@@ -1446,7 +1446,10 @@ void BaseLogging_Test::testVectorString(bool testPastConf) {
 
 
 void BaseLogging_Test::testVectorChar(bool testPastConf) {
-    auto lambda = [](int i) -> vector<char> { return {i & 0xFF, i & 0xFF, i & 0xFF, i & 0xFF, i & 0xFF, 0}; };
+    auto lambda = [](int i) -> vector<char> {
+        const char c = static_cast<char>(i & 0xFF);
+        return {c, c, c, c, c, 0};
+    };
     testHistory<vector<char>>("vectors.charProperty", lambda, testPastConf);
 }
 
@@ -1511,7 +1514,7 @@ void BaseLogging_Test::testVectorUnsignedShort(bool testPastConf) {
     auto lambda = [](int i) -> vector<unsigned short> {
         std::vector<unsigned short> result;
         if ((i % 3) != 0) { // every third is empty
-            result = {4, 2 * i, 8, 16, 5000};
+            result = {4, static_cast<unsigned short>(2 * i), 8, 16, 5000};
             if ((i % 2) == 0) result.push_back(std::numeric_limits<unsigned short>::lowest());
             if ((i % 5) == 0) result.push_back(std::numeric_limits<unsigned short>::max());
         }
@@ -1539,7 +1542,7 @@ void BaseLogging_Test::testVectorUnsignedInt(bool testPastConf) {
     auto lambda = [](int i) -> vector<unsigned int> {
         std::vector<unsigned int> result;
         if ((i % 3) != 0) { // every third is empty
-            result = {2, 4 * i, 8, 16, 5000};
+            result = {2, static_cast<unsigned int>(4 * i), 8, 16, 5000};
             if ((i % 2) == 0) result.push_back(std::numeric_limits<unsigned int>::lowest());
             if ((i % 5) == 0) result.push_back(std::numeric_limits<unsigned int>::max());
         }
