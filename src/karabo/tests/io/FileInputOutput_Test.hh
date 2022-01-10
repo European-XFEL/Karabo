@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   FileInputOutput_Test.hh
  * Author: heisenb
  *
@@ -6,13 +6,14 @@
  */
 
 #ifndef FILEINPUTOUTPUT_TEST_HH
-#define	FILEINPUTOUTPUT_TEST_HH
+#define FILEINPUTOUTPUT_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
+
 class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
     CPPUNIT_TEST(writeTextFile);
     CPPUNIT_TEST(readTextFile);
@@ -33,14 +34,13 @@ class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 
-public:
+   public:
     FileInputOutput_Test();
     virtual ~FileInputOutput_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     karabo::util::Schema m_schema;
     karabo::util::Hash m_rootedHash;
     karabo::util::Hash m_bigHash;
@@ -64,8 +64,6 @@ private:
     void readHdf5File();
     void writeSequenceToHdf5File();
     void readSequenceFromHdf5File();
-
 };
 
-#endif	/* FILEINPUTOUTPUT_TEST_HH */
-
+#endif /* FILEINPUTOUTPUT_TEST_HH */

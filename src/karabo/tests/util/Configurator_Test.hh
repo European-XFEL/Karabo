@@ -6,19 +6,18 @@
  */
 
 #ifndef KARABO_UTIL_CONFIGURATOR_TEST_HH
-#define	KARABO_UTIL_CONFIGURATOR_TEST_HH
+#define KARABO_UTIL_CONFIGURATOR_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <karabo/util/ClassInfo.hh>
+#include <karabo/util/Schema.hh>
 
 // Forward
 class Aggregated;
 
 class Base {
-
-public:
-
+   public:
     KARABO_CLASSINFO(Base, "Base", "");
 
     static void expectedParameters(karabo::util::Schema& s);
@@ -29,16 +28,12 @@ public:
 
     boost::shared_ptr<Aggregated>& getAggregated();
 
-private:
-
+   private:
     boost::shared_ptr<Aggregated> m_aggregated;
-
 };
 
 class Aggregated {
-
-public:
-
+   public:
     KARABO_CLASSINFO(Aggregated, "Aggregated", "");
 
     static void expectedParameters(karabo::util::Schema& s);
@@ -51,21 +46,16 @@ public:
 
     int foo() const;
 
-private:
-
+   private:
     int m_answer;
-
 };
 
 class Configurator_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(Configurator_Test);
     CPPUNIT_TEST(test);
     CPPUNIT_TEST_SUITE_END();
 
     void test();
-
 };
 
-#endif	/* CONFIGURATOR_TEST_HH */
-
+#endif /* CONFIGURATOR_TEST_HH */
