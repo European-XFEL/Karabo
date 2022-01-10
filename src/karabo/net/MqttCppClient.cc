@@ -1,8 +1,8 @@
 #include "MqttCppClient.hh"
+
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/SimpleElement.hh"
-
 #include "utils.hh"
 
 using namespace karabo::util;
@@ -17,14 +17,15 @@ namespace karabo {
 
 
         void MqttCppClient::expectedParameters(Schema& expected) {
-
-            UINT32_ELEMENT(expected).key("pingMs")
-                .displayedName("Ping interval")
-                .description("Ping interval in milliseconds")
-                .assignmentOptional().defaultValue(10000)
-                .unit(Unit::SECOND)
-                .metricPrefix(MetricPrefix::MILLI)
-                .commit();
+            UINT32_ELEMENT(expected)
+                  .key("pingMs")
+                  .displayedName("Ping interval")
+                  .description("Ping interval in milliseconds")
+                  .assignmentOptional()
+                  .defaultValue(10000)
+                  .unit(Unit::SECOND)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .commit();
 
             unsigned int defTimeout = 100;
             const char* env = getenv("KARABO_MQTT_TIMEOUT");
@@ -34,21 +35,24 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "MQTT timeout from environment: " << defTimeout;
             }
 
-            UINT32_ELEMENT(expected).key("mqttRequestTimeout")
-                .displayedName("MQTT request timeout")
-                .description("MQTT request timeout in seconds")
-                .assignmentOptional().defaultValue(defTimeout)
-                .unit(Unit::SECOND)
-                .commit();
+            UINT32_ELEMENT(expected)
+                  .key("mqttRequestTimeout")
+                  .displayedName("MQTT request timeout")
+                  .description("MQTT request timeout in seconds")
+                  .assignmentOptional()
+                  .defaultValue(defTimeout)
+                  .unit(Unit::SECOND)
+                  .commit();
         }
 
 
         MqttCppClient::MqttCppClient(const karabo::util::Hash& input)
-            : MqttClient(input)
-            , m_cleanSession(true)
-            , m_clientId(MqttClient::getUuidAsString())        // boost::uuids::to_string(m_uuidGenerator())
-            , m_pendingRequestsTimer(*m_ios)
-            , m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")) {
+            : MqttClient(input),
+              m_cleanSession(true),
+              m_clientId(MqttClient::getUuidAsString()) // boost::uuids::to_string(m_uuidGenerator())
+              ,
+              m_pendingRequestsTimer(*m_ios),
+              m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")) {
             setup(input);
         }
 
@@ -60,15 +64,10 @@ namespace karabo {
 
         boost::system::error_code MqttCppClient::connect() {
             boost::system::error_code ec = errc::make_error_code(errc::connection_refused);
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             // Calls connectAsycn passing as argument a lambda that sets the promise value
-            connectAsync(
-                [prom]
-                (const boost::system::error_code& ec) {
-                    prom->set_value(ec);
-                }
-            );
+            connectAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             ec = fut.get();
             return ec;
         }
@@ -77,8 +76,8 @@ namespace karabo {
         void MqttCppClient::createClientForUrl(const std::string& url, const AsyncHandler& onConnect) {
             using std::string;
 
-            KARABO_LOG_FRAMEWORK_INFO << "Attempt to connect to MQTT broker : \""
-                    << url << "\"  clientId=\"" << m_clientId << "\"";
+            KARABO_LOG_FRAMEWORK_INFO << "Attempt to connect to MQTT broker : \"" << url << "\"  clientId=\""
+                                      << m_clientId << "\"";
 
             const boost::tuple<string, string, string, string, string> urlParts = karabo::net::parseUrl(url);
             const string& host = urlParts.get<1>();
@@ -109,7 +108,8 @@ namespace karabo {
             m_client->set_unsuback_handler(bind_weak(&MqttCppClient::handleRequestResponse, this, _1));
 
             auto weakPtr = this->weak_from_this();
-            auto subAckHandler = [weakPtr] (std::uint16_t packetId, std::vector<MQTT_NS::suback_return_code> returnCodes) {
+            auto subAckHandler = [weakPtr](std::uint16_t packetId,
+                                           std::vector<MQTT_NS::suback_return_code> returnCodes) {
                 if (auto ptr = weakPtr.lock()) {
                     boost::shared_ptr<MqttCppClient> that = boost::static_pointer_cast<MqttCppClient>(ptr);
                     return that->handleRequestResponse(packetId);
@@ -123,29 +123,27 @@ namespace karabo {
             //"async_connect" requires that "set" functions are called above
             // Establish physical TCP connection to the broker...
             m_client->async_connect(
-                [this, wptr{weak_from_this()}, onConnect{std::move(onConnect)}]
-                (const MQTT_NS::error_code& ec) {
-                    auto ptr = wptr.lock();
-                    if (!ptr) return;
-                    // Check if physical TCP connection is established
-                    if (ec) {
-                        if (m_brokerIndex < m_brokerUrls.size() - 1) {
-                            // Fail to connect ... try the next broker in the list
-                            createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
-                        } else {
-                            // Fail to connect after checking all brokers
-                            dispatch(boost::bind(onConnect, ec));
-                        }
-                    }
-                    // Success! Nothing to do here ... the "handshake" handler
-                    // above is already registered via set_connack_handler!
-                }
-            );
+                  [this, wptr{weak_from_this()}, onConnect{std::move(onConnect)}](const MQTT_NS::error_code& ec) {
+                      auto ptr = wptr.lock();
+                      if (!ptr) return;
+                      // Check if physical TCP connection is established
+                      if (ec) {
+                          if (m_brokerIndex < m_brokerUrls.size() - 1) {
+                              // Fail to connect ... try the next broker in the list
+                              createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
+                          } else {
+                              // Fail to connect after checking all brokers
+                              dispatch(boost::bind(onConnect, ec));
+                          }
+                      }
+                      // Success! Nothing to do here ... the "handshake" handler
+                      // above is already registered via set_connack_handler!
+                  });
         }
 
 
         void MqttCppClient::connectAsync(const AsyncHandler& onConnect) {
-            //Concurrent calls to this function should be serialized
+            // Concurrent calls to this function should be serialized
             std::lock_guard<std::mutex> lock(m_connectionMutex);
 
             // If the client is already connected, calls the m_onConnect handler
@@ -156,9 +154,8 @@ namespace karabo {
                 return;
             }
 
-            m_brokerIndex = 0;  // start connection attempts using m_brokerUrls
+            m_brokerIndex = 0; // start connection attempts using m_brokerUrls
             createClientForUrl(m_brokerUrls[m_brokerIndex], onConnect);
-
         }
 
 
@@ -171,13 +168,11 @@ namespace karabo {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
 
             // Uses a pair of promise and future for synchronization
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto fut = prom->get_future();
 
             // Calls disconnectAsycn passing as argument a lambda that sets the promise value
-            disconnectAsync([prom] (const error_code ec) {
-                prom->set_value(ec);
-            });
+            disconnectAsync([prom](const error_code ec) { prom->set_value(ec); });
 
             // Wait on the future for the operation completion or a specified timeout
             auto status = fut.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
@@ -189,7 +184,7 @@ namespace karabo {
 
 
         void MqttCppClient::disconnectAsync(const AsyncHandler& onComplete) {
-            //Concurrent calls to this function should be serialized
+            // Concurrent calls to this function should be serialized
             std::lock_guard<std::mutex> lock(m_disconnectionMutex);
             m_client->set_close_handler(boost::bind(onComplete, errc::make_error_code(errc::success)));
             m_client->async_disconnect();
@@ -210,15 +205,12 @@ namespace karabo {
          * @param onRead
          * @return
          */
-        error_code MqttCppClient::subscribe(const std::string& topic, std::uint8_t subopts, const ReadHashHandler& onRead) {
+        error_code MqttCppClient::subscribe(const std::string& topic, std::uint8_t subopts,
+                                            const ReadHashHandler& onRead) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto future = prom->get_future();
-            subscribeAsync(topic, subopts, onRead,
-                           [prom]
-                           (error_code ec) {
-                               prom->set_value(ec);
-                           });
+            subscribeAsync(topic, subopts, onRead, [prom](error_code ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
                 return errc::make_error_code(errc::timed_out);
@@ -228,8 +220,7 @@ namespace karabo {
 
 
         void MqttCppClient::subscribeAsync(const std::string& topic, std::uint8_t subopts,
-                                           const ReadHashHandler& onRead,
-                                           const AsyncHandler& onComplete) {
+                                           const ReadHashHandler& onRead, const AsyncHandler& onComplete) {
             if (isConnected()) {
                 // Check if the client is already subscribed to the topic
                 std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
@@ -238,7 +229,7 @@ namespace karabo {
                 if (it == m_subscriptionsMap.end()) {
                     // Subscribe to the requested topic
                     auto op = [this, &topic, subopts] {
-                        //Concurrent calls to this function should be serialized
+                        // Concurrent calls to this function should be serialized
                         std::lock_guard<std::mutex> lk(m_subscribeMutex);
                         auto packetId = m_client->acquire_unique_packet_id();
                         m_client->async_subscribe(packetId, topic, MQTT_NS::subscribe_options(subopts));
@@ -258,7 +249,6 @@ namespace karabo {
         }
 
 
-
         ReadHashHandler MqttCppClient::getReadHashHandler(const std::string& topic) const {
             auto it = m_subscriptionsMap.find(topic);
             if (it == m_subscriptionsMap.end()) return ReadHashHandler();
@@ -268,11 +258,9 @@ namespace karabo {
 
         boost::system::error_code MqttCppClient::subscribe(const TopicSubOptions& params) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto fut = prom->get_future();
-            subscribeAsync(params, [prom] (error_code ec) {
-                prom->set_value(ec);
-            });
+            subscribeAsync(params, [prom](error_code ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -283,7 +271,7 @@ namespace karabo {
 
         void MqttCppClient::subscribeAsync(const TopicSubOptions& params, const AsyncHandler& onComplete) {
             if (!isConnected()) {
-                if (onComplete) dispatch(boost::bind(onComplete,KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
 
@@ -303,19 +291,18 @@ namespace karabo {
 
             if (!topics.empty()) {
                 auto op = [this, topics{std::move(topics)}] {
-                    //Concurrent calls to this function should be serialized
+                    // Concurrent calls to this function should be serialized
                     std::lock_guard<std::mutex> lk(m_subscribeMutex);
                     auto packetId = m_client->acquire_unique_packet_id();
                     m_client->async_subscribe(packetId, topics);
                     return packetId;
                 };
-                auto handler = bind_weak(&MqttCppClient::handleManySubscriptions,
-                                         this, _1, onComplete, params);
+                auto handler = bind_weak(&MqttCppClient::handleManySubscriptions, this, _1, onComplete, params);
                 performAsyncOperation(op, handler);
             } else {
                 // Subscription
-                auto handler = bind_weak(&MqttCppClient::handleManySubscriptions,
-                                         this, KARABO_ERROR_CODE_SUCCESS, onComplete, params);
+                auto handler = bind_weak(&MqttCppClient::handleManySubscriptions, this, KARABO_ERROR_CODE_SUCCESS,
+                                         onComplete, params);
                 dispatch(handler);
             }
         }
@@ -323,18 +310,16 @@ namespace karabo {
 
         error_code MqttCppClient::unsubscribe(const std::string& topic) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto future = prom->get_future();
-            unsubscribeAsync(topic, [prom] (error_code ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAsync(topic, [prom](error_code ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
             return future.get();
         }
-        
+
 
         void MqttCppClient::unsubscribeAsync(const std::string& topic, const AsyncHandler& onComplete) {
             if (!isConnected()) {
@@ -342,11 +327,11 @@ namespace karabo {
                 return;
             }
             std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
-            // Check if there is a subscription to the topic 
+            // Check if there is a subscription to the topic
             auto it = m_subscriptionsMap.find(topic);
             if (it != m_subscriptionsMap.end()) {
                 auto op = [this, &topic] {
-                    //Concurrent calls to this function should be serialized
+                    // Concurrent calls to this function should be serialized
                     std::lock_guard<std::mutex> lk(m_subscribeMutex);
                     auto packetId = m_client->acquire_unique_packet_id();
                     m_client->async_unsubscribe(packetId, topic);
@@ -362,11 +347,9 @@ namespace karabo {
 
         error_code MqttCppClient::unsubscribe(const std::vector<std::string>& topics) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto fut = prom->get_future();
-            unsubscribeAsync(topics, [prom] (error_code ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAsync(topics, [prom](error_code ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -400,7 +383,7 @@ namespace karabo {
             }
             if (!selected.empty()) {
                 auto op = [this, &selected] {
-                    //Concurrent calls to this function should be serialized
+                    // Concurrent calls to this function should be serialized
                     std::lock_guard<std::mutex> lk(m_subscribeMutex);
                     auto packetId = m_client->acquire_unique_packet_id();
                     m_client->async_unsubscribe(packetId, selected);
@@ -417,11 +400,9 @@ namespace karabo {
 
         error_code MqttCppClient::unsubscribeAll() {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto fut = prom->get_future();
-            unsubscribeAllAsync([prom] (error_code ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAllAsync([prom](error_code ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -462,16 +443,11 @@ namespace karabo {
 
 
         boost::system::error_code MqttCppClient::publish(const std::string& topic,
-                                                         const karabo::util::Hash::Pointer& msg,
-                                                         std::uint8_t options) {
+                                                         const karabo::util::Hash::Pointer& msg, std::uint8_t options) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<error_code> >();
+            auto prom = std::make_shared<std::promise<error_code>>();
             auto fut = prom->get_future();
-            publishAsync(topic, msg, options,
-                         [prom]
-                         (const error_code& ec) {
-                            prom->set_value(ec);
-                         });
+            publishAsync(topic, msg, options, [prom](const error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
                 KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Timeout of publishing " << *msg;
@@ -481,36 +457,30 @@ namespace karabo {
         }
 
 
-        void MqttCppClient::publishAsync(const std::string& topic,
-                                         const karabo::util::Hash::Pointer& msg,
-                                         std::uint8_t options,
-                                         const AsyncHandler& onComplete) {
+        void MqttCppClient::publishAsync(const std::string& topic, const karabo::util::Hash::Pointer& msg,
+                                         std::uint8_t options, const AsyncHandler& onComplete) {
             using namespace boost::asio;
 
             MQTT_NS::publish_options pubopts(options);
-            
+
             MqttNsAsyncClient::packet_id_t packetId = 0;
             if (pubopts.get_qos() != MQTT_NS::qos::at_most_once) packetId = m_client->acquire_unique_packet_id();
-            auto spPayload = std::make_shared<std::vector<char> >();
+            auto spPayload = std::make_shared<std::vector<char>>();
             if (msg) m_binarySerializer->save(*msg, *spPayload); // msg -> payload
             auto spTopic = std::make_shared<std::string>(std::move(topic));
 
             if (packetId) {
                 auto op = [this, spTopic, spPayload, pubopts{std::move(pubopts)}, packetId] {
-                    m_client->async_publish(packetId, buffer(*spTopic), buffer(*spPayload),
-                                            pubopts, std::make_pair(spTopic, spPayload));
+                    m_client->async_publish(packetId, buffer(*spTopic), buffer(*spPayload), pubopts,
+                                            std::make_pair(spTopic, spPayload));
                     return packetId;
                 };
                 performAsyncOperation(op, onComplete);
             } else {
-                dispatch
-                (
-                    [this, spTopic, spPayload, pubopts, onComplete]
-                    () {
-                        m_client->async_publish(0, buffer(*spTopic), buffer(*spPayload), pubopts,
-                                                std::make_pair(spTopic, spPayload), onComplete);
-                    }
-                );
+                dispatch([this, spTopic, spPayload, pubopts, onComplete]() {
+                    m_client->async_publish(0, buffer(*spTopic), buffer(*spPayload), pubopts,
+                                            std::make_pair(spTopic, spPayload), onComplete);
+                });
             }
         }
 
@@ -527,7 +497,8 @@ namespace karabo {
 
         bool MqttCppClient::handleConnect(const bool sp, const MQTT_NS::connect_return_code& rc,
                                           const AsyncHandler& onConnect) {
-            KARABO_LOG_FRAMEWORK_INFO << "MQTT  :  Connection to the broker " << MQTT_NS::connect_return_code_to_str(rc);
+            KARABO_LOG_FRAMEWORK_INFO << "MQTT  :  Connection to the broker "
+                                      << MQTT_NS::connect_return_code_to_str(rc);
             KARABO_LOG_FRAMEWORK_INFO << "MQTT  :  Clean session flag : " << std::boolalpha << sp;
             errc::errc_t ecode;
             switch (rc) {
@@ -567,8 +538,8 @@ namespace karabo {
             // Check if the client is already subscribed to the topic
             auto it = m_subscriptionsMap.find(topic);
             if (it == m_subscriptionsMap.end()) {
-                m_subscriptionsMap.emplace(topic, std::make_tuple(mqtttools::topicHasWildcard(topic),
-                                                                  std::move(onRead)));
+                m_subscriptionsMap.emplace(topic,
+                                           std::make_tuple(mqtttools::topicHasWildcard(topic), std::move(onRead)));
             } else {
                 std::get<1>(it->second) = std::move(onRead);
             }
@@ -596,8 +567,7 @@ namespace karabo {
         }
 
 
-        void MqttCppClient::handleUnsubscription(const error_code& ec,
-                                                 const AsyncHandler& handler,
+        void MqttCppClient::handleUnsubscription(const error_code& ec, const AsyncHandler& handler,
                                                  const std::string& topic) {
             if (!ec) unregisterSubscription(topic);
             // Call the user callback
@@ -610,11 +580,11 @@ namespace karabo {
             std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
             for (auto t : params) {
                 const std::string& topic = std::get<0>(t);
-                ReadHashHandler onRead   = std::move(std::get<2>(t));
+                ReadHashHandler onRead = std::move(std::get<2>(t));
                 auto it = m_subscriptionsMap.find(topic);
                 if (it == m_subscriptionsMap.end()) {
-                    m_subscriptionsMap.emplace(topic, std::make_tuple(mqtttools::topicHasWildcard(topic),
-                                                                      std::move(onRead)));
+                    m_subscriptionsMap.emplace(topic,
+                                               std::make_tuple(mqtttools::topicHasWildcard(topic), std::move(onRead)));
                 } else {
                     std::get<1>(it->second) = std::move(onRead);
                 }
@@ -622,8 +592,7 @@ namespace karabo {
         }
 
 
-        void MqttCppClient::handleManySubscriptions(const boost::system::error_code& ec,
-                                                    const AsyncHandler& onComplete,
+        void MqttCppClient::handleManySubscriptions(const boost::system::error_code& ec, const AsyncHandler& onComplete,
                                                     const TopicSubOptions& params) {
             if (!ec) registerManySubscriptions(params);
             // Call the user callback
@@ -676,10 +645,8 @@ namespace karabo {
 
 
         bool MqttCppClient::handleMessage(MQTT_NS::optional<MqttNsClientPacketId> packetId,
-                                          MQTT_NS::publish_options pubopts,
-                                          MQTT_NS::buffer topicName,
+                                          MQTT_NS::publish_options pubopts, MQTT_NS::buffer topicName,
                                           MQTT_NS::buffer contents) {
-
             std::string topic(topicName.cbegin(), topicName.cend());
             // The rule:  one callback per subscription
             // Try to call "exact" subscription having priority over wildcard ...
@@ -688,11 +655,9 @@ namespace karabo {
             if (it != m_subscriptionsMap.end()) {
                 if (std::get<1>(it->second)) {
                     auto hash = deserializeFrom(contents);
-                    post(
-                        [handler{std::get<1>(it->second)}, topic{std::move(topic)}, hash{std::move(hash)}]
-                        () {
-                            if (handler) handler(errc::make_error_code(errc::success), topic, hash);
-                        });
+                    post([handler{std::get<1>(it->second)}, topic{std::move(topic)}, hash{std::move(hash)}]() {
+                        if (handler) handler(errc::make_error_code(errc::success), topic, hash);
+                    });
                 }
                 return true;
             }
@@ -701,11 +666,9 @@ namespace karabo {
                 if (mqtttools::topicMatches(kv.first, topic)) {
                     if (std::get<1>(kv.second)) {
                         auto hash = deserializeFrom(contents);
-                        post(
-                            [handler{std::get<1>(kv.second)}, topic{std::move(topic)}, hash{std::move(hash)}]
-                            () {
-                                if (handler) handler(errc::make_error_code(errc::success), topic, hash);
-                            });
+                        post([handler{std::get<1>(kv.second)}, topic{std::move(topic)}, hash{std::move(hash)}]() {
+                            if (handler) handler(errc::make_error_code(errc::success), topic, hash);
+                        });
                     }
                     return true;
                 }
@@ -744,7 +707,8 @@ namespace karabo {
                     if (duration.getTotalSeconds() >= m_mqttRequestTimeout) {
                         // Call the callback with an timed_out error code and remove the corresponding entry
                         // from the pending requests map
-                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": MQTT request " << it->first << "from " << it->second.first  << " timed out at " << now;
+                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": MQTT request " << it->first << "from "
+                                                  << it->second.first << " timed out at " << now;
                         if (it->second.second) {
                             it->second.second(errc::make_error_code(errc::timed_out));
                         }
@@ -778,28 +742,26 @@ namespace karabo {
                     disconnectForced();
                     m_client.reset();
                 }
-                m_brokerUrls = input.get<std::vector<std::string> >("brokers");
+                m_brokerUrls = input.get<std::vector<std::string>>("brokers");
             } else {
                 throw KARABO_PARAMETER_EXCEPTION("No \"brokers\" parameter was defined for MqttCppClient");
             }
 
             m_brokerIndex = 0;
 
-            if (input.has("domain"))            input.get("domain", m_domain);
-            if (input.has("instanceId"))        input.get("instanceId", m_instanceId);
-            if (input.has("cleanSession"))      input.get("cleanSession", m_cleanSession);
-            if (input.has("username"))          input.get("username", m_username);
-            if (input.has("password"))          input.get("password", m_password);
-            if (input.has("keepAliveSec"))      input.get("keepAliveSec", m_keepAlive);
-            if (input.has("pingMs"))            input.get("pingMs", m_pingInterval);
-            if (input.has("mqttRequestTimeout")) input.get("mqttRequestTimeout",
-                                                                 m_mqttRequestTimeout);
-            m_willTopic = std::make_shared<std::string>(m_domain + "/topology/" + boost::replace_all_copy(m_instanceId,"/","|"));
+            if (input.has("domain")) input.get("domain", m_domain);
+            if (input.has("instanceId")) input.get("instanceId", m_instanceId);
+            if (input.has("cleanSession")) input.get("cleanSession", m_cleanSession);
+            if (input.has("username")) input.get("username", m_username);
+            if (input.has("password")) input.get("password", m_password);
+            if (input.has("keepAliveSec")) input.get("keepAliveSec", m_keepAlive);
+            if (input.has("pingMs")) input.get("pingMs", m_pingInterval);
+            if (input.has("mqttRequestTimeout")) input.get("mqttRequestTimeout", m_mqttRequestTimeout);
+            m_willTopic = std::make_shared<std::string>(m_domain + "/topology/" +
+                                                        boost::replace_all_copy(m_instanceId, "/", "|"));
             m_will = std::make_shared<MQTT_NS::will>(
-                    MQTT_NS::literals::operator""_mb(m_willTopic->c_str(), m_willTopic->size()),
-                    MQTT_NS::literals::operator""_mb(0,0),
-                    MQTT_NS::retain::no | MQTT_NS::qos::at_most_once
-            );
+                  MQTT_NS::literals::operator""_mb(m_willTopic->c_str(), m_willTopic->size()),
+                  MQTT_NS::literals::operator""_mb(0, 0), MQTT_NS::retain::no | MQTT_NS::qos::at_most_once);
         }
 
 
@@ -846,6 +808,5 @@ namespace karabo {
             }
             return handlers;
         }
-    }
-}
-
+    } // namespace net
+} // namespace karabo

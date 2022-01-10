@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TrainStamp.hh
  * Author: WP76
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_UTIL_TRAINSTAMP_HH
-#define	KARABO_UTIL_TRAINSTAMP_HH
+#define KARABO_UTIL_TRAINSTAMP_HH
 
 #include "Hash.hh"
 
@@ -19,13 +19,9 @@ namespace karabo {
          * The value is the European XFEL trainId which clocks in regular interval (initially 10Hz)
          */
         class Trainstamp {
-
-
             unsigned long long m_trainId;
 
-        public:
-
-
+           public:
             /**
              * Default constructor creates invalid trainId (=0)
              */
@@ -68,14 +64,13 @@ namespace karabo {
             inline bool operator!=(const Trainstamp& other) const {
                 return !(*this == other);
             }
-        private:
 
+           private:
         };
 
         std::ostream& operator<<(std::ostream&, const Trainstamp& trainstamp);
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif
-

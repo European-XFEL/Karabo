@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   RedisClient.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -6,19 +6,20 @@
  */
 
 #ifndef KARABO_NET_REDISCLIENT_HH
-#define	KARABO_NET_REDISCLIENT_HH
+#define KARABO_NET_REDISCLIENT_HH
 
+#include <boost/asio.hpp>
 #include <string>
-#include <vector>
 #include <tuple>
 #include <unordered_map>
-#include <boost/asio.hpp>
-#include "karabo/util/ClassInfo.hh"
+#include <vector>
+
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/net/utils.hh"
+#include "karabo/util/ClassInfo.hh"
 #include "redisclient/redisasyncclient.h"
 
-
+// clang-format off
 #define KARABO_ERROR_CODE_SUCCESS           boost::system::errc::make_error_code(boost::system::errc::success)
 #define KARABO_ERROR_CODE_CONN_REFUSED      boost::system::errc::make_error_code(boost::system::errc::connection_refused)
 #define KARABO_ERROR_CODE_IO_ERROR          boost::system::errc::make_error_code(boost::system::errc::io_error)
@@ -28,20 +29,20 @@
 #define KARABO_ERROR_CODE_TIMED_OUT         boost::system::errc::make_error_code(boost::system::errc::timed_out)
 #define KARABO_ERROR_CODE_STREAM_TIMEOUT    boost::system::errc::make_error_code(boost::system::errc::stream_timeout)
 #define KARABO_ERROR_CODE_RESOURCE_BUSY     boost::system::errc::make_error_code(boost::system::errc::device_or_resource_busy)
+// clang-format on
 
 
 namespace karabo {
     namespace net {
 
 
-	using ReadHashHandler = std::function<void(const boost::system::error_code, const std::string& /*topic*/, const util::Hash::Pointer /*readHash*/)>;
+        using ReadHashHandler = std::function<void(const boost::system::error_code, const std::string& /*topic*/,
+                                                   const util::Hash::Pointer /*readHash*/)>;
         using RedisTopicSubOptions = std::vector<std::tuple<std::string, ReadHashHandler> >;
 
 
         class RedisClient : public boost::enable_shared_from_this<RedisClient> {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(RedisClient, "RedisClient", "2.0")
 
             static void expectedParameters(karabo::util::Schema& expected);
@@ -53,13 +54,13 @@ namespace karabo {
             /**
              * Establish physical and logical connection with external Redis server
              */
-	    virtual boost::system::error_code connect();
+            virtual boost::system::error_code connect();
 
             /**
              * Establish physical and logical connection with external Redis server
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void connectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&){});
+            virtual void connectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&) {});
 
             /**
              * Check if the client is connected to the broker
@@ -78,7 +79,7 @@ namespace karabo {
              * Disconnect from a broker (server) by sending special message via asynchronous write.
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void disconnectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&){});
+            virtual void disconnectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&) {});
 
             /**
              * Force disconnect. It is not a clean disconnect sequence.<BR>
@@ -101,10 +102,9 @@ namespace karabo {
              *
              * @param topic to be subscribed
              * @param read handler called when the message associated with this topic arrived
-             * @return boost::system::error_code 
+             * @return boost::system::error_code
              */
-            boost::system::error_code
-            subscribe(const std::string& topic, const ReadHashHandler& slotFunc);
+            boost::system::error_code subscribe(const std::string& topic, const ReadHashHandler& slotFunc);
 
             /**
              * Asynchronous single topic subscription == Redis channel subscription.
@@ -114,20 +114,19 @@ namespace karabo {
              * @param slotFunction - handler called when a message associated with topic arrived
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            void
-            subscribeAsync(const std::string& topic, const ReadHashHandler& slotFunc, const AsyncHandler& onComplete);
+            void subscribeAsync(const std::string& topic, const ReadHashHandler& slotFunc,
+                                const AsyncHandler& onComplete);
 
             /**
-             * Synchronous multiple topics subscription. 
+             * Synchronous multiple topics subscription.
              * Subscriptions are represented as vector of tuples of topic name, quality-of-service and
              * read callback.  The topic names can be with or without wildcards. It allows to do single call
              * to subscribe to many topics. No special handling of overlapped subscriptions. No special
              * rules about order of topics in the list.
              * @param params  multiple tuples of 'topic', 'qos', 'slotFunction' to subscribe
-             * @return boost::system::error_code 
+             * @return boost::system::error_code
              */
-            virtual boost::system::error_code
-            subscribe(const RedisTopicSubOptions& params);
+            virtual boost::system::error_code subscribe(const RedisTopicSubOptions& params);
 
             /**
              * Asynchronous multiple topics subscription.
@@ -136,8 +135,7 @@ namespace karabo {
              * @param params   multiple (<64) tuples of 'topic', 'qos', 'slotName', 'slotFunction' to subscribe
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void
-            subscribeAsync(const RedisTopicSubOptions& params, const AsyncHandler& onComplete);
+            virtual void subscribeAsync(const RedisTopicSubOptions& params, const AsyncHandler& onComplete);
 
             /**
              * Request Redis broker to un-subscribe the topic.
@@ -147,33 +145,31 @@ namespace karabo {
              * @param topic to un-subscribe
              * @return boost::system::error_code indicating if un-subscription is successful
              */
-            virtual boost::system::error_code
-            unsubscribe(const std::string& topic);
+            virtual boost::system::error_code unsubscribe(const std::string& topic);
 
             /**
              * Request broker to un-subscribe topic.
              * @param topic to un-subscribe
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void
-            unsubscribeAsync(const std::string& topic, const AsyncHandler& onComplete = [](const boost::system::error_code&){});
+            virtual void unsubscribeAsync(
+                  const std::string& topic, const AsyncHandler& onComplete = [](const boost::system::error_code&) {});
 
             /**
              * Request broker to un-subscribe multiple topics
              * @param multiple topic-handlerName tuples to un-subscribe
-             * @return boost::system::error_code indicating if un-subscription is successful (all or none) 
+             * @return boost::system::error_code indicating if un-subscription is successful (all or none)
              */
-            virtual boost::system::error_code
-            unsubscribe(const std::vector<std::string>& topics);
+            virtual boost::system::error_code unsubscribe(const std::vector<std::string>& topics);
 
             /**
              * Request broker to un-subscribe many topics
              * @param multiple topics to un-subscribe
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void
-            unsubscribeAsync(const std::vector<std::string>& topics,
-                             const AsyncHandler& onComplete = [](const boost::system::error_code&){});
+            virtual void unsubscribeAsync(
+                  const std::vector<std::string>& topics,
+                  const AsyncHandler& onComplete = [](const boost::system::error_code&) {});
 
             /**
              * Un-subscribe from all subscriptions made by this client upto now (blocking call)
@@ -186,7 +182,7 @@ namespace karabo {
              * @param onUnSubAck acknowledgment callback will be called at the end
              * @param callback after network completion (send operation was successful)
              */
-            virtual void unsubscribeAllAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&){});
+            virtual void unsubscribeAllAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&) {});
 
             /**
              * Check if the topic is subscribed already.
@@ -195,9 +191,7 @@ namespace karabo {
              */
             virtual bool isSubscribed(const std::string& topic);
 
-            boost::system::error_code
-            publish(const std::string& topic,
-                    const karabo::util::Hash::Pointer& msg);
+            boost::system::error_code publish(const std::string& topic, const karabo::util::Hash::Pointer& msg);
 
             /**
              * Publish a message (Hash) asynchronously on the topic with given options
@@ -206,10 +200,8 @@ namespace karabo {
              * @param pubopts Example: PubQos::ExactlyOnce | PubRetain::yes
              * @param onComplete
              */
-            void
-            publishAsync(const std::string& topic,
-                         const karabo::util::Hash::Pointer& msg,
-                         const AsyncHandler& onComplete = AsyncHandler());
+            void publishAsync(const std::string& topic, const karabo::util::Hash::Pointer& msg,
+                              const AsyncHandler& onComplete = AsyncHandler());
 
             virtual const std::string& getBrokerUrl() const;
 
@@ -220,33 +212,29 @@ namespace karabo {
              */
             virtual std::vector<std::string> getSubscriptions();
 
-            template<typename CompletionToken>
+            template <typename CompletionToken>
             void post(CompletionToken&& token) {
                 m_ios->post(token);
             }
 
-        private:
-
+           private:
             /**
              * Disptch a functor on REDIS internal event loop
              * @param token == functor
              */
-            template<typename CompletionToken>
+            template <typename CompletionToken>
             void dispatch(CompletionToken&& token) {
                 m_ios->dispatch(token);
             }
 
             void run();
-            
-            void createClientForUrl(const std::string& url,
-                                    const AsyncHandler& onConnect);
-            
-            void resolveHandler(const boost::system::error_code& e,
-                                boost::asio::ip::tcp::resolver::iterator it,
+
+            void createClientForUrl(const std::string& url, const AsyncHandler& onConnect);
+
+            void resolveHandler(const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator it,
                                 const AsyncHandler& onConnect);
 
-        protected:
-
+           protected:
             boost::shared_ptr<boost::asio::io_context> m_ios;
             boost::shared_ptr<boost::thread> m_thread;
             boost::shared_ptr<redisclient::RedisAsyncClient> m_producer;
@@ -260,19 +248,15 @@ namespace karabo {
             std::mutex m_disconnectionMutex;
             // Mutex used to avoid concurrent calls of subscribeAsync
             std::mutex m_subscribeMutex;
-            std::unordered_map<std::string,
-                               std::tuple<bool,
-                                          redisclient::RedisAsyncClient::Handle
-                                         > > m_subscriptionsMap;
+            std::unordered_map<std::string, std::tuple<bool, redisclient::RedisAsyncClient::Handle> >
+                  m_subscriptionsMap;
             std::mutex m_subscriptionsMutex;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
             std::uint32_t m_requestTimeout;
-            
         };
-        
 
-    }
-}
 
-#endif	/* KARABO_NET_REDISCLIENT_HH */
+    } // namespace net
+} // namespace karabo
 
+#endif /* KARABO_NET_REDISCLIENT_HH */

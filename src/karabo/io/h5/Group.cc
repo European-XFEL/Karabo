@@ -8,6 +8,7 @@
 
 
 #include "Group.hh"
+
 #include <karabo/util/SimpleElement.hh>
 
 using namespace karabo::io::h5;
@@ -20,26 +21,26 @@ namespace karabo {
         namespace h5 {
 
 
-
             void Group::expectedParameters(karabo::util::Schema& expected) {
-
                 STRING_ELEMENT(expected)
-                        .key("type")
-                        .displayedName("Type")
-                        .description("Hash or vector<Hash>")
-                        .options("HASH, VECTOR_HASH")
-                        .tags("persistent")
-                        .assignmentOptional().noDefaultValue()
-                        .commit();
+                      .key("type")
+                      .displayedName("Type")
+                      .description("Hash or vector<Hash>")
+                      .options("HASH, VECTOR_HASH")
+                      .tags("persistent")
+                      .assignmentOptional()
+                      .noDefaultValue()
+                      .commit();
 
                 UINT64_ELEMENT(expected)
-                        .key("size")
-                        .displayedName("Vector Size")
-                        .description("Number of Hashes in the Vector")
-                        .tags("persistent")
-                        .minExc(0)
-                        .assignmentOptional().noDefaultValue()
-                        .commit();
+                      .key("size")
+                      .displayedName("Vector Size")
+                      .description("Number of Hashes in the Vector")
+                      .tags("persistent")
+                      .minExc(0)
+                      .assignmentOptional()
+                      .noDefaultValue()
+                      .commit();
             }
 
 
@@ -80,12 +81,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "bind vector<Hash>: " << m_key;
                 if (!data.has(m_key, '/')) {
                     if (m_isVectorHash) {
-                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> > (m_key, '/');
+                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> >(m_key, '/');
                         vh.resize(m_vectorSize);
                     } else {
                         Hash h = data.bindReference<Hash>(m_key, '/');
                     }
-
                 }
             }
 
@@ -93,15 +93,15 @@ namespace karabo {
             void Group::bind(karabo::util::Hash& data, hsize_t len) {
                 if (!data.has(m_key, '/')) {
                     if (m_isVectorHash) {
-                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> > (m_key, '/');
+                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> >(m_key, '/');
                         vh.resize(m_vectorSize * len);
                     } else {
-                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> > (m_key, '/');
+                        std::vector<Hash>& vh = data.bindReference<std::vector<Hash> >(m_key, '/');
                         vh.resize(len);
                     }
                 }
             }
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo

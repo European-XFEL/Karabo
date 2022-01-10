@@ -5,13 +5,11 @@
  */
 
 #ifndef SIGNALSLOTABLE_LONGTEST_HH
-#define	SIGNALSLOTABLE_LONGTEST_HH
+#define SIGNALSLOTABLE_LONGTEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class SignalSlotable_LongTest : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(SignalSlotable_LongTest);
 
     CPPUNIT_TEST(testStressSyncReplies);
@@ -19,16 +17,15 @@ class SignalSlotable_LongTest : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     SignalSlotable_LongTest();
     virtual ~SignalSlotable_LongTest();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testStressSyncReplies();
     void testStressAsyncReplies();
 };
 
-#endif	/* SIGNALSLOTABLE_LONGTEST_HH */
+#endif /* SIGNALSLOTABLE_LONGTEST_HH */

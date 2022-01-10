@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   FsmBaseState.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -6,77 +6,77 @@
  */
 
 #ifndef FSMBASESTATE_HH
-#define	FSMBASESTATE_HH
-
-#include <string>
+#define FSMBASESTATE_HH
 
 #include <boost/shared_ptr.hpp>
+#include <string>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
-//front-end
+// front-end
 #include <boost/msm/front/state_machine_def.hpp>
 // functors
-#include <boost/msm/front/functor_row.hpp>
 #include <boost/msm/front/euml/common.hpp>
+#include <boost/msm/front/functor_row.hpp>
 // for And_ operator
 #include <boost/msm/front/euml/operator.hpp>
 // for func_state and func_state_machine
 #include <boost/msm/front/euml/state_grammar.hpp>
-#include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/arithmetic/sub.hpp>
-#include "karabo/util/State.hh"
+#include <boost/preprocessor/cat.hpp>
 
 #include "Worker.hh"
+#include "karabo/util/State.hh"
 
 // Allow boost msm names appear globally in karabo namespace
 namespace karabo {
     using boost::msm::front::none;
     using boost::msm::front::Row;
-}
+} // namespace karabo
 
 namespace karabo {
     namespace core {
-        
-        class FsmBaseState;
-        
-        struct StateVisitor {
 
-            void visitState(const FsmBaseState* state, bool stopWorker=false);
+        class FsmBaseState;
+
+        struct StateVisitor {
+            void visitState(const FsmBaseState* state, bool stopWorker = false);
 
             const FsmBaseState* getState() {
                 return m_state;
             }
 
-        private:
-            
+           private:
             const FsmBaseState* m_state;
             std::string m_stateName;
             std::string m_currentFsm;
         };
 
         struct FsmBaseState {
-            
-            FsmBaseState() : m_state(karabo::util::State::UNKNOWN), m_fsmName(), m_isContained(false), m_timeout(-1), m_repetition(-1) {}
+            FsmBaseState()
+                : m_state(karabo::util::State::UNKNOWN),
+                  m_fsmName(),
+                  m_isContained(false),
+                  m_timeout(-1),
+                  m_repetition(-1) {}
 
             const karabo::util::State& getState() const {
                 return m_state;
             }
-            
+
             void setStateMachineName(const std::string& name) {
                 m_stateMachineName = name;
             }
-  
+
             const karabo::util::State* parent() const {
                 return m_state.parent();
             }
-            
-        public:
-            
+
+           public:
             bool isDerivedFrom(const karabo::util::State& s) const {
                 return m_state.isDerivedFrom(s);
             }
-            
-            const std::string & getFsmName() const {
+
+            const std::string& getFsmName() const {
                 return m_fsmName;
             }
 
@@ -93,12 +93,11 @@ namespace karabo {
             }
 
             // Signature of the accept function
-            typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor>, bool > accept_sig;
+            typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor>, bool> accept_sig;
 
             // This makes states polymorphic
 
-            virtual ~FsmBaseState() {
-            }
+            virtual ~FsmBaseState() {}
 
             // Default implementation for states who need to be visited
             void accept(boost::shared_ptr<StateVisitor> visitor, bool stopWorker) const {
@@ -125,22 +124,20 @@ namespace karabo {
                 return NULL;
             }
 
-            const std::string & getStateName() const {
-                if (m_state.name().empty())
-                    return m_stateMachineName;
+            const std::string& getStateName() const {
+                if (m_state.name().empty()) return m_stateMachineName;
                 return m_state.name();
             }
 
-            const std::string & name() const {
+            const std::string& name() const {
                 return this->getStateName();
             }
-            
-        protected:
 
+           protected:
             void setState(const karabo::util::State& state) {
                 m_state = state;
             }
-            
+
             karabo::util::State m_state;
             std::string m_stateMachineName;
             std::string m_fsmName;
@@ -149,10 +146,8 @@ namespace karabo {
             int m_repetition;
         };
 
-    }
-}
+    } // namespace core
+} // namespace karabo
 
 
-
-#endif	/* FSMBASESTATE_HH */
-
+#endif /* FSMBASESTATE_HH */

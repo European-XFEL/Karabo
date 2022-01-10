@@ -1,17 +1,16 @@
 #include "Runner.hh"
 
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/io/Output.hh"
-#include "karabo/io/Input.hh"
-#include "karabo/io/FileTools.hh"
-#include "karabo/log/Logger.hh"
-#include "karabo/util/Version.hh"
-
 #include <krb_log4cpp/Category.hh>
-
 #include <string>
 #include <vector>
+
+#include "karabo/io/FileTools.hh"
+#include "karabo/io/Input.hh"
+#include "karabo/io/Output.hh"
+#include "karabo/log/Logger.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/Version.hh"
 
 using namespace karabo::util;
 
@@ -21,14 +20,11 @@ namespace karabo {
 
 
         DeviceServer::Pointer Runner::instantiate(int argc, const char** argv) {
-
             const std::string classId("DeviceServer");
 
             try {
-
                 karabo::util::Hash configuration;
                 if (parseCommandLine(argc, argv, configuration)) {
-
                     if (!configuration.empty()) {
                         if (configuration.has(classId)) {
                             return Configurator<DeviceServer>::create(configuration);
@@ -46,7 +42,7 @@ namespace karabo {
         }
 
 
-        bool Runner::parseCommandLine(int argc, const char** argv, karabo::util::Hash & configuration, bool silent) {
+        bool Runner::parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration, bool silent) {
             using namespace std;
             using namespace karabo::util;
             std::string firstArg;
@@ -99,7 +95,8 @@ namespace karabo {
             if (braces > 0) {
                 throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(braces) + " closing brace(s)");
             } else if (braces < 0) {
-                throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(-braces) + " opening brace(s)");
+                throw KARABO_PARAMETER_EXCEPTION("CLI Syntax Error: missing " + toString(-braces) +
+                                                 " opening brace(s)");
             }
 
             resolveTokens(args, resolved);
@@ -140,13 +137,13 @@ namespace karabo {
         }
 
 
-        void Runner::showUsage(const std::string& programName, const std::string & what) {
+        void Runner::showUsage(const std::string& programName, const std::string& what) {
             std::cout << "\n ##################################################################\n"
-                    << " #                     Karabo Device Server\n"
-                    << " #\n"
-                    << " # Karabo-Version: " << karabo::util::Version::getVersion() << "\n"
-                    << " # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.\n"
-                    << " ##################################################################\n\n";
+                      << " #                     Karabo Device Server\n"
+                      << " #\n"
+                      << " # Karabo-Version: " << karabo::util::Version::getVersion() << "\n"
+                      << " # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.\n"
+                      << " ##################################################################\n\n";
             if (what.empty()) {
                 std::cout << "Usage: " << programName << " [<option> | <configuration>]\n\n";
                 std::cout << "<configuration>      A set of (hierarchical) <key>=<value> pairs (see below for keys)\n";
@@ -161,29 +158,25 @@ namespace karabo {
         }
 
 
-        void Runner::parseToken(const std::string& prefix, const std::string& token, std::vector<std::string>& tokenList) {
+        void Runner::parseToken(const std::string& prefix, const std::string& token,
+                                std::vector<std::string>& tokenList) {
             using namespace std;
             using namespace karabo::util;
             size_t pos = token.find_first_of("=");
             string key, value;
             if (pos == std::string::npos) {
-
                 key = token;
                 boost::trim(key);
-                if (!prefix.empty())
-                    key = prefix + "." + key;
+                if (!prefix.empty()) key = prefix + "." + key;
                 tokenList.push_back(key);
 
             } else {
-
                 key = token.substr(0, pos);
                 boost::trim(key);
-                if (!prefix.empty())
-                    key = prefix + "." + key;
+                if (!prefix.empty()) key = prefix + "." + key;
                 value = token.substr(pos + 1);
                 boost::trim(value);
                 if (!value.empty() && (*value.begin()) == '{' && (*value.rbegin()) == '}') {
-
                     string line = value.substr(1, value.length() - 2);
                     boost::trim(line);
 
@@ -198,9 +191,7 @@ namespace karabo {
                     string finalToken = key + "=" + value;
                     tokenList.push_back(finalToken);
                 }
-
             }
-
         }
 
 
@@ -245,7 +236,6 @@ namespace karabo {
                     showUsage(std::string(argv[0]));
                 }
             } else if (lowerOption == "version" || lowerOption == "v") {
-
                 std::cout << "Karabo-Version: " << karabo::util::Version::getVersion() << std::endl;
 
             } else {
@@ -254,9 +244,9 @@ namespace karabo {
         }
 
 
-        int Runner::buildToken(const std::vector<std::string>& args, int start, std::string & token) {
-            // This function builds single token fromm the argument list 
-            // It begins with an argument on position "start" and appends 
+        int Runner::buildToken(const std::vector<std::string>& args, int start, std::string& token) {
+            // This function builds single token fromm the argument list
+            // It begins with an argument on position "start" and appends
             // following arguments if needed to build the valid token
             // Function returns the index of the last consumed argument
 
@@ -278,8 +268,6 @@ namespace karabo {
                         if ((*token.begin()) == '{' || (*token.rbegin()) == '}') {
                             throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line \n" + token);
                         }
-
-
                     }
                 }
                 return start;
@@ -292,8 +280,8 @@ namespace karabo {
                 boost::trim(value);
                 start++;
                 if (key[0] == '{' || key[0] == '}') {
-                    throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line: the key '"
-                                                     + key +"' starts with invalid symbol '" + key[0] + "'!");
+                    throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line: the key '" + key +
+                                                     "' starts with invalid symbol '" + key[0] + "'!");
                 }
                 if (value.empty()) {
                     if (start < argc) {
@@ -313,7 +301,8 @@ namespace karabo {
                             token += " ";
                             start = buildToken(args, start, token);
                         } else {
-                            throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Check curly brackets.\n" + token);
+                            throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Check curly brackets.\n" +
+                                                             token);
                         }
                     }
                 }
@@ -323,7 +312,7 @@ namespace karabo {
         }
 
 
-        void Runner::readToken(const std::string& token, karabo::util::Hash & config) {
+        void Runner::readToken(const std::string& token, karabo::util::Hash& config) {
             // This function converts token to Hash entry
             // Tokens must be resolved before (see resolveTokens)
             using namespace karabo::util;
@@ -332,7 +321,8 @@ namespace karabo {
                 throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line (empty argument?)\n");
             }
             if ((*token.begin()) == '.') {
-                throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Token cannot start with dot (" + token + ")");
+                throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Token cannot start with dot (" + token +
+                                                 ")");
             }
             boost::filesystem::path possibleFile(token);
             if (boost::filesystem::exists(possibleFile)) {
@@ -365,7 +355,6 @@ namespace karabo {
                     boost::trim(value);
 
                     if (!value.empty() && (*value.begin()) == '{' && (*value.rbegin()) == '}') {
-
                         value = value.substr(1, value.size() - 2);
                         boost::trim(value);
                         std::vector<std::string> tokens;
@@ -376,15 +365,14 @@ namespace karabo {
                         for (std::string& subToken : tokens) {
                             boost::trim(subToken);
                             if (!subToken.empty()) {
-                                readToken(subToken, config.get<Hash > (key));
+                                readToken(subToken, config.get<Hash>(key));
                             }
                         }
                     } else {
-
                         config.set(key, value, ';');
                     }
                 }
             }
         }
-    }
-}
+    } // namespace core
+} // namespace karabo

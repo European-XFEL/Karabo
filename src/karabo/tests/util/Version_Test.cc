@@ -1,23 +1,22 @@
-/* 
+/*
  * File:   Version_Test.cc
  * Author: cas
- * 
+ *
  * Created on February 11, 2016, 2:23 PM
  */
 
 #include "Version_Test.hh"
+
 #include <karabo/util/Version.hh>
 #include <karabo/util/repositoryVersion>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Version_Test);
 
 
-Version_Test::Version_Test() {
-}
+Version_Test::Version_Test() {}
 
 
-Version_Test::~Version_Test() {
-}
+Version_Test::~Version_Test() {}
 
 
 void Version_Test::testVersion() {
@@ -27,7 +26,7 @@ void Version_Test::testVersion() {
     CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), std::string(KARABO_VERSION)); // from repositoryVersion
 }
 
-void Version_Test::testVersionFromString(){
+void Version_Test::testVersionFromString() {
     karabo::util::Version v("12.2.3");
     CPPUNIT_ASSERT_EQUAL(12, v.getMajor());
     CPPUNIT_ASSERT_EQUAL(2, v.getMinor());
@@ -56,42 +55,40 @@ void Version_Test::testVersionFromString(){
     CPPUNIT_ASSERT_EQUAL(true, v.isPreRelease());
     CPPUNIT_ASSERT_EQUAL(false, v.isPostRelease());
     CPPUNIT_ASSERT_EQUAL(true, v.isDevRelease());
-    
 }
 
-void Version_Test::testVersionComparison(){
+void Version_Test::testVersionComparison() {
     // release version comparisons
-    std::vector<std::string> versionsInStrictOrder{
-        "b00b1e5",
-        "0.0.0",
-        "0.0.0.dev2",
-        "99.0.0",
-        "99.0.0.dev0",
-        "100.0.0",
-        "100.0.0.dev2",
-        "100.0.1",
-        "100.0.1.dev3",
-        "100.1.0",
-        "100.1.0.dev1",
-        "100.1.1a1",
-        "100.1.1a1.dev1",
-        "100.1.1a2",
-        "100.1.1a2.dev1",
-        "100.1.1a2.dev1000",
-        "100.1.1b1",
-        "100.1.1b1.dev1",
-        "100.1.1b1.dev13",
-        "100.1.1b2",
-        "100.1.1b2.dev1",
-        "100.1.1b2.dev12",
-        "100.1.1rc1",
-        "100.1.1rc1.dev1",
-        "100.1.1rc1.dev15",
-        "100.1.1rc2",
-        "100.1.1",
-        "100.1.1.post1",
-        "100.1.1.post1.dev1",
-        "100.1.1.post1.dev3"};
+    std::vector<std::string> versionsInStrictOrder{"b00b1e5",
+                                                   "0.0.0",
+                                                   "0.0.0.dev2",
+                                                   "99.0.0",
+                                                   "99.0.0.dev0",
+                                                   "100.0.0",
+                                                   "100.0.0.dev2",
+                                                   "100.0.1",
+                                                   "100.0.1.dev3",
+                                                   "100.1.0",
+                                                   "100.1.0.dev1",
+                                                   "100.1.1a1",
+                                                   "100.1.1a1.dev1",
+                                                   "100.1.1a2",
+                                                   "100.1.1a2.dev1",
+                                                   "100.1.1a2.dev1000",
+                                                   "100.1.1b1",
+                                                   "100.1.1b1.dev1",
+                                                   "100.1.1b1.dev13",
+                                                   "100.1.1b2",
+                                                   "100.1.1b2.dev1",
+                                                   "100.1.1b2.dev12",
+                                                   "100.1.1rc1",
+                                                   "100.1.1rc1.dev1",
+                                                   "100.1.1rc1.dev15",
+                                                   "100.1.1rc2",
+                                                   "100.1.1",
+                                                   "100.1.1.post1",
+                                                   "100.1.1.post1.dev1",
+                                                   "100.1.1.post1.dev3"};
 
     for (size_t i1 = 0; i1 < versionsInStrictOrder.size(); i1++) {
         for (size_t i2 = 0; i2 < versionsInStrictOrder.size(); i2++) {

@@ -5,12 +5,13 @@
  * Created on May 22, 2015, 11:43:22 AM
  */
 
-#include <boost/thread/pthread/thread_data.hpp>
-#include <karabo/util/StringTools.hh>
-#include <karabo/util/NDArray.hh>
+#include "NDArray_Test.hh"
+
 #include <cppunit/TestAssert.h>
 
-#include "NDArray_Test.hh"
+#include <boost/thread/pthread/thread_data.hpp>
+#include <karabo/util/NDArray.hh>
+#include <karabo/util/StringTools.hh>
 
 using namespace std;
 using namespace karabo::util;
@@ -18,24 +19,19 @@ using namespace karabo::util;
 CPPUNIT_TEST_SUITE_REGISTRATION(NDArray_Test);
 
 
-NDArray_Test::NDArray_Test() {
-}
+NDArray_Test::NDArray_Test() {}
 
 
-NDArray_Test::~NDArray_Test() {
-}
+NDArray_Test::~NDArray_Test() {}
 
 
-void NDArray_Test::setUp() {
-}
+void NDArray_Test::setUp() {}
 
 
-void NDArray_Test::tearDown() {
-}
+void NDArray_Test::tearDown() {}
 
 
 void NDArray_Test::testConstructor() {
-
     const Dims shape(100, 200);
     // Underlying data: all 2 but the first 100 entries which are 0 to 99
     vector<int> someData(100 * 200, 2);
@@ -47,8 +43,8 @@ void NDArray_Test::testConstructor() {
     Hash h;
 
     {
-        NDArray fly(shape, 2); // This NDArray has everything as 2
-        NDArray cpy(&someData[0], someData.size(), shape); // copy of someData using raw pointer
+        NDArray fly(shape, 2);                                // This NDArray has everything as 2
+        NDArray cpy(&someData[0], someData.size(), shape);    // copy of someData using raw pointer
         NDArray iCp(someData.begin(), someData.end(), shape); // copy of someData using iterator range
         NDArray ref(&someData[0], someData.size(), NDArray::NullDeleter(), shape); // reference to someData
 
@@ -68,8 +64,8 @@ void NDArray_Test::testConstructor() {
         }
         CPPUNIT_ASSERT(fly.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(fly.size() == 100 * 200);
-        CPPUNIT_ASSERT_EQUAL(sizeof (int), fly.itemSize());
-        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), fly.byteSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof(int), fly.itemSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof(int) * static_cast<size_t>(100 * 200), fly.byteSize());
 
         CPPUNIT_ASSERT(cpyShape.x1() == 100);
         CPPUNIT_ASSERT(cpyShape.x2() == 200);
@@ -79,7 +75,7 @@ void NDArray_Test::testConstructor() {
         CPPUNIT_ASSERT(cpy.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(cpy.size() == 100 * 200);
         CPPUNIT_ASSERT_EQUAL(sizeof(int), cpy.itemSize());
-        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), cpy.byteSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof(int) * static_cast<size_t>(100 * 200), cpy.byteSize());
 
         CPPUNIT_ASSERT(iCpShape.x1() == 100);
         CPPUNIT_ASSERT(iCpShape.x2() == 200);
@@ -88,8 +84,8 @@ void NDArray_Test::testConstructor() {
         }
         CPPUNIT_ASSERT(iCp.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(iCp.size() == 100 * 200);
-        CPPUNIT_ASSERT_EQUAL(sizeof (int), iCp.itemSize());
-        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t> (100 * 200), iCp.byteSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof(int), iCp.itemSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof(int) * static_cast<size_t>(100 * 200), iCp.byteSize());
 
         CPPUNIT_ASSERT(refShape.x1() == 100);
         CPPUNIT_ASSERT(refShape.x2() == 200);
@@ -99,7 +95,7 @@ void NDArray_Test::testConstructor() {
         CPPUNIT_ASSERT(ref.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(ref.size() == 100 * 200);
         CPPUNIT_ASSERT_EQUAL(sizeof(int), ref.itemSize());
-        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), ref.byteSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof(int) * static_cast<size_t>(100 * 200), ref.byteSize());
 
         // Setting content affects underlying data for ref, but not for cpy and iCp which have copied data:
         cpy.getData<int>()[124] = 0;
@@ -120,7 +116,7 @@ void NDArray_Test::testConstructor() {
     }
 
     // What we get from Hash is still a reference to someData:
-    NDArray& ref = h.get<NDArray >("ref");
+    NDArray& ref = h.get<NDArray>("ref");
     CPPUNIT_ASSERT(ref.getData<int>()[124] == 0);
     CPPUNIT_ASSERT_EQUAL(0, someData[124]);
     ref.getData<int>()[124] = 124;
@@ -134,15 +130,13 @@ void NDArray_Test::testShapeException() {
     vector<int> data(10, -42);
     const Dims badShape(2, 500);
 
-    {
-        CPPUNIT_ASSERT_THROW(NDArray(&data[0], data.size(), badShape), karabo::util::ParameterException);
-    }
+    { CPPUNIT_ASSERT_THROW(NDArray(&data[0], data.size(), badShape), karabo::util::ParameterException); }
 }
 
 
 void NDArray_Test::testDataTypeException() {
     const int data[] = {1, 2, 3, 4};
-    NDArray arr(data, sizeof (data) / sizeof (data[0]));
+    NDArray arr(data, sizeof(data) / sizeof(data[0]));
 
     std::string exceptionMsg;
     try {
@@ -161,7 +155,7 @@ void NDArray_Test::testDataTypeException() {
     // arr.getData<AnUnknown>();
 
     // Manipulate internals as if NDArray was corrupted:
-    reinterpret_cast<Hash*> (&arr)->set("type", 12345678);
+    reinterpret_cast<Hash*>(&arr)->set("type", 12345678);
     exceptionMsg.clear();
     try {
         arr.getData<short>();
@@ -171,7 +165,9 @@ void NDArray_Test::testDataTypeException() {
         exceptionMsg = "not a cast exception";
     }
     const std::string msg(" missing from exception message: ");
-    CPPUNIT_ASSERT_MESSAGE("'from _invalid_'" + msg + exceptionMsg, exceptionMsg.find("from _invalid_") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE("'12345678'" + msg + exceptionMsg, exceptionMsg.find(toString(12345678)) != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("'from _invalid_'" + msg + exceptionMsg,
+                           exceptionMsg.find("from _invalid_") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("'12345678'" + msg + exceptionMsg,
+                           exceptionMsg.find(toString(12345678)) != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE("'to INT16'" + msg + exceptionMsg, exceptionMsg.find("to INT16") != std::string::npos);
 }

@@ -6,13 +6,14 @@
  */
 
 #ifndef _KARABO_UTIL_STATE_HH
-#define	_KARABO_UTIL_STATE_HH
+#define _KARABO_UTIL_STATE_HH
 
 #include <boost/shared_ptr.hpp>
-#include <vector>
+#include <mutex> // for once_flag
 #include <string>
-#include <mutex>  // for once_flag
 #include <unordered_map>
+#include <vector>
+
 #include "ClassInfo.hh"
 #include "Factory.hh"
 
@@ -20,29 +21,26 @@
 
 namespace karabo {
     namespace util {
-        
+
         /**
          * @class State
          * @brief A class representing unified states accross the Karabo system.
-         * 
+         *
          * This class holds all states known to Karabo as static data members.
          * States should always be accessed through this class. It's constructors
          * are fully private, meaning that no additional States can be constructed
          * outside of this class
          */
         class State {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(State, "State", "1.0")
 
-            //no inheritance from state!
-            ~State() {
-            }
+            // no inheritance from state!
+            ~State() {}
 
             /**
              * Implicit conversion to strings is allowed
-             * @return 
+             * @return
              */
             virtual const std::string& operator()() const {
                 return m_stateName;
@@ -50,16 +48,16 @@ namespace karabo {
 
             /**
              * Return the name of the state
-             * @return 
+             * @return
              */
             const std::string& name() const {
                 return m_stateName;
             }
 
             /**
-             * Return the states parent in the state hierarchy in case it is a 
+             * Return the states parent in the state hierarchy in case it is a
              * derived state
-             * @return 
+             * @return
              */
             const State* parent() const {
                 return m_parent;
@@ -68,7 +66,7 @@ namespace karabo {
             /**
              * Check if two states are identical
              * @param state
-             * @return 
+             * @return
              */
             bool operator==(const State& state) const {
                 // Just compare state names - parents do not matter.
@@ -78,7 +76,7 @@ namespace karabo {
             /**
              * Check if two states are not identical
              * @param state
-             * @return 
+             * @return
              */
             bool operator!=(const State& state) const {
                 return (!this->operator==(state));
@@ -87,7 +85,7 @@ namespace karabo {
             /**
              * Evaluate if this state is derived from another State s
              * @param s
-             * @return 
+             * @return
              */
             bool isDerivedFrom(const State& s) const;
 
@@ -182,11 +180,11 @@ namespace karabo {
             /**
              * Create a state from its string representation
              * @param state
-             * @return 
+             * @return
              */
-            static const State & fromString(const std::string & state);
+            static const State& fromString(const std::string& state);
 
-        private:
+           private:
             // Private constructor to avoid states not in the predefined set (copy is OK).
             explicit State(const std::string& name, const State* parent = NULL);
 
@@ -195,15 +193,12 @@ namespace karabo {
 
             static std::once_flag m_initFromStringFlag;
             static void initFromString();
-            static std::unordered_map<std::string, const State &> m_stateFactory;
-
-
+            static std::unordered_map<std::string, const State&> m_stateFactory;
         };
 
         std::ostream& operator<<(std::ostream&, const State& state);
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* _KARABO_UTIL_STATE_HH */
-
+#endif /* _KARABO_UTIL_STATE_HH */

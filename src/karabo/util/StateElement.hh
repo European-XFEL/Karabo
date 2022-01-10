@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_SCHEMA_STATEELEMENT_H
-#define	KARABO_SCHEMA_STATEELEMENT_H
+#define KARABO_SCHEMA_STATEELEMENT_H
 
 #include "GenericElement.hh"
 
@@ -21,9 +21,7 @@ namespace karabo {
          * @brief The StateElement represents a leaf and needs to be of type State
          */
         class StateElement : public GenericElement<StateElement> {
-
-        public:
-
+           public:
             StateElement(Schema& expected);
 
             /**
@@ -35,17 +33,29 @@ namespace karabo {
 
             StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2);
 
-            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3);
+            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2,
+                                  const karabo::util::State& s3);
 
-            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4);
+            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2,
+                                  const karabo::util::State& s3, const karabo::util::State& s4);
 
-            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5);
+            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2,
+                                  const karabo::util::State& s3, const karabo::util::State& s4,
+                                  const karabo::util::State& s5);
 
-            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6);
+            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2,
+                                  const karabo::util::State& s3, const karabo::util::State& s4,
+                                  const karabo::util::State& s5, const karabo::util::State& s6);
 
-            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6, const karabo::util::State& s7);
+            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2,
+                                  const karabo::util::State& s3, const karabo::util::State& s4,
+                                  const karabo::util::State& s5, const karabo::util::State& s6,
+                                  const karabo::util::State& s7);
 
-            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6, const karabo::util::State& s7, const karabo::util::State& s8);
+            StateElement& options(const karabo::util::State& s1, const karabo::util::State& s2,
+                                  const karabo::util::State& s3, const karabo::util::State& s4,
+                                  const karabo::util::State& s5, const karabo::util::State& s6,
+                                  const karabo::util::State& s7, const karabo::util::State& s8);
 
             StateElement& options(const std::vector<karabo::util::State>& opts);
 
@@ -58,23 +68,19 @@ namespace karabo {
 
             StateElement& daqPolicy(const DAQPolicy& policy);
 
-        protected:
-
+           protected:
             void beforeAddition();
 
-        private:
-
+           private:
             StateElement& options(const std::string& opts, const std::string& sep = " ,;");
 
             StateElement& options(const std::vector<std::string>& opts);
-
         };
 
         typedef StateElement STATE_ELEMENT;
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 
-#endif	/* KARABO_SCHEMA_STATEELEMENT_H */
-
+#endif /* KARABO_SCHEMA_STATEELEMENT_H */

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   InputOutputChannel_LongTest.hh
  * Author: gero.flucke@xfel.eu
  *
@@ -6,13 +6,11 @@
  */
 
 #ifndef INPUTOUTPUTCHANNEL_LONGTEST_HH
-#define	INPUTOUTPUTCHANNEL_LONGTEST_HH
+#define INPUTOUTPUTCHANNEL_LONGTEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class InputOutputChannel_LongTest : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(InputOutputChannel_LongTest);
     CPPUNIT_TEST(testDisconnectWhileSending1);
     CPPUNIT_TEST(testDisconnectWhileSending2);
@@ -25,13 +23,12 @@ class InputOutputChannel_LongTest : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testDisconnectWhileSending9);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     InputOutputChannel_LongTest();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testDisconnectWhileSending1();
     void testDisconnectWhileSending2();
     void testDisconnectWhileSending3();
@@ -48,5 +45,4 @@ private:
                                          const std::string& receiver_noInputShared);
 };
 
-#endif	/* INPUTOUTPUTCHANNEL_TEST_HH */
-
+#endif /* INPUTOUTPUTCHANNEL_TEST_HH */

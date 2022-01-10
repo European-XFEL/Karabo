@@ -1,70 +1,81 @@
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
-#include "karabo/net/EventLoop.hh"
 #include "MqttClient.hh"
 
+#include "karabo/net/EventLoop.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
+
 using namespace karabo::util;
-//using namespace karabo::io;
+// using namespace karabo::io;
 
 namespace karabo {
     namespace net {
 
 
         void MqttClient::expectedParameters(Schema& expected) {
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("brokers")
+                  .displayedName("Broker URLs")
+                  .description("Vector of URLs {\"mqtt://hostname:port\",...}")
+                  .assignmentMandatory()
+                  .minSize(1)
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("brokers")
-                    .displayedName("Broker URLs")
-                    .description("Vector of URLs {\"mqtt://hostname:port\",...}")
-                    .assignmentMandatory()
-                    .minSize(1)
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("instanceId")
+                  .displayedName("Instance ID")
+                  .description("Instance ID")
+                  .assignmentOptional()
+                  .defaultValue("none")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("instanceId")
-                    .displayedName("Instance ID")
-                    .description("Instance ID")
-                    .assignmentOptional().defaultValue("none")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("domain")
+                  .displayedName("Domain")
+                  .description("Domain is root topic (former JMS topic)")
+                  .assignmentMandatory()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("domain")
-                    .displayedName("Domain")
-                    .description("Domain is root topic (former JMS topic)")
-                    .assignmentMandatory()
-                    .commit();
+            BOOL_ELEMENT(expected)
+                  .key("cleanSession")
+                  .displayedName("Clean session")
+                  .description("Declare non-persistent connection")
+                  .assignmentOptional()
+                  .defaultValue(true)
+                  .commit();
 
-            BOOL_ELEMENT(expected).key("cleanSession")
-                    .displayedName("Clean session")
-                    .description("Declare non-persistent connection")
-                    .assignmentOptional().defaultValue(true)
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("username")
+                  .displayedName("User name")
+                  .description("User name")
+                  .assignmentOptional()
+                  .defaultValue(getenv("USER") ? getenv("USER") : "")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("username")
-                    .displayedName("User name")
-                    .description("User name")
-                    .assignmentOptional().defaultValue(getenv("USER")? getenv("USER") : "")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("password")
+                  .displayedName("Password")
+                  .description("Password")
+                  .assignmentOptional()
+                  .defaultValue("")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("password")
-                    .displayedName("Password")
-                    .description("Password")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
-
-            UINT16_ELEMENT(expected).key("keepAliveSec")
-                    .displayedName("Keep alive")
-                    .description("Max. number of seconds that client connection considered being alive")
-                    .assignmentOptional().defaultValue(120)
-                    .unit(Unit::SECOND)
-                    .commit();
-
+            UINT16_ELEMENT(expected)
+                  .key("keepAliveSec")
+                  .displayedName("Keep alive")
+                  .description("Max. number of seconds that client connection considered being alive")
+                  .assignmentOptional()
+                  .defaultValue(120)
+                  .unit(Unit::SECOND)
+                  .commit();
         }
 
 
         MqttClient::MqttClient(const karabo::util::Hash& input)
-            : m_ios(boost::make_shared<boost::asio::io_context>())
-            , m_thread()
-            , m_brokerUrls()
-            , m_domain()
-            , m_instanceId() {
+            : m_ios(boost::make_shared<boost::asio::io_context>()),
+              m_thread(),
+              m_brokerUrls(),
+              m_domain(),
+              m_instanceId() {
             input.get("domain", m_domain);
             input.get("instanceId", m_instanceId);
             run();
@@ -86,21 +97,16 @@ namespace karabo {
             // refactored, i.e. the CPPUNIT_ASSERT have to be moved from handlers
             // to the test function (since the Karabo event loop threads catch exceptions).
 
-            m_thread = boost::make_shared<boost::thread>(
-                    [this]
-                    () {
-                        boost::asio::io_context::work work(*m_ios);
-                        m_ios->run();
-                    });
+            m_thread = boost::make_shared<boost::thread>([this]() {
+                boost::asio::io_context::work work(*m_ios);
+                m_ios->run();
+            });
         }
 
 
         std::string MqttClient::getUuidAsString() {
             static std::atomic<unsigned int> counter(0);
-            return
-                    bareHostName() + "_"
-                    + std::to_string(::getpid()) + "_"
-                    + std::to_string(counter++);
+            return bareHostName() + "_" + std::to_string(::getpid()) + "_" + std::to_string(counter++);
         }
 
 
@@ -126,9 +132,7 @@ namespace karabo {
                     if (sub[spos] == topic[tpos]) {
                         if (tpos == topicLen - 1) {
                             /* Check for e.g. foo matching foo/# */
-                            if (spos == subLen - 3
-                                && sub[spos + 1] == '/'
-                                && sub[spos + 2] == '#') {
+                            if (spos == subLen - 3 && sub[spos + 1] == '/' && sub[spos + 2] == '#') {
                                 return true;
                             }
                         }
@@ -171,12 +175,8 @@ namespace karabo {
                             }
                         } else {
                             /* Check for e.g. foo/bar matching foo/+/# */
-                            if (spos > 0
-                                && spos + 2 == subLen
-                                && tpos == topicLen
-                                && sub[spos - 1] == '+'
-                                && sub[spos] == '/'
-                                && sub[spos + 1] == '#') {
+                            if (spos > 0 && spos + 2 == subLen && tpos == topicLen && sub[spos - 1] == '+' &&
+                                sub[spos] == '/' && sub[spos + 1] == '#') {
                                 return true;
                             } else {
                                 return false;
@@ -189,7 +189,7 @@ namespace karabo {
                 }
                 return true;
             }
-        }
+        } // namespace mqtttools
 
-    }
-}
+    } // namespace net
+} // namespace karabo

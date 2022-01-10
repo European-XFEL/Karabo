@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Memory_Test.hh
  * Author: wigginsj
  *
@@ -6,13 +6,13 @@
  */
 
 #ifndef MEMORY_TEST_HH
-#define	MEMORY_TEST_HH
+#define MEMORY_TEST_HH
 
-#include <karabo/xms.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
-class Memory_Test : public CPPUNIT_NS::TestFixture {
+#include <karabo/xms.hpp>
 
+class Memory_Test : public CPPUNIT_NS::TestFixture {
     unsigned int m_channelId;
     unsigned int m_chunkId;
 
@@ -21,17 +21,15 @@ class Memory_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testModifyAfterWrite);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Memory_Test();
     virtual ~Memory_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testSimpleReadAndWrite();
     void testModifyAfterWrite();
 };
 
-#endif	/* MEMORY_TEST_HH */
-
+#endif /* MEMORY_TEST_HH */

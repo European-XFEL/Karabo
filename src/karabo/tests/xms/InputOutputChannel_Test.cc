@@ -5,36 +5,33 @@
  * Created on November 8, 2016, 3:54 PM
  */
 
-#include <future>
-
 #include "InputOutputChannel_Test.hh"
 
-#include "karabo/xms/InputChannel.hh"
-#include "karabo/xms/OutputChannel.hh"
+#include <future>
+
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/SimpleElement.hh"
-#include "karabo/net/EventLoop.hh"
+#include "karabo/xms/InputChannel.hh"
+#include "karabo/xms/OutputChannel.hh"
 
 using namespace karabo;
-using xms::InputChannel;
-using xms::OutputChannel;
-using xms::OUTPUT_CHANNEL_ELEMENT;
 using util::Configurator;
 using util::Hash;
-using util::Schema;
 using util::INT32_ELEMENT;
+using util::Schema;
+using xms::InputChannel;
+using xms::OUTPUT_CHANNEL_ELEMENT;
+using xms::OutputChannel;
 
 /// A class that adds threads following the RAII principle
 /// to safely (exceptions!) remove them when going out of scope.
 
 
 class ThreadAdder {
-
-public:
-
-
+   public:
     ThreadAdder(int nThreads) : m_nThreads(nThreads) {
         karabo::net::EventLoop::addThread(m_nThreads);
     }
@@ -43,15 +40,15 @@ public:
     ~ThreadAdder() {
         karabo::net::EventLoop::removeThread(m_nThreads);
     }
-private:
+
+   private:
     const int m_nThreads;
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_Test);
 
 
-InputOutputChannel_Test::InputOutputChannel_Test() {
-}
+InputOutputChannel_Test::InputOutputChannel_Test() {}
 
 
 void InputOutputChannel_Test::setUp() {
@@ -59,21 +56,16 @@ void InputOutputChannel_Test::setUp() {
 }
 
 
-void InputOutputChannel_Test::tearDown() {
-}
+void InputOutputChannel_Test::tearDown() {}
 
 
 void InputOutputChannel_Test::testOutputChannelElement() {
-
     Schema pipeSchema;
     INT32_ELEMENT(pipeSchema).key("int32").readOnly().commit();
 
     Schema s;
-    CPPUNIT_ASSERT_NO_THROW(OUTPUT_CHANNEL_ELEMENT(s)
-                            .key("validkey")
-                            .displayedName("Valid output")
-                            .dataSchema(pipeSchema)
-                            .commit());
+    CPPUNIT_ASSERT_NO_THROW(
+          OUTPUT_CHANNEL_ELEMENT(s).key("validkey").displayedName("Valid output").dataSchema(pipeSchema).commit());
     CPPUNIT_ASSERT(s.has("validkey.schema.int32"));
 
     // The deviceId/channel delimiters ':' and (for backward compatibility) '@' are not allowed in keys.
@@ -113,16 +105,14 @@ void InputOutputChannel_Test::testManyToOne() {
         // Already add all entries in the map behind the Hash receivedData - so parallel access to items is thread safe
         receivedData.set(outputIds[i], std::vector<unsigned int>());
     }
-    input->registerDataHandler([&receivedData] (const Hash& data, const InputChannel::MetaData & meta) {
+    input->registerDataHandler([&receivedData](const Hash& data, const InputChannel::MetaData& meta) {
         const std::string& sourceName = meta.getSource();
         receivedData.get<std::vector<unsigned int>>(sourceName).push_back(data.get<unsigned int>("uint"));
     });
 
     // Handler to count endOfStream events
     std::atomic<int> nReceivedEos(0);
-    input->registerEndOfStreamEventHandler([&nReceivedEos](const InputChannel::Pointer&) {
-        ++nReceivedEos;
-    });
+    input->registerEndOfStreamEventHandler([&nReceivedEos](const InputChannel::Pointer&) { ++nReceivedEos; });
 
     for (size_t i = 0; i < outputs.size(); ++i) {
         // Connect
@@ -130,21 +120,19 @@ void InputOutputChannel_Test::testManyToOne() {
         CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
         outputInfo.set("outputChannelString", outputIds[i]);
         // Alternate scenarios to test both memory location code paths:
-        outputInfo.set("memoryLocation", (i % 2 == 0 // alternate between...
-                                          ? "local" // - using inner-process data shortcut via static Memory class
-                                          : "remote")); // - sending data via Tcp (buggy till 2.9.X for many-to-one)
+        outputInfo.set("memoryLocation",
+                       (i % 2 == 0          // alternate between...
+                              ? "local"     // - using inner-process data shortcut via static Memory class
+                              : "remote")); // - sending data via Tcp (buggy till 2.9.X for many-to-one)
 
         // Setup connection handler
         std::promise<karabo::net::ErrorCode> connectErrorCode;
         auto connectFuture = connectErrorCode.get_future();
-        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode & ec) {
-            connectErrorCode.set_value(ec);
-        };
+        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
         // Initiate connect and block until done - fail test if timeout.
         // Being more clever and waiting only once for all connections in one go is not worth it in the test here.
         input->connect(outputInfo, connectHandler);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
-                                     std::future_status::ready,
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i], std::future_status::ready,
                                      connectFuture.wait_for(std::chrono::milliseconds(5000)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
                                      karabo::net::ErrorCode(), // i.e. no error
@@ -157,9 +145,10 @@ void InputOutputChannel_Test::testManyToOne() {
             CPPUNIT_ASSERT(connectStatusMap.find(outputIds[j]) != connectStatusMap.end());
             namespace ku = karabo::util;
             namespace kn = karabo::net;
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Tested j = " + ku::toString(j) += ", connected i = " + ku::toString(i),
-                                         (j <= i ? kn::ConnectionStatus::CONNECTED : kn::ConnectionStatus::DISCONNECTED),
-                                         connectStatusMap[outputIds[j]]);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(
+                  "Tested j = " + ku::toString(j) += ", connected i = " + ku::toString(i),
+                  (j <= i ? kn::ConnectionStatus::CONNECTED : kn::ConnectionStatus::DISCONNECTED),
+                  connectStatusMap[outputIds[j]]);
         }
     } // all connected
 
@@ -175,14 +164,14 @@ void InputOutputChannel_Test::testManyToOne() {
             registered = outputs[i]->hasRegisteredCopyInputChannel(input->getInstanceId());
             if (registered) break;
             // Happesn very rarely - seen 6 times in 20,000 local test runs.
-                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1));
         }
         CPPUNIT_ASSERT_MESSAGE("Not yet ready: output " + karabo::util::toString(i), registered);
     }
 
     // Prepare lambda to send data
     const size_t numData = 200;
-    boost::function<void(unsigned int) > sending = [&outputs, numData](unsigned int outNum) {
+    boost::function<void(unsigned int)> sending = [&outputs, numData](unsigned int outNum) {
         for (unsigned int i = 0; i < numData; ++i) {
             outputs[outNum]->write(Hash("uint", i));
             outputs[outNum]->update();
@@ -205,17 +194,19 @@ void InputOutputChannel_Test::testManyToOne() {
     // endOfStream received once
     // We give some time for more to arrive - but there should only be one, although each output sent it!
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Data received:\n" + karabo::util::toString(receivedData),
-                                 1u, static_cast<unsigned int> (nReceivedEos));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Data received:\n" + karabo::util::toString(receivedData), 1u,
+                                 static_cast<unsigned int>(nReceivedEos));
 
     // Proper number and order of data received from each output
     for (size_t i = 0; i < outputIds.size(); ++i) {
         const auto& data = receivedData.get<std::vector<unsigned int>>(outputIds[i]);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(outputIds[i] + " lacks data, all received:\n" + karabo::util::toString(receivedData),
-                                     numData, data.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(
+              outputIds[i] + " lacks data, all received:\n" + karabo::util::toString(receivedData), numData,
+              data.size());
         for (unsigned int iData = 0; iData < data.size(); ++iData) {
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Output " + karabo::util::toString(i) += ", data " + karabo::util::toString(iData),
-                                         iData, data[iData]);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(
+                  "Output " + karabo::util::toString(i) += ", data " + karabo::util::toString(iData), iData,
+                  data[iData]);
         }
     }
 }
@@ -234,10 +225,11 @@ void InputOutputChannel_Test::testConnectDisconnect() {
 
     std::vector<karabo::util::Hash> table;
     boost::mutex handlerDataMutex;
-    output->registerShowConnectionsHandler([&table, &handlerDataMutex](const std::vector<karabo::util::Hash>& connections) {
-        boost::mutex::scoped_lock lock(handlerDataMutex);
-        table = connections;
-    });
+    output->registerShowConnectionsHandler(
+          [&table, &handlerDataMutex](const std::vector<karabo::util::Hash>& connections) {
+              boost::mutex::scoped_lock lock(handlerDataMutex);
+              table = connections;
+          });
 
     // Setup input channel
     const std::string outputChannelId(output->getInstanceId() + ":output");
@@ -245,12 +237,10 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
     input->setInstanceId("inputChannel");
     unsigned int calls = 0;
-    input->registerDataHandler([&calls](const Hash& data, const InputChannel::MetaData & meta) {
-        ++calls;
-    });
+    input->registerDataHandler([&calls](const Hash& data, const InputChannel::MetaData& meta) { ++calls; });
     std::vector<karabo::net::ConnectionStatus> trackedStatus;
-    input->registerConnectionTracker([&trackedStatus, &handlerDataMutex, outputChannelId](const std::string& outputId,
-                                                                                          karabo::net::ConnectionStatus status) {
+    input->registerConnectionTracker([&trackedStatus, &handlerDataMutex, outputChannelId](
+                                           const std::string& outputId, karabo::net::ConnectionStatus status) {
         if (outputId == outputChannelId) {
             boost::mutex::scoped_lock lock(handlerDataMutex);
             trackedStatus.push_back(status);
@@ -279,14 +269,12 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Setup connection handler
         std::promise<karabo::net::ErrorCode> connectErrorCode;
         auto connectFuture = connectErrorCode.get_future();
-        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode & ec) {
-            connectErrorCode.set_value(ec);
-        };
+        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
         // Not connected yet
         auto connectStatusMap(input->getConnectionStatus());
         CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
         CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int>(connectStatusMap[outputChannelId])),
                                connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
 
         // initiate connect and block until done (fail test if timeout))
@@ -296,25 +284,26 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         connectStatusMap = input->getConnectionStatus();
         CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
         CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
-                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTING
-                               || connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int>(connectStatusMap[outputChannelId])),
+                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTING ||
+                                     connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
-                                     std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
-                                     connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i), std::future_status::ready,
+                                     connectFuture.wait_for(std::chrono::milliseconds(5000)));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i), connectFuture.get(),
+                                     karabo::net::ErrorCode()); // i.e. no error
 
         // We are connected - check that the status tracker received all steps
-        // (rely on order of calls to connection tracker (first) and handler (second) at the end of InputChannel::onConnect
+        // (rely on order of calls to connection tracker (first) and handler (second) at the end of
+        // InputChannel::onConnect
         CPPUNIT_ASSERT(trackedStatus.size() > 0ul);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTING),
-                             static_cast<int> (trackedStatus[0]));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTING),
+                             static_cast<int>(trackedStatus[0]));
         // Without waiting for tracker really being called, this test relies on order of calls to connection
         // tracker and handler given to InputChannel::connect(..) (although might succeed most times even otherwise)
         CPPUNIT_ASSERT(trackedStatus.size() > 1ul);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED),
-                             static_cast<int> (trackedStatus[1]));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
+                             static_cast<int>(trackedStatus[1]));
         CPPUNIT_ASSERT_EQUAL(2ul, trackedStatus.size()); // i.e. nothing else (yet)!
 
         // Now ensure that output channel took note of input registration:
@@ -338,7 +327,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         connectStatusMap = input->getConnectionStatus();
         CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
         CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int>(connectStatusMap[outputChannelId])),
                                connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
 
         // Write data again (twice in one go...) - now input is connected.
@@ -358,7 +347,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         connectStatusMap = input->getConnectionStatus();
         CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
         CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
-        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int>(connectStatusMap[outputChannelId])),
                                connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
 
         // Some time to travel for message
@@ -373,8 +362,8 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         CPPUNIT_ASSERT_EQUAL(0uL, table.size());
         // Also the tracker got informed about disconnection:
         CPPUNIT_ASSERT(trackedStatus.size() > 2ul);
-        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::DISCONNECTED),
-                             static_cast<int> (trackedStatus[2]));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED),
+                             static_cast<int>(trackedStatus[2]));
         CPPUNIT_ASSERT_EQUAL(3ul, trackedStatus.size()); // i.e. nothing else!
     }
 
@@ -410,14 +399,14 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Setup connection handler
         std::promise<karabo::net::ErrorCode> connectErrorCode;
         auto connectFuture = connectErrorCode.get_future();
-        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode & ec) {
-            connectErrorCode.set_value(ec);
-        };
+        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
         input->connect(badOutputInfo, connectHandler);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Connection handler not called in time for " + toString(badOutputInfo),
-                                     std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
-        CPPUNIT_ASSERT_MESSAGE("Connection did not fail for " + toString(badOutputInfo),
-                               connectFuture.get() != karabo::net::ErrorCode()); // not all OK (do not care which problem)
+                                     std::future_status::ready,
+                                     connectFuture.wait_for(std::chrono::milliseconds(5000)));
+        CPPUNIT_ASSERT_MESSAGE(
+              "Connection did not fail for " + toString(badOutputInfo),
+              connectFuture.get() != karabo::net::ErrorCode()); // not all OK (do not care which problem)
     }
 }
 
@@ -451,14 +440,12 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         // Setup connection handlers
         std::promise<karabo::net::ErrorCode> connectPromise1;
         std::future<karabo::net::ErrorCode> connectFuture1 = connectPromise1.get_future();
-        boost::function<void(const karabo::net::ErrorCode&) > connectHandler1 = [&connectPromise1](const karabo::net::ErrorCode & ec) {
-            connectPromise1.set_value(ec);
-        };
+        boost::function<void(const karabo::net::ErrorCode&)> connectHandler1 =
+              [&connectPromise1](const karabo::net::ErrorCode& ec) { connectPromise1.set_value(ec); };
         std::promise<karabo::net::ErrorCode> connectPromise2;
         std::future<karabo::net::ErrorCode> connectFuture2 = connectPromise2.get_future();
-        boost::function<void(const karabo::net::ErrorCode&) > connectHandler2 = [&connectPromise2](const karabo::net::ErrorCode & ec) {
-            connectPromise2.set_value(ec);
-        };
+        boost::function<void(const karabo::net::ErrorCode&)> connectHandler2 =
+              [&connectPromise2](const karabo::net::ErrorCode& ec) { connectPromise2.set_value(ec); };
         // Subsequent connect(..): first succeeds, second fails since already connected (less likely) or connecting
         input->connect(outputInfo, connectHandler1);
         input->connect(outputInfo, connectHandler2);
@@ -469,27 +456,26 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         const karabo::net::ErrorCode ec = connectFuture2.get();
         namespace bse = boost::system::errc;
         CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(ec),
-                               ec == bse::make_error_code(bse::connection_already_in_progress) || ec == bse::make_error_code(bse::already_connected));
+                               ec == bse::make_error_code(bse::connection_already_in_progress) ||
+                                     ec == bse::make_error_code(bse::already_connected));
 
         input->disconnect(outputInfo);
 
         // Ensure it is disconnected
-        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::DISCONNECTED),
-                             static_cast<int> (input->getConnectionStatus()[outputChannelId]));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::DISCONNECTED),
+                             static_cast<int>(input->getConnectionStatus()[outputChannelId]));
         //
         // Now second scenario: disconnect in between two connect attempts:
         //
         // Setup more connection handlers
         std::promise<karabo::net::ErrorCode> connectPromise3;
         std::future<karabo::net::ErrorCode> connectFuture3 = connectPromise3.get_future();
-        boost::function<void(const karabo::net::ErrorCode&) > connectHandler3 = [&connectPromise3](const karabo::net::ErrorCode & ec) {
-            connectPromise3.set_value(ec);
-        };
+        boost::function<void(const karabo::net::ErrorCode&)> connectHandler3 =
+              [&connectPromise3](const karabo::net::ErrorCode& ec) { connectPromise3.set_value(ec); };
         std::promise<karabo::net::ErrorCode> connectPromise4;
         std::future<karabo::net::ErrorCode> connectFuture4 = connectPromise4.get_future();
-        boost::function<void(const karabo::net::ErrorCode&) > connectHandler4 = [&connectPromise4](const karabo::net::ErrorCode & ec) {
-            connectPromise4.set_value(ec);
-        };
+        boost::function<void(const karabo::net::ErrorCode&)> connectHandler4 =
+              [&connectPromise4](const karabo::net::ErrorCode& ec) { connectPromise4.set_value(ec); };
 
         input->connect(outputInfo, connectHandler3);
         input->disconnect(outputInfo);
@@ -500,12 +486,14 @@ void InputOutputChannel_Test::testConcurrentConnect() {
 
         // Now it is not exactly clear what to expect - depends on timing of threads:
         // - 1st fails as operation_canceled, 2nd succeeds, i.e. disconnect(..) clears from "being setup"
-        // - 1st succeeds and 2nd succeeds, i.e. disconnect(..) got called (and fully succeeded!) when 1st connect(..) already succeeded
+        // - 1st succeeds and 2nd succeeds, i.e. disconnect(..) got called (and fully succeeded!) when 1st connect(..)
+        // already succeeded
         const karabo::net::ErrorCode ec1 = connectFuture3.get();
         const karabo::net::ErrorCode ec2 = connectFuture4.get();
 
-        CPPUNIT_ASSERT_MESSAGE("1: " + karabo::util::toString(ec1) += ", 2: " + karabo::util::toString(ec2),
-                               (ec1 == bse::make_error_code(bse::operation_canceled) && ec2 == karabo::net::ErrorCode())
-                               || (ec1 == karabo::net::ErrorCode() && ec2 == karabo::net::ErrorCode()));
+        CPPUNIT_ASSERT_MESSAGE(
+              "1: " + karabo::util::toString(ec1) += ", 2: " + karabo::util::toString(ec2),
+              (ec1 == bse::make_error_code(bse::operation_canceled) && ec2 == karabo::net::ErrorCode()) ||
+                    (ec1 == karabo::net::ErrorCode() && ec2 == karabo::net::ErrorCode()));
     }
 }

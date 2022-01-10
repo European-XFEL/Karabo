@@ -1,17 +1,17 @@
-#include <map>
-#include <vector>
-#include <cstdlib>
-#include <sstream>
-#include <algorithm>
-#include <streambuf>
+#include "DataLogReader.hh"
 
+#include <algorithm>
+#include <cstdlib>
+#include <map>
+#include <sstream>
+#include <streambuf>
+#include <vector>
+
+#include "karabo/io/FileTools.hh"
 #include "karabo/io/Input.hh"
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/io/FileTools.hh"
 #include "karabo/util/TimeDuration.hh"
 #include "karabo/util/Version.hh"
-
-#include "DataLogReader.hh"
 
 
 namespace karabo {
@@ -24,31 +24,29 @@ namespace karabo {
 
 
         void DataLogReader::expectedParameters(Schema& expected) {
+            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
 
-            OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("numGetPropertyHistory")
+                  .displayedName("N(get history)")
+                  .description("Number of calls to slotGetPropertyHistory")
+                  .unit(UnitType::COUNT)
+                  .readOnly()
+                  .initialValue(0u)
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("numGetPropertyHistory")
-                    .displayedName("N(get history)")
-                    .description("Number of calls to slotGetPropertyHistory")
-                    .unit(UnitType::COUNT)
-                    .readOnly()
-                    .initialValue(0u)
-                    .commit();
-
-            UINT32_ELEMENT(expected).key("numGetConfigurationFromPast")
-                    .displayedName("N(get config)")
-                    .description("Number of calls to slotGetConfigurationFromPast")
-                    .unit(UnitType::COUNT)
-                    .readOnly()
-                    .initialValue(0u)
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("numGetConfigurationFromPast")
+                  .displayedName("N(get config)")
+                  .description("Number of calls to slotGetConfigurationFromPast")
+                  .unit(UnitType::COUNT)
+                  .readOnly()
+                  .initialValue(0u)
+                  .commit();
         }
 
 
-        DataLogReader::DataLogReader(const Hash& input)
-            : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+        DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);
         }
@@ -59,8 +57,7 @@ namespace karabo {
         }
 
 
-        void DataLogReader::slotGetPropertyHistory(const std::string& deviceId,
-                                                   const std::string& property,
+        void DataLogReader::slotGetPropertyHistory(const std::string& deviceId, const std::string& property,
                                                    const karabo::util::Hash& params) {
             set("numGetPropertyHistory", get<unsigned int>("numGetPropertyHistory") + 1);
 
@@ -74,8 +71,7 @@ namespace karabo {
             slotGetConfigurationFromPastImpl(deviceId, timepoint);
         }
 
-        void DataLogReader::okStateOnEntry() {
-        }
+        void DataLogReader::okStateOnEntry() {}
 
     } // namespace devices
 

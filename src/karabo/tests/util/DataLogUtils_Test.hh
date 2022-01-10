@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DataLogUtils_Test.hh
  * Author: costar
  *
@@ -6,14 +6,13 @@
  */
 
 #ifndef DATALOGUTILS_TEST_HH
-#define	DATALOGUTILS_TEST_HH
+#define DATALOGUTILS_TEST_HH
 
-#include <boost/regex.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/regex.hpp>
+
 class DataLogUtils_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(DataLogUtils_Test);
 
     CPPUNIT_TEST(testValidIndexLines);
@@ -23,15 +22,13 @@ class DataLogUtils_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     DataLogUtils_Test();
     virtual ~DataLogUtils_Test() = default;
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     /**
      * Tests valid data logger index lines. For a detailed description
      * of the index line format see the declaration of
@@ -52,8 +49,6 @@ private:
 
     boost::regex m_indexRegex;
     boost::regex m_indexTailRegex;
-
 };
 
-#endif	/* DATALOGUTILS_TEST_HH */
-
+#endif /* DATALOGUTILS_TEST_HH */
