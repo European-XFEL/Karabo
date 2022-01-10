@@ -322,7 +322,7 @@ namespace karabo {
             ec = m_client->publish(exchange, routingkey, message);
             if (ec) {
                 std::ostringstream oss;
-                oss << "Failed to publish to \"" << exchange
+                oss << "\"" << m_instanceId << "\" : Failed to publish to \"" << exchange
                         << "\" exchange with routing key = \"" << routingkey
                         << "\" : code #" << ec.value() << " -- " << ec.message();
                 throw KARABO_NETWORK_EXCEPTION(oss.str());

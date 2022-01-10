@@ -306,7 +306,7 @@ namespace karabo {
         }
 
 
-        boost::system::error_code RedisClient::subscribe(const TopicSubOptions& params) {
+        boost::system::error_code RedisClient::subscribe(const RedisTopicSubOptions& params) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
@@ -321,7 +321,7 @@ namespace karabo {
         }
 
 
-        void RedisClient::subscribeAsync(const TopicSubOptions& params, const AsyncHandler& onComplete) {
+        void RedisClient::subscribeAsync(const RedisTopicSubOptions& params, const AsyncHandler& onComplete) {
             // Let's restrict artificially the possible number of params.... 
             if (params.size() >= 64) throw KARABO_PARAMETER_EXCEPTION("subscribeAsync: cannot handle too many subscriptions");
             if (!isConnected()) {
