@@ -93,7 +93,7 @@ namespace karabo {
 
             VECTOR_STRING_ELEMENT(expected).key("brokers")
                     .displayedName("Broker URLs")
-                    .description("Vector of URLs {\"mqtt://hostname:port\",...}")
+                    .description("Vector of URLs {\"amqp://user:pass@hostname:port\",...}")
                     .assignmentMandatory()
                     .minSize(1)
                     .commit();
@@ -120,7 +120,7 @@ namespace karabo {
 
             UINT32_ELEMENT(expected).key("amqpRequestTimeout")
                     .displayedName("AMQP request timeout")
-                    .description("AMQAP request timeout in seconds")
+                    .description("AMQP request timeout in seconds")
                     .assignmentOptional().defaultValue(defTimeout)
                     .unit(Unit::SECOND)
                     .commit();
@@ -142,17 +142,21 @@ namespace karabo {
         , m_queue("")
         , m_consumerTag("")
         , m_onRead()
-//        , m_registeredExchanges()
         {
             EventLoop::addThread();
         }
 
 
         AmqpClient::~AmqpClient() {
-            disconnect();
+            {
+                std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
+                m_subscriptions.clear();
+            }
+            {
+                std::lock_guard<std::mutex> lock(amqpMutex);
+                m_connector.reset();
+            }
             EventLoop::removeThread();
-            std::lock_guard<std::mutex> lock(amqpMutex);
-            m_connector.reset();
         }
 
 
@@ -289,8 +293,7 @@ namespace karabo {
             // If the client is already connected, calls the m_onConnect handler
             if (this->isConnected()) {
                 if (onConnect) {
-                    m_strand->post(boost::bind(onConnect,
-                                               KARABO_ERROR_CODE_SUCCESS));
+                    m_strand->post(boost::bind(onConnect, KARABO_ERROR_CODE_SUCCESS));
                 }
                 return;
             }
@@ -567,13 +570,13 @@ namespace karabo {
             m_reliable->publish(exchange, routingKey, payload->data(), payload->size())
                 .onAck(
                     [this, payload, onComplete]() {
-                        m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                        onComplete(KARABO_ERROR_CODE_SUCCESS);
                     })
                 .onError(
                     [this, exchange, routingKey, onComplete](const char* message) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Publish error: exchange->\"" << exchange
                             << "\", routing key->\"" << routingKey << "\" failed: " << message;
-                        if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+                        if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
                     });
         }
 
