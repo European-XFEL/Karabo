@@ -34,40 +34,65 @@ def print_stack_trace(num_frames=0):
         del frames_subset
 
 
-def timeit(process_events=True):
-    """We now call timeit with arguments because functions hooked to
-       paintEvents cannot be timed with invoked processEvents. This decorator
-       is now used as a called function:
+class profiler:
+    """We now call profiler with arguments because functions hooked to
+       paintEvents cannot be timed with invoked processEvents.
+       Possible arguments are `name`, `process_events` and `timeout` for the
+       event chain. The `timeout` argument is only used if the `process_events`
+       setting is True (default).
 
-       @timeit()
+       @profiler()
        def foo():
            ...
 
-       @timeit(process_events=False)
+       @profiler(process_events=False, timeout=100)
        def paintEvent():
-           ..."""
+           ...
 
-    def decorator(func):
-        """A timing decorator for the GUI"""
+       with profiler(name="Image")
+           # compute image
+
+    """
+
+    def __init__(self, name=None, process_events=True, timeout=200):
+        self.name = name
+        self.t_start = None
+        self.process_events = process_events
+        self.timeout = timeout
+
+    def __enter__(self):
+        if self.process_events:
+            process_qt_events(timeout=self.timeout)
+        self.t_start = perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.process_events:
+            process_qt_events(timeout=self.timeout)
+
+        elapsed = perf_counter() - self.t_start
+        name = f"Block {self.name}: " if self.name is not None else ""
+        print(f"{name}time elapsed {elapsed}")
+
+    def __call__(self, func):
+        """Decorate a function to profile the execution time"""
+        name = func.__name__ if self.name is None else self.name
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Empty the eventloop stack before!
-            if process_events:
-                process_qt_events(timeout=200)
+            if self.process_events:
+                process_qt_events(timeout=self.timeout)
 
             t_start = perf_counter()
             ret = func(*args, **kwargs)
 
             # But process the generated eventloop stack for the performance
             # measurement!
-            if process_events:
-                process_qt_events()
+            if self.process_events:
+                process_qt_events(timeout=self.timeout)
 
             elapsed = perf_counter() - t_start
-            print("{} took {}".format(func.__name__, elapsed))
+            print(f"{name} took {elapsed}")
             return ret
 
         return wrapper
-
-    return decorator
