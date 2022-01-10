@@ -22,7 +22,7 @@ from unittest.mock import MagicMock
 sys.path.append(op.abspath("../src/pythonKarabo"))
 
 LOCAL_MODULES = [
-    "karabo", "karabo.bound",
+    "karabo", "karabo.bound", "traits",
     "karabo.common", "karabo.middlelayer", "karabo.native",
     "karabo.middlelayer_api", "karabo.bound_api",
     "karabo.project_db", "karabo.gui", "karabo.common.api",

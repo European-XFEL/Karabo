@@ -11,7 +11,10 @@ __all__ = ["has_changes"]
 
 
 def has_changes(old_value, new_value):
-    """Compare old/new values to determine if there is a real difference"""
+    """Compare old/new values to determine if there is a real difference
+
+    This function has been added in Karabo >= 2.14.
+    """
     try:
         if old_value is None:
             changes = True

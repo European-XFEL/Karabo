@@ -244,11 +244,11 @@ async def compareDeviceWithPast(device, timepoint):
 
     The changes are provided in a list for comparison::
 
-    changes = [PRESENT | PAST]
+        changes = [PRESENT | PAST]
 
-    -> h = compareDeviceWithPast(device, minutesAgo(2))
-    -> h
-    -> <disableEpsilonFeedback{}: [True, False]>
+        -> h = compareDeviceWithPast(device, minutesAgo(2))
+        -> h
+        -> <disableEpsilonFeedback{}: [True, False]>
 
     :param timepoint: The timepoint to compare
 
@@ -387,7 +387,7 @@ async def getConfigurationFromPast(device, timepoint):
 
         getConfigurationFromPast(device, "12:30")
 
-    Returns a karabo configuration hash of the device at the specified time.
+    :returns: A karabo configuration hash of the device at the specified time.
 
     The date of the time point is parsed using :func:`dateutil.parser.parse`,
     allowing many ways to write the date.
@@ -417,7 +417,7 @@ async def getConfigurationFromName(device, name):
 
         getConfigurationFromName(device, "run2012")
 
-    Returns a karabo configuration hash of the device saved under the `name`.
+    :returns: A karabo configuration hash of the device saved under the `name`.
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
@@ -436,7 +436,7 @@ async def getLastConfiguration(device, priority=3):
 
         getLastConfiguration(device, 3)
 
-    Returns a karabo configuration hash of the device.
+    :returns: A karabo configuration hash `Hash` of the device.
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
@@ -483,7 +483,7 @@ async def listDevicesWithConfiguration(priority=3):
 
         listDevicesWithConfiguration(priority=3)
 
-    Returns a list of deviceIds.
+    :returns: List of deviceIds, e.g. ["deviceA", "deviceB"].
     """
     instance = get_instance()
     slot = "slotListDevices"
