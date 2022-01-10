@@ -145,10 +145,10 @@ namespace karabo {
         };
 
 
-        using ReadHashHandler = std::function<void(const boost::system::error_code,
-                                                   const std::string& /*exchange*/,
-                                                   const std::string& /*routing key*/,
-                                                   const util::Hash::Pointer /*readHash*/)>;
+        using AmqpReadHashHandler = std::function<void(const boost::system::error_code,
+                                                       const std::string& /*exchange*/,
+                                                       const std::string& /*routing key*/,
+                                                       const util::Hash::Pointer /*readHash*/)>;
 
 
         class AmqpClient : public boost::enable_shared_from_this<AmqpClient> {
@@ -200,7 +200,7 @@ namespace karabo {
              */
             virtual void disconnectForced();
 
-            void registerConsumerHandler(const ReadHashHandler& slotFunc) {
+            void registerConsumerHandler(const AmqpReadHashHandler& slotFunc) {
                 m_onRead = slotFunc;
             }
 
@@ -367,7 +367,7 @@ namespace karabo {
             std::shared_ptr<AMQP::Reliable<> > m_reliable;
             std::string m_queue;
             std::string m_consumerTag;
-            ReadHashHandler m_onRead;
+            AmqpReadHashHandler m_onRead;
             static std::unordered_set<std::string> m_registeredExchanges;
         };
     }
