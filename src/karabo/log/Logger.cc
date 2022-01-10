@@ -37,13 +37,13 @@ namespace karabo {
         void Logger::expectedParameters(Schema& s) {
             // Take care to keep this priority in sync with "Logger.priority" of the Python karabo/bound_api/device.py
             STRING_ELEMENT(s)
-                .key("priority")
-                .displayedName("Priority")
-                .description("The default log priority")
-                .options("DEBUG INFO WARN ERROR FATAL")
-                .assignmentOptional()
-                .defaultValue("INFO")
-                .commit();
+                  .key("priority")
+                  .displayedName("Priority")
+                  .description("The default log priority")
+                  .options("DEBUG INFO WARN ERROR FATAL")
+                  .assignmentOptional()
+                  .defaultValue("INFO")
+                  .commit();
 
             NODE_ELEMENT(s).key("ostream").appendParametersOf<OstreamAppender>().commit();
 

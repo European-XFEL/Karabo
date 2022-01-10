@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Queues.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -6,12 +6,12 @@
  */
 
 #ifndef KARABO_NET_QUEUES_HH
-#define	KARABO_NET_QUEUES_HH
+#define KARABO_NET_QUEUES_HH
 
+#include <boost/circular_buffer.hpp>
+#include <boost/shared_ptr.hpp>
 #include <deque>
 #include <vector>
-#include <boost/shared_ptr.hpp>
-#include <boost/circular_buffer.hpp>
 
 #include "karabo/log/Logger.hh"
 
@@ -25,29 +25,23 @@ namespace karabo {
          * @brief This class represents a message in the distributed Karabo system
          */
         class Message {
-
-            public:
-
+           public:
             typedef boost::shared_ptr<Message> Pointer;
 
-            Message() : m_body(new karabo::io::BufferSet()), m_header() {
-            }
+            Message() : m_body(new karabo::io::BufferSet()), m_header() {}
 
-            explicit Message(const karabo::io::BufferSet::Pointer& data) : m_body(data), m_header() {
-            }
+            explicit Message(const karabo::io::BufferSet::Pointer& data) : m_body(data), m_header() {}
 
-            Message(const karabo::io::BufferSet::Pointer& data, const VectorCharPointer& header) : m_body(data), m_header(header) {
-            }
+            Message(const karabo::io::BufferSet::Pointer& data, const VectorCharPointer& header)
+                : m_body(data), m_header(header) {}
 
-            Message(const Message& other) : m_body(other.body()), m_header(other.header()) {
-            }
+            Message(const Message& other) : m_body(other.body()), m_header(other.header()) {}
 
-            virtual ~Message() {
-            }
+            virtual ~Message() {}
 
             /**
              * Return the body of the message
-             * @return 
+             * @return
              */
             const karabo::io::BufferSet::Pointer& body() const {
                 return m_body;
@@ -55,15 +49,14 @@ namespace karabo {
 
             /**
              * Return the header of the message
-             * @return 
+             * @return
              */
             const VectorCharPointer& header() const {
                 return m_header;
             }
 
 
-        private:
-
+           private:
             karabo::io::BufferSet::Pointer m_body;
             VectorCharPointer m_header;
         };
@@ -74,26 +67,22 @@ namespace karabo {
          *        distributed system
          */
         class Queue {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(Queue, "Queue", "1.0")
 
-            Queue() : m_counter(0) {
-            }
+            Queue() : m_counter(0) {}
 
-            virtual ~Queue() {
-            }
+            virtual ~Queue() {}
 
             /**
              * Return the size of the queue, i.e. the number of messages it holds
-             * @return 
+             * @return
              */
             virtual size_t size() = 0;
 
             /**
              * Return the maximum allowed size of this queue
-             * @return 
+             * @return
              */
             virtual size_t max_size() = 0;
 
@@ -105,7 +94,7 @@ namespace karabo {
 
             /**
              * Return this queues message capacity
-             * @return 
+             * @return
              */
             virtual size_t capacity() = 0;
 
@@ -116,13 +105,13 @@ namespace karabo {
 
             /**
              * Check if this queue is empty, i.e. size is 0
-             * @return 
+             * @return
              */
             virtual bool empty() = 0;
 
             /**
              * Check if this queue is full, i.e. if it has reached its maximum capacity
-             * @return 
+             * @return
              */
             virtual bool full() = 0;
 
@@ -134,7 +123,7 @@ namespace karabo {
 
             /**
              * Return the first element in the queue
-             * @return 
+             * @return
              */
             virtual const Message::Pointer& front() = 0;
 
@@ -149,8 +138,7 @@ namespace karabo {
              */
             virtual void pop_front() = 0;
 
-        protected:
-
+           protected:
             unsigned long long m_counter;
         };
 
@@ -159,19 +147,14 @@ namespace karabo {
          * @brief The LosslessQueue implements a queue that guarantees to preserve messages.
          */
         class LosslessQueue : public Queue {
-
-
             std::deque<Message::Pointer> m_queue;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(LosslessQueue, "LosslessQueue", "1.0")
 
-            LosslessQueue() {
-            }
+            LosslessQueue() {}
 
-            virtual ~LosslessQueue() {
-            }
+            virtual ~LosslessQueue() {}
 
             size_t size() {
                 return m_queue.size();
@@ -181,8 +164,7 @@ namespace karabo {
                 return m_queue.max_size();
             }
 
-            void set_capacity(size_t capacity) {
-            }
+            void set_capacity(size_t capacity) {}
 
             size_t capacity() {
                 return m_queue.max_size();
@@ -215,7 +197,6 @@ namespace karabo {
             void pop_front() {
                 m_queue.pop_front();
             }
-
         };
 
         /**
@@ -224,16 +205,12 @@ namespace karabo {
          *        new entries when it has reached its maximum capacity
          */
         class RejectNewestQueue : public LosslessQueue {
-
-
             size_t m_capacity;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(RejectNewestQueue, "RejectNewestQueue", "1.0")
 
-            RejectNewestQueue(const size_t capacity) : LosslessQueue(), m_capacity(capacity) {
-            }
+            RejectNewestQueue(const size_t capacity) : LosslessQueue(), m_capacity(capacity) {}
 
             virtual ~RejectNewestQueue() {
                 clear();
@@ -257,11 +234,10 @@ namespace karabo {
                 } else {
                     if (m_counter++ % 1000 == 0) {
                         KARABO_LOG_FRAMEWORK_WARN << "Ignored message pointer upon pushing since capacity ("
-                                << m_capacity << ") reached.";
+                                                  << m_capacity << ") reached.";
                     }
                 }
             }
-
         };
 
         /**
@@ -271,16 +247,12 @@ namespace karabo {
          *        and a new element is pushed to it
          */
         class RemoveOldestQueue : public Queue {
-
-
             boost::circular_buffer<Message::Pointer> m_queue;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(RemoveOldestQueue, "RemoveOldestQueue", "1.0")
 
-            RemoveOldestQueue(const size_t capacity) : m_queue(capacity) {
-            }
+            RemoveOldestQueue(const size_t capacity) : m_queue(capacity) {}
 
             virtual ~RemoveOldestQueue() {
                 clear();
@@ -324,8 +296,9 @@ namespace karabo {
 
             void push_back(const Message::Pointer& entry) {
                 if (m_queue.full() && m_counter++ % 1000 == 0) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Overwrite old message pointer upon pushing to buffer since it is full (size = "
-                            << m_queue.size() << ").";
+                    KARABO_LOG_FRAMEWORK_WARN
+                          << "Overwrite old message pointer upon pushing to buffer since it is full (size = "
+                          << m_queue.size() << ").";
                 }
                 m_queue.push_back(entry);
             }
@@ -333,10 +306,8 @@ namespace karabo {
             void pop_front() {
                 m_queue.pop_front();
             }
-
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
-#endif	/* KARABO_NET_QUEUES_HH */
-
+#endif /* KARABO_NET_QUEUES_HH */

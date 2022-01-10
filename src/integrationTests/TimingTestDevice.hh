@@ -5,7 +5,7 @@
  */
 
 #ifndef TIMINGTESTDEVICE_HH
-#define	TIMINGTESTDEVICE_HH
+#define TIMINGTESTDEVICE_HH
 
 #include <karabo/karabo.hpp>
 
@@ -15,9 +15,7 @@
 namespace karabo {
 
     class TimingTestDevice : public karabo::core::Device<> {
-
-    public:
-
+       public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(TimingTestDevice, "TimingTestDevice", "2.0")
 
@@ -41,16 +39,14 @@ namespace karabo {
         virtual ~TimingTestDevice();
 
 
-
-
-
-    private:
-
+       private:
         void start();
         void stop();
 
-        virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
-        virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
+        virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac,
+                                  unsigned long long period);
+        virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
+                                unsigned long long period);
 
         karabo::util::Epochstamp m_lastTimeStamp;
         bool m_started;
@@ -62,7 +58,6 @@ namespace karabo {
         std::vector<unsigned long long> m_secondsTick;
         std::vector<unsigned long long> m_fractionsTick;
     };
-}
+} // namespace karabo
 
-#endif	/* TIMINGTESTDEVICE_HH */
-
+#endif /* TIMINGTESTDEVICE_HH */

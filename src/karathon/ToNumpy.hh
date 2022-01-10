@@ -6,17 +6,16 @@
  */
 
 #ifndef KARATHON_TONUMPY_HH
-#define	KARATHON_TONUMPY_HH
+#define KARATHON_TONUMPY_HH
+
+#include <numpy/ndarraytypes.h>
 
 #include <karabo/util/ToType.hh>
-#include <numpy/ndarraytypes.h>
 
 namespace karathon {
 
     class ToNumpy {
-
-    public:
-
+       public:
         typedef int ReturnType;
 
         template <int RefType>
@@ -38,5 +37,5 @@ namespace karathon {
     KARABO_MAP_TO_REFERENCE_TYPE(ToNumpy, FLOAT, NPY_FLOAT)
     KARABO_MAP_TO_REFERENCE_TYPE(ToNumpy, DOUBLE, NPY_DOUBLE)
 
-}
+} // namespace karathon
 #endif

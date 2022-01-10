@@ -11,13 +11,15 @@
 
 
 #ifndef KARABO_NET_JMSPRODUCER_HH
-#define	KARABO_NET_JMSPRODUCER_HH
+#define KARABO_NET_JMSPRODUCER_HH
+
+#include <openmqc/mqtypes.h>
+
+#include <boost/enable_shared_from_this.hpp>
 
 #include "JmsConnection.hh"
-#include "karabo/util/MetaTools.hh"
 #include "karabo/io/BinarySerializer.hh"
-#include <openmqc/mqtypes.h>
-#include <boost/enable_shared_from_this.hpp>
+#include "karabo/util/MetaTools.hh"
 
 /**
  * The main European XFEL namespace
@@ -34,11 +36,9 @@ namespace karabo {
          * @brief A class producing messages to send to a JMS broker
          */
         class JmsProducer : public boost::enable_shared_from_this<JmsProducer> {
-
             friend class JmsConnection;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(JmsProducer, "JmsProducer", "0.1")
 
             /**
@@ -50,36 +50,29 @@ namespace karabo {
              * @param priority The message priority from 0 (lowest) - 9 (highest), default: 4
              * @param timeToLive The life time of the message in ms, default: 0 (lives forever)
              */
-            void write(const std::string& topic,
-                       const karabo::util::Hash::Pointer& header,
-                       const karabo::util::Hash::Pointer& body,
-                       const int priority = 4,
-                       const int timeToLive = 0);
+            void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
+                       const karabo::util::Hash::Pointer& body, const int priority = 4, const int timeToLive = 0);
 
             virtual ~JmsProducer();
 
-        private:
-
+           private:
             JmsProducer(const JmsConnection::Pointer& connection);
 
             MQProducerHandle getProducer(const std::string& topic);
 
             MQSessionHandle ensureProducerSessionAvailable();
 
-            std::pair<MQSessionHandle, MQDestinationHandle> ensureProducerDestinationAvailable(const std::string& topic);
+            std::pair<MQSessionHandle, MQDestinationHandle> ensureProducerDestinationAvailable(
+                  const std::string& topic);
 
             void clearProducerHandles();
 
             void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle) const;
 
-            void asyncWrite(const std::string& topic,
-                            const karabo::util::Hash::Pointer& header,
-                            const karabo::util::Hash::Pointer& body,
-                            const int priority = 4,
-                            const int timeToLive = 0);
+            void asyncWrite(const std::string& topic, const karabo::util::Hash::Pointer& header,
+                            const karabo::util::Hash::Pointer& body, const int priority = 4, const int timeToLive = 0);
 
-        private:
-
+           private:
             // OpenMQ failed to provide an publicly available constant to check handle validity
             // This constant is copied from the openMQ source in which
             // it is used for exactly the aforementioned purpose
@@ -90,15 +83,15 @@ namespace karabo {
 
             MQSessionHandle m_producerSessionHandle;
 
-            typedef std::map<std::string, std::pair<MQSessionHandle, MQDestinationHandle > > ProducerDestinations;
+            typedef std::map<std::string, std::pair<MQSessionHandle, MQDestinationHandle> > ProducerDestinations;
             ProducerDestinations m_producerDestinations;
 
-            typedef std::map<std::string, MQProducerHandle > Producers;
+            typedef std::map<std::string, MQProducerHandle> Producers;
             Producers m_producers;
 
             boost::asio::io_service::strand m_mqStrand;
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 #endif

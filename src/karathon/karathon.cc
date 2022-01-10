@@ -6,15 +6,14 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <boost/python.hpp>
-#include <boost/python/type_id.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <boost/python/converter/registry.hpp>
 #include <boost/any.hpp>
-#include <vector>
-
+#include <boost/python.hpp>
+#include <boost/python/converter/registry.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/type_id.hpp>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
+#include <vector>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #include <numpy/arrayobject.h>
@@ -41,10 +40,14 @@ void exportPyUtilAlarmConditionElement();
 // io
 void exportPyIo();
 void exportPyIoFileTools();
-template <class T> void exportPyIoOutput();
-template <class T> void exportPyIoInput();
-template <class T> void exportPyIoTextSerializer();
-template <class T> void exportPyIoBinarySerializer();
+template <class T>
+void exportPyIoOutput();
+template <class T>
+void exportPyIoInput();
+template <class T>
+void exportPyIoTextSerializer();
+template <class T>
+void exportPyIoBinarySerializer();
 void exportPyIoH5File();
 
 // xms
@@ -64,28 +67,23 @@ void exportp2p();
 
 
 void *convert_to_cstring(PyObject *obj) {
-
     const void *ret = PyUnicode_AsUTF8(obj);
-    if (!ret)
-        PyErr_Clear();
-    
-    return const_cast<void*>(ret);
+    if (!ret) PyErr_Clear();
+
+    return const_cast<void *>(ret);
 }
 
 
 void *convertible_string(PyObject *obj) {
-    if (PyUnicode_Check(obj))
-        return const_cast<char *> ("");
-    else
-        return 0;
+    if (PyUnicode_Check(obj)) return const_cast<char *>("");
+    else return 0;
 }
 
 
-void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data* data) {
-    void* storage = ((boost::python::converter::rvalue_from_python_storage<std::string>*)data)->
-            storage.bytes;
+void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data) {
+    void *storage = ((boost::python::converter::rvalue_from_python_storage<std::string> *)data)->storage.bytes;
     Py_ssize_t size;
-    const char* str = PyUnicode_AsUTF8AndSize(obj, &size);
+    const char *str = PyUnicode_AsUTF8AndSize(obj, &size);
     new (storage) std::string(str, size);
     data->convertible = storage;
 }
@@ -115,8 +113,8 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilDetectorGeometry();
     exportPyUtilRollingWindowStatistics();
     exportPyUtilStateElement();
-    exportPyUtilAlarmConditionElement();    
-    exportPyUtilNDArray();   
+    exportPyUtilAlarmConditionElement();
+    exportPyUtilNDArray();
 
     // io
     exportPyIo();
@@ -136,7 +134,7 @@ BOOST_PYTHON_MODULE(karathon) {
 
     exportPyIoH5File();
 
-    // xms       
+    // xms
     exportPyXmsInputOutputChannel();
     exportPyXmsSignalSlotable();
     exportPyXmsSlotElement();
@@ -151,10 +149,9 @@ BOOST_PYTHON_MODULE(karathon) {
     // net
     exportp2p();
 
-    boost::python::converter::registry::insert(convert_to_cstring,
-                                               boost::python::type_id<char>(),
+    boost::python::converter::registry::insert(convert_to_cstring, boost::python::type_id<char>(),
                                                &boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
-    boost::python::converter::registry::insert(convertible_string,
-                                               construct_string, boost::python::type_id<std::string>(),
+    boost::python::converter::registry::insert(convertible_string, construct_string,
+                                               boost::python::type_id<std::string>(),
                                                &boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
 }

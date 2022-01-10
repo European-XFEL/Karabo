@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Wrapper.cc
  * Author: esenov
  *
@@ -6,143 +6,142 @@
  */
 
 #include "Wrapper.hh"
-#include <iostream>
+
 #include <algorithm>
-
 #include <boost/filesystem.hpp>
-
+#include <iostream>
+#include <karabo/net/Broker.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/xms/ImageData.hh>
-#include <karabo/net/Broker.hh>
 
 using namespace std;
 
 namespace karathon {
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_BOOL);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
-            bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
+            bool* data = reinterpret_cast<bool*>(PyArray_DATA(arr));
             for (int i = 0; i < PyArray_SIZE(arr); i++) {
                 data[i] = v[i];
             }
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<short>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_SHORT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned short>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_USHORT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<int>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_INT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned int>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_UINT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<long long>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_LONGLONG);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_ULONGLONG);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<float>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_FLOAT);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(pyobj)); // 
+            return bp::object(bp::handle<>(pyobj)); //
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
 
-    template<>
+    template <>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<double>& v, bool numpyFlag) {
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
             PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_DOUBLE); // reinterpret_cast<void*> (&v[0]));
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj));
         }
@@ -151,80 +150,81 @@ namespace karathon {
 
     bp::object Wrapper::toObject(const boost::any& operand, bool numpyFlag) {
         try {
-            if (operand.type() == typeid (bool)) {
+            if (operand.type() == typeid(bool)) {
                 return bp::object(boost::any_cast<bool>(operand));
-            } else if (operand.type() == typeid (char)) {
+            } else if (operand.type() == typeid(char)) {
                 return bp::object(boost::any_cast<char>(operand));
-            } else if (operand.type() == typeid (signed char)) {
+            } else if (operand.type() == typeid(signed char)) {
                 return bp::object(boost::any_cast<signed char>(operand));
-            } else if (operand.type() == typeid (unsigned char)) {
+            } else if (operand.type() == typeid(unsigned char)) {
                 return bp::object(boost::any_cast<unsigned char>(operand));
-            } else if (operand.type() == typeid (short)) {
+            } else if (operand.type() == typeid(short)) {
                 return bp::object(boost::any_cast<short>(operand));
-            } else if (operand.type() == typeid (unsigned short)) {
+            } else if (operand.type() == typeid(unsigned short)) {
                 return bp::object(boost::any_cast<unsigned short>(operand));
-            } else if (operand.type() == typeid (int)) {
+            } else if (operand.type() == typeid(int)) {
                 return bp::object(boost::any_cast<int>(operand));
-            } else if (operand.type() == typeid (unsigned int)) {
+            } else if (operand.type() == typeid(unsigned int)) {
                 return bp::object(boost::any_cast<unsigned int>(operand));
-            } else if (operand.type() == typeid (long long)) {
+            } else if (operand.type() == typeid(long long)) {
                 return bp::object(boost::any_cast<long long>(operand));
-            } else if (operand.type() == typeid (unsigned long long)) {
+            } else if (operand.type() == typeid(unsigned long long)) {
                 return bp::object(boost::any_cast<unsigned long long>(operand));
-            } else if (operand.type() == typeid (float)) {
+            } else if (operand.type() == typeid(float)) {
                 return bp::object(boost::any_cast<float>(operand));
-            } else if (operand.type() == typeid (double)) {
+            } else if (operand.type() == typeid(double)) {
                 return bp::object(boost::any_cast<double>(operand));
-            } else if (operand.type() == typeid (std::complex<float>)) {
+            } else if (operand.type() == typeid(std::complex<float>)) {
                 return bp::object(boost::any_cast<std::complex<float> >(operand));
-            } else if (operand.type() == typeid (std::complex<double>)) {
+            } else if (operand.type() == typeid(std::complex<double>)) {
                 return bp::object(boost::any_cast<std::complex<double> >(operand));
-            } else if (operand.type() == typeid (std::string)) {
+            } else if (operand.type() == typeid(std::string)) {
                 return bp::object(boost::any_cast<std::string>(operand));
-            } else if (operand.type() == typeid (boost::filesystem::path)) {
+            } else if (operand.type() == typeid(boost::filesystem::path)) {
                 return bp::object(boost::any_cast<boost::filesystem::path>(operand).string());
-            } else if (operand.type() == typeid (karabo::util::CppNone)) {
+            } else if (operand.type() == typeid(karabo::util::CppNone)) {
                 return bp::object();
-            } else if (operand.type() == typeid (karabo::util::Hash)) {
+            } else if (operand.type() == typeid(karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
-            } else if (operand.type() == typeid (karabo::util::Hash::Pointer)) {
+            } else if (operand.type() == typeid(karabo::util::Hash::Pointer)) {
                 return bp::object(boost::any_cast<karabo::util::Hash::Pointer>(operand));
-            } else if (operand.type() == typeid (std::vector<bool>)) {
-                return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<char>)) {
+            } else if (operand.type() == typeid(std::vector<bool>)) {
+                return fromStdVectorToPyArray(boost::any_cast<std::vector<bool> >(operand), numpyFlag);
+            } else if (operand.type() == typeid(std::vector<char>)) {
                 return fromStdVectorToPyByteArray(boost::any_cast<std::vector<char> >(operand));
-            } else if (operand.type() == typeid (std::vector<signed char>)) {
-                return fromStdVectorToPyByteArray(boost::any_cast < std::vector<signed char> >(operand));
-            } else if (operand.type() == typeid (std::vector<unsigned char>)) {
+            } else if (operand.type() == typeid(std::vector<signed char>)) {
+                return fromStdVectorToPyByteArray(boost::any_cast<std::vector<signed char> >(operand));
+            } else if (operand.type() == typeid(std::vector<unsigned char>)) {
                 return fromStdVectorToPyByteArray(boost::any_cast<std::vector<unsigned char> >(operand));
-            } else if (operand.type() == typeid (std::vector<short>)) {
+            } else if (operand.type() == typeid(std::vector<short>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<short> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<unsigned short>)) {
+            } else if (operand.type() == typeid(std::vector<unsigned short>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned short> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<int>)) {
+            } else if (operand.type() == typeid(std::vector<int>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<int> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<unsigned int>)) {
+            } else if (operand.type() == typeid(std::vector<unsigned int>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned int> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<long long>)) {
+            } else if (operand.type() == typeid(std::vector<long long>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<long long> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<unsigned long long>)) {
+            } else if (operand.type() == typeid(std::vector<unsigned long long>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned long long> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<float>)) {
+            } else if (operand.type() == typeid(std::vector<float>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<float> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<double>)) {
+            } else if (operand.type() == typeid(std::vector<double>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<std::string>)) {
-                return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
-            } else if (operand.type() == typeid (std::vector<karabo::util::CppNone>)) {
-                return fromStdVectorToPyListNone(boost::any_cast < std::vector<karabo::util::CppNone> >(operand));
-            } else if (operand.type() == typeid (karabo::util::Schema)) {
+            } else if (operand.type() == typeid(std::vector<std::string>)) {
+                return fromStdVectorToPyList(boost::any_cast<std::vector<std::string> >(operand));
+            } else if (operand.type() == typeid(std::vector<karabo::util::CppNone>)) {
+                return fromStdVectorToPyListNone(boost::any_cast<std::vector<karabo::util::CppNone> >(operand));
+            } else if (operand.type() == typeid(karabo::util::Schema)) {
                 return bp::object(boost::any_cast<karabo::util::Schema>(operand));
-            } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
+            } else if (operand.type() == typeid(std::vector<karabo::util::Hash>)) {
                 return bp::object(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
-            } else if (operand.type() == typeid (std::vector<karabo::util::Hash::Pointer>)) {
+            } else if (operand.type() == typeid(std::vector<karabo::util::Hash::Pointer>)) {
                 return bp::object(boost::any_cast<std::vector<karabo::util::Hash::Pointer> >(operand));
-            } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "__name__")) {
-                return boost::any_cast<bp::object >(operand);
+            } else if (operand.type() == typeid(bp::object) &&
+                       hasattr(boost::any_cast<bp::object>(operand), "__name__")) {
+                return boost::any_cast<bp::object>(operand);
             }
             throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
         } catch (const boost::bad_any_cast& e) {
@@ -234,14 +234,15 @@ namespace karathon {
     }
 
     bp::object Wrapper::toCustomObject(karabo::util::Hash::Node& node) {
-        karabo::util::Hash::Pointer hash = karabo::util::Hash::Pointer(&node.getValue<karabo::util::Hash>(), null_deleter());
+        karabo::util::Hash::Pointer hash =
+              karabo::util::Hash::Pointer(&node.getValue<karabo::util::Hash>(), null_deleter());
         if (node.hasAttribute(KARABO_HASH_CLASS_ID)) { // Hash actually holds data for a custom class
             const std::string& classId = node.getAttribute<string>(KARABO_HASH_CLASS_ID);
             if (classId == "NDArray") {
-                return fromNDArrayToPyArray(reinterpret_cast<const karabo::util::NDArray&> (*hash));
+                return fromNDArrayToPyArray(reinterpret_cast<const karabo::util::NDArray&>(*hash));
             }
             if (classId == "ImageData") {
-                const karabo::xms::ImageData& imgData = reinterpret_cast<const karabo::xms::ImageData&> (*hash);
+                const karabo::xms::ImageData& imgData = reinterpret_cast<const karabo::xms::ImageData&>(*hash);
                 return bp::object(karabo::xms::ImageData::Pointer(new karabo::xms::ImageData(imgData)));
             }
         }
@@ -307,13 +308,13 @@ namespace karathon {
                 const PY_LONG_LONG value = PyLong_AsLongLong(obj.ptr());
                 switch (type) {
                     case karabo::util::Types::INT32:
-                        any = static_cast<int> (value);
+                        any = static_cast<int>(value);
                         break;
                     case karabo::util::Types::UINT32:
-                        any = static_cast<unsigned int> (value);
+                        any = static_cast<unsigned int>(value);
                         break;
                     case karabo::util::Types::INT64:
-                        any = static_cast<long long> (value);
+                        any = static_cast<long long>(value);
                         break;
                     default:
                         // Should never come here!
@@ -361,7 +362,7 @@ namespace karathon {
         if (bp::extract<wchar_t* const>(obj).check()) {
             wchar_t* const b = bp::extract<wchar_t* const>(obj);
             any = b;
-            return karabo::util::Types::PTR_CHAR; //TODO: Define WCHAR and PTR_WCHAR. Check with Burkhard and Martin
+            return karabo::util::Types::PTR_CHAR; // TODO: Define WCHAR and PTR_WCHAR. Check with Burkhard and Martin
         }
         if (bp::extract<std::vector<std::string> >(obj).check()) {
             std::vector<std::string> const b = bp::extract<std::vector<std::string> >(obj);
@@ -389,14 +390,15 @@ namespace karathon {
             return karabo::util::Types::VECTOR_HASH;
         }
         if (bp::extract<std::vector<karabo::util::Hash::Pointer> >(obj).check()) {
-            std::vector<karabo::util::Hash::Pointer> vhash = bp::extract<std::vector<karabo::util::Hash::Pointer> >(obj);
+            std::vector<karabo::util::Hash::Pointer> vhash =
+                  bp::extract<std::vector<karabo::util::Hash::Pointer> >(obj);
             any = vhash;
             return karabo::util::Types::VECTOR_HASH_POINTER;
         }
         if (PyArray_Check(obj.ptr())) {
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(obj.ptr());
             karabo::util::NDArray nd = fromPyArrayToNDArray(arr);
-            any = reinterpret_cast<karabo::util::Hash&> (nd);
+            any = reinterpret_cast<karabo::util::Hash&>(nd);
             return karabo::util::Types::HASH;
         }
         if (PyList_Check(obj.ptr())) {
@@ -447,7 +449,7 @@ namespace karathon {
                     any = std::move(v);
                     return karabo::util::Types::VECTOR_UINT32;
                 } else if (broadestType == karabo::util::Types::INT64) {
-                    std::vector<long long > v(size);
+                    std::vector<long long> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
                         v[i] = bp::extract<long long>(obj[i]);
                     }
@@ -477,7 +479,7 @@ namespace karathon {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     Py_ssize_t size;
-                    const char* data = PyUnicode_AsUTF8AndSize(static_cast<bp::object> (obj[i]).ptr(), &size);
+                    const char* data = PyUnicode_AsUTF8AndSize(static_cast<bp::object>(obj[i]).ptr(), &size);
                     v[i] = string(data, size);
                 }
                 any = v;
@@ -508,7 +510,7 @@ namespace karathon {
                 return karabo::util::Types::VECTOR_SCHEMA;
             }
         }
-        if (hasattr(obj, "__name__")) {// python function
+        if (hasattr(obj, "__name__")) { // python function
             any = obj;
             return karabo::util::Types::ANY;
         }
@@ -525,18 +527,17 @@ namespace karathon {
         }
 
         karabo::util::NDArray::DataPointer dataPtr(ndarray.getDataPtr());
-        const boost::shared_ptr<CppArrayRefHandler > refHandler(new CppArrayRefHandler(dataPtr));
+        const boost::shared_ptr<CppArrayRefHandler> refHandler(new CppArrayRefHandler(dataPtr));
         bp::object pyRefHandler(refHandler); // Python reference count starts at 1
-        void* data = reinterpret_cast<void*> (dataPtr.get());
+        void* data = reinterpret_cast<void*>(dataPtr.get());
         PyObject* pyobj = PyArray_SimpleNewFromData(nd, &dims[0], typenum, data);
-        PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*> (pyobj), pyRefHandler.ptr());
+        PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(pyobj), pyRefHandler.ptr());
         // PyArray_SetBaseObject steals a reference. Increase the refcount to protect bp::object::~object()
         Py_INCREF(pyRefHandler.ptr());
         return bp::object(bp::handle<>(pyobj));
     }
 
     karabo::util::NDArray Wrapper::fromPyArrayToNDArray(PyArrayObject* arr) {
-
         // Convert the array shape to a std::vector
         npy_intp* pDims = PyArray_DIMS(arr);
         std::vector<unsigned long long> dims;
@@ -550,7 +551,7 @@ namespace karathon {
         const karabo::util::Types::ReferenceType krbType = karabo::util::Types::from<FromNumpy>(pyType);
 
         // Extract number of elements
-        const size_t nelems = static_cast<size_t> (PyArray_SIZE(arr));
+        const size_t nelems = static_cast<size_t>(PyArray_SIZE(arr));
 
         // Get a smart DataPointer object which points to the array's data
         karabo::util::NDArray::DataPointer dataPtr;
@@ -560,7 +561,7 @@ namespace karathon {
         // Determine if the array data is owned by a C++ object
         if (arrBase != NULL && arrBase != Py_None) {
             bp::object base(bp::handle<>(bp::borrowed(arrBase)));
-            bp::extract<CppArrayRefHandler > maybeArrayRef(base);
+            bp::extract<CppArrayRefHandler> maybeArrayRef(base);
             if (maybeArrayRef.check()) {
                 const CppArrayRefHandler& arrayRef = maybeArrayRef();
                 // The data already has an DataPointer object managing it.
@@ -570,13 +571,14 @@ namespace karathon {
 
         // Array ref is still empty. Create a new ArrayData
         if (!dataPtr) {
-            PyObject* pyobj = reinterpret_cast<PyObject*> (arr);
+            PyObject* pyobj = reinterpret_cast<PyObject*>(arr);
             // Get a contiguous copy of the array with the correct type (or just a reference if already compatible)
-            PyArrayObject* carr = reinterpret_cast<PyArrayObject*> (PyArray_FROMANY(pyobj, pyType, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
+            PyArrayObject* carr = reinterpret_cast<PyArrayObject*>(
+                  PyArray_FROMANY(pyobj, pyType, KRB_NDARRAY_MIN_DIM, KRB_NDARRAY_MAX_DIM, NPY_ARRAY_C_CONTIGUOUS));
             if (carr != NULL) {
-                char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
+                char* data = reinterpret_cast<char*>(PyArray_DATA(carr));
                 const PyArrayRefHandler refHandler(carr); // Steals the reference to carr
-                // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count               
+                // Create a new ArrayData<T> which uses PyArrayRefHandler to manage the Python reference count
                 dataPtr = boost::shared_ptr<char>(data, refHandler);
             }
         }
@@ -591,7 +593,6 @@ namespace karathon {
 
 
     size_t Wrapper::numArgs(const bp::object& callable) {
-
         size_t result = 0ul;
         size_t numSelfArgs = 0ul;
 
@@ -614,17 +615,18 @@ namespace karathon {
                 numSelfArgs = 1ul;
             } else {
                 // For a functools.partial objects we end up here...
-                throw KARABO_PARAMETER_EXCEPTION("Attribute __call__ is neither function nor method, try to specify number of arguments.");
+                throw KARABO_PARAMETER_EXCEPTION(
+                      "Attribute __call__ is neither function nor method, try to specify number of arguments.");
             }
         } else {
             throw KARABO_PARAMETER_EXCEPTION("Cannot deduce number of arguments, please specify explicitely.");
         }
-        PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
+        PyCodeObject* pycode = reinterpret_cast<PyCodeObject*>(PyFunction_GetCode(function_object));
         if (pycode) {
             // Note: co_argcount includes arguments with defaults, see nice figure from 'Hzzkygcs' at
             // https://stackoverflow.com/questions/847936/how-can-i-find-the-number-of-arguments-of-a-python-function
             result = pycode->co_argcount - numSelfArgs; // Subtract "self" if any
-        } else { // Can we get here?
+        } else {                                        // Can we get here?
             throw KARABO_PARAMETER_EXCEPTION("Failed to access PyCode object to deduce number of arguments.");
         }
 
@@ -638,7 +640,7 @@ namespace karathon {
         // is not of a Hash type we insert into our result Hash r, if not we recursivly
         // call deepCopy_r to copy the internal structure
         // We make sure to maintain attributes
-        for (karabo::util::Hash::const_iterator it = h.begin(); it != h.end(); ++it) { 
+        for (karabo::util::Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
             if (it->getType() == karabo::util::Types::HASH) {
                 karabo::util::Hash::Node& n = r.set(it->getKey(), deepCopy_r(it->getValue<karabo::util::Hash>()));
                 n.setAttributes(it->getAttributes());
@@ -652,10 +654,12 @@ namespace karathon {
                 }
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::HASH_POINTER) {
-                karabo::util::Hash::Node& n = r.set(it->getKey(), deepCopy_r(*(it->getValue<karabo::util::Hash::Pointer>())));
+                karabo::util::Hash::Node& n =
+                      r.set(it->getKey(), deepCopy_r(*(it->getValue<karabo::util::Hash::Pointer>())));
                 n.setAttributes(it->getAttributes());
             } else if (it->getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
-                const std::vector<karabo::util::Hash::Pointer>& v = it->getValue<std::vector<karabo::util::Hash::Pointer> >();
+                const std::vector<karabo::util::Hash::Pointer>& v =
+                      it->getValue<std::vector<karabo::util::Hash::Pointer> >();
                 karabo::util::Hash::Node& n = r.set(it->getKey(), std::vector<karabo::util::Hash>());
                 std::vector<karabo::util::Hash>& vc = n.getValue<std::vector<karabo::util::Hash> >();
                 vc.reserve(v.size());
@@ -663,10 +667,9 @@ namespace karathon {
                     vc.push_back(deepCopy_r(**vit));
                 }
                 n.setAttributes(it->getAttributes());
-            } else { // if no Hash type we do not need to recurse           
+            } else { // if no Hash type we do not need to recurse
                 r.setNode(it);
             }
-            
         }
         return r;
     }
@@ -691,7 +694,8 @@ namespace karathon {
             } else if (node.getType() == karabo::util::Types::HASH_POINTER) {
                 return bp::object(deepCopy_r(*node.getValue<karabo::util::Hash::Pointer>()));
             } else if (node.getType() == karabo::util::Types::VECTOR_HASH_POINTER) {
-                const std::vector<karabo::util::Hash::Pointer>& v = node.getValue<std::vector<karabo::util::Hash::Pointer> >();
+                const std::vector<karabo::util::Hash::Pointer>& v =
+                      node.getValue<std::vector<karabo::util::Hash::Pointer> >();
                 std::vector<karabo::util::Hash> vc;
                 vc.reserve(v.size());
                 for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
@@ -701,15 +705,15 @@ namespace karathon {
             } else { // if no Hash like object was found we just return the object
                 return obj;
             }
-        // obj contains a Hash
+            // obj contains a Hash
         } else if (bp::extract<karabo::util::Hash&>(obj).check()) {
             const karabo::util::Hash& hash = bp::extract<karabo::util::Hash&>(obj);
             return bp::object(deepCopy_r(hash));
-        // obj contains a Hash::Pointer
+            // obj contains a Hash::Pointer
         } else if (bp::extract<karabo::util::Hash::Pointer&>(obj).check()) {
             const karabo::util::Hash::Pointer& hp = bp::extract<karabo::util::Hash::Pointer&>(obj);
             return bp::object(deepCopy_r(*hp));
-        // obj contains a vector<Hash>
+            // obj contains a vector<Hash>
         } else if (bp::extract<std::vector<karabo::util::Hash>&>(obj).check()) {
             const std::vector<karabo::util::Hash>& v = bp::extract<std::vector<karabo::util::Hash>&>(obj);
             std::vector<karabo::util::Hash> vc;
@@ -718,9 +722,10 @@ namespace karathon {
                 vc.push_back(deepCopy_r(*vit));
             }
             return bp::object(vc);
-        // final scenario to deep copy: vector<Hash::Pointer>
+            // final scenario to deep copy: vector<Hash::Pointer>
         } else if (bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj).check()) {
-            const std::vector<karabo::util::Hash::Pointer>& v = bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj);
+            const std::vector<karabo::util::Hash::Pointer>& v =
+                  bp::extract<std::vector<karabo::util::Hash::Pointer>&>(obj);
             std::vector<karabo::util::Hash> vc;
             vc.reserve(v.size());
             for (auto vit = v.cbegin(); vit != v.cend(); ++vit) {
@@ -732,7 +737,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny1::operator() (const boost::any& a1) const {
+    void HandlerWrapAny1::operator()(const boost::any& a1) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
@@ -745,7 +750,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny2::operator() (const boost::any& a1, const boost::any& a2) const {
+    void HandlerWrapAny2::operator()(const boost::any& a1, const boost::any& a2) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
@@ -758,7 +763,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny3::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3) const {
+    void HandlerWrapAny3::operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
@@ -771,11 +776,13 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny4::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) const {
+    void HandlerWrapAny4::operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3,
+                                     const boost::any& a4) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
-                (*m_handler)(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3), Wrapper::toObject(a4));
+                (*m_handler)(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3),
+                             Wrapper::toObject(a4));
             }
         } catch (const bp::error_already_set& e) {
             karathon::detail::treatError_already_set(*m_handler, m_where);
@@ -786,17 +793,16 @@ namespace karathon {
 
     namespace detail {
         void treatError_already_set(const bp::object& handler, const char* where) {
-
             const std::string errstr(PyErr_Occurred() ? getPythonExceptionAsString() : std::string());
             const std::string funcName(Wrapper::hasattr(handler, "__name__")
-                                       ? std::string(bp::extract<std::string>(handler.attr("__name__")))
-                                       : "unknown");  // e.g. 'partial' does not provide __name__
+                                             ? std::string(bp::extract<std::string>(handler.attr("__name__")))
+                                             : "unknown"); // e.g. 'partial' does not provide __name__
             std::ostringstream oss;
             oss << "Python " << (where ? where : "undefined") << " handler '" << funcName
-                << "' has thrown an exception ...\n...\n" << errstr << "...";
+                << "' has thrown an exception ...\n...\n"
+                << errstr << "...";
             std::cerr << '\n' << oss.str() << '\n' << std::endl;
             throw KARABO_PYTHON_EXCEPTION(oss.str());
         }
-    }
-}
-
+    } // namespace detail
+} // namespace karathon

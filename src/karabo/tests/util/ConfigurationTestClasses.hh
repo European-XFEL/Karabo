@@ -5,26 +5,23 @@
  */
 
 #ifndef KARABO_UTIL_TEST_EXPECTEDPARAMETERCLASSES_HH
-#define	KARABO_UTIL_TEST_EXPECTEDPARAMETERCLASSES_HH
-
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/ChoiceElement.hh>
-#include <karabo/util/OverwriteElement.hh>
-#include <karabo/util/NodeElement.hh>
-#include <karabo/util/ListElement.hh>
-#include <karabo/util/VectorElement.hh>
-#include <karabo/util/PathElement.hh>
-#include <karabo/xms/SlotElement.hh>
-#include <karabo/xms/ImageData.hh>
-#include <karabo/util/TableElement.hh>
-#include <karabo/util/State.hh>
-#include <karabo/util/NDArray.hh>
-
-#include <karabo/util/Configurator.hh>
-
-#include <karabo/util/karaboDll.hh>
+#define KARABO_UTIL_TEST_EXPECTEDPARAMETERCLASSES_HH
 
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
+#include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/ListElement.hh>
+#include <karabo/util/NDArray.hh>
+#include <karabo/util/NodeElement.hh>
+#include <karabo/util/OverwriteElement.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/State.hh>
+#include <karabo/util/TableElement.hh>
+#include <karabo/util/VectorElement.hh>
+#include <karabo/util/karaboDll.hh>
+#include <karabo/xms/ImageData.hh>
+#include <karabo/xms/SlotElement.hh>
 
 namespace configurationTest {
 
@@ -32,33 +29,31 @@ namespace configurationTest {
     using namespace karabo::xms;
 
     struct Shape {
-
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
 
-        static void expectedParameters(karabo::util::Schema & expected) {
-
-            BOOL_ELEMENT(expected).key("shadowEnabled")
-                    .description("Shadow enabled")
-                    .displayedName("Shadow")
-                    .assignmentOptional().defaultValue(false)
-                    .init()
-                    .commit();
+        static void expectedParameters(karabo::util::Schema& expected) {
+            BOOL_ELEMENT(expected)
+                  .key("shadowEnabled")
+                  .description("Shadow enabled")
+                  .displayedName("Shadow")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .init()
+                  .commit();
         }
 
-        Shape(const Hash & configuration) : m_configuration(configuration) {
-        }
+        Shape(const Hash& configuration) : m_configuration(configuration) {}
 
-        virtual ~Shape() {
-        }
+        virtual ~Shape() {}
 
-        const Hash & getConfiguration() {
+        const Hash& getConfiguration() {
             return m_configuration;
         }
 
         virtual std::string draw() const = 0;
 
-    private:
+       private:
         Hash m_configuration;
     };
 
@@ -67,28 +62,27 @@ namespace configurationTest {
     //**********************************************
 
     struct Circle : public Shape {
-
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
-        static void expectedParameters(karabo::util::Schema & expected) {
-
-            FLOAT_ELEMENT(expected).key("radius").alias(1)
-                    .description("The radius of the circle")
-                    .displayedName("Radius")
-                    .minExc(0)
-                    .maxExc(100)
-                    .unit(Unit::METER)
-                    .metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(10)
-                    .init()
-                    .commit();
+        static void expectedParameters(karabo::util::Schema& expected) {
+            FLOAT_ELEMENT(expected)
+                  .key("radius")
+                  .alias(1)
+                  .description("The radius of the circle")
+                  .displayedName("Radius")
+                  .minExc(0)
+                  .maxExc(100)
+                  .unit(Unit::METER)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .init()
+                  .commit();
         }
 
-        Circle(const karabo::util::Hash & configuration) : Shape(configuration) {
-        }
+        Circle(const karabo::util::Hash& configuration) : Shape(configuration) {}
 
-        virtual ~Circle() {
-        }
+        virtual ~Circle() {}
 
         std::string draw() const {
             return this->getClassInfo().getClassId();
@@ -100,25 +94,19 @@ namespace configurationTest {
     //**********************************************
 
     struct EditableCircle : public Circle {
-
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
-        static void expectedParameters(karabo::util::Schema & expected) {
-            OVERWRITE_ELEMENT(expected).key("radius")
-                    .setNowReconfigurable()
-                    .commit();
+        static void expectedParameters(karabo::util::Schema& expected) {
+            OVERWRITE_ELEMENT(expected).key("radius").setNowReconfigurable().commit();
         }
 
-        EditableCircle(const karabo::util::Hash & configuration) : Circle(configuration) {
-        }
+        EditableCircle(const karabo::util::Hash& configuration) : Circle(configuration) {}
 
-        virtual ~EditableCircle() {
-        }
+        virtual ~EditableCircle() {}
 
         std::string draw() const {
             return this->getClassInfo().getClassId();
         }
-
     };
 
     //**********************************************
@@ -126,40 +114,42 @@ namespace configurationTest {
     //**********************************************
 
     struct Rectangle : public Shape {
-
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
-        static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema& expected) {
+            FLOAT_ELEMENT(expected)
+                  .key("a")
+                  .alias(1)
+                  .description("Length of a")
+                  .displayedName("A")
+                  .minExc(0)
+                  .maxExc(100)
+                  .unit(Unit::METER)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .adminAccess()
+                  .init()
+                  .commit();
 
-            FLOAT_ELEMENT(expected).key("a").alias(1)
-                    .description("Length of a")
-                    .displayedName("A")
-                    .minExc(0)
-                    .maxExc(100)
-                    .unit(Unit::METER)
-                    .metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(10)
-                    .adminAccess()
-                    .init()
-                    .commit();
-
-            FLOAT_ELEMENT(expected).key("b").alias(1)
-                    .description("Length of b")
-                    .displayedName("B")
-                    .minExc(0)
-                    .maxExc(100)
-                    .unit(Unit::METER)
-                    .metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(10)
-                    .init()
-                    .commit();
+            FLOAT_ELEMENT(expected)
+                  .key("b")
+                  .alias(1)
+                  .description("Length of b")
+                  .displayedName("B")
+                  .minExc(0)
+                  .maxExc(100)
+                  .unit(Unit::METER)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .init()
+                  .commit();
         }
 
-        Rectangle(const karabo::util::Hash & configuration) : Shape(configuration) {
-        }
+        Rectangle(const karabo::util::Hash& configuration) : Shape(configuration) {}
 
-        virtual ~Rectangle() {
-        }
+        virtual ~Rectangle() {}
 
         std::string draw() const {
             return this->getClassInfo().getClassId();
@@ -167,321 +157,351 @@ namespace configurationTest {
     };
 
     struct GraphicsRenderer {
-
         KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
 
-        static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema& expected) {
+            BOOL_ELEMENT(expected)
+                  .key("antiAlias")
+                  .tags("prop")
+                  .displayedName("Use Anti-Aliasing")
+                  .description("You may switch of for speed")
+                  .assignmentOptional()
+                  .defaultValue(true)
+                  .init()
+                  .expertAccess()
+                  .commit();
 
-            BOOL_ELEMENT(expected).key("antiAlias")
-                    .tags("prop")
-                    .displayedName("Use Anti-Aliasing")
-                    .description("You may switch of for speed")
-                    .assignmentOptional().defaultValue(true)
-                    .init()
-                    .expertAccess()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("color")
+                  .tags("prop")
+                  .displayedName("Color")
+                  .options("red,green,blue,orange,black")
+                  .description("The default color for any shape")
+                  .assignmentOptional()
+                  .defaultValue("red")
+                  .reconfigurable()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("color")
-                    .tags("prop")
-                    .displayedName("Color")
-                    .options("red,green,blue,orange,black")
-                    .description("The default color for any shape")
-                    .assignmentOptional().defaultValue("red")
-                    .reconfigurable()
-                    .commit();
+            BOOL_ELEMENT(expected)
+                  .key("bold")
+                  .tags("prop")
+                  .displayedName("Bold")
+                  .description("Toggles bold painting")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .reconfigurable()
+                  .commit();
 
-            BOOL_ELEMENT(expected).key("bold")
-                    .tags("prop")
-                    .displayedName("Bold")
-                    .description("Toggles bold painting")
-                    .assignmentOptional().defaultValue(false)
-                    .reconfigurable()
-                    .commit();
+            CHOICE_ELEMENT(expected)
+                  .key("shapes")
+                  .description("Some shapes")
+                  .displayedName("Shapes")
+                  .appendNodesOfConfigurationBase<Shape>()
+                  .assignmentOptional()
+                  .defaultValue("Rectangle")
+                  .expertAccess()
+                  .commit();
 
-            CHOICE_ELEMENT(expected).key("shapes")
-                    .description("Some shapes")
-                    .displayedName("Shapes")
-                    .appendNodesOfConfigurationBase<Shape > ()
-                    .assignmentOptional().defaultValue("Rectangle")
-                    .expertAccess()
-                    .commit();
-
-            STRING_ELEMENT(expected).key("version")
-                    .displayedName("Version")
-                    .description("Version information")
-                    .readOnly()
-                    .initialValue("1.4.7")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("version")
+                  .displayedName("Version")
+                  .description("Version information")
+                  .readOnly()
+                  .initialValue("1.4.7")
+                  .commit();
         }
 
-        GraphicsRenderer(const karabo::util::Hash & input) {
-            //cout << input << endl;
+        GraphicsRenderer(const karabo::util::Hash& input) {
+            // cout << input << endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
             assert(input.get<std::string>("version") == "1.4.7");
             if (input.has("shapes.Circle")) assert(shape->draw() == "Circle");
         }
 
-        virtual ~GraphicsRenderer() {
-        }
+        virtual ~GraphicsRenderer() {}
     };
 
     struct GraphicsRenderer1 {
-
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
 
-        virtual ~GraphicsRenderer1() {
-        }
+        virtual ~GraphicsRenderer1() {}
 
-        static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema& expected) {
+            BOOL_ELEMENT(expected)
+                  .key("antiAlias")
+                  .tags("prop")
+                  .displayedName("Use Anti-Aliasing")
+                  .description("You may switch of for speed")
+                  .assignmentOptional()
+                  .defaultValue(true)
+                  .init()
+                  .expertAccess()
+                  .commit();
 
-            BOOL_ELEMENT(expected).key("antiAlias")
-                    .tags("prop")
-                    .displayedName("Use Anti-Aliasing")
-                    .description("You may switch of for speed")
-                    .assignmentOptional().defaultValue(true)
-                    .init()
-                    .expertAccess()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("color")
+                  .tags("prop")
+                  .displayedName("Color")
+                  .description("The default color for any shape")
+                  .assignmentOptional()
+                  .defaultValue("red")
+                  .reconfigurable()
+                  .allowedStates(State::OFF)
+                  .commit();
 
-            STRING_ELEMENT(expected).key("color")
-                    .tags("prop")
-                    .displayedName("Color")
-                    .description("The default color for any shape")
-                    .assignmentOptional().defaultValue("red")
-                    .reconfigurable().allowedStates(State::OFF)
-                    .commit();
+            BOOL_ELEMENT(expected)
+                  .key("bold")
+                  .tags("prop")
+                  .displayedName("Bold")
+                  .description("Toggles bold painting")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .reconfigurable()
+                  .commit();
 
-            BOOL_ELEMENT(expected).key("bold")
-                    .tags("prop")
-                    .displayedName("Bold")
-                    .description("Toggles bold painting")
-                    .assignmentOptional().defaultValue(false)
-                    .reconfigurable()
-                    .commit();
+            CHOICE_ELEMENT(expected).key("shapes").assignmentOptional().defaultValue("circle").commit();
 
-            CHOICE_ELEMENT(expected).key("shapes")
-                    .assignmentOptional().defaultValue("circle")
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("shapes.circle")
+                  .tags("shape")
+                  .displayedName("Circle")
+                  .description("A circle")
+                  .appendParametersOf<Circle>()
+                  .commit();
 
-            NODE_ELEMENT(expected).key("shapes.circle")
-                    .tags("shape")
-                    .displayedName("Circle")
-                    .description("A circle")
-                    .appendParametersOf<Circle> ()
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("shapes.rectangle")
+                  .tags("shape")
+                  .displayedName("Rectangle")
+                  .description("A rectangle")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("shapes.rectangle")
-                    .tags("shape")
-                    .displayedName("Rectangle")
-                    .description("A rectangle")
-                    .commit();
+            FLOAT_ELEMENT(expected)
+                  .key("shapes.rectangle.b")
+                  .description("Rectangle side - b")
+                  .displayedName("Side B")
+                  .tags("b")
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .init()
+                  .commit();
 
-            FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
-                    .description("Rectangle side - b")
-                    .displayedName("Side B")
-                    .tags("b")
-                    .assignmentOptional().defaultValue(10)
-                    .init()
-                    .commit();
+            FLOAT_ELEMENT(expected)
+                  .key("shapes.rectangle.c")
+                  .description("Rectangle side - c")
+                  .displayedName("Side C")
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .init()
+                  .commit();
 
-            FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
-                    .description("Rectangle side - c")
-                    .displayedName("Side C")
-                    .assignmentOptional().defaultValue(10)
-                    .init()
-                    .commit();
-
-            NODE_ELEMENT(expected).key("triangle")
-                    .displayedName("triangle")
-                    .description("A triangle (Node element containing no other elements)")
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("triangle")
+                  .displayedName("triangle")
+                  .description("A triangle (Node element containing no other elements)")
+                  .commit();
         }
     };
 
     struct TestStruct1 {
-
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
-        TestStruct1(const karabo::util::Hash& config) {
+        TestStruct1(const karabo::util::Hash& config) {}
 
-        }
+        virtual ~TestStruct1() {}
 
-        virtual ~TestStruct1() {
-        }
+        static void expectedParameters(karabo::util::Schema& expected) {
+            STRING_ELEMENT(expected)
+                  .key("exampleKey1")
+                  .tags("hardware, poll")
+                  .displayedName("Example key 1")
+                  .description("Example key 1 description")
+                  .options("Radio,Air Condition,Navigation", ",")
+                  .assignmentOptional()
+                  .defaultValue("Navigation")
+                  .userAccess()
+                  .reconfigurable()
+                  .commit();
 
-        static void expectedParameters(karabo::util::Schema & expected) {
+            INT32_ELEMENT(expected)
+                  .key("exampleKey2")
+                  .alias(10)
+                  .tags("hardware, poll")
+                  .displayedName("Example key 2")
+                  .description("Example key 2 description")
+                  .options("5, 25, 10")
+                  .minInc(5)
+                  .maxInc(25)
+                  .unit(Unit::METER)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .operatorAccess()
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("exampleKey1")
-                    .tags("hardware, poll")
-                    .displayedName("Example key 1")
-                    .description("Example key 1 description")
-                    .options("Radio,Air Condition,Navigation", ",")
-                    .assignmentOptional().defaultValue("Navigation")
-                    .userAccess()
-                    .reconfigurable()
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("exampleKey3")
+                  .alias(5.5)
+                  .tags("hardware, set")
+                  .displayedName("Example key 3")
+                  .description("Example key 3 description")
+                  .allowedStates(State::COOLED, State::ACTIVE, State::DISABLED, State::KNOWN)
+                  .minExc(10)
+                  .maxExc(20)
+                  .assignmentMandatory()
+                  .expertAccess()
+                  .reconfigurable()
+                  .commit();
 
-            INT32_ELEMENT(expected).key("exampleKey2").alias(10)
-                    .tags("hardware, poll")
-                    .displayedName("Example key 2")
-                    .description("Example key 2 description")
-                    .options("5, 25, 10")
-                    .minInc(5)
-                    .maxInc(25)
-                    .unit(Unit::METER)
-                    .metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(10)
-                    .operatorAccess()
-                    .init()
-                    .commit();
-
-            UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
-                    .tags("hardware, set")
-                    .displayedName("Example key 3")
-                    .description("Example key 3 description")
-                    .allowedStates(State::COOLED, State::ACTIVE, State::DISABLED, State::KNOWN)
-                    .minExc(10)
-                    .maxExc(20)
-                    .assignmentMandatory()
-                    .expertAccess()
-                    .reconfigurable()
-                    .commit();
-
-            FLOAT_ELEMENT(expected).key("exampleKey4").alias("exampleAlias4")
-                    .tags("software")
-                    .displayedName("Example key 4")
-                    .description("Example key 4 description")
-                    .options("1.11     -2.22 5.55")
-                    .adminAccess()
-                    .assignmentInternal().noDefaultValue()
-                    .commit();
+            FLOAT_ELEMENT(expected)
+                  .key("exampleKey4")
+                  .alias("exampleAlias4")
+                  .tags("software")
+                  .displayedName("Example key 4")
+                  .description("Example key 4 description")
+                  .options("1.11     -2.22 5.55")
+                  .adminAccess()
+                  .assignmentInternal()
+                  .noDefaultValue()
+                  .commit();
 
             std::vector<int> vecIntAlias;
             {
                 using namespace boost::assign; // bring 'operator+=()' into scope
-                vecIntAlias += 10, 20, 30; // use boost::assign to initialize vector
+                vecIntAlias += 10, 20, 30;     // use boost::assign to initialize vector
             }
-            INT64_ELEMENT(expected).key("exampleKey5").alias(vecIntAlias)
-                    .tags("h/w; d.m.y", ";")
-                    .displayedName("Example key 5")
-                    .description("Example key 5 description")
-                    .readOnly()
-                    .initialValue(1442244)
-                    .warnLow(-10).needsAcknowledging(false)
-                    .warnHigh(10).needsAcknowledging(false)
-                    .alarmLow(-20).needsAcknowledging(false)
-                    .alarmHigh(20).needsAcknowledging(false)
-                    .commit();
+            INT64_ELEMENT(expected)
+                  .key("exampleKey5")
+                  .alias(vecIntAlias)
+                  .tags("h/w; d.m.y", ";")
+                  .displayedName("Example key 5")
+                  .description("Example key 5 description")
+                  .readOnly()
+                  .initialValue(1442244)
+                  .warnLow(-10)
+                  .needsAcknowledging(false)
+                  .warnHigh(10)
+                  .needsAcknowledging(false)
+                  .alarmLow(-20)
+                  .needsAcknowledging(false)
+                  .alarmHigh(20)
+                  .needsAcknowledging(false)
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("exampleKey6").alias("key6")
-                    .displayedName("IP address")
-                    .description("This is IP address presented in hex")
-                    .hex()
-                    .reconfigurable()
-                    .operatorAccess()
-                    .assignmentOptional().defaultValue(0x0100007f) // 127.0.0.1 == localhost
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("exampleKey6")
+                  .alias("key6")
+                  .displayedName("IP address")
+                  .description("This is IP address presented in hex")
+                  .hex()
+                  .reconfigurable()
+                  .operatorAccess()
+                  .assignmentOptional()
+                  .defaultValue(0x0100007f) // 127.0.0.1 == localhost
+                  .commit();
 
-            UINT16_ELEMENT(expected).key("exampleKey7").alias("key7")
-                    .displayedName("Bit string")
-                    .description("Example key 7 description")
-                    .bin("0:isError,1:isMoving,2:isBusy,15:isOn")
-                    .readOnly()
-                    .expertAccess()
-                    .commit();
+            UINT16_ELEMENT(expected)
+                  .key("exampleKey7")
+                  .alias("key7")
+                  .displayedName("Bit string")
+                  .description("Example key 7 description")
+                  .bin("0:isError,1:isMoving,2:isBusy,15:isOn")
+                  .readOnly()
+                  .expertAccess()
+                  .commit();
 
-            UINT8_ELEMENT(expected).key("exampleKey8")
-                    .displayedName("Example key 8")
-                    .description("Options with unsigned char used to make problems")
-                    .options("1,2,3,4")
-                    .assignmentOptional().defaultValue(2)
-                    .reconfigurable()
-                    .commit();
+            UINT8_ELEMENT(expected)
+                  .key("exampleKey8")
+                  .displayedName("Example key 8")
+                  .description("Options with unsigned char used to make problems")
+                  .options("1,2,3,4")
+                  .assignmentOptional()
+                  .defaultValue(2)
+                  .reconfigurable()
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
-                    .displayedName("Example key 9")
-                    .setSpecialDisplayType("TestDisplayType")
-                    .readOnly().initialValue(std::vector<std::string>({"Hallo", "World"}))
-                    .commit();
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("exampleKey9")
+                  .displayedName("Example key 9")
+                  .setSpecialDisplayType("TestDisplayType")
+                  .readOnly()
+                  .initialValue(std::vector<std::string>({"Hallo", "World"}))
+                  .commit();
 
-            NDARRAY_ELEMENT(expected).key("exampleKey10")
-                    .displayedName("Example key 10")
-                    .dtype(karabo::util::Types::UINT16)
-                    .unit(Unit::DEGREE_CELSIUS)
-                    .metricPrefix(MetricPrefix::CENTI)
-                    .shape("3,2")
-                    .commit();
+            NDARRAY_ELEMENT(expected)
+                  .key("exampleKey10")
+                  .displayedName("Example key 10")
+                  .dtype(karabo::util::Types::UINT16)
+                  .unit(Unit::DEGREE_CELSIUS)
+                  .metricPrefix(MetricPrefix::CENTI)
+                  .shape("3,2")
+                  .commit();
 
-            INT32_ELEMENT(expected).key("sampleKey")
-                    .assignmentOptional().defaultValueFromString("10")
-                    .reconfigurable()
-                    .commit();
+            INT32_ELEMENT(expected)
+                  .key("sampleKey")
+                  .assignmentOptional()
+                  .defaultValueFromString("10")
+                  .reconfigurable()
+                  .commit();
 
-            INT32_ELEMENT(expected).key("sampleKey2")
-                    .readOnly()
-                    .commit();
+            INT32_ELEMENT(expected).key("sampleKey2").readOnly().commit();
         }
     };
 
     struct TestStruct2 : public TestStruct1 {
-
         KARABO_CLASSINFO(TestStruct2, "TestStruct2", "1.0");
 
-        TestStruct2(const karabo::util::Hash& config) : TestStruct1(config) {
-
-        }
+        TestStruct2(const karabo::util::Hash& config) : TestStruct1(config) {}
 
         static void expectedParameters(Schema& schema) {
+            OVERWRITE_ELEMENT(schema).key("exampleKey2").setNewAlias<int>(20).commit();
 
-            OVERWRITE_ELEMENT(schema).key("exampleKey2")
-                    .setNewAlias<int>(20)
-                    .commit();
-
-            OVERWRITE_ELEMENT(schema).key("exampleKey3")
-                    .setNewAlias<int>(30)
-                    .commit();
-
-
+            OVERWRITE_ELEMENT(schema).key("exampleKey3").setNewAlias<int>(30).commit();
         }
-
     };
 
     struct OtherSchemaElements {
-
         KARABO_CLASSINFO(OtherSchemaElements, "OtherSchemaElements", "1.0");
 
-        virtual ~OtherSchemaElements() {
-        }
+        virtual ~OtherSchemaElements() {}
 
-        static void expectedParameters(karabo::util::Schema & expected) {
-            SLOT_ELEMENT(expected).key("slotTest")
-                    .displayedName("Reset")
-                    .description("Test slot element")
-                    .allowedStates(State::STARTED, State::STOPPED, State::ERROR)
-                    .commit();
-
-            PATH_ELEMENT(expected)
-                    .description("File name")
-                    .key("filename")
-                    .alias(5)
-                    .displayedName("Filename")
-                    .isOutputFile()
-                    .options("file1, file2")
-                    .assignmentOptional().defaultValue("karabo.log")
-                    .reconfigurable()
-                    .commit();
+        static void expectedParameters(karabo::util::Schema& expected) {
+            SLOT_ELEMENT(expected)
+                  .key("slotTest")
+                  .displayedName("Reset")
+                  .description("Test slot element")
+                  .allowedStates(State::STARTED, State::STOPPED, State::ERROR)
+                  .commit();
 
             PATH_ELEMENT(expected)
-                    .key("testfile")
-                    .isInputFile()
-                    .readOnly().defaultValue("initFile") // (now) for readOnly it's the same as initialValue
-                    .alarmHigh("a").needsAcknowledging(false)
-                    .alarmLow("b").needsAcknowledging(false)
-                    .warnHigh("c").needsAcknowledging(false)
-                    .warnLow("d").needsAcknowledging(false)
-                    .archivePolicy(Schema::EVERY_10MIN)
-                    .commit();
+                  .description("File name")
+                  .key("filename")
+                  .alias(5)
+                  .displayedName("Filename")
+                  .isOutputFile()
+                  .options("file1, file2")
+                  .assignmentOptional()
+                  .defaultValue("karabo.log")
+                  .reconfigurable()
+                  .commit();
+
+            PATH_ELEMENT(expected)
+                  .key("testfile")
+                  .isInputFile()
+                  .readOnly()
+                  .defaultValue("initFile") // (now) for readOnly it's the same as initialValue
+                  .alarmHigh("a")
+                  .needsAcknowledging(false)
+                  .alarmLow("b")
+                  .needsAcknowledging(false)
+                  .warnHigh("c")
+                  .needsAcknowledging(false)
+                  .warnLow("d")
+                  .needsAcknowledging(false)
+                  .archivePolicy(Schema::EVERY_10MIN)
+                  .commit();
 
             using std::vector;
 
@@ -495,201 +515,183 @@ namespace configurationTest {
             vector<int> vecWarnH(3, 100);
 
             VECTOR_INT32_ELEMENT(expected)
-                    .key("vecInt")
-                    .readOnly()
-                    .initialValue(vecInit)
-                    .warnLow(vecWarnL).needsAcknowledging(false)
-                    .warnHigh(vecWarnH).needsAcknowledging(false)
-                    .archivePolicy(Schema::EVERY_EVENT)
-                    .commit();
+                  .key("vecInt")
+                  .readOnly()
+                  .initialValue(vecInit)
+                  .warnLow(vecWarnL)
+                  .needsAcknowledging(false)
+                  .warnHigh(vecWarnH)
+                  .needsAcknowledging(false)
+                  .archivePolicy(Schema::EVERY_EVENT)
+                  .commit();
 
             vector<double> vecAlarmL(3, -5.5);
             vector<double> vecAlarmH(3, 7.7);
             VECTOR_DOUBLE_ELEMENT(expected)
-                    .key("vecDouble")
-                    .readOnly()
-                    .alarmLow(vecAlarmL).needsAcknowledging(false)
-                    .alarmHigh(vecAlarmH).needsAcknowledging(false)
-                    .archivePolicy(Schema::NO_ARCHIVING)
-                    .commit();
+                  .key("vecDouble")
+                  .readOnly()
+                  .alarmLow(vecAlarmL)
+                  .needsAcknowledging(false)
+                  .alarmHigh(vecAlarmH)
+                  .needsAcknowledging(false)
+                  .archivePolicy(Schema::NO_ARCHIVING)
+                  .commit();
 
             VECTOR_INT32_ELEMENT(expected)
-                    .key("vecIntReconfig")
-                    .assignmentOptional().defaultValue(vecInit)
-                    .reconfigurable()
-                    .commit();
+                  .key("vecIntReconfig")
+                  .assignmentOptional()
+                  .defaultValue(vecInit)
+                  .reconfigurable()
+                  .commit();
 
             VECTOR_INT32_ELEMENT(expected)
-                    .key("vecIntReconfigStr")
-                    .assignmentOptional().defaultValueFromString("11, 22, 33")
-                    .reconfigurable()
-                    .commit();
+                  .key("vecIntReconfigStr")
+                  .assignmentOptional()
+                  .defaultValueFromString("11, 22, 33")
+                  .reconfigurable()
+                  .commit();
 
             VECTOR_DOUBLE_ELEMENT(expected)
-                    .key("vecDoubleReconfigStr")
-                    .assignmentOptional().defaultValueFromString("1.1, 2.2, 3.3")
-                    .reconfigurable()
-                    .commit();
+                  .key("vecDoubleReconfigStr")
+                  .assignmentOptional()
+                  .defaultValueFromString("1.1, 2.2, 3.3")
+                  .reconfigurable()
+                  .commit();
 
             VECTOR_BOOL_ELEMENT(expected)
-                    .key("vecBool")
-                    .tags("h/w; d.m.y", ";")
-                    .allowedStates(State::STARTED, State::STOPPED)
-                    .minSize(2)
-                    .maxSize(7)
-                    .assignmentMandatory()
-                    .commit();
+                  .key("vecBool")
+                  .tags("h/w; d.m.y", ";")
+                  .allowedStates(State::STARTED, State::STOPPED)
+                  .minSize(2)
+                  .maxSize(7)
+                  .assignmentMandatory()
+                  .commit();
+
+            NDARRAY_ELEMENT(expected).key("arrBool").dtype(karabo::util::Types::BOOL).shape("3,2").commit();
+
+            NDARRAY_ELEMENT(expected).key("arrInt8").dtype(karabo::util::Types::INT8).shape("3,2").commit();
+
+            NDARRAY_ELEMENT(expected).key("arrUInt16").dtype(karabo::util::Types::UINT16).shape("3,2").commit();
+
+            NDARRAY_ELEMENT(expected).key("arrFloat").dtype(karabo::util::Types::FLOAT).shape("3,2").commit();
+
+            NDARRAY_ELEMENT(expected).key("arrDouble").dtype(karabo::util::Types::DOUBLE).shape("3,2,-1").commit();
 
             NDARRAY_ELEMENT(expected)
-                    .key("arrBool")
-                    .dtype(karabo::util::Types::BOOL)
-                    .shape("3,2")
-                    .commit();
+                  .key("arrUndefined")
+                  // leave type undefined
+                  .shape("0,3,0")
+                  .commit();
 
-            NDARRAY_ELEMENT(expected)
-                    .key("arrInt8")
-                    .dtype(karabo::util::Types::INT8)
-                    .shape("3,2")
-                    .commit();
-
-            NDARRAY_ELEMENT(expected)
-                    .key("arrUInt16")
-                    .dtype(karabo::util::Types::UINT16)
-                    .shape("3,2")
-                    .commit();
-
-            NDARRAY_ELEMENT(expected)
-                    .key("arrFloat")
-                    .dtype(karabo::util::Types::FLOAT)
-                    .shape("3,2")
-                    .commit();
-
-            NDARRAY_ELEMENT(expected)
-                    .key("arrDouble")
-                    .dtype(karabo::util::Types::DOUBLE)
-                    .shape("3,2,-1")
-                    .commit();
-
-            NDARRAY_ELEMENT(expected)
-                    .key("arrUndefined")
-                    // leave type undefined
-                    .shape("0,3,0")
-                    .commit();
-
-            IMAGEDATA_ELEMENT(expected)
-                    .key("image")
-                    .commit();
+            IMAGEDATA_ELEMENT(expected).key("image").commit();
 
             Schema rowSchema;
 
             INT32_ELEMENT(rowSchema)
-                    .key("a")
-                    .minInc(2)
-                    .maxExc(10)
-                    .displayedName("A")
-                    .assignmentOptional().defaultValue(2)
-                    .commit();
+                  .key("a")
+                  .minInc(2)
+                  .maxExc(10)
+                  .displayedName("A")
+                  .assignmentOptional()
+                  .defaultValue(2)
+                  .commit();
 
-            STRING_ELEMENT(rowSchema)
-                    .key("b")
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
+            STRING_ELEMENT(rowSchema).key("b").assignmentOptional().noDefaultValue().commit();
 
             TABLE_ELEMENT(expected)
-                    .key("testTable")
-                    .setColumns(rowSchema)
-                    .assignmentOptional().defaultValue(std::vector<Hash>(2, Hash("a", 3, "b", "foo")))
-                    .commit();
+                  .key("testTable")
+                  .setColumns(rowSchema)
+                  .assignmentOptional()
+                  .defaultValue(std::vector<Hash>(2, Hash("a", 3, "b", "foo")))
+                  .commit();
 
             TABLE_ELEMENT(expected)
-                    .key("testTableEmptyDefault")
-                    .setColumns(rowSchema)
-                    .assignmentOptional().defaultValue(std::vector<Hash>())
-                    .commit();
+                  .key("testTableEmptyDefault")
+                  .setColumns(rowSchema)
+                  .assignmentOptional()
+                  .defaultValue(std::vector<Hash>())
+                  .commit();
 
             LIST_ELEMENT(expected)
-                    .key("shapeList")
-                    .description("A list of shapes")
-                    .appendNodesOfConfigurationBase<Shape>()
-                    .assignmentOptional().defaultValueFromString("Circle,Rectangle")
-                    .commit();
+                  .key("shapeList")
+                  .description("A list of shapes")
+                  .appendNodesOfConfigurationBase<Shape>()
+                  .assignmentOptional()
+                  .defaultValueFromString("Circle,Rectangle")
+                  .commit();
 
             // We can also add nodes to the list by hand:
-            NODE_ELEMENT(expected)
-                    .key("shapeList.BizarreForm")
-                    .description("A funny shape added by hand")
-                    .commit();
+            NODE_ELEMENT(expected).key("shapeList.BizarreForm").description("A funny shape added by hand").commit();
 
             FLOAT_ELEMENT(expected)
-                    .key("shapeList.BizarreForm.length")
-                    .description("The single length parameter characterizing the bizarre form")
-                    .assignmentOptional().defaultValue(10.f)
-                    .commit();
+                  .key("shapeList.BizarreForm.length")
+                  .description("The single length parameter characterizing the bizarre form")
+                  .assignmentOptional()
+                  .defaultValue(10.f)
+                  .commit();
         }
     };
 
     struct SchemaNodeElements {
-
         KARABO_CLASSINFO(SchemaNodeElements, "SchemaNodeElements", "1.0");
 
-        SchemaNodeElements(const karabo::util::Hash& config) {
-        }
+        SchemaNodeElements(const karabo::util::Hash& config) {}
 
-        virtual ~SchemaNodeElements() {
-        }
+        virtual ~SchemaNodeElements() {}
 
-        static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema& expected) {
+            NODE_ELEMENT(expected)
+                  .key("monitor")
+                  .displayedName("Monitor")
+                  .description("A Monitor (Node element containing count and other Node elements: stats)")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("monitor")
-                    .displayedName("Monitor")
-                    .description("A Monitor (Node element containing count and other Node elements: stats)")
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("monitor.count")
+                  .displayedName("Count")
+                  .description("Test count element")
+                  .reconfigurable()
+                  .assignmentOptional()
+                  .defaultValue(777)
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("monitor.count")
-                    .displayedName("Count")
-                    .description("Test count element")
-                    .reconfigurable()
-                    .assignmentOptional().defaultValue(777)
-                    .commit();
-
-            NODE_ELEMENT(expected).key("monitor.stats")
-                    .description("Complex status node empty for a while...")
-                    .displayedName("Stats")
-                    .commit();
-
+            NODE_ELEMENT(expected)
+                  .key("monitor.stats")
+                  .description("Complex status node empty for a while...")
+                  .displayedName("Stats")
+                  .commit();
         }
     };
 
     struct SchemaNodeInjected {
-
         KARABO_CLASSINFO(SchemaNodeInjected, "SchemaNodeInjected", "1.0");
 
-        SchemaNodeInjected(const karabo::util::Hash& config) {
-        }
+        SchemaNodeInjected(const karabo::util::Hash& config) {}
 
-        virtual ~SchemaNodeInjected() {
-        }
+        virtual ~SchemaNodeInjected() {}
 
-        static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema& expected) {
+            NODE_ELEMENT(expected)
+                  .key("monitor")
+                  .displayedName("Monitor new")
+                  .description("A Monitor new (Node element containing count and other Node elements: stats)")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("monitor")
-                    .displayedName("Monitor new")
-                    .description("A Monitor new (Node element containing count and other Node elements: stats)")
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("monitor.stats")
+                  .description("Complex status node having d1 parameter")
+                  .displayedName("Stats")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("monitor.stats")
-                    .description("Complex status node having d1 parameter")
-                    .displayedName("Stats")
-                    .commit();
-
-            FLOAT_ELEMENT(expected).key("monitor.stats.d1")
-                    .description("D1 parameter in 'monitor.stats' node")
-                    .displayedName("D1")
-                    .reconfigurable()
-                    .assignmentOptional().defaultValue(3.1415f)
-                    .commit();
-
+            FLOAT_ELEMENT(expected)
+                  .key("monitor.stats.d1")
+                  .description("D1 parameter in 'monitor.stats' node")
+                  .displayedName("D1")
+                  .reconfigurable()
+                  .assignmentOptional()
+                  .defaultValue(3.1415f)
+                  .commit();
         }
     };
-}
+} // namespace configurationTest
 #endif

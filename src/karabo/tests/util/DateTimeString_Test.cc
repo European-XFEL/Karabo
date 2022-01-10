@@ -1,13 +1,14 @@
-/* 
+/*
  * File:   DateTimeString_Test.cc
  * Author: <luis.maia@xfel.eu>
- * 
+ *
  * Created on March 19, 2014, 11:01 AM
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include "DateTimeString_Test.hh"
+
 #include <karabo/util/DateTimeString.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DateTimeString_Test);
@@ -16,48 +17,44 @@ using namespace std;
 using namespace karabo::util;
 
 
-DateTimeString_Test::DateTimeString_Test() {
-}
+DateTimeString_Test::DateTimeString_Test() {}
 
 
-DateTimeString_Test::~DateTimeString_Test() {
-}
+DateTimeString_Test::~DateTimeString_Test() {}
 
 
-void DateTimeString_Test::setUp() {
-}
+void DateTimeString_Test::setUp() {}
 
 
-void DateTimeString_Test::tearDown() {
-}
+void DateTimeString_Test::tearDown() {}
 
 
-void DateTimeString_Test::validateConstructor(const std::string& pTime,
-                                              const std::string& expectedDate,
+void DateTimeString_Test::validateConstructor(const std::string& pTime, const std::string& expectedDate,
                                               const std::string& expectedTime,
                                               const std::string& expectedFractionalSecond,
-                                              const std::string& expectedTimeZone,
-                                              const std::string& expectedDateTime,
+                                              const std::string& expectedTimeZone, const std::string& expectedDateTime,
                                               const std::string& expectedSecondsSinceEpoch) {
     bool writeToClog = false;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
-        std::clog << "DT => " << expectedDate << " |T => " << expectedTime << " |FSec => " << expectedFractionalSecond << " |TZ => " << expectedTimeZone << " |" << std::endl;
+        std::clog << "DT => " << expectedDate << " |T => " << expectedTime << " |FSec => " << expectedFractionalSecond
+                  << " |TZ => " << expectedTimeZone << " |" << std::endl;
         std::clog << "----------------------------------------------------------" << std::endl;
     }
 
     // Constructor
     karabo::util::DateTimeString dts;
     if (pTime == "") {
-        //Empty constructor
+        // Empty constructor
         dts = karabo::util::DateTimeString();
     } else {
-        //String constructor
+        // String constructor
         dts = karabo::util::DateTimeString(pTime);
     }
     // Constructor complete
-    karabo::util::DateTimeString dts2 = karabo::util::DateTimeString(expectedDate, expectedTime, expectedFractionalSecond, expectedTimeZone);
+    karabo::util::DateTimeString dts2 =
+          karabo::util::DateTimeString(expectedDate, expectedTime, expectedFractionalSecond, expectedTimeZone);
 
 
     // Validations
@@ -69,12 +66,18 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
     CPPUNIT_ASSERT(dts.getTime() == expectedTime);
     CPPUNIT_ASSERT(dts2.getTime() == expectedTime);
 
-    if (writeToClog) std::clog << "FSec <std::string> => " << dts.getFractionalSeconds<std::string>() << " == " << expectedFractionalSecond << std::endl;
+    if (writeToClog)
+        std::clog << "FSec <std::string> => " << dts.getFractionalSeconds<std::string>()
+                  << " == " << expectedFractionalSecond << std::endl;
     CPPUNIT_ASSERT(dts.getFractionalSeconds<std::string>() == expectedFractionalSecond);
     CPPUNIT_ASSERT(dts2.getFractionalSeconds<std::string>() == expectedFractionalSecond);
-    if (writeToClog) std::clog << "FSec <unsigned long long> => " << dts.getFractionalSeconds<std::string>() << " == " << expectedFractionalSecond << std::endl;
-    CPPUNIT_ASSERT(dts.getFractionalSeconds<unsigned long long>() == boost::lexical_cast<unsigned long long>(expectedFractionalSecond));
-    CPPUNIT_ASSERT(dts2.getFractionalSeconds<unsigned long long>() == boost::lexical_cast<unsigned long long>(expectedFractionalSecond));
+    if (writeToClog)
+        std::clog << "FSec <unsigned long long> => " << dts.getFractionalSeconds<std::string>()
+                  << " == " << expectedFractionalSecond << std::endl;
+    CPPUNIT_ASSERT(dts.getFractionalSeconds<unsigned long long>() ==
+                   boost::lexical_cast<unsigned long long>(expectedFractionalSecond));
+    CPPUNIT_ASSERT(dts2.getFractionalSeconds<unsigned long long>() ==
+                   boost::lexical_cast<unsigned long long>(expectedFractionalSecond));
 
     if (writeToClog) std::clog << "TZ => " << dts.getTimeZone() << " == " << expectedTimeZone << std::endl;
     CPPUNIT_ASSERT(dts.getTimeZone() == expectedTimeZone);
@@ -86,7 +89,8 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
 
     std::string secondsSinceEpoch = boost::lexical_cast<std::string>(dts.getSecondsSinceEpoch());
     std::string secondsSinceEpoch2 = boost::lexical_cast<std::string>(dts2.getSecondsSinceEpoch());
-    if (writeToClog) std::clog << "SecondsSinceEpoch => " << secondsSinceEpoch << " == " << expectedSecondsSinceEpoch << std::endl;
+    if (writeToClog)
+        std::clog << "SecondsSinceEpoch => " << secondsSinceEpoch << " == " << expectedSecondsSinceEpoch << std::endl;
     CPPUNIT_ASSERT(secondsSinceEpoch == expectedSecondsSinceEpoch);
     CPPUNIT_ASSERT(secondsSinceEpoch2 == expectedSecondsSinceEpoch);
 
@@ -95,51 +99,72 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
 
 
 void DateTimeString_Test::testConstructors() {
-
     // Validate "empty" constructor
-    validateConstructor("", "19700101", "000000", "000000000000000000", "+0000", "19700101T000000", boost::lexical_cast<std::string>(0ULL));
+    validateConstructor("", "19700101", "000000", "000000000000000000", "+0000", "19700101T000000",
+                        boost::lexical_cast<std::string>(0ULL));
 
     unsigned long long expectedSecondsSinceEpochULL = 475111250;
-    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475136450; //475111250 + (60*60*7)
-    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475098650; //475111250 - (60*60*3.5)
+    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475136450;   // 475111250 + (60*60*7)
+    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475098650; // 475111250 - (60*60*3.5)
 
     std::string expectedSecondsSinceEpoch = boost::lexical_cast<std::string>(expectedSecondsSinceEpochULL);
-    std::string expectedSecondsSinceEpochMinos7h = boost::lexical_cast<std::string>(expectedSecondsSinceEpochMinos7hULL);
-    std::string expectedSecondsSinceEpochPlus3h30m = boost::lexical_cast<std::string>(expectedSecondsSinceEpochPlus3h30mULL);
+    std::string expectedSecondsSinceEpochMinos7h =
+          boost::lexical_cast<std::string>(expectedSecondsSinceEpochMinos7hULL);
+    std::string expectedSecondsSinceEpochPlus3h30m =
+          boost::lexical_cast<std::string>(expectedSecondsSinceEpochPlus3h30mULL);
 
     // Validate the ISO8601 "string" constructor
     // Validate Extended strings
     std::string expectedDateExt = "1985-01-20";
     std::string expectedTimeExt = "23:20:50";
     std::string expectedDateAndTimeExt = "1985-01-20T23:20:50";
-    //validateConstructor("1985-01-20T23:20:50.789333123456789123", expectedDateExt, expectedTimeExt, "789333123456789123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50", expectedDateExt, expectedTimeExt, "000000000000000000", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50,123", expectedDateExt, expectedTimeExt, "123000000000000000", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50.123", expectedDateExt, expectedTimeExt, "123000000000000000", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50.123z", expectedDateExt, expectedTimeExt, "123000000000000000", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50z", expectedDateExt, expectedTimeExt, "000000000000000000", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50Z", expectedDateExt, expectedTimeExt, "000000000000000000", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50+00:00", expectedDateExt, expectedTimeExt, "000000000000000000", "+00:00", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    // validateConstructor("1985-01-20T23:20:50.789333123456789123", expectedDateExt, expectedTimeExt,
+    // "789333123456789123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50", expectedDateExt, expectedTimeExt, "000000000000000000", "",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50,123", expectedDateExt, expectedTimeExt, "123000000000000000", "",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50.123", expectedDateExt, expectedTimeExt, "123000000000000000", "",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50.123z", expectedDateExt, expectedTimeExt, "123000000000000000", "Z",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50z", expectedDateExt, expectedTimeExt, "000000000000000000", "Z",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50Z", expectedDateExt, expectedTimeExt, "000000000000000000", "Z",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50+00:00", expectedDateExt, expectedTimeExt, "000000000000000000", "+00:00",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpoch);
     //
-    validateConstructor("1985-01-20T23:20:50-07:00", expectedDateExt, expectedTimeExt, "000000000000000000", "-07:00", expectedDateAndTimeExt, expectedSecondsSinceEpochMinos7h);
-    validateConstructor("1985-01-20T23:20:50+03:30", expectedDateExt, expectedTimeExt, "000000000000000000", "+03:30", expectedDateAndTimeExt, expectedSecondsSinceEpochPlus3h30m);
+    validateConstructor("1985-01-20T23:20:50-07:00", expectedDateExt, expectedTimeExt, "000000000000000000", "-07:00",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpochMinos7h);
+    validateConstructor("1985-01-20T23:20:50+03:30", expectedDateExt, expectedTimeExt, "000000000000000000", "+03:30",
+                        expectedDateAndTimeExt, expectedSecondsSinceEpochPlus3h30m);
 
     // Validate Compact strings
     std::string expectedDateCom = "19850120";
     std::string expectedTimeCom = "232050";
     std::string expectedDateAndTimeCom = "19850120T232050";
-    validateConstructor("19850120T232050.789333123456789123", expectedDateCom, expectedTimeCom, "789333123456789123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050", expectedDateCom, expectedTimeCom, "000000000000000000", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050,123", expectedDateCom, expectedTimeCom, "123000000000000000", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050.123", expectedDateCom, expectedTimeCom, "123000000000000000", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050.123z", expectedDateCom, expectedTimeCom, "123000000000000000", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050z", expectedDateCom, expectedTimeCom, "000000000000000000", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050Z", expectedDateCom, expectedTimeCom, "000000000000000000", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050+0000", expectedDateCom, expectedTimeCom, "000000000000000000", "+0000", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050.789333123456789123", expectedDateCom, expectedTimeCom, "789333123456789123",
+                        "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050", expectedDateCom, expectedTimeCom, "000000000000000000", "",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050,123", expectedDateCom, expectedTimeCom, "123000000000000000", "",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050.123", expectedDateCom, expectedTimeCom, "123000000000000000", "",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050.123z", expectedDateCom, expectedTimeCom, "123000000000000000", "Z",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050z", expectedDateCom, expectedTimeCom, "000000000000000000", "Z",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050Z", expectedDateCom, expectedTimeCom, "000000000000000000", "Z",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050+0000", expectedDateCom, expectedTimeCom, "000000000000000000", "+0000",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpoch);
     //
-    validateConstructor("19850120T232050-0700", expectedDateCom, expectedTimeCom, "000000000000000000", "-0700", expectedDateAndTimeCom, expectedSecondsSinceEpochMinos7h);
-    validateConstructor("19850120T232050+0330", expectedDateCom, expectedTimeCom, "000000000000000000", "+0330", expectedDateAndTimeCom, expectedSecondsSinceEpochPlus3h30m);
-
+    validateConstructor("19850120T232050-0700", expectedDateCom, expectedTimeCom, "000000000000000000", "-0700",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpochMinos7h);
+    validateConstructor("19850120T232050+0330", expectedDateCom, expectedTimeCom, "000000000000000000", "+0330",
+                        expectedDateAndTimeCom, expectedSecondsSinceEpochPlus3h30m);
 }
 
 
@@ -160,219 +185,219 @@ void DateTimeString_Test::isStringValidIso8601() {
     // Complete representation
 
 
-    CPPUNIT_ASSERT(isValidIso8601("19850412") == true); //Basic format: YYYYMMDD
-    CPPUNIT_ASSERT(isValidIso8601("1985-04-12") == true); //Extended format: YYYY-MM-DD
+    CPPUNIT_ASSERT(isValidIso8601("19850412") == true);   // Basic format: YYYYMMDD
+    CPPUNIT_ASSERT(isValidIso8601("1985-04-12") == true); // Extended format: YYYY-MM-DD
 
     // Representations with reduced precision
-    //A specific month
-    CPPUNIT_ASSERT(isValidIso8601("1985-04") == true); //Basic format: YYYY-MM
-    //A specific year 
-    CPPUNIT_ASSERT(isValidIso8601("1985") == true); //Basic format: YYYY
-    //A specific century
-    CPPUNIT_ASSERT(isValidIso8601("19") == true); //Basic format: YY
+    // A specific month
+    CPPUNIT_ASSERT(isValidIso8601("1985-04") == true); // Basic format: YYYY-MM
+    // A specific year
+    CPPUNIT_ASSERT(isValidIso8601("1985") == true); // Basic format: YYYY
+    // A specific century
+    CPPUNIT_ASSERT(isValidIso8601("19") == true); // Basic format: YY
 
-    //Truncated representations
-    //A specific date in the implied century
-    CPPUNIT_ASSERT(isValidIso8601("850412") == true); //Basic format: YYMMDD
-    CPPUNIT_ASSERT(isValidIso8601("85-04-12") == true); //Extended format: YY-MM-DD
-    //A specific year and month in the implied century
-    CPPUNIT_ASSERT(isValidIso8601("-8504") == true); //Basic format: -YYMM
-    CPPUNIT_ASSERT(isValidIso8601("-85-04") == true); //Extended format: -YY-MM
-    //A specific year in the implied century
-    CPPUNIT_ASSERT(isValidIso8601("-85") == true); //Basic format: -YY
-    //A specific day of a month in the implied year
-    CPPUNIT_ASSERT(isValidIso8601("--0412") == true); //Basic format: --MMDD
-    CPPUNIT_ASSERT(isValidIso8601("--04-12") == true); //Extended format: --MM-DD
-    //A specific month in the implied year
-    CPPUNIT_ASSERT(isValidIso8601("--04") == true); //Basic format: --MM
-    //A specific day in the implied month
-    CPPUNIT_ASSERT(isValidIso8601("---12") == true); //Basic format: ---DD
+    // Truncated representations
+    // A specific date in the implied century
+    CPPUNIT_ASSERT(isValidIso8601("850412") == true);   // Basic format: YYMMDD
+    CPPUNIT_ASSERT(isValidIso8601("85-04-12") == true); // Extended format: YY-MM-DD
+    // A specific year and month in the implied century
+    CPPUNIT_ASSERT(isValidIso8601("-8504") == true);  // Basic format: -YYMM
+    CPPUNIT_ASSERT(isValidIso8601("-85-04") == true); // Extended format: -YY-MM
+    // A specific year in the implied century
+    CPPUNIT_ASSERT(isValidIso8601("-85") == true); // Basic format: -YY
+    // A specific day of a month in the implied year
+    CPPUNIT_ASSERT(isValidIso8601("--0412") == true);  // Basic format: --MMDD
+    CPPUNIT_ASSERT(isValidIso8601("--04-12") == true); // Extended format: --MM-DD
+    // A specific month in the implied year
+    CPPUNIT_ASSERT(isValidIso8601("--04") == true); // Basic format: --MM
+    // A specific day in the implied month
+    CPPUNIT_ASSERT(isValidIso8601("---12") == true); // Basic format: ---DD
 
-    //Expanded representations 
-    // Only if agreed it's possible to increase the number of years digits (i.e. 1)
-    //A specific day
-    CPPUNIT_ASSERT(isValidIso8601("+019850412") == false); //Basic format: ±YYYYYMMDD
-    CPPUNIT_ASSERT(isValidIso8601("+01985-04-12") == false); //Extended format: ±YYYYY-MM-DD
-    //A specific month
-    CPPUNIT_ASSERT(isValidIso8601("+01985-04") == false); //Basic format: ±YYYYY-MM
-    //A specific year
-    CPPUNIT_ASSERT(isValidIso8601("+01985") == false); //Basic format: ±YYYYY 
-    //A specific century
-    CPPUNIT_ASSERT(isValidIso8601("+019") == false); //Basic format: ±YYY 
+    // Expanded representations
+    //  Only if agreed it's possible to increase the number of years digits (i.e. 1)
+    // A specific day
+    CPPUNIT_ASSERT(isValidIso8601("+019850412") == false);   // Basic format: ±YYYYYMMDD
+    CPPUNIT_ASSERT(isValidIso8601("+01985-04-12") == false); // Extended format: ±YYYYY-MM-DD
+    // A specific month
+    CPPUNIT_ASSERT(isValidIso8601("+01985-04") == false); // Basic format: ±YYYYY-MM
+    // A specific year
+    CPPUNIT_ASSERT(isValidIso8601("+01985") == false); // Basic format: ±YYYYY
+    // A specific century
+    CPPUNIT_ASSERT(isValidIso8601("+019") == false); // Basic format: ±YYY
 
 
     /*
      * Ordinal date
      */
-    //Complete representation
-    CPPUNIT_ASSERT(isValidIso8601("1985102") == true); //Basic format: YYYYDDD
-    CPPUNIT_ASSERT(isValidIso8601("1985-102") == true); //Extended format: YYYY-DDD
+    // Complete representation
+    CPPUNIT_ASSERT(isValidIso8601("1985102") == true);  // Basic format: YYYYDDD
+    CPPUNIT_ASSERT(isValidIso8601("1985-102") == true); // Extended format: YYYY-DDD
 
-    //Truncated representations
-    //A specific year and day in the implied century
-    CPPUNIT_ASSERT(isValidIso8601("85102") == true); //Basic format: YYDDD
-    CPPUNIT_ASSERT(isValidIso8601("85-102") == true); //Extended format: YY-DDD
-    //Day only in the implied year
-    CPPUNIT_ASSERT(isValidIso8601("-102") == true); //Basic format: -DDD
+    // Truncated representations
+    // A specific year and day in the implied century
+    CPPUNIT_ASSERT(isValidIso8601("85102") == true);  // Basic format: YYDDD
+    CPPUNIT_ASSERT(isValidIso8601("85-102") == true); // Extended format: YY-DDD
+    // Day only in the implied year
+    CPPUNIT_ASSERT(isValidIso8601("-102") == true); // Basic format: -DDD
 
-    //Expanded representations
-    // Only if agreed it's possible to increase the number of years digits (i.e. 1)
-    //A specific day
-    CPPUNIT_ASSERT(isValidIso8601("+01985102") == false); //Basic format: ±YYYYYDDD
-    CPPUNIT_ASSERT(isValidIso8601("+01985-102") == false); //Extended format: ±YYYYY-DDD
+    // Expanded representations
+    //  Only if agreed it's possible to increase the number of years digits (i.e. 1)
+    // A specific day
+    CPPUNIT_ASSERT(isValidIso8601("+01985102") == false);  // Basic format: ±YYYYYDDD
+    CPPUNIT_ASSERT(isValidIso8601("+01985-102") == false); // Extended format: ±YYYYY-DDD
 
 
     /*
      * Week date
      */
-    //Complete representation
-    CPPUNIT_ASSERT(isValidIso8601("1985W155") == true); //Basic format: YYYYWwwD
-    CPPUNIT_ASSERT(isValidIso8601("1985-W15-5") == true); //Extended format: YYYY-Www-D
+    // Complete representation
+    CPPUNIT_ASSERT(isValidIso8601("1985W155") == true);   // Basic format: YYYYWwwD
+    CPPUNIT_ASSERT(isValidIso8601("1985-W15-5") == true); // Extended format: YYYY-Www-D
 
-    //Representation with reduced precision
-    //A specific week
-    CPPUNIT_ASSERT(isValidIso8601("1985W15") == true); //Basic format: YYYYWww
-    CPPUNIT_ASSERT(isValidIso8601("1985-W15") == true); //Extended format: YYYY-Www
+    // Representation with reduced precision
+    // A specific week
+    CPPUNIT_ASSERT(isValidIso8601("1985W15") == true);  // Basic format: YYYYWww
+    CPPUNIT_ASSERT(isValidIso8601("1985-W15") == true); // Extended format: YYYY-Www
 
-    //Truncated representations
-    //Year, week and day in the implied century
-    CPPUNIT_ASSERT(isValidIso8601("85W155") == true); //Basic format: YYWwwD
-    CPPUNIT_ASSERT(isValidIso8601("85-W15-5") == true); //Extended format: YY-Www-D
-    //Year and week only in the implied century
-    CPPUNIT_ASSERT(isValidIso8601("85W15") == true); //Basic format: YYWww
-    CPPUNIT_ASSERT(isValidIso8601("85-W15") == true); //Extended format: YY-Www
-    //Year of the implied decade, week and day only
-    CPPUNIT_ASSERT(isValidIso8601("-5W155") == true); //Basic format: -YWwwD
-    CPPUNIT_ASSERT(isValidIso8601("-5-W15-5") == true); //Extended format: -Y-Www-D
-    //Year of the implied decade and week only
-    CPPUNIT_ASSERT(isValidIso8601("-5W15") == true); //Basic format: -YWww
-    CPPUNIT_ASSERT(isValidIso8601("-5-W15") == true); //Extended format: -Y-Www
-    //Week and day only of the implied year
-    CPPUNIT_ASSERT(isValidIso8601("-W155") == true); //Basic format: -WwwD
-    CPPUNIT_ASSERT(isValidIso8601("-W15-5") == true); //Extended format: -Www-D
-    //Week only of the implied year
-    CPPUNIT_ASSERT(isValidIso8601("-W15") == true); //Basic format: -Www
-    //Day only of the implied week
-    CPPUNIT_ASSERT(isValidIso8601("-W-5") == true); //Basic format: -W-D 
+    // Truncated representations
+    // Year, week and day in the implied century
+    CPPUNIT_ASSERT(isValidIso8601("85W155") == true);   // Basic format: YYWwwD
+    CPPUNIT_ASSERT(isValidIso8601("85-W15-5") == true); // Extended format: YY-Www-D
+    // Year and week only in the implied century
+    CPPUNIT_ASSERT(isValidIso8601("85W15") == true);  // Basic format: YYWww
+    CPPUNIT_ASSERT(isValidIso8601("85-W15") == true); // Extended format: YY-Www
+    // Year of the implied decade, week and day only
+    CPPUNIT_ASSERT(isValidIso8601("-5W155") == true);   // Basic format: -YWwwD
+    CPPUNIT_ASSERT(isValidIso8601("-5-W15-5") == true); // Extended format: -Y-Www-D
+    // Year of the implied decade and week only
+    CPPUNIT_ASSERT(isValidIso8601("-5W15") == true);  // Basic format: -YWww
+    CPPUNIT_ASSERT(isValidIso8601("-5-W15") == true); // Extended format: -Y-Www
+    // Week and day only of the implied year
+    CPPUNIT_ASSERT(isValidIso8601("-W155") == true);  // Basic format: -WwwD
+    CPPUNIT_ASSERT(isValidIso8601("-W15-5") == true); // Extended format: -Www-D
+    // Week only of the implied year
+    CPPUNIT_ASSERT(isValidIso8601("-W15") == true); // Basic format: -Www
+    // Day only of the implied week
+    CPPUNIT_ASSERT(isValidIso8601("-W-5") == true); // Basic format: -W-D
 
-    //Expanded representations
-    // Only if agreed it's possible to increase the number of years digits (i.e. 1)
-    //A specific day
-    CPPUNIT_ASSERT(isValidIso8601("+01985W155") == false); //Basic format: ±YYYYYWwwD
-    CPPUNIT_ASSERT(isValidIso8601("+01985-W15-5") == false); //Extended format: ±YYYYY-Www-D
-    //A specific week
-    CPPUNIT_ASSERT(isValidIso8601("+01985W15") == false); //Basic format: ±YYYYYWww 
-    CPPUNIT_ASSERT(isValidIso8601("+01985-W15") == false); //Extended format: ±YYYYY-Www 
+    // Expanded representations
+    //  Only if agreed it's possible to increase the number of years digits (i.e. 1)
+    // A specific day
+    CPPUNIT_ASSERT(isValidIso8601("+01985W155") == false);   // Basic format: ±YYYYYWwwD
+    CPPUNIT_ASSERT(isValidIso8601("+01985-W15-5") == false); // Extended format: ±YYYYY-Www-D
+    // A specific week
+    CPPUNIT_ASSERT(isValidIso8601("+01985W15") == false);  // Basic format: ±YYYYYWww
+    CPPUNIT_ASSERT(isValidIso8601("+01985-W15") == false); // Extended format: ±YYYYY-Www
 
 
     /*
      * Time of the day
      */
-    //Local time of the day
-    //Complete representation
-    CPPUNIT_ASSERT(isValidIso8601("232050") == true); //Basic format: hhmmss
-    CPPUNIT_ASSERT(isValidIso8601("19850120T23") == true); //Basic format: YYYYMMDDThh
-    CPPUNIT_ASSERT(isValidIso8601("19850120T2320") == true); //Basic format: YYYYMMDDThhmm
-    CPPUNIT_ASSERT(isValidIso8601("19850120T232050") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidIso8601("23:20:50") == true); //Extended format: hh:mm:ss
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23") == true); //Basic format: YYYY-MM-DDThh
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20") == true); //Basic format: YYYY-MM-DDThh:mm
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20:50") == true); //Basic format: YYYY-MM-DDThh:mm:ss
+    // Local time of the day
+    // Complete representation
+    CPPUNIT_ASSERT(isValidIso8601("232050") == true);              // Basic format: hhmmss
+    CPPUNIT_ASSERT(isValidIso8601("19850120T23") == true);         // Basic format: YYYYMMDDThh
+    CPPUNIT_ASSERT(isValidIso8601("19850120T2320") == true);       // Basic format: YYYYMMDDThhmm
+    CPPUNIT_ASSERT(isValidIso8601("19850120T232050") == true);     // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidIso8601("23:20:50") == true);            // Extended format: hh:mm:ss
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23") == true);       // Basic format: YYYY-MM-DDThh
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20") == true);    // Basic format: YYYY-MM-DDThh:mm
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20:50") == true); // Basic format: YYYY-MM-DDThh:mm:ss
 
-    //Representations with reduced precision
-    //A specific hour and minute
-    CPPUNIT_ASSERT(isValidIso8601("2320") == true); //Basic format: hhmm
-    CPPUNIT_ASSERT(isValidIso8601("19850120T2320") == true); //Basic format: YYYYMMDDThhmm
-    CPPUNIT_ASSERT(isValidIso8601("23:20") == true); //Extended format: hh:mm
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20") == true); //Extended format: YYYY-MM-DDThh:mm
-    //A specific hour
-    CPPUNIT_ASSERT(isValidIso8601("23") == true); //Basic format: hh
-    CPPUNIT_ASSERT(isValidIso8601("19850120T23") == true); //Basic format: YYYYMMDDThh
+    // Representations with reduced precision
+    // A specific hour and minute
+    CPPUNIT_ASSERT(isValidIso8601("2320") == true);             // Basic format: hhmm
+    CPPUNIT_ASSERT(isValidIso8601("19850120T2320") == true);    // Basic format: YYYYMMDDThhmm
+    CPPUNIT_ASSERT(isValidIso8601("23:20") == true);            // Extended format: hh:mm
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20") == true); // Extended format: YYYY-MM-DDThh:mm
+    // A specific hour
+    CPPUNIT_ASSERT(isValidIso8601("23") == true);          // Basic format: hh
+    CPPUNIT_ASSERT(isValidIso8601("19850120T23") == true); // Basic format: YYYYMMDDThh
 
-    //Representation of decimal fractions
-    //A specific hour, minute and second and a decimal fraction of the second
-    CPPUNIT_ASSERT(isValidIso8601("232050,5") == true); //Basic format: hhmmss,ss
-    CPPUNIT_ASSERT(isValidIso8601("19850120T23,5") == true); //Basic format: YYYYMMDDThh,ss
-    CPPUNIT_ASSERT(isValidIso8601("19850120T2320,5") == true); //Basic format: YYYYMMDDThhmm,ss
-    CPPUNIT_ASSERT(isValidIso8601("19850120T232050,5") == true); //Basic format: YYYYMMDDThhmmss,ss
-    CPPUNIT_ASSERT(isValidIso8601("23:20:50,5") == true); //Extended format: hh:mm:ss,ss
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23,5") == true); //Extended format: YYYY-MM-DDThh,ss
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20,5") == true); //Extended format: YYYY-MM-DDThh:mm,ss
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20:50,5") == true); //Extended format: YYYY-MM-DDThh:mm:ss,ss
-    //A specific hour and minute and a decimal fraction of the minute
-    CPPUNIT_ASSERT(isValidIso8601("2320,8") == true); //Basic format: hhmm,mm
-    CPPUNIT_ASSERT(isValidIso8601("19850120T2320,8") == true); //Basic format: YYYYMMDDThhmm,mm
-    CPPUNIT_ASSERT(isValidIso8601("23:20,8") == true); //Extended format: hh:mm,mm
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20,8") == true); //Extended format: YYYY-MM-DDThh:mm,mm
-    //A specific hour and a decimal fraction of the hour
-    CPPUNIT_ASSERT(isValidIso8601("23,3") == true); //Basic format: hh,hh
-    CPPUNIT_ASSERT(isValidIso8601("19850120T23,3") == true); //Basic format: YYYYMMDDThh,hh
+    // Representation of decimal fractions
+    // A specific hour, minute and second and a decimal fraction of the second
+    CPPUNIT_ASSERT(isValidIso8601("232050,5") == true);              // Basic format: hhmmss,ss
+    CPPUNIT_ASSERT(isValidIso8601("19850120T23,5") == true);         // Basic format: YYYYMMDDThh,ss
+    CPPUNIT_ASSERT(isValidIso8601("19850120T2320,5") == true);       // Basic format: YYYYMMDDThhmm,ss
+    CPPUNIT_ASSERT(isValidIso8601("19850120T232050,5") == true);     // Basic format: YYYYMMDDThhmmss,ss
+    CPPUNIT_ASSERT(isValidIso8601("23:20:50,5") == true);            // Extended format: hh:mm:ss,ss
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23,5") == true);       // Extended format: YYYY-MM-DDThh,ss
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20,5") == true);    // Extended format: YYYY-MM-DDThh:mm,ss
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20:50,5") == true); // Extended format: YYYY-MM-DDThh:mm:ss,ss
+    // A specific hour and minute and a decimal fraction of the minute
+    CPPUNIT_ASSERT(isValidIso8601("2320,8") == true);             // Basic format: hhmm,mm
+    CPPUNIT_ASSERT(isValidIso8601("19850120T2320,8") == true);    // Basic format: YYYYMMDDThhmm,mm
+    CPPUNIT_ASSERT(isValidIso8601("23:20,8") == true);            // Extended format: hh:mm,mm
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T23:20,8") == true); // Extended format: YYYY-MM-DDThh:mm,mm
+    // A specific hour and a decimal fraction of the hour
+    CPPUNIT_ASSERT(isValidIso8601("23,3") == true);          // Basic format: hh,hh
+    CPPUNIT_ASSERT(isValidIso8601("19850120T23,3") == true); // Basic format: YYYYMMDDThh,hh
 
-    //Truncated representations
-    //A specific minute and second of the implied hour
-    CPPUNIT_ASSERT(isValidIso8601("-2050") == true); //Basic format: -mmss
-    CPPUNIT_ASSERT(isValidIso8601("-20:50") == true); //Extended format: -mm:ss
-    //A specific minute of the implied hour 
-    CPPUNIT_ASSERT(isValidIso8601("-20") == true); //Basic format: -mm
-    //A specific second of the implied minute 
-    CPPUNIT_ASSERT(isValidIso8601("-50") == true); //Basic format: -ss
-    //A specific minute and second of the implied hour and a decimal fraction of the second
-    CPPUNIT_ASSERT(isValidIso8601("-2050,5") == true); //Basic format: -mmss,s
-    CPPUNIT_ASSERT(isValidIso8601("-20:50,5") == true); //Extended format: -mm:ss,s
-    //A specific minute of the implied hour and a decimal fraction of the minute
-    CPPUNIT_ASSERT(isValidIso8601("-20,8") == true); //Basic format: -mm,m
-    //A specific second of the implied minute and a decimal fraction of the second
-    CPPUNIT_ASSERT(isValidIso8601("--50,5") == true); //Basic format: --ss,s
+    // Truncated representations
+    // A specific minute and second of the implied hour
+    CPPUNIT_ASSERT(isValidIso8601("-2050") == true);  // Basic format: -mmss
+    CPPUNIT_ASSERT(isValidIso8601("-20:50") == true); // Extended format: -mm:ss
+    // A specific minute of the implied hour
+    CPPUNIT_ASSERT(isValidIso8601("-20") == true); // Basic format: -mm
+    // A specific second of the implied minute
+    CPPUNIT_ASSERT(isValidIso8601("-50") == true); // Basic format: -ss
+    // A specific minute and second of the implied hour and a decimal fraction of the second
+    CPPUNIT_ASSERT(isValidIso8601("-2050,5") == true);  // Basic format: -mmss,s
+    CPPUNIT_ASSERT(isValidIso8601("-20:50,5") == true); // Extended format: -mm:ss,s
+    // A specific minute of the implied hour and a decimal fraction of the minute
+    CPPUNIT_ASSERT(isValidIso8601("-20,8") == true); // Basic format: -mm,m
+    // A specific second of the implied minute and a decimal fraction of the second
+    CPPUNIT_ASSERT(isValidIso8601("--50,5") == true); // Basic format: --ss,s
 
-    //Midnight
-    CPPUNIT_ASSERT(isValidIso8601("19850120T240000") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidIso8601("19850120T000000") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T24:00:00") == true); //Extended format: YYYY-MM-DDThh:mm:ss
-    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T00:00:00") == true); //Extended format: YYYY-MM-DDThh:mm:ss
+    // Midnight
+    CPPUNIT_ASSERT(isValidIso8601("19850120T240000") == true);     // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidIso8601("19850120T000000") == true);     // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T24:00:00") == true); // Extended format: YYYY-MM-DDThh:mm:ss
+    CPPUNIT_ASSERT(isValidIso8601("1985-01-20T00:00:00") == true); // Extended format: YYYY-MM-DDThh:mm:ss
 
-    //Coordinated Universal Time (UTC)
-    CPPUNIT_ASSERT(isValidIso8601("232030Z") == true); //Basic format: hhmmssZ
-    CPPUNIT_ASSERT(isValidIso8601("23:20:30Z") == true); //Extended format: hh:mm:ssZ
-    CPPUNIT_ASSERT(isValidIso8601("2320Z") == true); //Basic format: hhmmZ
-    CPPUNIT_ASSERT(isValidIso8601("23:20Z") == true); //Extended format: hh:mmZ
-    CPPUNIT_ASSERT(isValidIso8601("23Z") == true); //Basic format: hhZ
+    // Coordinated Universal Time (UTC)
+    CPPUNIT_ASSERT(isValidIso8601("232030Z") == true);   // Basic format: hhmmssZ
+    CPPUNIT_ASSERT(isValidIso8601("23:20:30Z") == true); // Extended format: hh:mm:ssZ
+    CPPUNIT_ASSERT(isValidIso8601("2320Z") == true);     // Basic format: hhmmZ
+    CPPUNIT_ASSERT(isValidIso8601("23:20Z") == true);    // Extended format: hh:mmZ
+    CPPUNIT_ASSERT(isValidIso8601("23Z") == true);       // Basic format: hhZ
 
-    //Local time and Coordinated Universal Time
-    //Difference between local time and Coordinated Universal Time
-    CPPUNIT_ASSERT(isValidIso8601("+0100") == true); //Basic format: ±hhmm
-    CPPUNIT_ASSERT(isValidIso8601("+01:00") == true); //Extended format: ±hh:mm
-    CPPUNIT_ASSERT(isValidIso8601("+01") == true); //Basic format: ±hh
-    //Local time and the difference with Coordinated Universal Time
-    CPPUNIT_ASSERT(isValidIso8601("152746+0100") == true); //Basic format: hhmmss±hhmm
-    CPPUNIT_ASSERT(isValidIso8601("152746-0500") == true); //Basic format: hhmmss±hhmm
-    CPPUNIT_ASSERT(isValidIso8601("152746+01") == true); //Basic format: hhmmss±hh
-    CPPUNIT_ASSERT(isValidIso8601("152746-05") == true); //Basic format: hhmmss±hh
-    CPPUNIT_ASSERT(isValidIso8601("15:27:46+01:00") == true); //Extended format: hh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidIso8601("15:27:46-05:00") == true); //Extended format: hh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidIso8601("15:27:46+01") == true); //Extended format: hh:mm:ss±hh
-    CPPUNIT_ASSERT(isValidIso8601("15:27:46-05") == true); //Extended format: hh:mm:ss±hh
+    // Local time and Coordinated Universal Time
+    // Difference between local time and Coordinated Universal Time
+    CPPUNIT_ASSERT(isValidIso8601("+0100") == true);  // Basic format: ±hhmm
+    CPPUNIT_ASSERT(isValidIso8601("+01:00") == true); // Extended format: ±hh:mm
+    CPPUNIT_ASSERT(isValidIso8601("+01") == true);    // Basic format: ±hh
+    // Local time and the difference with Coordinated Universal Time
+    CPPUNIT_ASSERT(isValidIso8601("152746+0100") == true);    // Basic format: hhmmss±hhmm
+    CPPUNIT_ASSERT(isValidIso8601("152746-0500") == true);    // Basic format: hhmmss±hhmm
+    CPPUNIT_ASSERT(isValidIso8601("152746+01") == true);      // Basic format: hhmmss±hh
+    CPPUNIT_ASSERT(isValidIso8601("152746-05") == true);      // Basic format: hhmmss±hh
+    CPPUNIT_ASSERT(isValidIso8601("15:27:46+01:00") == true); // Extended format: hh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidIso8601("15:27:46-05:00") == true); // Extended format: hh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidIso8601("15:27:46+01") == true);    // Extended format: hh:mm:ss±hh
+    CPPUNIT_ASSERT(isValidIso8601("15:27:46-05") == true);    // Extended format: hh:mm:ss±hh
 
-    //Combinations of date and time of the day
-    //Complete representation
-    CPPUNIT_ASSERT(isValidIso8601("19850412T101530") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidIso8601("19850412T101530Z") == true); //Basic format: YYYYMMDDThhmmssZ
-    CPPUNIT_ASSERT(isValidIso8601("19850412T101530+0400") == true); //Basic format: YYYYMMDDThhmmss±hhmm
-    CPPUNIT_ASSERT(isValidIso8601("19850412T101530+04") == true); //Basic format: YYYYMMDDThhmmss±hh
-    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30") == true); //Extended format: YYYY-MM-DDThh:mm:ss
-    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30Z") == true); //Extended format: YYYY-MM-DDThh:mm:ssZ
-    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30+04:00") == true); //Extended format: YYYY-MM-DDThh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30+04") == true); //Extended format: YYYY-MM-DDThh:mm:ss±hh
+    // Combinations of date and time of the day
+    // Complete representation
+    CPPUNIT_ASSERT(isValidIso8601("19850412T101530") == true);           // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidIso8601("19850412T101530Z") == true);          // Basic format: YYYYMMDDThhmmssZ
+    CPPUNIT_ASSERT(isValidIso8601("19850412T101530+0400") == true);      // Basic format: YYYYMMDDThhmmss±hhmm
+    CPPUNIT_ASSERT(isValidIso8601("19850412T101530+04") == true);        // Basic format: YYYYMMDDThhmmss±hh
+    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30") == true);       // Extended format: YYYY-MM-DDThh:mm:ss
+    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30Z") == true);      // Extended format: YYYY-MM-DDThh:mm:ssZ
+    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30+04:00") == true); // Extended format: YYYY-MM-DDThh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15:30+04") == true);    // Extended format: YYYY-MM-DDThh:mm:ss±hh
 
-    //Representations other than complete
-    //Calendar date and local time of the day
-    CPPUNIT_ASSERT(isValidIso8601("19850412T1015") == true); //Basic format: YYYYMMDDThhmm
-    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15") == true); //Extended format: YYYY-MM-DDThh:mm
-    //Ordinal date and coordinated universal time 
-    CPPUNIT_ASSERT(isValidIso8601("1985102T1015Z") == true); //Basic format: YYYYDDDThhmmZ
-    CPPUNIT_ASSERT(isValidIso8601("1985-102T10:15Z") == true); //Extended format: YYYY-DDDThh:mmZ 
-    //Week date and local time and the difference with UTC
-    CPPUNIT_ASSERT(isValidIso8601("1985W155T1015+0400") == true); //Basic format: YYYYWwwDThhmm±hhmm
-    CPPUNIT_ASSERT(isValidIso8601("1985-W15-5T10:15+04") == true); //Extended format: YYYY-Www-DThh:mm±hh
+    // Representations other than complete
+    // Calendar date and local time of the day
+    CPPUNIT_ASSERT(isValidIso8601("19850412T1015") == true);    // Basic format: YYYYMMDDThhmm
+    CPPUNIT_ASSERT(isValidIso8601("1985-04-12T10:15") == true); // Extended format: YYYY-MM-DDThh:mm
+    // Ordinal date and coordinated universal time
+    CPPUNIT_ASSERT(isValidIso8601("1985102T1015Z") == true);   // Basic format: YYYYDDDThhmmZ
+    CPPUNIT_ASSERT(isValidIso8601("1985-102T10:15Z") == true); // Extended format: YYYY-DDDThh:mmZ
+    // Week date and local time and the difference with UTC
+    CPPUNIT_ASSERT(isValidIso8601("1985W155T1015+0400") == true);  // Basic format: YYYYWwwDThhmm±hhmm
+    CPPUNIT_ASSERT(isValidIso8601("1985-W15-5T10:15+04") == true); // Extended format: YYYY-Www-DThh:mm±hh
 
 
     // Other tests
@@ -445,8 +470,8 @@ void DateTimeString_Test::isStringValidIso8601() {
     CPPUNIT_ASSERT(isValidIso8601("2008-09-15T15:53:00+05:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("2008-09-15") == true);
     CPPUNIT_ASSERT(isValidIso8601("20121225T132536.789333123456789123") == true);
-    CPPUNIT_ASSERT(isValidIso8601("200905") == true); //Year + Month
-    CPPUNIT_ASSERT(isValidIso8601("200913") == true); //Year + Day
+    CPPUNIT_ASSERT(isValidIso8601("200905") == true); // Year + Month
+    CPPUNIT_ASSERT(isValidIso8601("200913") == true); // Year + Day
     CPPUNIT_ASSERT(isValidIso8601("2007-04-05T23:50") == true);
     CPPUNIT_ASSERT(isValidIso8601("2009-0519") == true); // Year - Time zone
     CPPUNIT_ASSERT(isValidIso8601("200912-01") == true); // Year + Month - Time zone
@@ -477,7 +502,7 @@ void DateTimeString_Test::isStringValidIso8601() {
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:3924") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-2519T") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-2519") == false); // Year - Time zone that doesn't exist
-    CPPUNIT_ASSERT(isValidIso8601("200912-30") == false); //Year + Month - Time zone that doesn't exist
+    CPPUNIT_ASSERT(isValidIso8601("200912-30") == false); // Year + Month - Time zone that doesn't exist
     CPPUNIT_ASSERT(isValidIso8601("2009-05-1914:39") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19 14:") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19r14:39") == false);
@@ -559,221 +584,223 @@ void DateTimeString_Test::isStringKaraboValidIso8601() {
      * Calendar date
      */
     // Complete representation
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412") == false); //Basic format: YYYYMMDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12") == false); //Extended format: YYYY-MM-DD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412") == false);   // Basic format: YYYYMMDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12") == false); // Extended format: YYYY-MM-DD
 
     // Representations with reduced precision
-    //A specific month
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04") == false); //Basic format: YYYY-MM
-    //A specific year 
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985") == false); //Basic format: YYYY
-    //A specific century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19") == false); //Basic format: YY
+    // A specific month
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04") == false); // Basic format: YYYY-MM
+    // A specific year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985") == false); // Basic format: YYYY
+    // A specific century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19") == false); // Basic format: YY
 
-    //Truncated representations
-    //A specific date in the implied century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("850412") == false); //Basic format: YYMMDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85-04-12") == false); //Extended format: YY-MM-DD
-    //A specific year and month in the implied century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-8504") == false); //Basic format: -YYMM
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-85-04") == false); //Extended format: -YY-MM
-    //A specific year in the implied century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-85") == false); //Basic format: -YY
-    //A specific day of a month in the implied year
-    CPPUNIT_ASSERT(isValidKaraboIso8601("--0412") == false); //Basic format: --MMDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("--04-12") == false); //Extended format: --MM-DD
-    //A specific month in the implied year
-    CPPUNIT_ASSERT(isValidKaraboIso8601("--04") == false); //Basic format: --MM
-    //A specific day in the implied month
-    CPPUNIT_ASSERT(isValidKaraboIso8601("---12") == false); //Basic format: ---DD
+    // Truncated representations
+    // A specific date in the implied century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("850412") == false);   // Basic format: YYMMDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85-04-12") == false); // Extended format: YY-MM-DD
+    // A specific year and month in the implied century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-8504") == false);  // Basic format: -YYMM
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-85-04") == false); // Extended format: -YY-MM
+    // A specific year in the implied century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-85") == false); // Basic format: -YY
+    // A specific day of a month in the implied year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("--0412") == false);  // Basic format: --MMDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("--04-12") == false); // Extended format: --MM-DD
+    // A specific month in the implied year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("--04") == false); // Basic format: --MM
+    // A specific day in the implied month
+    CPPUNIT_ASSERT(isValidKaraboIso8601("---12") == false); // Basic format: ---DD
 
-    //Expanded representations 
-    // Only if agreed it's possible to increase the number of years digits (i.e. 1)
-    //A specific day
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+019850412") == false); //Basic format: ±YYYYYMMDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-04-12") == false); //Extended format: ±YYYYY-MM-DD
-    //A specific month
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-04") == false); //Basic format: ±YYYYY-MM
-    //A specific year
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985") == false); //Basic format: ±YYYYY 
-    //A specific century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+019") == false); //Basic format: ±YYY 
+    // Expanded representations
+    //  Only if agreed it's possible to increase the number of years digits (i.e. 1)
+    // A specific day
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+019850412") == false);   // Basic format: ±YYYYYMMDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-04-12") == false); // Extended format: ±YYYYY-MM-DD
+    // A specific month
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-04") == false); // Basic format: ±YYYYY-MM
+    // A specific year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985") == false); // Basic format: ±YYYYY
+    // A specific century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+019") == false); // Basic format: ±YYY
 
 
     /*
      * Ordinal date
      */
-    //Complete representation
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985102") == false); //Basic format: YYYYDDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-102") == false); //Extended format: YYYY-DDD
+    // Complete representation
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985102") == false);  // Basic format: YYYYDDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-102") == false); // Extended format: YYYY-DDD
 
-    //Truncated representations
-    //A specific year and day in the implied century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85102") == false); //Basic format: YYDDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85-102") == false); //Extended format: YY-DDD
-    //Day only in the implied year
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-102") == false); //Basic format: -DDD
+    // Truncated representations
+    // A specific year and day in the implied century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85102") == false);  // Basic format: YYDDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85-102") == false); // Extended format: YY-DDD
+    // Day only in the implied year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-102") == false); // Basic format: -DDD
 
-    //Expanded representations
-    // Only if agreed it's possible to increase the number of years digits (i.e. 1)
-    //A specific day
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985102") == false); //Basic format: ±YYYYYDDD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-102") == false); //Extended format: ±YYYYY-DDD
+    // Expanded representations
+    //  Only if agreed it's possible to increase the number of years digits (i.e. 1)
+    // A specific day
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985102") == false);  // Basic format: ±YYYYYDDD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-102") == false); // Extended format: ±YYYYY-DDD
 
 
     /*
      * Week date
      */
-    //Complete representation
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985W155") == false); //Basic format: YYYYWwwD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-W15-5") == false); //Extended format: YYYY-Www-D
+    // Complete representation
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985W155") == false);   // Basic format: YYYYWwwD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-W15-5") == false); // Extended format: YYYY-Www-D
 
-    //Representation with reduced precision
-    //A specific week
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985W15") == false); //Basic format: YYYYWww
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-W15") == false); //Extended format: YYYY-Www
+    // Representation with reduced precision
+    // A specific week
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985W15") == false);  // Basic format: YYYYWww
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-W15") == false); // Extended format: YYYY-Www
 
-    //Truncated representations
-    //Year, week and day in the implied century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85W155") == false); //Basic format: YYWwwD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85-W15-5") == false); //Extended format: YY-Www-D
-    //Year and week only in the implied century
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85W15") == false); //Basic format: YYWww
-    CPPUNIT_ASSERT(isValidKaraboIso8601("85-W15") == false); //Extended format: YY-Www
-    //Year of the implied decade, week and day only
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-5W155") == false); //Basic format: -YWwwD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-5-W15-5") == false); //Extended format: -Y-Www-D
-    //Year of the implied decade and week only
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-5W15") == false); //Basic format: -YWww
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-5-W15") == false); //Extended format: -Y-Www
-    //Week and day only of the implied year
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-W155") == false); //Basic format: -WwwD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-W15-5") == false); //Extended format: -Www-D
-    //Week only of the implied year
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-W15") == false); //Basic format: -Www
-    //Day only of the implied week
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-W-5") == false); //Basic format: -W-D 
+    // Truncated representations
+    // Year, week and day in the implied century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85W155") == false);   // Basic format: YYWwwD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85-W15-5") == false); // Extended format: YY-Www-D
+    // Year and week only in the implied century
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85W15") == false);  // Basic format: YYWww
+    CPPUNIT_ASSERT(isValidKaraboIso8601("85-W15") == false); // Extended format: YY-Www
+    // Year of the implied decade, week and day only
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-5W155") == false);   // Basic format: -YWwwD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-5-W15-5") == false); // Extended format: -Y-Www-D
+    // Year of the implied decade and week only
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-5W15") == false);  // Basic format: -YWww
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-5-W15") == false); // Extended format: -Y-Www
+    // Week and day only of the implied year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-W155") == false);  // Basic format: -WwwD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-W15-5") == false); // Extended format: -Www-D
+    // Week only of the implied year
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-W15") == false); // Basic format: -Www
+    // Day only of the implied week
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-W-5") == false); // Basic format: -W-D
 
-    //Expanded representations
-    // Only if agreed it's possible to increase the number of years digits (i.e. 1)
-    //A specific day
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985W155") == false); //Basic format: ±YYYYYWwwD
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-W15-5") == false); //Extended format: ±YYYYY-Www-D
-    //A specific week
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985W15") == false); //Basic format: ±YYYYYWww 
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-W15") == false); //Extended format: ±YYYYY-Www 
+    // Expanded representations
+    //  Only if agreed it's possible to increase the number of years digits (i.e. 1)
+    // A specific day
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985W155") == false);   // Basic format: ±YYYYYWwwD
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-W15-5") == false); // Extended format: ±YYYYY-Www-D
+    // A specific week
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985W15") == false);  // Basic format: ±YYYYYWww
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01985-W15") == false); // Extended format: ±YYYYY-Www
 
 
     /*
      * Time of the day
      */
-    //Local time of the day
-    //Complete representation
-    CPPUNIT_ASSERT(isValidKaraboIso8601("232050") == false); //Basic format: hhmmss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23") == false); //Basic format: YYYYMMDDThh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320") == false); //Basic format: YYYYMMDDThhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T232050") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20:50") == false); //Extended format: hh:mm:ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23") == false); //Basic format: YYYY-MM-DDThh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20") == false); //Basic format: YYYY-MM-DDThh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20:50") == true); //Basic format: YYYY-MM-DDThh:mm:ss
+    // Local time of the day
+    // Complete representation
+    CPPUNIT_ASSERT(isValidKaraboIso8601("232050") == false);             // Basic format: hhmmss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23") == false);        // Basic format: YYYYMMDDThh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320") == false);      // Basic format: YYYYMMDDThhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T232050") == true);     // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20:50") == false);           // Extended format: hh:mm:ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23") == false);      // Basic format: YYYY-MM-DDThh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20") == false);   // Basic format: YYYY-MM-DDThh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20:50") == true); // Basic format: YYYY-MM-DDThh:mm:ss
 
-    //Representations with reduced precision
-    //A specific hour and minute
-    CPPUNIT_ASSERT(isValidKaraboIso8601("2320") == false); //Basic format: hhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320") == false); //Basic format: YYYYMMDDThhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20") == false); //Extended format: hh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20") == false); //Extended format: YYYY-MM-DDThh:mm
-    //A specific hour
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23") == false); //Basic format: hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23") == false); //Basic format: YYYYMMDDThh
+    // Representations with reduced precision
+    // A specific hour and minute
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2320") == false);             // Basic format: hhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320") == false);    // Basic format: YYYYMMDDThhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20") == false);            // Extended format: hh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20") == false); // Extended format: YYYY-MM-DDThh:mm
+    // A specific hour
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23") == false);          // Basic format: hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23") == false); // Basic format: YYYYMMDDThh
 
-    //Representation of decimal fractions
-    //A specific hour, minute and second and a decimal fraction of the second
-    CPPUNIT_ASSERT(isValidKaraboIso8601("232050,5") == false); //Basic format: hhmmss,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23,5") == false); //Basic format: YYYYMMDDThh,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320,5") == false); //Basic format: YYYYMMDDThhmm,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T232050,5") == true); //Basic format: YYYYMMDDThhmmss,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20:50,5") == false); //Extended format: hh:mm:ss,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23,5") == false); //Extended format: YYYY-MM-DDThh,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20,5") == false); //Extended format: YYYY-MM-DDThh:mm,ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20:50,5") == true); //Extended format: YYYY-MM-DDThh:mm:ss,ss
-    //A specific hour and minute and a decimal fraction of the minute
-    CPPUNIT_ASSERT(isValidKaraboIso8601("2320,8") == false); //Basic format: hhmm,mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320,8") == false); //Basic format: YYYYMMDDThhmm,mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20,8") == false); //Extended format: hh:mm,mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20,8") == false); //Extended format: YYYY-MM-DDThh:mm,mm
-    //A specific hour and a decimal fraction of the hour
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23,3") == false); //Basic format: hh,hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23,3") == false); //Basic format: YYYYMMDDThh,hh
+    // Representation of decimal fractions
+    // A specific hour, minute and second and a decimal fraction of the second
+    CPPUNIT_ASSERT(isValidKaraboIso8601("232050,5") == false);             // Basic format: hhmmss,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23,5") == false);        // Basic format: YYYYMMDDThh,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320,5") == false);      // Basic format: YYYYMMDDThhmm,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T232050,5") == true);     // Basic format: YYYYMMDDThhmmss,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20:50,5") == false);           // Extended format: hh:mm:ss,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23,5") == false);      // Extended format: YYYY-MM-DDThh,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20,5") == false);   // Extended format: YYYY-MM-DDThh:mm,ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20:50,5") == true); // Extended format: YYYY-MM-DDThh:mm:ss,ss
+    // A specific hour and minute and a decimal fraction of the minute
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2320,8") == false);             // Basic format: hhmm,mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T2320,8") == false);    // Basic format: YYYYMMDDThhmm,mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20,8") == false);            // Extended format: hh:mm,mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T23:20,8") == false); // Extended format: YYYY-MM-DDThh:mm,mm
+    // A specific hour and a decimal fraction of the hour
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23,3") == false);          // Basic format: hh,hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T23,3") == false); // Basic format: YYYYMMDDThh,hh
 
-    //Truncated representations
-    //A specific minute and second of the implied hour
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-2050") == false); //Basic format: -mmss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-20:50") == false); //Extended format: -mm:ss
-    //A specific minute of the implied hour 
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-20") == false); //Basic format: -mm
-    //A specific second of the implied minute 
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-50") == false); //Basic format: -ss
-    //A specific minute and second of the implied hour and a decimal fraction of the second
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-2050,5") == false); //Basic format: -mmss,s
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-20:50,5") == false); //Extended format: -mm:ss,s
-    //A specific minute of the implied hour and a decimal fraction of the minute
-    CPPUNIT_ASSERT(isValidKaraboIso8601("-20,8") == false); //Basic format: -mm,m
-    //A specific second of the implied minute and a decimal fraction of the second
-    CPPUNIT_ASSERT(isValidKaraboIso8601("--50,5") == false); //Basic format: --ss,s
+    // Truncated representations
+    // A specific minute and second of the implied hour
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-2050") == false);  // Basic format: -mmss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-20:50") == false); // Extended format: -mm:ss
+    // A specific minute of the implied hour
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-20") == false); // Basic format: -mm
+    // A specific second of the implied minute
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-50") == false); // Basic format: -ss
+    // A specific minute and second of the implied hour and a decimal fraction of the second
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-2050,5") == false);  // Basic format: -mmss,s
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-20:50,5") == false); // Extended format: -mm:ss,s
+    // A specific minute of the implied hour and a decimal fraction of the minute
+    CPPUNIT_ASSERT(isValidKaraboIso8601("-20,8") == false); // Basic format: -mm,m
+    // A specific second of the implied minute and a decimal fraction of the second
+    CPPUNIT_ASSERT(isValidKaraboIso8601("--50,5") == false); // Basic format: --ss,s
 
-    //Midnight
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T240000") == false); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T000000") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T24:00:00") == false); //Extended format: YYYY-MM-DDThh:mm:ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T00:00:00") == true); //Extended format: YYYY-MM-DDThh:mm:ss
+    // Midnight
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T240000") == false);     // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850120T000000") == true);      // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T24:00:00") == false); // Extended format: YYYY-MM-DDThh:mm:ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-01-20T00:00:00") == true);  // Extended format: YYYY-MM-DDThh:mm:ss
 
-    //Coordinated Universal Time (UTC)
-    CPPUNIT_ASSERT(isValidKaraboIso8601("232030Z") == false); //Basic format: hhmmssZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20:30Z") == false); //Extended format: hh:mm:ssZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("2320Z") == false); //Basic format: hhmmZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20Z") == false); //Extended format: hh:mmZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("23Z") == false); //Basic format: hhZ
+    // Coordinated Universal Time (UTC)
+    CPPUNIT_ASSERT(isValidKaraboIso8601("232030Z") == false);   // Basic format: hhmmssZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20:30Z") == false); // Extended format: hh:mm:ssZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2320Z") == false);     // Basic format: hhmmZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23:20Z") == false);    // Extended format: hh:mmZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("23Z") == false);       // Basic format: hhZ
 
-    //Local time and Coordinated Universal Time
-    //Difference between local time and Coordinated Universal Time
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+0100") == false); //Basic format: ±hhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01:00") == false); //Extended format: ±hh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("+01") == false); //Basic format: ±hh
-    //Local time and the difference with Coordinated Universal Time
-    CPPUNIT_ASSERT(isValidKaraboIso8601("152746+0100") == false); //Basic format: hhmmss±hhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("152746-0500") == false); //Basic format: hhmmss±hhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("152746+01") == false); //Basic format: hhmmss±hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("152746-05") == false); //Basic format: hhmmss±hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46+01:00") == false); //Extended format: hh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46-05:00") == false); //Extended format: hh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46+01") == false); //Extended format: hh:mm:ss±hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46-05") == false); //Extended format: hh:mm:ss±hh
+    // Local time and Coordinated Universal Time
+    // Difference between local time and Coordinated Universal Time
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+0100") == false);  // Basic format: ±hhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01:00") == false); // Extended format: ±hh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("+01") == false);    // Basic format: ±hh
+    // Local time and the difference with Coordinated Universal Time
+    CPPUNIT_ASSERT(isValidKaraboIso8601("152746+0100") == false);    // Basic format: hhmmss±hhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("152746-0500") == false);    // Basic format: hhmmss±hhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("152746+01") == false);      // Basic format: hhmmss±hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("152746-05") == false);      // Basic format: hhmmss±hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46+01:00") == false); // Extended format: hh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46-05:00") == false); // Extended format: hh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46+01") == false);    // Extended format: hh:mm:ss±hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("15:27:46-05") == false);    // Extended format: hh:mm:ss±hh
 
-    //Combinations of date and time of the day
-    //Complete representation
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530") == true); //Basic format: YYYYMMDDThhmmss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530Z") == true); //Basic format: YYYYMMDDThhmmssZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530+0400") == true); //Basic format: YYYYMMDDThhmmss±hhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530+04") == false); //Basic format: YYYYMMDDThhmmss±hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30") == true); //Extended format: YYYY-MM-DDThh:mm:ss
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30Z") == true); //Extended format: YYYY-MM-DDThh:mm:ssZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30+04:00") == true); //Extended format: YYYY-MM-DDThh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30+04") == false); //Extended format: YYYY-MM-DDThh:mm:ss±hh
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30-04:00") == true); //Extended format: YYYY-MM-DDThh:mm:ss±hh:mm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30-04") == false); //Extended format: YYYY-MM-DDThh:mm:ss±hh
+    // Combinations of date and time of the day
+    // Complete representation
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530") == true);      // Basic format: YYYYMMDDThhmmss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530Z") == true);     // Basic format: YYYYMMDDThhmmssZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530+0400") == true); // Basic format: YYYYMMDDThhmmss±hhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T101530+04") == false);  // Basic format: YYYYMMDDThhmmss±hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30") == true);  // Extended format: YYYY-MM-DDThh:mm:ss
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30Z") == true); // Extended format: YYYY-MM-DDThh:mm:ssZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30+04:00") ==
+                   true); // Extended format: YYYY-MM-DDThh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30+04") == false); // Extended format: YYYY-MM-DDThh:mm:ss±hh
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30-04:00") ==
+                   true); // Extended format: YYYY-MM-DDThh:mm:ss±hh:mm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15:30-04") == false); // Extended format: YYYY-MM-DDThh:mm:ss±hh
 
-    //Representations other than complete
-    //Calendar date and local time of the day
-    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T1015") == false); //Basic format: YYYYMMDDThhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15") == false); //Extended format: YYYY-MM-DDThh:mm
-    //Ordinal date and coordinated universal time 
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985102T1015Z") == false); //Basic format: YYYYDDDThhmmZ
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-102T10:15Z") == false); //Extended format: YYYY-DDDThh:mmZ 
-    //Week date and local time and the difference with UTC
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985W155T1015+0400") == false); //Basic format: YYYYWwwDThhmm±hhmm
-    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-W15-5T10:15+04") == false); //Extended format: YYYY-Www-DThh:mm±hh
+    // Representations other than complete
+    // Calendar date and local time of the day
+    CPPUNIT_ASSERT(isValidKaraboIso8601("19850412T1015") == false);    // Basic format: YYYYMMDDThhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-04-12T10:15") == false); // Extended format: YYYY-MM-DDThh:mm
+    // Ordinal date and coordinated universal time
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985102T1015Z") == false);   // Basic format: YYYYDDDThhmmZ
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-102T10:15Z") == false); // Extended format: YYYY-DDDThh:mmZ
+    // Week date and local time and the difference with UTC
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985W155T1015+0400") == false);  // Basic format: YYYYWwwDThhmm±hhmm
+    CPPUNIT_ASSERT(isValidKaraboIso8601("1985-W15-5T10:15+04") == false); // Extended format: YYYY-Www-DThh:mm±hh
 
 
     // Other tests
@@ -944,7 +971,6 @@ bool DateTimeString_Test::isValidKaraboIso8601TimeZone(const std::string& timeZo
 
 
 void DateTimeString_Test::isStringKaraboValidIso8601TimeZone() {
-
     // Complete representation
     CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("Z") == true);
     CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("z") == true);
@@ -981,63 +1007,82 @@ void DateTimeString_Test::isStringKaraboValidIso8601TimeZone() {
 void DateTimeString_Test::isValidateFractionalSecondToString(const unsigned long long fractionalSeconds,
                                                              const std::string& expectedAttoFractionalSeconds,
                                                              const bool writeToClog) {
-
     karabo::util::DateTimeString dts = karabo::util::DateTimeString();
     std::string expectedFractionalSeconds = "." + expectedAttoFractionalSeconds;
 
-    //ATTOSEC
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::ATTOSEC, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::ATTOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    // ATTOSEC
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::ATTOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::ATTOSEC, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
     CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::ATTOSEC, fractionalSeconds) == expectedFractionalSeconds);
 
-    //FEMTOSEC
+    // FEMTOSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::FEMTOSEC, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::FEMTOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::FEMTOSEC, fractionalSeconds) == expectedFractionalSeconds);
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::FEMTOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::FEMTOSEC, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::FEMTOSEC, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
-    //PICOSEC
+    // PICOSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::PICOSEC, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::PICOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::PICOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::PICOSEC, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
     CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::PICOSEC, fractionalSeconds) == expectedFractionalSeconds);
 
-    //NANOSEC
+    // NANOSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::NANOSEC, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::NANOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::NANOSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::NANOSEC, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
     CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::NANOSEC, fractionalSeconds) == expectedFractionalSeconds);
 
-    //MICROSEC
+    // MICROSEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::MICROSEC, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::MICROSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MICROSEC, fractionalSeconds) == expectedFractionalSeconds);
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::MICROSEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::MICROSEC, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MICROSEC, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
-    //MILLISEC
+    // MILLISEC
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::MILLISEC, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) == expectedFractionalSeconds);
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::MILLISEC, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
-    //ONESECOND
+    // ONESECOND
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3) + "0";
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::ONESECOND, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) == expectedFractionalSeconds);
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::ONESECOND, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
-    //NOFRACTION
+    // NOFRACTION
     expectedFractionalSeconds = "";
-    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::NOFRACTION, " << fractionalSeconds << ") => '"
-            << dts.fractionalSecondToString(karabo::util::NOFRACTION, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
-    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::NOFRACTION, fractionalSeconds) == expectedFractionalSeconds);
+    if (writeToClog)
+        std::clog << "fractionalSecondToString(karabo::util::NOFRACTION, " << fractionalSeconds << ") => '"
+                  << dts.fractionalSecondToString(karabo::util::NOFRACTION, fractionalSeconds) << "' == '"
+                  << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::NOFRACTION, fractionalSeconds) ==
+                   expectedFractionalSeconds);
 
     return;
 }
 
 
 void DateTimeString_Test::validateFractionalSecondToString() {
-
     bool writeToClog = false;
 
     isValidateFractionalSecondToString(100000000000000000ULL, "100000000000000000", writeToClog);
@@ -1078,5 +1123,4 @@ void DateTimeString_Test::validateFractionalSecondToString() {
     isValidateFractionalSecondToString(101ULL, "000000000000000101", writeToClog);
     isValidateFractionalSecondToString(10ULL, "000000000000000010", writeToClog);
     isValidateFractionalSecondToString(1ULL, "000000000000000001", writeToClog);
-
 }

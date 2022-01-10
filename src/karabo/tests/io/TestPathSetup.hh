@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TestPathSetup.hh
  * Author: heisenb
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_TESTPATHSETUP_HH
-#define	KARABO_TESTPATHSETUP_HH
+#define KARABO_TESTPATHSETUP_HH
 
 #include <boost/filesystem.hpp>
 

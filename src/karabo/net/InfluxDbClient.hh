@@ -7,24 +7,23 @@
  */
 
 #ifndef KARABO_NET_INFLUXDBCLIENT_HH
-#define	KARABO_NET_INFLUXDBCLIENT_HH
+#define KARABO_NET_INFLUXDBCLIENT_HH
 
 #include <atomic>
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <future>
-#include <queue>
-
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/uuid/random_generator.hpp>
+#include <future>
+#include <iostream>
+#include <queue>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
-#include "karabo/net/Connection.hh"
 #include "karabo/net/Channel.hh"
+#include "karabo/net/Connection.hh"
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/MetaTools.hh"
@@ -37,7 +36,7 @@ namespace karabo {
     namespace net {
 
 
-        using InfluxResponseHandler = boost::function<void(const HttpResponse &) >;
+        using InfluxResponseHandler = boost::function<void(const HttpResponse&)>;
         using InfluxConnectedHandler = boost::function<void(bool)>;
 
 
@@ -59,8 +58,7 @@ namespace karabo {
          * these problems.
          */
         class InfluxDbClient : public boost::enable_shared_from_this<InfluxDbClient> {
-        public:
-
+           public:
             KARABO_CLASSINFO(InfluxDbClient, "InfluxDbClient", "2.6")
 
             InfluxDbClient(const karabo::util::Hash& input);
@@ -91,8 +89,7 @@ namespace karabo {
              * @param action callback: void(const HttpResponse&) is called when response comes
              *               from InfluxDB server
              */
-            void queryDb(const std::string& statement,
-                         const InfluxResponseHandler& action);
+            void queryDb(const std::string& statement, const InfluxResponseHandler& action);
 
             /**
              * HTTP request "POST /query ..." to InfluxDB server is registered in internal queue.
@@ -111,7 +108,7 @@ namespace karabo {
              * sent by Influx after it accepted and processed the current batch of updates. If not
              * defined, the flushBatch will work in a call-and-forget mode.
              */
-            void flushBatch(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
+            void flushBatch(const InfluxResponseHandler& respHandler = InfluxResponseHandler());
 
             /**
              * HTTP request "GET /ping ..." to InfluxDB server is registered in internal queue.
@@ -135,21 +132,20 @@ namespace karabo {
 
             void disconnect();
 
-        private:
-
+           private:
             /**
              * Writing HTTP request
              * @param message formed in compliance of HTTP protocol
              *        Malformed requests resulting in response code 4xx
              * @param requestId unique id of the HTTP request to be sent to Influx.
              */
-            void writeDb(const std::string& message,
-                         const std::string& requestId);
+            void writeDb(const std::string& message, const std::string& requestId);
 
             /**
              * Low-level callback called when connection to InfluxDB is established
              */
-            void onDbConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const InfluxConnectedHandler& hook);
+            void onDbConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
+                             const InfluxConnectedHandler& hook);
 
             /**
              * Low-level callback called when reading is done
@@ -194,8 +190,7 @@ namespace karabo {
              * Actual "GET /query ..." is accomplished. If no connection to DB, this call is blocked
              * until the connection is established.  Otherwise the call is non-blocking.
              */
-            void queryDbTask(const std::string& statement,
-                             const InfluxResponseHandler& action);
+            void queryDbTask(const std::string& statement, const InfluxResponseHandler& action);
 
             /**
              * Generic wrap callback is called and call in turn the user "action".
@@ -216,11 +211,10 @@ namespace karabo {
              * InfluxResponseHandler and keep the consumption of requests
              * submitted to the InfluxDbClient going.
              */
-            void sendToInfluxDb(const std::string& msg,
-                                const InfluxResponseHandler& action,
+            void sendToInfluxDb(const std::string& msg, const InfluxResponseHandler& action,
                                 const std::string& requestId);
 
-            void flushBatchImpl(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
+            void flushBatchImpl(const InfluxResponseHandler& respHandler = InfluxResponseHandler());
 
             /**
              * Gets the raw form of the http Authorization header with values of dbUser and dbPassword
@@ -247,10 +241,9 @@ namespace karabo {
              *                  response could not be processed (needed to update
              *                  the internal bookeeping of the InfluxDb client).
              */
-            void handleHttpReadError(const std::string &errMsg, const std::string &requestId);
+            void handleHttpReadError(const std::string& errMsg, const std::string& requestId);
 
-       private:
-
+           private:
             std::string m_url;
             karabo::net::Connection::Pointer m_dbConnection;
             karabo::net::Channel::Pointer m_dbChannel;
@@ -261,7 +254,8 @@ namespace karabo {
             std::atomic<bool> m_connectionRequested;
             // maps Request-Id to pair of HTTP request string and action callback
             boost::mutex m_responseHandlersMutex;
-            std::unordered_map<std::string, std::pair<std::string, InfluxResponseHandler> > m_registeredInfluxResponseHandlers;
+            std::unordered_map<std::string, std::pair<std::string, InfluxResponseHandler> >
+                  m_registeredInfluxResponseHandlers;
 
             // Unique id of the individual HTTP request that can be "flying" between the DbClient and Influx at
             // a given moment for the TCP channel. If the TCP connection between the DbClient and Influx gets
@@ -289,5 +283,4 @@ namespace karabo {
 } // namespace karabo
 
 
-
-#endif	/* KARABO_NET_INFLUXDBCLIENT_HH */
+#endif /* KARABO_NET_INFLUXDBCLIENT_HH */

@@ -5,16 +5,16 @@
  */
 
 #ifndef KARABO_UTIL_NDARRAY_HH
-#define	KARABO_UTIL_NDARRAY_HH
+#define KARABO_UTIL_NDARRAY_HH
 
-#include "Exception.hh"
-#include "Dims.hh"
-#include "Hash.hh"
-#include "Schema.hh"
 #include "ByteSwap.hh"
 #include "CustomNodeElement.hh"
-#include "ToSize.hh"
+#include "Dims.hh"
+#include "Exception.hh"
 #include "FromInt.hh"
+#include "Hash.hh"
+#include "Schema.hh"
+#include "ToSize.hh"
 
 
 namespace karabo {
@@ -23,22 +23,19 @@ namespace karabo {
         /**
          * @class NDArray
          * @brief A class representing multi-dimensional data in Karabo that seaminglessy converts to numpy.NDArray
-         * 
+         *
          * The NDArray class is intended to store any multidimensional data occurring in Karabo. Internally it
          * holds the data in a ByteArray. It is a Hash-derived structure, which means it serializes into a
          * karabo::util::Hash. Its meta-data is chosen such that it can be seamlessly converted into a numpy.NDArray
          */
         class NDArray : protected Hash {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(NDArray, "NDArray", "1.5");
 
             typedef boost::shared_ptr<char> DataPointer;
 
             struct NullDeleter {
-
-                void operator()(void const *) const {
+                void operator()(void const*) const {
                     // Do nothing
                 }
             };
@@ -53,8 +50,8 @@ namespace karabo {
              * @param isBigEndian
              */
             explicit NDArray(const Dims& shape = Dims(),
-                    const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,
-                    const bool isBigEndian = karabo::util::isBigEndian());
+                             const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,
+                             const bool isBigEndian = karabo::util::isBigEndian());
 
             /**
              * This constructor creates an NDArray where all values are initialized with a fill value
@@ -63,9 +60,7 @@ namespace karabo {
              * @param isBigEndian
              */
             template <typename T>
-            NDArray(const Dims& shape,
-                    const T& fill,
-                    const bool isBigEndian = karabo::util::isBigEndian());
+            NDArray(const Dims& shape, const T& fill, const bool isBigEndian = karabo::util::isBigEndian());
 
             /**
              * This constructor copies data from the provided memory location.
@@ -76,9 +71,7 @@ namespace karabo {
              * @param isBigEndian Endianess flag
              */
             template <typename T>
-            NDArray(const T* dataPtr,
-                    const size_t numElems,
-                    const Dims& shape = Dims(),
+            NDArray(const T* dataPtr, const size_t numElems, const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian());
 
             /**
@@ -91,8 +84,7 @@ namespace karabo {
              * @param isBigEndian Endianess flag
              */
             template <typename InputIterator>
-            NDArray(InputIterator first, InputIterator last,
-                    const Dims& shape = Dims(),
+            NDArray(InputIterator first, InputIterator last, const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian());
 
             /**
@@ -105,11 +97,8 @@ namespace karabo {
              * @param shape Shape information
              * @param isBigEndian Endianess flag
              */
-            template<typename T, typename D>
-            NDArray(const T* dataPtr,
-                    const size_t numElems,
-                    const D& deleter,
-                    const Dims& shape = Dims(),
+            template <typename T, typename D>
+            NDArray(const T* dataPtr, const size_t numElems, const D& deleter, const Dims& shape = Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian());
 
 
@@ -122,14 +111,10 @@ namespace karabo {
              * @param shape Shape information
              * @param isBigEndian Endianess flag
              */
-            NDArray(const DataPointer& ptr,
-                    const karabo::util::Types::ReferenceType& type,
-                    const size_t& numElems,
-                    const Dims& shape = Dims(),
-                    const bool isBigEndian = karabo::util::isBigEndian());
+            NDArray(const DataPointer& ptr, const karabo::util::Types::ReferenceType& type, const size_t& numElems,
+                    const Dims& shape = Dims(), const bool isBigEndian = karabo::util::isBigEndian());
 
-            virtual ~NDArray() {
-            }
+            virtual ~NDArray() {}
 
             /**
              * Set the schape of the array
@@ -162,12 +147,12 @@ namespace karabo {
 
             /**
              * Get the data contained in the array as a pointer
-             * @return 
+             * @return
              */
             template <typename T>
             const T* getData() const {
                 if (get<int>("type") == Types::from<T>()) {
-                    return reinterpret_cast<T*> (get<ByteArray>("data").first.get());
+                    return reinterpret_cast<T*>(get<ByteArray>("data").first.get());
                 } else {
                     const int fromType = get<int>("type");
                     // If fromType is invalid (e.g. since corrupted NDArray), we cannot get a string literal...
@@ -177,32 +162,37 @@ namespace karabo {
                     } catch (const karabo::util::Exception& e) {
                         karabo::util::Exception::clearTrace();
                     }
-                    // For unsupported types T, Types::from<T>() does not even compile and we always get a valid toTypeStr
+                    // For unsupported types T, Types::from<T>() does not even compile and we always get a valid
+                    // toTypeStr
                     const Types::ReferenceType toType = Types::from<T>();
                     const std::string toTypeStr = Types::convert<FromInt, ToLiteral>(toType);
-                    throw KARABO_CAST_EXCEPTION("NDArray::getData(): Failed to cast "
-                                                "from " + fromTypeStr + " (" + toString(fromType) += ") "
-                                                "to " + toTypeStr + " (" + toString(toType) += ")");
+                    throw KARABO_CAST_EXCEPTION(
+                          "NDArray::getData(): Failed to cast "
+                          "from " +
+                                fromTypeStr + " (" + toString(fromType) +=
+                          ") "
+                          "to " +
+                          toTypeStr + " (" + toString(toType) += ")");
                 }
             }
 
             template <typename T>
             T* getData() {
                 // Call the const version of getData:
-                const T* data = const_cast<const NDArray*> (this)->getData<T>();
+                const T* data = const_cast<const NDArray*>(this)->getData<T>();
                 // Convert back result to non-const:
-                return const_cast<T*> (data);
+                return const_cast<T*>(data);
             }
 
             /**
              * Get a shared pointer to the underlying ByteArray data
-             * @return 
+             * @return
              */
             const DataPointer& getDataPtr() const;
 
             /**
              * Return the underlying ByteArray
-             * @return 
+             * @return
              */
             ByteArray getByteArray();
 
@@ -210,7 +200,7 @@ namespace karabo {
 
             /**
              * Return the shape of the array as a karabo::util::Dins object
-             * @return 
+             * @return
              */
             Dims getShape() const;
 
@@ -230,31 +220,30 @@ namespace karabo {
              */
             void toBigEndian();
 
-        private:
-
+           private:
             template <typename T>
             void setType() {
-                set("type", static_cast<int> (karabo::util::Types::from<T>()));
+                set("type", static_cast<int>(karabo::util::Types::from<T>()));
             }
 
-            template<typename T>
+            template <typename T>
             void setData(const Dims& shape) {
-                const size_t byteSize = shape.size() * sizeof (T);
+                const size_t byteSize = shape.size() * sizeof(T);
                 set("data", std::make_pair(DataPointer(new char[byteSize], &NDArray::deallocator), byteSize));
             }
 
             template <typename T>
             void setData(const T* data, const size_t nelems) {
-                const size_t byteSize = nelems * sizeof (T);
+                const size_t byteSize = nelems * sizeof(T);
                 char* buffer = new char[byteSize];
-                std::memcpy(buffer, reinterpret_cast<const char*> (data), byteSize);
+                std::memcpy(buffer, reinterpret_cast<const char*>(data), byteSize);
                 set("data", std::make_pair(DataPointer(buffer, &NDArray::deallocator), byteSize));
             }
 
             template <typename T, typename D>
             void setData(const T* data, const size_t nelems, const D& deleter) {
-                const size_t byteSize = nelems * sizeof (T);
-                char* tmp = const_cast<char*> (reinterpret_cast<const char*> (data));
+                const size_t byteSize = nelems * sizeof(T);
+                char* tmp = const_cast<char*>(reinterpret_cast<const char*>(data));
                 set("data", std::make_pair(DataPointer(tmp, deleter), byteSize));
             }
 
@@ -263,32 +252,26 @@ namespace karabo {
             void swapEndianess();
 
             static void deallocator(const char* p);
-
         };
 
         // Implementation of template functions
 
         template <typename T>
-        NDArray::NDArray(const Dims& shape,
-                         const T& fill,
-                         const bool isBigEndian) {
-            const size_t itemSize = sizeof (T);
+        NDArray::NDArray(const Dims& shape, const T& fill, const bool isBigEndian) {
+            const size_t itemSize = sizeof(T);
             const size_t byteSize = shape.size() * itemSize;
             T* buffer = new T[shape.size()];
             for (size_t i = 0; i < shape.size(); ++i) {
                 buffer[i] = fill;
             }
-            set("data", std::make_pair(DataPointer(reinterpret_cast<char*> (buffer), &NDArray::deallocator), byteSize));
+            set("data", std::make_pair(DataPointer(reinterpret_cast<char*>(buffer), &NDArray::deallocator), byteSize));
             setType<T>();
             setShape(shape);
             setBigEndian(isBigEndian);
         }
 
         template <typename T>
-        NDArray::NDArray(const T* dataPtr,
-                         const size_t numElems,
-                         const Dims& shape,
-                         const bool isBigEndian) {
+        NDArray::NDArray(const T* dataPtr, const size_t numElems, const Dims& shape, const bool isBigEndian) {
             setData(dataPtr, numElems);
             setType<T>();
             setShape(shape);
@@ -296,13 +279,11 @@ namespace karabo {
         }
 
         template <typename InputIterator>
-        NDArray::NDArray(InputIterator first, InputIterator last,
-                         const Dims& shape,
-                         const bool isBigEndian) {
+        NDArray::NDArray(InputIterator first, InputIterator last, const Dims& shape, const bool isBigEndian) {
             using DataType = typename std::iterator_traits<InputIterator>::value_type;
 
             // Create data structure and specify type
-            const size_t byteSize = (last - first) * sizeof (DataType);
+            const size_t byteSize = (last - first) * sizeof(DataType);
             set("data", std::make_pair(DataPointer(new char[byteSize], &NDArray::deallocator), byteSize));
             setType<DataType>();
 
@@ -317,11 +298,8 @@ namespace karabo {
             }
         }
 
-        template<typename T, typename D>
-        NDArray::NDArray(const T* dataPtr,
-                         const size_t numElems,
-                         const D& deleter,
-                         const Dims& shape,
+        template <typename T, typename D>
+        NDArray::NDArray(const T* dataPtr, const size_t numElems, const D& deleter, const Dims& shape,
                          const bool isBigEndian) {
             setData(dataPtr, numElems, deleter);
             setType<T>();
@@ -333,21 +311,18 @@ namespace karabo {
          * Declaration NDArrayElement
          **********************************************************************/
 
-        class NDArrayElement : public karabo::util::CustomNodeElement<NDArrayElement, NDArray > {
+        class NDArrayElement : public karabo::util::CustomNodeElement<NDArrayElement, NDArray> {
+            typedef karabo::util::CustomNodeElement<NDArrayElement, NDArray> ParentType;
 
-            typedef karabo::util::CustomNodeElement<NDArrayElement, NDArray > ParentType;
-
-        public:
-
-            NDArrayElement(karabo::util::Schema& s) : ParentType(s) {
-            }
+           public:
+            NDArrayElement(karabo::util::Schema& s) : ParentType(s) {}
 
             NDArrayElement& dtype(const karabo::util::Types::ReferenceType type) {
-                return setDefaultValue("type", static_cast<int> (type));
+                return setDefaultValue("type", static_cast<int>(type));
             }
 
             NDArrayElement& shape(const std::string& shp) {
-                std::vector<unsigned long long> tmp = karabo::util::fromString< unsigned long long, std::vector>(shp);
+                std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(shp);
                 return setDefaultValue("shape", tmp);
             }
 
@@ -364,12 +339,11 @@ namespace karabo {
                 readOnly();
                 ParentType::commit();
             }
-
         };
 
         typedef NDArrayElement NDARRAY_ELEMENT;
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif

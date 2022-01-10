@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Serializable_Test.h
  * Author: heisenb
  *
@@ -6,15 +6,14 @@
  */
 
 #ifndef SERIALIZABLE_TEST_H
-#define	SERIALIZABLE_TEST_H
+#define SERIALIZABLE_TEST_H
 
 #include <cppunit/extensions/HelperMacros.h>
+
 #include <karabo/util/Hash.hh>
 
 class FancyData : protected karabo::util::Hash {
-
-public:
-
+   public:
     typedef karabo::util::Hash type;
 
     KARABO_CLASSINFO(FancyData, "FancyData", "1.0");
@@ -22,27 +21,20 @@ public:
     void setScalar(const int value);
 
     const int& getScalar() const;
-
-
 };
 
 class Serializable_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(Serializable_Test);
     CPPUNIT_TEST(testMethod);
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Serializable_Test();
     virtual ~Serializable_Test();
 
-private:
-
+   private:
     void testMethod();
-
 };
 
-#endif	/* SERIALIZABLE_TEST_H */
-
+#endif /* SERIALIZABLE_TEST_H */

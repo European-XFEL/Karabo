@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   AttributesNodeWrap.hh
  * Author: esenov
  *
@@ -6,11 +6,12 @@
  */
 
 #ifndef ATTRIBUTESNODEWRAP_HH
-#define	ATTRIBUTESNODEWRAP_HH
+#define ATTRIBUTESNODEWRAP_HH
 
 #include <boost/python.hpp>
-#include <karabo/util/Hash.hh>
 #include <karabo/util/FromLiteral.hh>
+#include <karabo/util/Hash.hh>
+
 #include "Wrapper.hh"
 
 namespace bp = boost::python;
@@ -18,14 +19,11 @@ namespace bp = boost::python;
 namespace karathon {
 
     class AttributesNodeWrap {
-
         struct null_deleter {
-
-            void operator()(void const *) const {
-            }
+            void operator()(void const*) const {}
         };
-    public:
 
+       public:
         typedef boost::shared_ptr<karabo::util::Hash::Attributes::Node> Pointer;
 
         static bp::object getKey(const Pointer& node) {
@@ -42,7 +40,7 @@ namespace karathon {
             using namespace karabo::util;
             boost::any& a = node->getValueAsAny();
             // handle Hash differently returning reference to Hash
-            if (a.type() == typeid (Hash)) {
+            if (a.type() == typeid(Hash)) {
                 Hash& hash = boost::any_cast<Hash&>(a);
                 boost::shared_ptr<Hash> p(&hash, null_deleter());
                 return bp::object(p);
@@ -89,11 +87,11 @@ namespace karathon {
                 case Types::STRING:
                     return bp::object(node->getValueAs<std::string>());
                 case Types::VECTOR_BOOL:
-                    return Wrapper::fromStdVectorToPyArray(node->getValueAs<bool, std::vector > ());
+                    return Wrapper::fromStdVectorToPyArray(node->getValueAs<bool, std::vector>());
                 case Types::VECTOR_CHAR:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<char, std::vector>());
                 case Types::VECTOR_INT8:
-                    return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<signed char, std::vector > ());
+                    return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<signed char, std::vector>());
                 case Types::VECTOR_UINT8:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<unsigned char, std::vector>());
                 case Types::VECTOR_INT16:
@@ -111,7 +109,8 @@ namespace karathon {
                     //                    case Types::HASH:
                     //                        return bp::object(node->getValueAs<karabo::util::Hash>());
                     //                    case Types::VECTOR_HASH:
-                    //                        return Wrapper::fromStdVectorToPyList(node->getValueAs<karabo::util::Hash, std::vector>());
+                    //                        return Wrapper::fromStdVectorToPyList(node->getValueAs<karabo::util::Hash,
+                    //                        std::vector>());
                 default:
                     break;
             }
@@ -120,7 +119,7 @@ namespace karathon {
 
         static bp::object getType(const Pointer& node) {
             using namespace karabo::util;
-            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType> (node->getType());
+            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(node->getType());
             return bp::object(type);
         }
 
@@ -135,7 +134,6 @@ namespace karathon {
             }
         }
     };
-}
+} // namespace karathon
 
-#endif	/* ATTRIBUTESNODEWRAP_HH */
-
+#endif /* ATTRIBUTESNODEWRAP_HH */

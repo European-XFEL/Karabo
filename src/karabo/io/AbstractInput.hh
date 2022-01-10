@@ -10,13 +10,13 @@
 
 
 #ifndef KARABO_IO_ABSTRACTINPUT_HH
-#define	KARABO_IO_ABSTRACTINPUT_HH
+#define KARABO_IO_ABSTRACTINPUT_HH
 
-#include <boost/function.hpp>
 #include <boost/any.hpp>
+#include <boost/function.hpp>
+#include <karabo/io/InputHandler.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/io/InputHandler.hh>
 
 namespace karabo {
     namespace io {
@@ -24,36 +24,29 @@ namespace karabo {
         /**
          * @class AbstractInput
          * @bried The AbstractInput class is the base for input classes in Karabo
-         * 
+         *
          * Their specific implementation defines how the input acquires data. This
          * can be either through a network or in memory connection, or through a
          * data source accessing persited data.
          */
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            static void expectedParameters(karabo::util::Schema& expected) {
-            }
+            static void expectedParameters(karabo::util::Schema& expected) {}
 
-            AbstractInput() {
-            }
+            AbstractInput() {}
 
-            AbstractInput(const karabo::util::Hash& configuration) {
-            }
+            AbstractInput(const karabo::util::Hash& configuration) {}
 
-            virtual ~AbstractInput() {
-            }
+            virtual ~AbstractInput() {}
 
             /**
              * Reconfigure the input, e.g. to use a different data source
              * @param input
              */
-            virtual void reconfigure(const karabo::util::Hash& input) {
-            }
+            virtual void reconfigure(const karabo::util::Hash& input) {}
 
             /**
              * Register a SignalSlotable instance to this input
@@ -65,7 +58,7 @@ namespace karabo {
 
             /**
              * Get the registered SignalSlotable instance
-             * @return 
+             * @return
              */
             const std::string& getInstanceId() const {
                 return m_instanceId;
@@ -79,16 +72,20 @@ namespace karabo {
             void setInputHandlerType(const std::string& language, const std::string& inputType) {
                 std::string capitalType = boost::algorithm::to_upper_copy(language);
                 if (capitalType == "C++")
-                    m_handler = karabo::util::Factory<InputHandler>::create("CppInputHandler" + inputType, shared_from_this());
+                    m_handler = karabo::util::Factory<InputHandler>::create("CppInputHandler" + inputType,
+                                                                            shared_from_this());
                 else if (capitalType == "PYTHON")
-                    m_handler = karabo::util::Factory<InputHandler>::create("PythonInputHandler" + inputType, shared_from_this());
+                    m_handler = karabo::util::Factory<InputHandler>::create("PythonInputHandler" + inputType,
+                                                                            shared_from_this());
                 else
-                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + language + " is not supported.  Supported types (case-insensitive) are C++, Python");
+                    throw KARABO_PARAMETER_EXCEPTION(
+                          "Handler type " + language +
+                          " is not supported.  Supported types (case-insensitive) are C++, Python");
             }
 
             /**
              * Get the registered input Handler
-             * @return 
+             * @return
              */
             InputHandler::Pointer getInputHandler() {
                 return m_handler;
@@ -105,7 +102,7 @@ namespace karabo {
 
             /**
              * Register a handler to be called for end of stream events. End of stream event are used
-             * to signify that a group of related data tokens is complete and that a new group of 
+             * to signify that a group of related data tokens is complete and that a new group of
              * data token follow
              * @param endOfStreamEventHandler
              */
@@ -117,18 +114,18 @@ namespace karabo {
 
             /**
              * Return if this input needs to used in the context of a device
-             * @return 
+             * @return
              */
             virtual bool needsDeviceConnection() const { // TODO Check if we can get rid of this
                 return false;
             }
-            
+
             /**
              * Get the output channels connected to this input
-             * @return 
+             * @return
              */
             virtual std::vector<karabo::util::Hash> getConnectedOutputChannels() {
-                return std::vector<karabo::util::Hash > ();
+                return std::vector<karabo::util::Hash>();
                 std::vector<int> v;
             }
 
@@ -136,19 +133,17 @@ namespace karabo {
              * Connect this input to an output channel as specified by its configuration.
              * @param outputChannelInfo
              */
-            virtual void connect(const karabo::util::Hash& outputChannelInfo) {
-            }
+            virtual void connect(const karabo::util::Hash& outputChannelInfo) {}
 
             /**
              * Disconnect the output channel specified by its configuration
              * @param outputChannelInfo
              */
-            virtual void disconnect(const karabo::util::Hash& outputChannelInfo) {
-            }
+            virtual void disconnect(const karabo::util::Hash& outputChannelInfo) {}
 
             /**
              * Should return true if the input can handle more data
-             * @return 
+             * @return
              */
             virtual bool canCompute() const {
                 return true;
@@ -157,20 +152,18 @@ namespace karabo {
             /**
              * Update the input to an receiving state
              */
-            virtual void update() {
-            }
+            virtual void update() {}
 
             /**
              * Check if the input responds to end of stream events, e.g. by calling
              * the registered handler.
-             * @return 
+             * @return
              */
             virtual bool respondsToEndOfStream() {
                 return true;
             }
 
-        protected:
-
+           protected:
             /**
              * Trigger an I/O event in the event handler
              */
@@ -189,11 +182,11 @@ namespace karabo {
                 }
             }
 
-        private:
+           private:
             boost::shared_ptr<InputHandler> m_handler;
             std::string m_instanceId;
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 #endif

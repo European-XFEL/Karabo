@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TimeDuration.hh
  * Author: boukhelef
  *
@@ -6,13 +6,14 @@
  */
 
 #ifndef TIMEDURATION_HH
-#define	TIMEDURATION_HH
-
-#include "Hash.hh"
+#define TIMEDURATION_HH
 
 #include <stdint.h>
-#include <string>
+
 #include <sstream>
+#include <string>
+
+#include "Hash.hh"
 
 namespace karabo {
     namespace util {
@@ -43,14 +44,12 @@ namespace karabo {
          * This class represents the time duration (length) between two time points
          * The value is hold in form of two unsigned 64bit values. The first expresses
          * the total number of seconds, and the seconds the fractional of a second.
-         * 
+         *
          * The default constructor create a time duration of length zero, i.e. empty.
          */
 
         class TimeDuration {
-
-            public:
-
+           public:
             /**
              * Default constructor creates an empty time duration
              */
@@ -58,7 +57,7 @@ namespace karabo {
             TimeDuration();
 
             /**
-             * Constructs a time duration from Hash. Seconds and fractions are stored as 
+             * Constructs a time duration from Hash. Seconds and fractions are stored as
              * unsigned integer 64bits under the keys "seconds" and "fractions", respectively.
              * @param hash Hash object ("seconds", unsigned int 64bits, "fractions", unsigned int 64bits)
              */
@@ -66,7 +65,7 @@ namespace karabo {
             TimeDuration(const karabo::util::Hash& hash);
 
             /**
-             * Construct a time duration from separate seconds and fractions of seconds. 
+             * Construct a time duration from separate seconds and fractions of seconds.
              * @param seconds
              * @param fractions in Atto seconds
              */
@@ -80,7 +79,8 @@ namespace karabo {
              * @param seconds
              * @param fractions
              */
-            TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
+            TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds,
+                         const TimeValue fractions);
 
             virtual ~TimeDuration();
 
@@ -94,13 +94,16 @@ namespace karabo {
              */
 
             TimeDuration& set(const TimeValue seconds, const TimeValue fractions);
-            TimeDuration& set(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
+            TimeDuration& set(const int days, const int hours, const int minutes, const TimeValue seconds,
+                              const TimeValue fractions);
 
             TimeDuration& add(const TimeValue seconds, const TimeValue fractions);
-            TimeDuration& add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
+            TimeDuration& add(const int days, const int hours, const int minutes, const TimeValue seconds,
+                              const TimeValue fractions);
 
             TimeDuration& sub(const TimeValue seconds, const TimeValue fractions);
-            TimeDuration& sub(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
+            TimeDuration& sub(const int days, const int hours, const int minutes, const TimeValue seconds,
+                              const TimeValue fractions);
 
             /**
              * Relational operations between time duration objects
@@ -156,7 +159,7 @@ namespace karabo {
             }
 
             /**
-             * Check if the time duration is empty, i.e. of zero length. 
+             * Check if the time duration is empty, i.e. of zero length.
              * @return bool
              */
 
@@ -173,7 +176,7 @@ namespace karabo {
             TimeValue getSeconds() const;
 
             /**
-             * Express the total length of a time duration in hours, minutes, or seconds. 
+             * Express the total length of a time duration in hours, minutes, or seconds.
              * @return unsigned int 64bits
              */
             TimeValue getTotalHours() const;
@@ -195,7 +198,7 @@ namespace karabo {
             friend std::ostream& operator<<(std::ostream& os, const TimeDuration& dr);
 
             /**
-             * Set the output format. This parameter is class variable, 
+             * Set the output format. This parameter is class variable,
              * thus, having a global effect on future output.
              * The default format is seconds[dot]fractions, with nanoseconds resolution.
              * CAVEAT: 'seconds' is the total number of seconds modulo 60,
@@ -222,14 +225,14 @@ namespace karabo {
             static inline void sanitize(TimeValue& sec, TimeValue& frac);
             /// One second expressed in attoseconds
             static const TimeValue m_oneSecondInAtto = 1000000000000000000ULL; // initialise integer type directly here
-        private:
+           private:
             TimeValue m_Seconds;
             TimeValue m_Fractions;
             static std::string DEFAULT_FORMAT;
         };
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 namespace karabo {
     namespace util {
@@ -244,7 +247,7 @@ namespace karabo {
 
         inline bool TimeDuration::operator>(const TimeDuration& other) const {
             return (m_Seconds > other.m_Seconds) ||
-                    ((m_Seconds == other.m_Seconds) && (m_Fractions > other.m_Fractions));
+                   ((m_Seconds == other.m_Seconds) && (m_Fractions > other.m_Fractions));
         }
 
         inline bool TimeDuration::operator>=(const TimeDuration& other) const {
@@ -253,7 +256,7 @@ namespace karabo {
 
         inline bool TimeDuration::operator<(const TimeDuration& other) const {
             return (m_Seconds < other.m_Seconds) ||
-                    ((m_Seconds == other.m_Seconds) && (m_Fractions < other.m_Fractions));
+                   ((m_Seconds == other.m_Seconds) && (m_Fractions < other.m_Fractions));
         }
 
         inline bool TimeDuration::operator<=(const TimeDuration& other) const {
@@ -340,8 +343,7 @@ namespace karabo {
                 frac %= m_oneSecondInAtto;
             }
         }
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* TIMEDURATION_HH */
-
+#endif /* TIMEDURATION_HH */

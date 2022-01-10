@@ -8,13 +8,16 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
-#include <memory>
+#include "JmsConsumer.hh"
+
+#include <openmqc/mqcrt.h>
+
 #include <karabo/io/HashBinarySerializer.hh>
 #include <karabo/log.hpp>
-#include "JmsConsumer.hh"
-#include "JmsConnection.hh"
+#include <memory>
+
 #include "EventLoop.hh"
-#include <openmqc/mqcrt.h>
+#include "JmsConnection.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -24,15 +27,14 @@ namespace karabo {
 
 
         JmsConsumer::JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
-                                 const std::string& selector, bool skipSerialisation) :
-            m_connection(connection),
-            m_binarySerializer(skipSerialisation ? nullptr : BinarySerializer<Hash>::create("Bin")),
-            m_reading(false),
-            m_serializerStrand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
-            m_handlerStrand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
-            m_topic(topic),
-            m_selector(selector) {
-        }
+                                 const std::string& selector, bool skipSerialisation)
+            : m_connection(connection),
+              m_binarySerializer(skipSerialisation ? nullptr : BinarySerializer<Hash>::create("Bin")),
+              m_reading(false),
+              m_serializerStrand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
+              m_handlerStrand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
+              m_topic(topic),
+              m_selector(selector) {}
 
 
         JmsConsumer::~JmsConsumer() {
@@ -41,8 +43,8 @@ namespace karabo {
         }
 
 
-        void JmsConsumer::startReading(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
-
+        void JmsConsumer::startReading(const consumer::MessageHandler& handler,
+                                       const consumer::ErrorNotifier& errorNotifier) {
             if (m_reading) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Refuse 'startReading' since already reading!";
                 return;
@@ -51,8 +53,8 @@ namespace karabo {
             // Set handlers on strand that uses them to circumvent mutex locks.
             // Do same "strand hops" that messages (and therefore handler resetting) do to guarantee that this handler
             // setting here cannot overtake a resetting triggered by a previously called stopReading:
-            m_serializerStrand->post(bind_weak(&JmsConsumer::postSetHandlers, this, m_handlerStrand,
-                                               handler, errorNotifier));
+            m_serializerStrand->post(
+                  bind_weak(&JmsConsumer::postSetHandlers, this, m_handlerStrand, handler, errorNotifier));
 
             // If startReading is scheduled before the event-loop is started, corresponding writes
             // (that are also only scheduled) may be executed first once the event-loop is started.
@@ -90,13 +92,14 @@ namespace karabo {
         }
 
 
-        void JmsConsumer::postSetHandlers(const Strand::Pointer& strand,
-                                          const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
+        void JmsConsumer::postSetHandlers(const Strand::Pointer& strand, const consumer::MessageHandler& handler,
+                                          const consumer::ErrorNotifier& errorNotifier) {
             strand->post(bind_weak(&JmsConsumer::setHandlers, this, handler, errorNotifier));
         }
 
 
-        void JmsConsumer::setHandlers(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
+        void JmsConsumer::setHandlers(const consumer::MessageHandler& handler,
+                                      const consumer::ErrorNotifier& errorNotifier) {
             m_messageHandler = handler;
             m_errorNotifier = errorNotifier;
         }
@@ -109,20 +112,19 @@ namespace karabo {
                 MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(m_topic, m_selector);
                 MQConsumerHandle consumerHandle = this->getConsumer(m_topic, m_selector);
 
-                JmsConsumer::MQMessageHandlePointer messageHandlePtr(new MQMessageHandle,
-                                                                     [](MQMessageHandle * r) {
-                                                                         MQFreeMessage(*r); delete r;
-                                                                     });
+                JmsConsumer::MQMessageHandlePointer messageHandlePtr(new MQMessageHandle, [](MQMessageHandle* r) {
+                    MQFreeMessage(*r);
+                    delete r;
+                });
                 MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, 100, messageHandlePtr.get());
                 MQError statusCode = MQGetStatusCode(status);
                 switch (statusCode) {
-
-                    case MQ_CONSUMER_DROPPED_MESSAGES:
-                    { // Deal with hand-crafted error code
+                    case MQ_CONSUMER_DROPPED_MESSAGES: { // Deal with hand-crafted error code
                         MQString statusString = MQGetStatusString(status);
                         const std::string stdStatusString(statusString);
                         MQFreeString(statusString);
-                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::drop, stdStatusString));
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this,
+                                                           consumer::Error::drop, stdStatusString));
                         // MQ_CONSUMER_DROPPED_MESSAGES is an error code introduced by an XFEL modification
                         // to OpenMQ. It means: Here is a new message, but be aware that other messages
                         // received before have been dropped. These dropped messages have already been acknowledged,
@@ -130,8 +132,7 @@ namespace karabo {
                         // the normal message processing logic. That's the reason for the intentional 'no break'
                         // behavior of this case.
                     }
-                    case MQ_SUCCESS:
-                    { // Message received
+                    case MQ_SUCCESS: { // Message received
                         MQ_SAFE_CALL(MQAcknowledgeMessages(sessionHandle, *messageHandlePtr));
 
                         MQMessageType messageType;
@@ -141,7 +142,8 @@ namespace karabo {
                         if (messageType != MQ_BYTES_MESSAGE) {
                             const std::string msg("Received a message of wrong type");
                             KARABO_LOG_FRAMEWORK_WARN << msg;
-                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::type, msg));
+                            m_serializerStrand->post(
+                                  bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::type, msg));
                             break;
                         }
                         m_serializerStrand->post(bind_weak(&JmsConsumer::deserialize, this, messageHandlePtr));
@@ -159,14 +161,14 @@ namespace karabo {
                         // This function may be called concurrently, hence its thread-safe
                         this->clearConsumerHandles();
                         break;
-                    default:
-                    {
+                    default: {
                         MQString tmp = MQGetStatusString(status);
                         const std::string errorString(tmp);
                         MQFreeString(tmp);
                         const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
                         KARABO_LOG_FRAMEWORK_WARN << msg;
-                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::unknown, msg));
+                        m_serializerStrand->post(
+                              bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::unknown, msg));
                     }
                 }
                 if (selfGuard.unique()) {
@@ -190,7 +192,6 @@ namespace karabo {
 
 
         void JmsConsumer::deserialize(const JmsConsumer::MQMessageHandlePointer& messageHandlePtr) {
-
             Hash::Pointer header(boost::make_shared<Hash>());
             this->parseHeader(*messageHandlePtr, *header);
 
@@ -199,9 +200,9 @@ namespace karabo {
             MQ_SAFE_CALL(MQGetBytesMessageBytes(*messageHandlePtr, &bytes, &nBytes));
 
             Hash::Pointer body(boost::make_shared<Hash>());
-            const char* constChars = reinterpret_cast<const char*> (bytes);
+            const char* constChars = reinterpret_cast<const char*>(bytes);
             if (m_binarySerializer) {
-                m_binarySerializer->load(*body, constChars, static_cast<size_t> (nBytes));
+                m_binarySerializer->load(*body, constChars, static_cast<size_t>(nBytes));
             } else {
                 // Just copy raw bytes as vector<char> under key "raw":
                 std::vector<char>& raw = body->bindReference<std::vector<char> >("raw");
@@ -220,29 +221,30 @@ namespace karabo {
             if (m_errorNotifier) {
                 m_errorNotifier(error, msg);
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "Error " << static_cast<int> (error) << ": " << msg;
+                KARABO_LOG_FRAMEWORK_ERROR << "Error " << static_cast<int>(error) << ": " << msg;
             }
         }
 
         MQConsumerHandle JmsConsumer::getConsumer(const std::string& topic, const std::string& selector) {
-
             Consumers::const_iterator it = m_consumers.find(topic + selector);
             if (it != m_consumers.end()) return it->second;
 
             m_connection->waitForConnectionAvailable();
 
-            std::pair<MQSessionHandle, MQDestinationHandle> handles = this->ensureConsumerDestinationAvailable(topic, selector);
+            std::pair<MQSessionHandle, MQDestinationHandle> handles =
+                  this->ensureConsumerDestinationAvailable(topic, selector);
             MQConsumerHandle consumerHandle;
 
-            MQ_SAFE_CALL(MQCreateMessageConsumer(handles.first, handles.second, selector.c_str(), MQ_FALSE /*noLocal*/, &consumerHandle));
+            MQ_SAFE_CALL(MQCreateMessageConsumer(handles.first, handles.second, selector.c_str(), MQ_FALSE /*noLocal*/,
+                                                 &consumerHandle));
             m_consumers[topic + selector] = consumerHandle;
 
             return consumerHandle;
         }
 
 
-        std::pair<MQSessionHandle, MQDestinationHandle> JmsConsumer::ensureConsumerDestinationAvailable(const std::string& topic, const std::string& selector) {
-
+        std::pair<MQSessionHandle, MQDestinationHandle> JmsConsumer::ensureConsumerDestinationAvailable(
+              const std::string& topic, const std::string& selector) {
             ConsumerDestinations::const_iterator it = m_consumerDestinations.find(topic);
             if (it != m_consumerDestinations.end()) return it->second;
 
@@ -258,27 +260,22 @@ namespace karabo {
         }
 
 
-        MQSessionHandle JmsConsumer::ensureConsumerSessionAvailable(const std::string& topic, const std::string& selector) {
-
+        MQSessionHandle JmsConsumer::ensureConsumerSessionAvailable(const std::string& topic,
+                                                                    const std::string& selector) {
             ConsumerSessions::const_iterator it = m_consumerSessions.find(topic + selector);
             if (it != m_consumerSessions.end()) return it->second;
 
             m_connection->waitForConnectionAvailable();
 
             MQSessionHandle consumerSessionHandle;
-            MQ_SAFE_CALL(MQCreateSession(m_connection->m_connectionHandle,
-                                         MQ_FALSE, /* isTransacted */
-                                         MQ_CLIENT_ACKNOWLEDGE,
-                                         MQ_SESSION_SYNC_RECEIVE,
-                                         &consumerSessionHandle));
+            MQ_SAFE_CALL(MQCreateSession(m_connection->m_connectionHandle, MQ_FALSE, /* isTransacted */
+                                         MQ_CLIENT_ACKNOWLEDGE, MQ_SESSION_SYNC_RECEIVE, &consumerSessionHandle));
             m_consumerSessions[topic + selector] = consumerSessionHandle;
             return consumerSessionHandle;
         }
 
 
         void JmsConsumer::clearConsumerHandles() {
-
-
             for (const Consumers::value_type& i : m_consumers) {
                 MQCloseMessageConsumer(i.second);
             }
@@ -302,7 +299,7 @@ namespace karabo {
             MQPropertiesHandle propertiesHandle, headerHandle;
             MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
             MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                    this->getProperties(header, propertiesHandle);
+            this->getProperties(header, propertiesHandle);
             this->getProperties(header, headerHandle);
             MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
             MQ_SAFE_CALL(MQFreeProperties(headerHandle))
@@ -319,65 +316,58 @@ namespace karabo {
                     MQType type;
                     MQ_SAFE_CALL(MQGetPropertyType(propertiesHandle, mqKey, &type))
                     switch (type) {
-                        case MQ_STRING_TYPE:
-                        {
+                        case MQ_STRING_TYPE: {
                             ConstMQString mqValue;
                             MQ_SAFE_CALL(MQGetStringProperty(propertiesHandle, mqKey, &mqValue))
-                            properties.set<std::string > (key, std::string(mqValue));
+                            properties.set<std::string>(key, std::string(mqValue));
                             break;
                         }
-                        case MQ_INT8_TYPE:
-                        {
+                        case MQ_INT8_TYPE: {
                             MQInt8 mqValue;
                             MQ_SAFE_CALL(MQGetInt8Property(propertiesHandle, mqKey, &mqValue))
                             properties.set<signed char>(key, mqValue);
                             break;
                         }
-                        case MQ_INT16_TYPE:
-                        {
+                        case MQ_INT16_TYPE: {
                             MQInt16 mqValue;
                             MQ_SAFE_CALL(MQGetInt16Property(propertiesHandle, mqKey, &mqValue))
                             // TODO Check the char issues, KW mentioned !!
                             properties.set<short>(key, mqValue);
                             break;
                         }
-                        case MQ_INT32_TYPE:
-                        {
+                        case MQ_INT32_TYPE: {
                             MQInt32 mqValue;
                             MQ_SAFE_CALL(MQGetInt32Property(propertiesHandle, mqKey, &mqValue))
                             properties.set<int>(key, mqValue);
                             break;
                         }
-                        case MQ_INT64_TYPE:
-                        {
+                        case MQ_INT64_TYPE: {
                             MQInt64 mqValue;
                             MQ_SAFE_CALL(MQGetInt64Property(propertiesHandle, mqKey, &mqValue))
                             properties.set<long long>(key, mqValue);
                             break;
                         }
-                        case MQ_FLOAT32_TYPE:
-                        {
+                        case MQ_FLOAT32_TYPE: {
                             MQFloat32 mqValue;
                             MQ_SAFE_CALL(MQGetFloat32Property(propertiesHandle, mqKey, &mqValue))
                             properties.set<float>(key, mqValue);
                             break;
                         }
-                        case MQ_FLOAT64_TYPE:
-                        {
+                        case MQ_FLOAT64_TYPE: {
                             MQFloat64 mqValue;
                             MQ_SAFE_CALL(MQGetFloat64Property(propertiesHandle, mqKey, &mqValue))
                             properties.set<double>(key, mqValue);
                             break;
                         }
-                        case MQ_BOOL_TYPE:
-                        {
+                        case MQ_BOOL_TYPE: {
                             MQBool mqValue;
                             MQ_SAFE_CALL(MQGetBoolProperty(propertiesHandle, mqKey, &mqValue))
                             properties.set<bool>(key, mqValue);
                             break;
                         }
                         default:
-                            KARABO_LOG_FRAMEWORK_WARN << "Ignoring header value '" << key << "' of unknown type '" << type << "'";
+                            KARABO_LOG_FRAMEWORK_WARN << "Ignoring header value '" << key << "' of unknown type '"
+                                                      << type << "'";
                             break;
                     }
                 }
@@ -396,5 +386,5 @@ namespace karabo {
             m_selector = selector;
         }
 
-    }
-}
+    } // namespace net
+} // namespace karabo

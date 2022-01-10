@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ScopedGilRelease.hh
  * Author: esenov
  *
@@ -6,16 +6,14 @@
  */
 
 #ifndef SCOPEDGILRELEASE_HH
-#define	SCOPEDGILRELEASE_HH
+#define SCOPEDGILRELEASE_HH
 
 #include <boost/python.hpp>
 
 namespace karathon {
 
     class ScopedGILRelease {
-
-        public:
-
+       public:
         inline ScopedGILRelease() {
             if (PyGILState_Check()) m_threadState = PyEval_SaveThread();
             else m_threadState = 0;
@@ -25,10 +23,9 @@ namespace karathon {
             if (m_threadState) PyEval_RestoreThread(m_threadState);
         }
 
-    private:
+       private:
         PyThreadState* m_threadState;
     };
-}
+} // namespace karathon
 
-#endif	/* SCOPEDGILRELEASE_HH */
-
+#endif /* SCOPEDGILRELEASE_HH */

@@ -8,25 +8,25 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "SignalSlotable.hh"
 #include "Signal.hh"
+
+#include "SignalSlotable.hh"
 
 namespace karabo {
     namespace xms {
 
 
         Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& channel,
-                       const std::string& signalInstanceId, const std::string& signalFunction,
-                       const int priority, const int messageTimeToLive) :
-            m_signalSlotable(const_cast<SignalSlotable*> (signalSlotable)),
-            m_channel(channel),
-            m_signalInstanceId(signalInstanceId),
-            m_signalFunction(signalFunction),
-            m_priority(priority),
-            m_messageTimeToLive(messageTimeToLive),
-            m_topic(signalSlotable->m_topic),
-            m_argsType(typeid (karabo::util::Types::NONE)) {
-        }
+                       const std::string& signalInstanceId, const std::string& signalFunction, const int priority,
+                       const int messageTimeToLive)
+            : m_signalSlotable(const_cast<SignalSlotable*>(signalSlotable)),
+              m_channel(channel),
+              m_signalInstanceId(signalInstanceId),
+              m_signalFunction(signalFunction),
+              m_priority(priority),
+              m_messageTimeToLive(messageTimeToLive),
+              m_topic(signalSlotable->m_topic),
+              m_argsType(typeid(karabo::util::Types::NONE)) {}
 
 
         void Signal::setSlotStrings(const SlotMap& slots, karabo::util::Hash& header) const {
@@ -132,7 +132,7 @@ namespace karabo {
             if (m_signalInstanceId.empty() && m_signalSlotable) {
                 // Hack to fix empty id if signal created before SignalSlotable::init (which defines the id) was called.
                 // Happens currently (2.10.0) for signals registered in constructors of devices
-                *const_cast<std::string*> (&m_signalInstanceId) = m_signalSlotable->getInstanceId();
+                *const_cast<std::string*>(&m_signalInstanceId) = m_signalSlotable->getInstanceId();
             }
 
             karabo::util::Hash::Pointer header(boost::make_shared<karabo::util::Hash>());
@@ -150,5 +150,5 @@ namespace karabo {
         void Signal::setTopic(const std::string& topic) {
             m_topic = topic;
         }
-    }
-}
+    } // namespace xms
+} // namespace karabo

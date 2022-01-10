@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   States_Test.cc
  * Author: haufs
  *
@@ -6,8 +6,9 @@
  */
 
 #include "States_Test.hh"
-#include <karabo/util/StateSignifier.hh>
+
 #include <karabo/util/State.hh>
+#include <karabo/util/StateSignifier.hh>
 
 using namespace karabo::util;
 using namespace std;
@@ -15,34 +16,27 @@ using namespace std;
 CPPUNIT_TEST_SUITE_REGISTRATION(States_Test);
 
 
-States_Test::States_Test() {
-}
+States_Test::States_Test() {}
 
 
-States_Test::~States_Test() {
-}
+States_Test::~States_Test() {}
 
 
-void States_Test::setUp() {
-
-}
+void States_Test::setUp() {}
 
 
-void States_Test::tearDown() {
-
-}
+void States_Test::tearDown() {}
 
 
 void States_Test::testStringRoundTrip() {
-    const State & s = State::CLOSED;
-    const std::string & sstr = s.name();
-    const State & s2 = State::fromString(sstr);
+    const State& s = State::CLOSED;
+    const std::string& sstr = s.name();
+    const State& s2 = State::fromString(sstr);
     CPPUNIT_ASSERT(s == s2);
 }
 
 
 void States_Test::testSignifier() {
-
     std::vector<State> s;
     s.push_back(State::DISABLED);
     s.push_back(State::COOLED);
@@ -59,7 +53,6 @@ void States_Test::testSignifier() {
 
 
 void States_Test::testSignifierInitTrump() {
-
     std::vector<State> s;
     s.push_back(State::INIT);
     s.push_back(State::RUNNING);
@@ -72,7 +65,6 @@ void States_Test::testSignifierInitTrump() {
 
 
 void States_Test::testInterlockTrump() {
-
     std::vector<State> s;
     s.push_back(State::RUNNING);
     s.push_back(State::CHANGING);
@@ -85,7 +77,6 @@ void States_Test::testInterlockTrump() {
 
 
 void States_Test::testSignifierNonDefaultList() {
-
     std::vector<State> trumpList;
     trumpList.push_back(State::INTERLOCKED);
     trumpList.push_back(State::UNKNOWN);
@@ -105,7 +96,6 @@ void States_Test::testSignifierNonDefaultList() {
 
 
 void States_Test::testRunningTrumpActivePassive() {
-
     std::vector<State> s;
     s.push_back(State::DISABLED);
     s.push_back(State::RUNNING);
@@ -161,27 +151,27 @@ void States_Test::testChainStatesActive() {
 }
 
 
-
 void States_Test::testComparisons() {
     CPPUNIT_ASSERT(State::CHANGING.isDerivedFrom(State::NORMAL)); // direct parentage
-    CPPUNIT_ASSERT(!State::NORMAL.isDerivedFrom(State::CHANGING)); // direct parentage the other way round should not compare
-    CPPUNIT_ASSERT(State::RUNNING.isDerivedFrom(State::NORMAL)); // direct parentage
+    CPPUNIT_ASSERT(
+          !State::NORMAL.isDerivedFrom(State::CHANGING)); // direct parentage the other way round should not compare
+    CPPUNIT_ASSERT(State::RUNNING.isDerivedFrom(State::NORMAL));  // direct parentage
     CPPUNIT_ASSERT(!State::CHANGING.isDerivedFrom(State::ERROR)); // no parentage
     CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING)); // the other way round
-    CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL)); // longer list of ancestors
-    CPPUNIT_ASSERT(!State::KNOWN.isDerivedFrom(State::INCREASING)); // longer list of ancestors the other way round should not compare
+    CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL));   // longer list of ancestors
+    CPPUNIT_ASSERT(!State::KNOWN.isDerivedFrom(
+          State::INCREASING)); // longer list of ancestors the other way round should not compare
     CPPUNIT_ASSERT(State::PAUSED.isDerivedFrom(State::DISABLED));
 
     const State state(State::fromString("ON"));
     CPPUNIT_ASSERT(state == State::ON);
     CPPUNIT_ASSERT(state != State::INIT);
-
 }
 
 
 void States_Test::testStatesSignifierDefault() {
     std::vector<State> states{State::DISABLED, State::ON, State::STOPPED};
-    auto signifier = StateSignifier(State::PASSIVE, // staticMoreSignificant
+    auto signifier = StateSignifier(State::PASSIVE,     // staticMoreSignificant
                                     State::DECREASING); // changingMoreSignificant
     CPPUNIT_ASSERT_EQUAL(State::STOPPED, signifier.returnMostSignificant(states));
     states.push_back(State::RUNNING);
@@ -213,7 +203,7 @@ void States_Test::testStatesSignifierDefault() {
 
 void States_Test::testStatesSignifierActiveDecreasing() {
     std::vector<State> states{State::DISABLED, State::ON, State::STOPPED};
-    auto signifier = StateSignifier(State::ACTIVE, // staticMoreSignificant
+    auto signifier = StateSignifier(State::ACTIVE,      // staticMoreSignificant
                                     State::DECREASING); // changingMoreSignificant
     CPPUNIT_ASSERT_EQUAL(State::ON, signifier.returnMostSignificant(states));
     states.push_back(State::RUNNING);
@@ -245,7 +235,7 @@ void States_Test::testStatesSignifierActiveDecreasing() {
 
 void States_Test::testStatesSignifierPassiveIncreasing() {
     std::vector<State> states{State::DISABLED, State::ON, State::STOPPED};
-    auto signifier = StateSignifier(State::PASSIVE, // staticMoreSignificant
+    auto signifier = StateSignifier(State::PASSIVE,     // staticMoreSignificant
                                     State::INCREASING); // changingMoreSignificant
     CPPUNIT_ASSERT_EQUAL(State::STOPPED, signifier.returnMostSignificant(states));
     states.push_back(State::RUNNING);
@@ -277,7 +267,7 @@ void States_Test::testStatesSignifierPassiveIncreasing() {
 
 void States_Test::testStatesSignifierActiveIncreasing() {
     std::vector<State> states{State::DISABLED, State::ON, State::STOPPED};
-    auto signifier = StateSignifier(State::ACTIVE, // staticMoreSignificant
+    auto signifier = StateSignifier(State::ACTIVE,      // staticMoreSignificant
                                     State::INCREASING); // changingMoreSignificant
     CPPUNIT_ASSERT_EQUAL(State::ON, signifier.returnMostSignificant(states));
     states.push_back(State::RUNNING);
@@ -309,7 +299,7 @@ void States_Test::testStatesSignifierActiveIncreasing() {
 
 void States_Test::testAcquiringChangingOnPassive() {
     std::vector<State> states{State::ON, State::OFF};
-    auto signifier = StateSignifier(State::PASSIVE, // staticMoreSignificant
+    auto signifier = StateSignifier(State::PASSIVE,     // staticMoreSignificant
                                     State::DECREASING); // changingMoreSignificant
     CPPUNIT_ASSERT_EQUAL(State::OFF, signifier.returnMostSignificant(states));
     states.push_back(State::ACQUIRING);
@@ -321,9 +311,9 @@ void States_Test::testAcquiringChangingOnPassive() {
 
 void States_Test::testAcquiringChangingOnActive() {
     std::vector<State> states{State::ON, State::OFF};
-    auto signifier = StateSignifier(State::ACTIVE, // staticMoreSignificant
+    auto signifier = StateSignifier(State::ACTIVE,      // staticMoreSignificant
                                     State::DECREASING); // changingMoreSignificant
-    
+
     CPPUNIT_ASSERT_EQUAL(State::ON, signifier.returnMostSignificant(states));
     states.push_back(State::ACQUIRING);
     CPPUNIT_ASSERT_EQUAL(State::ACQUIRING, signifier.returnMostSignificant(states));
@@ -334,9 +324,8 @@ void States_Test::testAcquiringChangingOnActive() {
 
 void States_Test::testStatesSignifierNonDefList() {
     std::vector<State> trumpList{State::INTERLOCKED, State::UNKNOWN, State::KNOWN};
-    std::vector<State> states{State::DISABLED, State::CHANGING, State::ON, State::DECREASING,
-                              State::RUNNING, State::PAUSED, State::UNKNOWN, State::INTERLOCKED};
+    std::vector<State> states{State::DISABLED, State::CHANGING, State::ON,      State::DECREASING,
+                              State::RUNNING,  State::PAUSED,   State::UNKNOWN, State::INTERLOCKED};
     auto signifier = StateSignifier(trumpList);
     CPPUNIT_ASSERT_EQUAL(State::CHANGING, signifier.returnMostSignificant(states));
 }
-

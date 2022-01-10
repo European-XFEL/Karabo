@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   StatisticalEvaluators.hh
  * Author: haufs
  *
@@ -6,24 +6,19 @@
  */
 
 #ifndef KARABO_ROLLINGWINDOWSTATISTICS_HH
-#define	KARABO_ROLLINGWINDOWSTATISTICS_HH
+#define KARABO_ROLLINGWINDOWSTATISTICS_HH
 
-#include <vector>
 #include <algorithm>
-
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
-
+#include <vector>
 
 
 namespace karabo {
     namespace util {
 
         class RollingWindowStatistics {
-
-            public:
-
-
+           public:
             typedef boost::shared_ptr<RollingWindowStatistics> Pointer;
             typedef boost::shared_ptr<const RollingWindowStatistics> ConstPointer;
 
@@ -54,20 +49,19 @@ namespace karabo {
              * @return
              */
             double getRollingWindowMean() const;
-            
-            
+
+
             /**
              * Return the interval for these statistics
-             * @return 
+             * @return
              */
             unsigned long long getInterval() const;
 
-        protected:
-            double m_meanEstimate; //protected mainly to allow for testing
+           protected:
+            double m_meanEstimate; // protected mainly to allow for testing
 
-        private:
-
-            RollingWindowStatistics(const RollingWindowStatistics & other); //copy is protected
+           private:
+            RollingWindowStatistics(const RollingWindowStatistics& other); // copy is protected
             RollingWindowStatistics();
 
             void updateEstimate(const double currentMean);
@@ -78,13 +72,10 @@ namespace karabo {
             std::vector<double> m_vals;
 
             mutable boost::shared_mutex m_updateMutex;
-
-
         };
 
-    }
+    } // namespace util
 
-}
+} // namespace karabo
 
-#endif	/* STATISTICALEVALUATORS_HH */
-
+#endif /* STATISTICALEVALUATORS_HH */

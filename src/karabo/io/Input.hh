@@ -11,7 +11,7 @@
 
 
 #ifndef KARABO_IO_INPUT_HH
-#define	KARABO_IO_INPUT_HH
+#define KARABO_IO_INPUT_HH
 
 #include "AbstractInput.hh"
 
@@ -21,22 +21,18 @@ namespace karabo {
         /**
          * @class Input
          * @brief The Input class provides a datatype T specific base for inputs in
-         *        the Karabo system. The not type-specific methods are provided by 
+         *        the Karabo system. The not type-specific methods are provided by
          *        the AbstractInput class.
          */
         template <class T>
         class Input : public AbstractInput {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(Input, "Input", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            Input(const karabo::util::Hash& config) : AbstractInput(config) {
-            }
+            Input(const karabo::util::Hash& config) : AbstractInput(config) {}
 
-            virtual ~Input() {
-            }
+            virtual ~Input() {}
 
             /**
              * Read data from the input located at a given index
@@ -47,15 +43,12 @@ namespace karabo {
 
             /**
              * Total size (in terms of type T entries) of the input's data soruce
-             * @return 
+             * @return
              */
             virtual size_t size() = 0;
-
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 
-
-#endif	/* KARABO_PACKAGENAME_INPUT_HH */
-
+#endif /* KARABO_PACKAGENAME_INPUT_HH */

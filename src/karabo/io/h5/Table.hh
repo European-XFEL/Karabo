@@ -1,14 +1,14 @@
 #ifndef KARABO_IO_H5_TABLE_HH
-#define	KARABO_IO_H5_TABLE_HH
+#define KARABO_IO_H5_TABLE_HH
+
+#include <hdf5/hdf5.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "File.hh"
 #include "Format.hh"
-#include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
-#include <hdf5/hdf5.h>
 #include "ioProfiler.hh"
-
-
 
 
 namespace karabo {
@@ -22,22 +22,22 @@ namespace karabo {
              * @brief Table is an entity defined to store set of records
              */
             class Table {
-
                 friend class File;
 
-            public:
-
+               public:
                 KARABO_CLASSINFO(Table, "Table", "1.0");
 
-            private:
-
+               private:
                 Table(hid_t h5file, boost::filesystem::path name)
-                    : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0), m_numberOfRecordsAttribute(-1),
-                    m_bindWasExecuted(false), m_bindLenWasExecuted(false) {
-                }
+                    : m_h5file(h5file),
+                      m_name(name),
+                      m_group(-1),
+                      m_tableSize(0),
+                      m_numberOfRecordsAttribute(-1),
+                      m_bindWasExecuted(false),
+                      m_bindLenWasExecuted(false) {}
 
-            public:
-
+               public:
                 virtual ~Table();
 
 
@@ -134,8 +134,7 @@ namespace karabo {
                     return m_name.string();
                 }
 
-            private:
-
+               private:
                 void close();
 
                 void openNew(const karabo::io::h5::Format::Pointer dataFormat);
@@ -168,12 +167,11 @@ namespace karabo {
 
                 static std::string generateUniqueId(const std::string& name);
 
-                static std::string generateUniqueId(const std::string& name, const Format::ConstPointer dataFormat, hsize_t numberOfRecords);
+                static std::string generateUniqueId(const std::string& name, const Format::ConstPointer dataFormat,
+                                                    hsize_t numberOfRecords);
 
 
-
-            private: // data members
-
+               private:         // data members
                 hid_t m_h5file; // file where this table belongs to.
 
                 boost::filesystem::path m_name; // table name, i.e.: /Data/Bla
@@ -192,14 +190,12 @@ namespace karabo {
 
                 bool m_bindWasExecuted;
                 bool m_bindLenWasExecuted;
-
             };
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
-//KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::Table, TEMPLATE_IO, DECLSPEC_IO)
+// KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::Table, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* KARABO_IO_TABLE_HH */
-
+#endif /* KARABO_IO_TABLE_HH */
