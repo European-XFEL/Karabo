@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ChannelWrap.hh
  * Author: Sergey Esenov <serguei.essenov@xfel.eu>
  *
@@ -6,10 +6,11 @@
  */
 
 #ifndef KARABO_PYEXFEL_CHANNELWRAP_HH
-#define	KARABO_PYEXFEL_CHANNELWRAP_HH
+#define KARABO_PYEXFEL_CHANNELWRAP_HH
 
 #include <boost/python.hpp>
 #include <karabo/net/Channel.hh>
+
 #include "ScopedGILRelease.hh"
 
 namespace bp = boost::python;
@@ -17,9 +18,7 @@ namespace bp = boost::python;
 namespace karathon {
 
     class ChannelWrap {
-
-        public:
-
+       public:
         static bp::object getConnection(karabo::net::Channel::Pointer channel) {
             karabo::net::Connection::Pointer connection;
             {
@@ -45,33 +44,42 @@ namespace karathon {
         static void readAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void readAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void readAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& handler);
-        static void writeAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler);
-        static void writeAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler);
-        static void writeAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
-        static void writeAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
-//        static void setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void writeAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& data,
+                                  const bp::object& handler);
+        static void writeAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& data,
+                                   const bp::object& handler);
+        static void writeAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& hdr,
+                                      const bp::object& data, const bp::object& handler);
+        static void writeAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& hdr,
+                                       const bp::object& data, const bp::object& handler);
+        //        static void setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
 
         static size_t id(karabo::net::Channel::Pointer channel) {
             return size_t(&(*channel));
         }
 
-        static void clear() {
-        }
+        static void clear() {}
 
-    private:
-
-        static void proxyReadSizeInBytesHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const size_t& size);
-        static void proxyReadStringHandler(const karabo::net::ErrorCode& code,const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s);
-        static void proxyReadHashHandler(const karabo::net::ErrorCode& code,const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
-        static void proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
-        static void proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
-        static void proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel);
+       private:
+        static void proxyReadSizeInBytesHandler(const bp::object& handler, karabo::net::Channel::Pointer channel,
+                                                const size_t& size);
+        static void proxyReadStringHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
+                                           karabo::net::Channel::Pointer channel, const std::string& s);
+        static void proxyReadHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
+                                         karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
+        static void proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
+                                               karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash,
+                                               const std::vector<char>& v);
+        static void proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
+                                             karabo::net::Channel::Pointer channel, const karabo::util::Hash& h,
+                                             const karabo::util::Hash& b);
+        static void proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
+                                              karabo::net::Channel::Pointer channel);
 
         static bool hasattr(bp::object obj, const std::string& attrName) {
-            return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
+            return PyObject_HasAttrString(obj.ptr(), const_cast<char*>(attrName.c_str()));
         }
     };
 
-}
-#endif	/* KARABO_PYEXFEL_CHANNELWRAP_HH */
-
+} // namespace karathon
+#endif /* KARABO_PYEXFEL_CHANNELWRAP_HH */

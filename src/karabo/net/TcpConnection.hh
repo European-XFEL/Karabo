@@ -11,13 +11,14 @@
 
 
 #ifndef KARABO_NET_ATCPCONNECTION_HH
-#define	KARABO_NET_ATCPCONNECTION_HH
+#define KARABO_NET_ATCPCONNECTION_HH
+
+#include <boost/asio.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/shared_ptr.hpp>
+#include <string>
 
 #include "Connection.hh"
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/asio.hpp>
-#include <string>
 
 /**
  * The main European XFEL namespace
@@ -33,24 +34,21 @@ namespace karabo {
         class TcpChannel;
         typedef boost::system::error_code ErrorCode;
         typedef boost::shared_ptr<Channel> ChannelPointer;
-        typedef boost::function<void () > TimeoutHandler;
-        
+        typedef boost::function<void()> TimeoutHandler;
+
         /**
          * @class TcpConnection
          * @brief a class for handling tcp connections
-         * 
+         *
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          * It is a factory class and thus can be configured using its expected
          * parameters
          */
         class TcpConnection : public Connection {
-
-
             friend class TcpChannel;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(TcpConnection, "Tcp", "1.0")
 
             virtual ~TcpConnection();
@@ -88,9 +86,8 @@ namespace karabo {
                 return m_lengthIsTextFlag;
             }
 
-            
-        private:
 
+           private:
             void resolveHandler(const ErrorCode&, boost::asio::ip::tcp::resolver::iterator, const ConnectionHandler&);
             ChannelPointer startServer();
             ChannelPointer startClient();
@@ -98,8 +95,7 @@ namespace karabo {
             void startClient(const ConnectionHandler&);
 
 
-        private:
-
+           private:
             boost::asio::ip::tcp::resolver m_resolver;
             boost::asio::ip::tcp::acceptor m_acceptor;
             std::string m_connectionType;
@@ -110,7 +106,7 @@ namespace karabo {
             bool m_lengthIsTextFlag;
             bool m_manageAsyncData;
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
-#endif	/* KARABO_NET_ATCPCONNECTION_HH */
+#endif /* KARABO_NET_ATCPCONNECTION_HH */

@@ -6,17 +6,17 @@
  */
 
 #ifndef H5FILE_TEST_HH
-#define	H5FILE_TEST_HH
+#define H5FILE_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <complex>
+#include <karabo/io/h5/Format.hh>
+#include <karabo/log/Logger.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
-#include <karabo/log/Logger.hh>
-#include <karabo/io/h5/Format.hh>
-#include <complex>
 
 class H5File_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(H5File_Test);
 
     CPPUNIT_TEST(testBuffer);
@@ -34,14 +34,13 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     //        CPPUNIT_TEST(testVLWrite);
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
-    //CPPUNIT_TEST(testArray);
+    // CPPUNIT_TEST(testArray);
 
     //    CPPUNIT_TEST(testExternalHdf5);
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     KARABO_CLASSINFO(H5File_Test, "H5File_Test", "1.0");
 
     H5File_Test();
@@ -49,8 +48,7 @@ public:
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     size_t m_numberOfRecords;
 
     size_t m_v3Size;
@@ -58,9 +56,6 @@ private:
 
     size_t m_v4Size;
     std::vector<std::complex<float> > m_v4;
-
-
-
 
 
     const size_t m_maxRec;
@@ -99,7 +94,7 @@ private:
     void testClose();
     void testVectorOfHashes();
 
-    //void testArray();
+    // void testArray();
     void testExternalHdf5();
 
     void testTrainFormat();
@@ -111,5 +106,4 @@ private:
     karabo::io::h5::Format::Pointer trainFormatTrainData(unsigned short detectorDataBlockSize);
 };
 
-#endif	/* H5FILE_TEST_HH */
-
+#endif /* H5FILE_TEST_HH */

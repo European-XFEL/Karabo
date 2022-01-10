@@ -11,14 +11,14 @@
 
 
 #ifndef KARABO_NET_CONNECTION_HH
-#define	KARABO_NET_CONNECTION_HH
+#define KARABO_NET_CONNECTION_HH
 
-#include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
+#include <string>
 
-#include "karabo/util/Factory.hh"
 #include "karabo/util/Configurator.hh"
+#include "karabo/util/Factory.hh"
 #include "karabo/util/karaboDll.hh"
 
 
@@ -36,28 +36,24 @@ namespace karabo {
 
         class Channel;
 
-        typedef boost::function<void (const ErrorCode&) > ErrorHandler;
+        typedef boost::function<void(const ErrorCode&)> ErrorHandler;
 
-/**
+        /**
          * @class Connection
          * @brief This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
         class Connection : public boost::enable_shared_from_this<Connection> {
-
-
             friend class Channel;
 
-        protected:
-
+           protected:
             typedef boost::shared_ptr<Channel> ChannelPointer;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            typedef boost::function<void (const ErrorCode&, const ChannelPointer&) > ConnectionHandler;
+            typedef boost::function<void(const ErrorCode&, const ChannelPointer&)> ConnectionHandler;
 
             virtual ~Connection();
 
@@ -75,7 +71,8 @@ namespace karabo {
              * @param handler A callback with the following signature: void myHandler(ErrorCode, ChannelPointer)
              */
             virtual int startAsync(const ConnectionHandler& handler) {
-                throw KARABO_NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " +
+                                                     this->classInfo().getClassId() + "connections");
             }
 
             /**
@@ -91,23 +88,20 @@ namespace karabo {
             virtual ChannelPointer createChannel() = 0;
 
 
-        protected: // functions
-
+           protected: // functions
             boost::shared_ptr<Connection> getConnectionPointer() {
                 return shared_from_this();
             }
 
-        protected: // members
-
+           protected: // members
             std::string m_serializationType;
-
         };
 
 
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 // TODO Windows
-//KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::Connection, TEMPLATE_NET, DECLSPEC_NET)
+// KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::Connection, TEMPLATE_NET, DECLSPEC_NET)
 
-#endif	/* KARABO_NET_ACONNECTION_HH */
+#endif /* KARABO_NET_ACONNECTION_HH */

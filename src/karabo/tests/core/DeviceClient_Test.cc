@@ -1,24 +1,23 @@
-/* 
+/*
  * File:   DevcieClient_Test.cc
  * Author: flucke
- * 
+ *
  * Created on August 24, 2017, 9:49 AM
  */
 
-#include <string>
-#include <karabo/core/DeviceClient.hh>
-
 #include "DeviceClient_Test.hh"
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/NDArray.hh"
-#include "karabo/xms/InputChannel.hh"
-#include "karabo/xms/ImageData.hh"
-
-#include <future>
-#include <tuple>
 #include <boost/thread.hpp>
+#include <future>
+#include <karabo/core/DeviceClient.hh>
+#include <string>
+#include <tuple>
+
+#include "karabo/util/Hash.hh"
+#include "karabo/util/NDArray.hh"
+#include "karabo/util/Schema.hh"
+#include "karabo/xms/ImageData.hh"
+#include "karabo/xms/InputChannel.hh"
 
 #define KRB_TEST_MAX_TIMEOUT 5
 
@@ -26,14 +25,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DeviceClient_Test);
 
 using namespace karabo::core;
 using namespace karabo::util;
-using karabo::xms::InputChannel;
 using karabo::xms::ImageData;
+using karabo::xms::InputChannel;
 
 
 const int maxIterWait = 1000;
 const int sleepPerIter = 5;
 
-template<class Container>
+template <class Container>
 void assertIgnoringOrder(const Container& expected, const Container& actual, const std::string& which) {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(which, expected.size(), actual.size());
 
@@ -43,12 +42,10 @@ void assertIgnoringOrder(const Container& expected, const Container& actual, con
     }
 }
 
-DeviceClient_Test::DeviceClient_Test() {
-}
+DeviceClient_Test::DeviceClient_Test() {}
 
 
-DeviceClient_Test::~DeviceClient_Test() {
-}
+DeviceClient_Test::~DeviceClient_Test() {}
 
 
 void DeviceClient_Test::setUp() {
@@ -62,7 +59,6 @@ void DeviceClient_Test::setUp() {
 
     // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
-
 }
 
 
@@ -87,16 +83,14 @@ void DeviceClient_Test::testAll() {
 
 
 void DeviceClient_Test::testConcurrentInitTopology() {
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                                                       Hash("deviceId", "TestedDevice"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Calls DeviceClient::getDevices and returns the elapsed time, in milliseconds, for
     // the call to complete, a vector with the device names and the id of the thread
     // that executed the call.
-    auto getDeviceWorker = [this]() -> std::tuple<unsigned, std::vector<std::string>, boost::thread::id>
-{
+    auto getDeviceWorker = [this]() -> std::tuple<unsigned, std::vector<std::string>, boost::thread::id> {
         const auto startTimePoint = std::chrono::high_resolution_clock::now();
 
         const std::vector<std::string> devices = this->m_deviceClient->getDevices();
@@ -152,10 +146,8 @@ void DeviceClient_Test::testConcurrentInitTopology() {
 
 
 void DeviceClient_Test::testGet() {
-
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                                                       Hash("deviceId", "TestedDevice"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // int as normal type - test both get, i.e. return by reference argument or return by value
@@ -187,7 +179,8 @@ void DeviceClient_Test::testGet() {
     CPPUNIT_ASSERT(alarm == AlarmCondition::NONE); // no alarm on device!
     //
     CPPUNIT_ASSERT_THROW(m_deviceClient->get<std::string>("TestedDevice", "alarmCondition", dummy), ParameterException);
-    CPPUNIT_ASSERT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "alarmCondition"), ParameterException);
+    CPPUNIT_ASSERT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "alarmCondition"),
+                         ParameterException);
 
     // No shutdown - done in following testSet
     //    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
@@ -196,7 +189,6 @@ void DeviceClient_Test::testGet() {
 
 
 void DeviceClient_Test::testSet() {
-
     // CPPUNIT_ASSERT_EQUAL(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
     // Cannot reconfigure non-reconfigurable parameters - here caught already by client
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::util::ParameterException);
@@ -206,14 +198,14 @@ void DeviceClient_Test::testSet() {
 }
 
 void DeviceClient_Test::testMonitorChannel() {
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                                                       Hash("deviceId", "TestedDevice2"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice2"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Cannot unregister if nothing is registered
     CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output")); // existing channel
-    CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("TestedDevice2", "notExistingoutput")); // non-existing channel
+    CPPUNIT_ASSERT(
+          !m_deviceClient->unregisterChannelMonitor("TestedDevice2", "notExistingoutput"));   // non-existing channel
     CPPUNIT_ASSERT(!m_deviceClient->unregisterChannelMonitor("nonExistingDevice", "output")); // non-existing device
 
     // register data handler
@@ -224,9 +216,8 @@ void DeviceClient_Test::testMonitorChannel() {
     float ndArrayEntry = -1.f;
     Dims imageDims;
     unsigned short imageEntry = 0;
-    auto dataHandler = [&int32inChannel, &strInChannel, &vecInt64inChannel,
-            &ndArrayDims, &ndArrayEntry, &imageDims, &imageEntry]
-            (const Hash& data, const InputChannel::MetaData & metaData) {
+    auto dataHandler = [&int32inChannel, &strInChannel, &vecInt64inChannel, &ndArrayDims, &ndArrayEntry, &imageDims,
+                        &imageEntry](const Hash& data, const InputChannel::MetaData& metaData) {
         data.get("node.int32", int32inChannel);
         data.get("node.string", strInChannel);
         data.get("node.vecInt64", vecInt64inChannel);
@@ -240,7 +231,7 @@ void DeviceClient_Test::testMonitorChannel() {
         imageEntry = image.getData().getData<unsigned short>()[0];
     };
 
-    std::promise <karabo::net::ConnectionStatus> trackerPromise;
+    std::promise<karabo::net::ConnectionStatus> trackerPromise;
     auto trackerFuture = trackerPromise.get_future();
     auto connectionTracker = [&trackerPromise](karabo::net::ConnectionStatus status) {
         // Should first receive CONNECTING and then CONNECTED - ignore the first (tested in InputOutputChannel_Test).
@@ -258,25 +249,26 @@ void DeviceClient_Test::testMonitorChannel() {
 
     // Check that we are connected:
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED), static_cast<int> (trackerFuture.get()));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
+                         static_cast<int>(trackerFuture.get()));
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     int counter = 0;
     while (counter++ < maxIterWait) { // failed with 100 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/144940
-        if (imageEntry == 1) break; // Check the last variable assigned in dataHandler
+        if (imageEntry == 1) break;   // Check the last variable assigned in dataHandler
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     // Now check all data arrived as it should:
     CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
     CPPUNIT_ASSERT_EQUAL(std::string("1"), strInChannel);
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (100u), vecInt64inChannel.size());
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(100u), vecInt64inChannel.size());
     CPPUNIT_ASSERT_EQUAL(1ll, vecInt64inChannel[0]);
     CPPUNIT_ASSERT(ndArrayDims == Dims(100ull, 200ull));
     // Float comparison can fail, see e.g. https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/26996
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1., ndArrayEntry, 1.e-7);
     CPPUNIT_ASSERT(imageDims == Dims(400ull, 500ull));
-    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short> (1), imageEntry);
+    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short>(1), imageEntry);
 
     // unregister and trigger channel again
     CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice2", "output"));
@@ -289,13 +281,14 @@ void DeviceClient_Test::testMonitorChannel() {
     // Register again and trigger channel once more
     // To be sure to go on when connection established, first reset promise/future of connectionTracker
     // (which is a member of 'handlers')
-    trackerPromise = std::promise <karabo::net::ConnectionStatus>();
+    trackerPromise = std::promise<karabo::net::ConnectionStatus>();
     trackerFuture = trackerPromise.get_future();
     CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
     // Check that we are connected:
     // With just sleep 50ms  failed in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/171924
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED), static_cast<int> (trackerFuture.get()));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
+                         static_cast<int>(trackerFuture.get()));
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
@@ -311,8 +304,8 @@ void DeviceClient_Test::testMonitorChannel() {
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                          Hash("deviceId", "TestedDevice2"), KRB_TEST_MAX_TIMEOUT);
+    success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice2"),
+                                          KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     int32inChannel = -1;
@@ -327,12 +320,12 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT(int32inChannel <= counter);
 
     // Test InputHandler
-    success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                          Hash("deviceId", "TestedDevice3"), KRB_TEST_MAX_TIMEOUT);
+    success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3"),
+                                          KRB_TEST_MAX_TIMEOUT);
 
     int sizeMsg = 0;
     int dataCounter = 0;
-    auto inputHandler = [&dataCounter, &sizeMsg] (const InputChannel::Pointer& channel) {
+    auto inputHandler = [&dataCounter, &sizeMsg](const InputChannel::Pointer& channel) {
         sizeMsg = channel->size();
         const Hash::Pointer& data = channel->read(0);
         data->get("node.int32", dataCounter);
@@ -360,14 +353,12 @@ void DeviceClient_Test::testMonitorChannel() {
 
 
 void DeviceClient_Test::testGetSchema() {
-
     // NOTE:
     // The deviceId needs to be another one than in the other tests, otherwise the test might succeed
     // even if the DeviceClient does not trigger to connect to schema updates: The registration that is
     // triggered by DeviceClient::get in 'testGet()' could still be valid.
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                                                       Hash("deviceId", "TestedDevice3"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Check initial maxSize of one exemplary vector
@@ -392,17 +383,16 @@ void DeviceClient_Test::testGetSchema() {
 
 
 void DeviceClient_Test::testCurrentlyExecutableCommands() {
-    //std::cout << "Im alive!" << std::endl;
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                                                       Hash("deviceId", "TestedDevice3_5"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    // std::cout << "Im alive!" << std::endl;
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3_5"), KRB_TEST_MAX_TIMEOUT);
 
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     //  Check if the parameter hierarchy can be correctly traversed or it throws a KeyError
     std::vector<std::string> commands;
     CPPUNIT_ASSERT_NO_THROW(commands = m_deviceClient->getCurrentlyExecutableCommands("TestedDevice3_5"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (11), commands.size());
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(11), commands.size());
     CPPUNIT_ASSERT_EQUAL(std::string("slotClearLock"), commands[0]);
 
     // Final clean-up
@@ -411,18 +401,16 @@ void DeviceClient_Test::testCurrentlyExecutableCommands() {
 }
 
 
-
 void DeviceClient_Test::testGetSchemaNoWait() {
     // NOTE: Better use new id, see comment in testGetSchema.
     const std::string deviceId("TestedDevice4");
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
-                                                                       Hash("deviceId", deviceId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerDeviceClient", "PropertyTest", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Add handler that will be called when schema arrives when triggered by getDeviceSchemaNoWait
     bool schemaReceived = false;
-    auto handler = [&schemaReceived, deviceId] (const std::string& id, const karabo::util::Schema& schema) {
+    auto handler = [&schemaReceived, deviceId](const std::string& id, const karabo::util::Schema& schema) {
         if (id == deviceId) schemaReceived = true;
     };
     m_deviceClient->registerSchemaUpdatedMonitor(handler);
@@ -467,16 +455,14 @@ void DeviceClient_Test::testGetSchemaNoWait() {
     // Final clean-up
     success = m_deviceClient->killDevice(deviceId, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-
 }
 
 
 void DeviceClient_Test::testConnectionHandling() {
     const std::string serverId("testServerDeviceClient");
     const std::string devId("TestedDevice");
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(serverId, "PropertyTest",
-                                                                       Hash("deviceId", devId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId), KRB_TEST_MAX_TIMEOUT);
     ////////////////////////////////////////////////////////////////////
     // Test 1)
     // We check that we can get the configuration and a single property
@@ -498,8 +484,7 @@ void DeviceClient_Test::testConnectionHandling() {
 
     // Device not there, so timeout
     CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::util::TimeoutException);
-    success = m_deviceClient->instantiate(serverId, "PropertyTest",
-                                          Hash("deviceId", devId, "int32Property", 64000000),
+    success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", 64000000),
                                           KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -518,9 +503,7 @@ void DeviceClient_Test::testConnectionHandling() {
     // "zombie".
     ////////////////////////////////////////////////////////////////////
     bool cfgArrived = false;
-    auto deviceMonitor = [&cfgArrived](const std::string&, const karabo::util::Hash&) {
-        cfgArrived = true;
-    };
+    auto deviceMonitor = [&cfgArrived](const std::string&, const karabo::util::Hash&) { cfgArrived = true; };
     m_deviceClient->registerDeviceMonitor(devId, deviceMonitor);
     // TODO: Waiting should not be needed. For the very likely reason I need it here,
     // see DeviceClient::_slotChanged and DeviceClient::killDevice.
@@ -537,8 +520,7 @@ void DeviceClient_Test::testConnectionHandling() {
     CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::util::TimeoutException);
 
     // Restart device again with a changed property
-    success = m_deviceClient->instantiate(serverId, "PropertyTest",
-                                          Hash("deviceId", devId, "int32Property", -32000000),
+    success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", -32000000),
                                           KRB_TEST_MAX_TIMEOUT);
     // Check again all paths and the single property
     Hash config;
@@ -561,8 +543,7 @@ void DeviceClient_Test::testConnectionHandling() {
     m_deviceClient->unregisterDeviceMonitor(devId);
 
     // Restart device again with a changed property
-    success = m_deviceClient->instantiate(serverId, "PropertyTest",
-                                          Hash("deviceId", devId, "int32Property", -64000000),
+    success = m_deviceClient->instantiate(serverId, "PropertyTest", Hash("deviceId", devId, "int32Property", -64000000),
                                           KRB_TEST_MAX_TIMEOUT);
 
     // Check once more all paths and the single property

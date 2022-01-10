@@ -11,20 +11,18 @@ namespace karabo {
     namespace util {
 
 
-        Timestamp::Timestamp() : m_epochstamp(Epochstamp()), m_trainstamp(Trainstamp()) {
-        }
+        Timestamp::Timestamp() : m_epochstamp(Epochstamp()), m_trainstamp(Trainstamp()) {}
 
 
-        Timestamp::Timestamp(const Epochstamp& e, const Trainstamp& t) : m_epochstamp(e), m_trainstamp(t) {
-        }
+        Timestamp::Timestamp(const Epochstamp& e, const Trainstamp& t) : m_epochstamp(e), m_trainstamp(t) {}
 
 
-        Timestamp::~Timestamp() {
-        }
+        Timestamp::~Timestamp() {}
 
 
         bool Timestamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
-            return (Epochstamp::hashAttributesContainTimeInformation(attributes) && Trainstamp::hashAttributesContainTimeInformation(attributes));
+            return (Epochstamp::hashAttributesContainTimeInformation(attributes) &&
+                    Trainstamp::hashAttributesContainTimeInformation(attributes));
         }
 
 
@@ -48,7 +46,8 @@ namespace karabo {
         }
 
 
-        std::string Timestamp::toFormattedStringLocale(const std::string& localeName, const std::string& format, const std::string& localTimeZone) const {
+        std::string Timestamp::toFormattedStringLocale(const std::string& localeName, const std::string& format,
+                                                       const std::string& localTimeZone) const {
             return m_epochstamp.toFormattedStringLocale(localeName, format, localTimeZone);
         }
 
@@ -73,5 +72,5 @@ namespace karabo {
             out << "Epoch: " << timestamp.getEpochstamp() << " Train ID: " << timestamp.getTrainstamp();
             return out;
         }
-    }
-}
+    } // namespace util
+} // namespace karabo

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   PropertyTest_Test.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -6,26 +6,24 @@
  */
 
 #ifndef PROPERTYTEST_TEST_HH
-#define	PROPERTYTEST_TEST_HH
+#define PROPERTYTEST_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+
 #include "karabo/karabo.hpp"
 
 class PropertyTest_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(PropertyTest_Test);
     CPPUNIT_TEST(allTestRunner);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-    
+   public:
     PropertyTest_Test();
     virtual ~PropertyTest_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void allTestRunner();
 
     void testPropertyTest();
@@ -46,9 +44,8 @@ private:
 
     void testAttributeEditing();
     void testNodedSlots();
-    
-private:
-        
+
+   private:
     karabo::core::DeviceServer::Pointer m_deviceServer;
 
     boost::thread m_eventLoopThread;
@@ -56,5 +53,4 @@ private:
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };
 
-#endif	/* PROPERTYTEST_TEST_HH */
-
+#endif /* PROPERTYTEST_TEST_HH */

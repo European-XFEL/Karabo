@@ -6,12 +6,11 @@
  */
 
 #ifndef DATALOGGING_TEST_HH
-#define	DATALOGGING_TEST_HH
+#define DATALOGGING_TEST_HH
 
 #include "BaseLogging_Test.hh"
 
 class DataLogging_Test : public BaseLogging_Test {
-
     CPPUNIT_TEST_SUITE(DataLogging_Test);
 
     CPPUNIT_TEST(fileAllTestRunner);
@@ -20,7 +19,7 @@ class DataLogging_Test : public BaseLogging_Test {
 
     CPPUNIT_TEST_SUITE_END();
 
-private:
+   private:
     void fileAllTestRunner();
     void influxAllTestRunnerWithDataMigration(); // Supports data migration test.
     void testMigrateFileLoggerData();
@@ -48,7 +47,6 @@ private:
 
     bool m_dataWasMigrated = false;
     karabo::util::Epochstamp m_fileMigratedDataEndsBefore;
-
 };
 
-#endif	/* DATALOGGING_TEST_HH */
+#endif /* DATALOGGING_TEST_HH */

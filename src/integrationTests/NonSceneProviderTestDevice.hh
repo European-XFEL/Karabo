@@ -5,7 +5,7 @@
  */
 
 #ifndef NONSCENEPROVIDERTESTDEVICE_HH
-#define	NONSCENEPROVIDERTESTDEVICE_HH
+#define NONSCENEPROVIDERTESTDEVICE_HH
 
 #include <karabo/karabo.hpp>
 
@@ -15,9 +15,7 @@
 namespace karabo {
 
     class NonSceneProviderTestDevice : public karabo::core::Device<> {
-
-    public:
-
+       public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(NonSceneProviderTestDevice, "NonSceneProviderTestDevice", "2.0")
 
@@ -41,15 +39,9 @@ namespace karabo {
         virtual ~NonSceneProviderTestDevice();
 
 
-
-
-
-    private:
-        
+       private:
         void initialize();
-
     };
-}
+} // namespace karabo
 
-#endif	/* NONSCENEPROVIDERTESTDEVICE_HH */
-
+#endif /* NONSCENEPROVIDERTESTDEVICE_HH */

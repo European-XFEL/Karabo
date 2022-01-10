@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ElementWrap.hh
  * Author: Sergey Esenov <serguei.essenov@xfel.eu>
  *
@@ -6,12 +6,13 @@
  */
 
 #ifndef ELEMENTWRAP_HH
-#define	ELEMENTWRAP_HH
+#define ELEMENTWRAP_HH
 
 #include <boost/python.hpp>
-#include <karabo/util/Hash.hh>
 #include <karabo/util/FromLiteral.hh>
+#include <karabo/util/Hash.hh>
 #include <karabo/util/ToLiteral.hh>
+
 #include "Wrapper.hh"
 
 namespace bp = boost::python;
@@ -19,14 +20,11 @@ namespace bp = boost::python;
 namespace karathon {
 
     class NodeWrap {
-
         struct null_deleter {
-
-            void operator()(void const *) const {
-            }
+            void operator()(void const*) const {}
         };
-    public:
 
+       public:
         typedef boost::shared_ptr<karabo::util::Hash::Node> Pointer;
 
         static bp::object getKey(const Pointer& node) {
@@ -43,7 +41,7 @@ namespace karathon {
             using namespace karabo::util;
             boost::any& a = node->getValueAsAny();
             // handle Hash differently returning reference to Hash
-            if (a.type() == typeid (Hash)) {
+            if (a.type() == typeid(Hash)) {
                 Hash& hash = boost::any_cast<Hash&>(a);
                 boost::shared_ptr<Hash> p(&hash, null_deleter());
                 return bp::object(p);
@@ -89,11 +87,11 @@ namespace karathon {
                 case Types::STRING:
                     return bp::object(node->getValueAs<std::string>());
                 case Types::VECTOR_BOOL:
-                    return Wrapper::fromStdVectorToPyArray(node->getValueAs<bool, std::vector > ());
+                    return Wrapper::fromStdVectorToPyArray(node->getValueAs<bool, std::vector>());
                 case Types::VECTOR_CHAR:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<char, std::vector>());
                 case Types::VECTOR_INT8:
-                    return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<signed char, std::vector > ());
+                    return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<signed char, std::vector>());
                 case Types::VECTOR_UINT8:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<unsigned char, std::vector>());
                 case Types::VECTOR_INT16:
@@ -111,7 +109,8 @@ namespace karathon {
                     //                    case Types::HASH:
                     //                        return bp::object(node->getValueAs<karabo::util::Hash>());
                     //                    case Types::VECTOR_HASH:
-                    //                        return Wrapper::fromStdVectorToPyList(node->getValueAs<karabo::util::Hash, std::vector>());
+                    //                        return Wrapper::fromStdVectorToPyList(node->getValueAs<karabo::util::Hash,
+                    //                        std::vector>());
 
                 default:
                     break;
@@ -168,29 +167,41 @@ namespace karathon {
                 case Types::STRING:
                     return bp::object(node->getAttributeAs<std::string>(key));
                     //                    case Types::VECTOR_BOOL:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<bool, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<bool,
+                    //                        std::vector>(key));
                     //                    case Types::VECTOR_CHAR:
-                    //                        return Wrapper::fromStdVectorToPyByteArray(node->getAttributeAs<char, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyByteArray(node->getAttributeAs<char,
+                    //                        std::vector>(key));
                     //                    case Types::VECTOR_INT8:
-                    //                        return Wrapper::fromStdVectorToPyByteArray(node->getAttributeAs <signed char, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyByteArray(node->getAttributeAs <signed
+                    //                        char, std::vector>(key));
                     //                    case Types::VECTOR_UINT8:
-                    //                        return Wrapper::fromStdVectorToPyByteArray(node->getAttributeAs<unsigned char, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyByteArray(node->getAttributeAs<unsigned
+                    //                        char, std::vector>(key));
                     //                    case Types::VECTOR_INT16:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<short, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<short,
+                    //                        std::vector>(key));
                     //                    case Types::VECTOR_UINT16:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<unsigned short, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<unsigned
+                    //                        short, std::vector>(key));
                     //                    case Types::VECTOR_INT32:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<int, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<int,
+                    //                        std::vector>(key));
                     //                    case Types::VECTOR_UINT32:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<unsigned int, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<unsigned int,
+                    //                        std::vector>(key));
                     //                    case Types::VECTOR_INT64:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<long long, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<long long,
+                    //                        std::vector>(key));
                     //                    case Types::VECTOR_UINT64:
-                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<unsigned long long, std::vector>(key));
+                    //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<unsigned long
+                    //                        long, std::vector>(key));
                     //                    case Types::HASH:
                     //                        return bp::object(node->getAttributeAs<karabo::util::Hash>(key));
                     //                    case Types::VECTOR_HASH:
-                    //                        return Wrapper::fromStdVectorToPyList(node->getAttributeAs<karabo::util::Hash, std::vector>(key));
+                    //                        return
+                    //                        Wrapper::fromStdVectorToPyList(node->getAttributeAs<karabo::util::Hash,
+                    //                        std::vector>(key));
                 default:
                     break;
             }
@@ -204,12 +215,11 @@ namespace karathon {
         static void setAttributes(const Pointer& node, const bp::object& obj) {
             if (bp::extract<karabo::util::Hash::Attributes>(obj).check())
                 node->setAttributes(bp::extract<karabo::util::Hash::Attributes>(obj));
-            else
-                throw KARABO_PYTHON_EXCEPTION("Python object is not of a Hash.Attributes type");
+            else throw KARABO_PYTHON_EXCEPTION("Python object is not of a Hash.Attributes type");
         }
 
         static const karabo::util::Hash::Attributes& getAttributes(const Pointer& node) {
-            return static_cast<const karabo::util::Hash::Attributes&> (node->getAttributes());
+            return static_cast<const karabo::util::Hash::Attributes&>(node->getAttributes());
         }
 
         static bp::object copyAttributes(const Pointer& node) {
@@ -231,7 +241,6 @@ namespace karathon {
             }
         }
     };
-}
+} // namespace karathon
 
-#endif	/* ELEMENTWRAP_HH */
-
+#endif /* ELEMENTWRAP_HH */

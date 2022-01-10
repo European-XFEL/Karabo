@@ -7,10 +7,11 @@
  */
 
 
-#include "HashHdf5Serializer.hh" 
+#include "HashHdf5Serializer.hh"
+
+#include <karabo/io/HashXmlSerializer.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/util/SimpleElement.hh>
-#include <karabo/io/HashXmlSerializer.hh>
 
 
 using namespace std;
@@ -24,7 +25,8 @@ namespace karabo {
 
         ////////////////////////////////////
 
-        HashHdf5Serializer::HashHdf5Serializer(const karabo::util::Hash& input) : Hdf5Serializer<karabo::util::Hash>(input) {
+        HashHdf5Serializer::HashHdf5Serializer(const karabo::util::Hash& input)
+            : Hdf5Serializer<karabo::util::Hash>(input) {
             m_stringStid = karabo::io::h5::ScalarTypes::getHdf5StandardType<std::string>();
             m_stringNtid = karabo::io::h5::ScalarTypes::getHdf5NativeType<std::string>();
             m_spaceId = H5Screate(H5S_SCALAR);
@@ -65,22 +67,21 @@ namespace karabo {
         }
 
 
-        unsigned long long HashHdf5Serializer::size(hid_t h5file, const std::string & groupName) {
+        unsigned long long HashHdf5Serializer::size(hid_t h5file, const std::string& groupName) {
             H5G_info_t ginfo;
             hid_t group = H5Gopen(h5file, groupName.c_str(), H5P_DEFAULT);
             KARABO_CHECK_HDF5_STATUS(H5Gget_info(group, &ginfo));
-            //std::clog << "nobj=" << ginfo.nlinks << std::endl;
+            // std::clog << "nobj=" << ginfo.nlinks << std::endl;
             return ginfo.nlinks;
         }
 
 
         void HashHdf5Serializer::serializeHash(const karabo::util::Hash& data, hid_t group) {
-
             // This hash does not have attributes
             // It is not rooted. Either top or element of vector<Hash>
-            //KARABO_LOG_FRAMEWORK_TRACE_CF << "path: " << path << " keyPath: " << keyPath;
+            // KARABO_LOG_FRAMEWORK_TRACE_CF << "path: " << path << " keyPath: " << keyPath;
             for (karabo::util::Hash::const_iterator it = data.begin(); it != data.end(); ++it) {
-                if (it->is<karabo::util::Hash > ()) {
+                if (it->is<karabo::util::Hash>()) {
                     serializeHashElement(*it, group);
                 } else if (it->is<std::vector<karabo::util::Hash> >()) {
                     serializeVectorOfHashesElement(*it, group);
@@ -92,8 +93,7 @@ namespace karabo {
 
 
         void HashHdf5Serializer::serializeHashElement(const karabo::util::Hash::Node& el, hid_t group) {
-
-            const karabo::util::Hash& h = el.getValue<karabo::util::Hash > ();
+            const karabo::util::Hash& h = el.getValue<karabo::util::Hash>();
             const std::string& key = el.getKey();
 
             hid_t h5obj = H5Gcreate(group, key.c_str(), H5P_DEFAULT, m_gcpl, H5P_DEFAULT);
@@ -104,13 +104,11 @@ namespace karabo {
             }
 
             for (karabo::util::Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                if (it->is<karabo::util::Hash > ()) {
+                if (it->is<karabo::util::Hash>()) {
                     serializeHashElement(*it, h5obj);
                 } else if (it->is<std::vector<karabo::util::Hash> >()) {
                     serializeVectorOfHashesElement(*it, h5obj);
                 } else {
-
-
                     serializeDataElement(*it, h5obj);
                 }
             }
@@ -119,7 +117,6 @@ namespace karabo {
 
 
         void HashHdf5Serializer::serializeVectorOfHashesElement(const karabo::util::Hash::Node& el, hid_t group) {
-
             const std::vector<karabo::util::Hash>& vec = el.getValue<std::vector<karabo::util::Hash> >();
             const std::string& key = el.getKey();
             hid_t newGroup = H5Gcreate(group, key.c_str(), H5P_DEFAULT, m_gcpl, H5P_DEFAULT);
@@ -139,7 +136,7 @@ namespace karabo {
                     tmp.set("a", 0);
                     karabo::util::Hash::Node& krbNode = tmp.getNode("a");
                     //            krbNode.setAttribute("KRB_type", "VECTOR_HASH");
-                    krbNode.setAttribute("KRB_size", static_cast<unsigned long long> (vec.size()));
+                    krbNode.setAttribute("KRB_size", static_cast<unsigned long long>(vec.size()));
                     serializeAttributes(krbNode, h5obj);
                 }
                 serializeHash(vec[i], h5obj);
@@ -150,72 +147,102 @@ namespace karabo {
 
 
         void HashHdf5Serializer::serializeDataElement(const karabo::util::Hash::Node& el, hid_t group) {
-
             karabo::util::Types::ReferenceType t = el.getType();
             const std::string& key = el.getKey();
 
             switch (t) {
-                case karabo::util::Types::CHAR: serializeNodeByte(el, group);
+                case karabo::util::Types::CHAR:
+                    serializeNodeByte(el, group);
                     break;
-                case karabo::util::Types::INT8: serializeNode<signed char>(el, group);
+                case karabo::util::Types::INT8:
+                    serializeNode<signed char>(el, group);
                     break;
-                case karabo::util::Types::INT16: serializeNode<short>(el, group);
+                case karabo::util::Types::INT16:
+                    serializeNode<short>(el, group);
                     break;
-                case karabo::util::Types::INT32: serializeNode<int>(el, group);
+                case karabo::util::Types::INT32:
+                    serializeNode<int>(el, group);
                     break;
-                case karabo::util::Types::INT64: serializeNode<long long>(el, group);
+                case karabo::util::Types::INT64:
+                    serializeNode<long long>(el, group);
                     break;
-                case karabo::util::Types::UINT8: serializeNode<unsigned char>(el, group);
+                case karabo::util::Types::UINT8:
+                    serializeNode<unsigned char>(el, group);
                     break;
-                case karabo::util::Types::UINT16: serializeNode<unsigned short>(el, group);
+                case karabo::util::Types::UINT16:
+                    serializeNode<unsigned short>(el, group);
                     break;
-                case karabo::util::Types::UINT32: serializeNode<unsigned int>(el, group);
+                case karabo::util::Types::UINT32:
+                    serializeNode<unsigned int>(el, group);
                     break;
-                case karabo::util::Types::UINT64: serializeNode<unsigned long long>(el, group);
+                case karabo::util::Types::UINT64:
+                    serializeNode<unsigned long long>(el, group);
                     break;
-                case karabo::util::Types::FLOAT: serializeNode<float>(el, group);
+                case karabo::util::Types::FLOAT:
+                    serializeNode<float>(el, group);
                     break;
-                case karabo::util::Types::DOUBLE: serializeNode<double>(el, group);
+                case karabo::util::Types::DOUBLE:
+                    serializeNode<double>(el, group);
                     break;
-                case karabo::util::Types::STRING: serializeNodeString(el, group);
+                case karabo::util::Types::STRING:
+                    serializeNodeString(el, group);
                     break;
-                case karabo::util::Types::BOOL: serializeNodeBool(el, group);
+                case karabo::util::Types::BOOL:
+                    serializeNodeBool(el, group);
                     break;
-                case karabo::util::Types::COMPLEX_FLOAT: serializeNodeComplex<float>(el, group);
+                case karabo::util::Types::COMPLEX_FLOAT:
+                    serializeNodeComplex<float>(el, group);
                     break;
-                case karabo::util::Types::COMPLEX_DOUBLE: serializeNodeComplex<double>(el, group);
+                case karabo::util::Types::COMPLEX_DOUBLE:
+                    serializeNodeComplex<double>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_CHAR: serializeNodeSequenceByte(el, group);
+                case karabo::util::Types::VECTOR_CHAR:
+                    serializeNodeSequenceByte(el, group);
                     break;
-                case karabo::util::Types::VECTOR_INT8: serializeNodeSequence<signed char>(el, group);
+                case karabo::util::Types::VECTOR_INT8:
+                    serializeNodeSequence<signed char>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_INT16: serializeNodeSequence<short>(el, group);
+                case karabo::util::Types::VECTOR_INT16:
+                    serializeNodeSequence<short>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_INT32: serializeNodeSequence<int>(el, group);
+                case karabo::util::Types::VECTOR_INT32:
+                    serializeNodeSequence<int>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_INT64: serializeNodeSequence<long long>(el, group);
+                case karabo::util::Types::VECTOR_INT64:
+                    serializeNodeSequence<long long>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_UINT8: serializeNodeSequence<unsigned char>(el, group);
+                case karabo::util::Types::VECTOR_UINT8:
+                    serializeNodeSequence<unsigned char>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_UINT16: serializeNodeSequence<unsigned short>(el, group);
+                case karabo::util::Types::VECTOR_UINT16:
+                    serializeNodeSequence<unsigned short>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_UINT32: serializeNodeSequence<unsigned int>(el, group);
+                case karabo::util::Types::VECTOR_UINT32:
+                    serializeNodeSequence<unsigned int>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_UINT64: serializeNodeSequence<unsigned long long>(el, group);
+                case karabo::util::Types::VECTOR_UINT64:
+                    serializeNodeSequence<unsigned long long>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_FLOAT: serializeNodeSequence<float>(el, group);
+                case karabo::util::Types::VECTOR_FLOAT:
+                    serializeNodeSequence<float>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_DOUBLE: serializeNodeSequence<double>(el, group);
+                case karabo::util::Types::VECTOR_DOUBLE:
+                    serializeNodeSequence<double>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_STRING: serializeNodeSequence<std::string>(el, group);
+                case karabo::util::Types::VECTOR_STRING:
+                    serializeNodeSequence<std::string>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_BOOL: serializeNodeSequenceBool(el, group);
+                case karabo::util::Types::VECTOR_BOOL:
+                    serializeNodeSequenceBool(el, group);
                     break;
-                case karabo::util::Types::VECTOR_COMPLEX_FLOAT: serializeNodeSequenceComplex<float>(el, group);
+                case karabo::util::Types::VECTOR_COMPLEX_FLOAT:
+                    serializeNodeSequenceComplex<float>(el, group);
                     break;
-                case karabo::util::Types::VECTOR_COMPLEX_DOUBLE: serializeNodeSequenceComplex<double>(el, group);
+                case karabo::util::Types::VECTOR_COMPLEX_DOUBLE:
+                    serializeNodeSequenceComplex<double>(el, group);
                     break;
-                case karabo::util::Types::SCHEMA: serializeNodeSchema(el, group);
+                case karabo::util::Types::SCHEMA:
+                    serializeNodeSchema(el, group);
                     break;
 
                 default:
@@ -231,73 +258,99 @@ namespace karabo {
                 const std::string& key = it->getKey();
                 //                clog << "Attribute: " << key << endl;
                 switch (t) {
-
-                    case karabo::util::Types::CHAR: writeSingleAttribute(h5obj, it->getValue<char>(), key);
+                    case karabo::util::Types::CHAR:
+                        writeSingleAttribute(h5obj, it->getValue<char>(), key);
                         break;
-                    case karabo::util::Types::INT8: writeSingleAttribute(h5obj, it->getValue<signed char>(), key);
+                    case karabo::util::Types::INT8:
+                        writeSingleAttribute(h5obj, it->getValue<signed char>(), key);
                         break;
-                    case karabo::util::Types::INT16: writeSingleAttribute(h5obj, it->getValue<short>(), key);
+                    case karabo::util::Types::INT16:
+                        writeSingleAttribute(h5obj, it->getValue<short>(), key);
                         break;
-                    case karabo::util::Types::INT32: writeSingleAttribute(h5obj, it->getValue<int>(), key);
+                    case karabo::util::Types::INT32:
+                        writeSingleAttribute(h5obj, it->getValue<int>(), key);
                         break;
-                    case karabo::util::Types::INT64: writeSingleAttribute(h5obj, it->getValue<long long>(), key);
+                    case karabo::util::Types::INT64:
+                        writeSingleAttribute(h5obj, it->getValue<long long>(), key);
                         break;
-                    case karabo::util::Types::UINT8: writeSingleAttribute(h5obj, it->getValue<unsigned char>(), key);
+                    case karabo::util::Types::UINT8:
+                        writeSingleAttribute(h5obj, it->getValue<unsigned char>(), key);
                         break;
-                    case karabo::util::Types::UINT16: writeSingleAttribute(h5obj, it->getValue<unsigned short>(), key);
+                    case karabo::util::Types::UINT16:
+                        writeSingleAttribute(h5obj, it->getValue<unsigned short>(), key);
                         break;
-                    case karabo::util::Types::UINT32: writeSingleAttribute(h5obj, it->getValue<unsigned int>(), key);
+                    case karabo::util::Types::UINT32:
+                        writeSingleAttribute(h5obj, it->getValue<unsigned int>(), key);
                         break;
-                    case karabo::util::Types::UINT64: writeSingleAttribute(h5obj, it->getValue<unsigned long long>(), key);
+                    case karabo::util::Types::UINT64:
+                        writeSingleAttribute(h5obj, it->getValue<unsigned long long>(), key);
                         break;
-                    case karabo::util::Types::FLOAT: writeSingleAttribute(h5obj, it->getValue<float>(), key);
+                    case karabo::util::Types::FLOAT:
+                        writeSingleAttribute(h5obj, it->getValue<float>(), key);
                         break;
-                    case karabo::util::Types::DOUBLE: writeSingleAttribute(h5obj, it->getValue<double>(), key);
+                    case karabo::util::Types::DOUBLE:
+                        writeSingleAttribute(h5obj, it->getValue<double>(), key);
                         break;
-                    case karabo::util::Types::STRING: writeSingleAttribute(h5obj, it->getValue<std::string>(), key);
+                    case karabo::util::Types::STRING:
+                        writeSingleAttribute(h5obj, it->getValue<std::string>(), key);
                         break;
-                    case karabo::util::Types::BOOL: writeSingleAttribute(h5obj, it->getValue<bool>(), key);
+                    case karabo::util::Types::BOOL:
+                        writeSingleAttribute(h5obj, it->getValue<bool>(), key);
                         break;
-                    case karabo::util::Types::COMPLEX_FLOAT: writeSingleAttribute(h5obj, it->getValue<std::complex<float> >(), key);
+                    case karabo::util::Types::COMPLEX_FLOAT:
+                        writeSingleAttribute(h5obj, it->getValue<std::complex<float> >(), key);
                         break;
-                    case karabo::util::Types::COMPLEX_DOUBLE: writeSingleAttribute(h5obj, it->getValue<std::complex<double> >(), key);
+                    case karabo::util::Types::COMPLEX_DOUBLE:
+                        writeSingleAttribute(h5obj, it->getValue<std::complex<double> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_CHAR: writeSequenceAttribute(h5obj, it->getValue< std::vector<char> >(), key);
+                    case karabo::util::Types::VECTOR_CHAR:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<char> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_INT8: writeSequenceAttribute(h5obj, it->getValue < std::vector<signed char> >(), key);
+                    case karabo::util::Types::VECTOR_INT8:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<signed char> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_INT16: writeSequenceAttribute(h5obj, it->getValue< std::vector<short> >(), key);
+                    case karabo::util::Types::VECTOR_INT16:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<short> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_INT32: writeSequenceAttribute(h5obj, it->getValue< std::vector<int> >(), key);
+                    case karabo::util::Types::VECTOR_INT32:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<int> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_INT64: writeSequenceAttribute(h5obj, it->getValue< std::vector<long long> >(), key);
+                    case karabo::util::Types::VECTOR_INT64:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<long long> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_UINT8: writeSequenceAttribute(h5obj, it->getValue< std::vector<unsigned char> >(), key);
+                    case karabo::util::Types::VECTOR_UINT8:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<unsigned char> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_UINT16: writeSequenceAttribute(h5obj, it->getValue< std::vector<unsigned short> >(), key);
+                    case karabo::util::Types::VECTOR_UINT16:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<unsigned short> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_UINT32: writeSequenceAttribute(h5obj, it->getValue< std::vector<unsigned int> >(), key);
+                    case karabo::util::Types::VECTOR_UINT32:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<unsigned int> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_UINT64: writeSequenceAttribute(h5obj, it->getValue< std::vector<unsigned long long> >(), key);
+                    case karabo::util::Types::VECTOR_UINT64:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<unsigned long long> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_FLOAT: writeSequenceAttribute(h5obj, it->getValue< std::vector<float> >(), key);
+                    case karabo::util::Types::VECTOR_FLOAT:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<float> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_DOUBLE: writeSequenceAttribute(h5obj, it->getValue< std::vector<double> >(), key);
+                    case karabo::util::Types::VECTOR_DOUBLE:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<double> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_STRING: writeSequenceAttribute(h5obj, it->getValue< std::vector<std::string> >(), key);
+                    case karabo::util::Types::VECTOR_STRING:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<std::string> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_BOOL: writeSequenceAttribute(h5obj, it->getValue < std::vector<bool> >(), key);
+                    case karabo::util::Types::VECTOR_BOOL:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<bool> >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_COMPLEX_FLOAT: writeSequenceAttribute(h5obj, it->getValue< std::vector< std::complex<float> > >(), key);
+                    case karabo::util::Types::VECTOR_COMPLEX_FLOAT:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<std::complex<float> > >(), key);
                         break;
-                    case karabo::util::Types::VECTOR_COMPLEX_DOUBLE: writeSequenceAttribute(h5obj, it->getValue< std::vector< std::complex<double> > >(), key);
+                    case karabo::util::Types::VECTOR_COMPLEX_DOUBLE:
+                        writeSequenceAttribute(h5obj, it->getValue<std::vector<std::complex<double> > >(), key);
                         break;
                     default:
                         throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
-
                 }
-
-
             }
         }
 
@@ -317,8 +370,6 @@ namespace karabo {
                 serializeAttributes(node, dsId);
                 KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
             } catch (...) {
-
-
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
             }
         }
@@ -389,7 +440,7 @@ namespace karabo {
         void HashHdf5Serializer::serializeNodeSequenceBool(const karabo::util::Hash::Node& node, hid_t group) {
             const std::string& key = node.getKey();
             try {
-                const std::vector<bool>& value = node.getValue < std::vector<bool> >();
+                const std::vector<bool>& value = node.getValue<std::vector<bool> >();
                 hsize_t len = value.size();
                 hsize_t dims[] = {len};
                 hid_t spaceId = H5Screate_simple(1, dims, NULL);
@@ -440,7 +491,7 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const std::string& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const std::string& value, const std::string& key) {
             try {
                 const char* ptr = value.c_str();
                 hsize_t size = value.length();
@@ -452,14 +503,12 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stype));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
             } catch (...) {
-
-
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
             }
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const char& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const char& value, const std::string& key) {
             try {
                 hid_t tid = H5Tcreate(H5T_OPAQUE, 1);
                 KARABO_CHECK_HDF5_STATUS(tid);
@@ -475,7 +524,7 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const bool& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const bool& value, const std::string& key) {
             try {
                 unsigned char converted = boost::numeric_cast<unsigned char>(value);
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<bool>();
@@ -493,7 +542,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const std::complex<float>& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const std::complex<float>& value,
+                                                      const std::string& key) {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<float>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<float>();
@@ -509,14 +559,13 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
             } catch (...) {
-
-
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize complex<float> attribute: " + key));
             }
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const std::complex<double>& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const std::complex<double>& value,
+                                                      const std::string& key) {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<double>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<double>();
@@ -538,7 +587,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector<char>& vec, const std::string& key) {
+        void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector<char>& vec,
+                                                        const std::string& key) {
             try {
                 hid_t tid = H5Tcreate(H5T_OPAQUE, vec.size());
                 KARABO_CHECK_HDF5_STATUS(tid);
@@ -554,7 +604,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::writeSequenceAttribute(hid_t h5obj, const std::vector< std::complex<float> >& value, const std::string & key) {
+        void HashHdf5Serializer::writeSequenceAttribute(hid_t h5obj, const std::vector<std::complex<float> >& value,
+                                                        const std::string& key) {
             try {
                 hsize_t len = value.size();
                 hsize_t dims[] = {len, 2};
@@ -572,15 +623,14 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-
-
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<complex<float> > attribute: " + key));
+                KARABO_RETHROW_AS(
+                      KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<complex<float> > attribute: " + key));
             }
-
         }
 
 
-        void HashHdf5Serializer::writeSequenceAttribute(hid_t h5obj, const std::vector< std::complex<double> >& value, const std::string & key) {
+        void HashHdf5Serializer::writeSequenceAttribute(hid_t h5obj, const std::vector<std::complex<double> >& value,
+                                                        const std::string& key) {
             try {
                 hsize_t len = value.size();
                 hsize_t dims[] = {len, 2};
@@ -598,13 +648,14 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<complex<double> > attribute: " + key));
+                KARABO_RETHROW_AS(
+                      KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<complex<double> > attribute: " + key));
             }
-
         }
 
 
-        void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector<bool>& value, const std::string & key) {
+        void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector<bool>& value,
+                                                        const std::string& key) {
             try {
                 hsize_t len = value.size();
                 hsize_t dims[] = {len};
@@ -628,7 +679,6 @@ namespace karabo {
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<bool> attribute: " + key));
             }
-
         }
 
 
@@ -637,17 +687,19 @@ namespace karabo {
                 H5G_info_t ginfo;
                 KARABO_CHECK_HDF5_STATUS(H5Gget_info(group, &ginfo));
                 for (hsize_t i = 0; i < ginfo.nlinks; ++i) {
-                    ssize_t len = H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
-                    len++; //null terminated string                    
+                    ssize_t len =
+                          H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
+                    len++; // null terminated string
                     std::vector<char> bufName(len, 0);
-                    ssize_t size = H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len, H5P_DEFAULT);
+                    ssize_t size = H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len,
+                                                      H5P_DEFAULT);
                     std::string name(&bufName[0], len - 1);
                     KARABO_CHECK_HDF5_STATUS(size);
                     H5O_info_t objInfo;
-                    KARABO_CHECK_HDF5_STATUS(H5Oget_info_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &objInfo, H5P_DEFAULT));
+                    KARABO_CHECK_HDF5_STATUS(
+                          H5Oget_info_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &objInfo, H5P_DEFAULT));
                     switch (objInfo.type) {
-                        case H5O_TYPE_GROUP:
-                        {
+                        case H5O_TYPE_GROUP: {
                             hid_t gid = H5Gopen2(group, name.c_str(), H5P_DEFAULT);
                             KARABO_CHECK_HDF5_STATUS(gid);
                             int last = name.length() - 1;
@@ -659,16 +711,13 @@ namespace karabo {
                             }
 
                             KARABO_CHECK_HDF5_STATUS(H5Gclose(gid));
-                        }
-                            break;
-                        case H5O_TYPE_DATASET:
-                        {
+                        } break;
+                        case H5O_TYPE_DATASET: {
                             hid_t dsId = H5Dopen2(group, name.c_str(), H5P_DEFAULT);
                             KARABO_CHECK_HDF5_STATUS(dsId);
                             serializeDataElement(dsId, name, data);
                             KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
-                        }
-                            break;
+                        } break;
                         default:
                             throw KARABO_HDF_IO_EXCEPTION("H5O_TYPE Not supported");
                     }
@@ -677,14 +726,12 @@ namespace karabo {
                 std::clog << ex << std::endl;
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize Hash"));
             }
-
         }
 
 
         void HashHdf5Serializer::serializeHashElement(hid_t group, const std::string& name, karabo::util::Hash& data) {
-
             try {
-                karabo::util::Hash& newData = data.bindReference< karabo::util::Hash>(name);
+                karabo::util::Hash& newData = data.bindReference<karabo::util::Hash>(name);
 
                 H5G_info_t ginfo;
                 KARABO_CHECK_HDF5_STATUS(H5Gget_info(group, &ginfo));
@@ -692,22 +739,25 @@ namespace karabo {
                 //                std::clog << "nobj=" << ginfo.nlinks << std::endl;
                 for (hsize_t i = 0; i < ginfo.nlinks; ++i) {
                     H5O_info_t objInfo;
-                    KARABO_CHECK_HDF5_STATUS(H5Oget_info_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &objInfo, H5P_DEFAULT));
-                    ssize_t len = H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
-                    len++; //null terminated string                    
+                    KARABO_CHECK_HDF5_STATUS(
+                          H5Oget_info_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &objInfo, H5P_DEFAULT));
+                    ssize_t len =
+                          H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
+                    len++; // null terminated string
                     std::vector<char> bufName(len, 0);
-                    ssize_t size = H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len, H5P_DEFAULT);
+                    ssize_t size = H5Lget_name_by_idx(group, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len,
+                                                      H5P_DEFAULT);
                     std::string name(&bufName[0], len - 1);
                     //                        std::clog << "objname: len=" << len << " name=" << name << std::endl;
                     KARABO_CHECK_HDF5_STATUS(size);
                     switch (objInfo.type) {
-                        case H5O_TYPE_GROUP:
-                        {
+                        case H5O_TYPE_GROUP: {
                             hid_t gid = H5Gopen2(group, name.c_str(), H5P_DEFAULT);
                             KARABO_CHECK_HDF5_STATUS(gid);
                             //                                std::clog << "group name: " << name << std::endl;
                             int last = name.length() - 1;
-                            //                                std::clog << "last character of group name: " << name[last] << std::endl;
+                            //                                std::clog << "last character of group name: " <<
+                            //                                name[last] << std::endl;
                             if (name[last] == ']') {
                                 serializeVectorOfHashesElement(gid, name, newData, i, group);
                             } else {
@@ -717,18 +767,15 @@ namespace karabo {
 
 
                             KARABO_CHECK_HDF5_STATUS(H5Gclose(gid));
-                        }
-                            break;
-                        case H5O_TYPE_DATASET:
-                        {
+                        } break;
+                        case H5O_TYPE_DATASET: {
                             //                            std::clog << "dataset: " << name << std::endl;
                             hid_t dsId = H5Dopen2(group, name.c_str(), H5P_DEFAULT);
                             KARABO_CHECK_HDF5_STATUS(dsId);
                             serializeDataElement(dsId, name, newData);
                             KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
 
-                        }
-                            break;
+                        } break;
                         default:
                             std::clog << "unknown: " << name << std::endl;
                     }
@@ -737,12 +784,11 @@ namespace karabo {
                 std::clog << ex << std::endl;
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize Hash"));
             }
-
         }
 
 
-        void HashHdf5Serializer::serializeVectorOfHashesElement(hid_t gid, const std::string& name, karabo::util::Hash& data, hsize_t& idx, hid_t group) {
-
+        void HashHdf5Serializer::serializeVectorOfHashesElement(hid_t gid, const std::string& name,
+                                                                karabo::util::Hash& data, hsize_t& idx, hid_t group) {
             //                std::clog << "vec hashes" << std::endl;
             karabo::util::Hash a("a", 0);
             karabo::util::Hash::Node& aNode = a.getNode("a");
@@ -775,7 +821,6 @@ namespace karabo {
 
 
         void HashHdf5Serializer::serializeDataElement(hid_t dsId, const std::string& name, karabo::util::Hash& data) {
-
             try {
                 // std::clog << "reading dataset " << name << std::endl;
                 hid_t tid = H5Dget_type(dsId);
@@ -796,7 +841,7 @@ namespace karabo {
                         char* tagPtr = H5Tget_tag(tid);
                         std::string tag(tagPtr);
                         free(tagPtr);
-                        //std::clog << "opaque type: " << tag << std::endl;
+                        // std::clog << "opaque type: " << tag << std::endl;
                         if (tag == "CHAR") {
                             readSingleValue<char>(dsId, tid, name, data);
                         } else if (tag == "VECTOR_CHAR") {
@@ -834,7 +879,7 @@ namespace karabo {
 
                 } else {
                     H5T_class_t dtClass = H5Tget_class(tid);
-                    // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space                        
+                    // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space
                     if (dtClass == H5T_STRING) {
                         readSequenceString(dsId, tid, dims, name, data);
                     } else {
@@ -881,11 +926,11 @@ namespace karabo {
             H5O_info_t objInfo;
             KARABO_CHECK_HDF5_STATUS(H5Oget_info(h5obj, &objInfo));
             for (hsize_t i = 0; i < objInfo.num_attrs; ++i) {
-
                 ssize_t len = H5Aget_name_by_idx(h5obj, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
-                len++; //null terminated string                    
+                len++; // null terminated string
                 std::vector<char> bufName(len, 0);
-                ssize_t size = H5Aget_name_by_idx(h5obj, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len, H5P_DEFAULT);
+                ssize_t size =
+                      H5Aget_name_by_idx(h5obj, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len, H5P_DEFAULT);
                 std::string name(&bufName[0]);
                 if (krb == false && name.substr(0, 4) == "KRB_") continue;
                 KARABO_CHECK_HDF5_STATUS(size);
@@ -906,13 +951,12 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(ndims);
 
                 if (ndims == 0) {
-
                     H5T_class_t dtClass = H5Tget_class(tid);
                     if (dtClass == H5T_OPAQUE) {
                         char* tagPtr = H5Tget_tag(tid);
                         std::string tag(tagPtr);
                         free(tagPtr);
-                        //std::clog << "opaque type: " << tag << std::endl;
+                        // std::clog << "opaque type: " << tag << std::endl;
                         if (tag == "CHAR") {
                             readSingleAttribute<char>(attrId, tid, node, name);
                         } else if (tag == "VECTOR_CHAR") {
@@ -921,7 +965,6 @@ namespace karabo {
                     } else if (dtClass == H5T_STRING) {
                         readSingleAttributeString(attrId, tid, node, name);
                     } else {
-
                         if (H5Tequal(tid, H5T_NATIVE_INT8)) {
                             readSingleAttribute<signed char>(attrId, tid, node, name);
                         } else if (H5Tequal(tid, H5T_NATIVE_INT16)) {
@@ -948,9 +991,8 @@ namespace karabo {
                     }
 
                 } else {
-
                     H5T_class_t dtClass = H5Tget_class(tid);
-                    // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space                        
+                    // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space
                     if (dtClass == H5T_STRING) {
                         readSequenceAttributeString(attrId, tid, dims, node, name);
                     } else {
@@ -985,20 +1027,20 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             }
-
         }
 
 
-        void HashHdf5Serializer::readSingleAttributeString(hid_t attrId, hid_t tid, karabo::util::Hash::Node& node, const std::string& name) {
+        void HashHdf5Serializer::readSingleAttributeString(hid_t attrId, hid_t tid, karabo::util::Hash::Node& node,
+                                                           const std::string& name) {
             size_t len = H5Tget_size(tid);
             KARABO_CHECK_HDF5_STATUS(len);
             hid_t stringTypeId = H5Tcopy(H5T_C_S1);
             KARABO_CHECK_HDF5_STATUS(H5Tset_size(stringTypeId, len));
             if (H5Tequal(tid, stringTypeId)) {
                 std::vector<char> vec(len, 0);
-                //std::clog << "C_S1 1" << std::endl;
+                // std::clog << "C_S1 1" << std::endl;
                 KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
-                //std::clog << "C_S1 2" << std::endl;
+                // std::clog << "C_S1 2" << std::endl;
                 node.setAttribute(name, std::string(&vec[0]));
             } else {
                 throw KARABO_HDF_IO_EXCEPTION("Type not supported");
@@ -1007,7 +1049,9 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSingleAttributeUnsignedChar(hid_t h5obj, hid_t attrId, hid_t tid, karabo::util::Hash::Node& node, const std::string& name) {
+        void HashHdf5Serializer::readSingleAttributeUnsignedChar(hid_t h5obj, hid_t attrId, hid_t tid,
+                                                                 karabo::util::Hash::Node& node,
+                                                                 const std::string& name) {
             unsigned char value;
             KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &value));
             string krbAttrName = "KRB_bool_" + name;
@@ -1022,8 +1066,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSequenceAttributeBytes(hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
-
+        void HashHdf5Serializer::readSequenceAttributeBytes(hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims,
+                                                            karabo::util::Hash::Node& node, const std::string& name) {
             node.setAttribute(name, std::vector<char>(0, 0));
             std::vector<char>& vec = node.getAttribute<std::vector<char> >(name);
             hsize_t len = H5Tget_size(tid);
@@ -1035,9 +1079,10 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSequenceAttributeUnsignedChar(hid_t h5obj, hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
-
-
+        void HashHdf5Serializer::readSequenceAttributeUnsignedChar(hid_t h5obj, hid_t attrId, hid_t tid,
+                                                                   const std::vector<hsize_t>& dims,
+                                                                   karabo::util::Hash::Node& node,
+                                                                   const std::string& name) {
             hsize_t size = dims[0];
             vector<unsigned char> vec(size, 0);
             KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
@@ -1056,7 +1101,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSequenceAttributeString(hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
+        void HashHdf5Serializer::readSequenceAttributeString(hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims,
+                                                             karabo::util::Hash::Node& node, const std::string& name) {
             hsize_t size = dims[0];
             std::vector<std::string> vec(size, "");
             std::vector<char*> ptr(size, 0);
@@ -1066,11 +1112,11 @@ namespace karabo {
                 vec[i] = std::string(ptr[i]);
             }
             node.setAttribute(name, vec);
-
         }
 
 
-        void HashHdf5Serializer::readSingleString(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
+        void HashHdf5Serializer::readSingleString(hid_t dsId, hid_t tid, const std::string& name,
+                                                  karabo::util::Hash& data) {
             size_t len = H5Tget_size(tid);
             KARABO_CHECK_HDF5_STATUS(len);
             hid_t stringTypeId = H5Tcopy(H5T_C_S1);
@@ -1095,7 +1141,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
+        void HashHdf5Serializer::readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name,
+                                                        karabo::util::Hash& data) {
             unsigned char value;
             KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
             htri_t exists = H5Aexists(dsId, "KRB_bool");
@@ -1109,7 +1156,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+        void HashHdf5Serializer::readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims,
+                                                    const std::string& name, karabo::util::Hash& data) {
             hsize_t size = dims[0];
             std::vector<std::string>& vec = data.bindReference<std::vector<std::string> >(name);
             vec.resize(size, "");
@@ -1122,7 +1170,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+        void HashHdf5Serializer::readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims,
+                                                          const std::string& name, karabo::util::Hash& data) {
             hsize_t size = dims[0];
             for (size_t i = 1; i < dims.size(); ++i) {
                 size *= dims[i];
@@ -1132,7 +1181,7 @@ namespace karabo {
             htri_t exists = H5Aexists(dsId, "KRB_bool");
             KARABO_CHECK_HDF5_STATUS(exists);
             if (exists) {
-                vector<bool>& bVec = data.bindReference < vector<bool> >(name);
+                vector<bool>& bVec = data.bindReference<vector<bool> >(name);
                 bVec.resize(size, false);
                 for (size_t i = 0; i < size; ++i) {
                     bVec[i] = boost::numeric_cast<bool>(vec[i]);
@@ -1143,7 +1192,8 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::readSequenceBytes(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
+        void HashHdf5Serializer::readSequenceBytes(hid_t dsId, hid_t tid, const std::string& name,
+                                                   karabo::util::Hash& data) {
             std::vector<char>& vec = data.bindReference<std::vector<char> >(name);
             hsize_t len = H5Tget_size(tid);
             KARABO_CHECK_HDF5_STATUS(len);
@@ -1153,7 +1203,5 @@ namespace karabo {
         }
 
 
-
-    }
-}
-
+    } // namespace io
+} // namespace karabo

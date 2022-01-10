@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   HttpResponse.hh
  * Author: <serguei.essenov@xfel.eu>
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef HTTPRESPONSE_HH
-#define	HTTPRESPONSE_HH
+#define HTTPRESPONSE_HH
 
 #include <sstream>
 #include <string>
@@ -19,7 +19,6 @@ namespace karabo {
     namespace net {
 
         struct HttpResponse {
-
             int code;
             std::string message;
             std::string contentType;
@@ -36,27 +35,25 @@ namespace karabo {
             std::string payload;
             bool payloadArrived;
 
-            std::vector<std::string> fields {"Content-Type: ","Request-Id: ",
-                                             "X-Influxdb-Build: ","X-Influxdb-Version: ",
-                                             "X-Request-Id: ","Date: ",
-                                             "Transfer-Encoding: "};
+            std::vector<std::string> fields{
+                  "Content-Type: ", "Request-Id: ", "X-Influxdb-Build: ", "X-Influxdb-Version: ",
+                  "X-Request-Id: ", "Date: ",       "Transfer-Encoding: "};
 
             HttpResponse()
-                : code(-1)
-                , message("")
-                , contentType("")
-                , requestId("")
-                , xRequestId("")
-                , build("")
-                , version("")
-                , xError("")
-                , date("")
-                , connection("")
-                , transferEncoding("")
-                , contentLength(-1)
-                , payload("")
-                , payloadArrived(true) {
-            }
+                : code(-1),
+                  message(""),
+                  contentType(""),
+                  requestId(""),
+                  xRequestId(""),
+                  build(""),
+                  version(""),
+                  xError(""),
+                  date(""),
+                  connection(""),
+                  transferEncoding(""),
+                  contentLength(-1),
+                  payload(""),
+                  payloadArrived(true) {}
 
             void clear() {
                 *this = HttpResponse();
@@ -75,5 +72,4 @@ namespace karabo {
 
 } // namespace karabo
 
-#endif	/* HTTPRESPONSE_HH */
-
+#endif /* HTTPRESPONSE_HH */

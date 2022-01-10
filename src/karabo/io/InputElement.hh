@@ -6,17 +6,18 @@
  *
  * Created on September 8, 2013, 11:48 AM
  *
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 
 #ifndef KARABO_UTIL_INPUTELEMENT_HH
-#define	KARABO_UTIL_INPUTELEMENT_HH
+#define KARABO_UTIL_INPUTELEMENT_HH
 
+#include <karabo/util/Configurator.hh>
 #include <karabo/util/GenericElement.hh>
 #include <karabo/util/LeafElement.hh>
-#include <karabo/util/Configurator.hh>
+
 #include "Input.hh"
 
 namespace karabo {
@@ -28,14 +29,12 @@ namespace karabo {
          *        a Schema Element, defined in an expected parameter section.
          */
         class InputElement : public karabo::util::GenericElement<InputElement> {
-
-
             karabo::util::Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
-        public:
-
-            InputElement(karabo::util::Schema& expected) : karabo::util::GenericElement<InputElement>(expected)
-            , m_parentSchemaAssemblyRules(expected.getAssemblyRules()) {
+           public:
+            InputElement(karabo::util::Schema& expected)
+                : karabo::util::GenericElement<InputElement>(expected),
+                  m_parentSchemaAssemblyRules(expected.getAssemblyRules()) {
                 this->m_node->setValue(karabo::util::Hash());
             }
 
@@ -67,23 +66,20 @@ namespace karabo {
             }
 
 
-        protected:
-
+           protected:
             void beforeAddition() {
                 using namespace karabo::util;
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE))
+                    this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, "Network");
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Input");
             }
-
-
         };
         typedef InputElement INPUT_ELEMENT;
-    }
-}
-
+    } // namespace io
+} // namespace karabo
 
 
 #endif

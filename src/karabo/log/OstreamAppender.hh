@@ -27,19 +27,18 @@ namespace karabo {
          * of the Logger!!
          */
         class OstreamAppender {
-          public:
+           public:
             KARABO_CLASSINFO(OstreamAppender, "Ostream", "")
 
             static void expectedParameters(karabo::util::Schema& expected);
 
             OstreamAppender(const karabo::util::Hash& input);
 
-            virtual ~OstreamAppender() {
-            }
+            virtual ~OstreamAppender() {}
 
             krb_log4cpp::Appender* getAppender();
 
-          private:
+           private:
             krb_log4cpp::Appender* m_appender;
         };
     } // namespace log

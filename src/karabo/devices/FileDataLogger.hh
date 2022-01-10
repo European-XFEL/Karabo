@@ -1,21 +1,19 @@
-/* 
+/*
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef KARABO_DEVICES_FILEDATALOGGER_HH
-#define	KARABO_DEVICES_FILEDATALOGGER_HH
-
-#include "karabo/util/Version.hh"
-#include "karabo/io/TextSerializer.hh"
+#define KARABO_DEVICES_FILEDATALOGGER_HH
 
 #include "DataLogger.hh"
+#include "karabo/io/TextSerializer.hh"
+#include "karabo/util/Version.hh"
 
 namespace karabo {
-    
-    namespace devices {
-        
-        struct FileDeviceData : public karabo::devices::DeviceData {
 
+    namespace devices {
+
+        struct FileDeviceData : public karabo::devices::DeviceData {
             KARABO_CLASSINFO(FileDeviceData, "FileDataLoggerDeviceData", "2.6")
 
             FileDeviceData(const karabo::util::Hash& input);
@@ -24,9 +22,8 @@ namespace karabo {
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
-            void logValue(const std::string& deviceId, const std::string& path,
-                          const karabo::util::Timestamp& ts, const std::string& value,
-                          const std::string& type, size_t filePosition);
+            void logValue(const std::string& deviceId, const std::string& path, const karabo::util::Timestamp& ts,
+                          const std::string& value, const std::string& type, size_t filePosition);
 
             void flushOne();
 
@@ -69,26 +66,21 @@ namespace karabo {
 
 
         class FileDataLogger : public karabo::devices::DataLogger {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(FileDataLogger, "FileDataLogger", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
-                    
+
             FileDataLogger(const karabo::util::Hash& input);
 
             virtual ~FileDataLogger();
 
-        private:
-
+           private:
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
 
             void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
-
         };
-    }
-}
+    } // namespace devices
+} // namespace karabo
 
-#endif	/* KARABO_DEVICES_FILEDATALOGGER_HH */
-
+#endif /* KARABO_DEVICES_FILEDATALOGGER_HH */

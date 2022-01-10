@@ -1,18 +1,19 @@
-/* 
+/*
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef KARABO_DEVICES_INFLUXDATALOGGER_HH
-#define	KARABO_DEVICES_INFLUXDATALOGGER_HH
+#define KARABO_DEVICES_INFLUXDATALOGGER_HH
 
 #include <fstream>
-#include "DataLogger.hh"
 #include <karabo/net/HttpResponse.hh>
 #include <karabo/net/InfluxDbClient.hh>
+
+#include "DataLogger.hh"
 #include "karabo/util/Version.hh"
 
 namespace karabo {
-    
+
     namespace devices {
 
         class InfluxDataLogger;
@@ -22,8 +23,6 @@ namespace karabo {
         typedef boost::function<void(const karabo::net::HttpResponse&)> InfluxResponseHandler;
 
         struct InfluxDeviceData : public karabo::devices::DeviceData {
-
-
             KARABO_CLASSINFO(InfluxDeviceData, "InfluxDataLoggerDeviceData", "2.6")
 
             InfluxDeviceData(const karabo::util::Hash& input);
@@ -32,7 +31,7 @@ namespace karabo {
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
-            void logValue(std::stringstream &query, const std::string& deviceId, const std::string& path,
+            void logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
                           const std::string& value, karabo::util::Types::ReferenceType type, bool isFinite);
 
             /**
@@ -45,8 +44,7 @@ namespace karabo {
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
-            void checkSchemaInDb(const karabo::util::Timestamp& stamp,
-                                 const std::string& schDigest,
+            void checkSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
                                  const karabo::net::HttpResponse& o);
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
@@ -67,9 +65,7 @@ namespace karabo {
 
 
         class InfluxDataLogger : public karabo::devices::DataLogger {
-
-        public:
-
+           public:
             friend class InfluxDeviceData;
 
             KARABO_CLASSINFO(InfluxDataLogger, "InfluxDataLogger", "karabo-" + karabo::util::Version::getVersion())
@@ -82,16 +78,14 @@ namespace karabo {
 
             void preDestruction() override;
 
-        protected:
-
+           protected:
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
 
             void initializeLoggerSpecific() override;
 
             void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
 
-        private:
-
+           private:
             void checkDb(bool connected);
 
             void onPingDb(const karabo::net::HttpResponse& o);
@@ -104,8 +98,7 @@ namespace karabo {
 
             void onCreateDatabase(const karabo::net::HttpResponse& o);
 
-        private:
-
+           private:
             karabo::net::InfluxDbClient::Pointer m_clientRead;
             karabo::net::InfluxDbClient::Pointer m_clientWrite;
             const std::string m_dbName;
@@ -113,10 +106,8 @@ namespace karabo {
             std::string m_urlQuery;
             int m_maxTimeAdvance;
             static const unsigned int k_httpResponseTimeoutMs;
-
         };
-    }
-}
+    } // namespace devices
+} // namespace karabo
 
-#endif	/* KARABO_DEVICES_INFLUXDATALOGGER_HH */
-
+#endif /* KARABO_DEVICES_INFLUXDATALOGGER_HH */

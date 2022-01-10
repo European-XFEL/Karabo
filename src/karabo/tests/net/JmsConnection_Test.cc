@@ -1,19 +1,20 @@
-/* 
+/*
  * File:   JmsConnection_Test.cc
  * Author: heisenb
- * 
+ *
  * Created on July 15, 2016, 5:05 PM
  */
 
 #include "JmsConnection_Test.hh"
+
+#include <boost/thread.hpp>
+
+#include "karabo/log/Logger.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
 #include "karabo/net/JmsProducer.hh"
-#include "karabo/log/Logger.hh"
-
-#include <boost/thread.hpp>
 
 
 using namespace karabo::util;
@@ -25,20 +26,17 @@ CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 JmsConnection_Test::JmsConnection_Test()
     // If neither environment variable defined nor tcp://exfl-broker.desy.de:7777 in reach,
     // change the latter e.g. to "tcp://localhost:7777"
-    : m_defaultBrokers(fromString<std::string, std::vector>(getenv("KARABO_BROKER")
-                                                            ? getenv("KARABO_BROKER")
-                                                            : "tcp://exfl-broker.desy.de:7777")),
-    m_baseTopic(Broker::brokerDomainFromEnv()), // parallel CIs or users must get different topics, so take from environment
-    m_messageCount(0) {
-}
+    : m_defaultBrokers(fromString<std::string, std::vector>(
+            getenv("KARABO_BROKER") ? getenv("KARABO_BROKER") : "tcp://exfl-broker.desy.de:7777")),
+      m_baseTopic(
+            Broker::brokerDomainFromEnv()), // parallel CIs or users must get different topics, so take from environment
+      m_messageCount(0) {}
 
 
-JmsConnection_Test::~JmsConnection_Test() {
-}
+JmsConnection_Test::~JmsConnection_Test() {}
 
 
 void JmsConnection_Test::testConnect() {
-
     { // constructor with empty vector<string> leads to exception in connect()
         m_connection = JmsConnection::Pointer(new JmsConnection(std::vector<std::string>()));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
@@ -82,11 +80,8 @@ void JmsConnection_Test::testConnect() {
 
 
 void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer,
-                                      karabo::net::JmsProducer::Pointer producer,
-                                      karabo::util::Hash::Pointer header,
+                                      karabo::net::JmsProducer::Pointer producer, karabo::util::Hash::Pointer header,
                                       karabo::util::Hash::Pointer body) {
-
-
     const std::string topic2(m_baseTopic + "_anotherTopic");
     if (m_messageCount == 0) {
         m_tick = boost::posix_time::microsec_clock::local_time();
@@ -105,7 +100,8 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
         // We switch topic now!
         consumer->setTopic(topic2);
         consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // Needed? Maybe switching topic does not read immediately...
+        boost::this_thread::sleep(
+              boost::posix_time::milliseconds(50)); // Needed? Maybe switching topic does not read immediately...
     }
 
     if (m_messageCount < 100) {
@@ -158,14 +154,14 @@ void JmsConnection_Test::testCommunication1() {
     t.join();
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
-    CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(m_failures) += ", messageCount " + karabo::util::toString(m_messageCount),
-                           m_failures.empty());
-    CPPUNIT_ASSERT_EQUAL(100u, static_cast<unsigned int> (m_messageCount));
+    CPPUNIT_ASSERT_MESSAGE(
+          karabo::util::toString(m_failures) += ", messageCount " + karabo::util::toString(m_messageCount),
+          m_failures.empty());
+    CPPUNIT_ASSERT_EQUAL(100u, static_cast<unsigned int>(m_messageCount));
 }
 
 
-void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
-                                      karabo::util::Hash::Pointer header,
+void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel, karabo::util::Hash::Pointer header,
                                       karabo::util::Hash::Pointer body) {
     ++m_messageCount;
 }
@@ -175,8 +171,8 @@ void JmsConnection_Test::testCommunication2() {
     // Here we basically test selectors for the consumer.
 
     m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
-    
-    m_connection->connect();   
+
+    m_connection->connect();
 
     m_messageCount = 0;
     Hash::Pointer header1(new Hash("key", "foo"));
@@ -213,7 +209,6 @@ void JmsConnection_Test::testCommunication2() {
 
 
 void JmsConnection_Test::testPermanentRead() {
-
     m_connection = boost::make_shared<JmsConnection>(m_defaultBrokers);
     m_connection->connect();
 
@@ -262,8 +257,8 @@ void JmsConnection_Test::testPermanentRead() {
     t.join();
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
-    CPPUNIT_ASSERT_EQUAL(numMessages, static_cast<unsigned int> (m_messageCount));
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (numMessages), counters.size());
+    CPPUNIT_ASSERT_EQUAL(numMessages, static_cast<unsigned int>(m_messageCount));
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numMessages), counters.size());
     for (unsigned i = 0; i < numMessages; ++i) {
         // Test correct ordering
         CPPUNIT_ASSERT_EQUAL(i, counters[i]);

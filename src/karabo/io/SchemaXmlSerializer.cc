@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   SchemaXmlSerializer.cc
  * Author: <burkhard.heisen@xsmail.com>
  *
@@ -6,10 +6,11 @@
  *
  */
 
-#include <karabo/util/Configurator.hh>
-#include "HashXmlSerializer.hh"
-
 #include "SchemaXmlSerializer.hh"
+
+#include <karabo/util/Configurator.hh>
+
+#include "HashXmlSerializer.hh"
 
 using namespace karabo::util;
 using namespace std;
@@ -21,7 +22,6 @@ namespace karabo {
     namespace io {
 
         void SchemaXmlSerializer::expectedParameters(karabo::util::Schema& expected) {
-
             HashXmlSerializer::expectedParameters(expected);
         }
 
@@ -47,5 +47,5 @@ namespace karabo {
             object.setParameterHash(std::move(hash));
             object.updateAliasMap();
         }
-    }
-}
+    } // namespace io
+} // namespace karabo

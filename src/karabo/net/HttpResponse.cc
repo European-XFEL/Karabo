@@ -7,10 +7,10 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include "HttpResponse.hh"
+
 #include <cassert>
 #include <cstring>
-
-#include "HttpResponse.hh"
 
 namespace karabo {
 
@@ -133,6 +133,6 @@ namespace karabo {
             return os;
         }
 
-    } // namespace karabo
+    } // namespace net
 
-} // namespace net
+} // namespace karabo

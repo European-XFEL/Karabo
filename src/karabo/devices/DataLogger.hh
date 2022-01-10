@@ -4,13 +4,13 @@
 
 
 #ifndef KARABO_DEVICES_DATALOGGER_HH
-#define	KARABO_DEVICES_DATALOGGER_HH
+#define KARABO_DEVICES_DATALOGGER_HH
 
 #include <fstream>
 
+#include "karabo/core/Device.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Version.hh"
-#include "karabo/core/Device.hh"
 
 
 /**
@@ -24,16 +24,15 @@ namespace karabo {
     namespace devices {
 
         struct DeviceData : public boost::enable_shared_from_this<DeviceData> {
-
             KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "karabo-" + karabo::util::Version::getVersion())
 
             enum class InitLevel {
 
 
-                NONE = 0, /// DeviceData is created
-                STARTED, /// connecting to device's signals has started
+                NONE = 0,  /// DeviceData is created
+                STARTED,   /// connecting to device's signals has started
                 CONNECTED, /// all connections are established (and first Schema received in between)
-                COMPLETE /// the initial configuration has arrived
+                COMPLETE   /// the initial configuration has arrived
             };
 
             DeviceData(const karabo::util::Hash& input);
@@ -52,7 +51,8 @@ namespace karabo {
              * @param schema - the new one
              * @param stamp - the timestamp to be assigned for that update
              */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) = 0;
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema,
+                                             const karabo::util::Timestamp& stamp) = 0;
 
             /**
              * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
@@ -65,8 +65,7 @@ namespace karabo {
              * @note karabo::devices::DataLogReader depends on the configuration items being properly sorted
              * in time to retrieve configuration changes.
              */
-            void getPathsForConfiguration(const karabo::util::Hash& configuration,
-                                          const karabo::util::Schema& schema,
+            void getPathsForConfiguration(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
                                           std::vector<std::string>& paths) const;
 
             virtual void stopLogging() {}
@@ -96,7 +95,7 @@ namespace karabo {
          * @class DataLogger
          * @brief A DataLogger device is assigned devices in the distributed
          * system and logs their slow control data.
-         * 
+         *
          * DataLoggers are managed by the karabo::devices::DataLoggerManager.
          *
          * Each is able to log any number of devices. This list can be specified at instantiation,
@@ -104,22 +103,21 @@ namespace karabo {
          * When the logger is ready to log data, its state changes from INIT to NORMAL.
          */
         class DataLogger : public karabo::core::Device<> {
-
-        protected:
+           protected:
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
             typedef std::unordered_map<std::string, DeviceData::Pointer> DeviceDataMap;
             boost::mutex m_perDeviceDataMutex;
             DeviceDataMap m_perDeviceData;
-            std::unordered_map<std::string, unsigned int> m_nonTreatedSlotChanged; // also needs m_perDeviceDataMutex protection
+            std::unordered_map<std::string, unsigned int>
+                  m_nonTreatedSlotChanged; // also needs m_perDeviceDataMutex protection
 
-        private:
+           private:
             boost::mutex m_changeVectorPropMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
             unsigned int m_flushInterval;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(DataLogger, "DataLogger", "2.6")
 
             static void expectedParameters(karabo::util::Schema& expected);
@@ -129,8 +127,7 @@ namespace karabo {
             virtual ~DataLogger();
 
             // Functions
-        protected:
-
+           protected:
             virtual DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) = 0;
 
             /**
@@ -145,7 +142,7 @@ namespace karabo {
             void startConnection();
 
             void initConnection(const DeviceData::Pointer& data,
-                                const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+                                const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             /**
              * Helper to remove an element from a vector<string> element.
@@ -174,8 +171,7 @@ namespace karabo {
              */
             void preDestruction() override;
 
-        private:
-
+           private:
             void initialize();
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
@@ -188,7 +184,8 @@ namespace karabo {
              *
              * (a) Regular shut-down of the device (wasValidUpToNow = true, reason = 'D')
              * (b) Silent death of the device (wasValidUpToNow = true, reason = 'D')
-             * (c) Start-up of this (DataLogger) device whilst the device was alive (wasValidUpToNow = false, reason = 'L')
+             * (c) Start-up of this (DataLogger) device whilst the device was alive (wasValidUpToNow = false, reason =
+             * 'L')
              *
              * This slot will be called by the DataLoggerManager
              *
@@ -198,29 +195,29 @@ namespace karabo {
             void slotAddDevicesToBeLogged(const std::vector<std::string>& deviceId);
 
             void handleFailure(const std::string& reason, const DeviceData::Pointer& data,
-                               const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+                               const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void handleSchemaConnected(const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
                                       const DeviceData::Pointer& data,
-                                      const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+                                      const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
                                        const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
             void handleConfigConnected(const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             void checkReady(std::atomic<unsigned int>& counter);
 
             bool stopLogging(const std::string& deviceId, bool retry);
 
-            void disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
-                                   bool retry, const boost::shared_ptr<std::atomic<int>>&counter);
+            void disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal, bool retry,
+                                   const boost::shared_ptr<std::atomic<int>>& counter);
 
             void flushActor(const boost::system::error_code& e);
 
@@ -233,7 +230,7 @@ namespace karabo {
 
             // The flush slot
             void flush();
-            
+
             /**
              * "Flush" data accumulated in the internal cache to the external storage (file, database,...)
              */
@@ -245,10 +242,9 @@ namespace karabo {
              */
             bool allowLock() const {
                 return false;
-            }            
-
+            }
         };
-    }
-}
+    } // namespace devices
+} // namespace karabo
 
 #endif /* KARABO_DEVICES_DATALOGGER_HH */

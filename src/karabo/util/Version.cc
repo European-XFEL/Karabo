@@ -6,12 +6,14 @@
  * Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <iosfwd>
-#include <fstream>
-#include <sstream>
-#include <boost/regex.hpp>
-#include <boost/filesystem/operations.hpp>
 #include "Version.hh"
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/regex.hpp>
+#include <fstream>
+#include <iosfwd>
+#include <sstream>
+
 #include "Exception.hh"
 #include "StringTools.hh"
 #include "repositoryVersion"
@@ -21,12 +23,13 @@ namespace karabo {
     namespace util {
 
 
-        Version::Version() : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
+        Version::Version()
+            : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
             processString(KARABO_VERSION); // from repositoryVersion
         }
 
-        Version::Version(const std::string &version) : m_major(-1), m_minor(-1), m_patch(-1),
-            m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
+        Version::Version(const std::string &version)
+            : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
             processString(version);
         }
 
@@ -48,23 +51,23 @@ namespace karabo {
                 const std::string &postVersion = versionParts.str(5);
                 const std::string &devSeparator = versionParts.str(6);
                 const std::string &devVersion = versionParts.str(7);
-                if (separator ==  "a" && postVersion.size() > 0){
+                if (separator == "a" && postVersion.size() > 0) {
                     m_postType = PostfixType::ALPHA;
                     m_post = fromString<unsigned int>(postVersion);
-                } else if (separator ==  "b" && postVersion.size() > 0) {
+                } else if (separator == "b" && postVersion.size() > 0) {
                     m_postType = PostfixType::BETA;
                     m_post = fromString<unsigned int>(postVersion);
-                } else if (separator ==  "rc" && postVersion.size() > 0) {
+                } else if (separator == "rc" && postVersion.size() > 0) {
                     m_postType = PostfixType::RC;
                     m_post = fromString<unsigned int>(postVersion);
-                } else if (separator ==  ".post" && postVersion.size() > 0) {
+                } else if (separator == ".post" && postVersion.size() > 0) {
                     m_postType = PostfixType::POST;
                     m_post = fromString<unsigned int>(postVersion);
-                } else if (separator ==  "" || postVersion.size()==0) {
+                } else if (separator == "" || postVersion.size() == 0) {
                     m_postType = PostfixType::NONE;
                     m_post = 0;
                 }
-                if (devSeparator ==  ".dev" && devVersion.size() > 0) {
+                if (devSeparator == ".dev" && devVersion.size() > 0) {
                     // development release
                     m_dev = fromString<unsigned int>(devVersion);
                 }
@@ -77,7 +80,7 @@ namespace karabo {
 
 
         std::string Version::getPathToKaraboInstallation() {
-            const char* envKarabo = getenv("KARABO");
+            const char *envKarabo = getenv("KARABO");
             if (envKarabo) {
                 // The KARABO env var is defined; we're done.
                 return std::string(envKarabo);
@@ -98,11 +101,12 @@ namespace karabo {
             }
 
             // All the attempts to obtain a path for the Karabo installation failed.
-            throw KARABO_INIT_EXCEPTION("$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
+            throw KARABO_INIT_EXCEPTION(
+                  "$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
         }
 
 
-        const Version& Version::getKaraboVersion() {
+        const Version &Version::getKaraboVersion() {
             static const Version v;
             return v;
         }
@@ -112,7 +116,7 @@ namespace karabo {
             return getKaraboVersion().m_versionString;
         }
 
-        const std::string& Version::getString() const {
+        const std::string &Version::getString() const {
             return m_versionString;
         }
 
@@ -133,38 +137,38 @@ namespace karabo {
         }
 
         bool Version::isPreRelease() const {
-            return (m_postType == PostfixType::ALPHA || m_postType == PostfixType::BETA || m_postType == PostfixType::RC);
+            return (m_postType == PostfixType::ALPHA || m_postType == PostfixType::BETA ||
+                    m_postType == PostfixType::RC);
         }
 
         bool Version::isPostRelease() const {
             return m_postType == PostfixType::POST;
         }
 
-        bool operator== (const karabo::util::Version &v1, const karabo::util::Version &v2){
-            if ( v1.m_major == v2.m_major && v1.m_minor == v2.m_minor && \
-                v1.m_patch == v2.m_patch && v1.m_postType == v2.m_postType && \
-                v1.m_post == v2.m_post && v1.m_dev == v2.m_dev) {
+        bool operator==(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+            if (v1.m_major == v2.m_major && v1.m_minor == v2.m_minor && v1.m_patch == v2.m_patch &&
+                v1.m_postType == v2.m_postType && v1.m_post == v2.m_post && v1.m_dev == v2.m_dev) {
                 return true;
             }
             return false;
         }
 
-        bool operator> (const karabo::util::Version &v1, const karabo::util::Version &v2){
-            if ( v1.m_major < v2.m_major ) {
+        bool operator>(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+            if (v1.m_major < v2.m_major) {
                 return false;
-            } else if ( v1.m_major > v2.m_major ) {
+            } else if (v1.m_major > v2.m_major) {
                 return true;
-            } else if (v1.m_minor < v2.m_minor ) {
+            } else if (v1.m_minor < v2.m_minor) {
                 return false;
-            } else if (v1.m_minor > v2.m_minor ) {
+            } else if (v1.m_minor > v2.m_minor) {
                 return true;
             } else if (v1.m_patch < v2.m_patch) {
                 return false;
             } else if (v1.m_patch > v2.m_patch) {
                 return true;
-            } else if (v1.m_postType < v2.m_postType ) {
+            } else if (v1.m_postType < v2.m_postType) {
                 return false;
-            } else if (v1.m_postType > v2.m_postType ) {
+            } else if (v1.m_postType > v2.m_postType) {
                 return true;
             } else if (v1.m_post < v2.m_post) {
                 return false;
@@ -179,21 +183,21 @@ namespace karabo {
             return false;
         }
 
-        bool operator!= (const karabo::util::Version &v1, const karabo::util::Version &v2){
+        bool operator!=(const karabo::util::Version &v1, const karabo::util::Version &v2) {
             return !(v1 == v2);
         }
 
-        bool operator>= (const karabo::util::Version &v1, const karabo::util::Version &v2){
+        bool operator>=(const karabo::util::Version &v1, const karabo::util::Version &v2) {
             return (v1 > v2) || (v1 == v2);
         }
 
-        bool operator< (const karabo::util::Version &v1, const karabo::util::Version &v2){
+        bool operator<(const karabo::util::Version &v1, const karabo::util::Version &v2) {
             return (v2 > v1);
         }
 
-        bool operator<= (const karabo::util::Version &v1, const karabo::util::Version &v2){
+        bool operator<=(const karabo::util::Version &v1, const karabo::util::Version &v2) {
             return (v2 > v1) || (v1 == v2);
         }
 
-    }
-}
+    } // namespace util
+} // namespace karabo

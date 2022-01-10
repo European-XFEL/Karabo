@@ -11,10 +11,10 @@
 
 
 #ifndef KARABO_UTIL_SIMPLE_ELEMENT_HH
-#define	KARABO_UTIL_SIMPLE_ELEMENT_HH
+#define KARABO_UTIL_SIMPLE_ELEMENT_HH
 
-#include "LeafElement.hh"
 #include "AlarmConditions.hh"
+#include "LeafElement.hh"
 
 namespace karabo {
     namespace util {
@@ -23,13 +23,10 @@ namespace karabo {
          * @class SimpleElement
          * @brief The SimpleElement represents a leaf and can be of any (supported) type
          */
-        template<typename ValueType>
-        class SimpleElement : public LeafElement<SimpleElement<ValueType>, ValueType > {
-
-        public:
-
-            SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType >(expected) {
-            }
+        template <typename ValueType>
+        class SimpleElement : public LeafElement<SimpleElement<ValueType>, ValueType> {
+           public:
+            SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType>(expected) {}
 
             /**
              * The <b>options</b> method specifies values allowed for the parameter.
@@ -42,8 +39,8 @@ namespace karabo {
             }
 
             /**
-             * The <b>options</b> method specifies values allowed for this parameter. Each value is an element of the vector.
-             * This function can be used when space cannot be used as a separator.
+             * The <b>options</b> method specifies values allowed for this parameter. Each value is an element of the
+             * vector. This function can be used when space cannot be used as a separator.
              * @param opts vector of strings. The values are casted to the proper type.
              * @return reference to the SimpleElement
              */
@@ -56,7 +53,8 @@ namespace karabo {
             }
 
             /**
-             * The <b>minInc</b> method sets the lowest value accepted for this parameter. Defines the left-closed interval.
+             * The <b>minInc</b> method sets the lowest value accepted for this parameter. Defines the left-closed
+             * interval.
              * @param val minimum value
              * @return reference to the SimpleElement
              */
@@ -155,48 +153,43 @@ namespace karabo {
             }
 
 
-        protected:
-
+           protected:
             void beforeAddition() {
-
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
-                this->m_node->template setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<ValueType > ()));
+                this->m_node->template setAttribute(KARABO_SCHEMA_VALUE_TYPE,
+                                                    Types::to<ToLiteral>(Types::from<ValueType>()));
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-
-                    //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
+                    // for init, reconfigurable elements - set default value of requiredAccessLevel to USER
                     if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||
                         this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
                         this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) {
-
                         this->userAccess();
 
-                    } else { //else set default value of requiredAccessLevel to OBSERVER
+                    } else { // else set default value of requiredAccessLevel to OBSERVER
                         this->observerAccess();
                     }
-
                 }
 
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
                 checkWarnAndAlarm();
                 checkDefaultValue();
-
             }
 
-        private:
-
+           private:
             void checkMinIncMaxInc() {
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_INC) && this->m_node->hasAttribute(KARABO_SCHEMA_MAX_INC)) {
-                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MIN_INC);
-                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MAX_INC);
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_INC) &&
+                    this->m_node->hasAttribute(KARABO_SCHEMA_MAX_INC)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_INC);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_INC);
                     if (min > max) {
                         std::ostringstream msg;
-                        msg << "Minimum value (" << min << ") is greater than maximum (" << max
-                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                        msg << "Minimum value (" << min << ") is greater than maximum (" << max << ") on parameter \""
+                            << this->m_node->getKey() << "\"";
                         throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
@@ -204,19 +197,20 @@ namespace karabo {
 
             void checkMinExcMaxExc() {
                 // this is a default implementation valid for all integral types
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_EXC) && this->m_node->hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
-                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MIN_EXC);
-                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MAX_EXC);
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_EXC) &&
+                    this->m_node->hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_EXC);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_EXC);
                     if (min >= max) {
                         std::ostringstream msg;
                         msg << "The open range: (" << min << "," << max << ") is empty on parameter \""
-                                << this->m_node->getKey() << "\"";
+                            << this->m_node->getKey() << "\"";
                         throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
             }
 
-            //only makes sense for simple element, as we cannot know how to evaluated for vectors etc
+            // only makes sense for simple element, as we cannot know how to evaluated for vectors etc
 
             void checkWarnAndAlarm() {
                 using namespace karabo::util;
@@ -226,19 +220,19 @@ namespace karabo {
                 this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::WARN_LOW);
                 this->checkAttributeOrder(AlarmCondition::ALARM_LOW, AlarmCondition::WARN_HIGH);
                 this->checkAttributeOrder(AlarmCondition::WARN_HIGH, AlarmCondition::ALARM_HIGH);
-
             }
 
-            void checkAttributeOrder(const karabo::util::AlarmCondition& condLow, const karabo::util::AlarmCondition& condHigh) {
+            void checkAttributeOrder(const karabo::util::AlarmCondition& condLow,
+                                     const karabo::util::AlarmCondition& condHigh) {
                 const std::string& attributeLow = condLow.asString();
                 const std::string& attributeHigh = condHigh.asString();
                 if (this->m_node->hasAttribute(attributeLow) && this->m_node->hasAttribute(attributeHigh)) {
-                    const ValueType& min = this->m_node->template getAttribute<ValueType > (attributeLow);
-                    const ValueType& max = this->m_node->template getAttribute<ValueType > (attributeHigh);
+                    const ValueType& min = this->m_node->template getAttribute<ValueType>(attributeLow);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType>(attributeHigh);
                     if (min > max) {
                         std::ostringstream msg;
                         msg << attributeLow << " value (" << min << ") is greater than " << attributeHigh << "(" << max
-                                << ") on parameter \"" << this->m_node->getKey() << "\"";
+                            << ") on parameter \"" << this->m_node->getKey() << "\"";
                         throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
@@ -250,74 +244,64 @@ namespace karabo {
             void checkDefaultValue() {
                 if (this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
                     const ValueType& defaultVal =
-                        this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_DEFAULT_VALUE);
+                          this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_DEFAULT_VALUE);
                     if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_EXC)) {
                         const ValueType& minExcVal =
-                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_EXC);
+                              this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_EXC);
                         if (defaultVal <= minExcVal) {
                             std::ostringstream oss;
-                            oss << "Default value, '" << defaultVal
-                                << "', is smaller than minExc limit, '"
-                                << minExcVal << "' for parameter '"
-                                << this->m_node->getKey() << "'.";
+                            oss << "Default value, '" << defaultVal << "', is smaller than minExc limit, '" << minExcVal
+                                << "' for parameter '" << this->m_node->getKey() << "'.";
                             throw KARABO_PARAMETER_EXCEPTION(oss.str());
                         }
                     }
                     if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_INC)) {
                         const ValueType& minIncVal =
-                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_INC);
+                              this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_INC);
                         if (defaultVal < minIncVal) {
                             std::ostringstream oss;
-                            oss << "Default value, '" << defaultVal
-                                << "', is smaller than minInc limit, '"
-                                << minIncVal << "' for parameter '"
-                                << this->m_node->getKey() << "'.";
+                            oss << "Default value, '" << defaultVal << "', is smaller than minInc limit, '" << minIncVal
+                                << "' for parameter '" << this->m_node->getKey() << "'.";
                             throw KARABO_PARAMETER_EXCEPTION(oss.str());
                         }
                     }
                     if (this->m_node->hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
                         const ValueType& maxExcVal =
-                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_EXC);
+                              this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_EXC);
                         if (defaultVal >= maxExcVal) {
                             std::ostringstream oss;
-                            oss << "Default value, '" << defaultVal
-                                << "', is greater than maxExc limit, '"
-                                << maxExcVal << "' for parameter '"
-                                << this->m_node->getKey() << "'.";
+                            oss << "Default value, '" << defaultVal << "', is greater than maxExc limit, '" << maxExcVal
+                                << "' for parameter '" << this->m_node->getKey() << "'.";
                             throw KARABO_PARAMETER_EXCEPTION(oss.str());
                         }
                     }
                     if (this->m_node->hasAttribute(KARABO_SCHEMA_MAX_INC)) {
                         const ValueType& maxIncVal =
-                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_INC);
+                              this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_INC);
                         if (defaultVal > maxIncVal) {
                             std::ostringstream oss;
-                            oss << "Default value, '" << defaultVal
-                                << "', is greater than maxInc limit, '"
-                                << maxIncVal << "' for parameter '"
-                                << this->m_node->getKey() << "'.";
+                            oss << "Default value, '" << defaultVal << "', is greater than maxInc limit, '" << maxIncVal
+                                << "' for parameter '" << this->m_node->getKey() << "'.";
                             throw KARABO_PARAMETER_EXCEPTION(oss.str());
                         }
                     }
                     if (this->m_node->hasAttribute(KARABO_SCHEMA_OPTIONS)) {
                         const std::vector<ValueType>& optionsVals =
-                            this->m_node->template getAttribute<std::vector<ValueType>>(KARABO_SCHEMA_OPTIONS);
+                              this->m_node->template getAttribute<std::vector<ValueType>>(KARABO_SCHEMA_OPTIONS);
                         if (std::find(optionsVals.begin(), optionsVals.end(), defaultVal) == optionsVals.end()) {
                             std::ostringstream oss;
                             oss << "Default value, '" << defaultVal
-                                << "', is not among the valid options for parameter '"
-                                << this->m_node->getKey() << "'.";
+                                << "', is not among the valid options for parameter '" << this->m_node->getKey()
+                                << "'.";
                             throw KARABO_PARAMETER_EXCEPTION(oss.str());
                         }
                     }
                 }
             }
-
         };
 
 
-
-        typedef SimpleElement<bool > BOOL_ELEMENT;
+        typedef SimpleElement<bool> BOOL_ELEMENT;
         typedef SimpleElement<signed char> INT8_ELEMENT;
         typedef SimpleElement<char> CHAR_ELEMENT;
         typedef SimpleElement<signed short> INT16_ELEMENT;
@@ -331,8 +315,7 @@ namespace karabo {
         typedef SimpleElement<double> DOUBLE_ELEMENT;
         typedef SimpleElement<std::string> STRING_ELEMENT;
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif
-

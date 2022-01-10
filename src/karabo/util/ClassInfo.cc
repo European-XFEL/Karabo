@@ -12,7 +12,7 @@
  *   Note: Still template parameters are not part of the class name
  *         Also for template specializations
  *   Consider further improvements for template parameters - to be discussed what is needed
- *   i.e.  
+ *   i.e.
  *    template< class T> class A
  *    template<> class A<int>
  *    template<> class A<std::string>
@@ -20,16 +20,18 @@
  *    template<class U > class B<U, int>
  *    template<> class B<float, std::string>
  *    etc.
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 
 #include "ClassInfo.hh"
-#include <string>
-#include <iostream>
-#include <boost/regex.hpp>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
+#include <iostream>
+#include <string>
+
 #include "Exception.hh"
 
 using namespace std;
@@ -39,12 +41,10 @@ namespace karabo {
     namespace util {
 
 
-        ClassInfo::ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion) :
-            m_classId(classId), m_configVersion(classVersion) {
-
+        ClassInfo::ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion)
+            : m_classId(classId), m_configVersion(classVersion) {
             initClassNameAndSpace(signature);
             initLogCategory();
-
         }
 
 
@@ -81,7 +81,7 @@ namespace karabo {
                 // no templates in the signature
 #if defined(_WIN32)
                 boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
-#else            
+#else
                 boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
 #endif
                 boost::smatch what;
@@ -100,12 +100,11 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION("Introspection error");
                 }
             } else {
-
                 string tmp = signature.substr(0, found);
 
 #if defined(_WIN32)
                 boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)");
-#else            
+#else
                 boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)");
 #endif
 
@@ -126,7 +125,6 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION("Introspection error");
                 }
             }
-
         }
 
 
@@ -140,5 +138,5 @@ namespace karabo {
             }
             m_logCategory += m_classId;
         }
-    }
-}
+    } // namespace util
+} // namespace karabo

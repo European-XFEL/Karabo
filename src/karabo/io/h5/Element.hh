@@ -7,29 +7,23 @@
  */
 
 
-
-
-
 #ifndef KARABO_IO_H5_ELEMENT_HH
-#define	KARABO_IO_H5_ELEMENT_HH
+#define KARABO_IO_H5_ELEMENT_HH
 
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
-
-#include <karabo/util/Factory.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/ToLiteral.hh>
-
-#include <karabo/util/Types.hh>
-#include <karabo/util/FromTypeInfo.hh>
 
 #include <hdf5/hdf5.h>
 
 #include <boost/enable_shared_from_this.hpp>
+#include <iostream>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/Factory.hh>
+#include <karabo/util/FromTypeInfo.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/ToLiteral.hh>
+#include <karabo/util/Types.hh>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "Attribute.hh"
 
@@ -43,8 +37,7 @@ namespace karabo {
              * @brief This class maps Karabo Hash values to HDF5 elements
              */
             class Element {
-
-            public:
+               public:
                 KARABO_CLASSINFO(Element, "Element", "1.0");
                 KARABO_CONFIGURATION_BASE_CLASS
 
@@ -62,8 +55,7 @@ namespace karabo {
                  */
                 Element(const karabo::util::Hash& input);
 
-                virtual ~Element() {
-                }
+                virtual ~Element() {}
 
                 /**
                  * Get element name. Element can represent hdf5 group or dataset
@@ -146,8 +138,7 @@ namespace karabo {
                  * Set compression level to use for HDf5 dataset representing this element
                  * @param level
                  */
-                virtual void setCompressionLevel(int level) {
-                }
+                virtual void setCompressionLevel(int level) {}
 
                 /**
                  * Return the configuration of this element as defined by evaluation of its input configuration
@@ -188,15 +179,12 @@ namespace karabo {
                 void openAttributes();
 
 
-            protected:
-
+               protected:
                 virtual void openH5(hid_t group) = 0;
                 virtual void closeH5() = 0;
 
 
-            public:
-
-
+               public:
                 virtual void close() = 0;
 
                 /**
@@ -211,7 +199,8 @@ namespace karabo {
                  * Write many records of data to a dataset (buffered writing).
                  * The value of the Hash must be a vector(?) of values of type as defined at the dataset creation time.
                  * The length of the vector must be at least len.
-                 * The key is the name of the dataset, value must correspond to the type as defined at the dataset creation time
+                 * The key is the name of the dataset, value must correspond to the type as defined at the dataset
+                 * creation time
                  *
                  *
                  * @param data Hash with data to be written.
@@ -219,7 +208,6 @@ namespace karabo {
                  * @param len Number of values to be written
                  */
                 virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
-
 
 
                 virtual void writeAttributes(const karabo::util::Hash& data);
@@ -230,8 +218,9 @@ namespace karabo {
 
                 /**
                  * Allocate memory for single record
-                 * If the entry in the Hash does not exist, this function must allocate memory to hold the complete dataset
-                 * If the entry exist assume the memory is allocated. This can be used when client delivers own buffers.
+                 * If the entry in the Hash does not exist, this function must allocate memory to hold the complete
+                 * dataset If the entry exist assume the memory is allocated. This can be used when client delivers own
+                 * buffers.
                  * @param data Hash where the data will be stored when using read function
                  */
                 virtual void bind(karabo::util::Hash& data) = 0;
@@ -250,9 +239,7 @@ namespace karabo {
                 virtual void read(hsize_t recordId, hsize_t len) = 0;
 
 
-
-            protected:
-
+               protected:
                 std::string m_h5name; // name of this element in hdf5 file
 
                 std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
@@ -273,10 +260,9 @@ namespace karabo {
             };
 
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
 
 #endif
-

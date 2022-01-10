@@ -5,7 +5,7 @@
  */
 
 #ifndef SIMULATEDTIMESERVERDEVICE_HH
-#define	SIMULATEDTIMESERVERDEVICE_HH
+#define SIMULATEDTIMESERVERDEVICE_HH
 
 #include <karabo/karabo.hpp>
 
@@ -15,9 +15,7 @@
 namespace karabo {
 
     class SimulatedTimeServerDevice : public karabo::core::Device<> {
-
-    public:
-
+       public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(SimulatedTimeServerDevice, "SimulatedTimeServerDevice", "2.0")
 
@@ -41,11 +39,7 @@ namespace karabo {
         virtual ~SimulatedTimeServerDevice();
 
 
-
-
-
-    private:
-        
+       private:
         void initialize();
         void tickTock(const boost::system::error_code& e);
         void resetId();
@@ -55,7 +49,6 @@ namespace karabo {
         boost::asio::deadline_timer m_timeTickerTimer;
         unsigned int m_tickCountdown;
     };
-}
+} // namespace karabo
 
-#endif	/* SIMULATEDTIMESERVERDEVICE_HH */
-
+#endif /* SIMULATEDTIMESERVERDEVICE_HH */

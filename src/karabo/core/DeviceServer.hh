@@ -9,25 +9,22 @@
  */
 
 #ifndef KARABO_CORE_DEVICESERVER_HH
-#define	KARABO_CORE_DEVICESERVER_HH
-
-#include "FsmMacros.hh"
-
-#include "Device.hh"
-
-#include "karabo/log/Logger.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/PluginLoader.hh"
-#include "karabo/util/Version.hh"
-#include "karabo/util/State.hh"
-#include "karabo/net/Strand.hh"
-#include "karabo/xms/SignalSlotable.hh"
+#define KARABO_CORE_DEVICESERVER_HH
 
 #include <boost/asio/deadline_timer.hpp>
-
-#include <vector>
-#include <utility>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "Device.hh"
+#include "FsmMacros.hh"
+#include "karabo/log/Logger.hh"
+#include "karabo/net/Strand.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/PluginLoader.hh"
+#include "karabo/util/State.hh"
+#include "karabo/util/Version.hh"
+#include "karabo/xms/SignalSlotable.hh"
 
 /**
  * The main European XFEL namespace
@@ -42,16 +39,15 @@ namespace karabo {
         /**
          * @class DeviceServer
          * @brief The DeviceServer class hosts device instances
-         * 
+         *
          * The DeviceServer class hosts device instances. It monitors the system
          * for new class plugins appearing and notifies the distributed system
          * of these and their static information.
-         * 
-         * The device server uses an ok-error FSM, which knows the ERROR and 
+         *
+         * The device server uses an ok-error FSM, which knows the ERROR and
          * NORMAL karabo::util::State states.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
-            
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
 
@@ -64,7 +60,8 @@ namespace karabo {
             karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
 
-            typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> > DeviceInstanceMap;
+            typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> >
+                  DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
             boost::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
@@ -76,17 +73,16 @@ namespace karabo {
             std::string m_connectionClass;
             std::string m_timeServerId;
             unsigned long long m_timeId;
-            unsigned long long m_timeSec; // seconds
-            unsigned long long m_timeFrac; // attoseconds
+            unsigned long long m_timeSec;    // seconds
+            unsigned long long m_timeFrac;   // attoseconds
             unsigned long long m_timePeriod; // microseconds
-            bool m_noTimeTickYet; // whether slotTimeTick received a first call
+            bool m_noTimeTickYet;            // whether slotTimeTick received a first call
             mutable boost::mutex m_timeChangeMutex;
             unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
             boost::asio::deadline_timer m_timeTickerTimer;
             std::string m_hostname;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(DeviceServer, "DeviceServer", karabo::util::Version::getVersion())
             KARABO_CONFIGURATION_BASE_CLASS
 
@@ -98,11 +94,12 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema&);
 
             /**
-             * The constructor expects a configuration Hash. The following 
+             * The constructor expects a configuration Hash. The following
              * configuration options are supported:
-             * 
+             *
              * - serverId: a string giving the server's id
-             * - autostart: a vector of Hashes containing configurations for device that are to be automatically started by the server
+             * - autostart: a vector of Hashes containing configurations for device that are to be automatically started
+             * by the server
              * - scanPlugins: a boolean indicating if this server should scan for additional plugins
              * - visibility: an integer indicating device server visibility in the distributed system
              * - debugMode: a boolean indicating if the server should run in debugMode
@@ -110,7 +107,7 @@ namespace karabo {
              * - pluginDirectory: a path to the plugin directory for this device server
              * - heartbeatInterval: interval in seconds at which this server sends heartbeats to the distributed system
              * - nThreads: number of threads to use in this device server
-             * @param 
+             * @param
              */
             DeviceServer(const karabo::util::Hash&);
 
@@ -120,7 +117,7 @@ namespace karabo {
 
             /**
              * Check if the device server is running
-             * @return 
+             * @return
              */
             bool isRunning() const;
 
@@ -166,25 +163,21 @@ namespace karabo {
             //  Source-State    Event        Target-State    Action         Guard
 
             KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
-            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
-            Row< ERROR, ResetEvent, NORMAL, none, none >,
-            Row< ERROR, ErrorFoundEvent, ERROR, ErrorFoundAction, none >
-            KARABO_FSM_TABLE_END
+            Row<NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none>, Row<ERROR, ResetEvent, NORMAL, none, none>,
+                  Row<ERROR, ErrorFoundEvent, ERROR, ErrorFoundAction, none> KARABO_FSM_TABLE_END
 
 
-            //                       Name          Transition-Table             Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
+                  //                       Name          Transition-Table             Initial-State Context
+                  KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
 
 
-            void startFsm() {
-
+                        void startFsm() {
                 KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
 
-        private: // Functions
-
+           private: // Functions
             void newPluginAvailable();
 
             void slotStartDevice(const karabo::util::Hash& configuration);
@@ -219,12 +212,11 @@ namespace karabo {
 
             /// Helper to create input passed to instantiate.
             /// Returns a tuple of the deviceId, the classId and the configuration.
-            boost::tuple<std::string, std::string, util::Hash>
-            prepareInstantiate(const util::Hash& configuration);
+            boost::tuple<std::string, std::string, util::Hash> prepareInstantiate(const util::Hash& configuration);
 
             /// Helper for instantiateDevices - e.g. provides the (async) reply for slotStartDevice.
-            void instantiate(const std::string& deviceId, const std::string& classId,
-                             const util::Hash& config, const SignalSlotable::AsyncReply& asyncReply);
+            void instantiate(const std::string& deviceId, const std::string& classId, const util::Hash& config,
+                             const SignalSlotable::AsyncReply& asyncReply);
 
             void slotLoggerPriority(const std::string& prio);
 
@@ -236,8 +228,9 @@ namespace karabo {
              * @param frac: current fractional seconds
              * @param period: interval between subsequent ids in microseconds
              */
-            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
-            
+            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
+                              unsigned long long period);
+
             /**
              * Helper function for internal time ticker deadline timer to provide internal clock
              * that calls 'onTimeUpdate' for every id even if slotTimeTick is called less often.
@@ -252,8 +245,8 @@ namespace karabo {
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
         };
 
-    }
-}
+    } // namespace core
+} // namespace karabo
 
 
 #endif

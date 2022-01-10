@@ -1,18 +1,18 @@
-/* 
+/*
  * File:   ImageData.cc
- * Author: 
- * 
+ * Author:
+ *
  * Created on April 20, 2015, 19:35 PM
  */
 
+#include "ImageData.hh"
+
+#include <climits>
 #include <karabo/util/VectorElement.hh>
 
-#include "ImageData.hh"
 #include "karabo/util/ToSize.hh"
 #include "karabo/util/Types.hh"
 #include "karabo/util/Units.hh"
-
-#include <climits>
 
 namespace karabo {
     namespace xms {
@@ -46,94 +46,98 @@ namespace karabo {
 
 
         void ImageData::expectedParameters(karabo::util::Schema& s) {
+            NDARRAY_ELEMENT(s)
+                  .key("pixels")
+                  .displayedName("Pixel Data")
+                  .description("The N-dimensional array containing the pixels")
+                  .readOnly()
+                  .commit();
 
-            NDARRAY_ELEMENT(s).key("pixels")
-                    .displayedName("Pixel Data")
-                    .description("The N-dimensional array containing the pixels")
-                    .readOnly()
-                    .commit();
-
-            VECTOR_UINT64_ELEMENT(s).key("dims")
-                    .displayedName("Dimensions")
-                    .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
-                    .readOnly()
-                    .commit();
-            VECTOR_INT32_ELEMENT(s).key("dimTypes")
-                    .displayedName("Dimension Types")
-                    .description("Any dimension should have an enumerated type")
-                    .readOnly()
-                    .commit();
-            STRING_ELEMENT(s).key("dimScales")
-                    .displayedName("Dimension Scales")
-                    .description("")
-                    .readOnly()
-                    .commit();
-            INT32_ELEMENT(s).key("encoding")
-                    .displayedName("Encoding")
-                    .description("Describes the color space of pixel encoding of"
-                    " the data (e.g. GRAY, RGB, JPG, PNG etc.).")
-                    .readOnly()
-                    .commit();
-            INT32_ELEMENT(s).key("bitsPerPixel")
-                    .displayedName("Bits per pixel")
-                    .description("The number of bits needed for each pixel")
-                    .readOnly()
-                    .commit();
-            VECTOR_UINT64_ELEMENT(s).key("roiOffsets")
-                    .displayedName("ROI Offsets")
-                    .description("The offset of the Region-of-Interest (ROI); "
-                                 "it will contain zeros if the image has no ROI defined.")
-                    .readOnly()
-                    .commit();
-            VECTOR_UINT64_ELEMENT(s).key("binning")
-                    .displayedName("Binning")
-                    .description("The number of binned adjacent pixels. They "
-                                 "are reported out of the camera as a single pixel.")
-                    .readOnly()
-                    .commit();
-            INT32_ELEMENT(s).key("rotation")
-                    .displayedName("Rotation")
-                    .description("The image counterclockwise rotation.")
-                    .options("0,90,180,270")
-                    .unit(Unit::DEGREE)
-                    .readOnly()
-                    .commit();
-            BOOL_ELEMENT(s).key("flipX")
-                    .displayedName("Flip X")
-                    .description("Image horizontal flip.")
-                    .readOnly()
-                    .commit();
-            BOOL_ELEMENT(s).key("flipY")
-                    .displayedName("Flip Y")
-                    .description("Image vertical flip.")
-                    .readOnly()
-                    .commit();
+            VECTOR_UINT64_ELEMENT(s)
+                  .key("dims")
+                  .displayedName("Dimensions")
+                  .description(
+                        "The length of the array reflects total dimensionality and each element the extension in this "
+                        "dimension")
+                  .readOnly()
+                  .commit();
+            VECTOR_INT32_ELEMENT(s)
+                  .key("dimTypes")
+                  .displayedName("Dimension Types")
+                  .description("Any dimension should have an enumerated type")
+                  .readOnly()
+                  .commit();
+            STRING_ELEMENT(s).key("dimScales").displayedName("Dimension Scales").description("").readOnly().commit();
+            INT32_ELEMENT(s)
+                  .key("encoding")
+                  .displayedName("Encoding")
+                  .description(
+                        "Describes the color space of pixel encoding of"
+                        " the data (e.g. GRAY, RGB, JPG, PNG etc.).")
+                  .readOnly()
+                  .commit();
+            INT32_ELEMENT(s)
+                  .key("bitsPerPixel")
+                  .displayedName("Bits per pixel")
+                  .description("The number of bits needed for each pixel")
+                  .readOnly()
+                  .commit();
+            VECTOR_UINT64_ELEMENT(s)
+                  .key("roiOffsets")
+                  .displayedName("ROI Offsets")
+                  .description(
+                        "The offset of the Region-of-Interest (ROI); "
+                        "it will contain zeros if the image has no ROI defined.")
+                  .readOnly()
+                  .commit();
+            VECTOR_UINT64_ELEMENT(s)
+                  .key("binning")
+                  .displayedName("Binning")
+                  .description(
+                        "The number of binned adjacent pixels. They "
+                        "are reported out of the camera as a single pixel.")
+                  .readOnly()
+                  .commit();
+            INT32_ELEMENT(s)
+                  .key("rotation")
+                  .displayedName("Rotation")
+                  .description("The image counterclockwise rotation.")
+                  .options("0,90,180,270")
+                  .unit(Unit::DEGREE)
+                  .readOnly()
+                  .commit();
+            BOOL_ELEMENT(s)
+                  .key("flipX")
+                  .displayedName("Flip X")
+                  .description("Image horizontal flip.")
+                  .readOnly()
+                  .commit();
+            BOOL_ELEMENT(s)
+                  .key("flipY")
+                  .displayedName("Flip Y")
+                  .description("Image vertical flip.")
+                  .readOnly()
+                  .commit();
             // TODO Convert into a serializable object later
             // Will then read: GEOMETRY_ELEMENT(s).key("geometry") [...]
-            NODE_ELEMENT(s).key("geometry")
-                    .displayedName("Geometry")
-                    .commit();
-            NODE_ELEMENT(s).key("header")
-                    .displayedName("Header")
-                    .description("Hash containing user-defined header data")
-                    .commit();
+            NODE_ELEMENT(s).key("geometry").displayedName("Geometry").commit();
+            NODE_ELEMENT(s)
+                  .key("header")
+                  .displayedName("Header")
+                  .description("Hash containing user-defined header data")
+                  .commit();
         }
 
 
-        ImageData::ImageData() : ImageData(karabo::util::NDArray(karabo::util::Dims())) {
-        }
+        ImageData::ImageData() : ImageData(karabo::util::NDArray(karabo::util::Dims())) {}
 
 
         ImageData::ImageData(const karabo::util::NDArray& data, const EncodingType encoding, const int bitsPerPixel)
-            : ImageData(data, karabo::util::Dims(), encoding, bitsPerPixel) {
-        }
+            : ImageData(data, karabo::util::Dims(), encoding, bitsPerPixel) {}
 
 
-        ImageData::ImageData(const karabo::util::NDArray& data,
-                             const karabo::util::Dims& dims,
-                             const EncodingType encoding,
-                             const int bitsPerPixel) {
-
+        ImageData::ImageData(const karabo::util::NDArray& data, const karabo::util::Dims& dims,
+                             const EncodingType encoding, const int bitsPerPixel) {
             setData(data);
 
             // Encoding might be deduced from data if not defined
@@ -194,9 +198,10 @@ namespace karabo {
             // Make sure that ROI is within the image
             auto imgSize = get<std::vector<unsigned long long> >("dims");
             auto newOffset = offsets.toVector();
-            
+
             if (newOffset.size() != imgSize.size()) {
-                std::string msg = "ImageData ROI must have the same length as the image shape: " + std::to_string(imgSize.size());
+                std::string msg =
+                      "ImageData ROI must have the same length as the image shape: " + std::to_string(imgSize.size());
                 throw KARABO_PARAMETER_EXCEPTION(msg);
             }
 
@@ -253,8 +258,8 @@ namespace karabo {
             // Maximum depends on type in data and on encoding.
             // But if encoding cannot specify a maximum, just believe the input.
             const int maxBitsPerPixel = defaultBitsPerPixel(getEncoding(), getData());
-            const int finalBitsPerPixel = (maxBitsPerPixel == 0 ? bitsPerPixel
-                                           : std::min<int>(bitsPerPixel, maxBitsPerPixel));
+            const int finalBitsPerPixel =
+                  (maxBitsPerPixel == 0 ? bitsPerPixel : std::min<int>(bitsPerPixel, maxBitsPerPixel));
             set<int>("bitsPerPixel", finalBitsPerPixel);
         }
 
@@ -323,11 +328,11 @@ namespace karabo {
         karabo::util::DetectorGeometry ImageData::getGeometry() const {
             boost::optional<const karabo::util::Hash::Node&> node = find("detectorGeometry");
             return (node ? karabo::util::DetectorGeometry(node->getValue<karabo::util::Hash>())
-                    : karabo::util::DetectorGeometry());
+                         : karabo::util::DetectorGeometry());
         }
 
 
-        void ImageData::setGeometry(const karabo::util::DetectorGeometry & geometry) {
+        void ImageData::setGeometry(const karabo::util::DetectorGeometry& geometry) {
             set("detectorGeometry", geometry.toHash());
         }
 
@@ -343,26 +348,26 @@ namespace karabo {
         }
 
 
-        void ImageData::setHeader(const karabo::util::Hash & header) {
+        void ImageData::setHeader(const karabo::util::Hash& header) {
             set("header", header);
         }
 
 
         karabo::util::NDArray& ImageData::getData() {
-            return get<karabo::util::NDArray >("pixels");
+            return get<karabo::util::NDArray>("pixels");
         }
 
 
         const karabo::util::NDArray& ImageData::getData() const {
-            return get<karabo::util::NDArray >("pixels");
+            return get<karabo::util::NDArray>("pixels");
         }
 
 
         void ImageData::setData(const karabo::util::NDArray& array) {
-            set<karabo::util::NDArray >("pixels", array);
-           
+            set<karabo::util::NDArray>("pixels", array);
+
             // We can't set dimensions without setting the encoding
-            // First, make sure that the "encoding" key exists... 
+            // First, make sure that the "encoding" key exists...
             // If you don't like the defaults set it yourself manually...
             std::size_t shapeRank = array.getShape().rank();
 
@@ -393,14 +398,14 @@ namespace karabo {
 
 
         karabo::util::Types::ReferenceType ImageData::getDataType() const {
-            return static_cast<karabo::util::Types::ReferenceType> (get<int>("pixels.type"));
+            return static_cast<karabo::util::Types::ReferenceType>(get<int>("pixels.type"));
         }
 
 
         void ImageData::setDataType(const karabo::util::Types::ReferenceType& type) {
-            set("pixels.type", static_cast<int> (type));
+            set("pixels.type", static_cast<int>(type));
         }
-        
+
 
         int ImageData::defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data) {
             const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());
@@ -430,5 +435,5 @@ namespace karabo {
             }
             return factor * numBytes * CHAR_BIT; // CHAR_BIT from <climits> - usually 8
         }
-    }
-}
+    } // namespace xms
+} // namespace karabo

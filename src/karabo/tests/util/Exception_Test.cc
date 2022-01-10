@@ -1,22 +1,21 @@
-/* 
+/*
  * File:   Exception_Test.cc
  * Author: heisenb
- * 
+ *
  * Created on September 29, 2016, 5:28 PM
  */
 
 #include "Exception_Test.hh"
+
 #include "karabo/util/Exception.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Exception_Test);
 
 
-Exception_Test::Exception_Test() {
-}
+Exception_Test::Exception_Test() {}
 
 
-Exception_Test::~Exception_Test() {
-}
+Exception_Test::~Exception_Test() {}
 
 void doNestedThrow() {
     try {
@@ -33,7 +32,6 @@ void doNestedThrow() {
 
 
 void Exception_Test::testMethod() {
-
     CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::util::LogicException);
     CPPUNIT_ASSERT_THROW(throw KARABO_LOGIC_EXCEPTION("Some message"), karabo::util::Exception);
     try {
@@ -60,12 +58,16 @@ void Exception_Test::testMethod() {
         //     Line Number.......:  34
         //     Timestamp.........:  2021-Dec-16 15:17:44.697660
         CPPUNIT_ASSERT_MESSAGE(details, details.find("1. Exception =====>  {") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Exception Type....:  SignalSlot Exception") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(details,
+                               details.find("    Exception Type....:  SignalSlot Exception") != std::string::npos);
         CPPUNIT_ASSERT_MESSAGE(details, details.find("    Message...........:  A nasty problem") != std::string::npos);
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    File..............:  ") != std::string::npos); // Don't mind file if test moved
+        CPPUNIT_ASSERT_MESSAGE(
+              details, details.find("    File..............:  ") != std::string::npos); // Don't mind file if test moved
         CPPUNIT_ASSERT_MESSAGE(details, details.find("    Function..........:  ") != std::string::npos); // nor method
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Line Number.......:  ") != std::string::npos); // nor line number
-        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Timestamp.........:  2") != std::string::npos); // and for sure not date except millenium
+        CPPUNIT_ASSERT_MESSAGE(details,
+                               details.find("    Line Number.......:  ") != std::string::npos); // nor line number
+        CPPUNIT_ASSERT_MESSAGE(details, details.find("    Timestamp.........:  2") !=
+                                              std::string::npos); // and for sure not date except millenium
 
         CPPUNIT_ASSERT_EQUAL(std::string(e.what()), details);
     } catch (...) {
@@ -78,8 +80,10 @@ void Exception_Test::testMethod() {
     } catch (const karabo::util::Exception& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.type());
         // Outer most rethrow without extra message
-        // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A casting problem\n  because: Propagated"), e.userFriendlyMsg(false));
+        // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
+        // indented "because: " prefix
+        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A casting problem\n  because: Propagated"),
+                             e.userFriendlyMsg(false));
 
         const std::string details = e.detailedMsg();
         // Detailed message looks e.g. like this:
@@ -115,7 +119,7 @@ void Exception_Test::testMethod() {
         const size_t mesg1 = details.find("    Message...........:  A casting problem");
         const size_t file1 = details.find("    File..............:  "); // skip file
         const size_t func1 = details.find("    Function..........:  void doNestedThrow()");
-        const size_t line1 = details.find("    Line Number.......:  "); // skip exact number
+        const size_t line1 = details.find("    Line Number.......:  ");   // skip exact number
         const size_t stamp1 = details.find("    Timestamp.........:  2"); // skip date except millenium
         // Now three more spaces before
         const size_t except2 = details.find("   2. Exception =====>  {");
@@ -123,7 +127,7 @@ void Exception_Test::testMethod() {
         const size_t mesg2 = details.find("       Message...........:  Propagated");
         const size_t file2 = details.find("       File..............:  "); // skip file
         const size_t func2 = details.find("       Function..........:  void doNestedThrow()");
-        const size_t line2 = details.find("       Line Number.......:  "); // skip exact number
+        const size_t line2 = details.find("       Line Number.......:  ");   // skip exact number
         const size_t stamp2 = details.find("       Timestamp.........:  2"); // skip date except millenium
         // Even three more spaces, no message
         const size_t except3 = details.find("   3. Exception =====>  {");
@@ -131,13 +135,15 @@ void Exception_Test::testMethod() {
         const size_t mesg3 = details.find("          Message...........:  "); // not printed since empty
         const size_t file3 = details.find("          File..............:  "); // skip file
         const size_t func3 = details.find("          Function..........:  void doNestedThrow()");
-        const size_t line3 = details.find("          Line Number.......:  "); // skip exact number
+        const size_t line3 = details.find("          Line Number.......:  ");   // skip exact number
         const size_t stamp3 = details.find("          Timestamp.........:  2"); // skip date except millenium
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE(details, 0ul, exceptWith);
         // For the following message parts just test that order is as expected.
-        // NOTE: If some text would not be found, find(..) returns std::string::npos wich is the biggest possible size_t, i.e. the
-        //       test with it on the right hand side would still succeed, but the next test with it on the left would fail.
+        // NOTE: If some text would not be found, find(..) returns std::string::npos wich is the biggest possible
+        // size_t, i.e. the
+        //       test with it on the right hand side would still succeed, but the next test with it on the left would
+        //       fail.
         CPPUNIT_ASSERT_GREATER(exceptWith, except1);
         CPPUNIT_ASSERT_GREATER(except1, type1);
         CPPUNIT_ASSERT_GREATER(type1, mesg1);
@@ -209,7 +215,7 @@ void Exception_Test::testMethod() {
         const size_t mesg1 = details.find("    Message...........:  A casting problem");
         const size_t file1 = details.find("    File..............:  "); // skip file
         const size_t func1 = details.find("    Function..........:  void doNestedThrow()");
-        const size_t line1 = details.find("    Line Number.......:  "); // skip exact number
+        const size_t line1 = details.find("    Line Number.......:  ");   // skip exact number
         const size_t stamp1 = details.find("    Timestamp.........:  2"); // skip date except millenium
         // Now three more spaces before
         const size_t except2 = details.find("   2. Exception =====>  {");
@@ -217,7 +223,7 @@ void Exception_Test::testMethod() {
         const size_t mesg2 = details.find("       Message...........:  Propagated");
         const size_t file2 = details.find("       File..............:  "); // skip file
         const size_t func2 = details.find("       Function..........:  void doNestedThrow()");
-        const size_t line2 = details.find("       Line Number.......:  "); // skip exact number
+        const size_t line2 = details.find("       Line Number.......:  ");   // skip exact number
         const size_t stamp2 = details.find("       Timestamp.........:  2"); // skip date except millenium
         // Even three more spaces, no message
         const size_t except3 = details.find("   3. Exception =====>  {");
@@ -225,13 +231,15 @@ void Exception_Test::testMethod() {
         const size_t mesg3 = details.find("          Message...........:  "); // not printed since empty
         const size_t file3 = details.find("          File..............:  "); // skip file
         const size_t func3 = details.find("          Function..........:  void doNestedThrow()");
-        const size_t line3 = details.find("          Line Number.......:  "); // skip exact number
+        const size_t line3 = details.find("          Line Number.......:  ");   // skip exact number
         const size_t stamp3 = details.find("          Timestamp.........:  2"); // skip date except millenium
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE(details, 0ul, exceptWith);
         // For the following message parts just test that order is as expected.
-        // NOTE: If some text would not be found, find(..) returns std::string::npos wich is the biggest possible size_t, i.e. the
-        //       test with it on the right hand side would still succeed, but the next test with it on the left would fail.
+        // NOTE: If some text would not be found, find(..) returns std::string::npos wich is the biggest possible
+        // size_t, i.e. the
+        //       test with it on the right hand side would still succeed, but the next test with it on the left would
+        //       fail.
         CPPUNIT_ASSERT_GREATER(exceptWith, except1);
         CPPUNIT_ASSERT_GREATER(except1, type1);
         CPPUNIT_ASSERT_GREATER(type1, mesg1);
@@ -268,10 +276,13 @@ void Exception_Test::testMethod() {
     } catch (const karabo::util::Exception& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.type());
         // Outer most rethrow without extra message
-        // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A casting problem\n  because: Propagated"), e.userFriendlyMsg(true));
-        // Previous call to userFriendlyMsg(true) cleared the stack trace, so a further call has only the most recent exception
-        // Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type is printed.
+        // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
+        // indented "because: " prefix
+        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A casting problem\n  because: Propagated"),
+                             e.userFriendlyMsg(true));
+        // Previous call to userFriendlyMsg(true) cleared the stack trace, so a further call has only the most recent
+        // exception Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type
+        // is printed.
         CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: Propagated Exception"), e.userFriendlyMsg());
     }
 }

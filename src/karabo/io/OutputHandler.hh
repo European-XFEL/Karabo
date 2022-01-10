@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   OutputHandler.hh
  * Author: esenov
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_IO_OUTPUTHANDLER_HH
-#define	KARABO_IO_OUTPUTHANDLER_HH
+#define KARABO_IO_OUTPUTHANDLER_HH
 
 #include <karabo/util/Configurator.hh>
 
@@ -14,16 +14,13 @@ namespace karabo {
     namespace io {
 
         class OutputHandler {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(OutputHandler, "OutputHandler", "1.0")
 
             virtual void registerIOEventHandler(const boost::any& eventHandler) = 0;
             virtual void triggerIOEvent() = 0;
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
-#endif	/* KARABO_IO_OUTPUTHANDLER_HH */
-
+#endif /* KARABO_IO_OUTPUTHANDLER_HH */

@@ -6,7 +6,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 #include <boost/python.hpp>
-
 #include <karabo/util/Trainstamp.hh>
 
 namespace bp = boost::python;
@@ -19,21 +18,17 @@ void exportPyUtilTrainstamp() {
     t.def(bp::init<>());
     t.def(bp::init<const unsigned long long>(bp::arg("trainId")));
 
-    t.def("getTrainId"
-          , (unsigned long long const & (Trainstamp::*)() const) (&Trainstamp::getTrainId)
-          , bp::return_value_policy< bp::copy_const_reference >());
+    t.def("getTrainId", (unsigned long long const &(Trainstamp::*)() const)(&Trainstamp::getTrainId),
+          bp::return_value_policy<bp::copy_const_reference>());
 
-    t.def("hashAttributesContainTimeInformation"
-          , &Trainstamp::hashAttributesContainTimeInformation
-          , bp::arg("attributes"));
+    t.def("hashAttributesContainTimeInformation", &Trainstamp::hashAttributesContainTimeInformation,
+          bp::arg("attributes"));
     t.staticmethod("hashAttributesContainTimeInformation");
 
-    t.def("fromHashAttributes"
-          , (Trainstamp(*)(Hash::Attributes const))(&Trainstamp::fromHashAttributes)
-          , bp::arg("attributes"));
+    t.def("fromHashAttributes", (Trainstamp(*)(Hash::Attributes const))(&Trainstamp::fromHashAttributes),
+          bp::arg("attributes"));
     t.staticmethod("fromHashAttributes");
 
-    t.def("toHashAttributes"
-          , (void (Trainstamp::*)(Hash::Attributes &) const) (&Trainstamp::toHashAttributes)
-          , bp::arg("attributes"));
+    t.def("toHashAttributes", (void(Trainstamp::*)(Hash::Attributes &) const)(&Trainstamp::toHashAttributes),
+          bp::arg("attributes"));
 }

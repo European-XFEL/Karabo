@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_LOG_HPP
-#define	KARABO_LOG_HPP
+#define KARABO_LOG_HPP
 
 #include "log/Logger.hh"
 #endif

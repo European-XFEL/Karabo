@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   EventLoop_Test.hh
  * Author: heisenb
  *
@@ -6,12 +6,11 @@
  */
 
 #ifndef EVENTLOOP_TEST_HH
-#define	EVENTLOOP_TEST_HH
+#define EVENTLOOP_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class EventLoop_Test : public CPPUNIT_NS::TestFixture {
-
     boost::mutex m_mutex;
     bool m_finished;
 
@@ -21,11 +20,11 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSignalCapture);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     EventLoop_Test();
-    virtual ~EventLoop_Test();   
+    virtual ~EventLoop_Test();
 
-private:
+   private:
     void handler1(boost::asio::deadline_timer&, int count);
     void handler2();
     void handler3();
@@ -34,5 +33,4 @@ private:
     void testSignalCapture();
 };
 
-#endif	/* EVENTLOOP_TEST_HH */
-
+#endif /* EVENTLOOP_TEST_HH */

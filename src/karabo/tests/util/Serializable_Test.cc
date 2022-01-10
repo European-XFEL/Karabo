@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   Serializable_Test.cc
  * Author: heisenb
- * 
+ *
  * Created on August 5, 2016, 12:13 PM
  */
 
@@ -25,16 +25,13 @@ const int& FancyData::getScalar() const {
 }
 
 
-Serializable_Test::Serializable_Test() {
-}
+Serializable_Test::Serializable_Test() {}
 
 
-Serializable_Test::~Serializable_Test() {
-}
+Serializable_Test::~Serializable_Test() {}
 
 
 void Serializable_Test::testMethod() {
-
     FancyData fd1;
     fd1.setScalar(2);
 

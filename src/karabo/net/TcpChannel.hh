@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TcpChannel.hh
  * Author: esenov
  *
@@ -6,23 +6,22 @@
  */
 
 #ifndef KARABO_NET_TCPCHANNEL_HH
-#define	KARABO_NET_TCPCHANNEL_HH
+#define KARABO_NET_TCPCHANNEL_HH
 
 //#include <boost/enable_shared_from_this.hpp>
 
 #include <atomic>
-#include <karabo/io/TextSerializer.hh>
 #include <karabo/io/BinarySerializer.hh>
+#include <karabo/io/TextSerializer.hh>
 
 #include "Channel.hh"
-#include "TcpConnection.hh"
 #include "Queues.hh"
+#include "TcpConnection.hh"
 
 namespace karabo {
     namespace net {
 
         class TcpChannel : public Channel {
-
             enum HandlerType {
 
                 NONE,
@@ -54,13 +53,13 @@ namespace karabo {
 
             std::vector<char> m_inboundMessagePrefix;
             std::vector<char> m_inboundHeaderPrefix;
-            boost::shared_ptr<std::vector<char> > m_inboundData;
-            boost::shared_ptr<std::vector<char> > m_inboundHeader;
+            boost::shared_ptr<std::vector<char>> m_inboundData;
+            boost::shared_ptr<std::vector<char>> m_inboundHeader;
             karabo::util::Hash::Pointer m_inHashHeader;
             std::vector<char> m_outboundMessagePrefix;
             std::vector<char> m_outboundHeaderPrefix;
-            boost::shared_ptr<std::vector<char> > m_outboundData;
-            boost::shared_ptr<std::vector<char> > m_outboundHeader;
+            boost::shared_ptr<std::vector<char>> m_outboundData;
+            boost::shared_ptr<std::vector<char>> m_outboundHeader;
 
             // MQ channel supported parameters
             unsigned int m_bodySize;
@@ -74,11 +73,10 @@ namespace karabo {
             bool m_quit;
             unsigned long long m_syncCounter;
             unsigned long long m_asyncCounter;
-            
+
             boost::asio::streambuf m_streamBufferInbound;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(TcpChannel, "TcpChannel", "1.0")
 
             virtual ~TcpChannel();
@@ -130,27 +128,27 @@ namespace karabo {
             void read(char* data, const size_t& size);
 
             /**
-             * This function reads from a channel into vector of chars 
+             * This function reads from a channel into vector of chars
              * The reading will block until the data record is read.
              * The vector will be updated accordingly (must not be pre-allocated before)
-             * @return void 
+             * @return void
              */
             void read(std::vector<char>& data);
 
             /**
-             * This function reads from a channel into shared pointer of vector of chars 
+             * This function reads from a channel into shared pointer of vector of chars
              * The reading will block until the data record is read.
              * The shared pointer of vector will be updated accordingly (must not be pre-allocated before)
-             * @return void 
+             * @return void
              */
-            void read(boost::shared_ptr<std::vector<char> >& data);
+            void read(boost::shared_ptr<std::vector<char>>& data);
 
             /**
-             * This function reads from a channel into vector of chars 
+             * This function reads from a channel into vector of chars
              * The reading will block until the data record is read.
              * The size of data record is the first 4 bytes in a channel stream.
              * The hash will be updated accordingly.
-             * @return void 
+             * @return void
              */
             void read(karabo::util::Hash& data);
 
@@ -163,7 +161,7 @@ namespace karabo {
             void read(karabo::util::Hash& header, char* data, const size_t& size);
 
             /**
-             * This function reads into a header and a vector of chars. 
+             * This function reads into a header and a vector of chars.
              * The reading will block until the data record is read.
              * @param header Hash object which will be updated to contain header information
              * @param data A vector which will be updated accordingly
@@ -171,12 +169,12 @@ namespace karabo {
             void read(karabo::util::Hash& header, std::vector<char>& data);
 
             /**
-             * This function reads into a header and shared pointer of vector of chars. 
+             * This function reads into a header and shared pointer of vector of chars.
              * The reading will block until the data record is read.
              * @param header Hash object which will be updated to contain header information
              * @param data A shared pointer of a vector which will be updated accordingly
              */
-            void read(karabo::util::Hash& header, boost::shared_ptr<std::vector<char> >& data);
+            void read(karabo::util::Hash& header, boost::shared_ptr<std::vector<char>>& data);
 
             /**
              * This function reads into a header hash and a data hash.
@@ -197,17 +195,18 @@ namespace karabo {
              * A handler can be registered to inform about completion of writing
              * @param data Pre-allocated contiguous block of memory
              * @param size This number of bytes will be copied into data
-             * @param handler Function of signature: <void (Channel::Pointer)> which will be call-backed upon read completion
+             * @param handler Function of signature: <void (Channel::Pointer)> which will be call-backed upon read
+             * completion
              */
             void readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler);
-            
+
             /**
              * wrapper around boost::asio::async_read_until
-             * 
+             *
              * Read a string until terminator string is found. (No header is expected).
-             * 
-             * @param terminator when this string found, read is done 
-             * @param handler handler with signature ReadStringHandler, 
+             *
+             * @param terminator when this string found, read is done
+             * @param handler handler with signature ReadStringHandler,
              *        i.e. void (const boost::system::error_code&, std::string&) is called.
              *        second handler parameter is the read string including the terminator
              *
@@ -226,7 +225,7 @@ namespace karabo {
             void readAsyncHashPointer(const ReadHashPointerHandler& handler);
 
             void readAsyncVectorPointer(const ReadVectorPointerHandler& handler);
-                        
+
             //**************************************************************/
             //*              Asynchronous Read - With Header Hash          */
             //**************************************************************/
@@ -239,7 +238,7 @@ namespace karabo {
 
             void readAsyncHashPointerHashPointer(const ReadHashPointerHashPointerHandler& handler);
 
-            void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);                        
+            void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);
 
             void readAsyncHashVectorBufferSetPointer(const ReadHashVectorBufferSetPointerHandler& handler);
 
@@ -249,35 +248,43 @@ namespace karabo {
 
             void write(const karabo::util::Hash& data);
 
-            void write(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& body);
-            
+            void write(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char>>& body);
+
             void write(const karabo::util::Hash& header, const karabo::io::BufferSet& body);
 
             void write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body);
 
             void write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body);
 
-            void write(const char* header, const size_t& headerSize, const std::vector<karabo::io::BufferSet::Pointer>& body);
+            void write(const char* header, const size_t& headerSize,
+                       const std::vector<karabo::io::BufferSet::Pointer>& body);
 
             void write(const karabo::util::Hash& header, const karabo::util::Hash& body);
 
             void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler);
 
             void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler);
-            
-            void writeAsyncVectorPointer(const boost::shared_ptr<std::vector<char> >& data, const WriteCompleteHandler& handler);
+
+            void writeAsyncVectorPointer(const boost::shared_ptr<std::vector<char>>& data,
+                                         const WriteCompleteHandler& handler);
 
             void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler);
 
-            void writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size, const WriteCompleteHandler& handler);
+            void writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size,
+                                   const WriteCompleteHandler& handler);
 
-            void writeAsyncHashVector(const karabo::util::Hash& header, const std::vector<char>& data, const WriteCompleteHandler& handler);
+            void writeAsyncHashVector(const karabo::util::Hash& header, const std::vector<char>& data,
+                                      const WriteCompleteHandler& handler);
 
-            void writeAsyncHashVectorPointer(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data, const WriteCompleteHandler& handler);
+            void writeAsyncHashVectorPointer(const karabo::util::Hash& header,
+                                             const boost::shared_ptr<std::vector<char>>& data,
+                                             const WriteCompleteHandler& handler);
 
-            //void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler);
+            // void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const
+            // WriteCompleteHandler& handler);
 
-            void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler);
+            void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data,
+                                    const WriteCompleteHandler& handler);
 
             virtual size_t dataQuantityRead();
 
@@ -312,7 +319,7 @@ namespace karabo {
              *  Sends the vector pointed by data. The data vector must not be changed after the call to
              *  writeAsync.
              */
-            void writeAsync(const boost::shared_ptr<std::vector<char> >& data, int prio);
+            void writeAsync(const boost::shared_ptr<std::vector<char>>& data, int prio);
 
             /**
              *  Writes a copy of the data string.
@@ -338,7 +345,8 @@ namespace karabo {
              *  Writes a copy of the header hash. Sends the vector pointed by data, not a copy of it. The data vector
              *  must not be changed after the call to writeAsync.
              */
-            void writeAsync(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data, int prio);
+            void writeAsync(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char>>& data,
+                            int prio);
 
             /**
              *  Writes copies of the header hash and of the data string.
@@ -349,18 +357,19 @@ namespace karabo {
              *  When copyAllData is false, elements of type NDArray in the body hash won't be copied before being sent.
              *  copyAllData doesn't influence the handling of the header hash.
              */
-            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio, bool copyAllData);
+            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio,
+                            bool copyAllData);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
-            
+
             int getSyncPercent() {
                 double nomin = double(m_syncCounter);
                 double denom = nomin + double(m_asyncCounter);
-                int result = int(nomin/denom * 100);
+                int result = int(nomin / denom * 100);
                 m_syncCounter = m_asyncCounter = 0;
                 return result;
             }
-            
+
             /**
              * This function returns low level info about connection like ...
              * "localIp", "localPort", "remoteIp", "remotePort" that constitute active connection.
@@ -369,16 +378,15 @@ namespace karabo {
              * @return Hash with 4 key/value pairs
              */
             static karabo::util::Hash getChannelInfo(const boost::shared_ptr<karabo::net::TcpChannel>& ptr);
-            
-        private:
 
+           private:
             // Private - only for friend TcpConnection::createChannel
             TcpChannel(const TcpConnection::Pointer& connection);
 
             karabo::util::Hash _getChannelInfo();
 
             void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
-            
+
             void stringAvailableHandler(const boost::system::error_code& e, size_t bytes_to_read);
 
             /**
@@ -416,26 +424,29 @@ namespace karabo {
                                                      const ReadVectorBufferSetPointerHandler& handler);
 
             void readAsyncVectorPointerImpl(const ReadVectorPointerHandler& handler);
-                        
+
             /**
              * Internal default handler
              * @param byteSize
              */
             void byteSizeAvailableHandler(const size_t byteSize);
-            
+
             void readAsyncSizeInBytesImpl(const ReadSizeInBytesHandler& handler, bool allowNonAsync);
 
             void readAsyncRawImpl(char* data, const size_t& size, const ReadRawHandler& handler, bool allowNonAsync);
-            
+
             void managedWriteAsync(const WriteCompleteHandler& handler);
 
             void unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler);
 
             void managedWriteAsyncWithHeader(const WriteCompleteHandler& handler);
 
-            void unmanagedWriteAsyncWithHeader(const char* data, const size_t& size, const WriteCompleteHandler& handler);
+            void unmanagedWriteAsyncWithHeader(const char* data, const size_t& size,
+                                               const WriteCompleteHandler& handler);
 
-            void writeAsyncHeaderBodyImpl(const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body, const WriteCompleteHandler& handler);
+            void writeAsyncHeaderBodyImpl(const boost::shared_ptr<std::vector<char>>& header,
+                                          const boost::shared_ptr<std::vector<char>>& body,
+                                          const WriteCompleteHandler& handler);
 
             void prepareHeaderFromHash(const karabo::util::Hash& hash);
 
@@ -443,7 +454,7 @@ namespace karabo {
 
             void prepareDataFromHash(const karabo::util::Hash& hash);
 
-            void prepareDataFromHash(const karabo::util::Hash& hash, boost::shared_ptr<std::vector<char> >& dataPtr);
+            void prepareDataFromHash(const karabo::util::Hash& hash, boost::shared_ptr<std::vector<char>>& dataPtr);
 
             void prepareHashFromData(karabo::util::Hash& hash) const;
 
@@ -490,13 +501,18 @@ namespace karabo {
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
-            void asyncWriteHandler(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler);
-            void asyncWriteHandlerBody(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& body);
-            void asyncWriteHandlerHeaderBody(const ErrorCode& e, const size_t length, const Channel::WriteCompleteHandler& handler, const boost::shared_ptr<std::vector<char> >& header, const boost::shared_ptr<std::vector<char> >& body);
+            void asyncWriteHandler(const ErrorCode& e, const size_t length,
+                                   const Channel::WriteCompleteHandler& handler);
+            void asyncWriteHandlerBody(const ErrorCode& e, const size_t length,
+                                       const Channel::WriteCompleteHandler& handler,
+                                       const boost::shared_ptr<std::vector<char>>& body);
+            void asyncWriteHandlerHeaderBody(const ErrorCode& e, const size_t length,
+                                             const Channel::WriteCompleteHandler& handler,
+                                             const boost::shared_ptr<std::vector<char>>& header,
+                                             const boost::shared_ptr<std::vector<char>>& body);
 
             // MQ support methods
-        private:
-
+           private:
             void prepareVectorFromHash(const karabo::util::Hash& hash, std::vector<char>& vec);
 
             void prepareHashFromVector(const std::vector<char>& vec, karabo::util::Hash& hash) const;
@@ -505,22 +521,25 @@ namespace karabo {
 
             void doWrite();
 
-            void doWriteHandler(Message::Pointer& msg, boost::system::error_code, const size_t length, const int queueIndex);
+            void doWriteHandler(Message::Pointer& msg, boost::system::error_code, const size_t length,
+                                const int queueIndex);
 
             //
             // Finally some methods for exclusive use in TcpConnection,
             // we grant friendship exclusively to the methods that need it:
             //
             friend Channel::Pointer TcpConnection::startServer(); // for acceptSocket(..)
-            friend void TcpConnection::startServer(const TcpConnection::ConnectionHandler& handler); // for asyncAcceptSocket(..)
-            friend Channel::Pointer TcpConnection::startClient(); // for socketConnect(..)
-            friend void TcpConnection::resolveHandler(const ErrorCode& e, boost::asio::ip::tcp::resolver::iterator it,
-                                                      const TcpConnection::ConnectionHandler& handler); // for asyncSocketConnect(..))
-            friend ChannelPointer TcpConnection::createChannel(); // constructing TcpChannel
+            friend void TcpConnection::startServer(
+                  const TcpConnection::ConnectionHandler& handler); // for asyncAcceptSocket(..)
+            friend Channel::Pointer TcpConnection::startClient();   // for socketConnect(..)
+            friend void TcpConnection::resolveHandler(
+                  const ErrorCode& e, boost::asio::ip::tcp::resolver::iterator it,
+                  const TcpConnection::ConnectionHandler& handler); // for asyncSocketConnect(..))
+            friend ChannelPointer TcpConnection::createChannel();   // constructing TcpChannel
 
             void acceptSocket(boost::asio::ip::tcp::acceptor& acceptor);
 
-            template<typename Handler>
+            template <typename Handler>
             void asyncAcceptSocket(boost::asio::ip::tcp::acceptor& acceptor, Handler&& handler) {
                 boost::mutex::scoped_lock lock(m_socketMutex);
                 acceptor.async_accept(m_socket, handler);
@@ -528,14 +547,13 @@ namespace karabo {
 
             void socketConnect(const boost::asio::ip::tcp::endpoint& endpoint);
 
-            template<typename Handler>
+            template <typename Handler>
             void asyncSocketConnect(const boost::asio::ip::tcp::endpoint& endpoint, Handler&& handler) {
                 boost::mutex::scoped_lock lock(m_socketMutex);
                 m_socket.async_connect(endpoint, handler);
             }
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
-#endif	/* KARABO_NET_TCPCHANNEL_HH */
-
+#endif /* KARABO_NET_TCPCHANNEL_HH */

@@ -9,12 +9,15 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include "JmsProducer.hh"
+
+#include <openmqc/mqcrt.h>
+
 #include <karabo/io/HashBinarySerializer.hh>
 #include <karabo/log.hpp>
-#include "JmsProducer.hh"
-#include "JmsConnection.hh"
+
 #include "EventLoop.hh"
-#include <openmqc/mqcrt.h>
+#include "JmsConnection.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -23,9 +26,8 @@ namespace karabo {
     namespace net {
 
 
-        JmsProducer::JmsProducer(const JmsConnection::Pointer& connection) :
-            m_connection(connection),
-            m_mqStrand(EventLoop::getIOService()) {
+        JmsProducer::JmsProducer(const JmsConnection::Pointer& connection)
+            : m_connection(connection), m_mqStrand(EventLoop::getIOService()) {
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             m_producerSessionHandle.handle = HANDLED_OBJECT_INVALID_HANDLE;
         }
@@ -38,17 +40,12 @@ namespace karabo {
 
         void JmsProducer::write(const std::string& topic, const karabo::util::Hash::Pointer& header,
                                 const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) {
-
             this->asyncWrite(topic, header, body, priority, timeToLive);
         }
 
 
-        void JmsProducer::asyncWrite(const std::string& topic,
-                                     const Hash::Pointer& header,
-                                     const Hash::Pointer& body,
-                                     const int priority,
-                                     const int timeToLive) {
-
+        void JmsProducer::asyncWrite(const std::string& topic, const Hash::Pointer& header, const Hash::Pointer& body,
+                                     const int priority, const int timeToLive) {
             std::vector<char> buffer;
             m_binarySerializer->save(body, buffer);
 
@@ -63,15 +60,13 @@ namespace karabo {
             MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle));
 
             if (buffer.size() > 0) {
-                MQ_SAFE_CALL(MQSetBytesMessageBytes(messageHandle,
-                                                    reinterpret_cast<MQInt8*> (const_cast<char*> (&buffer[0])),
-                                                    buffer.size()));
+                MQ_SAFE_CALL(MQSetBytesMessageBytes(
+                      messageHandle, reinterpret_cast<MQInt8*>(const_cast<char*>(&buffer[0])), buffer.size()));
             }
 
             MQProducerHandle producerHandle = this->getProducer(topic);
-            MQStatus status = MQSendMessageExt(producerHandle, messageHandle,
-                                               MQ_NON_PERSISTENT_DELIVERY,
-                                               priority, timeToLive);
+            MQStatus status =
+                  MQSendMessageExt(producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, timeToLive);
             MQFreeMessage(messageHandle);
             MQError statusCode = MQGetStatusCode(status);
             switch (statusCode) {
@@ -79,17 +74,16 @@ namespace karabo {
                     // Do nothing
                     break;
                 case MQ_STATUS_INVALID_HANDLE:
-                case MQ_BROKER_CONNECTION_CLOSED:
-                {
+                case MQ_BROKER_CONNECTION_CLOSED: {
                     // Need to clear old handles
                     this->clearProducerHandles();
                     m_connection->waitForConnectionAvailable();
                     // Next trial will re-cache all handles
-                    m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body, priority, timeToLive));
+                    m_mqStrand.post(bind_weak(&karabo::net::JmsProducer::asyncWrite, this, topic, header, body,
+                                              priority, timeToLive));
                     break;
                 }
-                default:
-                {
+                default: {
                     MQString tmp = MQGetStatusString(status);
                     std::string errorString(tmp);
                     MQFreeString(tmp);
@@ -100,7 +94,6 @@ namespace karabo {
 
 
         MQProducerHandle JmsProducer::getProducer(const std::string& topic) {
-
             Producers::const_iterator it = m_producers.find(topic);
             if (it != m_producers.end()) return it->second;
 
@@ -117,9 +110,8 @@ namespace karabo {
         }
 
 
-        std::pair<MQSessionHandle, MQDestinationHandle>
-        JmsProducer::ensureProducerDestinationAvailable(const std::string& topic) {
-
+        std::pair<MQSessionHandle, MQDestinationHandle> JmsProducer::ensureProducerDestinationAvailable(
+              const std::string& topic) {
             ProducerDestinations::const_iterator it = m_producerDestinations.find(topic);
             if (it != m_producerDestinations.end()) return it->second;
 
@@ -137,20 +129,15 @@ namespace karabo {
 
 
         MQSessionHandle JmsProducer::ensureProducerSessionAvailable() {
-
             if (m_producerSessionHandle.handle == HANDLED_OBJECT_INVALID_HANDLE) {
-                MQ_SAFE_CALL(MQCreateSession(m_connection->m_connectionHandle,
-                                             MQ_FALSE, /* isTransacted */
-                                             MQ_CLIENT_ACKNOWLEDGE,
-                                             MQ_SESSION_SYNC_RECEIVE,
-                                             &m_producerSessionHandle));
+                MQ_SAFE_CALL(MQCreateSession(m_connection->m_connectionHandle, MQ_FALSE, /* isTransacted */
+                                             MQ_CLIENT_ACKNOWLEDGE, MQ_SESSION_SYNC_RECEIVE, &m_producerSessionHandle));
             }
             return m_producerSessionHandle;
         }
 
 
         void JmsProducer::clearProducerHandles() {
-
             // Clear producers
 
 
@@ -173,49 +160,64 @@ namespace karabo {
         }
 
 
-        void JmsProducer::setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle & propertiesHandle) const {
+        void JmsProducer::setProperties(const karabo::util::Hash& properties,
+                                        const MQPropertiesHandle& propertiesHandle) const {
             try {
                 for (Hash::const_iterator it = properties.begin(); it != properties.end(); ++it) {
                     Types::ReferenceType type = it->getType();
                     switch (type) {
                         case Types::STRING:
-                            MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->getKey().c_str(), it->getValue<std::string>().c_str()))
+                            MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->getKey().c_str(),
+                                                             it->getValue<std::string>().c_str()))
                             break;
                         case Types::UINT8:
-                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<signed char>()))
+                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(),
+                                                           it->getValueAs<signed char>()))
                             break;
                         case Types::INT8:
-                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(), it->getValue<signed char>()))
+                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(),
+                                                           it->getValue<signed char>()))
                             break;
                         case Types::UINT16:
-                            MQ_SAFE_CALL(MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<short>()))
+                            MQ_SAFE_CALL(
+                                  MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<short>()))
                             break;
                         case Types::INT16:
-                            MQ_SAFE_CALL(MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValue<short>()))
+                            MQ_SAFE_CALL(
+                                  MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValue<short>()))
                             break;
                         case Types::UINT32:
-                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<int>()))
+                            MQ_SAFE_CALL(
+                                  MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<int>()))
                             break;
                         case Types::INT32:
-                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValue<int>()))
+                            MQ_SAFE_CALL(
+                                  MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValue<int>()))
                             break;
                         case Types::UINT64:
-                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValueAs<long long>()))
+                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(),
+                                                            it->getValueAs<long long>()))
                             break;
                         case Types::INT64:
-                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValue<long long>()))
+                            MQ_SAFE_CALL(
+                                  MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValue<long long>()))
                             break;
                         case Types::FLOAT:
-                            MQ_SAFE_CALL(MQSetFloat32Property(propertiesHandle, it->getKey().c_str(), it->getValue<float>()))
+                            MQ_SAFE_CALL(
+                                  MQSetFloat32Property(propertiesHandle, it->getKey().c_str(), it->getValue<float>()))
                             break;
                         case Types::DOUBLE:
-                            MQ_SAFE_CALL(MQSetFloat64Property(propertiesHandle, it->getKey().c_str(), it->getValue<double>()))
+                            MQ_SAFE_CALL(
+                                  MQSetFloat64Property(propertiesHandle, it->getKey().c_str(), it->getValue<double>()))
                             break;
                         case Types::BOOL:
-                            MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, it->getKey().c_str(), it->getValue<bool>()))
+                            MQ_SAFE_CALL(
+                                  MQSetBoolProperty(propertiesHandle, it->getKey().c_str(), it->getValue<bool>()))
                             break;
                         default:
-                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Given property value type (" + Types::to<ToLiteral>(type) + ") is not supported by the OpenMQ");
+                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Given property value type (" +
+                                                                 Types::to<ToLiteral>(type) +
+                                                                 ") is not supported by the OpenMQ");
                             break;
                     }
                 }
@@ -223,6 +225,5 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
-    }
-}
-
+    } // namespace net
+} // namespace karabo

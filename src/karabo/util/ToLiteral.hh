@@ -9,16 +9,14 @@
 #include "ToType.hh"
 
 #ifndef KARABO_UTIL_TOLITERAL_HH
-#define	KARABO_UTIL_TOLITERAL_HH
+#define KARABO_UTIL_TOLITERAL_HH
 
 namespace karabo {
 
     namespace util {
 
         class ToLiteral {
-
-        public:
-
+           public:
             typedef std::string ReturnType;
 
             template <int RefType>
@@ -82,8 +80,7 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_HASH_POINTER, "VECTOR_HASH_POINTER")
         KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, BYTE_ARRAY, "BYTE_ARRAY")
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif
-

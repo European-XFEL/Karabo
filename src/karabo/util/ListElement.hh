@@ -12,11 +12,11 @@
  */
 
 #ifndef KARABO_UTIL_LISTELEMENT_HH
-#define	KARABO_UTIL_LISTELEMENT_HH
+#define KARABO_UTIL_LISTELEMENT_HH
 
+#include "Configurator.hh"
 #include "GenericElement.hh"
 #include "LeafElement.hh"
-#include "Configurator.hh"
 
 namespace karabo {
     namespace util {
@@ -24,28 +24,27 @@ namespace karabo {
         /**
          * @class ListElement
          * @brief An element allowing choice-access to a list of factorized classes
-         * 
+         *
          * The ListElement can be configured to hold a number of factorized
-         * classes. Two methods exist for adding classes to the 
+         * classes. Two methods exist for adding classes to the
          * list of choices the ChoiceElement knows of:
-         * 
+         *
          * - ListElement::appendNodesOfConfigurationBase is used if another
          *   class of a type known to the factory system is to be added
-         * 
+         *
          * - ListElement::appendAsNode is used to append the entries of a
          *   NodeElement defined in the same expectedParameter function as the
          *   choice element
-         * 
+         *
          * In either case, it will add a configuration entry to a Node List
-         * 
+         *
          */
         class ListElement : public GenericElement<ListElement> {
-
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
             DefaultValue<ListElement, std::vector<std::string> > m_defaultValue;
-        public:
 
+           public:
             ListElement(Schema& expected) : GenericElement<ListElement>(expected) {
                 Schema::AssemblyRules m_parentSchemaAssemblyRules = expected.getAssemblyRules();
                 m_defaultValue.setElement(this);
@@ -54,17 +53,17 @@ namespace karabo {
             /**
              * Minimum number of nodes the list element should hold - inclusive
              * @param minNumNodes
-             * @return 
+             * @return
              */
             ListElement& min(const int minNumNodes) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MIN, minNumNodes);
                 return *this;
             }
 
-             /**
+            /**
              * Maximum number of nodes the list element should hold - inclusive
              * @param maxNumNodes
-             * @return 
+             * @return
              */
             ListElement& max(const int maxNumNodes) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MAX, maxNumNodes);
@@ -75,20 +74,20 @@ namespace karabo {
              * Append the expected parameters of another class of type ConfigurationBase.
              * The class needs to be known by the factory system. It will be identified
              * by its Karabo ClassId in the list.
-             * @return 
+             * @return
              */
             template <class ConfigurationBase>
             ListElement& appendNodesOfConfigurationBase() {
                 // Create an empty Hash as value of this choice node if not there yet
                 if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
                 // Retrieve reference for filling
-                Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
+                Hash& choiceOfNodes = this->m_node->template getValue<Hash>();
 
                 std::vector<std::string> nodeNames = Configurator<ConfigurationBase>::getRegisteredClasses();
                 for (size_t i = 0; i < nodeNames.size(); ++i) {
                     const std::string& nodeName = nodeNames[i];
                     Schema schema = Configurator<ConfigurationBase>::getSchema(nodeName, m_parentSchemaAssemblyRules);
-                    Hash::Node& node = choiceOfNodes.template set<Hash > (nodeName, schema.getParameterHash());
+                    Hash::Node& node = choiceOfNodes.template set<Hash>(nodeName, schema.getParameterHash());
                     node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
                     node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
                     node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
@@ -99,23 +98,23 @@ namespace karabo {
 
             /**
              * Append the entries found underneath a NodeElement identified by
-             * key. The node element needs to be defined prior to and in the same expected 
+             * key. The node element needs to be defined prior to and in the same expected
              * parameter function as the ListElement.
              * @param nodeName identifying the node, i.e. the key of the node.
-             * @return 
+             * @return
              */
             template <class T>
             ListElement& appendAsNode(const std::string& nodeName = "") {
                 // Create an empty Hash as value of this choice node if not there yet
                 if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
                 // Retrieve reference for filling
-                Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
+                Hash& choiceOfNodes = this->m_node->template getValue<Hash>();
 
                 // Simply append the expected parameters of T to current node
                 if (nodeName.empty()) nodeName = T::classInfo().getClassId();
                 Schema schema(nodeName, m_parentSchemaAssemblyRules);
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
-                Hash::Node& node = choiceOfNodes.template set<Hash > (nodeName, schema.getParameterHash());
+                Hash::Node& node = choiceOfNodes.template set<Hash>(nodeName, schema.getParameterHash());
                 node.setAttribute(KARABO_SCHEMA_CLASS_ID, T::classInfo().getClassId());
                 node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
                 node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
@@ -167,7 +166,7 @@ namespace karabo {
                 return *this;
             }
 
-             /**
+            /**
              * Enable modification of the displayType of the element.
              * @param displayType
              * @return reference to the Element (to allow method's chaining)
@@ -177,13 +176,12 @@ namespace karabo {
                 return *this;
             }
 
-        protected:
-
+           protected:
             void beforeAddition() {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LIST_OF_NODES);
 
-                //finally protect setting options etc to list element via overwrite
+                // finally protect setting options etc to list element via overwrite
                 OverwriteElement::Restrictions restrictions;
 
                 restrictions.minInc = true;
@@ -194,13 +192,10 @@ namespace karabo {
                 restrictions.max = true;
                 m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
             }
-
         };
         typedef util::ListElement LIST_ELEMENT;
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 
-
-#endif	/* KARABO_PACKAGENAME_LISTELEMENT_HH */
-
+#endif /* KARABO_PACKAGENAME_LISTELEMENT_HH */
