@@ -3,6 +3,17 @@ Python Middlelayer API
 
 .. automodule:: karabo.middlelayer
 
+The Karabo Hash Dictionary
+--------------------------
+
+.. autoclass:: karabo.middlelayer.Hash
+   :members:
+
+.. autofunction:: karabo.middlelayer.hashToDict
+
+.. autofunction:: karabo.middlelayer.dictToHash
+
+
 Accessing remote devices with proxies
 -------------------------------------
 
@@ -133,6 +144,10 @@ Utility functions are provided for convenience.
 
 .. autofunction:: karabo.middlelayer.set_property
 
+.. autofunction:: karabo.middlelayer.get_array_data
+
+.. autofunction:: karabo.middlelayer.get_image_data
+
 .. autofunction:: karabo.middlelayer.maximum
 
 .. autofunction:: karabo.middlelayer.minimum
@@ -142,6 +157,16 @@ Utility functions are provided for convenience.
 .. autofunction:: karabo.middlelayer.profiler
 
 .. autofunction:: karabo.middlelayer.validate_args
+
+.. autofunction:: karabo.middlelayer.get_descriptor_from_data
+
+.. autofunction:: karabo.middlelayer.get_hash_type_from_data
+
+.. autofunction:: karabo.middlelayer.is_equal
+
+.. autofunction:: karabo.middlelayer.has_changes
+
+.. autofunction:: karabo.middlelayer.simple_deepcopy
 
 
 Writing a device
