@@ -8,20 +8,19 @@
 
 
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
-#define	KARABO_CORE_GUISERVERDEVICE_HH
+#define KARABO_CORE_GUISERVERDEVICE_HH
 
-#include <unordered_map>
-#include <set>
 #include <atomic>
-
 #include <krb_log4cpp/Priority.hh>
-#include "karabo/net/Broker.hh"
-#include "karabo/net/Connection.hh"
-#include "karabo/xms/InputChannel.hh"
-#include "karabo/util/Version.hh"
+#include <set>
+#include <unordered_map>
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
+#include "karabo/net/Broker.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/util/Version.hh"
+#include "karabo/xms/InputChannel.hh"
 
 /**
  * The main karabo namespace
@@ -40,29 +39,23 @@ namespace karabo {
          * by clients and passes them on to devices in the distributed system.
          */
         class GuiServerDevice : public karabo::core::Device<> {
-
             struct DeviceInstantiation {
                 boost::weak_ptr<karabo::net::Channel> channel;
                 karabo::util::Hash hash;
             };
 
             struct ChannelData {
-                std::set<std::string> visibleInstances; // deviceIds
+                std::set<std::string> visibleInstances;       // deviceIds
                 std::set<std::string> requestedDeviceSchemas; // deviceIds
                 // key in map is the serverId, values in set are classIds
                 std::map<std::string, std::set<std::string>> requestedClassSchemas;
                 karabo::util::Version clientVersion;
                 bool sendLogs;
 
-                ChannelData()
-                    : clientVersion("0.0.0"),
-                    sendLogs(true) {
-                };
+                ChannelData() : clientVersion("0.0.0"), sendLogs(true){};
 
                 ChannelData(const karabo::util::Version& version)
-                    : clientVersion(version),
-                    sendLogs(clientVersion <= karabo::util::Version("2.11.1")) {
-                };
+                    : clientVersion(version), sendLogs(clientVersion <= karabo::util::Version("2.11.1")){};
             };
 
             enum NewInstanceAttributeUpdateEvents {
@@ -83,11 +76,13 @@ namespace karabo {
             // There is no way to have a reliable unordered_set of weak pointers...
             // Before C++14 we cannot use unordered_map since that does not (yet) guarantee that we can erase
             // entries while looping over it.
-            typedef std::map<std::string, std::set<WeakChannelPointer> > NetworkMap;
+            typedef std::map<std::string, std::set<WeakChannelPointer>> NetworkMap;
 
             enum QueueBehaviorsTypes {
 
-                FAST_DATA = 2, REMOVE_OLDEST, LOSSLESS
+                FAST_DATA = 2,
+                REMOVE_OLDEST,
+                LOSSLESS
             };
 
             karabo::net::Connection::Pointer m_dataConnection;
@@ -115,12 +110,12 @@ namespace karabo {
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
             // Next map<string, ...> not unordered before use of C++14 because we erase from it while looping over it.
-            std::map<std::string, std::map<WeakChannelPointer, bool> > m_readyNetworkConnections;
+            std::map<std::string, std::map<WeakChannelPointer, bool>> m_readyNetworkConnections;
 
             karabo::net::Broker::Pointer m_guiDebugProducer;
 
-            typedef std::map< karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
-            typedef std::map< karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;
+            typedef std::map<karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
+            typedef std::map<karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;
 
             mutable boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
@@ -133,16 +128,15 @@ namespace karabo {
             mutable boost::shared_mutex m_projectManagerMutex;
 
             bool m_isReadOnly;
-            static const std::unordered_set <std::string> m_writeCommands;
-            static const std::unordered_map <std::string, karabo::util::Version> m_minVersionRestrictions;
+            static const std::unordered_set<std::string> m_writeCommands;
+            static const std::unordered_map<std::string, karabo::util::Version> m_minVersionRestrictions;
 
             // TODO: remove this once "fast slot reply policy" is enforced
             // list of devices that do not respect fast slot reply policy
-            std::unordered_set <std::string> m_timingOutDevices;
+            std::unordered_set<std::string> m_timingOutDevices;
 
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
-        public:
-
+           public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
@@ -155,7 +149,7 @@ namespace karabo {
 
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
 
-        private: // Functions
+           private: // Functions
             /** Wrapping requestNoWait */
             void loggerMapConnectedHandler();
 
@@ -207,7 +201,8 @@ namespace karabo {
             void deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
                                     boost::shared_ptr<boost::asio::deadline_timer> timer);
 
-            void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
+            void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message,
+                                 int prio = LOSSLESS);
 
             /**
              * writes message to all channels connected to the gui-server device
@@ -282,7 +277,8 @@ namespace karabo {
              * @param channel
              * @param info
              */
-            void onLoginMessage(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel, karabo::util::Hash& info);
+            void onLoginMessage(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel,
+                                karabo::util::Hash& info);
 
             /**
              * Handles a login request of a user on a gui client. If the login credentials
@@ -375,7 +371,8 @@ namespace karabo {
              * @param info the input info Hash
              * @param reply the reply from the remote device or an empty Hash on failure
              */
-            void forwardHashReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& info, const karabo::util::Hash& reply);
+            void forwardHashReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& info,
+                                  const karabo::util::Hash& reply);
 
             /**
              * Request a generic action internally.
@@ -437,7 +434,7 @@ namespace karabo {
              * @param channel who requested the call
              * @param input will be copied to the key ``input`` of the reply message
              */
-            void forwardExecuteReply(bool success, WeakChannelPointer channel, const karabo::util::Hash & input);
+            void forwardExecuteReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& input);
 
             /**
              * Calls a ``command`` slot on a specified device.
@@ -489,8 +486,9 @@ namespace karabo {
              * @param success
              * @param message
              */
-            void initReply(WeakChannelPointer channel, const std::string& givenDeviceId, const karabo::util::Hash& givenConfig,
-                           bool success, const std::string& message, bool isFailureHandler);
+            void initReply(WeakChannelPointer channel, const std::string& givenDeviceId,
+                           const karabo::util::Hash& givenConfig, bool success, const std::string& message,
+                           bool isFailureHandler);
 
             /**
              * requests the current device configuration for ``deviceId`` specified in
@@ -588,9 +586,8 @@ namespace karabo {
              * @param property
              * @param data
              */
-            void propertyHistory(WeakChannelPointer channel, bool success,
-                                 const std::string& deviceId, const std::string& property,
-                                 const std::vector<karabo::util::Hash>& data);
+            void propertyHistory(WeakChannelPointer channel, bool success, const std::string& deviceId,
+                                 const std::string& property, const std::vector<karabo::util::Hash>& data);
 
             /**
              * Request configuration for a ``device`` at point in time ``time`` as specified in ``info``.
@@ -607,13 +604,14 @@ namespace karabo {
              */
             void configurationFromPast(WeakChannelPointer channel, const std::string& deviceId, const std::string& time,
                                        const bool& preview, const karabo::util::Hash& config,
-                                       const karabo::util::Schema& /*schema*/,
-                                       const bool configAtTimepoint, const std::string &configTimepoint);
+                                       const karabo::util::Schema& /*schema*/, const bool configAtTimepoint,
+                                       const std::string& configTimepoint);
 
             /**
              * Failure callback for ``onGetDeviceConfiguration``
              */
-            void configurationFromPastError(WeakChannelPointer channel, const std::string& deviceId, const std::string& time);
+            void configurationFromPastError(WeakChannelPointer channel, const std::string& deviceId,
+                                            const std::string& time);
 
             /**
              * Helper for history retrieval functions
@@ -693,8 +691,8 @@ namespace karabo {
              * @param data: the data coming from channelName
              * @param meta: corresponding meta data
              */
-            void onNetworkData(const std::string& channelName,
-                               const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
+            void onNetworkData(const std::string& channelName, const karabo::util::Hash& data,
+                               const karabo::xms::InputChannel::MetaData& meta);
 
             /**
              * sends the current system topology to the client connected on ``channel``.
@@ -739,7 +737,8 @@ namespace karabo {
              */
             void devicesChangedHandler(const karabo::util::Hash& what);
 
-            void classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema);
+            void classSchemaHandler(const std::string& serverId, const std::string& classId,
+                                    const karabo::util::Schema& classSchema);
 
             void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema);
 
@@ -769,9 +768,8 @@ namespace karabo {
              * @param info a Hash with following keys
              *              * "message": a string containing the notification type
              *              * "contentType": a string defining the type of notification as the GUI client understands it
-             *                               - "banner" means message will go to the GUI banner. Therefore it will be stored
-             *                                          in the "bannerMessage" property of the GuiServerDevice and sent to
-             *                                          any client that connects.
+             *                               - "banner" means message will go to the GUI banner. Therefore it will be
+             * stored in the "bannerMessage" property of the GuiServerDevice and sent to any client that connects.
              *                               - other types will likely just be shown in a pop-up window of the client
              */
             void slotNotify(const karabo::util::Hash& info);
@@ -787,7 +785,8 @@ namespace karabo {
              *                           It should contain a "type" string.
              *              * "clientAddress": a string containing the GUI client address as coded in the
              *                                 `slotDumpDebugInfo` results.
-             *                                 If the value for this key is an empty string, all clients will be notified.
+             *                                 If the value for this key is an empty string, all clients will be
+             * notified.
              */
             void slotBroadcast(const karabo::util::Hash& info);
 
@@ -796,7 +795,8 @@ namespace karabo {
              */
             karabo::util::Hash getDebugInfo(const karabo::util::Hash& info);
 
-            void monitorConnectionQueues(const boost::system::error_code& err, const karabo::util::Hash& lastCheckSuspects);
+            void monitorConnectionQueues(const boost::system::error_code& err,
+                                         const karabo::util::Hash& lastCheckSuspects);
 
             /**
              * Slot to force disconnection of client. Reply is whether specified client found.
@@ -840,7 +840,8 @@ namespace karabo {
              *
              * Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
              */
-            void slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows);
+            void slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type,
+                                        const karabo::util::Hash& updateRows);
 
             /**
              * Called if the client wants to acknowledge an alarm, by sending a message of type "acknowledgeAlarm"
@@ -862,7 +863,8 @@ namespace karabo {
              * @param replyToAllClients: If true, reply to all clients instead of only the
              * requesting client.
              */
-            void onRequestAlarms(WeakChannelPointer channel, const karabo::util::Hash& info, const bool replyToAllClients = false);
+            void onRequestAlarms(WeakChannelPointer channel, const karabo::util::Hash& info,
+                                 const bool replyToAllClients = false);
 
             /**
              * Callback executed upon reply from an alarm service to "onRequestAlarms".
@@ -874,16 +876,18 @@ namespace karabo {
              * alarms -> Nested Hash of form given in "slotAlarmSignalsUpdate"
              *
              * It sends out a Hash of form:
-             * Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
+             * Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows",
+             * reply.get<Hash>("alarms"));
              */
-            void onRequestedAlarmsReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const bool replyToAllClients);
+            void onRequestedAlarmsReply(WeakChannelPointer channel, const karabo::util::Hash& reply,
+                                        const bool replyToAllClients);
 
 
             /**
              * Executed when the gui requests an update to schema attributes via the updateAttributes signal.
              * @param channel: gui channel that requested the update
-             * @param info: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>) where
-             * each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
+             * @param info: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>)
+             * where each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
              */
             void onUpdateAttributes(WeakChannelPointer channel, const karabo::util::Hash& info);
 
@@ -910,7 +914,8 @@ namespace karabo {
              * @param type: string which will afterwards contain type
              * @param instanceId: string which will be filled with the instance id
              */
-            void typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type, std::string& instanceId);
+            void typeAndInstanceFromTopology(const karabo::util::Hash& topologyEntry, std::string& type,
+                                             std::string& instanceId);
 
             /**
              * This device may not be locked
@@ -982,7 +987,8 @@ namespace karabo {
              *          - token: token of the database user - identifies the session
              *          - items: a vector of Hashes where each Hash is of the form:
              *                   - uuid: uuid of the item
-             *                   - revision (optional): revision to load. If not given the newest revision will be returned
+             *                   - revision (optional): revision to load. If not given the newest revision will be
+             * returned
              *                   - domain: to load this item from.
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
              */
@@ -994,9 +1000,9 @@ namespace karabo {
              * @param channel from which the request originates
              * @param info is given for compatability with all other calls but not further evaluated.
              *
-             * Will write to the calling channel a Hash where "type" = projectListProjectManagers and "reply" is a vector of strings containing
-             * the project manager device ids.
-             * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
+             * Will write to the calling channel a Hash where "type" = projectListProjectManagers and "reply" is a
+             * vector of strings containing the project manager device ids. For the reply written to channel see the
+             * documentation of karabo.bound_devices.ProjectManager
              */
             void onProjectListProjectManagers(WeakChannelPointer channel, const karabo::util::Hash& info);
 
@@ -1045,7 +1051,8 @@ namespace karabo {
              * @param replyType type of reply
              * @param reply the reply to forward
              */
-            void forwardReply(WeakChannelPointer channel, const std::string& replyType, const karabo::util::Hash& reply);
+            void forwardReply(WeakChannelPointer channel, const std::string& replyType,
+                              const karabo::util::Hash& reply);
 
             /**
              * Forward a reply from a remote slot call to a requesting GUI channel adding a token relevant to the callee
@@ -1055,7 +1062,8 @@ namespace karabo {
              * @param reply the reply to forward
              * @param token generated by the calling client
              */
-            void forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const std::string& origin);
+            void forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply,
+                                     const std::string& origin);
 
             /**
              * Check if a given project manager identified by id is known in the distributed system
@@ -1064,7 +1072,8 @@ namespace karabo {
              * @param type of the request
              * @return true if the project manager id exists in the distributed system
              */
-            bool checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type, const std::string & reason);
+            bool checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string& type,
+                                       const std::string& reason);
 
             /**
              * Calls the ``request`` slot on the device specified by ``deviceId``
@@ -1076,7 +1085,8 @@ namespace karabo {
             /**
              * Error handler to be called in case of remote errors resulting from requests.
              */
-            void onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info, const std::string& token);
+            void onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info,
+                                               const std::string& token);
 
             /**
              * Utility for getting a "name" from client connections.
@@ -1105,10 +1115,10 @@ namespace karabo {
              * Helper Function to recalculate the list of timeout violating devices from the list of offending classes
              * TODO: remove this once "fast slot reply policy" is enforced
              */
-            void recalculateTimingOutDevices(const karabo::util::Hash& topologyEntry, const std::vector <std::string>& timingOutClasses, bool clearSet);
-
+            void recalculateTimingOutDevices(const karabo::util::Hash& topologyEntry,
+                                             const std::vector<std::string>& timingOutClasses, bool clearSet);
         };
-    }
-}
+    } // namespace devices
+} // namespace karabo
 
 #endif

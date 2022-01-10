@@ -5,15 +5,17 @@
  * Created on Sep 18, 2012, 6:47:59 PM
  */
 
+#include "Hash_Test.hh"
+
+#include <karabo/util/Exception.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
-#include <karabo/util/Schema.hh>
-#include <stack>
-#include "Hash_Test.hh"
-#include "karabo/util/ToLiteral.hh"
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/Exception.hh>
 #include <karabo/util/PackParameters.hh>
+#include <karabo/util/Schema.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <stack>
+
+#include "karabo/util/ToLiteral.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 
@@ -21,24 +23,19 @@ using namespace karabo::util;
 using namespace std;
 
 
-Hash_Test::Hash_Test() {
-}
+Hash_Test::Hash_Test() {}
 
 
-Hash_Test::~Hash_Test() {
-}
+Hash_Test::~Hash_Test() {}
 
 
-void Hash_Test::setUp() {
-}
+void Hash_Test::setUp() {}
 
 
-void Hash_Test::tearDown() {
-}
+void Hash_Test::tearDown() {}
 
 
 void Hash_Test::testConstructors() {
-
     {
         Hash h;
         h.set("h", Hash());
@@ -84,7 +81,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
+        CPPUNIT_ASSERT(h.get<string>("d") == "4");
     }
 
     {
@@ -104,8 +101,8 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int> > ("e")[0] == 5);
+        CPPUNIT_ASSERT(h.get<string>("d") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
     }
 
     {
@@ -115,50 +112,51 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash > ("f").get<int>("a") == 6);
-        CPPUNIT_ASSERT(h.get<int > ("f.a") == 6);
-
+        CPPUNIT_ASSERT(h.get<string>("d") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        CPPUNIT_ASSERT(h.get<Hash>("f").get<int>("a") == 6);
+        CPPUNIT_ASSERT(h.get<int>("f.a") == 6);
     }
 
     {
-        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", Hash::Pointer(new Hash("a", 6)));
+        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f",
+               Hash::Pointer(new Hash("a", 6)));
         CPPUNIT_ASSERT(h.empty() == false);
         CPPUNIT_ASSERT(h.size() == 6);
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash::Pointer > ("f")->get<int>("a") == 6);
+        CPPUNIT_ASSERT(h.get<string>("d") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        CPPUNIT_ASSERT(h.get<Hash::Pointer>("f")->get<int>("a") == 6);
     }
 
 
     {
-        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", std::vector<Hash::Pointer>(5, Hash::Pointer(new Hash("a", 6))));
+        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f",
+               std::vector<Hash::Pointer>(5, Hash::Pointer(new Hash("a", 6))));
         CPPUNIT_ASSERT(h.empty() == false);
         CPPUNIT_ASSERT(h.size() == 6);
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash::Pointer > > ("f")[3]->get<int>("a") == 6);
-
+        CPPUNIT_ASSERT(h.get<string>("d") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned int>>("e")[0] == 5);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash::Pointer>>("f")[3]->get<int>("a") == 6);
     }
 
     {
-        Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long> (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
-        h.set("foo.array", NDArray(Dims(5,5)));
+        Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long>(5, 5),
+               "F.f.f.f.f", Hash("x.y.z", 99));
+        h.set("foo.array", NDArray(Dims(5, 5)));
         CPPUNIT_ASSERT(h.empty() == false);
         CPPUNIT_ASSERT(h.size() == 7);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 1);
         CPPUNIT_ASSERT(h.get<double>("b.c") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(h.get<string > ("d.e") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
-        CPPUNIT_ASSERT(h.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
+        CPPUNIT_ASSERT(h.get<string>("d.e") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned long long>>("e.f.g.h")[0] == 5);
+        CPPUNIT_ASSERT(h.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
         // Internally, Hash-derived classes are stored as Hash
         CPPUNIT_ASSERT(h.getType("foo.array") == karabo::util::Types::HASH);
@@ -172,8 +170,8 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(flat.get<int>("a.b.c", 0) == 1);
         CPPUNIT_ASSERT(flat.get<double>("b.c", 0) == 2.0);
         CPPUNIT_ASSERT(flat.get<float>("c", 0) == 3.0);
-        CPPUNIT_ASSERT(flat.get<string > ("d.e", 0) == "4");
-        CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long> >("e.f.g.h", 0)[0] == 5);
+        CPPUNIT_ASSERT(flat.get<string>("d.e", 0) == "4");
+        CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long>>("e.f.g.h", 0)[0] == 5);
         CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
         // Internally, Hash-derived classes are stored as Hash
         CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
@@ -186,15 +184,14 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tree.get<int>("a.b.c") == 1);
         CPPUNIT_ASSERT(tree.get<double>("b.c") == 2.0);
         CPPUNIT_ASSERT(tree.get<float>("c") == 3.0);
-        CPPUNIT_ASSERT(tree.get<string > ("d.e") == "4");
-        CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
-        CPPUNIT_ASSERT(tree.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
+        CPPUNIT_ASSERT(tree.get<string>("d.e") == "4");
+        CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long>>("e.f.g.h")[0] == 5);
+        CPPUNIT_ASSERT(tree.get<Hash>("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
         // Internally, Hash-derived classes are stored as Hash
         CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
-
     }
-    
+
     {
         // copy constructor
         Hash tmp("a", 1);
@@ -204,7 +201,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(tmp.empty() == false);
     }
-    
+
     {
         // lvalue assignment
         Hash tmp("a", 1);
@@ -225,7 +222,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(tmp.empty() == true);
     }
-    
+
     {
         // rvalue assignment
         Hash h;
@@ -236,52 +233,50 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(tmp.empty() == true);
     }
-
 }
 
 
 void Hash_Test::testGetSet() {
-
     {
         Hash h;
         h.set("a.b.c1.d", 1);
-        CPPUNIT_ASSERT(h.get<Hash > ("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c1") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b.c1").has("d") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c1") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b.c1").has("d") == true);
         CPPUNIT_ASSERT(h.get<int>("a.b.c1.d") == 1);
         CPPUNIT_ASSERT(h.has("a.b.c1.d") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a").has("b.c1") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").has("b.c1") == true);
 
         h.set("a.b.c2.d", "1");
-        CPPUNIT_ASSERT(h.get<Hash > ("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c1") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c2") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c2.d") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b").is<string > ("c2.d") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b.c2").has("d") == true);
-        CPPUNIT_ASSERT(h.get<string > ("a.b.c2.d") == "1");
+        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c1") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c2") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b").has("c2.d") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b").is<string>("c2.d") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b.c2").has("d") == true);
+        CPPUNIT_ASSERT(h.get<string>("a.b.c2.d") == "1");
 
         h.set("a.b[0]", Hash("a", 1));
-        CPPUNIT_ASSERT(h.get<Hash > ("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a").size() == 1);
-        CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b").size() == 1);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[0].size() == 1);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[0].get<int>("a") == 1);
+        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").size() == 1);
+        CPPUNIT_ASSERT(h.is<std::vector<Hash>>("a.b") == true);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b").size() == 1);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[0].size() == 1);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[0].get<int>("a") == 1);
         CPPUNIT_ASSERT(h.get<int>("a.b[0].a") == 1);
 
         h.set("a.b[2]", Hash("a", "1"));
         CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
         CPPUNIT_ASSERT(h.get<Hash>("a").size() == 1);
-        CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
+        CPPUNIT_ASSERT(h.is<std::vector<Hash>>("a.b") == true);
         CPPUNIT_ASSERT(h.has("a.b") == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b").size() == 3);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b").size() == 3);
         CPPUNIT_ASSERT(h.get<int>("a.b[0].a") == 1);
         CPPUNIT_ASSERT(h.get<Hash>("a.b[1]").empty() == true);
         CPPUNIT_ASSERT(h.get<string>("a.b[2].a") == "1");
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[0].is<int>("a") == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[1].empty() == true);
-        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[2].is<string>("a") == true);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[0].is<int>("a") == true);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[1].empty() == true);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash>>("a.b")[2].is<string>("a") == true);
 
         CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[0]") == true);
         CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[1]") == true);
@@ -296,7 +291,7 @@ void Hash_Test::testGetSet() {
         h.set("a.b.c", 1);
         h.set("a.b.c", 2);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
-        CPPUNIT_ASSERT(h.get<Hash > ("a").is<Hash > ("b") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b") == true);
         CPPUNIT_ASSERT(h.is<int>("a.b.c") == true);
         CPPUNIT_ASSERT(h.has("a.b") == true);
         CPPUNIT_ASSERT(h.has("a.b.c.d") == false);
@@ -314,8 +309,8 @@ void Hash_Test::testGetSet() {
         h.set("x[1].y[0]", Hash("a", 4.0, "b", "green", "c", false));
         CPPUNIT_ASSERT(h.get<bool>("x[0].y[0].c") == true);
         CPPUNIT_ASSERT(h.get<bool>("x[1].y[0].c") == false);
-        CPPUNIT_ASSERT(h.get<string > ("x[0].y[0].b") == "red");
-        CPPUNIT_ASSERT(h.get<string > ("x[1].y[0].b") == "green");
+        CPPUNIT_ASSERT(h.get<string>("x[0].y[0].b") == "red");
+        CPPUNIT_ASSERT(h.get<string>("x[1].y[0].b") == "green");
     }
 
     {
@@ -333,7 +328,7 @@ void Hash_Test::testGetSet() {
         Hash h("a", "1");
         h.get("a", s);
         CPPUNIT_ASSERT(s == "1");
-        h.get<string > ("a") = "2";
+        h.get<string>("a") = "2";
         h.get("a", s);
         CPPUNIT_ASSERT(s == "2");
     }
@@ -359,7 +354,7 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT_THROW(h.get<int>("c"), karabo::util::ParameterException);
 
         // non-existing index of vector that is last item
-        CPPUNIT_ASSERT(h.get<vector<Hash> >("b").size() == 2);
+        CPPUNIT_ASSERT(h.get<vector<Hash>>("b").size() == 2);
         bool caught2 = false;
         try {
             h.get<Hash>("b[2]");
@@ -383,17 +378,25 @@ void Hash_Test::testGetSet() {
  * A helper class tracing move and copy construction to test Hash::set move-assignment.
  */
 struct TraceCopies {
-
     explicit TraceCopies(int v = 0) : value(v) {}
-    TraceCopies(const TraceCopies& other) : value(other.value) { ++countCopyConstr;}
+    TraceCopies(const TraceCopies& other) : value(other.value) {
+        ++countCopyConstr;
+    }
     // Move constructor, leaving the source in a valid (but other) state,
     // noexcept needed to get used in std::vector<TraceCopies>::resize(n)
-    TraceCopies(TraceCopies&& other) noexcept : value(other.value) { ++countMoveConstr; other.value = -1;}
+    TraceCopies(TraceCopies&& other) noexcept : value(other.value) {
+        ++countMoveConstr;
+        other.value = -1;
+    }
 
     int value;
 
-    static int counts() { return (countCopyConstr + countMoveConstr);}
-    static void reset() { countCopyConstr = countMoveConstr = 0;}
+    static int counts() {
+        return (countCopyConstr + countMoveConstr);
+    }
+    static void reset() {
+        countCopyConstr = countMoveConstr = 0;
+    }
 
     static int countCopyConstr;
     static int countMoveConstr;
@@ -407,12 +410,16 @@ class TraceCopiesHash : protected Hash {
     // Since inside the Hash it is stored like a Hash,
     // tracing has to be indirect via its TraceCopies member
 
-    public:
+   public:
     // Class info needed for these Hash-inheriting objects
     KARABO_CLASSINFO(TraceCopiesHash, "TraceCopiesHash", "2.11");
 
-    TraceCopiesHash() { set("v", TraceCopies(0));}
-    explicit TraceCopiesHash(const TraceCopies& v) { set("v", v);}
+    TraceCopiesHash() {
+        set("v", TraceCopies(0));
+    }
+    explicit TraceCopiesHash(const TraceCopies& v) {
+        set("v", v);
+    }
     TraceCopiesHash(const TraceCopiesHash& other) : Hash(other) {}
     TraceCopiesHash(TraceCopiesHash&& other) noexcept : Hash(other) {
         // Put back into a valid state - Hash(other) just cleared (i.e. removed key "v").
@@ -425,13 +432,18 @@ class TraceCopiesHash : protected Hash {
         return *this;
     }
 
-    const TraceCopies& getValue() const { return get<TraceCopies>("v");}
-    void setValue(TraceCopies&& v)  { set("v", std::move(v));}
-    void setValue(int v)  { get<TraceCopies>("v").value = v;}
+    const TraceCopies& getValue() const {
+        return get<TraceCopies>("v");
+    }
+    void setValue(TraceCopies&& v) {
+        set("v", std::move(v));
+    }
+    void setValue(int v) {
+        get<TraceCopies>("v").value = v;
+    }
 };
 
 void Hash_Test::testSetMoveSemantics() {
-
     TraceCopies::reset(); // Ensure that nothing yet - e.g. when other test that ran before failed
     {
         // test Hash::set of normal non-const object
@@ -521,7 +533,7 @@ void Hash_Test::testSetMoveSemantics() {
         CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h3.ta2").value);
         h.set("h3", hInner2);
         CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr); // another copy
-        CPPUNIT_ASSERT_EQUAL(7, TraceCopies::counts()); // ...and still one move
+        CPPUNIT_ASSERT_EQUAL(7, TraceCopies::counts());        // ...and still one move
         CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3.ta2").value);
 
         TraceCopies::reset();
@@ -738,7 +750,7 @@ void Hash_Test::testSetMoveSemantics() {
         h.set<NDArray>("ndarray", NDArray(Dims({20}), 5));
         CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 20ul, h.get<NDArray>("ndarray").size());
 
-        h.set<TraceCopies>("trace", TraceCopies (77));
+        h.set<TraceCopies>("trace", TraceCopies(77));
         CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // even this syntax does proper move
         CPPUNIT_ASSERT_EQUAL(77, h.get<TraceCopies>("trace").value);
 
@@ -752,7 +764,7 @@ void Hash_Test::testSetMoveSemantics() {
         h.getNode("ndarray").setValue<NDArray>(NDArray(Dims({10}), 6));
         CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 10ul, h.get<NDArray>("ndarray").size());
 
-        h.getNode("trace").setValue<TraceCopies>(TraceCopies (88));
+        h.getNode("trace").setValue<TraceCopies>(TraceCopies(88));
         CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr); // even this syntax does proper move
         CPPUNIT_ASSERT_EQUAL(88, h.get<TraceCopies>("trace").value);
 
@@ -761,7 +773,6 @@ void Hash_Test::testSetMoveSemantics() {
 }
 
 void Hash_Test::testSetAttributeMoveSemantics() {
-
     TraceCopies::reset(); // Ensure that nothing yet - e.g. when other test that ran before failed
     {
         // test Hash::setAttribute of normal non-const object
@@ -789,7 +800,8 @@ void Hash_Test::testSetAttributeMoveSemantics() {
         CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
         CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr); // since moved
         CPPUNIT_ASSERT_EQUAL(8, h.getAttribute<TraceCopies>("a", "tb").value);
-        CPPUNIT_ASSERT_EQUAL(-1, ta.value); // as before: the moved-from object gets -1 assigned to value in the move constructor
+        CPPUNIT_ASSERT_EQUAL(
+              -1, ta.value); // as before: the moved-from object gets -1 assigned to value in the move constructor
         ta.value = 9;
         h.setAttribute<TraceCopies>("a", "tb", std::move(ta));
         CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
@@ -893,7 +905,6 @@ void Hash_Test::testSetAttributeMoveSemantics() {
 }
 
 void Hash_Test::testConstructorMoveSemantics() {
-
     TraceCopies::reset(); // Clean start
 
     // First test setting single value as specially treated
@@ -926,11 +937,11 @@ void Hash_Test::testConstructorMoveSemantics() {
         Hash ha("a", ta, "b", tb);
         const Hash hb("a", ta, "b", tb);
         TraceCopies::reset(); // Only count for the following constructor(s)
-        Hash h("int", 0, // for first do not test TraceCopies since that is tested above
-               "ta", ta, "tb", tb, "tc", TraceCopies(3),
-               "ha", ha, "hb", hb, "hc", Hash("a", ta, "b", tb));
+        Hash h("int", 0,      // for first do not test TraceCopies since that is tested above
+               "ta", ta, "tb", tb, "tc", TraceCopies(3), "ha", ha, "hb", hb, "hc", Hash("a", ta, "b", tb));
 
-        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::countCopyConstr); // ta, tb, 4x when ha and hb are copied into h and 2x when ta/tb are copied into hc
+        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::countCopyConstr); // ta, tb, 4x when ha and hb are copied into h and 2x
+                                                               // when ta/tb are copied into hc
         CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // tc
 
         CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("ta").value);
@@ -960,22 +971,21 @@ void Hash_Test::testConstructorMoveSemantics() {
 }
 
 void Hash_Test::testGetAs() {
-
     {
         Hash h("a", true);
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "1");
-        CPPUNIT_ASSERT(h.getAs<int > ("a") == 1);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAs<double > ("a"), 0.00001);
-        CPPUNIT_ASSERT(h.getAs<char > ("a") == '1');
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "1");
+        CPPUNIT_ASSERT(h.getAs<int>("a") == 1);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAs<double>("a"), 0.00001);
+        CPPUNIT_ASSERT(h.getAs<char>("a") == '1');
     }
 
     {
         Hash h("a", true);
         h.setAttribute("a", "a", true);
-        CPPUNIT_ASSERT(h.getAttributeAs<string > ("a", "a") == "1");
-        CPPUNIT_ASSERT(h.getAttributeAs<int > ("a", "a") == 1);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double > ("a", "a"), 0.00001);
-        CPPUNIT_ASSERT(h.getAttributeAs<char > ("a", "a") == '1');
+        CPPUNIT_ASSERT(h.getAttributeAs<string>("a", "a") == "1");
+        CPPUNIT_ASSERT(h.getAttributeAs<int>("a", "a") == 1);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double>("a", "a"), 0.00001);
+        CPPUNIT_ASSERT(h.getAttributeAs<char>("a", "a") == '1');
         boost::any& any = h.getAttributeAsAny("a", "a");
         CPPUNIT_ASSERT(boost::any_cast<bool>(any) == true);
         h.setAttribute("a", "b", 12);
@@ -983,101 +993,100 @@ void Hash_Test::testGetAs() {
         Hash::Attributes attrs = h.getAttributes("a");
         Hash g("Z.a.b.c", "Value");
         g.setAttributes("Z.a.b.c", attrs);
-        CPPUNIT_ASSERT(g.getAttributeAs<string > ("Z.a.b.c", "a") == "1");
-        CPPUNIT_ASSERT(g.getAttributeAs<int > ("Z.a.b.c", "a") == 1);
-        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, g.getAttributeAs<double > ("Z.a.b.c", "a"), 0.00001);
+        CPPUNIT_ASSERT(g.getAttributeAs<string>("Z.a.b.c", "a") == "1");
+        CPPUNIT_ASSERT(g.getAttributeAs<int>("Z.a.b.c", "a") == 1);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, g.getAttributeAs<double>("Z.a.b.c", "a"), 0.00001);
     }
 
     {
         Hash h("a", std::vector<bool>(4, false));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,0,0,0");
-        int tmp = h.getAs<int, std::vector > ("a")[3];
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "0,0,0,0");
+        int tmp = h.getAs<int, std::vector>("a")[3];
         CPPUNIT_ASSERT(tmp == 0);
     }
     {
         Hash h("a", char('R'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "R");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "R");
     }
     {
         // Assumes vector to contain binary data and does a base64 encode
         Hash h("a", std::vector<unsigned char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "NDQ0");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "NDQ0");
     }
     {
         // Assumes vector to contain binary data and does a base64 encode
         Hash h("a", std::vector<char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "NDQ0");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "NDQ0");
     }
     {
         // Assumes vector to contain printable (ASCII) characters
         Hash h("a", std::vector<signed char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "52,52,52");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "52,52,52");
     }
     {
-        Hash h("a", static_cast<unsigned char> ('R'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "82");
+        Hash h("a", static_cast<unsigned char>('R'));
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "82");
     }
     {
-        Hash h("a", static_cast<signed char> ('R'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "82");
+        Hash h("a", static_cast<signed char>('R'));
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "82");
     }
     {
         Hash h("a", std::vector<signed char>(4, '2'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "50,50,50,50");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "50,50,50,50");
     }
     {
         Hash h("a", short(126));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "126");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "126");
     }
     {
         Hash h("a", std::vector<short>(4, 13));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "13,13,13,13");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "13,13,13,13");
     }
     {
         Hash h("a", int(-42));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "-42");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "-42");
     }
     {
         Hash h("a", std::vector<int>(1, -42));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "-42");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "-42");
     }
     {
-        Hash h("a", static_cast<unsigned int> (42));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "42");
+        Hash h("a", static_cast<unsigned int>(42));
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "42");
     }
     {
         Hash h("a", std::vector<unsigned int>());
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "");
     }
     {
-        Hash h("a", static_cast<long long> (-2147483647));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "-2147483647");
+        Hash h("a", static_cast<long long>(-2147483647));
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "-2147483647");
     }
     {
-        Hash h("a", static_cast<unsigned long long> (0));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "0");
+        Hash h("a", static_cast<unsigned long long>(0));
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "0");
     }
     {
-        Hash h("a", static_cast<float> (0.1234567));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "0.1234567");
+        Hash h("a", static_cast<float>(0.1234567));
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "0.1234567");
     }
     {
         Hash h("a", 0.123456789123456);
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "0.123456789123456");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "0.123456789123456");
     }
     {
         Hash h("a", std::complex<float>(1.2, 0.5));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.2,0.5)");
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "(1.2,0.5)");
     }
     {
         Hash h("a", std::complex<double>(1.2, 0.5));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.2,0.5)");
-    }    
+        CPPUNIT_ASSERT(h.getAs<string>("a") == "(1.2,0.5)");
+    }
 }
 
 
 void Hash_Test::testFind() {
-
     // First test non-const version of Hash::find(..).
     {
         Hash h("a.b.c1.d", 1, "b[2].c.d", "some");
@@ -1183,25 +1192,22 @@ void Hash_Test::testFind() {
         // Check non-existence with invalid index as last but two.
         node = h.find("b[3].c.d");
         CPPUNIT_ASSERT(!node == true);
-
     }
-
 }
 
 
 void Hash_Test::testAttributes() {
-
     {
         Hash h("a.b.a.b", 42);
         h.setAttribute("a", "attr1", "someValue");
-        CPPUNIT_ASSERT(h.getAttribute<std::string > ("a", "attr1") == "someValue");
+        CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
 
         h.setAttribute("a", "attr2", 42);
-        CPPUNIT_ASSERT(h.getAttribute<std::string > ("a", "attr1") == "someValue");
+        CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
         CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 42);
 
         h.setAttribute("a", "attr2", 43);
-        CPPUNIT_ASSERT(h.getAttribute<std::string > ("a", "attr1") == "someValue");
+        CPPUNIT_ASSERT(h.getAttribute<std::string>("a", "attr1") == "someValue");
         CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 43);
 
         h.setAttribute("a.b.a.b", "attr1", true);
@@ -1209,7 +1215,7 @@ void Hash_Test::testAttributes() {
 
         const Hash::Attributes& attrs = h.getAttributes("a");
         CPPUNIT_ASSERT(attrs.size() == 2);
-        CPPUNIT_ASSERT(attrs.get<std::string > ("attr1") == "someValue");
+        CPPUNIT_ASSERT(attrs.get<std::string>("attr1") == "someValue");
         CPPUNIT_ASSERT(attrs.get<int>("attr2") == 43);
 
         Hash::Attributes::Node node = attrs.getNode("attr2");
@@ -1221,12 +1227,10 @@ void Hash_Test::testAttributes() {
         h.getNode("a").setAttribute<int>("a", b);
         CPPUNIT_ASSERT(h.getNode("a").getType() == Types::INT32);
     }
-
 }
 
 
 void Hash_Test::testIteration() {
-
     Hash h("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
     Hash::Attributes a("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
 
@@ -1284,7 +1288,7 @@ void Hash_Test::testIteration() {
         CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
     }
 
-    h.erase("be"); // Remove
+    h.erase("be");    // Remove
     h.set("be", "2"); // Must be last element in sequence now
 
     {
@@ -1317,7 +1321,7 @@ void Hash_Test::testIteration() {
     //         "set"
     {
         std::set<std::string> tmp; // create empty set
-        h.getKeys(tmp); // fill set by keys
+        h.getKeys(tmp);            // fill set by keys
         std::set<std::string>::const_iterator it = tmp.begin();
         CPPUNIT_ASSERT(*it++ == "be");
         CPPUNIT_ASSERT(*it++ == "correct");
@@ -1330,7 +1334,7 @@ void Hash_Test::testIteration() {
     //         "vector"
     {
         std::vector<std::string> tmp; // create empty vector
-        h.getKeys(tmp); // fill vector by keys
+        h.getKeys(tmp);               // fill vector by keys
         std::vector<std::string>::const_iterator it = tmp.begin();
         CPPUNIT_ASSERT(*it++ == "should");
         CPPUNIT_ASSERT(*it++ == "iterated");
@@ -1343,7 +1347,7 @@ void Hash_Test::testIteration() {
     //         "list"
     {
         std::list<std::string> tmp; // create empty list
-        h.getKeys(tmp); // fill list by keys
+        h.getKeys(tmp);             // fill list by keys
         std::list<std::string>::const_iterator it = tmp.begin();
         CPPUNIT_ASSERT(*it++ == "should");
         CPPUNIT_ASSERT(*it++ == "iterated");
@@ -1356,7 +1360,7 @@ void Hash_Test::testIteration() {
     //         "deque"
     {
         std::deque<std::string> tmp; // create empty queue
-        h.getKeys(tmp); // fill deque by keys
+        h.getKeys(tmp);              // fill deque by keys
         std::deque<std::string>::const_iterator it = tmp.begin();
         CPPUNIT_ASSERT(*it++ == "should");
         CPPUNIT_ASSERT(*it++ == "iterated");
@@ -1373,12 +1377,12 @@ void Hash_Test::testGetPaths() {
         Hash h;
         h.set("a", 1);
         h.set("b.c", "foo");
-        h.set("array", NDArray(Dims(10,10)));
-        std::vector<Hash > vh;
+        h.set("array", NDArray(Dims(10, 10)));
+        std::vector<Hash> vh;
         vh.push_back(Hash("a.b", 123));
         vh.push_back(Hash());
         h.set("vector.hash.one", vh);
-        h.set("empty.vector.hash", std::vector<Hash > ());
+        h.set("empty.vector.hash", std::vector<Hash>());
         h.set("empty.hash", Hash());
 
         std::vector<std::string> paths;
@@ -1394,12 +1398,12 @@ void Hash_Test::testGetPaths() {
         CPPUNIT_ASSERT(*it++ == "empty.vector.hash");
         CPPUNIT_ASSERT(*it++ == "empty.hash");
     }
-    
+
     {
         Hash h;
         h.set("a", 1);
         h.set("b.c", "foo");
-        h.set("b.array", NDArray(Dims(10,10)));
+        h.set("b.array", NDArray(Dims(10, 10)));
         std::vector<std::string> paths;
         h.getDeepPaths(paths);
         CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(paths) += "\n" + toString(h), 6ul, paths.size());
@@ -1408,34 +1412,22 @@ void Hash_Test::testGetPaths() {
 
 
 void Hash_Test::testMerge() {
-
-    Hash h1("a", 1,
-            "b", 2,
-            "c.b[0].g", 3,
-            "c.c[0].d", 4,
-            "c.c[1]", Hash("a.b.c", 6),
-            "d.e", 7
+    Hash h1("a", 1, "b", 2, "c.b[0].g", 3, "c.c[0].d", 4, "c.c[1]", Hash("a.b.c", 6), "d.e", 7
             //,"f.g", 99 // can only set 6 keys in constructor...
-            );
+    );
     h1.set("f.g", 99);
     h1.set("h", -1);
     h1.setAttribute("a", "attrKey", "Just a number");
     h1.setAttribute("c.b", "attrKey2", 3);
     h1.setAttribute("c.b[0].g", "attrKey3", 4.);
     h1.setAttribute("f", "attrKey6", std::string("buaah!"));
-    h1.set("array2", NDArray(Dims(1,1)));
+    h1.set("array2", NDArray(Dims(1, 1)));
 
     Hash h1b(h1);
     Hash h1c(h1);
     Hash h1d(h1);
 
-    Hash h2("a", 21,
-            "b.c", 22,
-            "c.b[0]", Hash("key", "value"),
-            "c.b[1].d", 24,
-            "e", 27,
-            "f", Hash()
-            );
+    Hash h2("a", 21, "b.c", 22, "c.b[0]", Hash("key", "value"), "c.b[1].d", 24, "e", 27, "f", Hash());
     h2.set("g.h.i", -88);
     h2.set("g.h.j", -188);
     h2.set("h.i", -199);
@@ -1444,14 +1436,14 @@ void Hash_Test::testMerge() {
     h2.set(".i[1].j", 200);
     h2.set(".i[2]", Hash("k.l", 5.));
     h2.set("j", Hash("k", 5.));
-    h2.set("array", NDArray(Dims(5,5)));
-    h2.set("array2", NDArray(Dims(5,5)));
+    h2.set("array", NDArray(Dims(5, 5)));
+    h2.set("array2", NDArray(Dims(5, 5)));
     h2.setAttribute("a", "attrKey", "Really just a number");
     h2.setAttribute("e", "attrKey4", -1);
     h2.setAttribute("e", "attrKey5", -11.f);
     h2.setAttribute("f", "attrKey7", 77u);
     h2.setAttribute(".i", "attrKey8", 123ll); // attribute on new vector<Hash> node
-    h2.setAttribute("j", "attrKey9", 12.3); // ... and new Hash node
+    h2.setAttribute("j", "attrKey9", 12.3);   // ... and new Hash node
 
 
     h1.merge(h2); // Hash::REPLACE_ATTRIBUTES is the default
@@ -1482,14 +1474,17 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on node kept", 0ul, h1.getAttributes("c.b").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes on untouched leaf not kept", 1ul, h1.getAttributes("c.b[0].g").size());
     CPPUNIT_ASSERT_MESSAGE("Attribute on untouched leaf not kept", h1.hasAttribute("c.b[0].g", "attrKey3"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed", 4., h1.getAttribute<double>("c.b[0].g", "attrKey3"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed", 4.,
+                                 h1.getAttribute<double>("c.b[0].g", "attrKey3"));
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on node changed (MERGE)", 1ul, h1b.getAttributes("c.b").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on leaf changed (MERGE)", 1ul, h1b.getAttributes("c.b[0].g").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of attributes on leaf changed (MERGE)", 1ul,
+                                 h1b.getAttributes("c.b[0].g").size());
     CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on node changed (MERGE)", 3, h1b.getAttribute<int>("c.b", "attrKey2"));
     CPPUNIT_ASSERT_MESSAGE("Attribute on untouched leaf not kept (MERGE)", h1b.hasAttribute("c.b[0].g", "attrKey3"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed (MERGE)", 4., h1b.getAttribute<double>("c.b[0].g", "attrKey3"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Attribute on untouched leaf changed (MERGE)", 4.,
+                                 h1b.getAttribute<double>("c.b[0].g", "attrKey3"));
 
     CPPUNIT_ASSERT(!h1.has("c.b.d"));
     CPPUNIT_ASSERT(h1.has("c.b[0]"));
@@ -1512,8 +1507,9 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1.has("array.data"));
     CPPUNIT_ASSERT(h1.has("array2"));
     CPPUNIT_ASSERT(h1.has("array2.data"));
-    
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Array size changed through merge", 25ull, h1.get<NDArray>("array2").getShape().size());
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Array size changed through merge", 25ull,
+                                 h1.get<NDArray>("array2").getShape().size());
 
     // Just add attributes with leaf (identical for REPLACE or MERGE)
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added", 2ul, h1.getAttributes("e").size());
@@ -1521,21 +1517,22 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect", -11.f, h1.getAttribute<float>("e", "attrKey5"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on leaf added (MERGE)", 2ul, h1b.getAttributes("e").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect (MERGE)", -1, h1b.getAttribute<int>("e", "attrKey4"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect (MERGE)", -11.f, h1b.getAttribute<float>("e", "attrKey5"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect (MERGE)", -11.f,
+                                 h1b.getAttribute<float>("e", "attrKey5"));
     // Just add attributes for new Hash/vector<Hash> (identical for REPLACE or MERGE)
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added", 1ul, h1.getAttributes(".i").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong",
-                                 123ll, h1.getAttribute<long long>(".i", "attrKey8"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong", 123ll,
+                                 h1.getAttribute<long long>(".i", "attrKey8"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added", 1ul, h1.getAttributes("j").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong",
-                                 12.3, h1.getAttribute<double>("j", "attrKey9"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong", 12.3, h1.getAttribute<double>("j", "attrKey9"));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added (MERGE)", 1ul, h1b.getAttributes(".i").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong  (MERGE)",
-                                 123ll, h1b.getAttribute<long long>(".i", "attrKey8"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added (MERGE)", 1ul,
+                                 h1b.getAttributes(".i").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong  (MERGE)", 123ll,
+                                 h1b.getAttribute<long long>(".i", "attrKey8"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added (MERGE)", 1ul, h1b.getAttributes("j").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong (MERGE)",
-                                 12.3, h1b.getAttribute<double>("j", "attrKey9"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong (MERGE)", 12.3,
+                                 h1b.getAttribute<double>("j", "attrKey9"));
 
     CPPUNIT_ASSERT_MESSAGE("Attribute on node not kept (MERGE)", h1b.hasAttribute("c.b", "attrKey2"));
 
@@ -1547,7 +1544,8 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect", 77u, h1.getAttribute<unsigned int>("f", "attrKey7"));
     // += is merge with REPLACE_ATTRIBUTES
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not replaced (+=)", 1ul, h1d.getAttributes("f").size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (+=)", 77u, h1d.getAttribute<unsigned int>("f", "attrKey7"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (+=)", 77u,
+                                 h1d.getAttribute<unsigned int>("f", "attrKey7"));
     // here is MERGE_ATTRIBUTES
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Attributes not merged", 2ul, h1b.getAttributes("f").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("UInt attribute value incorrect (MERGE)", std::string("buaah!"),
@@ -1605,13 +1603,13 @@ void Hash_Test::testMerge() {
     Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
     Hash hashTargetC(hashTargetB);
     Hash hashTargetD(hashTargetB);
-    const Hash hashSourceBCD("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6),
-                             "c[2]", Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
+    const Hash hashSourceBCD("a[2]", Hash("a", 33, "b", 4.4), "ha", 9, "c[1]", Hash("k", 5, "l", 6), "c[2]",
+                             Hash("b", -3), "d[2].b", 66, "e[1]", Hash("1", 1, "2", 2, "3", 3));
     selectedPaths.clear();
     selectedPaths.insert("a"); // trigger merging full vector
     // trigger selecting first HashVec item overwriting what was not a hashVec before, but only keep selected items
     selectedPaths.insert("c[1].l");
-    selectedPaths.insert("d"); // trigger adding full new vector
+    selectedPaths.insert("d");      // trigger adding full new vector
     selectedPaths.insert("e[1].2"); // trigger selective adding of hashVec where there was not node before
     selectedPaths.insert("e[1].3");
     hashTargetB.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
@@ -1631,7 +1629,7 @@ void Hash_Test::testMerge() {
     selectedPaths.clear();
     selectedPaths.insert("a[0]");
     selectedPaths.insert("a[2].b"); // trigger selective vector items
-    selectedPaths.insert("c"); // trigger overwriting with complete vector
+    selectedPaths.insert("c");      // trigger overwriting with complete vector
     hashTargetC.merge(hashSourceBCD, Hash::MERGE_ATTRIBUTES, selectedPaths);
     CPPUNIT_ASSERT(hashTargetC.has("a[1].b"));
     CPPUNIT_ASSERT(!hashTargetC.has("a[3]"));
@@ -1654,20 +1652,9 @@ void Hash_Test::testMerge() {
 
 
 void Hash_Test::testSubtract() {
-    Hash h1("a", 1,
-            "b", 2,
-            "c.b[0].g", 3,
-            "c.c[0].d", 4,
-            "c.c[1]", Hash("a.b.c", 6),
-            "d.e", 7
-            );
+    Hash h1("a", 1, "b", 2, "c.b[0].g", 3, "c.c[0].d", 4, "c.c[1]", Hash("a.b.c", 6), "d.e", 7);
 
-    Hash h2("a", 21,
-            "b.c", 22,
-            "c.b[0]", Hash("key", "value"),
-            "c.b[1].d", 24,
-            "e", 27
-            );
+    Hash h2("a", 21, "b.c", 22, "c.b[0]", Hash("key", "value"), "c.b[1].d", 24, "e", 27);
     h1 += h2;
     h1 -= h2;
     CPPUNIT_ASSERT(h1.has("a") == false);
@@ -1678,15 +1665,8 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
     CPPUNIT_ASSERT(h1.get<int>("d.e") == 7);
 
-    Hash h3("a.b.c", 1,
-            "a.b.d", 2,
-            "a.c.d", 22,
-            "b.c.d", 33,
-            "c.d.e", 44,
-            "c.e.f", 55
-            );
-    Hash h4("a.b", Hash(),
-            "c", Hash());
+    Hash h3("a.b.c", 1, "a.b.d", 2, "a.c.d", 22, "b.c.d", 33, "c.d.e", 44, "c.e.f", 55);
+    Hash h4("a.b", Hash(), "c", Hash());
     h3 -= h4;
     CPPUNIT_ASSERT(h3.has("a.b") == true);
     CPPUNIT_ASSERT(h3.has("c") == true);
@@ -1708,7 +1688,7 @@ void Hash_Test::testErase() {
     CPPUNIT_ASSERT(h1.has("a") == false);
     CPPUNIT_ASSERT(h1.size() == 3);
 
-    // non-existing key - return false and keep size: 
+    // non-existing key - return false and keep size:
     CPPUNIT_ASSERT(h1.erase("a") == false);
     CPPUNIT_ASSERT(h1.size() == 3);
 
@@ -1755,11 +1735,11 @@ void Hash_Test::testErase() {
 
     // Now testing erasure of elements in a vector<Hash>.
     Hash hVector("a[2].b", 111);
-    CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 3);
+    CPPUNIT_ASSERT(hVector.get<vector<Hash>>("a").size() == 3);
     CPPUNIT_ASSERT(hVector.erase("a[3]") == false);
-    CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 3);
+    CPPUNIT_ASSERT(hVector.get<vector<Hash>>("a").size() == 3);
     CPPUNIT_ASSERT(hVector.erase("a[0]") == true);
-    CPPUNIT_ASSERT(hVector.get<vector<Hash> >("a").size() == 2);
+    CPPUNIT_ASSERT(hVector.get<vector<Hash>>("a").size() == 2);
     CPPUNIT_ASSERT(hVector.get<int>("a[1].b") == 111);
     // index on non-existing key
     CPPUNIT_ASSERT(hVector.erase("c[2]") == false);
@@ -1768,17 +1748,17 @@ void Hash_Test::testErase() {
 
     // Now testing erasePath for paths containing indices.
     Hash hVector2("a[2].b", 111);
-    CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 3);
+    CPPUNIT_ASSERT(hVector2.get<vector<Hash>>("a").size() == 3);
     Hash copy = hVector2;
     hVector2.erasePath("a[3]"); // nothing happens (not even an exception)
     CPPUNIT_ASSERT(hVector2 == copy);
     hVector2.erasePath("a[3].b"); // nothing happens (not even an exception)
     CPPUNIT_ASSERT(hVector2 == copy);
     hVector2.erasePath("a[0]"); // shrunk
-    CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 2);
+    CPPUNIT_ASSERT(hVector2.get<vector<Hash>>("a").size() == 2);
     CPPUNIT_ASSERT(hVector2.get<int>("a[1].b") == 111);
     hVector2.erasePath("a[1].b"); // erase a[1] as well since b is only daughter
-    CPPUNIT_ASSERT(hVector2.get<vector<Hash> >("a").size() == 1);
+    CPPUNIT_ASSERT(hVector2.get<vector<Hash>>("a").size() == 1);
     // index for non-existing key must neither throw nor touch the content
     copy = hVector2;
     hVector2.erasePath("c[2]");
@@ -1792,8 +1772,7 @@ void Hash_Test::testErase() {
     CPPUNIT_ASSERT(hVector2.has("a") == false);
 
     // Test erase with empty keys at various places of the path
-    Hash hEmptyKey("", 1, "a.", 2, "a1.", 3,
-                   "b..", 31, "c..d", 32, "e..f", 33);
+    Hash hEmptyKey("", 1, "a.", 2, "a1.", 3, "b..", 31, "c..d", 32, "e..f", 33);
     Hash hEmptyKey2(hEmptyKey); // for next test section
     // only empty key
     CPPUNIT_ASSERT_EQUAL(6ul, hEmptyKey.size());
@@ -1929,7 +1908,7 @@ void Hash_Test::testIs() {
     // Test different cases: paths without indices, with index at end or in the middle.
     Hash h("a", 77, "b[1].d", 88.8, "b[2].c", 88);
     CPPUNIT_ASSERT(h.is<int>("a") == true);
-    CPPUNIT_ASSERT(h.is<vector<Hash> >("b") == true);
+    CPPUNIT_ASSERT(h.is<vector<Hash>>("b") == true);
     CPPUNIT_ASSERT(h.is<Hash>("b[0]") == true);
     CPPUNIT_ASSERT(h.is<double>("b[1].d") == true);
     CPPUNIT_ASSERT(h.is<Hash>("b[2]") == true);
@@ -1940,7 +1919,7 @@ void Hash_Test::testIs() {
     CPPUNIT_ASSERT(h.is<Hash>("b") == false);
     CPPUNIT_ASSERT(h.is<int>("b[0]") == false);
     CPPUNIT_ASSERT(h.is<float>("b[1].d") == false);
-    CPPUNIT_ASSERT(h.is<vector<Hash> >("b[2]") == false);
+    CPPUNIT_ASSERT(h.is<vector<Hash>>("b[2]") == false);
     CPPUNIT_ASSERT(h.is<double>("b[2].c") == false);
 
     // Check exceptions on bad paths:
@@ -1986,16 +1965,11 @@ namespace helper {
 
 
     class Helper {
-
-        public:
-
-
-        Helper() {
-        };
+       public:
+        Helper(){};
 
 
-        virtual ~Helper() {
-        };
+        virtual ~Helper(){};
 
 
         bool operator()(const karabo::util::Hash::Node& node) {
@@ -2011,8 +1985,7 @@ namespace helper {
 
 
     bool dfs(const karabo::util::Hash& hash, Helper& helper) {
-        if (hash.empty())
-            return false;
+        if (hash.empty()) return false;
 
         for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
             if (!dfs(*it, helper)) return false;
@@ -2022,8 +1995,7 @@ namespace helper {
 
 
     bool dfs(const std::vector<karabo::util::Hash>& hash, Helper& helper) {
-        if (hash.empty())
-            return false;
+        if (hash.empty()) return false;
 
         for (size_t i = 0; i < hash.size(); ++i) {
             if (!dfs(hash[i], helper)) return false;
@@ -2036,27 +2008,22 @@ namespace helper {
         helper(node);
 
         if (node.getType() == Types::HASH) {
-            return dfs(node.getValue<Hash > (), helper);
+            return dfs(node.getValue<Hash>(), helper);
         }
         if (node.getType() == Types::VECTOR_HASH) {
-            return dfs(node.getValue<std::vector<Hash> >(), helper);
+            return dfs(node.getValue<std::vector<Hash>>(), helper);
         }
         return true;
     }
 
 
-    template<class V, class E>
+    template <class V, class E>
     class Visitor {
-
-        public:
-
-
-        Visitor() {
-        };
+       public:
+        Visitor(){};
 
 
-        ~Visitor() {
-        };
+        ~Visitor(){};
 
 
         E operator()(V& visitable) {
@@ -2071,10 +2038,9 @@ namespace helper {
         }
 
 
-        template<class Helper>
+        template <class Helper>
         static bool visit__(const karabo::util::Hash& hash, Helper& helper) {
-            if (hash.empty())
-                return false;
+            if (hash.empty()) return false;
 
             for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
                 if (!visit__(*it, helper)) return false;
@@ -2083,10 +2049,9 @@ namespace helper {
         }
 
 
-        template<class Helper>
+        template <class Helper>
         static bool visit__(const std::vector<karabo::util::Hash>& hash, Helper& helper) {
-            if (hash.empty())
-                return false;
+            if (hash.empty()) return false;
 
             for (size_t i = 0; i < hash.size(); ++i) {
                 if (!visit__(hash[i], helper)) return false;
@@ -2095,38 +2060,32 @@ namespace helper {
         }
 
 
-        template<class Helper>
+        template <class Helper>
         static bool visit__(const karabo::util::Hash::Node& node, Helper& helper) {
             helper(node);
 
             if (node.getType() == Types::HASH) {
-                return visit__(node.getValue<Hash > (), helper);
+                return visit__(node.getValue<Hash>(), helper);
             }
             if (node.getType() == Types::VECTOR_HASH) {
-                return visit__(node.getValue<std::vector<Hash> >(), helper);
+                return visit__(node.getValue<std::vector<Hash>>(), helper);
             }
             return true;
         }
     };
 
 
-}
+} // namespace helper
 
 
 class Counter : public helper::Helper {
-
-
-public:
-
-
-    Counter() : m_counter(0) {
-
-    }
+   public:
+    Counter() : m_counter(0) {}
 
 
     bool eval(const karabo::util::Hash::Node& node) {
         if (node.getType() == Types::VECTOR_HASH) {
-            m_counter += node.getValue<std::vector<Hash> >().size();
+            m_counter += node.getValue<std::vector<Hash>>().size();
         } else {
             ++m_counter;
         }
@@ -2137,20 +2096,15 @@ public:
     size_t getResult() {
         return m_counter;
     }
-private:
+
+   private:
     size_t m_counter;
 };
 
 
 class Concat : public helper::Helper {
-
-
-public:
-
-
-    Concat() : m_concat("") {
-
-    }
+   public:
+    Concat() : m_concat("") {}
 
 
     bool eval(const karabo::util::Hash::Node& node) {
@@ -2162,17 +2116,14 @@ public:
     std::string getResult() {
         return m_concat;
     }
-private:
+
+   private:
     std::string m_concat;
 };
 
 
 class Serializer : public helper::Helper {
-
-
-public:
-
-
+   public:
     Serializer() : indent(0) {
         memset(fill, ' ', 256);
         fill[indent] = 0;
@@ -2192,7 +2143,8 @@ public:
         const Hash::Attributes& attrs = node.getAttributes();
         if (attrs.size() > 0) {
             for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
-                m_stream << " " << ait->getKey() << "=\"" << ait->getValueAs<string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
+                m_stream << " " << ait->getKey() << "=\""
+                         << ait->getValueAs<string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
             }
         }
 
@@ -2212,16 +2164,19 @@ public:
     bool eval(const karabo::util::Hash::Node& node) {
         Types::ReferenceType type = node.getType();
         switch (type) {
-            case Types::HASH: m_stream << " +";
+            case Types::HASH:
+                m_stream << " +";
                 indices.push(-1);
                 break;
-            case Types::VECTOR_HASH: m_stream << " @";
+            case Types::VECTOR_HASH:
+                m_stream << " @";
                 indices.push(0);
                 break;
-            case Types::SCHEMA: m_stream << " => " << node.getValue<karabo::util::Schema>();
+            case Types::SCHEMA:
+                m_stream << " => " << node.getValue<karabo::util::Schema>();
                 break;
             default:
-                if (Types::isPointer(type)) {// TODO Add pointer types
+                if (Types::isPointer(type)) { // TODO Add pointer types
                     m_stream << " => xxx " << Types::to<ToLiteral>(type);
                 } else {
                     m_stream << " => " << node.getValueAs<string>() << " " << Types::to<ToLiteral>(type);
@@ -2232,7 +2187,7 @@ public:
     }
 
 
-    void post(const karabo::util::Hash::Node & node) {
+    void post(const karabo::util::Hash::Node& node) {
         switch (node.getType()) {
             case Types::HASH:
             case Types::VECTOR_HASH:
@@ -2247,10 +2202,11 @@ public:
     }
 
 
-    const std::ostringstream & getResult() {
+    const std::ostringstream& getResult() {
         return m_stream;
     }
-private:
+
+   private:
     std::ostringstream m_stream;
     char fill[256];
     int indent;
@@ -2259,19 +2215,14 @@ private:
 
 
 class Flatten : public helper::Helper {
-
-
-public:
-
-
+   public:
     Flatten(const char sep = '/') : separator(sep) {
         prefix.push("");
         indices.push(-1);
     };
 
 
-    ~Flatten() {
-    };
+    ~Flatten(){};
 
 
     void pre(const karabo::util::Hash::Node& node) {
@@ -2314,7 +2265,7 @@ public:
     }
 
 
-    void post(const karabo::util::Hash::Node & node) {
+    void post(const karabo::util::Hash::Node& node) {
         switch (node.getType()) {
             case Types::HASH:
             case Types::VECTOR_HASH:
@@ -2331,7 +2282,7 @@ public:
         return flat;
     }
 
-private:
+   private:
     Hash flat;
     char separator;
     std::stack<string> prefix;
@@ -2340,19 +2291,14 @@ private:
 
 
 class Paths : public helper::Helper {
-
-
-public:
-
-
+   public:
     Paths(const char sep = '/') : separator(sep) {
         prefix.push("");
         indices.push(-1);
     };
 
 
-    ~Paths() {
-    };
+    ~Paths(){};
 
 
     void pre(const karabo::util::Hash::Node& node) {
@@ -2394,7 +2340,7 @@ public:
     }
 
 
-    void post(const karabo::util::Hash::Node & node) {
+    void post(const karabo::util::Hash::Node& node) {
         switch (node.getType()) {
             case Types::HASH:
             case Types::VECTOR_HASH:
@@ -2407,11 +2353,11 @@ public:
     }
 
 
-    const std::vector<std::string> & getResult() {
+    const std::vector<std::string>& getResult() {
         return paths;
     }
 
-private:
+   private:
     std::vector<std::string> paths;
     char separator;
     std::stack<string> prefix;
@@ -2421,29 +2367,13 @@ private:
 
 void Hash_Test::testHelper() {
     {
-        Hash h3("a", 21,
-                "b.c", 22,
-                "c.b[0]", Hash("key", "value"),
-                "c.b[1].d", 24,
-                "e", 23
-                );
+        Hash h3("a", 21, "b.c", 22, "c.b[0]", Hash("key", "value"), "c.b[1].d", 24, "e", 23);
         h3.setAttribute("a", "at0", "value0");
 
-        Hash h2("a", 21,
-                "b.c", 22,
-                "c.b[0]", Hash("key", "value"),
-                "c.b[1].d", h3,
-                "e", 27
-                );
+        Hash h2("a", 21, "b.c", 22, "c.b[0]", Hash("key", "value"), "c.b[1].d", h3, "e", 27);
         h2.setAttribute("a", "at1", "value1");
 
-        Hash h1("a", 1,
-                "b", 2,
-                "c.b[0].g", h2,
-                "c.c[0].d", h2,
-                "c.c[1]", Hash("a.b.c", h2),
-                "d.e", 7
-                );
+        Hash h1("a", 1, "b", 2, "c.b[0].g", h2, "c.c[0].d", h2, "c.c[1]", Hash("a.b.c", h2), "d.e", 7);
 
         h1.setAttribute("a", "at2", "value2");
 
@@ -2456,9 +2386,9 @@ void Hash_Test::testHelper() {
         Serializer serializer;
         helper::dfs(h1, serializer);
 
-        //std::clog << "Count    1: " << counter.getResult() << std::endl;
-        //std::clog << "Concate  1: " << concat.getResult() << std::endl;
-        //std::clog << "Serialize1: " << serializer.getResult().str() << std::endl;
+        // std::clog << "Count    1: " << counter.getResult() << std::endl;
+        // std::clog << "Concate  1: " << concat.getResult() << std::endl;
+        // std::clog << "Serialize1: " << serializer.getResult().str() << std::endl;
 
         Counter counter2;
         Concat concat2;
@@ -2489,11 +2419,11 @@ void Hash_Test::testHelper() {
         //            std::clog << "\t" << paths.getResult()[i] << std::endl;
         //        }
 
-        //helper::Visitor<Hash, Counter> count;
-        //std::clog << "Count 2 : " << count(h1).getResult() << std::endl;
-        //std::clog << "Count 3 : " << helper::Visitor<Hash, Counter>()(h1).getResult() << std::endl;
-        //std::clog << "Count H : " << karabo::util::counter(h1) << std::endl;
-        //std::clog << "Count V : " << c2.getResult() << std::endl;
+        // helper::Visitor<Hash, Counter> count;
+        // std::clog << "Count 2 : " << count(h1).getResult() << std::endl;
+        // std::clog << "Count 3 : " << helper::Visitor<Hash, Counter>()(h1).getResult() << std::endl;
+        // std::clog << "Count H : " << karabo::util::counter(h1) << std::endl;
+        // std::clog << "Count V : " << c2.getResult() << std::endl;
     }
 }
 
@@ -2504,21 +2434,13 @@ void Hash_Test::testTableValidation() {
     phonyTable.set("tab", rows);
 
     Schema s;
-    INT32_ELEMENT(s).key("a")
-            .assignmentOptional().noDefaultValue()
-            .commit();
-    STRING_ELEMENT(s).key("b")
-            .assignmentOptional().defaultValue("bar")
-            .commit();
-    FLOAT_ELEMENT(s).key("c")
-            .assignmentMandatory()
-            .commit();
+    INT32_ELEMENT(s).key("a").assignmentOptional().noDefaultValue().commit();
+    STRING_ELEMENT(s).key("b").assignmentOptional().defaultValue("bar").commit();
+    FLOAT_ELEMENT(s).key("c").assignmentMandatory().commit();
 
     phonyTable.setAttribute("tab", "rowSchema", s);
     phonyTable.setAttribute<int>("tab", "nodeType", Schema::LEAF);
     phonyTable.setAttribute<int>("tab", "leafType", Schema::PROPERTY);
-
-
 
 
     Hash aRow;
@@ -2536,11 +2458,11 @@ void Hash_Test::testTableValidation() {
     }
     CPPUNIT_ASSERT(allOk);
 
-    //provoke failure due to missing mandatory
+    // provoke failure due to missing mandatory
     Hash aRow2;
     aRow2.set<int>("a", 1);
     aRow2.set<std::string>("b", "foo");
-    //aRow2.set<float>("c", 0.1);
+    // aRow2.set<float>("c", 0.1);
 
     rows.push_back(aRow2);
     Hash newPhoneyTable("tab", rows);
@@ -2550,12 +2472,11 @@ void Hash_Test::testTableValidation() {
         phonyTable.merge(newPhoneyTable, Hash::MERGE_ATTRIBUTES);
         allOk = true;
     } catch (karabo::util::ParameterException const& e) {
-
         allOk = false;
     }
     CPPUNIT_ASSERT(allOk == false);
 
-    //provoke failure due to wrong type on mandatory
+    // provoke failure due to wrong type on mandatory
     Hash aRow3;
     aRow3.set<int>("a", 1);
     aRow3.set<std::string>("b", "foo");
@@ -2574,7 +2495,7 @@ void Hash_Test::testTableValidation() {
     }
     CPPUNIT_ASSERT(allOk == false);
 
-    //provoke failure due to additional colum
+    // provoke failure due to additional colum
     Hash aRow4;
     aRow4.set<int>("a", 1);
     aRow4.set<std::string>("b", "foo");
@@ -2594,7 +2515,7 @@ void Hash_Test::testTableValidation() {
     }
     CPPUNIT_ASSERT(allOk == false);
 
-    //check if defaults are set
+    // check if defaults are set
     Hash aRow5;
     aRow5.set<float>("c", 1.0);
 
@@ -2611,7 +2532,7 @@ void Hash_Test::testTableValidation() {
         allOk = false;
     }
     CPPUNIT_ASSERT(allOk);
-    std::vector<Hash> ret = phonyTable.get<std::vector<Hash> >("tab");
+    std::vector<Hash> ret = phonyTable.get<std::vector<Hash>>("tab");
     Hash h1 = ret[1];
     CPPUNIT_ASSERT(h1.get<std::string>("b") == "bar");
     CPPUNIT_ASSERT(h1.has("a") == false);
@@ -2639,9 +2560,9 @@ void Hash_Test::testPack() {
     CPPUNIT_ASSERT(x == 2.5);
 }
 
-void Hash_Test::testCounter(){
-    Hash h("a", true, "b", int(0), "c", NDArray(Dims(5,5)), "d", std::vector<int>(3,0));
-    h.set("e", std::vector<NDArray>(3,NDArray(Dims(5,5))));
+void Hash_Test::testCounter() {
+    Hash h("a", true, "b", int(0), "c", NDArray(Dims(5, 5)), "d", std::vector<int>(3, 0));
+    h.set("e", std::vector<NDArray>(3, NDArray(Dims(5, 5))));
     // if counter were not to skip over Hash derived classes the ND-Array internal reference type of type
     // INT32 would be counted leading to a count of 8
     CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::INT32) == 4);
@@ -2654,12 +2575,7 @@ void Hash_Test::testCounter(){
 
 void Hash_Test::testKeys() {
     // Test various funny keys/paths
-    Hash h(" ", true,
-           "", false,
-           ".", 0,
-           ".b", 1,
-           "a.", 2,
-           "c..b", 3);
+    Hash h(" ", true, "", false, ".", 0, ".b", 1, "a.", 2, "c..b", 3);
 
     CPPUNIT_ASSERT(h.has(" "));
     CPPUNIT_ASSERT(h.has(""));
@@ -2717,14 +2633,10 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
     CPPUNIT_ASSERT_MESSAGE("h4 and h2 shouldn't be fullyEquals - they differ in element attributes.",
                            !h2.fullyEquals(h4, orderMatters));
 
-    Hash h5("a", 13.14159,
-            "b[0]", Hash("hKey_0", "hValue_0"),
-            "b[1]", Hash("hKey_1", "hValue_1"),
-            "c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
-    Hash h6("a", 13.14159,
-            "b[0]", Hash("hKey_0", "hValue_0"),
-            "b[1]", Hash("hKey_1", "hValue_1"),
-            "c", "1, 1, 2, 3, 5, 8, 11, 19, 30, 49, 79");
+    Hash h5("a", 13.14159, "b[0]", Hash("hKey_0", "hValue_0"), "b[1]", Hash("hKey_1", "hValue_1"), "c",
+            "1, 1, 2, 3, 5, 8, 11, 19, 30");
+    Hash h6("a", 13.14159, "b[0]", Hash("hKey_0", "hValue_0"), "b[1]", Hash("hKey_1", "hValue_1"), "c",
+            "1, 1, 2, 3, 5, 8, 11, 19, 30, 49, 79");
     // Repeats the test for hashes differing in node value, but this time with one
     // complex node, of type vector of hashes, that matches. The hashes are similar ...
     CPPUNIT_ASSERT_EQUAL(h5, h6); // 'Hash::operator==' actually checks for similarity.
@@ -2741,8 +2653,7 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
 
     // A case where two hashes with complex attributes and nodes are fullyEquals.
     h6.setAttribute("a", "attr", vhAttr);
-    CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!",
-                           h5.fullyEquals(h6, orderMatters));
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!", h5.fullyEquals(h6, orderMatters));
 
     Hash h7("a", 1, "b", 2, "c", 3);
     Hash h8("b", 1, "a", 2, "c", 3);
@@ -2755,30 +2666,26 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
     Hash h9("a", 1, "b", 2, "c", "3");
     // Checks that hashes with different value types for values that have the same string representation form are
     // neither similar nor fullyEquals.
-    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be similar, as their 'c' elements differ in type.",
-                           h7 != h9);
+    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be similar, as their 'c' elements differ in type.", h7 != h9);
     CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.",
                            !h7.fullyEquals(h9, orderMatters));
 
     // Check VECTOR_STRING treatment
     Hash h11("vecStr", std::vector<std::string>({"with,comma", "with space", "onlyChar"}));
     Hash h12("vecStr", std::vector<std::string>({"with,comma", "with space"}));
-    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector",
-                           !h11.fullyEquals(h12, orderMatters));
-    h12.get<std::vector < std::string >> ("vecStr").push_back("onlychar");
-    CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector",
-                           !h11.fullyEquals(h12, orderMatters));
-    h12.get<std::vector < std::string >> ("vecStr").back() = "onlyChar"; // now make fully equal
+    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector", !h11.fullyEquals(h12, orderMatters));
+    h12.get<std::vector<std::string>>("vecStr").push_back("onlychar");
+    CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector", !h11.fullyEquals(h12, orderMatters));
+    h12.get<std::vector<std::string>>("vecStr").back() = "onlyChar"; // now make fully equal
     CPPUNIT_ASSERT(h11.fullyEquals(h12, orderMatters));
     // Now VECTOR_STRING as attribute
     h11.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space", "OnlyChar"}));
     h12.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space"}));
-    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector attribute",
-                           !h11.fullyEquals(h12, orderMatters));
-    h12.getAttribute<std::vector < std::string >> ("vecStr", "vecStrOpt").push_back("Onlychar");
+    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector attribute", !h11.fullyEquals(h12, orderMatters));
+    h12.getAttribute<std::vector<std::string>>("vecStr", "vecStrOpt").push_back("Onlychar");
     CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector attribute",
                            !h11.fullyEquals(h12, orderMatters));
-    h12.getAttribute<std::vector < std::string >> ("vecStr", "vecStrOpt").back() = "OnlyChar";
+    h12.getAttribute<std::vector<std::string>>("vecStr", "vecStrOpt").back() = "OnlyChar";
     CPPUNIT_ASSERT(h11.fullyEquals(h12, orderMatters));
 
     Schema sch("hashSchema");
@@ -2789,8 +2696,9 @@ void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
     // Checks that hashes with different attributes of type schema are similar
     CPPUNIT_ASSERT_EQUAL(h8, h10);
     // But are not fullyEquals
-    CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
-                           !h8.fullyEquals(h10, orderMatters));
+    CPPUNIT_ASSERT_MESSAGE(
+          "h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
+          !h8.fullyEquals(h10, orderMatters));
 }
 
 
@@ -2821,7 +2729,6 @@ void Hash_Test::testFullyEqualUnordered() {
 
 
 void Hash_Test::testNode() {
-
     // Hash::Node::setValue
     {
         Hash h1, h2;
@@ -2847,7 +2754,6 @@ void Hash_Test::testNode() {
         if (node) node->setValue(2);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
         CPPUNIT_ASSERT(h.getAs<std::string>("a.b.c") == "2");
-
     }
     {
         // Setting a Hash::Node is setting its value (due to Element::setValue(..) template specification).
@@ -2884,23 +2790,26 @@ void Hash_Test::testNode() {
         h.set("normal", node);
         CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
         CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("normal").value);
-        CPPUNIT_ASSERT_EQUAL(2, node.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
+        CPPUNIT_ASSERT_EQUAL(
+              2, node.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
 
         // Moving the node means move-assignment of its m_value member (which is a boost::any) to the new node inside h.
-        // That leaves node's m_value in a valid, but undefined state, so better do not use it (e.g. by node.getValue) anymore.
+        // That leaves node's m_value in a valid, but undefined state, so better do not use it (e.g. by node.getValue)
+        // anymore.
         h.set("moved", std::move(node));
         CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("moved").value);
-        // Next line would throw (see comment above) since node::m_value has an unknown type (void?) that cannot be cast to TraceCopies
-        // CPPUNIT_ASSERT_EQUAL(-1, node.getValue<TraceCopies>().value);
+        // Next line would throw (see comment above) since node::m_value has an unknown type (void?) that cannot be cast
+        // to TraceCopies CPPUNIT_ASSERT_EQUAL(-1, node.getValue<TraceCopies>().value);
         CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // There was no copy!
-        // Next line succeeds, i.e. no move assignment either. Looks like since the move-assignment of boost::any just swaps between
-        // source and target instead of moving. But that is an implementation detail we should not tests.
+        // Next line succeeds, i.e. no move assignment either. Looks like since the move-assignment of boost::any just
+        // swaps between source and target instead of moving. But that is an implementation detail we should not tests.
         // CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countMoveConstr);
 
         h.set("const", constNode);
         CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // another copy now
         CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("const").value);
-        CPPUNIT_ASSERT_EQUAL(3, constNode.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
+        CPPUNIT_ASSERT_EQUAL(
+              3, constNode.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
 
         TraceCopies::reset();
     }
@@ -2934,7 +2843,7 @@ void Hash_Test::testNode() {
         CPPUNIT_ASSERT_EQUAL(1, boost::any_cast<TraceCopies>(a).value); // not -1 as for a moved away object
 
         boost::any b(TraceCopies(2));
-        TraceCopies::reset(); // Whatever the line before did does not matter...
+        TraceCopies::reset();              // Whatever the line before did does not matter...
         boost::any&& bRval = std::move(b); // std::move is in fact just a cast
         Hash::Node nodeB("b", std::move(bRval));
         // Not copied - in fact it is not moved either (since boost::any is moved which seems to swap),
@@ -2945,6 +2854,5 @@ void Hash_Test::testNode() {
         // CPPUNIT_ASSERT_EQUAL(-1, boost::any_cast<TraceCopies>(b).value);
 
         TraceCopies::reset();
-
     }
 }

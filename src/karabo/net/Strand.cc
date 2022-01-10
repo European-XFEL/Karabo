@@ -11,26 +11,23 @@
 
 #include "Strand.hh"
 
-#include "karabo/util/MetaTools.hh"  // for bind_weak
-#include "karabo/log/Logger.hh"      // for KARABO_LOG_FRAMEWORK_XXX
+#include <utility> // for std::move
 
-#include <utility>  // for std::move
+#include "karabo/log/Logger.hh"     // for KARABO_LOG_FRAMEWORK_XXX
+#include "karabo/util/MetaTools.hh" // for bind_weak
 
 
 namespace karabo {
     namespace net {
 
 
-        Strand::Strand(boost::asio::io_service& ioService) : m_ioService(ioService), m_tasksRunning(false) {
-        }
+        Strand::Strand(boost::asio::io_service& ioService) : m_ioService(ioService), m_tasksRunning(false) {}
 
 
-        Strand::~Strand() {
-        }
+        Strand::~Strand() {}
 
 
         void Strand::post(const boost::function<void()>& handler) {
-
             boost::mutex::scoped_lock lock(m_tasksMutex);
             m_tasks.push(handler);
 
@@ -39,7 +36,6 @@ namespace karabo {
 
 
         void Strand::post(boost::function<void()>&& handler) {
-
             boost::mutex::scoped_lock lock(m_tasksMutex);
             m_tasks.push(std::move(handler)); // actually forward the rvalue-ness
 
@@ -47,7 +43,7 @@ namespace karabo {
         }
 
 
-        boost::function<void() > Strand::wrap(boost::function<void()> handler) {
+        boost::function<void()> Strand::wrap(boost::function<void()> handler) {
             return karabo::util::bind_weak(&Strand::postWrapped, this, std::move(handler));
         }
 
@@ -66,7 +62,7 @@ namespace karabo {
 
 
         void Strand::run() {
-            boost::function<void() > nextTask;
+            boost::function<void()> nextTask;
             {
                 boost::mutex::scoped_lock lock(m_tasksMutex);
                 if (m_tasks.empty()) {
@@ -93,10 +89,10 @@ namespace karabo {
         }
 
 
-        void Strand::postWrapped(boost::function<void() > handler) {
+        void Strand::postWrapped(boost::function<void()> handler) {
             // Hm - this will probably be the second copy of the handler...
             post(std::move(handler));
         }
 
-    }
-}
+    } // namespace net
+} // namespace karabo

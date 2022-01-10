@@ -65,7 +65,7 @@ namespace karabo {
         }
 
 
-        void Slot::callRegisteredSlotFunctions(const Hash &header, const Hash &body) {
+        void Slot::callRegisteredSlotFunctions(const Hash& header, const Hash& body) {
             try {
                 // Mutex lock prevents that the same slot of a SignalSlotable can be called concurrently.
                 // SignalSlotable takes care that messages are sequentially processed per sender
@@ -79,18 +79,21 @@ namespace karabo {
                 invalidateSenderInformation();
             } catch (const karabo::util::CastException& e) {
                 invalidateSenderInformation();
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" +
+                                                              m_slotFunction + "\". Check your connection!"));
             } catch (const karabo::util::Exception& e) {
                 invalidateSenderInformation();
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
+                KARABO_RETHROW_AS(
+                      KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
             } catch (const std::exception& e) {
                 invalidateSenderInformation();
                 std::string msg(e.what());
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION(((msg += " was thrown in slot \"") += m_slotFunction) += "\""));
+                KARABO_RETHROW_AS(
+                      KARABO_SIGNALSLOT_EXCEPTION(((msg += " was thrown in slot \"") += m_slotFunction) += "\""));
             } catch (...) {
                 invalidateSenderInformation();
                 KARABO_RETHROW;
             }
         }
-    }
-}
+    } // namespace xms
+} // namespace karabo

@@ -7,11 +7,11 @@
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
-#include <cppunit/XmlOutputter.h>
-#include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
 #include <cppunit/TestRunner.h>
+#include <cppunit/XmlOutputter.h>
+#include <cppunit/extensions/TestFactoryRegistry.h>
 
 
 int main(int argc, char* argv[]) {
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     // Add the top suite to the test runner
     CPPUNIT_NS::TestRunner runner;
     CPPUNIT_NS::Test* test = CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest();
-    if (argc>1) {
+    if (argc > 1) {
         // one can run a single test by passing the class name as an argumnent. e.g. States_Test
         try {
             test = test->findTest(argv[1]);

@@ -5,29 +5,28 @@
  */
 
 #ifndef KARABO_UTIL_STACKTRACE_HH
-#define	KARABO_UTIL_STACKTRACE_HH
+#define KARABO_UTIL_STACKTRACE_HH
 
-#include <string>
 #include <iostream>
+#include <string>
 
 namespace karabo {
     namespace util {
 
-     
+
         /**
          * @class StackTrace
          * @brief StackTrace prints out the exception stack, symbols are, in the best case, C++ demangled.
          */
         class StackTrace {
-
-        public:
+           public:
             /**
              * Demangle symbol into a string
              * @param symbol
-             * @return 
+             * @return
              */
             static std::string demangle(const char* symbol);
-            
+
             /**
              * Print trace to an output stream
              * @param os
@@ -36,8 +35,7 @@ namespace karabo {
         };
 
         std::ostream& operator<<(std::ostream& os, const StackTrace& trace);
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* SIGNALHANDLER_HH */
-
+#endif /* SIGNALHANDLER_HH */

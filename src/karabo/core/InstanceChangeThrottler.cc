@@ -7,13 +7,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <boost/asio/placeholders.hpp>
+#include "InstanceChangeThrottler.hh"
 
+#include <boost/asio/placeholders.hpp>
 #include <karabo/log/Logger.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/MetaTools.hh>
-
-#include "InstanceChangeThrottler.hh"
 
 using namespace karabo::util;
 
@@ -24,13 +23,11 @@ namespace karabo {
         //<editor-fold desc="Construction & Destruction">
 
 
-        boost::shared_ptr<InstanceChangeThrottler> InstanceChangeThrottler::createThrottler(const InstanceChangeHandler& instChangeHandler,
-                                                                                            unsigned int cycleIntervalMs,
-                                                                                            unsigned int maxChangesPerCycle) {
-
-            boost::shared_ptr<InstanceChangeThrottler> pt(new InstanceChangeThrottler(instChangeHandler,
-                                                                                      cycleIntervalMs,
-                                                                                      maxChangesPerCycle));
+        boost::shared_ptr<InstanceChangeThrottler> InstanceChangeThrottler::createThrottler(
+              const InstanceChangeHandler& instChangeHandler, unsigned int cycleIntervalMs,
+              unsigned int maxChangesPerCycle) {
+            boost::shared_ptr<InstanceChangeThrottler> pt(
+                  new InstanceChangeThrottler(instChangeHandler, cycleIntervalMs, maxChangesPerCycle));
             pt->initCycleInstChanges();
             pt->kickNextThrottlerCycleAsync();
             return pt;
@@ -38,13 +35,11 @@ namespace karabo {
 
 
         InstanceChangeThrottler::InstanceChangeThrottler(const InstanceChangeHandler& instChangeHandler,
-                                                         unsigned int cycleIntervalMs,
-                                                         unsigned int maxChangesPerCycle) :
-            m_cycleIntervalMs(cycleIntervalMs),
-            m_maxChangesPerCycle(maxChangesPerCycle),
-            m_throttlerTimer(karabo::net::EventLoop::getIOService()),
-            m_instChangeHandler(instChangeHandler) {
-        };
+                                                         unsigned int cycleIntervalMs, unsigned int maxChangesPerCycle)
+            : m_cycleIntervalMs(cycleIntervalMs),
+              m_maxChangesPerCycle(maxChangesPerCycle),
+              m_throttlerTimer(karabo::net::EventLoop::getIOService()),
+              m_instChangeHandler(instChangeHandler){};
 
 
         InstanceChangeThrottler::~InstanceChangeThrottler() {
@@ -71,8 +66,7 @@ namespace karabo {
         }
 
 
-        void InstanceChangeThrottler::submitInstanceNew(const std::string& instanceId,
-                                                        const Hash& instanceInfo) {
+        void InstanceChangeThrottler::submitInstanceNew(const std::string& instanceId, const Hash& instanceInfo) {
             boost::mutex::scoped_lock lock(m_instChangesMutex);
 
             const std::string& instType = instanceInfo.get<std::string>("type");
@@ -87,13 +81,10 @@ namespace karabo {
             }
 
             addChange(InstChangeType::NEW, instanceId, instanceInfo);
-
         }
 
 
-        void InstanceChangeThrottler::submitInstanceUpdate(const std::string& instanceId,
-                                                           const Hash& instanceInfo) {
-
+        void InstanceChangeThrottler::submitInstanceUpdate(const std::string& instanceId, const Hash& instanceInfo) {
             const std::string& instType = instanceInfo.get<std::string>("type");
 
             boost::mutex::scoped_lock lock(m_instChangesMutex);
@@ -126,9 +117,7 @@ namespace karabo {
         }
 
 
-        void InstanceChangeThrottler::submitInstanceGone(const std::string& instanceId,
-                                                         const Hash& instanceInfo) {
-
+        void InstanceChangeThrottler::submitInstanceGone(const std::string& instanceId, const Hash& instanceInfo) {
             const std::string& instType = instanceInfo.get<std::string>("type");
 
             boost::mutex::scoped_lock lock(m_instChangesMutex);
@@ -167,10 +156,8 @@ namespace karabo {
         }
 
 
-        void InstanceChangeThrottler::addChange(InstChangeType changeType,
-                                                const std::string& instanceId,
+        void InstanceChangeThrottler::addChange(InstChangeType changeType, const std::string& instanceId,
                                                 const Hash& instanceInfo) {
-
             auto encodeInstanceInfo = [this, changeType, &instanceId, &instanceInfo]() {
                 Hash eif;
                 switch (changeType) {
@@ -200,9 +187,9 @@ namespace karabo {
                 // From the optmizations performed while submitting changes, it can be assumed that there will
                 // be no collision in here; to be on the safe side though, an error is logged before overwritting.
                 if (instanceLevelHash.has(instanceId)) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Unexpected collision for change of type '"
-                            << changeTypeStr << "' for instance '" << instanceId << "' of type '" << typeKey << "'. "
-                            << "No instance change data will be overwritten.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Unexpected collision for change of type '" << changeTypeStr
+                                              << "' for instance '" << instanceId << "' of type '" << typeKey << "'. "
+                                              << "No instance change data will be overwritten.";
                 } else {
                     instanceLevelHash.merge(encodeInstanceInfo());
                     addedChange = true;
@@ -227,7 +214,7 @@ namespace karabo {
             }
         }
 
-        
+
         //</editor-fold>
 
 
@@ -238,14 +225,13 @@ namespace karabo {
             return m_maxChangesPerCycle;
         }
 
-        
+
         unsigned int InstanceChangeThrottler::cycleIntervalMs() const {
             return m_cycleIntervalMs;
         }
 
 
         void InstanceChangeThrottler::runThrottlerCycleAsync(const boost::system::error_code& e) {
-
             if (e) return;
 
             boost::mutex::scoped_lock lock(m_instChangesMutex);
@@ -280,9 +266,8 @@ namespace karabo {
 
         void InstanceChangeThrottler::kickNextThrottlerCycleAsync() {
             m_throttlerTimer.expires_from_now(boost::posix_time::milliseconds(m_cycleIntervalMs));
-            m_throttlerTimer.async_wait(bind_weak(&InstanceChangeThrottler::runThrottlerCycleAsync,
-                                                  this,
-                                                  boost::asio::placeholders::error));
+            m_throttlerTimer.async_wait(
+                  bind_weak(&InstanceChangeThrottler::runThrottlerCycleAsync, this, boost::asio::placeholders::error));
         }
 
 
@@ -324,6 +309,6 @@ namespace karabo {
 
         //</editor-fold>
 
-    } 
+    } // namespace core
 
-}
+} // namespace karabo

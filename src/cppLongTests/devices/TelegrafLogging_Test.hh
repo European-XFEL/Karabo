@@ -5,15 +5,14 @@
  */
 
 #ifndef TELEGRAFLOGGING_TEST_HH
-#define	TELEGRAFLOGGING_TEST_HH
-
-#include "BaseLogging_Test.hh"
+#define TELEGRAFLOGGING_TEST_HH
 
 #include <string>
 #include <utility>
 
-class TelegrafLogging_Test : public BaseLogging_Test {
+#include "BaseLogging_Test.hh"
 
+class TelegrafLogging_Test : public BaseLogging_Test {
     CPPUNIT_TEST_SUITE(TelegrafLogging_Test);
 
     CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
@@ -21,11 +20,11 @@ class TelegrafLogging_Test : public BaseLogging_Test {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     TelegrafLogging_Test();
     void setUp();
 
-private:
+   private:
     void influxAllTestRunnerWithTelegraf();
 
     /**
@@ -55,4 +54,4 @@ private:
     bool m_telegrafEnvOk;
 };
 
-#endif	/* TELEGRAFLOGGING_TEST_HH */
+#endif /* TELEGRAFLOGGING_TEST_HH */

@@ -10,7 +10,7 @@
 
 
 #ifndef KARABO_CORE_MOTORINTERFACE_HH
-#define	KARABO_CORE_MOTORINTERFACE_HH
+#define KARABO_CORE_MOTORINTERFACE_HH
 
 #include "Device.hh"
 #include "karabo/util/OverwriteElement.hh"
@@ -29,124 +29,141 @@ namespace karabo {
          * @brief suggested interface for motor devices.
          */
         class MotorInterface : public virtual karabo::xms::SignalSlotable {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(MotorInterface, "MotorInterface", "1.0")
 
 
             static void expectedParameters(karabo::util::Schema& expected) {
-
                 using namespace karabo::xms;
                 using namespace karabo::util;
 
-                OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions(State::INIT, State::ERROR, State::DISABLED, State::OFF, State::STOPPED, State::STATIC, State::HOMING, State::MOVING)
-                        .setNewDefaultValue(State::INIT)
-                        .commit();
+                OVERWRITE_ELEMENT(expected)
+                      .key("state")
+                      .setNewOptions(State::INIT, State::ERROR, State::DISABLED, State::OFF, State::STOPPED,
+                                     State::STATIC, State::HOMING, State::MOVING)
+                      .setNewDefaultValue(State::INIT)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("resetHardware")
-                        .description("Resets the hardware")
-                        .displayedName("Reset hardware")
-                        .allowedStates(State::ERROR)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("resetHardware")
+                      .description("Resets the hardware")
+                      .displayedName("Reset hardware")
+                      .allowedStates(State::ERROR)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("safe")
-                        .description("Brings device into a safe operation mode (as defined on h/w)")
-                        .displayedName("Safe")
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("safe")
+                      .description("Brings device into a safe operation mode (as defined on h/w)")
+                      .displayedName("Safe")
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("normal")
-                        .displayedName("Normal")
-                        .description("Brings device into normal operation mode")
-                        .expertAccess()
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("normal")
+                      .displayedName("Normal")
+                      .description("Brings device into normal operation mode")
+                      .expertAccess()
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("override")
-                        .displayedName("Override")
-                        .description("Brings device into override operation mode (be careful, hardware may be broken)")
-                        .adminAccess()
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("override")
+                      .displayedName("Override")
+                      .description("Brings device into override operation mode (be careful, hardware may be broken)")
+                      .adminAccess()
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("off")
-                        .displayedName("Off")
-                        .description("Instructs device to switch off")
-                        .allowedStates(State::DISABLED, State::STOPPED, State::STATIC, State::CHANGING)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("off")
+                      .displayedName("Off")
+                      .description("Instructs device to switch off")
+                      .allowedStates(State::DISABLED, State::STOPPED, State::STATIC, State::CHANGING)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("on")
-                        .displayedName("On")
-                        .description("Instructs device to switch on")
-                        .allowedStates(State::DISABLED, State::OFF)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("on")
+                      .displayedName("On")
+                      .description("Instructs device to switch on")
+                      .allowedStates(State::DISABLED, State::OFF)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("stop")
-                        .displayedName("Stop")
-                        .description("Instructs the device to switch on and stopped")
-                        .allowedStates(State::DISABLED, State::STATIC, State::CHANGING)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("stop")
+                      .displayedName("Stop")
+                      .description("Instructs the device to switch on and stopped")
+                      .allowedStates(State::DISABLED, State::STATIC, State::CHANGING)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("home")
-                        .displayedName("Home")
-                        .description("Find home position")
-                        .allowedStates(State::DISABLED, State::STOPPED)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("home")
+                      .displayedName("Home")
+                      .description("Find home position")
+                      .allowedStates(State::DISABLED, State::STOPPED)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("move")
-                        .displayedName("Move")
-                        .description("Move position")
-                        .allowedStates(State::DISABLED, State::STOPPED)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("move")
+                      .displayedName("Move")
+                      .description("Move position")
+                      .allowedStates(State::DISABLED, State::STOPPED)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("stepUp")
-                        .displayedName("Step up")
-                        .description("Step up")
-                        .allowedStates(State::DISABLED, State::STATIC, State::STOPPED)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("stepUp")
+                      .displayedName("Step up")
+                      .description("Step up")
+                      .allowedStates(State::DISABLED, State::STATIC, State::STOPPED)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("stepDown")
-                        .displayedName("Step down")
-                        .description("Step down")
-                        .allowedStates(State::DISABLED, State::STATIC, State::STOPPED)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("stepDown")
+                      .displayedName("Step down")
+                      .description("Step down")
+                      .allowedStates(State::DISABLED, State::STATIC, State::STOPPED)
+                      .commit();
 
-                FLOAT_ELEMENT(expected).key("encoderPosition")
-                        .description("Encoder position")
-                        .displayedName("Encoder position")
-                        .unit(Unit::METER)
-                        .metricPrefix(MetricPrefix::MILLI)
-                        .readOnly()
-                        .commit();
+                FLOAT_ELEMENT(expected)
+                      .key("encoderPosition")
+                      .description("Encoder position")
+                      .displayedName("Encoder position")
+                      .unit(Unit::METER)
+                      .metricPrefix(MetricPrefix::MILLI)
+                      .readOnly()
+                      .commit();
 
-                FLOAT_ELEMENT(expected).key("stepCounterPosition")
-                        .displayedName("Stepcounter position")
-                        .description("The step counter position describes the motor position calculated from counter steps (instead of encoder values), and is only valid if connected to external encoder")
-                        .expertAccess()
-                        .readOnly()
-                        .commit();
+                FLOAT_ELEMENT(expected)
+                      .key("stepCounterPosition")
+                      .displayedName("Stepcounter position")
+                      .description(
+                            "The step counter position describes the motor position calculated from counter steps "
+                            "(instead of encoder values), and is only valid if connected to external encoder")
+                      .expertAccess()
+                      .readOnly()
+                      .commit();
 
-                FLOAT_ELEMENT(expected).key("targetPosition")
-                        .description("Target position in position mode")
-                        .displayedName("Target position")
-                        .unit(Unit::METER)
-                        .metricPrefix(MetricPrefix::MILLI)
-                        .assignmentOptional().noDefaultValue()
-                        .reconfigurable()
-                        .allowedStates(State::DISABLED, State::STOPPED, State::OFF, State::STATIC, State::MOVING)
-                        .commit();
+                FLOAT_ELEMENT(expected)
+                      .key("targetPosition")
+                      .description("Target position in position mode")
+                      .displayedName("Target position")
+                      .unit(Unit::METER)
+                      .metricPrefix(MetricPrefix::MILLI)
+                      .assignmentOptional()
+                      .noDefaultValue()
+                      .reconfigurable()
+                      .allowedStates(State::DISABLED, State::STOPPED, State::OFF, State::STATIC, State::MOVING)
+                      .commit();
 
-                INT16_ELEMENT(expected).key("targetVelocity")
-                        .description("Target velocity in velocity mode")
-                        .displayedName("Target velocity")
-                        .assignmentOptional().noDefaultValue()
-                        .reconfigurable()
-                        .allowedStates(State::DISABLED, State::STOPPED, State::OFF, State::STATIC, State::MOVING)
-                        .expertAccess()
-                        .commit();
+                INT16_ELEMENT(expected)
+                      .key("targetVelocity")
+                      .description("Target velocity in velocity mode")
+                      .displayedName("Target velocity")
+                      .assignmentOptional()
+                      .noDefaultValue()
+                      .reconfigurable()
+                      .allowedStates(State::DISABLED, State::STOPPED, State::OFF, State::STATIC, State::MOVING)
+                      .expertAccess()
+                      .commit();
             }
 
-            virtual ~MotorInterface() {
-            }
+            virtual ~MotorInterface() {}
 
             void initFsmSlots() {
                 KARABO_SLOT(resetHardware)
@@ -190,12 +207,9 @@ namespace karabo {
                 this->initialize();
             }
 
-            void stopFsm() {
-            };
-
+            void stopFsm(){};
         };
-    }
-}
+    } // namespace core
+} // namespace karabo
 
 #endif
-

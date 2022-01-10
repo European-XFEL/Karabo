@@ -1,17 +1,16 @@
-/* 
+/*
  * File:   Strand_Test.cc
  * Author: flucke
- * 
+ *
  * Created on November 15, 2017, 12:26 PM
  */
-#include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/TimeDuration.hh"
-
-#include "boost/asio/deadline_timer.hpp"
 
 #include "Strand_Test.hh"
+#include "boost/asio/deadline_timer.hpp"
+#include "karabo/net/EventLoop.hh"
+#include "karabo/util/Epochstamp.hh"
+#include "karabo/util/TimeDuration.hh"
 
 using karabo::net::EventLoop;
 using karabo::util::Epochstamp;
@@ -20,16 +19,13 @@ using karabo::util::TimeDuration;
 CPPUNIT_TEST_SUITE_REGISTRATION(Strand_Test);
 
 
-Strand_Test::Strand_Test() : m_nThreadsInPool(4) {
-}
+Strand_Test::Strand_Test() : m_nThreadsInPool(4) {}
 
 
-Strand_Test::~Strand_Test() {
-}
+Strand_Test::~Strand_Test() {}
 
 
 void Strand_Test::setUp() {
-
     m_thread = boost::make_shared<boost::thread>(EventLoop::work);
     // really switch on parallelism:
     EventLoop::addThread(m_nThreadsInPool);
@@ -37,7 +33,6 @@ void Strand_Test::setUp() {
 
 
 void Strand_Test::tearDown() {
-
     EventLoop::removeThread(m_nThreadsInPool);
     EventLoop::stop();
 
@@ -47,17 +42,15 @@ void Strand_Test::tearDown() {
 
 
 void Strand_Test::testSequential() {
-
     boost::mutex aMutex;
     unsigned int counter = 0;
     const unsigned int sleepTimeMs = 40; // must be above 10, see below
 
-    auto sleepAndCount = [&aMutex, &counter, &sleepTimeMs] () {
+    auto sleepAndCount = [&aMutex, &counter, &sleepTimeMs]() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs));
 
         boost::mutex::scoped_lock lock(aMutex);
         ++counter;
-
     };
     // All helpers before timing starts via creating 'now'
     const unsigned int numPosts = m_nThreadsInPool;
@@ -71,13 +64,10 @@ void Strand_Test::testSequential() {
     // not sure whether several handlers of the timer will really be executed at the same time or not...
     boost::asio::deadline_timer timer(EventLoop::getIOService());
     timer.expires_from_now(boost::posix_time::milliseconds(10));
-    timer.async_wait([&now] (const boost::system::error_code & e) {
-        now.now();
-    });
+    timer.async_wait([&now](const boost::system::error_code& e) { now.now(); });
     for (unsigned int i = 0; i < numPosts; ++i) {
-        timer.async_wait([&strand, &sleepAndCount](const boost::system::error_code & e) {
-            strand->post(sleepAndCount);
-        });
+        timer.async_wait(
+              [&strand, &sleepAndCount](const boost::system::error_code& e) { strand->post(sleepAndCount); });
     }
 
     while (--numTest > 0) {
@@ -106,7 +96,7 @@ void Strand_Test::testThrowing() {
     const int size = 10;
     std::vector<int> vec(size, -1); // initialize all entries with -1
     bool done = false;
-    boost::function<void(int) > handler = [&vec, &done](int i) {
+    boost::function<void(int)> handler = [&vec, &done](int i) {
         if (i == 2) {
             throw std::runtime_error("trouble");
         } else {
@@ -132,7 +122,6 @@ void Strand_Test::testThrowing() {
 }
 
 void Strand_Test::testStrandDies() {
-
     // We stop the test before all posts have been processed - in principle the Strand could have posted
     // to the event loop before it died and then the handler is called when the test function is done and
     // its scope is cleaned.
@@ -141,12 +130,11 @@ void Strand_Test::testStrandDies() {
     auto counterPtr = boost::make_shared<unsigned int>(0);
     const unsigned int sleepTimeMs = 40; // must be above 10, see below
 
-    auto sleepAndCount = [aMutexPtr, counterPtr, sleepTimeMs] () {
+    auto sleepAndCount = [aMutexPtr, counterPtr, sleepTimeMs]() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs));
 
         boost::mutex::scoped_lock lock(*aMutexPtr);
         ++(*counterPtr);
-
     };
     const unsigned int numPosts = m_nThreadsInPool;
 
@@ -173,5 +161,4 @@ void Strand_Test::testStrandDies() {
     // The above loop came to an end since the last handlers where not called.
     CPPUNIT_ASSERT(*counterPtr < numPosts);
     CPPUNIT_ASSERT_EQUAL(numTest, 0u);
- }
-
+}

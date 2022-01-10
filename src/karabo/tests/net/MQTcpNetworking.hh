@@ -6,18 +6,18 @@
  */
 
 #ifndef MQTCPNETWORKING_HH
-#define	MQTCPNETWORKING_HH
+#define MQTCPNETWORKING_HH
 
-#include "karabo/util/Configurator.hh"
-#include "karabo/log/Logger.hh"
-#include "karabo/net/Connection.hh"
-#include "karabo/net/Channel.hh"
-
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
-class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
+#include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "karabo/log/Logger.hh"
+#include "karabo/net/Channel.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/util/Configurator.hh"
+
+class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
     int m_numberOfMessages;
 
     karabo::util::Hash m_header;
@@ -42,8 +42,7 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     KARABO_CLASSINFO(MQTcpNetworking, "MQTcpNetworking", "1.0");
 
     MQTcpNetworking();
@@ -51,18 +50,15 @@ public:
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void createServer();
 
     void serverConnectHandler(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel);
 
     void serverErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
-    void serverReadHashHashHandler(const karabo::net::ErrorCode& ec,
-                                   const karabo::net::Channel::Pointer& channel,
-                                   karabo::util::Hash& header,
-                                   karabo::util::Hash& body);
+    void serverReadHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
+                                   karabo::util::Hash& header, karabo::util::Hash& body);
 
     void serverPublish(const karabo::net::Channel::Pointer& channel);
 
@@ -74,13 +70,10 @@ private:
 
     void clientChannelErrorHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
-    void clientReadHashHashHandler(const karabo::net::ErrorCode& ec,
-                                   const karabo::net::Channel::Pointer& channel,
-                                   karabo::util::Hash& header,
-                                   karabo::util::Hash& body);
+    void clientReadHashHashHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
+                                   karabo::util::Hash& header, karabo::util::Hash& body);
 
     void onClientEnd(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 };
 
-#endif	/* MQTCPNETWORKING_HH */
-
+#endif /* MQTCPNETWORKING_HH */

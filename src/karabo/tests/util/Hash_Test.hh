@@ -6,14 +6,13 @@
  */
 
 #ifndef HASH_TEST_HH
-#define	HASH_TEST_HH
+#define HASH_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+
 #include <karabo/util/SimpleElement.hh>
 
 class Hash_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(Hash_Test);
 
     CPPUNIT_TEST(testConstructors);
@@ -41,14 +40,13 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testNode);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Hash_Test();
     virtual ~Hash_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testConstructors();
     void testGetSet();
     void testGetAs();
@@ -74,5 +72,3 @@ private:
     void testNode();
 };
 #endif
-
-

@@ -8,23 +8,22 @@
  */
 
 #ifndef INSTANCECHANGETHROTTLER_TEST_HH
-#define	INSTANCECHANGETHROTTLER_TEST_HH
+#define INSTANCECHANGETHROTTLER_TEST_HH
+
+#include <cppunit/extensions/HelperMacros.h>
 
 #include <boost/chrono.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
-#include <cppunit/extensions/HelperMacros.h>
+#include <karabo/core/InstanceChangeThrottler.hh>
+#include <karabo/util/Hash.hh>
 #include <string>
 #include <vector>
-
-#include <karabo/util/Hash.hh>
-#include <karabo/core/InstanceChangeThrottler.hh>
 
 
 //<editor-fold desc="Helper types for InstanceChangeThrottler unit tests">
 
 struct InstanceChange {
-
     boost::chrono::high_resolution_clock::time_point timePoint;
     karabo::core::InstanceChangeThrottler::InstChangeType changeType;
     std::string instanceId;
@@ -33,9 +32,7 @@ struct InstanceChange {
 
 
 class InstanceChangeObserver {
-
-public:
-
+   public:
     int numOfInstNewChanges() const;
     int numOfInstGoneChanges() const;
     int numOfInstUpdateChanges() const;
@@ -52,8 +49,7 @@ public:
                               const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
                               std::vector<InstanceChange>& destChangeVector);
 
-private:
-
+   private:
     mutable boost::mutex m_instChangesMutex;
     std::vector<InstanceChange> m_instNewChanges;
     std::vector<InstanceChange> m_instGoneChanges;
@@ -69,8 +65,6 @@ private:
 //<editor-fold desc="Unit test fixture">
 
 class InstanceChangeThrottler_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(InstanceChangeThrottler_Test);
 
     CPPUNIT_TEST(testThrottleInterval);
@@ -88,14 +82,13 @@ class InstanceChangeThrottler_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     InstanceChangeThrottler_Test();
     virtual ~InstanceChangeThrottler_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     std::string m_instIdServer;
     karabo::util::Hash m_instInfoServer;
 
@@ -107,26 +100,26 @@ private:
     void handleInstChange(const karabo::util::Hash& changeInfo);
 
     /**
-     * Waits, for a maximum amount of time, for a condition checked by a 
+     * Waits, for a maximum amount of time, for a condition checked by a
      * given function.
-     * 
+     *
      * @param checker the function that will evaluate if the target condition has
      *        been reached.
-     * 
-     * @param timeoutMillis the maximum amount of time to wait for the condition 
+     *
+     * @param timeoutMillis the maximum amount of time to wait for the condition
      *        (in milliseconds).
      *
      * @return true if the condition has been reached; false if time expired before
      *         the condition could have been reached.
      */
-    bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis);
+    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis);
 
     /**
      * Test that the "bursts" of event changes received from the throttler are
      * propertly spaced in time.
      */
     void testThrottleInterval();
-    
+
     /**
      * Test the throttler optimization for New->[Update]->Gone changes for
      * the same instanceId - the throttler is expected to "consume" those sequences
@@ -185,7 +178,7 @@ private:
 
     /**
      * Tests the stability of the throttler across its lifecycle. To pass
-     * this test the throttler must be able to always flush the instance 
+     * this test the throttler must be able to always flush the instance
      * changes it has stored internally before being destructed.
      */
     void testThrottlerLifecycle();
@@ -199,11 +192,9 @@ private:
      * cycle must not compromisse the dispatches.
      */
     void testChangesWithFlushes();
-
 };
 
 //</editor-fold>
 
 
-#endif	/* INSTANCECHANGETHROTTLER_TEST_HH */
-
+#endif /* INSTANCECHANGETHROTTLER_TEST_HH */

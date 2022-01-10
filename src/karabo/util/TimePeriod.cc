@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   TimePeriod.cc
  * Author: boukhelef
- * 
+ *
  * Created on April 28, 2013, 11:02 PM
  */
 
@@ -11,8 +11,7 @@ namespace karabo {
     namespace util {
 
 
-        TimePeriod::TimePeriod() : m_Open(false) {
-        }
+        TimePeriod::TimePeriod() : m_Open(false) {}
 
 
         TimePeriod::TimePeriod(const karabo::util::Hash& hash) {
@@ -20,13 +19,11 @@ namespace karabo {
         }
 
 
-        TimePeriod::TimePeriod(const Epochstamp& start, const Epochstamp& stop) :
-            m_Open(false), m_Start(start), m_Stop(stop) {
-        }
+        TimePeriod::TimePeriod(const Epochstamp& start, const Epochstamp& stop)
+            : m_Open(false), m_Start(start), m_Stop(stop) {}
 
 
-        TimePeriod::~TimePeriod() {
-        }
+        TimePeriod::~TimePeriod() {}
 
 
         TimeDuration TimePeriod::getDuration() const {
@@ -96,5 +93,5 @@ namespace karabo {
             hash.set("KRB_open", m_Open);
         }
 
-    }
-}
+    } // namespace util
+} // namespace karabo
