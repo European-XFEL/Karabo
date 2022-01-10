@@ -132,18 +132,29 @@ class profiler:
         async def do_something()
             # do something
 
+        async with profiler("Async with statement"):
+            # do something with name in context
+
     """
 
     def __init__(self, name=None):
         self.name = name
+        self.t_start = None
 
     def __enter__(self):
         self.t_start = perf_counter()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         elapsed = perf_counter() - self.t_start
         name = f"{self.name}:" if self.name is not None else ":"
         print(f"With block {name} time elapsed {elapsed}")
+
+    async def __aenter__(self):
+        return self.__enter__()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return self.__exit__(exc_type, exc_val, exc_tb)
 
     def __call__(self, func):
         """Decorate a function to profile the execution time"""
