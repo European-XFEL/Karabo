@@ -1,18 +1,18 @@
-/* 
+/*
  * File:   FileInputOutput_Test.cc
  * Author: heisenb
- * 
+ *
  * Created on March 7, 2013, 11:06 AM
  */
 
-#include <boost/filesystem/path.hpp>
+#include "FileInputOutput_Test.hh"
 
+#include <boost/filesystem/path.hpp>
 #include <karabo/io/FileTools.hh>
-#include <karabo/util/TimeProfiler.hh>
 #include <karabo/util.hpp>
+#include <karabo/util/TimeProfiler.hh>
 
 #include "TestPathSetup.hh"
-#include "FileInputOutput_Test.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -22,175 +22,199 @@ CPPUNIT_TEST_SUITE_REGISTRATION(FileInputOutput_Test);
 
 
 struct MySchema {
-
-
     KARABO_CLASSINFO(MySchema, "TestXsd", "1.0");
 
 
-    static void expectedParameters(karabo::util::Schema & expected) {
+    static void expectedParameters(karabo::util::Schema& expected) {
+        STRING_ELEMENT(expected)
+              .key("exampleKey1")
+              .tags("hardware, poll")
+              .displayedName("Example key 1")
+              .description("Example key 1 description")
+              .options("Radio,Air Condition,Navigation", ",")
+              .assignmentOptional()
+              .defaultValue("Navigation")
+              .expertAccess()
+              .commit();
 
-        STRING_ELEMENT(expected).key("exampleKey1")
-                .tags("hardware, poll")
-                .displayedName("Example key 1")
-                .description("Example key 1 description")
-                .options("Radio,Air Condition,Navigation", ",")
-                .assignmentOptional().defaultValue("Navigation")
-                .expertAccess()
-                .commit();
+        NODE_ELEMENT(expected)
+              .key("MyNodeElement")
+              .tags("myNode")
+              .displayedName("MyNodeElem")
+              .description("Description of my node elem")
+              .commit();
 
-        NODE_ELEMENT(expected).key("MyNodeElement")
-                .tags("myNode")
-                .displayedName("MyNodeElem")
-                .description("Description of my node elem")
-                .commit();
+        DOUBLE_ELEMENT(expected)
+              .key("MyNodeElement.a")
+              .tags("myNode")
+              .displayedName("MyNodeElem_A")
+              .description("Description of my node elem A")
+              .assignmentMandatory()
+              .commit();
 
-        DOUBLE_ELEMENT(expected).key("MyNodeElement.a")
-                .tags("myNode")
-                .displayedName("MyNodeElem_A")
-                .description("Description of my node elem A")
-                .assignmentMandatory()
-                .commit();
+        STRING_ELEMENT(expected)
+              .key("MyNodeElement.b")
+              .tags("myNode")
+              .displayedName("MyNodeElem_B")
+              .description("Description of my node elem B")
+              .assignmentMandatory()
+              .commit();
 
-        STRING_ELEMENT(expected).key("MyNodeElement.b")
-                .tags("myNode")
-                .displayedName("MyNodeElem_B")
-                .description("Description of my node elem B")
-                .assignmentMandatory()
-                .commit();
+        INT64_ELEMENT(expected)
+              .key("exampleKey5")
+              .alias("exampleAlias5")
+              .tags("h/w; d.m.y", ";")
+              .displayedName("Example key 5")
+              .description("Example key 5 description")
+              .readOnly()
+              .initialValue(1442244)
+              .commit();
 
-        INT64_ELEMENT(expected).key("exampleKey5")
-                .alias("exampleAlias5")
-                .tags("h/w; d.m.y", ";")
-                .displayedName("Example key 5")
-                .description("Example key 5 description")
-                .readOnly()
-                .initialValue(1442244)
-                .commit();
+        INT64_ELEMENT(expected)
+              .key("exampleKeyINTERNAL")
+              .displayedName("INTERNAL")
+              .description("Example key INTERNAL")
+              .assignmentInternal();
 
-        INT64_ELEMENT(expected).key("exampleKeyINTERNAL")
-                .displayedName("INTERNAL")
-                .description("Example key INTERNAL")
-                .assignmentInternal();
+        // test for CHOICE element
+        CHOICE_ELEMENT(expected)
+              .key("shapes")
+              .displayedName("shapesAsChoice")
+              .description("Description of Choice-element shapes")
+              .assignmentOptional()
+              .defaultValue("circle")
+              .commit();
 
-        //test for CHOICE element
-        CHOICE_ELEMENT(expected).key("shapes")
-                .displayedName("shapesAsChoice")
-                .description("Description of Choice-element shapes")
-                .assignmentOptional().defaultValue("circle")
-                .commit();
+        // or: test for LIST element (min/max appears only in 'annotation')
+        //   LIST_ELEMENT(expected).key("shapes")
+        //        .displayedName("shapesAsList")
+        //        .description("Description of List-element shapes")
+        //        .min(2)
+        //        .max(5)
+        //        .assignmentMandatory()
+        //        .commit();
 
-        //or: test for LIST element (min/max appears only in 'annotation')
-        //  LIST_ELEMENT(expected).key("shapes")
-        //       .displayedName("shapesAsList")
-        //       .description("Description of List-element shapes")
-        //       .min(2)
-        //       .max(5)
-        //       .assignmentMandatory()
-        //       .commit();
+        NODE_ELEMENT(expected)
+              .key("shapes.circle")
+              .tags("shape")
+              .displayedName("Circle")
+              .description("Description of circle")
+              .commit();
 
-        NODE_ELEMENT(expected).key("shapes.circle")
-                .tags("shape")
-                .displayedName("Circle")
-                .description("Description of circle")
-                .commit();
+        INT32_ELEMENT(expected)
+              .key("shapes.circle.radius")
+              .tags("shape")
+              .displayedName("radius")
+              .description("Radius of circle")
+              .minInc(5)
+              .maxExc(10)
+              .assignmentOptional()
+              .defaultValue(5)
+              .commit();
 
-        INT32_ELEMENT(expected).key("shapes.circle.radius")
-                .tags("shape")
-                .displayedName("radius")
-                .description("Radius of circle")
-                .minInc(5)
-                .maxExc(10)
-                .assignmentOptional().defaultValue(5)
-                .commit();
+        INT32_ELEMENT(expected)
+              .key("shapes.circle.color")
+              .tags("shape")
+              .displayedName("color")
+              .description("Color of circle")
+              .minExc(2)
+              .maxInc(20)
+              .assignmentOptional()
+              .defaultValue(5)
+              .commit();
 
-        INT32_ELEMENT(expected).key("shapes.circle.color")
-                .tags("shape")
-                .displayedName("color")
-                .description("Color of circle")
-                .minExc(2)
-                .maxInc(20)
-                .assignmentOptional().defaultValue(5)
-                .commit();
+        NODE_ELEMENT(expected)
+              .key("shapes.circle.newnode")
+              .tags("shape")
+              .displayedName("NewNodeOfCircle")
+              .description("Description of NEW NODE of circle")
+              .commit();
 
-        NODE_ELEMENT(expected).key("shapes.circle.newnode")
-                .tags("shape")
-                .displayedName("NewNodeOfCircle")
-                .description("Description of NEW NODE of circle")
-                .commit();
+        INT32_ELEMENT(expected)
+              .key("shapes.circle.newnode.mynewint")
+              .tags("shape")
+              .displayedName("MyNewInt")
+              .description("Descr of shapes circle newnode MyNewInt")
+              .assignmentOptional()
+              .defaultValue(555)
+              .commit();
 
-        INT32_ELEMENT(expected).key("shapes.circle.newnode.mynewint")
-                .tags("shape")
-                .displayedName("MyNewInt")
-                .description("Descr of shapes circle newnode MyNewInt")
-                .assignmentOptional().defaultValue(555)
-                .commit();
+        NODE_ELEMENT(expected)
+              .key("shapes.rectangle")
+              .tags("shape")
+              .displayedName("rectangle")
+              .description("Description of rectangle")
+              .commit();
 
-        NODE_ELEMENT(expected).key("shapes.rectangle")
-                .tags("shape")
-                .displayedName("rectangle")
-                .description("Description of rectangle")
-                .commit();
-
-        DOUBLE_ELEMENT(expected).key("shapes.rectangle.square")
-                .tags("shape")
-                .displayedName("square")
-                .description("Description of square of rectangle")
-                .assignmentOptional().noDefaultValue()
-                .commit();
+        DOUBLE_ELEMENT(expected)
+              .key("shapes.rectangle.square")
+              .tags("shape")
+              .displayedName("square")
+              .description("Description of square of rectangle")
+              .assignmentOptional()
+              .noDefaultValue()
+              .commit();
 
 
         vector<string> vecStr;
         vecStr.push_back("first line");
         vecStr.push_back("second line");
-        VECTOR_STRING_ELEMENT(expected).key("strVector")
-                .displayedName("myVectorString")
-                .assignmentOptional().defaultValue(vecStr)
-                .reconfigurable()
-                .commit();
+        VECTOR_STRING_ELEMENT(expected)
+              .key("strVector")
+              .displayedName("myVectorString")
+              .assignmentOptional()
+              .defaultValue(vecStr)
+              .reconfigurable()
+              .commit();
 
         vector<int> vecInt;
         vecInt.push_back(5);
         vecInt.push_back(15);
-        VECTOR_INT32_ELEMENT(expected).key("intVector")
-                .displayedName("MyVectorInt")
-                .minSize(2)
-                .maxSize(5)
-                .assignmentOptional().defaultValue(vecInt)
-                .reconfigurable()
-                .commit();
+        VECTOR_INT32_ELEMENT(expected)
+              .key("intVector")
+              .displayedName("MyVectorInt")
+              .minSize(2)
+              .maxSize(5)
+              .assignmentOptional()
+              .defaultValue(vecInt)
+              .reconfigurable()
+              .commit();
 
-        INT32_ELEMENT(expected).key("SimpleElem")
-                .displayedName("SimpleElem")
-                .description("Description of SimpleElem")
-                .unit(Unit::METER)
-                .metricPrefix(MetricPrefix::MILLI)
-                .readOnly()
-                .alarmHigh(7).needsAcknowledging(false)
-                .warnHigh(5).needsAcknowledging(false)
-                .warnLow(0).needsAcknowledging(false)
-                .alarmLow(-2).needsAcknowledging(false)
-                .commit();
-
+        INT32_ELEMENT(expected)
+              .key("SimpleElem")
+              .displayedName("SimpleElem")
+              .description("Description of SimpleElem")
+              .unit(Unit::METER)
+              .metricPrefix(MetricPrefix::MILLI)
+              .readOnly()
+              .alarmHigh(7)
+              .needsAcknowledging(false)
+              .warnHigh(5)
+              .needsAcknowledging(false)
+              .warnLow(0)
+              .needsAcknowledging(false)
+              .alarmLow(-2)
+              .needsAcknowledging(false)
+              .commit();
     }
 };
 
 
-FileInputOutput_Test::FileInputOutput_Test() {
-}
+FileInputOutput_Test::FileInputOutput_Test() {}
 
 
-FileInputOutput_Test::~FileInputOutput_Test() {
-}
+FileInputOutput_Test::~FileInputOutput_Test() {}
 
 
 void FileInputOutput_Test::setUp() {
     m_canCleanUp = false;
-    Hash rooted("dom.b.c", 1, "dom.b.d", vector<int>(5, 1), "dom.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
+    Hash rooted("dom.b.c", 1, "dom.b.d", vector<int>(5, 1), "dom.b.e", vector<Hash>(2, Hash("a", 1)), "a.d",
+                std::complex<double>(1.2, 4.2));
     rooted.setAttribute("dom", "a1", true);
     rooted.setAttribute("dom", "a2", 3.4);
     rooted.setAttribute("dom.b", "b1", "3");
     rooted.setAttribute("dom.b.c", "c1", 2);
-    rooted.setAttribute("dom.b.c", "c2", vector<string > (3, "bla"));
+    rooted.setAttribute("dom.b.c", "c2", vector<string>(3, "bla"));
     m_rootedHash = rooted;
 
 
@@ -208,7 +232,8 @@ void FileInputOutput_Test::setUp() {
     m_bigHash.setAttribute("a.c", "k7", vector<unsigned char>(5, 1));
 
 
-    Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
+    Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long>(5, 5),
+                  "F.f.f.f.f", Hash("x.y.z", 99));
     unrooted.setAttribute("F.f.f", "attr1", true);
     m_unrootedHash = unrooted;
 
@@ -224,12 +249,11 @@ void FileInputOutput_Test::setUp() {
     m_withSchemaHash.set("a.x", "Hello");
     m_withSchemaHash.set("a.y", testSchema);
     m_withSchemaHash.set("a.z", 25);
-
 }
 
 
 void FileInputOutput_Test::tearDown() {
-    if(m_canCleanUp){
+    if (m_canCleanUp) {
         if (boost::filesystem::exists(resourcePath("folder"))) {
             boost::filesystem::remove_all(resourcePath("folder"));
         }
@@ -250,14 +274,16 @@ void FileInputOutput_Test::writeTextFile() {
     p.startPeriod("bigHash");
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file2.xml"), "format.Xml.indentation", -1));
     out->write(m_bigHash);
-    p.stopPeriod("bigHash"); //p.stopPeriod(); 
+    p.stopPeriod("bigHash"); // p.stopPeriod();
     p.close();
     if (false) clog << "writing big Hash (text) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
-    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
+    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0,
+                                                "format.Xml.writeDataTypes", false));
     out->write(m_unrootedHash);
 
-    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file4.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
+    out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file4.xml"), "format.Xml.indentation", 0,
+                                                "format.Xml.writeDataTypes", true));
     out->write(m_withSchemaHash);
 
     // Using the FileTools interface
@@ -265,16 +291,18 @@ void FileInputOutput_Test::writeTextFile() {
 
     saveToFile(m_bigHash, resourcePath("file2a.xml"), Hash("format.Xml.indentation", -1));
 
-    saveToFile(m_unrootedHash, resourcePath("file3a.xml"), Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
+    saveToFile(m_unrootedHash, resourcePath("file3a.xml"),
+               Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
 
-    saveToFile(m_withSchemaHash, resourcePath("file4a.xml"), Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
-    
+    saveToFile(m_withSchemaHash, resourcePath("file4a.xml"),
+               Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
+
     // Check different folder levels
     if (boost::filesystem::exists(resourcePath("folder/"))) {
         CPPUNIT_FAIL("'folder' already exists!");
     }
     saveToFile(m_rootedHash, resourcePath("folder/file5a.xml"));
-    
+
     if (boost::filesystem::exists(resourcePath("/tmp/folder/"))) {
         CPPUNIT_FAIL("'/tmp/folder' already exists!");
     }
@@ -283,7 +311,6 @@ void FileInputOutput_Test::writeTextFile() {
 
 
 void FileInputOutput_Test::readTextFile() {
-
     // Using the Factory interface
     Input<Hash>::Pointer in = Input<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     Hash h1;
@@ -314,10 +341,10 @@ void FileInputOutput_Test::readTextFile() {
 
     Hash h4a;
     loadFromFile(h4a, resourcePath("file4a.xml"));
-    
+
     Hash h5a;
     loadFromFile(h5a, resourcePath("folder/file5a.xml"));
-    
+
     Hash h6a;
     loadFromFile(h6a, "/tmp/folder/file6a.xml");
 
@@ -343,7 +370,7 @@ void FileInputOutput_Test::readTextFile() {
 
     CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
     CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
-    
+
     CPPUNIT_ASSERT(karabo::util::similar(h5a, m_rootedHash));
     CPPUNIT_ASSERT(karabo::util::similar(h6a, m_rootedHash));
     m_canCleanUp = true;
@@ -352,7 +379,8 @@ void FileInputOutput_Test::readTextFile() {
 
 void FileInputOutput_Test::writeTextSchema() {
     // Using the Factory interface
-    Output<Schema>::Pointer out = Output<Schema>::create("TextFile", Hash("filename", resourcePath("testschema.xml"), "format.Xml.indentation", 3));
+    Output<Schema>::Pointer out = Output<Schema>::create(
+          "TextFile", Hash("filename", resourcePath("testschema.xml"), "format.Xml.indentation", 3));
     out->write(m_schema);
 
     // Using the FileTools interface
@@ -361,7 +389,6 @@ void FileInputOutput_Test::writeTextSchema() {
 
 
 void FileInputOutput_Test::readTextSchema() {
-
     // Using the Factory interface
     Input<Schema>::Pointer in = Input<Schema>::create("TextFile", Hash("filename", resourcePath("testschema.xml")));
     Schema schema1;
@@ -376,9 +403,9 @@ void FileInputOutput_Test::readTextSchema() {
 
 
 void FileInputOutput_Test::writeSequenceToTextFile() {
-
     // Using the Factory interface
-    Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml"), "enableAppendMode", true));
+    Output<Hash>::Pointer out =
+          Output<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
         out->write(m_rootedHash);
     }
@@ -399,7 +426,6 @@ void FileInputOutput_Test::readSequenceFromTextFile() {
 
 
 void FileInputOutput_Test::writeBinaryFile() {
-
     TimeProfiler p("writeBinaryFile");
     p.open();
     // Using the Factory interface
@@ -409,7 +435,7 @@ void FileInputOutput_Test::writeBinaryFile() {
     p.startPeriod("bigHash");
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
     out->write(m_bigHash);
-    p.stopPeriod(); //p.stopPeriod("bigHash"); TODO
+    p.stopPeriod(); // p.stopPeriod("bigHash"); TODO
     p.close();
     if (false) clog << "writing big Hash (binary) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
@@ -429,15 +455,13 @@ void FileInputOutput_Test::writeBinaryFile() {
     saveToFile(m_unrootedHash, resourcePath("file3a.bin"));
     //    TODO: uncomment when schema serialization is done
     //    saveToFile(m_withSchemaHash, resourcePath("file4a.bin"));
-
-
 }
 
 
 void FileInputOutput_Test::readBinaryFile() {
-
     // Using the Factory interface
-    Input<Hash>::Pointer in = Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin"), "format", "Bin"));
+    Input<Hash>::Pointer in =
+          Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin"), "format", "Bin"));
     Hash h1;
     in->read(h1);
 
@@ -476,7 +500,7 @@ void FileInputOutput_Test::readBinaryFile() {
     CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
 
     CPPUNIT_ASSERT(h2.getAttribute<int>("a.c", "k5") == 123);
-    vector<bool> vecBoolAttr = h2.getAttribute < vector<bool> >("a.c", "k6");
+    vector<bool> vecBoolAttr = h2.getAttribute<vector<bool> >("a.c", "k6");
     vector<bool> refVecBoolAttr(4, true);
     for (size_t i = 0; i < refVecBoolAttr.size(); ++i) {
         CPPUNIT_ASSERT(refVecBoolAttr[i] == vecBoolAttr[i]);
@@ -489,14 +513,13 @@ void FileInputOutput_Test::readBinaryFile() {
     //    TODO: uncomment when schema serialization is done
     //    CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
     //    CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
-
-
 }
 
 
 void FileInputOutput_Test::writeBinarySchema() {
     // Using the Factory interface
-    Output<Schema>::Pointer out = Output<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
+    Output<Schema>::Pointer out =
+          Output<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
     out->write(m_schema);
 
     // Using the FileTools interface
@@ -505,7 +528,6 @@ void FileInputOutput_Test::writeBinarySchema() {
 
 
 void FileInputOutput_Test::readBinarySchema() {
-
     // Using the Factory interface
     Input<Schema>::Pointer in = Input<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
     Schema schema1;
@@ -520,9 +542,9 @@ void FileInputOutput_Test::readBinarySchema() {
 
 
 void FileInputOutput_Test::writeSequenceToBinaryFile() {
-
     // Using the Factory interface
-    Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("seqfile1.bin"), "enableAppendMode", true));
+    Output<Hash>::Pointer out =
+          Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("seqfile1.bin"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
         out->write(m_rootedHash);
     }
@@ -543,11 +565,9 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
 
 
 void FileInputOutput_Test::writeHdf5File() {
-
     TimeProfiler p("writeHdf5File");
 
     try {
-
         p.open();
 
         Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
@@ -570,7 +590,6 @@ void FileInputOutput_Test::writeHdf5File() {
         out->write(m_withSchemaHash);
 
 
-
         // Using the FileTools interface
         saveToFile(m_rootedHash, resourcePath("fileS1a.h5"));
 
@@ -583,12 +602,10 @@ void FileInputOutput_Test::writeHdf5File() {
         clog << ex << endl;
         CPPUNIT_FAIL("Hdf5 test failed");
     }
-
 }
 
 
 void FileInputOutput_Test::readHdf5File() {
-
     Hash h1, h2, h3, h4, h1a, h2a, h3a, h4a;
     try {
         // Using the Factory interface
@@ -630,7 +647,7 @@ void FileInputOutput_Test::readHdf5File() {
     CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
 
     CPPUNIT_ASSERT(h2.getAttribute<int>("a.c", "k5") == 123);
-    vector<bool> vecBoolAttr = h2.getAttribute < vector<bool> >("a.c", "k6");
+    vector<bool> vecBoolAttr = h2.getAttribute<vector<bool> >("a.c", "k6");
     vector<bool> refVecBoolAttr(4, true);
     for (size_t i = 0; i < refVecBoolAttr.size(); ++i) {
         CPPUNIT_ASSERT(refVecBoolAttr[i] == vecBoolAttr[i]);
@@ -642,15 +659,13 @@ void FileInputOutput_Test::readHdf5File() {
 
     CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
     CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
-
-
 }
 
 
 void FileInputOutput_Test::writeSequenceToHdf5File() {
-
     // Using the Factory interface
-    Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("seqfile1.h5"), "enableAppendMode", true));
+    Output<Hash>::Pointer out =
+          Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("seqfile1.h5"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
         out->write(m_rootedHash);
     }

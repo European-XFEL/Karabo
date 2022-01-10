@@ -10,8 +10,10 @@
  */
 
 #include "Connection.hh"
-#include "Channel.hh"
+
 #include <karabo/util/SimpleElement.hh>
+
+#include "Channel.hh"
 
 namespace karabo {
     namespace net {
@@ -20,15 +22,15 @@ namespace karabo {
 
 
         void Connection::expectedParameters(Schema& expected) {
-
             STRING_ELEMENT(expected)
-                    .key("serializationType")
-                    .displayedName("Serialization Type")
-                    .description("Decides whether the serialization type for objects will be binary or text")
-                    .options("text binary")
-                    .assignmentOptional().defaultValue("binary")
-                    .init()
-                    .commit();
+                  .key("serializationType")
+                  .displayedName("Serialization Type")
+                  .description("Decides whether the serialization type for objects will be binary or text")
+                  .options("text binary")
+                  .assignmentOptional()
+                  .defaultValue("binary")
+                  .init()
+                  .commit();
         }
 
 
@@ -37,9 +39,7 @@ namespace karabo {
         }
 
 
-        Connection::~Connection() {
-        }
+        Connection::~Connection() {}
 
-    }
-}
-
+    } // namespace net
+} // namespace karabo

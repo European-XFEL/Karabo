@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   net.hpp
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -6,11 +6,11 @@
  */
 
 #ifndef KARABO_NET_HPP
-#define	KARABO_NET_HPP
+#define KARABO_NET_HPP
 
 #include "net/Broker.hh"
-#include "net/Connection.hh"
 #include "net/Channel.hh"
+#include "net/Connection.hh"
 #include "net/Strand.hh"
 #include "net/utils.hh"
 

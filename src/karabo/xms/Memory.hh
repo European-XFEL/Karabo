@@ -10,13 +10,12 @@
  */
 
 #ifndef KARABO_XMS_MEMORY_HH
-#define	KARABO_XMS_MEMORY_HH
+#define KARABO_XMS_MEMORY_HH
 
-#include <karabo/util/Factory.hh>
 #include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/BufferSet.hh>
-
 #include <karabo/log/Logger.hh>
+#include <karabo/util/Factory.hh>
 
 namespace karabo {
     namespace xms {
@@ -25,9 +24,7 @@ namespace karabo {
          * The Memory class is an internal utility for InputChannel and OutputChannel to provide static shared memory.
          */
         class Memory {
-
-        public:
-
+           public:
             /**
              * @class Memory::MetaData
              * @brief The MetaData class is s class for transporting
@@ -36,12 +33,10 @@ namespace karabo {
              *        transparent serialization.
              */
             class MetaData : protected karabo::util::Hash {
-
                 // Note that if you extend this class you need to use set/get internally
                 // to assure Hash serializion.
 
-            public:
-
+               public:
                 /**
                  * Constructor to directly set meta data entries
                  * @param source an identifier of the data producer
@@ -84,20 +79,19 @@ namespace karabo {
                 inline const karabo::util::Timestamp getTimestamp() const {
                     return karabo::util::Timestamp::fromHashAttributes(getAttributes("timestamp"));
                 }
-
             };
 
             typedef karabo::io::BufferSet DataType;
             typedef boost::shared_ptr<DataType> DataPointer;
-            typedef std::vector< DataPointer > Data;
-            typedef std::vector< Data > Chunks;
-            typedef std::vector< Chunks > Channels;
+            typedef std::vector<DataPointer> Data;
+            typedef std::vector<Data> Chunks;
+            typedef std::vector<Chunks> Channels;
 
             typedef std::vector<MetaData> MetaDataEntries;
             typedef std::vector<MetaDataEntries> ChunkMetaDataEntries;
             typedef std::vector<ChunkMetaDataEntries> ChannelMetaDataEntries;
 
-            typedef std::vector<std::vector<int> > ChunkStatus;
+            typedef std::vector<std::vector<int>> ChunkStatus;
             typedef std::vector<int> ChannelStatus;
 
             typedef karabo::io::BinarySerializer<karabo::util::Hash> SerializerType;
@@ -111,16 +105,14 @@ namespace karabo {
 
             static boost::mutex m_accessMutex;
 
-            static boost::shared_ptr<SerializerType > m_serializer;
+            static boost::shared_ptr<SerializerType> m_serializer;
 
             static const int MAX_N_CHANNELS = 128;
             static const int MAX_N_CHUNKS = 2056;
 
-            Memory() {
-            }
+            Memory() {}
 
-        public:
-
+           public:
             KARABO_CLASSINFO(Memory, "Memory", "1.0")
 
             /**
@@ -131,7 +123,8 @@ namespace karabo {
              * @param channelIdx
              * @param chunkIdx
              */
-            static void read(karabo::util::Hash& data, const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx);
+            static void read(karabo::util::Hash& data, const size_t dataIdx, const size_t channelIdx,
+                             const size_t chunkIdx);
 
             /**
              * Read the contents of a single Hash out of the cache. A pointer tag_of
@@ -153,10 +146,13 @@ namespace karabo {
              * @param channelIdx where to store the serialised data
              * @param chunkIdx where to store the serialised data
              * @param metaData of the data
-             * @param copyAllData defines whether all data (incl. NDArray data) is copied into the internal buffer (default: true)
+             * @param copyAllData defines whether all data (incl. NDArray data) is copied into the internal buffer
+             * (default: true)
              */
-            static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx, const MetaData& metaData, bool copyAllData=true);
-            static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData);
+            static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx,
+                              const MetaData& metaData, bool copyAllData = true);
+            static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx,
+                                   const std::vector<MetaData>& metaData);
 
             static void setEndOfStream(const size_t channelIdx, const size_t chunkIdx, bool eos = true);
             static bool isEndOfStream(const size_t channelIdx, const size_t chunkIdx);
@@ -173,7 +169,7 @@ namespace karabo {
             static void incrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx);
             static void decrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx);
 
-            static void clearChunkData(const size_t & channelIdx, const size_t & chunkIdx);
+            static void clearChunkData(const size_t& channelIdx, const size_t& chunkIdx);
 
             static int getChannelStatus(const size_t channelIdx);
             static void setChannelStatus(const size_t channelIdx, const int status);
@@ -188,20 +184,17 @@ namespace karabo {
             static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
 
             static void readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers,
-                                        karabo::util::Hash& header,
-                                        const size_t channelIdx,
-                                        const size_t chunkIdx);
+                                        karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx);
 
             static void writeFromBuffers(const Data& /*std::vector<karabo::io::BufferSet::Pointer>&*/ buffers,
-                                               const karabo::util::Hash& header,
-                                               const size_t channelIdx,
-                                               const size_t chunkIdx,
-                                               bool copyAllData = false);
+                                         const karabo::util::Hash& header, const size_t channelIdx,
+                                         const size_t chunkIdx, bool copyAllData = false);
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx);
 
             /**
-             * Return a vector of MetaData objects for the data tokens in the bucket identified by channelIdx and chunkIdx.
+             * Return a vector of MetaData objects for the data tokens in the bucket identified by channelIdx and
+             * chunkIdx.
              * @param channelIdx
              * @param chunkIdx
              * @return
@@ -209,16 +202,12 @@ namespace karabo {
             static const std::vector<Memory::MetaData>& getMetaData(const size_t channelIdx, const size_t chunkIdx);
 
 
-        private:
-
+           private:
             static void _ensureSerializer();
-
         };
 
-    }
-}
-
+    } // namespace xms
+} // namespace karabo
 
 
 #endif
-

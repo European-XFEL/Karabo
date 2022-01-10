@@ -32,7 +32,7 @@ namespace karabo {
          *        the distributed system by posting to the loop.
          */
         class EventLoop : private boost::noncopyable {
-          public:
+           public:
             KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
 
             virtual ~EventLoop() = default;
@@ -96,7 +96,7 @@ namespace karabo {
              */
             static void setSignalHandler(const SignalHandler& handler);
 
-          private:
+           private:
             EventLoop() = default;
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:

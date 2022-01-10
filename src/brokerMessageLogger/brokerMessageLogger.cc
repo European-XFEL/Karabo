@@ -8,25 +8,23 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 #include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <cassert>
-#include <iosfwd>
 #include <array>
-#include <vector>
-
 #include <boost/algorithm/string.hpp>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/StringTools.hh>
+#include <cassert>
+#include <fstream>
+#include <iosfwd>
+#include <karabo/log/Logger.hh>
+#include <karabo/net/AmqpClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
 #include <karabo/net/MqttClient.hh>
-#include <karabo/net/AmqpClient.hh>
 #include <karabo/net/RedisClient.hh>
-#include <karabo/log/Logger.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/StringTools.hh>
 #include <karabo/xms/SignalSlotable.hh>
+#include <vector>
 
 using namespace std;
 using namespace karabo::util;
@@ -52,23 +50,18 @@ void printHelp(const char* execName) {
     cout << "                        possibly using glob style patterns: '*', '?', '[list]'" << endl;
     cout << "                        e.g. \"signals/*/signalChanged,global_slots,slots/INSTANCE|1\"" << endl;
     cout << "                AMQP:   Selection criteria involves 2 values: exchange and binding key " << endl;
-    cout << "                        separated by colon sign (:) and such pairs are comma separated. " << endl; 
+    cout << "                        separated by colon sign (:) and such pairs are comma separated. " << endl;
     cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
-
 }
 
-void jmsReadHandler(const Hash::Pointer& header,
-                    const Hash::Pointer& body) {
-
+void jmsReadHandler(const Hash::Pointer& header, const Hash::Pointer& body) {
     cout << *header << endl;
     cout << *body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
-
 }
 
 
 void jmsErrorNotifier(consumer::Error errCode, const string& errDesc) {
-
     cout << ">>>> Error >>>>" << endl;
     cout << " Code: " << static_cast<int>(errCode) << endl;
     cout << " Description: " << errDesc << endl;
@@ -76,9 +69,8 @@ void jmsErrorNotifier(consumer::Error errCode, const string& errDesc) {
 }
 
 
-void mqttOrRedisMessageHandler(const boost::system::error_code ec,
-                        const std::string& topic,
-                        const Hash::Pointer& message) {
+void mqttOrRedisMessageHandler(const boost::system::error_code ec, const std::string& topic,
+                               const Hash::Pointer& message) {
     if (ec) {
         cout << "Error " << ec.value() << ": " << ec.message() << endl;
     }
@@ -94,10 +86,7 @@ void mqttOrRedisMessageHandler(const boost::system::error_code ec,
 }
 
 
-void logOpenMQ(const std::vector<std::string>& brokerUrls,
-               const std::string& topic,
-               const std::string& selector) {
-
+void logOpenMQ(const std::vector<std::string>& brokerUrls, const std::string& topic, const std::string& selector) {
     JmsConnection::Pointer connection = boost::make_shared<JmsConnection>(brokerUrls);
     connection->connect();
     const string effectiveUrl = connection->getBrokerUrl(); // one of the potentially several
@@ -111,15 +100,11 @@ void logOpenMQ(const std::vector<std::string>& brokerUrls,
     JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
 
     // Read and logs messages and errors.
-    consumer->startReading(boost::bind(&jmsReadHandler, _1, _2),
-                           boost::bind(&jmsErrorNotifier, _1, _2));
+    consumer->startReading(boost::bind(&jmsReadHandler, _1, _2), boost::bind(&jmsErrorNotifier, _1, _2));
     EventLoop::work(); // Block forever
 }
 
-void logMqtt(const std::vector<std::string>& brokerUrls,
-             const std::string& domain,
-             const std::string& subtopics) {
-
+void logMqtt(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& subtopics) {
     // Create client, but don't care which type, just take the first (vector::at(0) will throw if empty).
     const string clientName = Configurator<MqttClient>::getRegisteredClasses().at(0);
     const Hash config("brokers", brokerUrls, "domain", domain);
@@ -133,10 +118,12 @@ void logMqtt(const std::vector<std::string>& brokerUrls,
 
     TopicSubOptions subscriptions;
     if (subtopics.empty()) {
-        subscriptions.emplace_back(domain + "/#", SubQos::AtMostOnce, boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
+        subscriptions.emplace_back(domain + "/#", SubQos::AtMostOnce,
+                                   boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
     } else {
         for (const string& t : fromString<string, vector>(subtopics)) {
-            subscriptions.emplace_back(domain + "/" + t, SubQos::AtMostOnce, boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
+            subscriptions.emplace_back(domain + "/" + t, SubQos::AtMostOnce,
+                                       boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
         }
     }
     cout << "# Starting to consume messages..." << std::endl;
@@ -156,10 +143,7 @@ void logMqtt(const std::vector<std::string>& brokerUrls,
     EventLoop::work(); // block for ever
 }
 
-void logRedis(const std::vector<std::string>& brokerUrls,
-             const std::string& domain,
-             const std::string& subtopics) {
-
+void logRedis(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& subtopics) {
     const Hash config("brokers", brokerUrls, "domain", domain);
     RedisClient::Pointer client = Configurator<RedisClient>::create("RedisClient", config);
 
@@ -193,10 +177,7 @@ void logRedis(const std::vector<std::string>& brokerUrls,
     EventLoop::work(); // block for ever
 }
 
-void logAmqp(const std::vector<std::string>& brokerUrls,
-             const std::string& domain,
-             const std::string& selector) {
-
+void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& selector) {
     // The network layer for AMQPCPP package uses internal one threaded
     // io_context object but the callbacks are posted on karabo multithreaded
     // EventLoop.  Below we use "synchronous" connect and subscribe functions.
@@ -220,11 +201,8 @@ void logAmqp(const std::vector<std::string>& brokerUrls,
     }
 
     // Define read handler for message visualization...
-    auto readHandler =
-        [] (const boost::system::error_code& ec,
-            const std::string& exchange,
-            const std::string& routingkey,
-            const Hash::Pointer & msg) {
+    auto readHandler = [](const boost::system::error_code& ec, const std::string& exchange,
+                          const std::string& routingkey, const Hash::Pointer& msg) {
         if (ec) {
             std::cout << "Error " << ec.value() << ": " << ec.message() << std::endl;
             return;
@@ -250,11 +228,11 @@ void logAmqp(const std::vector<std::string>& brokerUrls,
     if (selector.empty()) {
         // Bind to all possible messages ...
         const std::vector<std::array<std::string, 2> >& defaultTable = {
-            {"karaboGuiDebug", ""},         // always empty routing key
-            {domain + ".signals", "*.*"},   // any INSTANCE, any SIGNAL
-            {domain + ".slots", "#"},       // any INSTANCE ID ('*' may work as well)
-            {domain + ".global_slots", ""}, // always empty routing key
-            {domain + ".log", ""}           // always empty routing key
+              {"karaboGuiDebug", ""},         // always empty routing key
+              {domain + ".signals", "*.*"},   // any INSTANCE, any SIGNAL
+              {domain + ".slots", "#"},       // any INSTANCE ID ('*' may work as well)
+              {domain + ".global_slots", ""}, // always empty routing key
+              {domain + ".log", ""}           // always empty routing key
         };
 
         boost::system::error_code ec;
@@ -262,8 +240,8 @@ void logAmqp(const std::vector<std::string>& brokerUrls,
             std::cout << "# Exchange: \"" << a[0] << "\" and binding key: \"" << a[1] << "\"" << std::endl;
             ec = client->subscribe(a[0], a[1]);
             if (ec) {
-                std::cout << "ERROR: Failed to subscribe to AMQP broker: #"
-                        << ec.value() << " -- " << ec.message() << std::endl;
+                std::cout << "ERROR: Failed to subscribe to AMQP broker: #" << ec.value() << " -- " << ec.message()
+                          << std::endl;
                 throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
             }
         }
@@ -288,16 +266,13 @@ void logAmqp(const std::vector<std::string>& brokerUrls,
 
 
 int main(int argc, char** argv) {
-
     try {
-
         // Parse command line
         Hash options;
         for (int i = 1; i < argc; i += 2) {
             const std::string argv_i(argv[i]);
-            if (argv_i == "-h" || argv[i - 1] == std::string("-h")
-                || argc <= i + 1
-                || (argv_i != "-b" && argv_i != "-t" && argv_i != "-s")) {
+            if (argv_i == "-h" || argv[i - 1] == std::string("-h") || argc <= i + 1 ||
+                (argv_i != "-b" && argv_i != "-t" && argv_i != "-s")) {
                 printHelp(argv[0]);
                 return 0;
             };

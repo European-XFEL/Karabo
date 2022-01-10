@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Broker_Test.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -6,14 +6,14 @@
  */
 
 #ifndef BROKER_TEST_HH
-#define	BROKER_TEST_HH
+#define BROKER_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <karabo/util/Hash.hh>
+
 #include <karabo/net/Broker.hh>
+#include <karabo/util/Hash.hh>
 
 class Broker_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(Broker_Test);
     CPPUNIT_TEST(testConnectDisconnect);
     CPPUNIT_TEST(testPublishSubscribe);
@@ -25,15 +25,13 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testProducerContinuesConsumerRestart);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     Broker_Test();
     virtual ~Broker_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testConnectDisconnect();
     void _testConnectDisconnect();
     void testPublishSubscribe();
@@ -50,12 +48,10 @@ private:
     void _testProducerRestartConsumerContinues();
     void _testProducerContinuesConsumerRestart();
 
-private:
-
+   private:
     std::string m_domain;
     boost::shared_ptr<boost::thread> m_thread;
     karabo::util::Hash m_config;
 };
 
-#endif	/* BROKER_TEST_HH */
-
+#endif /* BROKER_TEST_HH */

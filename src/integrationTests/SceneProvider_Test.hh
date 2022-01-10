@@ -1,19 +1,20 @@
 /*
  * File:   SceneProvider_Test.hh
  * Author: steffen.hauf@xfel.eu
- 
+
  */
 
 #ifndef SCENEPROVIDER_TEST_HH
-#define	SCENEPROVIDER_TEST_HH
+#define SCENEPROVIDER_TEST_HH
 
-#include "karabo/karabo.hpp"
-#include "karabo/core/DeviceServer.hh"
-#include "karabo/core/DeviceClient.hh"
-#include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/shared_ptr.hpp>
+
 #include "TcpAdapter_4.hh"
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/karabo.hpp"
 
 
 class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
@@ -23,19 +24,19 @@ class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     SceneProvider_Test();
     virtual ~SceneProvider_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void appTestRunner();
     void testInstanceInfo();
     void testRequestScenes();
     void testRequestSceneFailure1();
     void testRequestSceneFailure2();
-    
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
@@ -43,5 +44,4 @@ private:
     boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
 };
 
-#endif	/* SCENEPROVIDER_TEST_HH */
-
+#endif /* SCENEPROVIDER_TEST_HH */

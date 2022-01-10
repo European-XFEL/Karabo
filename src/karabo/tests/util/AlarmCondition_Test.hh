@@ -6,15 +6,13 @@
  */
 
 #ifndef ALARMCONDITION_TEST_HH
-#define	ALARMCONDITION_TEST_HH
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
-
+#define ALARMCONDITION_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <karabo/log/Logger.hh>
+#include <karabo/util/Configurator.hh>
+
 class AlarmCondition_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(AlarmCondition_Test);
 
     CPPUNIT_TEST(testOperators);
@@ -26,8 +24,7 @@ class AlarmCondition_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     KARABO_CLASSINFO(AlarmCondition_Test, "AlarmCondition_Test", "1.0");
 
     AlarmCondition_Test();
@@ -35,14 +32,12 @@ public:
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testOperators();
     void testStringAssignmentRoundTrip();
     void testSignificanceEvaluation();
     void testValidationConditionalRoundTrip();
     void testValidation();
-
 };
 
-#endif	/* ALARMCONDITION_TEST_HH */
-
+#endif /* ALARMCONDITION_TEST_HH */

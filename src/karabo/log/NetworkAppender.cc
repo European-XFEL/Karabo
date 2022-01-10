@@ -33,39 +33,39 @@ namespace karabo {
 
         void NetworkAppender::expectedParameters(karabo::util::Schema& s) {
             STRING_ELEMENT(s)
-                .key("name")
-                .displayedName("Name")
-                .description("Name of the appender")
-                .assignmentOptional()
-                .defaultValue("network")
-                .commit();
+                  .key("name")
+                  .displayedName("Name")
+                  .description("Name of the appender")
+                  .assignmentOptional()
+                  .defaultValue("network")
+                  .commit();
 
             CHOICE_ELEMENT(s)
-                .key("connection")
-                .displayedName("Connection")
-                .appendNodesOfConfigurationBase<karabo::net::Broker>()
-                .assignmentOptional()
-                .noDefaultValue()
-                .expertAccess()
-                .commit();
+                  .key("connection")
+                  .displayedName("Connection")
+                  .appendNodesOfConfigurationBase<karabo::net::Broker>()
+                  .assignmentOptional()
+                  .noDefaultValue()
+                  .expertAccess()
+                  .commit();
 
             UINT32_ELEMENT(s)
-                .key("interval")
-                .displayedName("Interval")
-                .description("Time between subsequent sending of messages")
-                .assignmentOptional()
-                .defaultValue(1000u)
-                .unit(Unit::SECOND)
-                .metricPrefix(MetricPrefix::MILLI)
-                .commit();
+                  .key("interval")
+                  .displayedName("Interval")
+                  .description("Time between subsequent sending of messages")
+                  .assignmentOptional()
+                  .defaultValue(1000u)
+                  .unit(Unit::SECOND)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  .commit();
 
             UINT32_ELEMENT(s)
-                .key("maxNumMessages")
-                .displayedName("Max. Num. Messages")
-                .description("Maximum number of messages - if mor per interval arrive, they are dropped")
-                .assignmentOptional()
-                .defaultValue(1000u)
-                .commit();
+                  .key("maxNumMessages")
+                  .displayedName("Max. Num. Messages")
+                  .description("Maximum number of messages - if mor per interval arrive, they are dropped")
+                  .assignmentOptional()
+                  .defaultValue(1000u)
+                  .commit();
         }
 
 
@@ -191,12 +191,10 @@ namespace karabo {
         }
 
 
-        NetworkFilter::NetworkFilter() : krb_log4cpp::Filter() {
-        }
+        NetworkFilter::NetworkFilter() : krb_log4cpp::Filter() {}
 
 
-        NetworkFilter::~NetworkFilter() {
-        }
+        NetworkFilter::~NetworkFilter() {}
 
 
         krb_log4cpp::Filter::Decision NetworkFilter::_decide(const krb_log4cpp::LoggingEvent& event) {

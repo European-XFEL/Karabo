@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   SignalSlotableWrap.hh
  * Author: <burkhard.heisen@xfel.eu>
  * Contributions: <irina.kozlova@xfel.eu>
@@ -7,43 +7,37 @@
  */
 
 #ifndef KARATHON_SIGNALSLOTABLE_HH
-#define	KARATHON_SIGNALSLOTABLE_HH
+#define KARATHON_SIGNALSLOTABLE_HH
 
-#include <karabo/util/ClassInfo.hh>
+#include <boost/function.hpp>
+#include <boost/python.hpp>
+#include <iostream>
 #include <karabo/log/Logger.hh>
+#include <karabo/util/ClassInfo.hh>
 #include <karabo/xms/SignalSlotable.hh>
 
-#include <boost/python.hpp>
-#include <boost/function.hpp>
-
-#include <iostream>
-
+#include "PyXmsInputOutputChannel.hh"
+#include "ScopedGILRelease.hh"
 #include "SignalWrap.hh"
 #include "SlotWrap.hh"
-#include "ScopedGILRelease.hh"
 #include "Wrapper.hh"
-#include "PyXmsInputOutputChannel.hh"
 
 namespace bp = boost::python;
 
 namespace karathon {
 
     class SignalSlotableWrap : public karabo::xms::SignalSlotable {
-
-    public:
+       public:
         KARABO_CLASSINFO(SignalSlotableWrap, "SignalSlotableWrap", "1.0")
 
         class RequestorWrap : public karabo::xms::SignalSlotable::Requestor {
-
-        public:
-
+           public:
             explicit RequestorWrap(karabo::xms::SignalSlotable* signalSlotable);
 
             RequestorWrap timeoutPy(const int& milliseconds);
 
-            template<typename ...Args>
-            RequestorWrap& requestPy(const std::string& slotInstanceId,
-                                     const std::string& slotFunction,
+            template <typename... Args>
+            RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction,
                                      const Args&... args) {
                 try {
                     auto body = boost::make_shared<karabo::util::Hash>();
@@ -56,20 +50,17 @@ namespace karathon {
                 return *this;
             }
 
-            template<typename ...Args>
+            template <typename... Args>
             RequestorWrap& requestNoWaitPy(const std::string& requestSlotInstanceId,
                                            const std::string& requestSlotFunction,
-                                           const std::string replySlotInstanceId,
-                                           const std::string& replySlotFunction,
+                                           const std::string replySlotInstanceId, const std::string& replySlotFunction,
                                            const Args&... args) {
                 try {
                     auto body = boost::make_shared<karabo::util::Hash>();
                     packPy(*body, args...);
                     ScopedGILRelease nogil;
-                    karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(requestSlotInstanceId,
-                                                                                    requestSlotFunction,
-                                                                                    replySlotInstanceId,
-                                                                                    replySlotFunction);
+                    karabo::util::Hash::Pointer header = prepareRequestNoWaitHeader(
+                          requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction);
                     registerRequest(requestSlotInstanceId, header, body);
                     sendRequest();
                 } catch (...) {
@@ -79,7 +70,8 @@ namespace karathon {
             }
 
             void receiveAsyncPy(const bp::object& replyCallback, const bp::object& errorCallback = bp::object(),
-                                const bp::object& timeoutMs = bp::object(), const bp::object& numCallbackArgs = bp::object());
+                                const bp::object& timeoutMs = bp::object(),
+                                const bp::object& numCallbackArgs = bp::object());
 
             void receiveAsyncPy0(const bp::object& replyCallback);
 
@@ -93,22 +85,20 @@ namespace karathon {
 
             bp::tuple waitForReply(const int& milliseconds);
 
-        private:
-            bp::tuple prepareTuple0(const karabo::util::Hash & body);
+           private:
+            bp::tuple prepareTuple0(const karabo::util::Hash& body);
 
-            bp::tuple prepareTuple1(const karabo::util::Hash & body);
+            bp::tuple prepareTuple1(const karabo::util::Hash& body);
 
-            bp::tuple prepareTuple2(const karabo::util::Hash & body);
+            bp::tuple prepareTuple2(const karabo::util::Hash& body);
 
-            bp::tuple prepareTuple3(const karabo::util::Hash & body);
+            bp::tuple prepareTuple3(const karabo::util::Hash& body);
 
-            bp::tuple prepareTuple4(const karabo::util::Hash & body);
+            bp::tuple prepareTuple4(const karabo::util::Hash& body);
         };
 
         class AsyncReplyWrap : public karabo::xms::SignalSlotable::AsyncReply {
-
-        public:
-
+           public:
             explicit AsyncReplyWrap(SignalSlotable* signalSlotable);
 
             void replyPy0() const;
@@ -125,24 +115,20 @@ namespace karathon {
         AsyncReplyWrap createAsyncReply() {
             return SignalSlotableWrap::AsyncReplyWrap(this);
         }
-    public:
 
+       public:
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                           int heartbeatInterval = 10,
-                           const karabo::util::Hash& instanceInfo = karabo::util::Hash());
+                           int heartbeatInterval = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
         virtual ~SignalSlotableWrap();
 
-        static boost::shared_ptr<SignalSlotableWrap>
-        create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-               const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-               int heartbeatInterval = 10,
-               const karabo::util::Hash& instanceInfo = karabo::util::Hash()) {
-            return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId,
-                                                                                connectionParameters,
-                                                                                heartbeatInterval,
-                                                                                instanceInfo));
+        static boost::shared_ptr<SignalSlotableWrap> create(
+              const std::string& instanceId = generateInstanceId<SignalSlotable>(),
+              const karabo::util::Hash& connectionParameters = karabo::util::Hash(), int heartbeatInterval = 10,
+              const karabo::util::Hash& instanceInfo = karabo::util::Hash()) {
+            return boost::shared_ptr<SignalSlotableWrap>(
+                  new SignalSlotableWrap(instanceId, connectionParameters, heartbeatInterval, instanceInfo));
         }
 
         void start() {
@@ -183,53 +169,49 @@ namespace karathon {
 
         void registerSlotPy(const bp::object& slotFunction, std::string slotName, int numArg);
 
-        template<typename ...Args>
+        template <typename... Args>
         void registerSignalPy(const std::string& funcName, const Args&... args) {
             // Arguments are ignored, but required to partially deduce the signature of the signal in Python:
             // All args will always be bp::object, but at least the number of arguments defines the signal signature
-            registerSignal < Args...>(funcName);
+            registerSignal<Args...>(funcName);
         }
 
-        template<typename ...Args>
+        template <typename... Args>
         void registerSystemSignalPy(const std::string& funcName, const Args&... args) {
             // Arguments are ignored, but required to partially deduce the signature of the signal in Python:
             // All args will always be bp::object, but at least the number of arguments defines the signal signature
-            registerSystemSignal < Args...>(funcName);
+            registerSystemSignal<Args...>(funcName);
         }
 
-        template<typename ...Args>
-        SignalSlotableWrap::RequestorWrap requestPy(std::string instanceId,
-                                                    const std::string& functionName,
+        template <typename... Args>
+        SignalSlotableWrap::RequestorWrap requestPy(std::string instanceId, const std::string& functionName,
                                                     const Args&... args) {
             if (instanceId.empty()) instanceId = m_instanceId;
             return SignalSlotableWrap::RequestorWrap(this).requestPy(instanceId, functionName, args...);
         }
 
-        template<typename ...Args>
+        template <typename... Args>
         SignalSlotableWrap::RequestorWrap requestNoWaitPy(std::string requestSlotInstanceId,
                                                           const std::string& requestSlotFunction,
                                                           std::string replySlotInstanceId,
-                                                          const std::string& replySlotFunction,
-                                                          const Args&... args) {
-
+                                                          const std::string& replySlotFunction, const Args&... args) {
             if (requestSlotInstanceId.empty()) requestSlotInstanceId = m_instanceId;
             if (replySlotInstanceId.empty()) replySlotInstanceId = m_instanceId;
-            return SignalSlotableWrap::RequestorWrap(this).requestNoWaitPy(requestSlotInstanceId, requestSlotFunction,
-                                                                           replySlotInstanceId, replySlotFunction,
-                                                                           args...);
+            return SignalSlotableWrap::RequestorWrap(this).requestNoWaitPy(
+                  requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction, args...);
         }
 
-        template<typename ...Args>
+        template <typename... Args>
         void emitPy(const std::string& signalFunction, const Args&... args) {
             auto s = getSignal(signalFunction);
             if (s) {
                 auto hash = boost::make_shared<karabo::util::Hash>();
                 packPy(*hash, args...);
-                s->emit < Args...>(hash);
+                s->emit<Args...>(hash);
             }
         }
 
-        template<typename ...Args>
+        template <typename... Args>
         void callPy(const std::string& instanceId, const std::string& functionName, const Args&... args) const {
             auto body = boost::make_shared<karabo::util::Hash>();
             packPy(*body, args...);
@@ -238,7 +220,7 @@ namespace karathon {
             doSendMessage(id, header, body, KARABO_SYS_PRIO, KARABO_SYS_TTL);
         }
 
-        template <typename ...Args>
+        template <typename... Args>
         void replyPy(const Args&... args) {
             auto reply(boost::make_shared<karabo::util::Hash>());
             packPy(*reply, args...);
@@ -257,42 +239,42 @@ namespace karathon {
         }
 
         void registerInstanceNewHandlerPy(const bp::object& handler) {
-            registerInstanceNewHandler(HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceNew"));
+            registerInstanceNewHandler(
+                  HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceNew"));
         }
 
         void registerInstanceGoneHandlerPy(const bp::object& handler) {
-            registerInstanceGoneHandler(HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceGone"));
+            registerInstanceGoneHandler(
+                  HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceGone"));
         }
 
         void registerSlotCallGuardHandlerPy(const bp::object& handler) {
-            registerSlotCallGuardHandler(HandlerWrap<const std::string&, const std::string&>(handler, "slot call guard"));
+            registerSlotCallGuardHandler(
+                  HandlerWrap<const std::string&, const std::string&>(handler, "slot call guard"));
         }
 
         void registerPerformanceStatisticsHandlerPy(const bp::object& handler) {
-            registerPerformanceStatisticsHandler(HandlerWrap<const karabo::util::Hash::Pointer&>(handler, "performance measurement"));
+            registerPerformanceStatisticsHandler(
+                  HandlerWrap<const karabo::util::Hash::Pointer&>(handler, "performance measurement"));
         }
 
         void registerBrokerErrorHandlerPy(const bp::object& handler) {
             registerBrokerErrorHandler(HandlerWrap<const std::string&>(handler, "broker error"));
         }
 
-        karabo::xms::OutputChannel::Pointer
-        createOutputChannelPy(const std::string& channelName,
-                              const karabo::util::Hash& config,
-                              const bp::object& onOutputPossibleHandler = bp::object()) {
+        karabo::xms::OutputChannel::Pointer createOutputChannelPy(
+              const std::string& channelName, const karabo::util::Hash& config,
+              const bp::object& onOutputPossibleHandler = bp::object()) {
             using Wrap = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>;
-            return createOutputChannel(channelName,
-                                       config,
-                                       Wrap(onOutputPossibleHandler, "IOEvent"));
+            return createOutputChannel(channelName, config, Wrap(onOutputPossibleHandler, "IOEvent"));
         }
 
-        karabo::xms::InputChannel::Pointer
-        createInputChannelPy(const std::string& channelName,
-                             const karabo::util::Hash& config,
-                             const bp::object& onDataHandler = bp::object(),
-                             const bp::object& onInputHandler = bp::object(),
-                             const bp::object& onEndOfStreamHandler = bp::object(),
-                             const bp::object& connectionTracker = bp::object());
+        karabo::xms::InputChannel::Pointer createInputChannelPy(const std::string& channelName,
+                                                                const karabo::util::Hash& config,
+                                                                const bp::object& onDataHandler = bp::object(),
+                                                                const bp::object& onInputHandler = bp::object(),
+                                                                const bp::object& onEndOfStreamHandler = bp::object(),
+                                                                const bp::object& connectionTracker = bp::object());
 
         void connectInputChannelsPy() {
             ScopedGILRelease nogil;
@@ -324,11 +306,10 @@ namespace karathon {
         }
 
         void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerEndOfStreamHandler(channelName, HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "EOS"));
+            registerEndOfStreamHandler(channelName,
+                                       HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "EOS"));
         }
-
     };
-}
+} // namespace karathon
 
-#endif  /* KARATHON_SIGNALSLOTABLE_HH */
-
+#endif /* KARATHON_SIGNALSLOTABLE_HH */

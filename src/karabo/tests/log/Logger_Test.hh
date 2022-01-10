@@ -6,28 +6,27 @@
  */
 
 #ifndef LOGGER_TEST_HH
-#define	LOGGER_TEST_HH
+#define LOGGER_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <karabo/log/Logger.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/NodeElement.hh>
-#include <karabo/log/Logger.hh>
 
 class LogSomething {
-
-
-public:
-
-    KARABO_CLASSINFO(LogSomething, "LogSomething", "")    
+   public:
+    KARABO_CLASSINFO(LogSomething, "LogSomething", "")
 
     static void expectedParameters(karabo::util::Schema& expected) {
         using namespace karabo::util;
 
-        NODE_ELEMENT(expected).key("Logger")
-                .displayedName("Logger")
-                .description("Logger configuration")
-                .appendParametersOf<karabo::log::Logger>()
-                .commit();
+        NODE_ELEMENT(expected)
+              .key("Logger")
+              .displayedName("Logger")
+              .description("Logger configuration")
+              .appendParametersOf<karabo::log::Logger>()
+              .commit();
     }
 
     LogSomething(const karabo::util::Hash& input) {
@@ -36,10 +35,9 @@ public:
         Logger::useOstream();
     }
 
-    virtual ~LogSomething() {
-    }
+    virtual ~LogSomething() {}
 
-    void doSomeLogging() {        
+    void doSomeLogging() {
         KARABO_LOG_FRAMEWORK_DEBUG << "ERROR";
         KARABO_LOG_FRAMEWORK_INFO << "ERROR";
         KARABO_LOG_FRAMEWORK_WARN << "OK";
@@ -48,8 +46,6 @@ public:
 };
 
 class Logger_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(Logger_Test);
 
     CPPUNIT_TEST(test1);
@@ -58,17 +54,16 @@ class Logger_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Logger_Test();
     virtual ~Logger_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void test1();
     void test2();
     void testInClassLogging();
 };
 
-#endif	/* LOGGER_TEST_HH */
-
+#endif /* LOGGER_TEST_HH */

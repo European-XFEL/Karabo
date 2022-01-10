@@ -10,17 +10,17 @@
  */
 
 #include "TcpConnection.hh"
-#include "TcpChannel.hh"
-#include "EventLoop.hh"
-#include "utils.hh"
-
-#include "karabo/log/Logger.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/MetaTools.hh"
 
 #include <boost/any.hpp>
-#include <boost/pointer_cast.hpp>
 #include <boost/asio/basic_socket_acceptor.hpp>
+#include <boost/pointer_cast.hpp>
+
+#include "EventLoop.hh"
+#include "TcpChannel.hh"
+#include "karabo/log/Logger.hh"
+#include "karabo/util/MetaTools.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "utils.hh"
 
 using namespace std;
 using namespace boost::asio;
@@ -35,78 +35,83 @@ namespace karabo {
 
         void TcpConnection::expectedParameters(karabo::util::Schema& expected) {
             STRING_ELEMENT(expected)
-                    .key("type")
-                    .displayedName("Connection Type")
-                    .description("Decide whether the connection is used to implement a TCP Server or TCP Client")
-                    .assignmentOptional().defaultValue("client")
-                    .options("server,client")
-                    .commit();
+                  .key("type")
+                  .displayedName("Connection Type")
+                  .description("Decide whether the connection is used to implement a TCP Server or TCP Client")
+                  .assignmentOptional()
+                  .defaultValue("client")
+                  .options("server,client")
+                  .commit();
 
             STRING_ELEMENT(expected)
-                    .key("hostname")
-                    .displayedName("Hostname")
-                    .description("Hostname of a peer (used only for client)")
-                    .assignmentOptional().defaultValue("localhost")
-                    .commit();
+                  .key("hostname")
+                  .displayedName("Hostname")
+                  .description("Hostname of a peer (used only for client)")
+                  .assignmentOptional()
+                  .defaultValue("localhost")
+                  .commit();
 
             UINT32_ELEMENT(expected)
-                    .key("port")
-                    .displayedName("Hostport")
-                    .description("Hostport of a peer for type 'client' and local port for type 'server'")
-                    .assignmentOptional().defaultValue(0)
-                    .commit();
+                  .key("port")
+                  .displayedName("Hostport")
+                  .description("Hostport of a peer for type 'client' and local port for type 'server'")
+                  .assignmentOptional()
+                  .defaultValue(0)
+                  .commit();
 
             STRING_ELEMENT(expected)
-                    .key("url")
-                    .displayedName("URL")
-                    .description("URL format is tcp://hostname:port. This style has precedence.")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
+                  .key("url")
+                  .displayedName("URL")
+                  .description("URL format is tcp://hostname:port. This style has precedence.")
+                  .assignmentOptional()
+                  .defaultValue("")
+                  .commit();
 
             UINT32_ELEMENT(expected)
-                    .key("sizeofLength")
-                    .displayedName("Size of Message Length")
-                    .description("The size of messageLength field in communication protocol")
-                    .assignmentOptional().defaultValue(4)
-                    .init()
-                    .expertAccess()
-                    .commit();
+                  .key("sizeofLength")
+                  .displayedName("Size of Message Length")
+                  .description("The size of messageLength field in communication protocol")
+                  .assignmentOptional()
+                  .defaultValue(4)
+                  .init()
+                  .expertAccess()
+                  .commit();
 
             BOOL_ELEMENT(expected)
-                    .key("messageTagIsText")
-                    .displayedName("Message Tag is Text")
-                    .description("The length field in communication protocol is considered as text string")
-                    .assignmentOptional().defaultValue(false)
-                    .init()
-                    .expertAccess()
-                    .commit();
+                  .key("messageTagIsText")
+                  .displayedName("Message Tag is Text")
+                  .description("The length field in communication protocol is considered as text string")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .init()
+                  .expertAccess()
+                  .commit();
 
             BOOL_ELEMENT(expected)
-                    .key("manageAsyncData")
-                    .displayedName("Manage Async Data")
-                    .description("If set to true, asynchronous write handlers will copy the data to be written. The user does not "
-                                 "have to make sure that the to-be-written data has a long-enough life time.")
-                    .assignmentOptional().defaultValue(true)
-                    .init()
-                    .expertAccess()
-                    .commit();
-
+                  .key("manageAsyncData")
+                  .displayedName("Manage Async Data")
+                  .description(
+                        "If set to true, asynchronous write handlers will copy the data to be written. The user does "
+                        "not "
+                        "have to make sure that the to-be-written data has a long-enough life time.")
+                  .assignmentOptional()
+                  .defaultValue(true)
+                  .init()
+                  .expertAccess()
+                  .commit();
         }
 
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
-            : Connection(input)
-            , m_resolver(EventLoop::getIOService())
-            , m_acceptor(EventLoop::getIOService()) {
-
+            : Connection(input), m_resolver(EventLoop::getIOService()), m_acceptor(EventLoop::getIOService()) {
             string url;
             input.get("url", url);
             if (url.empty()) {
                 input.get("hostname", m_hostname);
                 input.get("port", m_port);
             } else {
-                const boost::tuple<std::string, std::string,
-                                   std::string, std::string, std::string> parts = parseUrl(url);
+                const boost::tuple<std::string, std::string, std::string, std::string, std::string> parts =
+                      parseUrl(url);
                 assert(parts.get<0>() == "tcp");
                 m_hostname = parts.get<1>();
                 m_port = fromString<unsigned int>(parts.get<2>());
@@ -124,7 +129,6 @@ namespace karabo {
 
 
         Channel::Pointer TcpConnection::start() {
-
             m_isAsyncConnect = false;
 
             if (m_connectionType == "server") {
@@ -155,7 +159,7 @@ namespace karabo {
             Channel::Pointer channel;
             try {
                 channel = this->createChannel();
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
+                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                 tcpChannel->acceptSocket(m_acceptor);
             } catch (...) {
                 KARABO_RETHROW
@@ -170,7 +174,7 @@ namespace karabo {
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
                 ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
                 channel = this->createChannel();
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
+                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                 tcpChannel->socketConnect(*endpoint_iterator);
             } catch (...) {
                 KARABO_RETHROW
@@ -180,7 +184,6 @@ namespace karabo {
 
 
         int TcpConnection::startAsync(const ConnectionHandler& handler) {
-
             m_isAsyncConnect = true;
             if (m_connectionType == "server") {
                 if (!m_acceptor.is_open()) {
@@ -204,8 +207,8 @@ namespace karabo {
                                 m_acceptor.close();
                             }
                             if (m_port != 0) {
-                                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("bind with port "
-                                        + toString(m_port) + " failed. OS: '" + e.what() + "'"));
+                                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("bind with port " + toString(m_port) +
+                                                                           " failed. OS: '" + e.what() + "'"));
                             }
                         }
                     } while (m_port == 0);
@@ -221,13 +224,14 @@ namespace karabo {
         void TcpConnection::startServer(const ConnectionHandler& handler) {
             try {
                 Channel::Pointer channel = this->createChannel();
-                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
-                // Caveat - cyclic shared_ptr to 'this' TcpConnection if 'channel' would have a shared_ptr to its TcpConnection:
-                // Then 'channel' is bound to the callback created by boost::bind and asyncAcceptSocket will call
-                // 'm_acceptor.async_accept(aSocket, callback)' and that certainly has to store the callback somewhere.
-                // So the datamember 'm_acceptor' holds a shared_ptr to this - if now the callback is never called (why?),
-                // the TcpConnection lives forever even if nothing outside keeps a pointer to it.
-                tcpChannel->asyncAcceptSocket(m_acceptor, boost::bind(handler, boost::asio::placeholders::error, channel));
+                TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                // Caveat - cyclic shared_ptr to 'this' TcpConnection if 'channel' would have a shared_ptr to its
+                // TcpConnection: Then 'channel' is bound to the callback created by boost::bind and asyncAcceptSocket
+                // will call 'm_acceptor.async_accept(aSocket, callback)' and that certainly has to store the callback
+                // somewhere. So the datamember 'm_acceptor' holds a shared_ptr to this - if now the callback is never
+                // called (why?), the TcpConnection lives forever even if nothing outside keeps a pointer to it.
+                tcpChannel->asyncAcceptSocket(m_acceptor,
+                                              boost::bind(handler, boost::asio::placeholders::error, channel));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -237,22 +241,23 @@ namespace karabo {
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
-                m_resolver.async_resolve(query, bind_weak(&TcpConnection::resolveHandler,
-                                                          this, boost::asio::placeholders::error,
-                                                          boost::asio::placeholders::iterator, handler));
+                m_resolver.async_resolve(
+                      query, bind_weak(&TcpConnection::resolveHandler, this, boost::asio::placeholders::error,
+                                       boost::asio::placeholders::iterator, handler));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
 
-        void TcpConnection::resolveHandler(const ErrorCode& e, ip::tcp::resolver::iterator it, const ConnectionHandler& handler) {
+        void TcpConnection::resolveHandler(const ErrorCode& e, ip::tcp::resolver::iterator it,
+                                           const ConnectionHandler& handler) {
             try {
                 if (!e) {
                     // No errors... create channel
                     Channel::Pointer channel = createChannel();
                     // ... cast it to the TcpChannel
-                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
+                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                     // ... get peer endpoint ...
                     const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
                     // ... and let the tcpChannel connect its socket asynchronously to the endpoint
@@ -265,7 +270,8 @@ namespace karabo {
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             } catch (const std::exception& ex) {
-                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(string("Standard exception caught by TcpConnection::resolveHandler: ") + ex.what()))
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(
+                      string("Standard exception caught by TcpConnection::resolveHandler: ") + ex.what()))
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -286,8 +292,9 @@ namespace karabo {
 
 
         ChannelPointer TcpConnection::createChannel() {
-            ChannelPointer channel(new TcpChannel(boost::dynamic_pointer_cast<TcpConnection>(this->getConnectionPointer())));
+            ChannelPointer channel(
+                  new TcpChannel(boost::dynamic_pointer_cast<TcpConnection>(this->getConnectionPointer())));
             return channel;
         }
-    }
-}
+    } // namespace net
+} // namespace karabo

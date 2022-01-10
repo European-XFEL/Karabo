@@ -15,21 +15,16 @@
 namespace karabo {
     namespace util {
 
-        class ByteArrayElement : public LeafElement<ByteArrayElement, ByteArray > {
+        class ByteArrayElement : public LeafElement<ByteArrayElement, ByteArray> {
+           public:
+            ByteArrayElement(Schema& expected) : LeafElement<ByteArrayElement, ByteArray>(expected) {}
 
-        public:
-
-            ByteArrayElement(Schema& expected) : LeafElement<ByteArrayElement, ByteArray >(expected) {
-            }
-
-        protected:
-
+           protected:
             void beforeAddition() {
-
                 m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
                 m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
                 m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "ByteArray");
-                m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<ByteArray >()));
+                m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<ByteArray>()));
 
                 m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
@@ -50,7 +45,7 @@ namespace karabo {
         };
 
         typedef ByteArrayElement BYTEARRAY_ELEMENT;
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif

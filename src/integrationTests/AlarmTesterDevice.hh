@@ -19,9 +19,7 @@
 namespace karabo {
 
     class AlarmTester : public karabo::core::Device<> {
-
-    public:
-
+       public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(AlarmTester, "AlarmTester", "2.0")
 
@@ -107,9 +105,8 @@ namespace karabo {
         void triggerGlobalNormal();
         void alarmConditionToResult();
 
-    private:
-
+       private:
     };
-}
+} // namespace karabo
 
 #endif

@@ -13,7 +13,7 @@
 #include "karabo/log/Logger.hh"
 
 #if defined(__GNUC__) || defined(__clang__)
-    #include <cxxabi.h>
+#include <cxxabi.h>
 #endif
 
 namespace karabo {
@@ -45,29 +45,29 @@ namespace karabo {
             auto loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
             boost::function<void(boost::system::error_code ec, int signo)> signalHandler =
-                [&loop](boost::system::error_code ec, int signo) {
-                    if (ec == boost::asio::error::operation_aborted) {
-                        KARABO_LOG_FRAMEWORK_ERROR
-                            << "*** EventLoop::work() signalHandler: signal_set cancelled. signal: " << signo;
-                    }
-                    if (ec) return;
+                  [&loop](boost::system::error_code ec, int signo) {
+                      if (ec == boost::asio::error::operation_aborted) {
+                          KARABO_LOG_FRAMEWORK_ERROR
+                                << "*** EventLoop::work() signalHandler: signal_set cancelled. signal: " << signo;
+                      }
+                      if (ec) return;
 
-                    {
-                        boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
-                        if (loop->m_signalHandler) {
-                            loop->m_signalHandler(signo);
-                        }
-                    }
-                    // Some time to do all actions possibly triggered by handler.
-                    boost::this_thread::sleep(boost::posix_time::seconds(1));
-                    // Finally go down, i.e. leave work()
-                    EventLoop::stop();
-                    // TODO (check!):
-                    // Once we have no thread running for the DeviceServer, but only the EventLoop,
-                    // we could stop() without sleep and then run().
-                    // If the main in deviceServer.cc registers a handler that resets the DeviceServer::Pointer,
-                    // the DeviceServer destructor will stop all re-registrations and thus let run() fade out.
-                };
+                      {
+                          boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
+                          if (loop->m_signalHandler) {
+                              loop->m_signalHandler(signo);
+                          }
+                      }
+                      // Some time to do all actions possibly triggered by handler.
+                      boost::this_thread::sleep(boost::posix_time::seconds(1));
+                      // Finally go down, i.e. leave work()
+                      EventLoop::stop();
+                      // TODO (check!):
+                      // Once we have no thread running for the DeviceServer, but only the EventLoop,
+                      // we could stop() without sleep and then run().
+                      // If the main in deviceServer.cc registers a handler that resets the DeviceServer::Pointer,
+                      // the DeviceServer destructor will stop all re-registrations and thus let run() fade out.
+                  };
             signals.async_wait(signalHandler);
 
             boost::asio::io_service::work work(getIOService());
@@ -205,7 +205,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_threadPoolMutex);
                     if (m_threadPool.is_this_thread_in()) {
                         m_ioService.post(
-                            boost::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
+                              boost::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
                         return; // No more while, we want to die
                     } else {
                         // We are in the main blocking thread here, which we never want to kill

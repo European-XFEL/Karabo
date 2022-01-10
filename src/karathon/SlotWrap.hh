@@ -9,36 +9,31 @@
  */
 
 #ifndef KARATHON_SLOTWRAP_HH
-#define	KARATHON_SLOTWRAP_HH
-
-#include "HashWrap.hh"
-
-#include "karabo/xms/Slot.hh"
+#define KARATHON_SLOTWRAP_HH
 
 #include <boost/python.hpp>
-
 #include <memory>
+
+#include "HashWrap.hh"
+#include "karabo/xms/Slot.hh"
 
 namespace bp = boost::python;
 
 namespace karathon {
 
     class SlotWrap : public karabo::xms::Slot {
-
         // unique_ptr seems more light weight than shared_ptr (no thread guarantees)
         std::unique_ptr<bp::object> m_slotFunction;
         size_t m_arity; // arity of position arguments, except *args
 
-    public:
-
+       public:
         SlotWrap(const std::string& slotFunction);
 
         virtual ~SlotWrap();
 
         void registerSlotFunction(const bp::object& slotHandler, int numArgs);
 
-    private: // function
-
+       private: // function
         void doCallRegisteredSlotFunctions(const karabo::util::Hash& body);
 
         void callFunction0(const karabo::util::Hash& body);
@@ -57,7 +52,6 @@ namespace karathon {
 
         void rethrowPythonException();
     };
-}
+} // namespace karathon
 
 #endif
-

@@ -6,7 +6,7 @@
  */
 
 #ifndef LOCKTESTDEVICE_HH
-#define	LOCKTESTDEVICE_HH
+#define LOCKTESTDEVICE_HH
 
 #include <karabo/karabo.hpp>
 
@@ -16,9 +16,7 @@
 namespace karabo {
 
     class LockTestDevice : public karabo::core::Device<> {
-
-    public:
-
+       public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(LockTestDevice, "LockTestDevice", "2.0")
 
@@ -42,11 +40,7 @@ namespace karabo {
         virtual ~LockTestDevice();
 
 
-
-
-
-    private:
-
+       private:
         void lockAndWait();
         void lockAndWait_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
 
@@ -63,9 +57,7 @@ namespace karabo {
         void lockAndWaitRecursiveFail_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
 
         void initialize();
-
     };
-}
+} // namespace karabo
 
-#endif	/* LOCKTESTDEVICE_HH */
-
+#endif /* LOCKTESTDEVICE_HH */

@@ -5,9 +5,10 @@
  * Created on Mar 14, 2013, 12:24:04 PM
  */
 
-#include <karabo/log/Logger.hh>
-#include <karabo/io/Input.hh>
 #include "Logger_Test.hh"
+
+#include <karabo/io/Input.hh>
+#include <karabo/log/Logger.hh>
 
 using namespace std;
 using namespace karabo::log;
@@ -20,24 +21,19 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Logger_Test);
 KARABO_REGISTER_FOR_CONFIGURATION(LogSomething)
 
 
-Logger_Test::Logger_Test() {
-}
+Logger_Test::Logger_Test() {}
 
 
-Logger_Test::~Logger_Test() {
-}
+Logger_Test::~Logger_Test() {}
 
 
-void Logger_Test::setUp() {
-}
+void Logger_Test::setUp() {}
 
 
-void Logger_Test::tearDown() {
-}
+void Logger_Test::tearDown() {}
 
 
 void Logger_Test::test1() {
-
     // We are chatty in this test
     // But the idea is to only see OKs and never ERROR
     // There is no ASSERT unfortunately, so this test needs visual inspection
@@ -108,6 +104,3 @@ void Logger_Test::testInClassLogging() {
     auto p = Configurator<LogSomething>::create("LogSomething", config);
     p->doSomeLogging();
 }
-
-
-

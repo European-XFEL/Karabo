@@ -11,40 +11,41 @@
 
 
 #ifndef KARABO_UTIL_LEAF_ELEMENT_HH
-#define	KARABO_UTIL_LEAF_ELEMENT_HH
+#define KARABO_UTIL_LEAF_ELEMENT_HH
 
+#include "AlarmConditions.hh"
 #include "GenericElement.hh"
 #include "State.hh"
-#include "AlarmConditions.hh"
 
 namespace karabo {
     namespace util {
 
         // Forwards
-        template<class T, class U> class DefaultValue;
-        template<class T, class U> class ReadOnlySpecific;
-        template<class T, class U, class W> class AlarmSpecific;
-        template<class T, class U> class RollingStatsSpecific;
+        template <class T, class U>
+        class DefaultValue;
+        template <class T, class U>
+        class ReadOnlySpecific;
+        template <class T, class U, class W>
+        class AlarmSpecific;
+        template <class T, class U>
+        class RollingStatsSpecific;
 
         /**
          * The LeafElement represents a leaf and can be of any (supported) type
          */
-        template<class Derived, typename ValueType>
+        template <class Derived, typename ValueType>
         class LeafElement : public GenericElement<Derived> {
-
             DefaultValue<Derived, ValueType> m_defaultValue; // the default value type depends on the type of element
             ReadOnlySpecific<Derived, ValueType> m_readOnlySpecific;
 
 
-        public:
-
+           public:
             LeafElement(Schema& expected) : GenericElement<Derived>(expected) {
-                m_defaultValue.setElement(static_cast<Derived*> (this));
-                m_readOnlySpecific.setElement(static_cast<Derived*> (this));
-                
+                m_defaultValue.setElement(static_cast<Derived*>(this));
+                m_readOnlySpecific.setElement(static_cast<Derived*>(this));
+
                 // set the default DAQ policy
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
-                
             }
 
             /**
@@ -57,7 +58,7 @@ namespace karabo {
                 std::pair<std::string, std::string> names = karabo::util::getUnit(unit);
                 this->m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
                 this->m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -70,7 +71,7 @@ namespace karabo {
                 std::pair<std::string, std::string> names = karabo::util::getMetricPrefix(metricPrefix);
                 this->m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
                 this->m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -81,11 +82,12 @@ namespace karabo {
              */
             Derived& allowedStates(const std::vector<karabo::util::State>& value) {
                 const std::string stateString = karabo::util::toString(value);
-                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(stateString, ","));
-                return *(static_cast<Derived*> (this));
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES,
+                                           karabo::util::fromString<std::string, std::vector>(stateString, ","));
+                return *(static_cast<Derived*>(this));
             }
 
-            //overloads for up to six elements
+            // overloads for up to six elements
 
             Derived& allowedStates(const karabo::util::State& s1) {
                 const karabo::util::State arr[] = {s1};
@@ -97,22 +99,28 @@ namespace karabo {
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 2));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3) {
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                   const karabo::util::State& s3) {
                 const karabo::util::State arr[] = {s1, s2, s3};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 3));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4) {
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                   const karabo::util::State& s3, const karabo::util::State& s4) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 4));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5) {
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                   const karabo::util::State& s3, const karabo::util::State& s4,
+                                   const karabo::util::State& s5) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 5));
             }
 
-            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
+            Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                   const karabo::util::State& s3, const karabo::util::State& s4,
+                                   const karabo::util::State& s5, const karabo::util::State& s6) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 6));
             }
@@ -124,7 +132,7 @@ namespace karabo {
              */
             virtual Derived& assignmentMandatory() {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -169,7 +177,7 @@ namespace karabo {
              */
             virtual Derived& init() {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -179,7 +187,7 @@ namespace karabo {
              */
             virtual Derived& reconfigurable() {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -187,19 +195,20 @@ namespace karabo {
              * to be included  in monitoring schema only.
              * @return reference to the Element (to allow method's chaining)
              */
-            virtual ReadOnlySpecific<Derived, ValueType> &readOnly() {
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
-                    && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM
-                    && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+            virtual ReadOnlySpecific<Derived, ValueType>& readOnly() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT) &&
+                    this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM &&
+                    this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
                     std::string msg;
                     msg.append("Error in element '")
-                            .append(this->m_node->getKey())
-                            .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
-                            .append("Use readOnly().initialValue(v) instead.");
+                          .append(this->m_node->getKey())
+                          .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
+                          .append("Use readOnly().initialValue(v) instead.");
                     throw KARABO_LOGIC_EXCEPTION(msg);
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-                // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
+                // Set the assignment and defaults here, as the API would look strange to assign something to a
+                // read-only
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, ValueType());
                 return m_readOnlySpecific;
@@ -211,23 +220,19 @@ namespace karabo {
              */
             virtual Derived& daqPolicy(const DAQPolicy& policy) {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, policy);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
-            
         };
 
         /**
          * The DefaultValue class defines a default value for element.
          */
-        template<class Element, class ValueType>
+        template <class Element, class ValueType>
         class DefaultValue {
-
             Element* m_genericElement;
 
-        public:
-
-            DefaultValue() : m_genericElement(0) {
-            }
+           public:
+            DefaultValue() : m_genericElement(0) {}
 
             /**
              * Set the element this DefaultValue refers to
@@ -256,8 +261,9 @@ namespace karabo {
              */
             Element& defaultValueFromString(const std::string& defaultValue) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, defaultValue);
-                Types::ReferenceType type = Types::from<FromTypeInfo>(typeid (ValueType));
-                Hash::Attributes::Node& attrNode = m_genericElement->getNode().getAttributeNode(KARABO_SCHEMA_DEFAULT_VALUE);
+                Types::ReferenceType type = Types::from<FromTypeInfo>(typeid(ValueType));
+                Hash::Attributes::Node& attrNode =
+                      m_genericElement->getNode().getAttributeNode(KARABO_SCHEMA_DEFAULT_VALUE);
                 attrNode.setType(type);
                 return *m_genericElement;
             }
@@ -275,17 +281,17 @@ namespace karabo {
          * The AlarmSpecific Class assures acknowledgements are configured for
          * alarm conditions
          */
-        template<class Element, class ValueType, class ReturnType>
+        template <class Element, class ValueType, class ReturnType>
         class AlarmSpecific {
-
             ReturnType* m_returnElement;
             ReadOnlySpecific<Element, ValueType>* m_readOnlyElement;
             std::string m_lastConfig;
 
-        public:
-
-            template< class U, class V> friend class ReadOnlySpecific;
-            template< class U, class V> friend class RollingStatsSpecific;
+           public:
+            template <class U, class V>
+            friend class ReadOnlySpecific;
+            template <class U, class V>
+            friend class RollingStatsSpecific;
 
             /**
              * The <b>needsAcknowledging</b> method serves for setting up whether
@@ -295,7 +301,8 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             ReturnType& needsAcknowledging(const bool ack) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(std::string(KARABO_ALARM_ACK) + "_" + m_lastConfig, ack);
+                m_readOnlyElement->getElement()->getNode().setAttribute(
+                      std::string(KARABO_ALARM_ACK) + "_" + m_lastConfig, ack);
                 return *m_returnElement;
             }
 
@@ -306,43 +313,41 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             AlarmSpecific<Element, ValueType, ReturnType>& info(const std::string& desc) {
-                m_readOnlyElement->getElement()->getNode().setAttribute(std::string(KARABO_ALARM_INFO) + "_" + m_lastConfig, desc);
+                m_readOnlyElement->getElement()->getNode().setAttribute(
+                      std::string(KARABO_ALARM_INFO) + "_" + m_lastConfig, desc);
 
                 return *this;
             }
 
-        private:
+           private:
+            AlarmSpecific() : m_readOnlyElement(0) {}
 
-            AlarmSpecific() : m_readOnlyElement(0) {
-            }
-
-            void setScope(ReadOnlySpecific<Element, ValueType>* el, ReturnType* rel, const std::string & config) {
+            void setScope(ReadOnlySpecific<Element, ValueType>* el, ReturnType* rel, const std::string& config) {
                 m_readOnlyElement = el;
                 m_returnElement = rel;
                 m_lastConfig = config;
             }
-
         };
 
         /**
          * The RollingStatsSpecific Class configures alarms on rolling statistics
          */
-        template<class Element, class ValueType>
+        template <class Element, class ValueType>
         class RollingStatsSpecific {
-
             typedef RollingStatsSpecific<Element, ValueType> Self;
             ReadOnlySpecific<Element, ValueType>* m_readOnlyElement;
             AlarmSpecific<Element, ValueType, Self> m_alarmSpecific;
 
-        public:
-
-            template< class U, class V> friend class ReadOnlySpecific;
-            template< class U, class V, class W> friend class AlarmSpecific;
+           public:
+            template <class U, class V>
+            friend class ReadOnlySpecific;
+            template <class U, class V, class W>
+            friend class AlarmSpecific;
 
             /**
              * Set lower warning threshold for rolling window variance
              * @param value
-             * @return 
+             * @return
              */
             AlarmSpecific<Element, ValueType, Self>& warnVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_WARN_VARIANCE_LOW, value);
@@ -353,7 +358,7 @@ namespace karabo {
             /**
              * Set upper warning threshold for rolling window variance
              * @param value
-             * @return 
+             * @return
              */
             AlarmSpecific<Element, ValueType, Self>& warnVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_WARN_VARIANCE_HIGH, value);
@@ -364,7 +369,7 @@ namespace karabo {
             /**
              * Set lower alarm threshold for rolling window variance
              * @param value
-             * @return 
+             * @return
              */
             AlarmSpecific<Element, ValueType, Self>& alarmVarianceLow(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_ALARM_VARIANCE_LOW, value);
@@ -375,7 +380,7 @@ namespace karabo {
             /**
              * Set upper alarm threshold for rolling window variance
              * @param value
-             * @return 
+             * @return
              */
             AlarmSpecific<Element, ValueType, Self>& alarmVarianceHigh(const double value) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_ALARM_VARIANCE_HIGH, value);
@@ -386,42 +391,38 @@ namespace karabo {
             /**
              * Set the size/interval for the rolling window the variance is evaluated over.
              * @param value
-             * @return 
+             * @return
              */
             ReadOnlySpecific<Element, ValueType>& evaluationInterval(const unsigned int interval) {
                 m_readOnlyElement->getElement()->getNode().setAttribute(KARABO_SCHEMA_ROLLING_STATS_EVAL, interval);
                 return *m_readOnlyElement;
             }
 
-        private:
-
-            RollingStatsSpecific() : m_readOnlyElement(0) {
-            }
+           private:
+            RollingStatsSpecific() : m_readOnlyElement(0) {}
 
             void setElement(ReadOnlySpecific<Element, ValueType>* el) {
                 m_readOnlyElement = el;
-
             }
-
-
         };
 
         /**
          * The ReadOnlySpecific class defines specific values for 'readOnly'-element.
          */
-        template<class Element, class ValueType>
+        template <class Element, class ValueType>
         class ReadOnlySpecific {
-
             typedef ReadOnlySpecific<Element, ValueType> Self;
             Element* m_genericElement;
             AlarmSpecific<Element, ValueType, Self> m_alarmSpecific;
             RollingStatsSpecific<Element, ValueType> m_rollingStatsSpecific;
 
-        public:
-
-            template<class U, class V> friend class LeafElement;
-            template<class U, class V> friend class RollingStatsSpecific;
-            template<class U, class V, class W> friend class AlarmSpecific;
+           public:
+            template <class U, class V>
+            friend class LeafElement;
+            template <class U, class V>
+            friend class RollingStatsSpecific;
+            template <class U, class V, class W>
+            friend class AlarmSpecific;
             friend class TableElement;
 
             /**
@@ -457,9 +458,9 @@ namespace karabo {
             /**
              * Set lower warning threshold for this value
              * @param value
-             * @return 
+             * @return
              */
-            AlarmSpecific<Element, ValueType, Self> & warnLow(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, Self>& warnLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_WARN_LOW, value);
                 m_alarmSpecific.setScope(this, this, KARABO_WARN_LOW);
                 return m_alarmSpecific;
@@ -468,9 +469,9 @@ namespace karabo {
             /**
              * Set upper warning threshold for this value
              * @param value
-             * @return 
+             * @return
              */
-            AlarmSpecific<Element, ValueType, Self> & warnHigh(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, Self>& warnHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_WARN_HIGH, value);
                 m_alarmSpecific.setScope(this, this, KARABO_WARN_HIGH);
                 return m_alarmSpecific;
@@ -479,9 +480,9 @@ namespace karabo {
             /**
              * Set lower alarm threshold for this value
              * @param value
-             * @return 
+             * @return
              */
-            AlarmSpecific<Element, ValueType, Self> & alarmLow(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, Self>& alarmLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_ALARM_LOW, value);
                 m_alarmSpecific.setScope(this, this, KARABO_ALARM_LOW);
                 return m_alarmSpecific;
@@ -490,9 +491,9 @@ namespace karabo {
             /**
              * Set upper alarm threshold for this value
              * @param value
-             * @return 
+             * @return
              */
-            AlarmSpecific<Element, ValueType, Self> & alarmHigh(const ValueType& value) {
+            AlarmSpecific<Element, ValueType, Self>& alarmHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute(KARABO_ALARM_HIGH, value);
                 m_alarmSpecific.setScope(this, this, KARABO_ALARM_HIGH);
                 return m_alarmSpecific;
@@ -501,9 +502,9 @@ namespace karabo {
             /**
              * Enable rolling window statistics for this element. Allows to set
              * variance alarms.
-             * @return 
+             * @return
              */
-            RollingStatsSpecific<Element, ValueType> & enableRollingStats() {
+            RollingStatsSpecific<Element, ValueType>& enableRollingStats() {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS, true);
                 m_rollingStatsSpecific.setElement(this);
                 return m_rollingStatsSpecific;
@@ -512,7 +513,7 @@ namespace karabo {
             /**
              * Set the archiving policy for this element. Available settings
              * are:
-             * 
+             *
              *   EVERY_EVENT,
              *   EVERY_100MS,
              *   EVERY_1S,
@@ -521,9 +522,9 @@ namespace karabo {
              *   EVERY_1MIN,
              *   EVERY_10MIN,
              *   NO_ARCHIVING
-             * 
+             *
              * @param value
-             * @return 
+             * @return
              */
             ReadOnlySpecific& archivePolicy(const Schema::ArchivePolicy& value) {
                 m_genericElement->getNode().template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, value);
@@ -531,14 +532,15 @@ namespace karabo {
             }
 
             /**
-            * Registers this element into the Schema
-            */
+             * Registers this element into the Schema
+             */
             void commit() {
                 m_genericElement->commit();
             }
 
             /**
-             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
+             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * OBSERVER.
              * @return reference to the Element (to allow method's chaining)
              */
             ReadOnlySpecific& observerAccess() {
@@ -556,7 +558,8 @@ namespace karabo {
             }
 
             /**
-             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
+             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * OPERATOR.
              * @return reference to the Element (to allow method's chaining)
              */
             ReadOnlySpecific& operatorAccess() {
@@ -565,7 +568,8 @@ namespace karabo {
             }
 
             /**
-             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
+             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * EXPERT.
              * @return reference to the Element (to allow method's chaining)
              */
             ReadOnlySpecific& expertAccess() {
@@ -574,7 +578,8 @@ namespace karabo {
             }
 
             /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * ADMIN.
              * @return reference to the Element (to allow method's chaining)
              */
             ReadOnlySpecific& adminAccess() {
@@ -582,12 +587,10 @@ namespace karabo {
                 return *this;
             }
 
-        private:
-
+           private:
             // ReadOnlySpecific object can be only constructed by its friends
 
-            ReadOnlySpecific() : m_genericElement(0) {
-            }
+            ReadOnlySpecific() : m_genericElement(0) {}
 
             void setElement(Element* el) {
                 m_genericElement = el;
@@ -596,12 +599,8 @@ namespace karabo {
             Element* getElement() {
                 return m_genericElement;
             }
-
-
-
         };
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif
-

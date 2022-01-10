@@ -8,13 +8,15 @@
 
 
 #ifndef KARABO_IO_H5_FILE_HH
-#define	KARABO_IO_H5_FILE_HH
+#define KARABO_IO_H5_FILE_HH
 
-#include "Table.hh"
-#include "Format.hh"
+#include <hdf5/hdf5.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
-#include <hdf5/hdf5.h>
+
+#include "Format.hh"
+#include "Table.hh"
 
 
 namespace karabo {
@@ -31,25 +33,22 @@ namespace karabo {
              * @brief A class representing a physical HDF5 file, containing any number of tables.
              */
             class File {
-
                 static int m_init;
                 static int initErrorHandling();
 
-            public:
-
+               public:
                 KARABO_CLASSINFO(File, "Hdf5", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
-            private:
+               private:
                 typedef std::map<std::string, boost::shared_ptr<karabo::io::h5::Table> > TableMap;
 
-            public:
-
+               public:
                 /**
                  * Initialize a File wrapped from a HDF5 file identified by an h5 file handle
                  * @param h5file
                  */
-                File(const hid_t & h5file);
+                File(const hid_t& h5file);
 
                 /**
                  * Initialize a File wrapped as identified by an input configuration. Input should contain
@@ -110,12 +109,10 @@ namespace karabo {
                  *
                  * \li \c TRUNCATE Truncate file if exists.
                  * \li \c EXCLUSIVE Fails to open a file if already exists.
-                 * \li \c APPEND Appending records to existing tables and creating new tables within the file is possible
-                 * \li \c READONLY Readonly mode.
+                 * \li \c APPEND Appending records to existing tables and creating new tables within the file is
+                 * possible \li \c READONLY Readonly mode.
                  */
                 void open(File::AccessMode mode);
-
-
 
 
                 /**
@@ -161,7 +158,8 @@ namespace karabo {
                  * This can be useful if one wants to read only certain datasets.
                  * Client is fully responsible to make sure that the supplied format is compatible with stored data.
                  */
-                boost::shared_ptr<Table> getTable(const std::string& name, karabo::io::h5::Format::Pointer dataFormat, size_t numberOfRecords = 0);
+                boost::shared_ptr<Table> getTable(const std::string& name, karabo::io::h5::Format::Pointer dataFormat,
+                                                  size_t numberOfRecords = 0);
 
                 void closeTable(boost::shared_ptr<Table> table);
 
@@ -185,8 +183,7 @@ namespace karabo {
                 karabo::util::Hash& reportOpenObjects(karabo::util::Hash& hash);
 
 
-            private:
-
+               private:
                 boost::filesystem::path m_filename;
 
                 hid_t m_h5file;
@@ -206,11 +203,10 @@ namespace karabo {
                 bool m_managed;
 
                 void closeTable(const std::string& uniqueId);
-
             };
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
 
 #endif

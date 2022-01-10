@@ -1,23 +1,22 @@
-#include <boost/smart_ptr/make_shared.hpp>
-
 #include "State.hh"
+
+#include <boost/smart_ptr/make_shared.hpp>
 
 namespace karabo {
     namespace util {
 
-#define KARABO_INIT_BASE_STATE(X) const State  State::X(#X, NULL);
+#define KARABO_INIT_BASE_STATE(X) const State State::X(#X, NULL);
 
 
         KARABO_INIT_BASE_STATE(UNKNOWN)
         KARABO_INIT_BASE_STATE(KNOWN)
         KARABO_INIT_BASE_STATE(INIT)
 
-#undef KARABO_INIT_BASE_STATE                
+#undef KARABO_INIT_BASE_STATE
 
 
+#define KARABO_INIT_FIXED_STATE(X, Y) const State State::X(#X, &Y);
 
-#define KARABO_INIT_FIXED_STATE(X,Y) const State State::X(#X, &Y);
-                    
         KARABO_INIT_FIXED_STATE(DISABLED, KNOWN)
 
         KARABO_INIT_FIXED_STATE(ERROR, KNOWN)
@@ -43,7 +42,7 @@ namespace karabo {
         /**
          *
          */
-        
+
         KARABO_INIT_FIXED_STATE(INTERLOCKED, DISABLED)
 
         KARABO_INIT_FIXED_STATE(COOLED, ACTIVE)
@@ -159,13 +158,9 @@ namespace karabo {
         KARABO_INIT_FIXED_STATE(INTERLOCK_OK, STATIC)
 
 
-
-
 #undef KARABO_INIT_FIXED_STATE
 
-        State::State(const std::string& name, const State* parent) : m_stateName(name), m_parent(parent) {
-
-        }
+        State::State(const std::string& name, const State* parent) : m_stateName(name), m_parent(parent) {}
 
 
         bool State::isDerivedFrom(const State& s) const {
@@ -175,10 +170,11 @@ namespace karabo {
         }
 
         std::once_flag State::m_initFromStringFlag;
-        std::unordered_map<std::string, const State & > State::m_stateFactory;
+        std::unordered_map<std::string, const State&> State::m_stateFactory;
 
         void State::initFromString() {
-#define KARABO_INSERT_STATE_TO_FACTORY(state) m_stateFactory.insert(std::pair<std::string, const State& >(std::string(#state), State::state));
+#define KARABO_INSERT_STATE_TO_FACTORY(state) \
+    m_stateFactory.insert(std::pair<std::string, const State&>(std::string(#state), State::state));
 
             KARABO_INSERT_STATE_TO_FACTORY(UNKNOWN)
             KARABO_INSERT_STATE_TO_FACTORY(KNOWN)
@@ -261,7 +257,7 @@ namespace karabo {
         }
 
 
-        const State& State::fromString(const std::string & state) {
+        const State& State::fromString(const std::string& state) {
             std::call_once(m_initFromStringFlag, &State::initFromString);
 
             auto iter = m_stateFactory.find(state);
@@ -278,5 +274,5 @@ namespace karabo {
         }
 
 
-    }
-}
+    } // namespace util
+} // namespace karabo

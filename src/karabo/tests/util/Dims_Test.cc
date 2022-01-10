@@ -1,15 +1,15 @@
-/* 
+/*
  * File:   Dims_Test.cc
  * Author: <krzysztof.wrona@xfel.eu>
- * 
+ *
  * Created on February 19, 2013, 1:33 PM
  */
 
 #include "Dims_Test.hh"
-#include <karabo/util/Dims.hh>
-#include <karabo/util/ArrayTools.hh>
 
 #include <boost/shared_array.hpp>
+#include <karabo/util/ArrayTools.hh>
+#include <karabo/util/Dims.hh>
 
 
 using namespace karabo::util;
@@ -19,24 +19,19 @@ using namespace std;
 CPPUNIT_TEST_SUITE_REGISTRATION(Dims_Test);
 
 
-Dims_Test::Dims_Test() {
-}
+Dims_Test::Dims_Test() {}
 
 
-Dims_Test::~Dims_Test() {
-}
+Dims_Test::~Dims_Test() {}
 
 
-void Dims_Test::setUp() {
-}
+void Dims_Test::setUp() {}
 
 
-void Dims_Test::tearDown() {
-}
+void Dims_Test::tearDown() {}
 
 
 void Dims_Test::testDims() {
-
     Dims a0;
     CPPUNIT_ASSERT(a0.rank() == 0);
     CPPUNIT_ASSERT(a0.size() == 0);
@@ -80,12 +75,10 @@ void Dims_Test::testDims() {
     CPPUNIT_ASSERT(d.extentIn(2) == 2);
     CPPUNIT_ASSERT(d.extentIn(3) == 10);
     CPPUNIT_ASSERT(d.extentIn(4) == 3);
-
 }
 
 
 void Dims_Test::testArrayTools() {
-
     Dims dimsD(10, 6);
     boost::shared_array<unsigned short> d = boost::shared_array<unsigned short>(new unsigned short[dimsD.size()]);
     for (size_t i = 0; i < dimsD.size(); ++i) {
@@ -102,7 +95,7 @@ void Dims_Test::testArrayTools() {
         getPointerFromHash(data, "d", dd, dimsDD);
     }
 
-    //clog << "rank: " << dimsDD.rank() << endl;
+    // clog << "rank: " << dimsDD.rank() << endl;
     CPPUNIT_ASSERT(dimsDD.rank() == 2);
     CPPUNIT_ASSERT(dimsDD.size() == 60);
     CPPUNIT_ASSERT(dimsDD.extentIn(0) == 10);
@@ -115,7 +108,6 @@ void Dims_Test::testArrayTools() {
 
 
     {
-
         Dims d, dd;
         int a = 287;
         int* aPtr = &a;
@@ -125,10 +117,9 @@ void Dims_Test::testArrayTools() {
             addPointerToHash(data, "a", aPtr, d);
             getPointerFromHash(data, "a", aaPtr, dd);
         }
-        //clog << "aaPtr:  " << aaPtr << " value: " << *aaPtr << endl;
+        // clog << "aaPtr:  " << aaPtr << " value: " << *aaPtr << endl;
         CPPUNIT_ASSERT(*aaPtr == 287);
         CPPUNIT_ASSERT(dd.rank() == 0);
         CPPUNIT_ASSERT(dd.size() == 0);
     }
-
 }

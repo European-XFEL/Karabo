@@ -6,8 +6,9 @@
  */
 
 #include "GuiServer_Test.hh"
-#include <karabo/net/EventLoop.hh>
+
 #include <cstdlib>
+#include <karabo/net/EventLoop.hh>
 
 
 using namespace std;
@@ -19,10 +20,10 @@ USING_KARABO_NAMESPACES
 
 CPPUNIT_TEST_SUITE_REGISTRATION(GuiVersion_Test);
 
-bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
+bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
     const unsigned int sleepIntervalMillis = 5;
     unsigned int numOfWaits = 0;
-    const unsigned int maxNumOfWaits = static_cast<unsigned int> (std::ceil(timeoutMillis / sleepIntervalMillis));
+    const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
     while (numOfWaits < maxNumOfWaits && !checker()) {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
         numOfWaits++;
@@ -31,12 +32,10 @@ bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMill
 }
 
 
-GuiVersion_Test::GuiVersion_Test() {
-}
+GuiVersion_Test::GuiVersion_Test() {}
 
 
-GuiVersion_Test::~GuiVersion_Test() {
-}
+GuiVersion_Test::~GuiVersion_Test() {}
 
 
 void GuiVersion_Test::setUp() {
@@ -45,12 +44,12 @@ void GuiVersion_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL, "Logger.network.interval", 10);
+    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL,
+                "Logger.network.interval", 10);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
-
 }
 
 
@@ -62,21 +61,20 @@ void GuiVersion_Test::tearDown() {
 
 
 void GuiVersion_Test::appTestRunner() {
-
     // bring up a GUI server
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
-                                                                       Hash("deviceId", "testGuiServerDevice",
-                                                                            "port", 44450,
-                                                                            "minClientVersion", "2.2.3",
-                                                                            "forwardLogInterval", 500,
-                                                                            "timeout", 0),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
+                                      Hash("deviceId", "testGuiServerDevice", "port", 44450, "minClientVersion",
+                                           "2.2.3", "forwardLogInterval", 500, "timeout", 0),
+                                      KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    waitForCondition([this](){
-        auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
-        return state == State::ON;
-    }, KRB_TEST_MAX_TIMEOUT * 1000);
+    waitForCondition(
+          [this]() {
+              auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
+              return state == State::ON;
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
 
     testVersionControl();
     testExecuteBeforeLogin();
@@ -100,18 +98,18 @@ void GuiVersion_Test::appTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // bring up a GUI server and a tcp adapter to it
-    std::pair<bool, std::string> success_n = m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
-                                                                         Hash("deviceId", "testGuiServerDevice",
-                                                                              "port", 44450,
-                                                                              "minClientVersion", "2.2.3",
-                                                                              "isReadOnly", true,
-                                                                              "timeout", 0),
-                                                                         KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success_n =
+          m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
+                                      Hash("deviceId", "testGuiServerDevice", "port", 44450, "minClientVersion",
+                                           "2.2.3", "isReadOnly", true, "timeout", 0),
+                                      KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
-    waitForCondition([this](){
-        auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
-        return state == State::ON;
-    }, KRB_TEST_MAX_TIMEOUT * 1000);
+    waitForCondition(
+          [this]() {
+              auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
+              return state == State::ON;
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
 
     testReadOnly();
 
@@ -132,7 +130,8 @@ void GuiVersion_Test::resetTcpConnection() {
             timeout -= 5;
         }
     }
-    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u/*, "debug", true*/)));
+    m_tcpAdapter =
+          boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u /*, "debug", true*/)));
     timeout = 5000;
     while (!m_tcpAdapter->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -144,9 +143,8 @@ void GuiVersion_Test::resetTcpConnection() {
 
 void GuiVersion_Test::resetClientConnection(const karabo::util::Hash& loginData) {
     resetTcpConnection();
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("systemTopology", 1, [&] {
-        m_tcpAdapter->sendMessage(loginData);
-    });
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("systemTopology", 1, [&] { m_tcpAdapter->sendMessage(loginData); });
     Hash lastMessage;
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT(lastMessage.has("systemTopology"));
@@ -163,12 +161,12 @@ void GuiVersion_Test::testVersionControl() {
     std::clog << "testVersionControl: " << std::flush;
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
     // description , client version, server version, should connect
-    typedef std::tuple < std::string, std::string, std::string, bool> TestData;
-    std::vector <TestData> tests;
+    typedef std::tuple<std::string, std::string, std::string, bool> TestData;
+    std::vector<TestData> tests;
     tests.push_back(TestData("version control supported", "100.1.0", "2.11.0", true));
     tests.push_back(TestData("version control unsupported", "0.1.0", "2.11.0", false));
     tests.push_back(TestData("version control disabled", "0.1.0", "", true));
-    for (const auto &test : tests) {
+    for (const auto& test : tests) {
         std::clog << "." << std::flush;
         const std::string& testName = std::get<0>(test);
         const std::string& version = std::get<1>(test);
@@ -180,18 +178,18 @@ void GuiVersion_Test::testVersionControl() {
         loginInfo.set("version", version);
         Hash lastMessage;
         if (connected) {
-            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("systemTopology", 1, [&] {
-                m_tcpAdapter->sendMessage(loginInfo);
-            });
+            karabo::TcpAdapter::QueuePtr messageQ =
+                  m_tcpAdapter->getNextMessages("systemTopology", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
             messageQ->pop(lastMessage);
             CPPUNIT_ASSERT(lastMessage.has("systemTopology"));
         } else {
-            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
-                m_tcpAdapter->sendMessage(loginInfo);
-            });
+            karabo::TcpAdapter::QueuePtr messageQ =
+                  m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
             messageQ->pop(lastMessage);
             const std::string& message = lastMessage.get<std::string>("message");
-            CPPUNIT_ASSERT_MESSAGE(message, message.rfind("Your GUI client has version '" + version + "', but the minimum required is:", 0u) == 0u);
+            CPPUNIT_ASSERT_MESSAGE(
+                  message, message.rfind("Your GUI client has version '" + version + "', but the minimum required is:",
+                                         0u) == 0u);
             int timeout = 1500;
             // wait for the GUI server to log us out
             while (m_tcpAdapter->connected() && timeout > 0) {
@@ -215,46 +213,41 @@ void GuiVersion_Test::testReadOnly() {
     // Request execution of slot although the server is in readOnly mode!
     //
     std::vector<Hash> commands = {
-        Hash("type", "execute"),
-        Hash("type", "killDevice"),
-        Hash("type", "projectSaveItems"),
-        Hash("type", "initDevice"),
-        Hash("type", "requestFromSlot", "slot", "thisSlotShouldBeRejected"),
-        Hash("type", "killServer"),
-        Hash("type", "acknowledgeAlarm"),
-        Hash("type", "projectUpdateAttribute"),
-        Hash("type", "updateAttributes"),
-        Hash("type", "reconfigure"),
-        Hash("type", "requestGeneric", "slot", "slotSaveConfigurationFromName"),
-        };
-    for (const Hash &h : commands) {
+          Hash("type", "execute"),
+          Hash("type", "killDevice"),
+          Hash("type", "projectSaveItems"),
+          Hash("type", "initDevice"),
+          Hash("type", "requestFromSlot", "slot", "thisSlotShouldBeRejected"),
+          Hash("type", "killServer"),
+          Hash("type", "acknowledgeAlarm"),
+          Hash("type", "projectUpdateAttribute"),
+          Hash("type", "updateAttributes"),
+          Hash("type", "reconfigure"),
+          Hash("type", "requestGeneric", "slot", "slotSaveConfigurationFromName"),
+    };
+    for (const Hash& h : commands) {
         const std::string& type = h.get<std::string>("type");
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         const std::string& message = replyMessage.get<std::string>("message");
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Command: " + toString(h), std::string("Action '" + type + "' is not allowed on GUI servers in readOnly mode!"), message);
-        std::clog << "testReadOnly: OK for " + type  << std::endl;
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(
+              "Command: " + toString(h),
+              std::string("Action '" + type + "' is not allowed on GUI servers in readOnly mode!"), message);
+        std::clog << "testReadOnly: OK for " + type << std::endl;
     }
     const unsigned int messageTimeout = 500u;
-    Hash reqScene("type", "requestFromSlot",
-                  "deviceId", "doesNotMatter",
-                  "slot", "requestScene");
-    CPPUNIT_ASSERT_THROW(
-                         m_tcpAdapter->getNextMessages("notification", 1, [&] {
-                             m_tcpAdapter->sendMessage(reqScene);
-                         }, messageTimeout), karabo::util::TimeoutException);
+    Hash reqScene("type", "requestFromSlot", "deviceId", "doesNotMatter", "slot", "requestScene");
+    CPPUNIT_ASSERT_THROW(m_tcpAdapter->getNextMessages(
+                               "notification", 1, [&] { m_tcpAdapter->sendMessage(reqScene); }, messageTimeout),
+                         karabo::util::TimeoutException);
     std::clog << "testReadOnly: OK for requestFromSlot with requestScene" << std::endl;
 
-    Hash reqSlotScene("type", "requestFromSlot",
-                      "deviceId", "doesNotMatter",
-                      "slot", "slotGetScene");
-    CPPUNIT_ASSERT_THROW(
-                         m_tcpAdapter->getNextMessages("notification", 1, [&] {
-                             m_tcpAdapter->sendMessage(reqSlotScene);
-                         }, messageTimeout), karabo::util::TimeoutException);
+    Hash reqSlotScene("type", "requestFromSlot", "deviceId", "doesNotMatter", "slot", "slotGetScene");
+    CPPUNIT_ASSERT_THROW(m_tcpAdapter->getNextMessages(
+                               "notification", 1, [&] { m_tcpAdapter->sendMessage(reqSlotScene); }, messageTimeout),
+                         karabo::util::TimeoutException);
     std::clog << "testReadOnly: OK for requestFromSlot with slotGetScene" << std::endl;
 }
 
@@ -268,49 +261,45 @@ void GuiVersion_Test::testExecuteBeforeLogin() {
     //
     // Request of any type other than login, will fail.
     //
-    std::vector<std::string> blockedTypes = {
-        "execute",
-        "requestFromSlot",
-        "reconfigure",
-        "getDeviceConfiguration",
-        "getDeviceSchema",
-        "getClassSchema",
-        "initDevice",
-        "killServer",
-        "killDevice",
-        "startMonitoringDevice",
-        "stopMonitoringDevice",
-        "getPropertyHistory",
-        "getConfigurationFromPast",
-        "subscribeNetwork",
-        "requestNetwork",
-        "error",
-        "acknowledgeAlarm",
-        "requestAlarms",
-        "updateAttributes",
-        "projectBeginUserSession",
-        "projectEndUserSession",
-        "projectSaveItems",
-        "projectLoadItems",
-        "projectListProjectManagers",
-        "projectListItems",
-        "projectListDomains",
-        "projectUpdateAttribute",
-        "requestGeneric"
-    };
+    std::vector<std::string> blockedTypes = {"execute",
+                                             "requestFromSlot",
+                                             "reconfigure",
+                                             "getDeviceConfiguration",
+                                             "getDeviceSchema",
+                                             "getClassSchema",
+                                             "initDevice",
+                                             "killServer",
+                                             "killDevice",
+                                             "startMonitoringDevice",
+                                             "stopMonitoringDevice",
+                                             "getPropertyHistory",
+                                             "getConfigurationFromPast",
+                                             "subscribeNetwork",
+                                             "requestNetwork",
+                                             "error",
+                                             "acknowledgeAlarm",
+                                             "requestAlarms",
+                                             "updateAttributes",
+                                             "projectBeginUserSession",
+                                             "projectEndUserSession",
+                                             "projectSaveItems",
+                                             "projectLoadItems",
+                                             "projectListProjectManagers",
+                                             "projectListItems",
+                                             "projectListDomains",
+                                             "projectUpdateAttribute",
+                                             "requestGeneric"};
     for (const std::string& type : blockedTypes) {
         const Hash h("type", type);
         // no other argument should be needed, since the requests are rejected before
         // the arguments are parsed.
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         const std::string& message = replyMessage.get<std::string>("message");
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Received Hash: " + toString(replyMessage),
-                                     std::string("Action '" + type + "' refused before log in"),
-                                     message);
+                                     std::string("Action '" + type + "' refused before log in"), message);
     }
     // The `login` type is implicitly tested by `resetClientConnection()`
     m_tcpAdapter->disconnect();
@@ -327,23 +316,21 @@ void GuiVersion_Test::testExecute() {
     // Request execution of slot of non-existing device
     //
     {
-        const Hash h("type", "execute",
-                     "deviceId", "not_there",
-                     "command", "does.not.matter",
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "not_there", "command", "does.not.matter", "reply", true, "timeout",
+                     1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
-        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
+        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
+                               h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to execute 'does.not.matter' on device 'not_there'. Request "\
-                                         "not answered within 1 seconds."),
-                             replyMessage.get<std::string>("reason"));
+        CPPUNIT_ASSERT_EQUAL(
+              std::string("Failure on request to execute 'does.not.matter' on device 'not_there'. Request "
+                          "not answered within 1 seconds."),
+              replyMessage.get<std::string>("reason"));
     }
 
 
@@ -351,24 +338,22 @@ void GuiVersion_Test::testExecute() {
     // Request execution of non-existing slot of existing device (the GuiServerDevice itself...)
     //
     {
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevice",
-                     "command", "not.existing",
-                     "reply", true,
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevice", "command", "not.existing", "reply", true,
                      "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
-        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
+        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
+                               h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
         // First part of fail message is fixed, details contain 'Remote Exception':
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("reason"), 0ul,
-                                     replyMessage.get<std::string>("reason")
-                                     .find("Failure on request to execute 'not.existing' on device 'testGuiServerDevice', details:\n"));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(
+              replyMessage.get<std::string>("reason"), 0ul,
+              replyMessage.get<std::string>("reason").find(
+                    "Failure on request to execute 'not.existing' on device 'testGuiServerDevice', details:\n"));
         CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("reason"),
                                replyMessage.get<std::string>("reason").find("Remote Exception") != std::string::npos);
     }
@@ -381,18 +366,15 @@ void GuiVersion_Test::testExecute() {
         // with the deviceId - but that does not matter, they are ignored.
         // Also, "execute" is meant for slots listed as SLOT_ELEMENTS - but it works for any argument less slot
         // as slotGetConfiguration is one...
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevice",
-                     "command", "slotGetConfiguration",
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevice", "command", "slotGetConfiguration", "reply",
+                     true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
-        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
+        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
+                               h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
@@ -404,10 +386,9 @@ void GuiVersion_Test::testExecute() {
     {
         // We set the "lockedBy" property that is cleared by slotClearLock
         m_deviceClient->set("testGuiServerDevice", "lockedBy", "someone");
-        CPPUNIT_ASSERT_EQUAL(std::string("someone"), m_deviceClient->get<std::string>("testGuiServerDevice", "lockedBy"));
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevice",
-                     "command", "slotClearLock");
+        CPPUNIT_ASSERT_EQUAL(std::string("someone"),
+                             m_deviceClient->get<std::string>("testGuiServerDevice", "lockedBy"));
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevice", "command", "slotClearLock");
         // "reply", false); is default
         m_tcpAdapter->sendMessage(h);
 
@@ -436,13 +417,13 @@ void GuiVersion_Test::testRequestFailProtocol() {
         const Hash conf = m_deviceClient->get("testGuiServerDevice");
         const std::string& classVersion = conf.get<string>("classVersion");
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "notification", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
 
-        std::string assert_message = "The gui server with version " + classVersion + " does not support the client application request of " + type;
+        std::string assert_message = "The gui server with version " + classVersion +
+                                     " does not support the client application request of " + type;
         CPPUNIT_ASSERT_EQUAL(assert_message, replyMessage.get<std::string>("message"));
 
         std::clog << "testRequestFailProtocol: OK" << std::endl;
@@ -465,14 +446,14 @@ void GuiVersion_Test::testRequestFailOldVersion() {
     const unsigned int messageTimeout = 2000u;
     {
         const std::string type = "projectSaveItems";
-        Hash h("type", type);  // no other arguments are needed.
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, messageTimeout);
+        Hash h("type", type); // no other arguments are needed.
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "notification", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
 
-        std::string assert_message = "Action '" + type + "' is not allowed on this GUI client version. Please upgrade your GUI client";
+        std::string assert_message =
+              "Action '" + type + "' is not allowed on this GUI client version. Please upgrade your GUI client";
         CPPUNIT_ASSERT_EQUAL(assert_message, replyMessage.get<std::string>("message"));
 
         std::clog << "OK" << std::endl;
@@ -486,15 +467,11 @@ void GuiVersion_Test::testRequestGeneric() {
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
     const unsigned int messageTimeout = 2000u;
     {
-        Hash h("type", "requestGeneric",
-               "instanceId", "isnotonline",
-               "timeout", 1,
-               "slot", "requestScene");
+        Hash h("type", "requestGeneric", "instanceId", "isnotonline", "timeout", 1, "slot", "requestScene");
         h.set("args", Hash("name", "scene"));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
@@ -503,39 +480,31 @@ void GuiVersion_Test::testRequestGeneric() {
         std::clog << "requestGeneric: OK without specified replyType" << std::endl;
     }
     {
-        Hash h("type", "requestGeneric",
-               "instanceId", "isnotonline",
-               "timeout", 1,
-               "replyType", "requestSuperScene",
+        Hash h("type", "requestGeneric", "instanceId", "isnotonline", "timeout", 1, "replyType", "requestSuperScene",
                "slot", "slotDumpDebugInfo");
         h.set("args", Hash("name", "noname"));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("requestSuperScene", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "requestSuperScene", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(h.fullyEquals(replyMessage.get<Hash>("request")));
-        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to isnotonline.slotDumpDebugInfo, not answered within 1 seconds."),
-                             replyMessage.get<std::string>("reason"));
+        CPPUNIT_ASSERT_EQUAL(
+              std::string("Failure on request to isnotonline.slotDumpDebugInfo, not answered within 1 seconds."),
+              replyMessage.get<std::string>("reason"));
         CPPUNIT_ASSERT_EQUAL(std::string("requestSuperScene"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(std::string("noname"), replyMessage.get<std::string>("request.args.name"));
 
         std::clog << "requestGeneric: OK different replyType" << std::endl;
     }
     {
-        Hash h("type", "requestGeneric",
-               "instanceId", "testGuiServerDevice",
-               "timeout", 1,
-               "replyType", "debug",
-               "empty", true,
-               "slot", "slotDumpDebugInfo");
+        Hash h("type", "requestGeneric", "instanceId", "testGuiServerDevice", "timeout", 1, "replyType", "debug",
+               "empty", true, "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("debug", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "debug", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(true, replyMessage.get<bool>("success"));
@@ -549,18 +518,12 @@ void GuiVersion_Test::testRequestGeneric() {
         std::clog << "requestGeneric: OK with online device and empty request" << std::endl;
     }
     {
-        Hash h("type", "requestGeneric",
-               "instanceId", "testGuiServerDevice",
-               "timeout", 1,
-               "replyType", "debug",
-               "empty", true,
-               "token", "here is a token of my appreciation",
-               "slot", "slotDumpDebugInfo");
+        Hash h("type", "requestGeneric", "instanceId", "testGuiServerDevice", "timeout", 1, "replyType", "debug",
+               "empty", true, "token", "here is a token of my appreciation", "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("debug", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, messageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "debug", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(true, replyMessage.get<bool>("success"));
@@ -581,10 +544,9 @@ void GuiVersion_Test::testRequestGeneric() {
 void GuiVersion_Test::testSlowSlots() {
     resetClientConnection();
     // bring up a PropertyTestDevice
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer",
-                                                                       "PropertyTest",
-                                                                       Hash("deviceId", "testGuiServerDevicePropertyTest"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
+                                      Hash("deviceId", "testGuiServerDevicePropertyTest"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     //
@@ -593,21 +555,18 @@ void GuiVersion_Test::testSlowSlots() {
     // as a karabo command, i.e. no arguments. The slot takes 2 seconds therefore it should timeout.
     //
     {
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevicePropertyTest",
-                     "command", "slowSlot",
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
+                     true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(replyMessage.has("reason"));
         const std::string& failureMsg = replyMessage.get<std::string>("reason");
-        CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(failureMsg,
+                               failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
 
     ////////////////////////////////////////////////////////////////
@@ -617,18 +576,14 @@ void GuiVersion_Test::testSlowSlots() {
     //
     m_deviceClient->set("testGuiServerDevice", "ignoreTimeoutClasses", std::vector<std::string>({"PropertyTest"}));
     {
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevicePropertyTest",
-                     "command", "slowSlot",
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
+                     true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
-        std::string message = (replyMessage.has("reason"))? replyMessage.get<std::string>("reason") : "NO REASON";
+        std::string message = (replyMessage.has("reason")) ? replyMessage.get<std::string>("reason") : "NO REASON";
         CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
@@ -638,21 +593,18 @@ void GuiVersion_Test::testSlowSlots() {
     //
     m_deviceClient->set("testGuiServerDevice", "ignoreTimeoutClasses", std::vector<std::string>());
     {
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevicePropertyTest",
-                     "command", "slowSlot",
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
+                     true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(replyMessage.has("reason"));
         const std::string& failureMsg = replyMessage.get<std::string>("reason");
-        CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(failureMsg,
+                               failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
 
     ////////////////////////////////////////////////////////////////
@@ -663,14 +615,10 @@ void GuiVersion_Test::testSlowSlots() {
     const int previousTimeout = m_deviceClient->get<int>("testGuiServerDevice", "timeout");
     m_deviceClient->set("testGuiServerDevice", "timeout", 30);
     {
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevicePropertyTest",
-                     "command", "slowSlot",
-                     "reply", true,
-                     "timeout", 1); // smaller than the "timeout" property of the server, so gets ignored
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
+                     true, "timeout", 1); // smaller than the "timeout" property of the server, so gets ignored
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
@@ -683,21 +631,18 @@ void GuiVersion_Test::testSlowSlots() {
     //
     m_deviceClient->set("testGuiServerDevice", "timeout", previousTimeout);
     {
-        const Hash h("type", "execute",
-                     "deviceId", "testGuiServerDevicePropertyTest",
-                     "command", "slowSlot",
-                     "reply", true,
-                     "timeout", 1); // now this rules again, so the 2s slow slowSlot will timeout again
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
+                     true, "timeout", 1); // now this rules again, so the 2s slow slowSlot will timeout again
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(replyMessage.has("reason"));
         const std::string& failureMsg = replyMessage.get<std::string>("reason");
-        CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(failureMsg,
+                               failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
 
     // Clean up. Shutdown the PropertyTest device.
@@ -719,22 +664,19 @@ void GuiVersion_Test::testReconfigure() {
     // Request reconfiguration of non-existing device
     //
     {
-        const Hash h("type", "reconfigure",
-                     "deviceId",
-                     "not_there",
-                     "configuration", Hash("whatever", 1),
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "reconfigure", "deviceId", "not_there", "configuration", Hash("whatever", 1), "reply",
+                     true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("reconfigureReply"), replyMessage.get<std::string>("type"));
-        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
+        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
+                               h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to reconfigure 'whatever' of device 'not_there'. Request not answered within 1 seconds."),
+        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to reconfigure 'whatever' of device 'not_there'. Request "
+                                         "not answered within 1 seconds."),
                              replyMessage.get<std::string>("reason"));
     }
 
@@ -742,25 +684,22 @@ void GuiVersion_Test::testReconfigure() {
     // Request invalid reconfiguration of existing device (the GuiServerDevice itself...)
     //
     {
-        const Hash h("type", "reconfigure",
-                     "deviceId",
-                     "testGuiServerDevice",
-                     "configuration", Hash("whatever", 1),
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "reconfigure", "deviceId", "testGuiServerDevice", "configuration", Hash("whatever", 1),
+                     "reply", true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("reconfigureReply"), replyMessage.get<std::string>("type"));
-        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
+        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
+                               h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
         // Start of fail message is well defined, details contain 'Remote Exception':
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("reason"), 0ul,
-                                     replyMessage.get<std::string>("reason")
-                                     .find("Failure on request to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(
+              replyMessage.get<std::string>("reason"), 0ul,
+              replyMessage.get<std::string>("reason").find(
+                    "Failure on request to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
         CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("reason"),
                                replyMessage.get<std::string>("reason").find("Remote Exception") != std::string::npos);
     }
@@ -770,24 +709,20 @@ void GuiVersion_Test::testReconfigure() {
     //
     {
         const int newTarget = m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") * 2;
-        const Hash h("type", "reconfigure",
-                     "deviceId",
-                     "testGuiServerDevice",
-                     "configuration", Hash("networkPerformance.sampleInterval", 10),
-                     "reply", true,
-                     "timeout", 1);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        });
+        const Hash h("type", "reconfigure", "deviceId", "testGuiServerDevice", "configuration",
+                     Hash("networkPerformance.sampleInterval", 10), "reply", true, "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ =
+              m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("reconfigureReply"), replyMessage.get<std::string>("type"));
-        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
+        CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")),
+                               h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(!replyMessage.has("reason"));
         // Just assure that it really happened:
-        CPPUNIT_ASSERT_EQUAL(newTarget, m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
-
+        CPPUNIT_ASSERT_EQUAL(newTarget,
+                             m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
     }
 
     //
@@ -796,20 +731,20 @@ void GuiVersion_Test::testReconfigure() {
     //
     {
         const int newTarget = m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") + 2;
-        const Hash h("type", "reconfigure",
-                     "deviceId",
-                     "testGuiServerDevice",
-                     "configuration", Hash("networkPerformance.sampleInterval", newTarget));
+        const Hash h("type", "reconfigure", "deviceId", "testGuiServerDevice", "configuration",
+                     Hash("networkPerformance.sampleInterval", newTarget));
         // "reply", false); is default
         m_tcpAdapter->sendMessage(h);
 
         // Just make sure that it really happened - we have to wait a bit for it:
         int timeout = 1500;
-        while (m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") != newTarget && timeout > 0) {
+        while (m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") != newTarget &&
+               timeout > 0) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             timeout -= 5;
         }
-        CPPUNIT_ASSERT_EQUAL(newTarget, m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
+        CPPUNIT_ASSERT_EQUAL(newTarget,
+                             m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
     }
 
     std::clog << "testReconfigure: OK" << std::endl;
@@ -821,7 +756,8 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     // checks that we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
-    const unsigned int propertyUpdateInterval = 1500u; // A propertyUpdateInterval that is large enough so that the distance
+    const unsigned int propertyUpdateInterval =
+          1500u; // A propertyUpdateInterval that is large enough so that the distance
     // between a reference timestamp gathered right after an update interval
     // "pulse" and the real "pulse" timestamp is at least one order of magnitu-
     // de smaller than the interval duration - (with 1500 we are allowing that
@@ -831,13 +767,11 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     const unsigned int nextMessageTimeout = propertyUpdateInterval + 500u;
 
     // Instantiate two property test devices
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
-                                                                       Hash("deviceId", "PropTest_1"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testGuiVersionServer", "PropertyTest", Hash("deviceId", "PropTest_1"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
-                                          Hash("deviceId", "PropTest_2"),
+    success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest", Hash("deviceId", "PropTest_2"),
                                           KRB_TEST_MAX_TIMEOUT);
 
     CPPUNIT_ASSERT(success.first);
@@ -845,28 +779,22 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     // Changes a property of one of the test devices and makes sure that no message 'deviceConfigurations' arrives
     // within the propertyUpdateInterval.
     {
-        const Hash h("type", "reconfigure",
-                     "deviceId",
-                     "PropTest_1",
-                     "configuration", Hash("int32Property", 10));
+        const Hash h("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 10));
         CPPUNIT_ASSERT_THROW(
-                             m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
-                                 m_tcpAdapter->sendMessage(h);
-                             }, nextMessageTimeout), karabo::util::TimeoutException);
+              m_tcpAdapter->getNextMessages(
+                    "deviceConfigurations", 1, [&] { m_tcpAdapter->sendMessage(h); }, nextMessageTimeout),
+              karabo::util::TimeoutException);
         // Makes sure that the property has been set.
         CPPUNIT_ASSERT_EQUAL(10, m_deviceClient->get<int>("PropTest_1", "int32Property"));
     }
 
     // "Subscribes" to one of the test property devices by sending the GUI Server a 'startMonitoringDevice' message.
     {
-        const Hash h("type", "startMonitoringDevice",
-                     "deviceId",
-                     "PropTest_1");
+        const Hash h("type", "startMonitoringDevice", "deviceId", "PropTest_1");
         // After receiving a startMonitoringDevice, the GUI Server sends a 'deviceConfigurations' message with
         // the full configuration it has for the device.
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, nextMessageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "deviceConfigurations", 1, [&] { m_tcpAdapter->sendMessage(h); }, nextMessageTimeout);
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
@@ -880,19 +808,16 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     //       below.
     Epochstamp propUpdateTime;
     {
-        const Hash h_1("type", "reconfigure",
-                       "deviceId",
-                       "PropTest_1",
-                       "configuration", Hash("int32Property", 12));
-        const Hash h_2("type", "reconfigure",
-                       "deviceId",
-                       "PropTest_2",
-                       "configuration", Hash("int32Property", 22));
+        const Hash h_1("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 12));
+        const Hash h_2("type", "reconfigure", "deviceId", "PropTest_2", "configuration", Hash("int32Property", 22));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
-            m_tcpAdapter->sendMessage(h_2);
-            m_tcpAdapter->sendMessage(h_1);
-        }, nextMessageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "deviceConfigurations", 1,
+              [&] {
+                  m_tcpAdapter->sendMessage(h_2);
+                  m_tcpAdapter->sendMessage(h_1);
+              },
+              nextMessageTimeout);
 
         propUpdateTime.now(); // Captures a timestamp that is as close as possible to the update "pulse".
 
@@ -909,16 +834,11 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
 
     // "Subscribes" to the yet unsubscribed test device.
     {
-        const Hash h("type", "startMonitoringDevice",
-                     "deviceId",
-                     "PropTest_2",
-                     "reply", true,
-                     "timeout", 1);
+        const Hash h("type", "startMonitoringDevice", "deviceId", "PropTest_2", "reply", true, "timeout", 1);
         // After receiving a startMonitoringDevice, the GUI Server sends a 'deviceConfigurations' message with
         // the full configuration it has for the device.
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, nextMessageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "deviceConfigurations", 1, [&] { m_tcpAdapter->sendMessage(h); }, nextMessageTimeout);
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
@@ -928,33 +848,32 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     // Changes properties on both test devices and assures that an update message arrives containing the changes
     // to both devices.
     {
-        const Hash h_1("type", "reconfigure",
-                       "deviceId",
-                       "PropTest_1",
-                       "configuration", Hash("int32Property", 14));
-        const Hash h_2("type", "reconfigure",
-                       "deviceId",
-                       "PropTest_2",
-                       "configuration", Hash("int32Property", 24));
+        const Hash h_1("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 14));
+        const Hash h_2("type", "reconfigure", "deviceId", "PropTest_2", "configuration", Hash("int32Property", 24));
 
         // Syncs as close as possible to the next update "pulse" - we'll need that for the next check, which is supposed
         // to get the two updates in the same cycle.
         Epochstamp targetTime(propUpdateTime);
         Epochstamp currentTime;
         // Duration constructor takes care of overflow of fractions.
-        const TimeDuration duration(0ull,
-                                    propertyUpdateInterval * 1000000000000000ull); // 10^15 => factor from ms. to attosecs.
+        const TimeDuration duration(
+              0ull,
+              propertyUpdateInterval * 1000000000000000ull); // 10^15 => factor from ms. to attosecs.
         const int tolerance = propertyUpdateInterval / 15;
         do {
             targetTime += duration;
         } while (targetTime < currentTime &&
                  targetTime.elapsed(currentTime).getFractions(TIME_UNITS::MILLISEC) <= tolerance);
-        boost::this_thread::sleep(boost::posix_time::milliseconds(targetTime.elapsed().getFractions(TIME_UNITS::MILLISEC)));
+        boost::this_thread::sleep(
+              boost::posix_time::milliseconds(targetTime.elapsed().getFractions(TIME_UNITS::MILLISEC)));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
-            m_tcpAdapter->sendMessage(h_2);
-            m_tcpAdapter->sendMessage(h_1);
-        }, nextMessageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "deviceConfigurations", 1,
+              [&] {
+                  m_tcpAdapter->sendMessage(h_2);
+                  m_tcpAdapter->sendMessage(h_1);
+              },
+              nextMessageTimeout);
 
         Hash nextMessage;
         messageQ->pop(nextMessage);
@@ -973,12 +892,10 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     // "Unsubscribes" for both devices by sending the corresponding 'stopMonitoringDevice' for both devices to the
     // GUI Server.
     {
-        const Hash h_1("type", "stopMonitoringDevice",
-                       "deviceId", "PropTest_1");
+        const Hash h_1("type", "stopMonitoringDevice", "deviceId", "PropTest_1");
         m_tcpAdapter->sendMessage(h_1);
 
-        const Hash h_2("type", "stopMonitoringDevice",
-                       "deviceId", "PropTest_2");
+        const Hash h_2("type", "stopMonitoringDevice", "deviceId", "PropTest_2");
         m_tcpAdapter->sendMessage(h_2);
     }
 
@@ -986,21 +903,18 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     // Changes properties on both test devices and assures that no message 'deviceConfigurations' arrives within the
     // propertyUpdateInterval.
     {
-        const Hash h_1("type", "reconfigure",
-                       "deviceId",
-                       "PropTest_1",
-                       "configuration", Hash("int32Property", 16));
+        const Hash h_1("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 16));
 
-        const Hash h_2("type", "reconfigure",
-                       "deviceId",
-                       "PropTest_2",
-                       "configuration", Hash("int32Property", 26));
+        const Hash h_2("type", "reconfigure", "deviceId", "PropTest_2", "configuration", Hash("int32Property", 26));
 
-        CPPUNIT_ASSERT_THROW(
-                             m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
-                                m_tcpAdapter->sendMessage(h_2);
-                                m_tcpAdapter->sendMessage(h_1);
-                             }, nextMessageTimeout), karabo::util::TimeoutException);
+        CPPUNIT_ASSERT_THROW(m_tcpAdapter->getNextMessages(
+                                   "deviceConfigurations", 1,
+                                   [&] {
+                                       m_tcpAdapter->sendMessage(h_2);
+                                       m_tcpAdapter->sendMessage(h_1);
+                                   },
+                                   nextMessageTimeout),
+                             karabo::util::TimeoutException);
 
         // Makes sure that the properties have been set.
         CPPUNIT_ASSERT_EQUAL(16, m_deviceClient->get<int>("PropTest_1", "int32Property"));
@@ -1031,7 +945,8 @@ void GuiVersion_Test::testDisconnect() {
     //
     bool disconnected = true;
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", "BLAnoPORT")
-                            .timeout(1000).receive(disconnected));
+                                  .timeout(1000)
+                                  .receive(disconnected));
     CPPUNIT_ASSERT(!disconnected);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
@@ -1040,14 +955,16 @@ void GuiVersion_Test::testDisconnect() {
     //
     Hash result;
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", 0))
-                            .timeout(1000).receive(result));
+                                  .timeout(1000)
+                                  .receive(result));
     std::vector<std::string> keys;
     result.getKeys(keys);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Expected single key for one client only, but there are " + toString(keys),
-                                 1ul, result.size()); // Just a single client
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Expected single key for one client only, but there are " + toString(keys), 1ul,
+                                 result.size()); // Just a single client
     std::string clientIdentifier = result.begin()->getKey();
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", clientIdentifier)
-                            .timeout(1000).receive(disconnected));
+                                  .timeout(1000)
+                                  .receive(disconnected));
     CPPUNIT_ASSERT_MESSAGE("Failed to disconnect '" + clientIdentifier + "'", disconnected);
     // Wait until disconnected (disconnection delayed by one second in GUI server)
     int timeout = 2000;
@@ -1062,24 +979,17 @@ void GuiVersion_Test::testDisconnect() {
 
 void GuiVersion_Test::testLogMute() {
     std::clog << "testLogMute: " << std::flush;
-    const Hash logCommand("type", "requestFromSlot",
-                           "deviceId", "PropTest_LOG",
-                           "slot", "logSomething",
-                           "args", Hash("priority", "INFO", "message", "log me"),
-                           "token", "superSecretPassword");
+    const Hash logCommand("type", "requestFromSlot", "deviceId", "PropTest_LOG", "slot", "logSomething", "args",
+                          Hash("priority", "INFO", "message", "log me"), "token", "superSecretPassword");
     // Instantiate a property test device
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
-                                                                       Hash("deviceId", "PropTest_LOG"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testGuiVersionServer", "PropertyTest", Hash("deviceId", "PropTest_LOG"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     {
-        const Hash h("type", "setLogPriority",
-                     "instanceId", "testGuiVersionServer",
-                     "priority", "INFO");
+        const Hash h("type", "setLogPriority", "instanceId", "testGuiVersionServer", "priority", "INFO");
         // the change of logging will generate a log message. Here we wait for this log message
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("setLogPriorityReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, 1000);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "setLogPriorityReply", 1, [&] { m_tcpAdapter->sendMessage(h); }, 1000);
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("setLogPriorityReply"), nextMessage.get<std::string>("type"));
@@ -1088,11 +998,9 @@ void GuiVersion_Test::testLogMute() {
     {
         // subscribe to the logs. Log subscription is version dependent.
         // This makes the test version independent.
-        const Hash h("type", "subscribeLogs",
-                     "subscribe", true);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("subscribeLogsReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, 100);
+        const Hash h("type", "subscribeLogs", "subscribe", true);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "subscribeLogsReply", 1, [&] { m_tcpAdapter->sendMessage(h); }, 100);
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("subscribeLogsReply"), nextMessage.get<std::string>("type"));
@@ -1100,8 +1008,8 @@ void GuiVersion_Test::testLogMute() {
     }
     {
         m_tcpAdapter->sendMessage(logCommand);
-        const auto callback = [] (const Hash& incoming) {
-            for (auto log: incoming.get<std::vector<Hash>>("messages")) {
+        const auto callback = [](const Hash& incoming) {
+            for (auto log : incoming.get<std::vector<Hash>>("messages")) {
                 // if this test is executed in a crowded topic, we might have log messages from other devices
                 // here we look for a message emitted by the propertyTestDevice we instantiated for this test
                 // and return true only when the right message has come.
@@ -1111,20 +1019,20 @@ void GuiVersion_Test::testLogMute() {
             }
             return false;
         };
-        // The timeout is the `forwardLogInterval` value plus the `Logger.network.interval` of the server plus some change.
+        // The timeout is the `forwardLogInterval` value plus the `Logger.network.interval` of the server plus some
+        // change.
         auto status = m_tcpAdapter->waitFor("log", callback, 520);
-        CPPUNIT_ASSERT_MESSAGE("The correct log message was not received before the timeout", status == std::future_status::ready);
+        CPPUNIT_ASSERT_MESSAGE("The correct log message was not received before the timeout",
+                               status == std::future_status::ready);
         // clear the affected queues.
         m_tcpAdapter->clearAllMessages("requestFromSlot");
         m_tcpAdapter->clearAllMessages("log");
     }
     {
         // unsubscribe to the logs
-        const Hash h("type", "subscribeLogs",
-                     "subscribe", false);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("subscribeLogsReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, 100);
+        const Hash h("type", "subscribeLogs", "subscribe", false);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "subscribeLogsReply", 1, [&] { m_tcpAdapter->sendMessage(h); }, 100);
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("subscribeLogsReply"), nextMessage.get<std::string>("type"));
@@ -1134,26 +1042,22 @@ void GuiVersion_Test::testLogMute() {
         m_tcpAdapter->clearAllMessages("log");
     }
     {
-        for (int i=0; i< 5; i++) {
-            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("requestFromSlot", 1, [&] {
-                m_tcpAdapter->sendMessage(logCommand);
-            }, 100);
+        for (int i = 0; i < 5; i++) {
+            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+                  "requestFromSlot", 1, [&] { m_tcpAdapter->sendMessage(logCommand); }, 100);
             Hash nextMessage;
             messageQ->pop(nextMessage);
             CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
         }
-       // Sleep for `forwardLogInterval` value plus the `Logger.network.interval` of the server and some change.
+        // Sleep for `forwardLogInterval` value plus the `Logger.network.interval` of the server and some change.
         boost::this_thread::sleep_for(boost::chrono::milliseconds(520));
         CPPUNIT_ASSERT_EQUAL(0ul, m_tcpAdapter->getAllMessages("log").size());
     }
     {
         // put everything back as we found it
-        const Hash h("type", "setLogPriority",
-                     "instanceId", "testGuiVersionServer",
-                     "priority", LOG_LEVEL);
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("setLogPriorityReply", 1, [&] {
-            m_tcpAdapter->sendMessage(h);
-        }, 100);
+        const Hash h("type", "setLogPriority", "instanceId", "testGuiVersionServer", "priority", LOG_LEVEL);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "setLogPriorityReply", 1, [&] { m_tcpAdapter->sendMessage(h); }, 100);
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("setLogPriorityReply"), nextMessage.get<std::string>("type"));
@@ -1166,17 +1070,17 @@ void GuiVersion_Test::testLogMute() {
 
 
 void GuiVersion_Test::testSlotNotify() {
-
     std::clog << "testSlotNotify: " << std::flush;
     const std::string messageToSend("Banner for everyone!");
-    const Hash arg("message", messageToSend,
-                   "contentType", "banner",
-                   "foreground", "red");
+    const Hash arg("message", messageToSend, "contentType", "banner", "foreground", "red");
     const std::vector<string> expectedMessageData = {messageToSend, "", "red"};
     Hash reply;
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&reply, &arg, this] {
-            m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(1000).receive(reply);
-    }, 1000);
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "notification", 1,
+          [&reply, &arg, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(1000).receive(reply);
+          },
+          1000);
     CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
 
     // Test that client received the notification
@@ -1192,17 +1096,20 @@ void GuiVersion_Test::testSlotNotify() {
 
     // Since it is type "banner", GUI server device stores message as "bannerData":
     // Note: Better wait to ensure that deviceClient received update - no guarantee since server sent the message...
-    waitForCondition([this, &messageToSend](){
-        return 3ul == m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size();
-    }, KRB_TEST_MAX_TIMEOUT * 1000);
-    const std::vector<std::string> messageData(m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData"));
+    waitForCondition(
+          [this, &messageToSend]() {
+              return 3ul == m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size();
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
+    const std::vector<std::string> messageData(
+          m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData"));
     CPPUNIT_ASSERT_EQUAL(expectedMessageData.size(), messageData.size());
     for (int i = 0; i < 3; i++) {
         CPPUNIT_ASSERT_EQUAL(expectedMessageData[i], messageData[i]);
     }
 
     // Create second adapter that connects - it should receive the stored notification "banner"
-    auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u/*, "debug", true*/));
+    auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
     int timeout = 5000;
     while (!tcpAdapter2->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -1222,14 +1129,17 @@ void GuiVersion_Test::testSlotNotify() {
 
     tcpAdapter2->disconnect();
 
-    const Hash clear_arg("message", "",
-                         "contentType", "banner");
-    messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&reply, &clear_arg, this] {
-            m_deviceServer->request("testGuiServerDevice", "slotNotify", clear_arg).timeout(1000).receive(reply);
-    }, 1000);
+    const Hash clear_arg("message", "", "contentType", "banner");
+    messageQ = m_tcpAdapter->getNextMessages(
+          "notification", 1,
+          [&reply, &clear_arg, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotNotify", clear_arg).timeout(1000).receive(reply);
+          },
+          1000);
     CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
     // Banner data is cleared
-    CPPUNIT_ASSERT_EQUAL(0ul, m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size());
+    CPPUNIT_ASSERT_EQUAL(0ul,
+                         m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size());
 
     messageQ->pop(messageReceived);
     CPPUNIT_ASSERT(messageReceived.has("message"));
@@ -1240,7 +1150,7 @@ void GuiVersion_Test::testSlotNotify() {
     CPPUNIT_ASSERT_EQUAL(std::string("banner"), messageReceived.get<std::string>("contentType"));
 
     // new clients do not get the banner
-    auto tcpAdapter3 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u/*, "debug", true*/));
+    auto tcpAdapter3 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
     timeout = 5000;
     while (!tcpAdapter2->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -1255,15 +1165,16 @@ void GuiVersion_Test::testSlotNotify() {
 }
 
 void GuiVersion_Test::testSlotBroadcast() {
-
     std::clog << "testSlotBroadcast: " << std::flush;
-    const Hash message("isSkookum", true,
-                       "type", "unimplementedDangerousCall");
+    const Hash message("isSkookum", true, "type", "unimplementedDangerousCall");
     const Hash arg("message", message, "clientAddress", "");
     Hash reply;
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("unimplementedDangerousCall", 1, [&reply, &arg, this] {
-            m_deviceServer->request("testGuiServerDevice", "slotBroadcast", arg).timeout(1000).receive(reply);
-    }, 1000);
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+          "unimplementedDangerousCall", 1,
+          [&reply, &arg, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", arg).timeout(1000).receive(reply);
+          },
+          1000);
     CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
     CPPUNIT_ASSERT_EQUAL(1ul, reply.size());
 
@@ -1276,12 +1187,11 @@ void GuiVersion_Test::testSlotBroadcast() {
     // A message should have a type
     const Hash bad_arg("isSkookum", false);
     CPPUNIT_ASSERT_THROW(
-        m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_arg).timeout(1000).receive(reply),
-        std::exception);
+          m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_arg).timeout(1000).receive(reply),
+          std::exception);
     std::clog << "." << std::flush;
 
-    const Hash bad_msg("isSkookum", false,
-                       "type", "unimplementedDangerousCall");
+    const Hash bad_msg("isSkookum", false, "type", "unimplementedDangerousCall");
     const Hash bad_client_arg("message", bad_msg, "clientAddress", "pinneberg");
 
     m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_client_arg).timeout(1000).receive(reply);
@@ -1295,18 +1205,22 @@ void GuiVersion_Test::testSlotBroadcast() {
 
     std::string clientAddress;
     Hash debugInfo;
-    m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", true)).timeout(1000).receive(debugInfo);
+    m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", true))
+          .timeout(1000)
+          .receive(debugInfo);
     CPPUNIT_ASSERT_EQUAL(1ul, debugInfo.size());
     clientAddress = debugInfo.begin()->getKey();
 
-    const Hash client_msg("skookumFactor", 42,
-                          "type", "unimplementedDangerousCall");
+    const Hash client_msg("skookumFactor", 42, "type", "unimplementedDangerousCall");
     const Hash client_arg("clientAddress", clientAddress, "message", client_msg);
 
     // Test that client received the notification
-    messageQ = m_tcpAdapter->getNextMessages("unimplementedDangerousCall", 1, [&reply, &client_arg, this] {
-            m_deviceServer->request("testGuiServerDevice", "slotBroadcast", client_arg).timeout(1000).receive(reply);
-    }, 1000);
+    messageQ = m_tcpAdapter->getNextMessages(
+          "unimplementedDangerousCall", 1,
+          [&reply, &client_arg, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", client_arg).timeout(1000).receive(reply);
+          },
+          1000);
 
     CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
     CPPUNIT_ASSERT_EQUAL(1ul, reply.size());

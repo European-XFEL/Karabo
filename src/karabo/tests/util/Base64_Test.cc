@@ -1,13 +1,13 @@
-/* 
+/*
  * File:   Base64_Test.cc
  * Author: parenti
- * 
+ *
  * Created on October 2, 2013, 4:18 PM
  */
 
-#include <cstring>
-
 #include "Base64_Test.hh"
+
+#include <cstring>
 #include <karabo/util/Base64.hh>
 
 using namespace karabo::util;
@@ -16,26 +16,19 @@ using namespace std;
 CPPUNIT_TEST_SUITE_REGISTRATION(Base64_Test);
 
 
-Base64_Test::Base64_Test() {
-}
+Base64_Test::Base64_Test() {}
 
 
-Base64_Test::~Base64_Test() {
-}
+Base64_Test::~Base64_Test() {}
 
 
-void Base64_Test::setUp() {
-
-}
+void Base64_Test::setUp() {}
 
 
-void Base64_Test::tearDown() {
-
-}
+void Base64_Test::tearDown() {}
 
 
 void Base64_Test::testEncode() {
-
     const unsigned char in1[] = "1234567890";
     CPPUNIT_ASSERT(base64Encode(in1, 10) == "MTIzNDU2Nzg5MA==");
     CPPUNIT_ASSERT(base64Encode(in1, 9) == "MTIzNDU2Nzg5");
@@ -46,12 +39,10 @@ void Base64_Test::testEncode() {
 
     const unsigned char in3[] = "ABCDEFGHIJKLMNOPQRSTUVXWYZ";
     CPPUNIT_ASSERT(base64Encode(in3, 26) == "QUJDREVGR0hJSktMTU5PUFFSU1RVVlhXWVo=");
-
 }
 
 
 void Base64_Test::testDecode() {
-
     std::vector<unsigned char> out;
 
     out.clear();
@@ -78,5 +69,4 @@ void Base64_Test::testDecode() {
     base64Decode("QUJDREVGR0hJSktMTU5PUFFSU1RVVlhXWVo=", out);
     CPPUNIT_ASSERT(memcmp(out.data(), "ABCDEFGHIJKLMNOPQRSTUVXWYZ", out.size()) == 0);
     CPPUNIT_ASSERT(out.size() == 26);
-
 }

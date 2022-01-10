@@ -1,6 +1,7 @@
+#include "SlotWrap.hh"
+
 #include <Python.h>
 
-#include "SlotWrap.hh"
 #include "ScopedGILAcquire.hh"
 
 namespace bp = boost::python;
@@ -8,8 +9,7 @@ namespace bp = boost::python;
 namespace karathon {
 
 
-    SlotWrap::SlotWrap(const std::string& slotFunction) : karabo::xms::Slot(slotFunction) {
-    }
+    SlotWrap::SlotWrap(const std::string& slotFunction) : karabo::xms::Slot(slotFunction) {}
 
 
     SlotWrap::~SlotWrap() {
@@ -57,7 +57,8 @@ namespace karathon {
                 callFunction0(body);
                 break;
             default:
-                throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
+                throw KARABO_SIGNALSLOT_EXCEPTION(
+                      "Too many arguments send to python slot (max 4 are currently supported");
         }
     }
 
@@ -74,7 +75,7 @@ namespace karathon {
     bp::object SlotWrap::getBodyArgument(const karabo::util::Hash& body, const char* key) const {
         // Avoid using HashWrap::get: it returns None if key missing (but we want the exception!).
         // Since get uses internally this getRef with the same const_cast, that is safe here as well
-        return HashWrap::getRef(const_cast<karabo::util::Hash&> (body), bp::object(key));
+        return HashWrap::getRef(const_cast<karabo::util::Hash&>(body), bp::object(key));
     }
 
 
@@ -129,7 +130,7 @@ namespace karathon {
         // get the error indicators
         PyErr_Fetch(&e, &v, &t); // ref count incremented
         PyErr_NormalizeException(&e, &v, &t);
-        
+
         std::string pythonErrorMessage;
 
         // Try to extract full traceback
@@ -146,7 +147,7 @@ namespace karathon {
                         pythonErrorMessage.append("Python reports ...\n\n");
                         Py_ssize_t size = PyList_Size(pythonValue);
                         for (Py_ssize_t i = 0; i < size; i++) {
-                            PyObject* item = PyList_GetItem(pythonValue, i);  // this "borrowed reference" - no decref!
+                            PyObject* item = PyList_GetItem(pythonValue, i); // this "borrowed reference" - no decref!
                             PyObject* pythonString = PyObject_Str(item);
                             pythonErrorMessage.append(PyUnicode_AsUTF8(pythonString));
                             Py_DECREF(pythonString);
@@ -158,7 +159,7 @@ namespace karathon {
             }
             Py_DECREF(pythonModule);
         } else {
-            PyObject* pythonRepr = PyObject_Repr(v);   // apply str()
+            PyObject* pythonRepr = PyObject_Repr(v); // apply str()
             pythonErrorMessage.assign(PyUnicode_AsUTF8(pythonRepr));
             Py_DECREF(pythonRepr);
         }
@@ -170,4 +171,4 @@ namespace karathon {
         throw KARABO_PYTHON_EXCEPTION(pythonErrorMessage);
     }
 
-}
+} // namespace karathon
