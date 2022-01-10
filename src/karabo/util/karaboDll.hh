@@ -9,7 +9,9 @@
  */
 
 #ifndef KARABO_UTIL_KARABO_DLL_HH
-#define	KARABO_UTIL_KARABO_DLL_HH
+#define KARABO_UTIL_KARABO_DLL_HH
+
+// clang-format off
 
 /********************************************
  *         Disable Specific Warnings         *
@@ -29,7 +31,7 @@
 
 
 /********************************************
- *            Windows DLL stuff             *  
+ *            Windows DLL stuff             *
  ********************************************/
 
 #if defined(_WIN32)
@@ -40,7 +42,7 @@
 #define KARABO_DECLSPEC __declspec(dllimport)
 #define KARABO_TEMPLATE_DLL extern
 #endif
-#elif defined(unix)        || defined(__unix)      || defined(__unix__) \
+#elif defined(unix)      || defined(__unix)      || defined(__unix__) \
  || defined(linux)       || defined(__linux)     || defined(__linux__) \
  || defined(sun)         || defined(__sun) \
  || defined(BSD)         || defined(__OpenBSD__) || defined(__NetBSD__) \
@@ -61,6 +63,6 @@
 #define KARABO_DEPRECATED
 #endif
 
+// clang-format on
 
 #endif
-
