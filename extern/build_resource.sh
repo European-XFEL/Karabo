@@ -12,6 +12,10 @@
 checkReturnCode() {
     ret_code=$?
     if [ $ret_code != 0 ]; then
+        if [ -n "$1" ]; then
+            # if the output is 
+            cat $1
+        fi
         printf "Error : [%d] when executing command: '$cmnd'" $ret_code
         exit $ret_code
     fi
@@ -23,16 +27,25 @@ safeRunCommand() {
 
     echo cmnd=$cmnd
     eval $cmnd
-    checkReturnCode
+    checkReturnCode ""
 }
 
 safeRunCommandQuiet() {
     local cmnd="$*"
     local ret_code
 
+    tmp_output=$(mktemp)
     echo cmnd=$cmnd
-    eval $cmnd &> /dev/null
-    checkReturnCode
+    # redirect the stream with file descriptor 3 to the temporary file
+    exec 3>"$tmp_output"
+    # execute the command redirecting the output to 3
+    eval $cmnd>&3 2>&3
+    # `checkReturnCode` will print the output even in quiet mode.
+    checkReturnCode $tmp_output
+    # remove the temporary file
+    rm -f $tmp_output
+    # redirect the filedescriptor 3 to stdout as is tradition
+    exec 3>&1
 }
 
 usage() {
