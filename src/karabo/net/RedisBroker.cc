@@ -417,7 +417,7 @@ namespace karabo {
                                               const consumer::MessageHandler& handler,
                                               const consumer::ErrorNotifier& errorNotifier) {
             auto readHandler = bind_weak(&RedisBroker::redisReadHashHandler, this, _1, _2, _3, handler, errorNotifier);
-            TopicSubOptions params;
+            RedisTopicSubOptions params;
             for (size_t i = 0; i < topics.size(); i++) {
                 params.push_back(std::make_tuple(topics[i], readHandler));
             }
