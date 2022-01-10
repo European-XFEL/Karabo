@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   RunTimeSchemaAttributes.hh
  * Author: steffen
  *
@@ -6,34 +6,33 @@
  */
 
 #ifndef RUNTIMESCHEMAATTRIBUTES_HH
-#define	RUNTIMESCHEMAATTRIBUTES_HH
+#define RUNTIMESCHEMAATTRIBUTES_HH
 
-#include "karabo/karabo.hpp"
-#include "karabo/devices/AlarmService.hh"
-#include "karabo/core/DeviceServer.hh"
-#include "karabo/core/DeviceClient.hh"
-#include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <boost/shared_ptr.hpp>
 
 #include "AlarmTesterDevice.hh"
 #include "TcpAdapter.hh"
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/devices/AlarmService.hh"
+#include "karabo/karabo.hpp"
 
 class RunTimeSchemaAttributes_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(RunTimeSchemaAttributes_Test);
 
     CPPUNIT_TEST(appTestRunner);
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     RunTimeSchemaAttributes_Test();
     virtual ~RunTimeSchemaAttributes_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void appTestRunner();
     void testRuntimeApplication();
 
@@ -58,8 +57,6 @@ private:
 
     // m_tcpAdapter mocks a GUI Client for the test.
     boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
-
 };
 
-#endif	/* RUNTIMESCHEMAATTRIBUTES_HH */
-
+#endif /* RUNTIMESCHEMAATTRIBUTES_HH */

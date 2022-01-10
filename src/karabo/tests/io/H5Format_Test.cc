@@ -7,19 +7,15 @@
 
 #include "H5Format_Test.hh"
 
-#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
-
-#include <karabo/util/Configurator.hh>
+#include <boost/shared_ptr.hpp>
 #include <karabo/io/TextSerializer.hh>
-
-#include <karabo/io/h5/Format.hh>
 #include <karabo/io/h5/Element.hh>
-
-
+#include <karabo/io/h5/Format.hh>
+#include <karabo/util/ArrayTools.hh>
+#include <karabo/util/Configurator.hh>
 
 #include "karabo/util/TimeProfiler.hh"
-#include <karabo/util/ArrayTools.hh>
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -30,21 +26,16 @@ using std::vector;
 CPPUNIT_TEST_SUITE_REGISTRATION(H5Format_Test);
 
 
-H5Format_Test::H5Format_Test() {
-
-}
+H5Format_Test::H5Format_Test() {}
 
 
-H5Format_Test::~H5Format_Test() {
-}
+H5Format_Test::~H5Format_Test() {}
 
 
-void H5Format_Test::setUp() {
-}
+void H5Format_Test::setUp() {}
 
 
-void H5Format_Test::tearDown() {
-}
+void H5Format_Test::tearDown() {}
 
 
 void H5Format_Test::testEmptyFormat() {
@@ -52,23 +43,16 @@ void H5Format_Test::testEmptyFormat() {
     const Hash& config = format->getConfig();
     //    clog << endl << "Empty format config\n" << format->getConfig() << endl;
     CPPUNIT_ASSERT(config.has("Format") == true);
-    CPPUNIT_ASSERT(config.is<Hash > ("Format") == true);
+    CPPUNIT_ASSERT(config.is<Hash>("Format") == true);
 
     CPPUNIT_ASSERT(config.get<vector<Hash> >("Format.elements").size() == 0);
-    //clog << "Empty format config\n" << format->getConfig() << endl;    
+    // clog << "Empty format config\n" << format->getConfig() << endl;
 }
 
 
 void H5Format_Test::testManualFormat() {
-
-
     Format::Pointer format = Format::createEmptyFormat();
-    Hash c1(
-            "h5path", "experimental",
-            "h5name", "test23",
-            "key", "instrument.test",
-            "compressionLevel", 9
-            );
+    Hash c1("h5path", "experimental", "h5name", "test23", "key", "instrument.test", "compressionLevel", 9);
 
     h5::Element::Pointer e1 = h5::Element::create("UINT32", c1);
     format->addElement(e1);
@@ -108,16 +92,9 @@ void H5Format_Test::testManualFormat() {
     CPPUNIT_ASSERT(vec1p[0].has("UINT32.compressionLevel") == true);
 
 
-
     {
-        Hash c2(
-                "h5path", "experimental2",
-                "h5name", "test1000",
-                "key", "instrument.test2",
-                "compressionLevel", 0,
-                "dims", Dims(10, 10).toVector(),
-                "type", "VECTOR_INT32"
-                );
+        Hash c2("h5path", "experimental2", "h5name", "test1000", "key", "instrument.test2", "compressionLevel", 0,
+                "dims", Dims(10, 10).toVector(), "type", "VECTOR_INT32");
 
         h5::Element::Pointer e2 = h5::Element::create("VECTOR_INT32", c2);
         format->replaceElement("experimental.test23", e2);
@@ -145,8 +122,6 @@ void H5Format_Test::testManualFormat() {
         CPPUNIT_ASSERT(vec2[0].has("VECTOR_INT32.dims") == true);
 
 
-
-
         Hash config2p;
         format->getPersistentConfig(config2p);
 
@@ -162,16 +137,10 @@ void H5Format_Test::testManualFormat() {
 
 
     {
+        Hash c2("h5path", "experimental2", "h5name", "test1000", "key", "instrument.test2", "compressionLevel", 0,
+                "dims", Dims(10, 10).toVector(), "type", "PTR_INT32"
 
-        Hash c2(
-                "h5path", "experimental2",
-                "h5name", "test1000",
-                "key", "instrument.test2",
-                "compressionLevel", 0,
-                "dims", Dims(10, 10).toVector(),
-                "type", "PTR_INT32"
-
-                );
+        );
 
         h5::Element::Pointer e2 = h5::Element::create("VECTOR_INT32", c2);
         format->replaceElement("experimental.test23", e2);
@@ -204,28 +173,21 @@ void H5Format_Test::testManualFormat() {
     }
 
 
-
     format->removeElement("experimental2.test1000");
 
     const Hash config3 = format->getConfig();
     CPPUNIT_ASSERT(config3.has("Format") == true);
-    CPPUNIT_ASSERT(config3.is<Hash > ("Format") == true);
+    CPPUNIT_ASSERT(config3.is<Hash>("Format") == true);
     CPPUNIT_ASSERT(config3.has("Format.elements") == true);
     CPPUNIT_ASSERT(config3.get<vector<Hash> >("Format.elements").size() == 0);
 
     //    clog << endl << "config3:" << endl << config3 << endl;
-
 }
 
 
 void H5Format_Test::testDiscoverFromHash() {
-
-
     {
-
-
         try {
-
             Hash data;
 
             vector<int> vecInt(100, 2);
@@ -238,8 +200,6 @@ void H5Format_Test::testDiscoverFromHash() {
             data.set("b.b5", true);
             data.set("c.c1", Hash());
             data.set("c.c2", vector<Hash>(4, Hash()));
-
-
 
 
             Format::Pointer dataFormat = Format::discover(data);
@@ -267,10 +227,5 @@ void H5Format_Test::testDiscoverFromHash() {
             std::clog << e.detailedMsg() << std::endl;
             KARABO_RETHROW
         }
-
     }
-
-
 }
-
-

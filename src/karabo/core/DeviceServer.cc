@@ -9,31 +9,32 @@
  */
 
 #include "DeviceServer.hh"
-#include "Device.hh"
 
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
-#include "karabo/util/ListElement.hh"
-#include "karabo/util/NodeElement.hh"
-#include "karabo/util/ChoiceElement.hh"
-#include "karabo/util/Version.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/log/Logger.hh"
+#include <unistd.h>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <csignal>
+#include <cstdlib>
+
+#include "Device.hh"
+#include "karabo/io/FileTools.hh"
 #include "karabo/io/Input.hh"
 #include "karabo/io/Output.hh"
-#include "karabo/io/FileTools.hh"
+#include "karabo/log/Logger.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
-
-#include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <cstdlib>
-#include <csignal>
-#include <unistd.h>
+#include "karabo/util/ChoiceElement.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/ListElement.hh"
+#include "karabo/util/NodeElement.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
+#include "karabo/util/Version.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::DeviceServer)
 
@@ -41,7 +42,7 @@ namespace karabo {
 
     namespace core {
 
-        //template class Runner<DeviceServer>;
+        // template class Runner<DeviceServer>;
 
         using namespace std;
         using namespace karabo::util;
@@ -53,106 +54,127 @@ namespace karabo {
 
 
         void DeviceServer::expectedParameters(Schema& expected) {
+            STRING_ELEMENT(expected)
+                  .key("serverId")
+                  .displayedName("Server ID")
+                  .description(
+                        "The device-server instance id uniquely identifies a device-server instance in the distributed "
+                        "system")
+                  .assignmentOptional()
+                  .noDefaultValue()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("serverId")
-                    .displayedName("Server ID")
-                    .description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("hostName")
+                  .displayedName("Forced Hostname")
+                  .description(
+                        "The hostname can be optionally forced to a specific "
+                        "string. The host's definition will be used if not specified.")
+                  .assignmentOptional()
+                  .noDefaultValue()
+                  .expertAccess()
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("hostName")
-                    .displayedName("Forced Hostname")
-                    .description("The hostname can be optionally forced to a specific "\
-                                 "string. The host's definition will be used if not specified.")
-                    .assignmentOptional().noDefaultValue()
-                    .expertAccess()
-                    .init()
-                    .commit();
+            INT32_ELEMENT(expected)
+                  .key("visibility")
+                  .displayedName("Visibility")
+                  .description("Configures who is allowed to see this server at all")
+                  .assignmentOptional()
+                  .defaultValue(karabo::util::Schema::OBSERVER)
+                  .options("0 1 2 3 4")
+                  .adminAccess()
+                  .init()
+                  .commit();
 
-            INT32_ELEMENT(expected).key("visibility")
-                    .displayedName("Visibility")
-                    .description("Configures who is allowed to see this server at all")
-                    .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
-                    .options("0 1 2 3 4")
-                    .adminAccess()
-                    .init()
-                    .commit();
+            CHOICE_ELEMENT(expected)
+                  .key("connection")
+                  .displayedName("Connection")
+                  .description("The connection to the communication layer of the distributed system")
+                  .appendNodesOfConfigurationBase<karabo::net::Broker>()
+                  .assignmentOptional()
+                  .defaultValue(karabo::net::Broker::brokerTypeFromEnv())
+                  .expertAccess()
+                  .commit();
 
-            CHOICE_ELEMENT(expected).key("connection")
-                    .displayedName("Connection")
-                    .description("The connection to the communication layer of the distributed system")
-                    .appendNodesOfConfigurationBase<karabo::net::Broker>()
-                    .assignmentOptional().defaultValue(karabo::net::Broker::brokerTypeFromEnv())
-                    .expertAccess()
-                    .commit();
+            INT32_ELEMENT(expected)
+                  .key("heartbeatInterval")
+                  .displayedName("Heartbeat interval")
+                  .description("The heartbeat interval")
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .minInc(10) // avoid too much traffic
+                  .adminAccess()
+                  .commit();
 
-            INT32_ELEMENT(expected).key("heartbeatInterval")
-                    .displayedName("Heartbeat interval")
-                    .description("The heartbeat interval")
-                    .assignmentOptional().defaultValue(10)
-                    .minInc(10) // avoid too much traffic
-                    .adminAccess()
-                    .commit();
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("deviceClasses")
+                  .displayedName("Device Classes")
+                  .description("The devices classes the server will manage")
+                  .assignmentOptional()
+                  .defaultValue(BaseDevice::getRegisteredClasses())
+                  .expertAccess()
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("deviceClasses")
-                    .displayedName("Device Classes")
-                    .description("The devices classes the server will manage")
-                    .assignmentOptional().defaultValue(BaseDevice::getRegisteredClasses())
-                    .expertAccess()
-                    .commit();
+            LIST_ELEMENT(expected)
+                  .key("autoStart")
+                  .displayedName("Auto start")
+                  .description("Auto starts selected devices")
+                  .appendNodesOfConfigurationBase<karabo::core::BaseDevice>()
+                  .assignmentOptional()
+                  .noDefaultValue()
+                  .commit();
 
-            LIST_ELEMENT(expected).key("autoStart")
-                    .displayedName("Auto start")
-                    .description("Auto starts selected devices")
-                    .appendNodesOfConfigurationBase<karabo::core::BaseDevice>()
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
-
-            BOOL_ELEMENT(expected).key("scanPlugins")
-                    .displayedName("Scan plug-ins?")
-                    .description("Decides whether the server will scan the content of the plug-in folder and dynamically load found devices")
-                    .expertAccess()
-                    .assignmentOptional().defaultValue(true)
-                    .commit();
+            BOOL_ELEMENT(expected)
+                  .key("scanPlugins")
+                  .displayedName("Scan plug-ins?")
+                  .description(
+                        "Decides whether the server will scan the content of the plug-in folder and dynamically load "
+                        "found devices")
+                  .expertAccess()
+                  .assignmentOptional()
+                  .defaultValue(true)
+                  .commit();
 
             PATH_ELEMENT(expected)
-                    .key("pluginDirectory")
-                    .displayedName("Plugin Directory")
-                    .description("Directory to search for plugins")
-                    .assignmentOptional().defaultValue(PluginLoader::defaultPluginPath())
-                    .isDirectory()
-                    .expertAccess()
-                    .commit();
+                  .key("pluginDirectory")
+                  .displayedName("Plugin Directory")
+                  .description("Directory to search for plugins")
+                  .assignmentOptional()
+                  .defaultValue(PluginLoader::defaultPluginPath())
+                  .isDirectory()
+                  .expertAccess()
+                  .commit();
 
-            NODE_ELEMENT(expected).key("Logger")
-                    .description("Logging settings")
-                    .displayedName("Logger")
-                    .appendParametersOf<Logger>()
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("Logger")
+                  .description("Logging settings")
+                  .displayedName("Logger")
+                  .appendParametersOf<Logger>()
+                  .commit();
 
-            OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
-                    .setNewDefaultValue("device-server.log")
-                    .commit();
+            OVERWRITE_ELEMENT(expected).key("Logger.file.filename").setNewDefaultValue("device-server.log").commit();
 
-            STRING_ELEMENT(expected).key("timeServerId")
-                    .displayedName("TimeServer ID")
-                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
-
+            STRING_ELEMENT(expected)
+                  .key("timeServerId")
+                  .displayedName("TimeServer ID")
+                  .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
+                  .assignmentOptional()
+                  .defaultValue("")
+                  .commit();
         }
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config)
-            : m_log(0)
-            , m_scanPluginsTimer(EventLoop::getIOService())
-            , m_timeId(0ull)
-            , m_timeSec(0ull)
-            , m_timeFrac(0ull)
-            , m_timePeriod(1ull) // non-zero as double protection against division by zero in DeviceServer::timeTick
-            , m_noTimeTickYet(true)
-            , m_timeIdLastTick(0ull)
-            , m_timeTickerTimer(EventLoop::getIOService()) {
-
+            : m_log(0),
+              m_scanPluginsTimer(EventLoop::getIOService()),
+              m_timeId(0ull),
+              m_timeSec(0ull),
+              m_timeFrac(0ull),
+              m_timePeriod(1ull) // non-zero as double protection against division by zero in DeviceServer::timeTick
+              ,
+              m_noTimeTickYet(true),
+              m_timeIdLastTick(0ull),
+              m_timeTickerTimer(EventLoop::getIOService()) {
             if (config.has("serverId")) {
                 config.get("serverId", m_serverId);
             } else {
@@ -189,8 +211,8 @@ namespace karabo {
             m_connection = Configurator<Broker>::createChoice("connection", brokerConfig);
             m_connection->connect();
 
-            m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"),
-                                                                       "pluginsToLoad", "*"));
+            m_pluginLoader = PluginLoader::create(
+                  "PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"), "pluginsToLoad", "*"));
             loadLogger(config);
 
             karabo::util::Hash instanceInfo;
@@ -215,13 +237,13 @@ namespace karabo {
 
         DeviceServer::~DeviceServer() {
             stopDeviceServer();
-            KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()=" << m_logger.use_count();
+            KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()="
+                                       << m_logger.use_count();
             m_logger.reset();
         }
 
 
         void DeviceServer::loadLogger(const Hash& input) {
-
             Hash config = input.get<Hash>("Logger");
 
             boost::filesystem::path path(Version::getPathToKaraboInstallation() + "/var/log/" + m_serverId);
@@ -230,7 +252,8 @@ namespace karabo {
 
             config.set("file.filename", path.generic_string());
             // Copy the connection properties and specify an instanceId.
-            // Remember that for the choice element "connection" there is a single leaf with the key specifying the type.
+            // Remember that for the choice element "connection" there is a single leaf with the key specifying the
+            // type.
             Hash::Node& connectionNode = config.set("network.connection", input.get<Hash>("connection"));
             Hash& brokerCfg = connectionNode.getValue<Hash>().begin()->getValue<Hash>();
             // Avoid name clash with any SignalSlotable since there ':' is not allowed as instanceId:
@@ -256,7 +279,6 @@ namespace karabo {
 
 
         void DeviceServer::finalizeInternalInitialization() {
-
             // Do before calling start() since not thread safe,
             // boost::bind is safe since handler is only called directly from SignalSlotable code of 'this'.
             registerBroadcastHandler(boost::bind(&DeviceServer::onBroadcastMessage, this, _1, _2));
@@ -265,21 +287,17 @@ namespace karabo {
 
             startFsm();
 
-            KARABO_LOG_INFO << "Starting Karabo DeviceServer (pid: " << ::getpid()
-                    << ") on host: " << m_hostname
-                    << ", serverId: " << m_serverId
-                    << ", Broker: " << m_connection->getBrokerUrl();
+            KARABO_LOG_INFO << "Starting Karabo DeviceServer (pid: " << ::getpid() << ") on host: " << m_hostname
+                            << ", serverId: " << m_serverId << ", Broker: " << m_connection->getBrokerUrl();
 
             m_serverIsRunning = true;
 
             if (!m_timeServerId.empty()) {
                 KARABO_LOG_FRAMEWORK_DEBUG << m_serverId << ": Connecting to time server \"" << m_timeServerId << "\"";
                 const std::string timeServerId(m_timeServerId); // copy to avoid catching this
-                asyncConnect(m_timeServerId, "signalTimeTick", "", "slotTimeTick",
-                             [timeServerId]() {
-                                 KARABO_LOG_FRAMEWORK_INFO << "Successfully connected to time server '"
-                                         << timeServerId << "'";
-                             });
+                asyncConnect(m_timeServerId, "signalTimeTick", "", "slotTimeTick", [timeServerId]() {
+                    KARABO_LOG_FRAMEWORK_INFO << "Successfully connected to time server '" << timeServerId << "'";
+                });
             }
         }
 
@@ -287,7 +305,7 @@ namespace karabo {
         void DeviceServer::onBroadcastMessage(const karabo::util::Hash::Pointer& header,
                                               const karabo::util::Hash::Pointer& body) {
             // const_cast to have ids refer to a const Node...
-            boost::optional<const Hash::Node&> ids = const_cast<const Hash*> (header.get())->find("slotInstanceIds");
+            boost::optional<const Hash::Node&> ids = const_cast<const Hash*>(header.get())->find("slotInstanceIds");
             if (!ids || !ids->is<std::string>()) {
                 return;
             }
@@ -302,8 +320,9 @@ namespace karabo {
                         // Can happen if devId just tries to come up, but has not yet registered for shortcut messaging.
                         // But this registration happens before the device broadcasts its existence and before that the
                         // device is not really part of the game, so no harm.
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Failed to forward broadcast message to local device "
-                                << devId << " which likely is just coming up and thus not fully part of the system yet.";
+                        KARABO_LOG_FRAMEWORK_DEBUG
+                              << "Failed to forward broadcast message to local device " << devId
+                              << " which likely is just coming up and thus not fully part of the system yet.";
                     }
                 }
             }
@@ -311,9 +330,7 @@ namespace karabo {
 
 
         bool DeviceServer::isRunning() const {
-
             return m_serverIsRunning;
-
         }
 
 
@@ -323,14 +340,16 @@ namespace karabo {
             KARABO_SLOT(slotDeviceGone, string /*deviceId*/)
             KARABO_SLOT(slotGetClassSchema, string /*classId*/)
             KARABO_SLOT(slotLoggerPriority, string /*priority*/)
-            KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+            KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */,
+                        unsigned long long /* frac */, unsigned long long /* period */);
         }
 
 
-        void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+        void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
+                                        unsigned long long period) {
             if (period == 0ull) {
-                KARABO_LOG_ERROR << "Ignore invalid input in slotTimeTick: period=0, id=" << id
-                        << ", sec=" << sec << ", frac=" << frac;
+                KARABO_LOG_ERROR << "Ignore invalid input in slotTimeTick: period=0, id=" << id << ", sec=" << sec
+                                 << ", frac=" << frac;
                 return;
             }
             bool firstCall = false;
@@ -338,11 +357,11 @@ namespace karabo {
                 karabo::util::Epochstamp epochNow; // before mutex lock since that could add a delay
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
                 m_timeId = id;
-                m_timeSec  = sec;
+                m_timeSec = sec;
                 m_timeFrac = frac;
                 // Fallback to the local timing ...
                 if (sec == 0) {
-                    m_timeSec  = epochNow.getSeconds();
+                    m_timeSec = epochNow.getSeconds();
                     m_timeFrac = epochNow.getFractionalSeconds();
                 }
                 m_timePeriod = period;
@@ -395,8 +414,9 @@ namespace karabo {
 
             // Calculate how many ids we are away from last external update and adjust stamp
             const unsigned long long delta = newId - id; // newId >= id is fulfilled
-            const util::TimeDuration periodDuration(period / 1000000ull, // '/ 10^6': any full seconds part
-                                                    (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
+            const util::TimeDuration periodDuration(
+                  period / 1000000ull,                       // '/ 10^6': any full seconds part
+                  (period % 1000000ull) * 1000000000000ull); // '* 10^12': micro- to attoseconds
             const util::TimeDuration sinceId(periodDuration * delta);
             stamp += sinceId;
 
@@ -410,7 +430,8 @@ namespace karabo {
             if (newId > m_timeIdLastTick + largestOnTimeUpdateBacklog) {
                 // Don't treat an 'id' older than 10 min - for a period of 100 millisec that is 6000 ids in the past
                 KARABO_LOG_WARN << "Big gap between trainIds: from " << m_timeIdLastTick << " to " << newId
-                        << ". Call hook for time updates only for last " << largestOnTimeUpdateBacklog << " ids.";
+                                << ". Call hook for time updates only for last " << largestOnTimeUpdateBacklog
+                                << " ids.";
                 m_timeIdLastTick = newId - largestOnTimeUpdateBacklog;
             }
             while (m_timeIdLastTick < newId) {
@@ -419,30 +440,28 @@ namespace karabo {
                 for (auto& kv : m_deviceInstanceMap) {
                     if (kv.second.second) { // otherwise not yet fully initialized
                         kv.second.second->post(bind_weak(&BaseDevice::onTimeUpdate, kv.second.first.get(),
-                                                         m_timeIdLastTick,
-                                                         stamp.getSeconds(), stamp.getFractionalSeconds(), period));
+                                                         m_timeIdLastTick, stamp.getSeconds(),
+                                                         stamp.getFractionalSeconds(), period));
                     }
                 }
             }
 
             // reload timer for next id:
             m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
-            m_timeTickerTimer.async_wait(util::bind_weak(&DeviceServer::timeTick, this,
-                                                         boost::asio::placeholders::error, ++newId));
+            m_timeTickerTimer.async_wait(
+                  util::bind_weak(&DeviceServer::timeTick, this, boost::asio::placeholders::error, ++newId));
         }
 
 
-        krb_log4cpp::Category & DeviceServer::log() {
+        krb_log4cpp::Category& DeviceServer::log() {
             return (*m_log);
         }
 
 
-        void DeviceServer::onStateUpdate(const State& currentState) {
-        }
+        void DeviceServer::onStateUpdate(const State& currentState) {}
 
 
         void DeviceServer::okStateOnEntry() {
-
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             // Check whether we have installed devices available
@@ -458,8 +477,10 @@ namespace karabo {
 
             // Whether to scan for additional plug-ins at runtime
             if (m_scanPlugins) {
-                KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
-                EventLoop::getIOService().post(util::bind_weak(&DeviceServer::scanPlugins, this, boost::system::error_code()));
+                KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory()
+                                << " for Device plugins";
+                EventLoop::getIOService().post(
+                      util::bind_weak(&DeviceServer::scanPlugins, this, boost::system::error_code()));
             }
         }
 
@@ -472,11 +493,15 @@ namespace karabo {
             for (const string& device : devices) {
                 if (!m_availableDevices.has(device)) {
                     Schema schema;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device class \"" << device << "\".  Try to get schema ...";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device class \"" << device
+                                               << "\".  Try to get schema ...";
                     try {
-                        schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
+                        schema = BaseDevice::getSchema(
+                              device,
+                              Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
                     } catch (const std::exception& e) {
-                        KARABO_LOG_ERROR << "Device \"" << device << "\" is ignored because of Schema building failure : " << e.what();
+                        KARABO_LOG_ERROR << "Device \"" << device
+                                         << "\" is ignored because of Schema building failure : " << e.what();
                         continue;
                     }
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
@@ -486,7 +511,6 @@ namespace karabo {
 
 
         void DeviceServer::scanPlugins(const boost::system::error_code& e) {
-
             if (e) return;
 
             int delay = 10; // If there is a problem, do not try too soon...
@@ -508,7 +532,8 @@ namespace karabo {
 
             // reload timer
             m_scanPluginsTimer.expires_from_now(boost::posix_time::seconds(delay));
-            m_scanPluginsTimer.async_wait(bind_weak(&DeviceServer::scanPlugins, this, boost::asio::placeholders::error));
+            m_scanPluginsTimer.async_wait(
+                  bind_weak(&DeviceServer::scanPlugins, this, boost::asio::placeholders::error));
         }
 
 
@@ -544,7 +569,6 @@ namespace karabo {
 
 
         void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
-
             // Just register an asynchronous reply and put on the "stack".
             const SignalSlotable::AsyncReply reply(this);
 
@@ -554,22 +578,19 @@ namespace karabo {
 
         void DeviceServer::startDevice(const karabo::util::Hash& configuration,
                                        const SignalSlotable::AsyncReply& reply) {
-
-            const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig
-                    = this->prepareInstantiate(configuration);
+            const boost::tuple<std::string, std::string, util::Hash>& idClassIdConfig =
+                  this->prepareInstantiate(configuration);
 
             const std::string& deviceId = idClassIdConfig.get<0>();
             const std::string& classId = idClassIdConfig.get<1>();
-            KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId
-                    << "' with deviceId '" << deviceId << "'...";
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
             instantiate(deviceId, classId, idClassIdConfig.get<2>(), reply);
         }
 
 
-        boost::tuple<std::string, std::string, util::Hash>
-        DeviceServer::prepareInstantiate(const karabo::util::Hash& configuration) {
-
+        boost::tuple<std::string, std::string, util::Hash> DeviceServer::prepareInstantiate(
+              const karabo::util::Hash& configuration) {
             if (configuration.has("classId")) {
                 // New style
                 const std::string& classId = configuration.get<string>("classId");
@@ -614,8 +635,8 @@ namespace karabo {
                 // Inject Hostname
                 tmp.set("hostName", m_hostname);
 
-                const std::pair<std::string, util::Hash>& idCfg
-                        = util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
+                const std::pair<std::string, util::Hash>& idCfg =
+                      util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
                 return boost::make_tuple(tmp.get<std::string>("_deviceId_"), idCfg.first, idCfg.second);
             }
         }
@@ -628,13 +649,13 @@ namespace karabo {
             EventLoop::addThread();
             bool putInMap = false;
             try {
-
                 BaseDevice::Pointer device = BaseDevice::create(classId, config);
 
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     if (m_deviceInstanceMap.find(deviceId) != m_deviceInstanceMap.end()) {
-                        throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' already running/starting on this server.");
+                        throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId +
+                                                     "' already running/starting on this server.");
                     }
                     // Keep the device instance - doing this before finalizeInternalInitialization to enable the device
                     // to kill itself during instantiation (see slotDeviceGone).
@@ -643,9 +664,10 @@ namespace karabo {
                 }
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
-                device->finalizeInternalInitialization(getConnection()->clone(deviceId), // use clone to potentially share
-                                                       false, // DeviceServer will forward broadcasts!
-                                                       m_timeServerId);
+                device->finalizeInternalInitialization(
+                      getConnection()->clone(deviceId), // use clone to potentially share
+                      false,                            // DeviceServer will forward broadcasts!
+                      m_timeServerId);
 
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
@@ -659,12 +681,14 @@ namespace karabo {
             } catch (const std::exception& se) {
                 if (putInMap) { // Otherwise the device is not from this request.
                     // To be precise, the following unlikely case is not excluded: The device was put in map above, but
-                    // killed itself during its initialization phase and slotStartDevice has been called once more for the
-                    // same deviceId and placed it into the map again before we get here to remove the one that killed itself.
+                    // killed itself during its initialization phase and slotStartDevice has been called once more for
+                    // the same deviceId and placed it into the map again before we get here to remove the one that
+                    // killed itself.
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     m_deviceInstanceMap.erase(deviceId);
                 }
-                const std::string message("Device '" + deviceId + "' of class '" + classId + "' could not be started: ");
+                const std::string message("Device '" + deviceId + "' of class '" + classId +
+                                          "' could not be started: ");
                 KARABO_LOG_ERROR << message << se.what();
                 asyncReply(false, message + se.what());
             }
@@ -689,7 +713,7 @@ namespace karabo {
                 }
             }
             KARABO_LOG_FRAMEWORK_INFO << "Sending instance update as new device plugins are available: "
-                    << karabo::util::toString(deviceClasses);
+                                      << karabo::util::toString(deviceClasses);
             this->updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities));
         }
 
@@ -702,12 +726,12 @@ namespace karabo {
             if (result && what.size() == 2) {
                 eventName = what.str(1);
             }
-            KARABO_LOG_WARN << "Current state of server \"" << getInstanceId() << "\" does not allow a transition for event \"" << eventName << "\"";
+            KARABO_LOG_WARN << "Current state of server \"" << getInstanceId()
+                            << "\" does not allow a transition for event \"" << eventName << "\"";
         }
 
 
         void DeviceServer::slotKillServer() {
-
             KARABO_LOG_INFO << "Received kill signal";
 
             reply(m_serverId);
@@ -719,16 +743,14 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotDeviceGone(const std::string & instanceId) {
-
+        void DeviceServer::slotDeviceGone(const std::string& instanceId) {
             KARABO_LOG_FRAMEWORK_INFO << "Device '" << instanceId << "' notifies '" << this->getInstanceId()
-                    << "' about its future death.";
+                                      << "' about its future death.";
 
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
             if (m_deviceInstanceMap.erase(instanceId) > 0) {
                 KARABO_LOG_INFO << "Device '" << instanceId << "' removed from server.";
             }
-
         }
 
 
@@ -738,7 +760,7 @@ namespace karabo {
         }
 
 
-        std::string DeviceServer::generateDefaultDeviceId(const std::string & classId) {
+        std::string DeviceServer::generateDefaultDeviceId(const std::string& classId) {
             const string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
             // Prepare shortened Device-Server name
             vector<string> tokens;
@@ -757,5 +779,5 @@ namespace karabo {
             Logger::setPriority(newprio);
             KARABO_LOG_INFO << "Logger Priority changed : " << oldprio << " ==> " << newprio;
         }
-    }
-}
+    } // namespace core
+} // namespace karabo

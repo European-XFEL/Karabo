@@ -8,22 +8,22 @@
 
 
 #ifndef KARABO_IO_FIXEDLENGTHARRAYATTRIBUTE_HH
-#define	KARABO_IO_FIXEDLENGTHARRAYATTRIBUTE_HH
+#define KARABO_IO_FIXEDLENGTHARRAYATTRIBUTE_HH
 
 
-#include <vector>
-#include <string>
-
-#include "Attribute.hh"
-#include "TypeTraits.hh"
-#include "FixedLengthArray.hh"
+#include <karabo/log/Logger.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/Dims.hh>
+#include <karabo/util/FromTypeInfo.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/ToLiteral.hh>
-#include <karabo/util/FromTypeInfo.hh>
 #include <karabo/util/VectorElement.hh>
-#include <karabo/util/Dims.hh>
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
+#include <string>
+#include <vector>
+
+#include "Attribute.hh"
+#include "FixedLengthArray.hh"
+#include "TypeTraits.hh"
 
 
 namespace karabo {
@@ -36,19 +36,17 @@ namespace karabo {
              * @class FixedLengthArrayAttribute
              * @brief A class to represent vector attributes of fixed length in HDF5
              */
-            template<typename T>
+            template <typename T>
             class FixedLengthArrayAttribute : public Attribute {
+               public:
+                KARABO_CLASSINFO(FixedLengthArrayAttribute,
+                                 "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(
+                                                   karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid(T))),
+                                 "2.0")
 
-            public:
+                FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input, this) {}
 
-                KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
-
-                FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input, this) {
-
-                }
-
-                virtual ~FixedLengthArrayAttribute() {
-                }
+                virtual ~FixedLengthArrayAttribute() {}
 
                 /**
                  * Return the dimensions of the attribute, overwrite for consistent interface.
@@ -81,7 +79,6 @@ namespace karabo {
                  * @return the bound node
                  */
                 karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node& node) {
-
                     if (!node.hasAttribute(m_key)) {
                         node.setAttribute(m_key, std::vector<T>());
                     }
@@ -96,12 +93,9 @@ namespace karabo {
                  * Has empty expected parameter section
                  * @param expected
                  */
-                static void expectedParameters(karabo::util::Schema& expected) {
+                static void expectedParameters(karabo::util::Schema& expected) {}
 
-                }
-
-            protected:
-
+               protected:
                 /**
                  * Write value of an Element into the HDF5 attribute
                  * @param attributeNode Element holding the value
@@ -113,7 +107,8 @@ namespace karabo {
                         KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &(node.getValue<std::vector<T> >())[0]));
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
+                                                                      this->m_key + " to dataset /"));
                     }
                 }
 
@@ -127,10 +122,9 @@ namespace karabo {
                     hid_t tid = getNativeTypeId();
                     KARABO_CHECK_HDF5_STATUS(H5Aread(m_attribute, tid, m_attributeData));
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-
                 }
 
-            private:
+               private:
                 T* m_attributeData;
             };
 
@@ -138,19 +132,19 @@ namespace karabo {
              * @class FixedLengthArrayAttribute
              * @brief A class to represent vector attributes of fixed length in HDF5 -specialization for booleans
              */
-            template<>
+            template <>
             class FixedLengthArrayAttribute<bool> : public Attribute {
+               public:
+                KARABO_CLASSINFO(FixedLengthArrayAttribute,
+                                 "VECTOR_" +
+                                       karabo::util::ToType<karabo::util::ToLiteral>::to(
+                                             karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid(bool))),
+                                 "2.0")
 
-            public:
+                FixedLengthArrayAttribute(const karabo::util::Hash& input)
+                    : Attribute(input, this), m_attributeData(0) {}
 
-                KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool))), "2.0")
-
-                FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input, this),
-                    m_attributeData(0) {
-                }
-
-                virtual ~FixedLengthArrayAttribute() {
-                }
+                virtual ~FixedLengthArrayAttribute() {}
 
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims();
@@ -169,20 +163,18 @@ namespace karabo {
                         node.setAttribute(m_key, std::vector<bool>());
                     }
                     karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
-                    m_attributeData = &attrNode.getValue < std::vector<bool> >();
+                    m_attributeData = &attrNode.getValue<std::vector<bool> >();
                     m_attributeData->resize(dims().size());
                     return attrNode;
                 }
 
-                static void expectedParameters(karabo::util::Schema& expected) {
-                }
+                static void expectedParameters(karabo::util::Schema& expected) {}
 
-            protected:
-
+               protected:
                 void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) {
                     try {
                         hid_t tid = getNativeTypeId();
-                        const std::vector<bool>& vec = node.getValue < std::vector<bool> >();
+                        const std::vector<bool>& vec = node.getValue<std::vector<bool> >();
                         hsize_t len = vec.size();
                         std::vector<unsigned char> converted(len, 0);
                         for (size_t i = 0; i < len; ++i) {
@@ -192,7 +184,8 @@ namespace karabo {
                         KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, ptr));
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
+                                                                      this->m_key + " to dataset /"));
                     }
                 }
 
@@ -208,28 +201,27 @@ namespace karabo {
                     }
                 }
 
-            private:
+               private:
                 std::vector<bool>* m_attributeData;
-
             };
 
             /**
              * @class FixedLengthArrayAttribute
              * @brief A class to represent vector attributes of fixed length in HDF5 - specialization for strings
              */
-            template<>
+            template <>
             class FixedLengthArrayAttribute<std::string> : public Attribute {
+               public:
+                KARABO_CLASSINFO(
+                      FixedLengthArrayAttribute,
+                      "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(
+                                        karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid(std::string))),
+                      "2.0")
 
-            public:
+                FixedLengthArrayAttribute(const karabo::util::Hash& input)
+                    : Attribute(input, this), m_attributeData(0) {}
 
-                KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::string))), "2.0")
-
-                FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input, this),
-                    m_attributeData(0) {
-                }
-
-                virtual ~FixedLengthArrayAttribute() {
-                }
+                virtual ~FixedLengthArrayAttribute() {}
 
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims();
@@ -248,16 +240,14 @@ namespace karabo {
                         node.setAttribute(m_key, std::vector<std::string>());
                     }
                     karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
-                    m_attributeData = &attrNode.getValue < std::vector<std::string> >();
+                    m_attributeData = &attrNode.getValue<std::vector<std::string> >();
                     m_attributeData->resize(dims().size());
                     return attrNode;
                 }
 
-                static void expectedParameters(karabo::util::Schema& expected) {
-                }
+                static void expectedParameters(karabo::util::Schema& expected) {}
 
-            protected:
-
+               protected:
                 void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) {
                     try {
                         hid_t tid = getNativeTypeId();
@@ -269,19 +259,19 @@ namespace karabo {
                         KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &value_copy[0]));
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
+                                                                      this->m_key + " to dataset /"));
                     }
                 }
 
                 void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
-
                     try {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "reading - string attribute";
                         hid_t space = H5Aget_space(m_attribute);
                         KARABO_CHECK_HDF5_STATUS(space);
                         hsize_t dims[1];
                         /*int ndims = NOT USED */ H5Sget_simple_extent_dims(space, dims, NULL);
-                        char** rdata = (char **) malloc(dims[0] * sizeof (char *));
+                        char** rdata = (char**)malloc(dims[0] * sizeof(char*));
 
                         hid_t tid = getNativeTypeId();
                         KARABO_CHECK_HDF5_STATUS(H5Aread(m_attribute, tid, rdata));
@@ -293,32 +283,31 @@ namespace karabo {
                         KARABO_CHECK_HDF5_STATUS(H5Sclose(space));
                         free(rdata);
                     } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
+                                                                      this->m_key + " to dataset /"));
                     }
-
                 }
 
-            private:
+               private:
                 std::vector<std::string>* m_attributeData;
-
             };
 
             // typedefs
             typedef FixedLengthArrayAttribute<signed char> Int8ArrayAttribute;
             typedef FixedLengthArrayAttribute<short> Int16ArrayAttribute;
             typedef FixedLengthArrayAttribute<int> Int32ArrayAttribute;
-            typedef FixedLengthArrayAttribute<long long > Int64ArrayAttribute;
+            typedef FixedLengthArrayAttribute<long long> Int64ArrayAttribute;
             typedef FixedLengthArrayAttribute<unsigned char> UInt8ArrayAttribute;
             typedef FixedLengthArrayAttribute<unsigned short> UInt16ArrayAttribute;
             typedef FixedLengthArrayAttribute<unsigned int> UInt32ArrayAttribute;
-            typedef FixedLengthArrayAttribute<unsigned long long > UInt64ArrayAttribute;
+            typedef FixedLengthArrayAttribute<unsigned long long> UInt64ArrayAttribute;
             typedef FixedLengthArrayAttribute<double> DoubleArrayAttribute;
             typedef FixedLengthArrayAttribute<float> FloatArrayAttribute;
             typedef FixedLengthArrayAttribute<std::string> StringArrayAttribute;
             typedef FixedLengthArrayAttribute<bool> BoolArrayAttribute;
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
 #endif

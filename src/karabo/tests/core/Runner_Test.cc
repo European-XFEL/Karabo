@@ -1,44 +1,45 @@
-/* 
+/*
  * File:   Runner_Test.cc
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
- * 
+ *
  * Created on February 21, 2017, 2:37 PM
  */
 
-#include <karabo/karabo.hpp>
 #include "Runner_Test.hh"
+
+#include <karabo/karabo.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Runner_Test);
 
 
-Runner_Test::Runner_Test() {
-}
+Runner_Test::Runner_Test() {}
 
 
-Runner_Test::~Runner_Test() {
-}
+Runner_Test::~Runner_Test() {}
 
 
-void Runner_Test::setUp() {
-}
+void Runner_Test::setUp() {}
 
 
-void Runner_Test::tearDown() {
-}
+void Runner_Test::tearDown() {}
 
 
 void Runner_Test::testRunnerSuccess() {
     using namespace karabo::util;
-    char const * argv[] = {"SomeExecutable", "serverId=foo",
-                   "autostart[0]={DataLoggerManager.serverList=dls1,dls2,dls3,dls4",
-                   "DataLoggerManager.param1=12", "DataLoggerManager.param2=99}",
-                   "visibility=5", "Logger.priority=DEBUG"};
+    char const *argv[] = {"SomeExecutable",
+                          "serverId=foo",
+                          "autostart[0]={DataLoggerManager.serverList=dls1,dls2,dls3,dls4",
+                          "DataLoggerManager.param1=12",
+                          "DataLoggerManager.param2=99}",
+                          "visibility=5",
+                          "Logger.priority=DEBUG"};
     int argc = 7;
     Hash configuration;
     CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
-    //std::clog << "**** configuration ...\n" << configuration << std::endl;
+    // std::clog << "**** configuration ...\n" << configuration << std::endl;
     CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "foo");
-    CPPUNIT_ASSERT(configuration.get<std::string>("autostart[0].DataLoggerManager.serverList") == "dls1,dls2,dls3,dls4");
+    CPPUNIT_ASSERT(configuration.get<std::string>("autostart[0].DataLoggerManager.serverList") ==
+                   "dls1,dls2,dls3,dls4");
     CPPUNIT_ASSERT(configuration.get<std::string>("autostart[0].DataLoggerManager.param1") == "12");
     CPPUNIT_ASSERT(configuration.get<std::string>("autostart[0].DataLoggerManager.param2") == "99");
     CPPUNIT_ASSERT(configuration.get<std::string>("visibility") == "5");
@@ -52,7 +53,7 @@ void Runner_Test::testRunnerSuccess2() {
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
-    //std::clog << "\n********** The configuration is ...\n" << configuration << std::endl;
+    // std::clog << "\n********** The configuration is ...\n" << configuration << std::endl;
     CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "bingo");
     CPPUNIT_ASSERT(configuration.get<std::string>("a[0].b") == "1");
     CPPUNIT_ASSERT(configuration.get<std::string>("a[0].c") == "2");

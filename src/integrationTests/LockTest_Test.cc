@@ -6,6 +6,7 @@
  */
 
 #include "LockTest_Test.hh"
+
 #include <karabo/net/EventLoop.hh>
 
 using namespace std;
@@ -17,16 +18,13 @@ USING_KARABO_NAMESPACES
 CPPUNIT_TEST_SUITE_REGISTRATION(LockTest_Test);
 
 
-LockTest_Test::LockTest_Test() {
-}
+LockTest_Test::LockTest_Test() {}
 
 
-LockTest_Test::~LockTest_Test() {
-}
+LockTest_Test::~LockTest_Test() {}
 
 
 void LockTest_Test::setUp() {
-
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
@@ -35,7 +33,6 @@ void LockTest_Test::setUp() {
     m_deviceServer->finalizeInternalInitialization();
     // Create client
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
-
 }
 
 
@@ -47,15 +44,19 @@ void LockTest_Test::tearDown() {
 
 
 void LockTest_Test::appTestRunner() {
-
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerLock", "LockTestDevice", Hash("deviceId", "lockTest3"), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testServerLock", "LockTestDevice", Hash("deviceId", "lockTest3"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    success = m_deviceClient->instantiate("testServerLock", "LockTestDevice", Hash("deviceId", "lockTest1", "controlledDevice", "lockTest3"), KRB_TEST_MAX_TIMEOUT);
+    success = m_deviceClient->instantiate("testServerLock", "LockTestDevice",
+                                          Hash("deviceId", "lockTest1", "controlledDevice", "lockTest3"),
+                                          KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    success = m_deviceClient->instantiate("testServerLock", "LockTestDevice", Hash("deviceId", "lockTest2", "controlledDevice", "lockTest3"), KRB_TEST_MAX_TIMEOUT);
+    success = m_deviceClient->instantiate("testServerLock", "LockTestDevice",
+                                          Hash("deviceId", "lockTest2", "controlledDevice", "lockTest3"),
+                                          KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     testLocking();
@@ -63,12 +64,10 @@ void LockTest_Test::appTestRunner() {
     testRecursiveLocking();
     testSettingOnLocked();
     testLockStealing();
-
 }
 
 
 void LockTest_Test::testLocking() {
-
     // This will lock "lockTest3" and work on it for 1s (asynchronously)
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     // We are waiting here to give the machinery time to really lock "lockTest3"
@@ -98,28 +97,28 @@ void LockTest_Test::testLocking() {
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10));
     std::clog << "Tested locking with timeout (success).. Ok" << std::endl;
-
 }
 
 
 void LockTest_Test::testUnlocking() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
 
-    // FIXME: should not be needed anymore with ordering guarantee: CPPUNIT_ASSERT_NO_THROW(waitUntilLockClears("lockTest3"));
+    // FIXME: should not be needed anymore with ordering guarantee:
+    // CPPUNIT_ASSERT_NO_THROW(waitUntilLockClears("lockTest3"));
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT));
     std::clog << "Tested unlocking.. Ok" << std::endl;
-
 }
 
 
 void LockTest_Test::testRecursiveLocking() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
-    CPPUNIT_ASSERT_THROW(m_deviceClient->execute("lockTest1", "lockAndWaitRecursiveFail", KRB_TEST_MAX_TIMEOUT), Exception);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->execute("lockTest1", "lockAndWaitRecursiveFail", KRB_TEST_MAX_TIMEOUT),
+                         Exception);
     Exception::clearTrace();
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
-    //recursive succeeds
+    // recursive succeeds
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest1", "lockAndWaitRecursive", KRB_TEST_MAX_TIMEOUT));
     std::clog << "Tested recursive locking.. Ok" << std::endl;
 }
@@ -164,4 +163,3 @@ void LockTest_Test::waitUntilLockClears(const std::string& deviceId) {
         throw KARABO_TIMEOUT_EXCEPTION("Lock on '" + deviceId + "' did not clear.");
     }
 }
-

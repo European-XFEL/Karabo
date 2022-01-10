@@ -1,16 +1,16 @@
-/* 
+/*
  * File:   Factory_Test.cc
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on August 26, 2012, 7:20 PM
- * 
+ *
  * © Copyright 2012 Burkhard C. Heisen
  */
 
+#include "Factory_Test.hh"
+
 #include <karabo/util/Factory.hh>
 #include <karabo/util/PluginLoader.hh>
-
-#include "Factory_Test.hh"
 
 using namespace karabo::util;
 using namespace std;
@@ -24,38 +24,30 @@ KARABO_REGISTER_IN_FACTORY_1(Interface, A, std::string);
 KARABO_REGISTER_IN_FACTORY_1(Interface, A, int);
 
 
-Factory_Test::Factory_Test() {
-}
+Factory_Test::Factory_Test() {}
 
 
-Factory_Test::~Factory_Test() {
-}
+Factory_Test::~Factory_Test() {}
 
 
-void Factory_Test::setUp() {
-}
+void Factory_Test::setUp() {}
 
 
-void Factory_Test::tearDown() {
-}
+void Factory_Test::tearDown() {}
 
 
 void Factory_Test::testObjectCreation() {
-
-    //Factory::registerClass<A>("A");
-    //Factory::registerClass<A, std::string>("A");
+    // Factory::registerClass<A>("A");
+    // Factory::registerClass<A, std::string>("A");
     boost::shared_ptr<Interface> ptr1 = Factory<Interface>::create("AAA");
     CPPUNIT_ASSERT(ptr1->foo() == "A:void");
     Interface::Pointer ptr2 = Factory<Interface>::create<std::string>("AAA", "Horrey!");
     CPPUNIT_ASSERT(ptr2->foo() == "A:string");
-    //Factory<A>::create<int>("A", 42);
-
-
+    // Factory<A>::create<int>("A", 42);
 }
 
 
 void Factory_Test::testClassInfo() {
-
     ClassInfo ci = Interface::classInfo();
     //    clog << "i cid: " << ci.getClassId() << endl;
     //    clog << "i cna: " << ci.getClassName() << endl;
@@ -141,7 +133,6 @@ void Factory_Test::testClassInfo() {
     CPPUNIT_ASSERT(ci.getVersion() == "2.1");
 
 
-
     B<std::string> bs;
     ci = bs.getClassInfo();
 
@@ -156,5 +147,4 @@ void Factory_Test::testClassInfo() {
     CPPUNIT_ASSERT(ci.getLogCategory() == "BBB");
     CPPUNIT_ASSERT(ci.getNamespace() == "");
     CPPUNIT_ASSERT(ci.getVersion() == "2.1");
-
 }

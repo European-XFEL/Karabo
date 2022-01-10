@@ -31,18 +31,17 @@ namespace karabo {
          * of the Logger!!
          */
         class RollingFileAppender {
-          public:
+           public:
             KARABO_CLASSINFO(RollingFileAppender, "RollingFileAppender", "")
 
             static void expectedParameters(karabo::util::Schema& expected);
 
             RollingFileAppender(const karabo::util::Hash& input);
-            virtual ~RollingFileAppender() {
-            }
+            virtual ~RollingFileAppender() {}
 
             krb_log4cpp::Appender* getAppender();
 
-          private:
+           private:
             krb_log4cpp::Appender* m_appender;
         };
     } // namespace log

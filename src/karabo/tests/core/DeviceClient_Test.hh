@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DeviceClient_Test.hh
  * Author: flucke
  *
@@ -6,37 +6,36 @@
  */
 
 #ifndef DEVICECLIENT_TEST_HH
-#define	DEVICECLIENT_TEST_HH
+#define DEVICECLIENT_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "karabo/core/DeviceServer.hh"
 #include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
 
 class DeviceClient_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(DeviceClient_Test);
     CPPUNIT_TEST(testAll);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     DeviceClient_Test();
     virtual ~DeviceClient_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testAll();
 
     /**
      * Checks that concurrent calls to DeviceClient::initTopology()
-     * have the expected behavior - the broadcast of slotPing 
+     * have the expected behavior - the broadcast of slotPing
      * followed by a sleep of almost 2 seconds done from
      * SignalSlotable::getAvailableInstances only happens once.
      * The way to assert the expected behavior is by confirming
      * that the calls take about the same time and obtain the
      * same results.
-     * 
+     *
      * NOTE: This test uses the DeviceClient::getDevices() function
      * to trigger the DeviceClient::initTopology() calls.
      */
@@ -54,5 +53,4 @@ private:
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };
 
-#endif	/* DEVICECLIENT_TEST_HH */
-
+#endif /* DEVICECLIENT_TEST_HH */

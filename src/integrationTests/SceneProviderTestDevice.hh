@@ -5,7 +5,7 @@
  */
 
 #ifndef SCENEPROVIDERTESTDEVICE_HH
-#define	SCENEPROVIDERTESTDEVICE_HH
+#define SCENEPROVIDERTESTDEVICE_HH
 
 #include <karabo/karabo.hpp>
 
@@ -15,9 +15,7 @@
 namespace karabo {
 
     class SceneProviderTestDevice : public karabo::core::Device<> {
-
-    public:
-
+       public:
         // Add reflection information and Karabo framework compatibility to this class
         KARABO_CLASSINFO(SceneProviderTestDevice, "SceneProviderTestDevice", "2.0")
 
@@ -41,17 +39,11 @@ namespace karabo {
         virtual ~SceneProviderTestDevice();
 
 
-
-
-
-    private:
-
+       private:
         void initialize();
-        
+
         void slotGetScenes(const karabo::util::Hash& args);
-
     };
-}
+} // namespace karabo
 
-#endif	/* SCENEPROVIDERTESTDEVICE_HH */
-
+#endif /* SCENEPROVIDERTESTDEVICE_HH */

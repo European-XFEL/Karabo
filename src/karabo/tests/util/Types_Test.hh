@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Types_Test.hh
  * Author: heisenb
  *
@@ -6,13 +6,11 @@
  */
 
 #ifndef TYPES_TEST_HH
-#define	TYPES_TEST_HH
+#define TYPES_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class Types_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(Types_Test);
     CPPUNIT_TEST(testIsPointer);
     CPPUNIT_TEST(testIsVector);
@@ -23,13 +21,13 @@ class Types_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConvert);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Types_Test();
     virtual ~Types_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testCategory();
     void testFrom();
     void testTo();
@@ -39,5 +37,4 @@ private:
     void testIsSimple();
 };
 
-#endif	/* TYPES_TEST_HH */
-
+#endif /* TYPES_TEST_HH */

@@ -2,23 +2,24 @@
  * $Id: ioProfiler.hh 5260 2012-02-26 22:13:16Z wrona $
  *
  * Author: <krzysztof.wrona@xfel.eu>
- * 
+ *
  * Created on February 25, 2012, 21:04 AM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef KARABO_IO_IOPROFILER_HH
-#define	KARABO_IO_IOPROFILER_HH
+#define KARABO_IO_IOPROFILER_HH
 
-#include <karabo/util/Profiler.hh>
 #include <iostream>
+#include <karabo/util/Profiler.hh>
 
 
 #define KARABO_PROFILER(p) karabo::util::Profiler p(#p);
-#define KARABO_PROFILER_START(p,name) p.start(name);
+#define KARABO_PROFILER_START(p, name) p.start(name);
 #define KARABO_PROFILER_STOP(p) p.stop();
-#define KARABO_PROFILER_REPORT(p, name) std::cout << name << ": " << HighResolutionTimer::time2string (p.getTime(name)) << std::endl;
+#define KARABO_PROFILER_REPORT(p, name) \
+    std::cout << name << ": " << HighResolutionTimer::time2string(p.getTime(name)) << std::endl;
 
 
 #ifdef KARABO_USE_PROFILER_TABLE1
@@ -60,7 +61,4 @@
 #endif
 
 
-
-
-#endif	/* KARABO_IO_IOPROFILER_HH */
-
+#endif /* KARABO_IO_IOPROFILER_HH */

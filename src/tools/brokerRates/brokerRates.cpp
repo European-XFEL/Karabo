@@ -8,38 +8,31 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <iostream>
-#include <iosfwd>
-
-#include <cstdlib>
-#include <iomanip>
-#include <map>
-#include <unordered_set>
-
-#include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/enable_shared_from_this.hpp>
-
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/MetaTools.hh>
+#include <boost/shared_ptr.hpp>
+#include <cstdlib>
+#include <iomanip>
+#include <iosfwd>
+#include <iostream>
+#include <karabo/core/DeviceClient.hh>
+#include <karabo/log/Logger.hh>
+#include <karabo/net/Broker.hh>
+#include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
-#include <karabo/net/EventLoop.hh>
-#include <karabo/net/Broker.hh>
-#include <karabo/log/Logger.hh>
-#include <karabo/core/DeviceClient.hh>
+#include <karabo/util/Epochstamp.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/MetaTools.hh>
+#include <karabo/util/Schema.hh>
+#include <map>
+#include <unordered_set>
 
 using namespace karabo;
 
 
 class BrokerStatistics : public boost::enable_shared_from_this<BrokerStatistics> {
-
-
-
-public:
-
+   public:
     /// Stats as pair of number of calls and accumulated size in bytes.
     typedef std::pair<unsigned int, size_t> Stats;
 
@@ -58,21 +51,17 @@ public:
 
     BrokerStatistics(util::TimeValue intervalSec, const std::vector<std::string>& receiverIds,
                      const std::vector<std::string>& senderIds)
-        :
-        m_interval(intervalSec, 0ll),
-        m_receivers(receiverIds.begin(), receiverIds.end()),
-        m_senders(senderIds.begin(), senderIds.end()),
-        m_start(0ull, 0ull) {
-    }
+        : m_interval(intervalSec, 0ll),
+          m_receivers(receiverIds.begin(), receiverIds.end()),
+          m_senders(senderIds.begin(), senderIds.end()),
+          m_start(0ull, 0ull) {}
 
     // virtual ~BrokerStatistics() {} // no need for virtual...
 
     /// Register a message, i.e. increase statistics and possibly print.
-    void registerMessage(const util::Hash::Pointer& header,
-                         const util::Hash::Pointer& body);
+    void registerMessage(const util::Hash::Pointer& header, const util::Hash::Pointer& body);
 
-private:
-
+   private:
     void registerPerSignal(const util::Hash::Pointer& header, size_t bodySize);
 
     void registerPerSlot(const util::Hash::Pointer& header, size_t bodySize);
@@ -88,22 +77,18 @@ private:
 
     void registerLogMessage(size_t bodySize);
 
-    void printStatistics(const util::Epochstamp& timeStamp,
-                         float elapsedSeconds) const;
+    void printStatistics(const util::Epochstamp& timeStamp, float elapsedSeconds) const;
 
     /// The keys of StatsMap must either support
     /// ostream& operator<<(ostream&, const KeyType&),
     /// preferably with a width of 59 characters or there must be a specialisation
     /// of BrokerStatistics::printId for IdType=KeyType.
     template <typename StatsMap>
-    Stats printStatistics(const StatsMap& statsMap,
-                          const util::Epochstamp& timeStamp,
-                          float elapsedSeconds) const;
+    Stats printStatistics(const StatsMap& statsMap, const util::Epochstamp& timeStamp, float elapsedSeconds) const;
 
     /// Helper of printStatistics.
     template <class IdType>
-    void printLine(const IdType& id, const Stats& stats,
-                   float elapsedSeconds) const;
+    void printLine(const IdType& id, const Stats& stats, float elapsedSeconds) const;
 
     /// Helper of printLine (see also printStatistics).
     template <class IdType>
@@ -126,8 +111,8 @@ private:
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-const std::string BrokerStatistics::m_delimLine
-("===============================================================================\n");
+const std::string BrokerStatistics::m_delimLine(
+      "===============================================================================\n");
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -140,9 +125,7 @@ void BrokerStatistics::printId(std::ostream& out, const IdType& id) const {
 
 template <>
 void BrokerStatistics::printId(std::ostream& out, const SignalId& id) const {
-    out << std::left
-            << std::setw(39) << id.first
-            << std::setw(20) << id.second;
+    out << std::left << std::setw(39) << id.first << std::setw(20) << id.second;
 }
 
 
@@ -153,9 +136,7 @@ void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const {
     boost::split(deviceSlot, id, boost::is_any_of(":"));
 
     const std::string& slotName = (deviceSlot.size() >= 2 ? deviceSlot[1] : "");
-    out << std::left
-            << std::setw(39) << deviceSlot[0]
-            << std::setw(20) << slotName;
+    out << std::left << std::setw(39) << deviceSlot[0] << std::setw(20) << slotName;
 
     // Create a warning if deviceSlot.size() > 2, at least once?
 }
@@ -163,8 +144,7 @@ void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const {
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
-                                       const util::Hash::Pointer& body) {
+void BrokerStatistics::registerMessage(const util::Hash::Pointer& header, const util::Hash::Pointer& body) {
     try {
         // In the very first call we reset the start time.
         // Otherwise (if the constructor initialises m_start with 'now') starting this
@@ -173,7 +153,7 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
         if (!m_start.getSeconds()) m_start.now();
 
         // Since we told the consumer to skip serialisation, there is just the raw data:
-        const size_t bodySize = body->get<std::vector<char> >("raw").size();
+        const size_t bodySize = body->get<std::vector<char>>("raw").size();
         boost::optional<util::Hash::Node&> targetNode = header->find("target");
         if (targetNode && targetNode->is<std::string>() && targetNode->getValue<std::string>() == "log") {
             this->registerLogMessage(bodySize);
@@ -190,8 +170,8 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
         const util::TimeDuration diff = now.elapsed(m_start);
         if (diff >= m_interval) {
             // Calculating in single float precision should be enough...
-            const float elapsedSeconds = static_cast<float> (diff.getTotalSeconds())
-                    + diff.getFractions(util::MICROSEC) / 1.e6f;
+            const float elapsedSeconds =
+                  static_cast<float>(diff.getTotalSeconds()) + diff.getFractions(util::MICROSEC) / 1.e6f;
             this->printStatistics(now, elapsedSeconds);
 
             // Reset:
@@ -232,15 +212,15 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t
     // Asynchronous replies do not have that key, so we use instead:
     // "slotInstanceIds": |DataLogger-Cam7_Proc||Karabo_GuiServer_0|
     boost::optional<util::Hash::Node&> funcNode = header->find("slotFunctions");
-    const std::string& slots = (funcNode ? funcNode->getValue<std::string>()
-                                : header->get<std::string>("slotInstanceIds"));
+    const std::string& slots =
+          (funcNode ? funcNode->getValue<std::string>() : header->get<std::string>("slotInstanceIds"));
 
     std::vector<std::string> slotsVec;
     // token_compress_on: treat "||" as "|"
     boost::split(slotsVec, slots, boost::is_any_of("|"), boost::token_compress_on);
 
-    for (std::vector<std::string>::const_iterator iSlot = slotsVec.begin(),
-         iEnd = slotsVec.end(); iSlot != iEnd; ++iSlot) {
+    for (std::vector<std::string>::const_iterator iSlot = slotsVec.begin(), iEnd = slotsVec.end(); iSlot != iEnd;
+         ++iSlot) {
         if (iSlot->empty()) continue; // before first or after last '|'
 
         // Find slot ID in map and increase statistics.
@@ -255,7 +235,6 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t
 
 
 bool BrokerStatistics::slotReceivedBy(const SlotId& slot, const std::unordered_set<std::string>& receivers) const {
-
     if (receivers.empty()) {
         return true;
     }
@@ -269,7 +248,6 @@ bool BrokerStatistics::slotReceivedBy(const SlotId& slot, const std::unordered_s
 
 
 void BrokerStatistics::registerLogMessage(size_t bodySize) {
-
     // We have no clue who sends or receives log messages.
     // Treat them as sent and received once:
     const SignalId signalKey("?", "log");
@@ -286,8 +264,7 @@ void BrokerStatistics::registerLogMessage(size_t bodySize) {
 ////////////////////////////////////////////////////////////////////////////
 
 
-void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp,
-                                       float elapsedSeconds) const {
+void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp, float elapsedSeconds) const {
     std::string when;
     try {
         when = timeStamp.toFormattedString() += " (UTC)";
@@ -297,10 +274,9 @@ void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp,
         when = timeStamp.toIso8601Ext(); // This works - but human readability is reduced...
     }
     // Print kind of header
-    std::cout << "\n" << m_delimLine << m_delimLine
-            << std::setprecision(2) << std::fixed // 2 digits, keep 0s
-            << when << " - average over "
-            << elapsedSeconds << " s:\n";
+    std::cout << "\n"
+              << m_delimLine << m_delimLine << std::setprecision(2) << std::fixed // 2 digits, keep 0s
+              << when << " - average over " << elapsedSeconds << " s:\n";
 
 
     std::cout << "Senders:\n" << m_delimLine.substr(0, 8) << "\n";
@@ -318,10 +294,8 @@ void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp,
 
 
 template <typename StatsMap>
-BrokerStatistics::Stats
-BrokerStatistics::printStatistics(const StatsMap& statsMap,
-                                  const util::Epochstamp& timeStamp,
-                                  float elapsedSeconds) const {
+BrokerStatistics::Stats BrokerStatistics::printStatistics(const StatsMap& statsMap, const util::Epochstamp& timeStamp,
+                                                          float elapsedSeconds) const {
     // Iterators for looping through map of stats:
     typename StatsMap::const_iterator iter = statsMap.begin();
     const typename StatsMap::const_iterator end = statsMap.end();
@@ -336,7 +310,7 @@ BrokerStatistics::printStatistics(const StatsMap& statsMap,
     // Now loop and print for each signal:
     for (; iter != end; ++iter) {
         const Stats& stats = iter->second; // i.e. count & sum_of_bytes
-        if (stats.first) { // i.e. if some counts
+        if (stats.first) {                 // i.e. if some counts
             this->printLine(iter->first, stats, elapsedSeconds);
         }
         numTotal += stats.first;
@@ -360,23 +334,23 @@ BrokerStatistics::printStatistics(const StatsMap& statsMap,
 
 
 template <class IdType>
-void BrokerStatistics::printLine(const IdType& id, const Stats& stats,
-                                 float elapsedSeconds) const {
+void BrokerStatistics::printLine(const IdType& id, const Stats& stats, float elapsedSeconds) const {
     const float kBytes = stats.first ? stats.second / (1.e3f * stats.first) : 0.f;
 
     this->printId(std::cout, id);
-    std::cout << ":"
-            << std::right << std::setw(6) << stats.first / elapsedSeconds << " Hz,"
-            << std::right << std::setw(6) << kBytes << " kB\n";
+    std::cout << ":" << std::right << std::setw(6) << stats.first / elapsedSeconds << " Hz," << std::right
+              << std::setw(6) << kBytes << " kB\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
 
-std::pair<std::vector<std::string>, std::vector<std::string>>
-instancesOfServers(const std::string& serverIn, const std::string& serverOut, unsigned int sleepSeconds, bool debug) {
-    std::pair<std::vector<std::string>, std::vector < std::string>> receiversSenders;
+std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers(const std::string& serverIn,
+                                                                                 const std::string& serverOut,
+                                                                                 unsigned int sleepSeconds,
+                                                                                 bool debug) {
+    std::pair<std::vector<std::string>, std::vector<std::string>> receiversSenders;
 
     if (!serverIn.empty() || !serverOut.empty()) {
         std::cout << "\nGathering topology to identify devices of servers. . " << std::flush;
@@ -386,9 +360,10 @@ instancesOfServers(const std::string& serverIn, const std::string& serverOut, un
         boost::thread thread(boost::bind(&net::EventLoop::work));
         std::cout << ". " << std::flush;
 
-        auto client = boost::make_shared<core::DeviceClient>("", false); // default unique id, explicitly call initialize()
+        auto client =
+              boost::make_shared<core::DeviceClient>("", false); // default unique id, explicitly call initialize()
         client->initialize();
-        std::cout << ". " << std::flush; // output some progress markers...
+        std::cout << ". " << std::flush;  // output some progress markers...
         client->enableInstanceTracking(); // blocking a while to gather topology
         std::cout << ". " << std::flush;
 
@@ -404,7 +379,7 @@ instancesOfServers(const std::string& serverIn, const std::string& serverOut, un
             const std::vector<std::string> devices(client->getDevices(serverIn));
             if (debug) {
                 std::cout << "\nFound " << devices.size() << " devices of receiving server " << serverIn << ": "
-                        << util::toString(devices) << std::endl;
+                          << util::toString(devices) << std::endl;
             }
             instances.insert(instances.end(), devices.begin(), devices.end());
         }
@@ -414,7 +389,7 @@ instancesOfServers(const std::string& serverIn, const std::string& serverOut, un
             const std::vector<std::string> devices(client->getDevices(serverOut));
             if (debug) {
                 std::cout << "\nFound " << devices.size() << " devices of sending server " << serverOut << ": "
-                        << util::toString(devices) << std::endl;
+                          << util::toString(devices) << std::endl;
             }
             instances.insert(instances.end(), devices.begin(), devices.end());
         }
@@ -432,28 +407,28 @@ void printHelp(const char* name) {
         nameStr.replace(0, lastSlashPos + 1, "");
     }
     std::cout << "\n  " << nameStr << " [-h|--help] [other options with values] [interval]\n\n"
-            << "Prints the rate and average size of all signals sent to the "
-            << "broker and of\n"
-            << "the intended calls of the slots that receive the signals.\n"
-            << "Broker host and topic are read from the usual environment "
-            << "variables\nKARABO_BROKER and KARABO_BROKER_TOPIC or, if "
-            << "these are not defined, use the\n"
-            << "usual defaults. Optional 'interval' argument specifies the time in seconds\n"
-            << "for averaging (default: 5).\n"
-            << "Available options:\n"
-            << "   --receivers a[,b[,c[,...]]]  Consider only messages FOR given ids\n"
-            << "   --senders a[,b[,c[,...]]]    Consider only messages FROM given ids\n"
-            << "   --receiversServer serverId   Consider only messages FOR given serverId,\n"
-            << "                                   including its devices\n"
-            << "   --sendersServer serverId     Consider only messages FROM given serverId,\n"
-            << "                                   including its devices\n"
-            << "   --discoveryWait seconds      Extra seconds for topology discovery\n"
-            << "   --debug y|n                  If yes, adds some debug output\n\n"
-            << "The options '--receiversServer' and '--sendersServer' require to discover the\n"
-            << "topology of the Karabo installation. If a server of interest is slowly\n"
-            << "responding, the normal discovery time might be too short to identify all its\n"
-            << "devices and some extra delay should be added using '--discoveryWait'.\n"
-            << std::endl;
+              << "Prints the rate and average size of all signals sent to the "
+              << "broker and of\n"
+              << "the intended calls of the slots that receive the signals.\n"
+              << "Broker host and topic are read from the usual environment "
+              << "variables\nKARABO_BROKER and KARABO_BROKER_TOPIC or, if "
+              << "these are not defined, use the\n"
+              << "usual defaults. Optional 'interval' argument specifies the time in seconds\n"
+              << "for averaging (default: 5).\n"
+              << "Available options:\n"
+              << "   --receivers a[,b[,c[,...]]]  Consider only messages FOR given ids\n"
+              << "   --senders a[,b[,c[,...]]]    Consider only messages FROM given ids\n"
+              << "   --receiversServer serverId   Consider only messages FOR given serverId,\n"
+              << "                                   including its devices\n"
+              << "   --sendersServer serverId     Consider only messages FROM given serverId,\n"
+              << "                                   including its devices\n"
+              << "   --discoveryWait seconds      Extra seconds for topology discovery\n"
+              << "   --debug y|n                  If yes, adds some debug output\n\n"
+              << "The options '--receiversServer' and '--sendersServer' require to discover the\n"
+              << "topology of the Karabo installation. If a server of interest is slowly\n"
+              << "responding, the normal discovery time might be too short to identify all its\n"
+              << "devices and some extra delay should be added using '--discoveryWait'.\n"
+              << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -462,16 +437,11 @@ void printHelp(const char* name) {
 
 
 int main(int argc, const char** argv) {
-
     net::EventLoop::addThread(2); // e.g. for JmsConsumer's serializer and handler strands
 
     // Setup option defaults
-    karabo::util::Hash options("period", static_cast<util::TimeValue> (5ull),
-                               "--receivers", "",
-                               "--senders", "",
-                               "--receiversServer", "",
-                               "--sendersServer", "",
-                               "--discoveryWait", "0");
+    karabo::util::Hash options("period", static_cast<util::TimeValue>(5ull), "--receivers", "", "--senders", "",
+                               "--receiversServer", "", "--sendersServer", "", "--discoveryWait", "0");
     for (int i = 1; i < argc; i += 2) {
         const std::string argv_i(argv[i]);
         if (argv_i == "-h" || argv_i == "--help") { // both for backward compatibility
@@ -480,9 +450,8 @@ int main(int argc, const char** argv) {
         } else if (argc == i + 1) {
             // The last of an odd number of arguments maybe the averaging period
             options.set("period", strtoull(argv[i], 0, 0));
-        } else if (argv_i != "--receivers" && argv_i != "--senders"
-                   && argv_i != "--receiversServer" && argv_i != "--sendersServer"
-                   && argv_i != "--discoveryWait" && argv_i != "--debug") {
+        } else if (argv_i != "--receivers" && argv_i != "--senders" && argv_i != "--receiversServer" &&
+                   argv_i != "--sendersServer" && argv_i != "--discoveryWait" && argv_i != "--debug") {
             printHelp(argv[0]);
             return EXIT_FAILURE;
         } else {
@@ -496,13 +465,14 @@ int main(int argc, const char** argv) {
     const util::TimeValue interval = options.get<util::TimeValue>("period");
 
     // Unpack configured senders and receivers.
-    std::vector<std::string> receivers(karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--receivers")));
-    std::vector<std::string> senders(karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--senders")));
+    std::vector<std::string> receivers(
+          karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--receivers")));
+    std::vector<std::string> senders(
+          karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--senders")));
     // If full servers are requested, unpack and insert to senders and receivers as well.
-    const auto recAndSendFromServers = instancesOfServers(options.get<std::string>("--receiversServer"),
-                                                          options.get<std::string>("--sendersServer"),
-                                                          util::fromString<unsigned int>(options.get<std::string>("--discoveryWait")),
-                                                          debug);
+    const auto recAndSendFromServers =
+          instancesOfServers(options.get<std::string>("--receiversServer"), options.get<std::string>("--sendersServer"),
+                             util::fromString<unsigned int>(options.get<std::string>("--discoveryWait")), debug);
     receivers.insert(receivers.end(), recAndSendFromServers.first.begin(), recAndSendFromServers.first.end());
     senders.insert(senders.end(), recAndSendFromServers.second.begin(), recAndSendFromServers.second.end());
 
@@ -540,17 +510,15 @@ int main(int argc, const char** argv) {
         // 3rd argument true: skip serialisation (but get access to raw message size)!
         net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
 
-        std::cout << "\nStart monitoring signal and slot rates of \n   topic         '"
-                << topic << "'\n   on broker     '"
-                << connection->getBrokerUrl() << "',\n   ";
+        std::cout << "\nStart monitoring signal and slot rates of \n   topic         '" << topic
+                  << "'\n   on broker     '" << connection->getBrokerUrl() << "',\n   ";
         if (!receivers.empty()) {
             std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
         }
         if (!senders.empty()) {
             std::cout << "messages from '" << util::toString(senders) << "',\n   ";
         }
-        std::cout << "interval is   " << interval << " s."
-                << std::endl;
+        std::cout << "interval is   " << interval << " s." << std::endl;
 
         // Register our registration message as async reader:
         boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));

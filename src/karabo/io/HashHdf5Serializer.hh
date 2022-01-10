@@ -7,26 +7,20 @@
  */
 
 
-
-
-
 #ifndef KARABO_IO_H5_HASHHDF5SERIALIZER_HH
-#define	KARABO_IO_H5_HASHHDF5SERIALIZER_HH
+#define KARABO_IO_H5_HASHHDF5SERIALIZER_HH
 
-#include "h5/ErrorHandler.hh"
-
+#include <hdf5/hdf5.h>
 
 #include <iostream>
-#include <hdf5/hdf5.h>
-#include "Hdf5Serializer.hh"
 #include <karabo/io/h5/ErrorHandler.hh>
 #include <karabo/io/h5/TypeTraits.hh>
 #include <karabo/io/h5/VLArray.hh>
-
-
 #include <string>
 #include <vector>
 
+#include "Hdf5Serializer.hh"
+#include "h5/ErrorHandler.hh"
 
 
 namespace karabo {
@@ -36,16 +30,14 @@ namespace karabo {
          * @class HashHdf5Serializer
          * @brief The HashHdf5Serializer provides an implementation of Hdf5Serializer
          *        for the karabo::util::Hash
-         * 
+         *
          * While a karabo::util::Hash can in principle hold arbitrary data types, Hash
          * serialization is limited to data types known to the karabo::util::Types type
          * system. Hashes containing other data types will lead to exceptions during
          * serialization.
          */
         class HashHdf5Serializer : public Hdf5Serializer<karabo::util::Hash> {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(HashHdf5Serializer, "h5", "1.0")
 
             HashHdf5Serializer(const karabo::util::Hash& input);
@@ -56,10 +48,9 @@ namespace karabo {
 
             void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName);
 
-            unsigned long long size(hid_t h5file, const std::string & groupName);
+            unsigned long long size(hid_t h5file, const std::string& groupName);
 
-        private:
-
+           private:
             // members
 
 
@@ -83,7 +74,7 @@ namespace karabo {
 
             void serializeAttributes(const karabo::util::Hash::Node& el, hid_t h5obj);
 
-            template<class T>
+            template <class T>
             void serializeNode(const karabo::util::Hash::Node& node, hid_t group);
 
             void serializeNodeByte(const karabo::util::Hash::Node& node, hid_t group);
@@ -92,18 +83,19 @@ namespace karabo {
 
             void serializeNodeBool(const karabo::util::Hash::Node& node, hid_t group);
 
-            template<class U>
+            template <class U>
             void serializeNodeComplex(const karabo::util::Hash::Node& node, hid_t group);
 
-            template<typename T>
+            template <typename T>
             void serializeNodeSequence(const karabo::util::Hash::Node& node, hid_t group);
 
-            template<typename T>
-            herr_t wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId, const std::vector<T>& value);
+            template <typename T>
+            herr_t wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId,
+                                            const std::vector<T>& value);
 
             void serializeNodeSequenceBool(const karabo::util::Hash::Node& node, hid_t group);
 
-            template<class U>
+            template <class U>
             void serializeNodeSequenceComplex(const karabo::util::Hash::Node& node, hid_t group);
 
             void serializeNodeSequenceByte(const karabo::util::Hash::Node& node, hid_t group);
@@ -112,10 +104,10 @@ namespace karabo {
 
             // implementation of save,  Attributes
 
-            template<typename T>
+            template <typename T>
             void writeSingleAttribute(hid_t group, const T& value, const std::string& key);
 
-            void writeSingleAttribute(hid_t group, const char& value, const std::string & key);
+            void writeSingleAttribute(hid_t group, const char& value, const std::string& key);
 
             void writeSingleAttribute(hid_t group, const std::string& value, const std::string& key);
 
@@ -125,17 +117,19 @@ namespace karabo {
 
             void writeSingleAttribute(hid_t group, const std::complex<double>& value, const std::string& key);
 
-            template<typename T>
+            template <typename T>
             void writeSequenceAttribute(hid_t group, const std::vector<T>& value, const std::string& key);
 
-            template<typename T>
+            template <typename T>
             herr_t wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid, const std::vector<T>& value);
 
             void writeSequenceAttribute(hid_t group, const std::vector<char>& value, const std::string& key);
 
-            void writeSequenceAttribute(hid_t group, const std::vector< std::complex<float> >& value, const std::string& key);
+            void writeSequenceAttribute(hid_t group, const std::vector<std::complex<float> >& value,
+                                        const std::string& key);
 
-            void writeSequenceAttribute(hid_t group, const std::vector< std::complex<double> >& value, const std::string& key);
+            void writeSequenceAttribute(hid_t group, const std::vector<std::complex<double> >& value,
+                                        const std::string& key);
 
             void writeSequenceAttribute(hid_t group, const std::vector<bool>& value, const std::string& key);
 
@@ -146,55 +140,68 @@ namespace karabo {
 
             void serializeHashElement(hid_t group, const std::string& name, karabo::util::Hash& data);
 
-            void serializeVectorOfHashesElement(hid_t gid, const std::string& name, karabo::util::Hash& data, hsize_t& idx, hid_t group);
+            void serializeVectorOfHashesElement(hid_t gid, const std::string& name, karabo::util::Hash& data,
+                                                hsize_t& idx, hid_t group);
 
             void serializeDataElement(hid_t dsId, const std::string& name, karabo::util::Hash& data);
 
-            template<class T>
+            template <class T>
             void readSingleValue(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
 
             void readSingleString(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
 
             void readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
 
-            template<class T>
-            void readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+            template <class T>
+            void readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name,
+                                   karabo::util::Hash& data);
 
-            template<class T>
-            void readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+            template <class T>
+            void readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims,
+                                           const std::string& name, karabo::util::Hash& data);
 
-            void readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+            void readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name,
+                                    karabo::util::Hash& data);
 
-            void readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+            void readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims,
+                                          const std::string& name, karabo::util::Hash& data);
 
             void readSequenceBytes(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
 
             void serializeAttributes(hid_t h5obj, karabo::util::Hash::Node& node, bool krb = false);
 
-            template<class T>
-            void readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name);
+            template <class T>
+            void readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node,
+                                     const std::string& name);
 
-            void readSingleAttributeString(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name);
+            void readSingleAttributeString(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node,
+                                           const std::string& name);
 
-            void readSingleAttributeUnsignedChar(hid_t dsId, hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name);
+            void readSingleAttributeUnsignedChar(hid_t dsId, hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node,
+                                                 const std::string& name);
 
-            template<class T>
-            void readSequenceAttribute(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
+            template <class T>
+            void readSequenceAttribute(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims,
+                                       karabo::util::Hash::Node& node, const std::string& name);
 
-            void readSequenceAttributeBytes(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
+            void readSequenceAttributeBytes(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims,
+                                            karabo::util::Hash::Node& node, const std::string& name);
 
-            void readSequenceAttributeUnsignedChar(hid_t h5obj, hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
+            void readSequenceAttributeUnsignedChar(hid_t h5obj, hid_t attrId, hid_t typeId,
+                                                   const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node,
+                                                   const std::string& name);
 
-            void readSequenceAttributeString(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
+            void readSequenceAttributeString(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims,
+                                             karabo::util::Hash::Node& node, const std::string& name);
 
-            template<class T>
-            void readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
-
+            template <class T>
+            void readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid,
+                                                    const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node,
+                                                    const std::string& name);
         };
 
-        template<class T>
+        template <class T>
         inline void HashHdf5Serializer::serializeNode(const karabo::util::Hash::Node& node, hid_t group) {
-
             const std::string& key = node.getKey();
             try {
                 const T& value = node.getValue<T>();
@@ -212,7 +219,7 @@ namespace karabo {
             }
         }
 
-        template<class U>
+        template <class U>
         inline void HashHdf5Serializer::serializeNodeComplex(const karabo::util::Hash::Node& node, hid_t group) {
             const std::string& key = node.getKey();
             try {
@@ -235,7 +242,7 @@ namespace karabo {
             }
         }
 
-        template<typename T>
+        template <typename T>
         inline void HashHdf5Serializer::serializeNodeSequence(const karabo::util::Hash::Node& node, hid_t group) {
             const std::string& key = node.getKey();
             try {
@@ -259,27 +266,32 @@ namespace karabo {
             }
         }
 
-        template<typename T>
-        inline herr_t HashHdf5Serializer::wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId, const std::vector<T>& value) {
+        template <typename T>
+        inline herr_t HashHdf5Serializer::wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid,
+                                                                   const hid_t spaceId, const std::vector<T>& value) {
             return H5Dwrite(dsId, ntid, spaceId, spaceId, H5P_DEFAULT, &value[0]);
         }
 
-        template<>
-        inline herr_t HashHdf5Serializer::wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid, const hid_t spaceId, const std::vector<std::string>& value) {
-            // std::string is NOT guaranteed to look like a C-style string in memory. Copy pointers to the strings before writing.
+        template <>
+        inline herr_t HashHdf5Serializer::wrappedSequenceNodeWrite(const hid_t dsId, const hid_t ntid,
+                                                                   const hid_t spaceId,
+                                                                   const std::vector<std::string>& value) {
+            // std::string is NOT guaranteed to look like a C-style string in memory. Copy pointers to the strings
+            // before writing.
             size_t len = value.size();
-            std::vector<const char *> converted(len, NULL);
-            for (size_t i=0; i < len; ++i) {
+            std::vector<const char*> converted(len, NULL);
+            for (size_t i = 0; i < len; ++i) {
                 converted[i] = value[i].c_str();
             }
             return H5Dwrite(dsId, ntid, spaceId, spaceId, H5P_DEFAULT, &converted[0]);
         }
 
-        template<class U>
-        inline void HashHdf5Serializer::serializeNodeSequenceComplex(const karabo::util::Hash::Node& node, hid_t group) {
+        template <class U>
+        inline void HashHdf5Serializer::serializeNodeSequenceComplex(const karabo::util::Hash::Node& node,
+                                                                     hid_t group) {
             const std::string& key = node.getKey();
             try {
-                const std::vector<std::complex<U> >& value = node.getValue<std::vector< std::complex<U> > >();
+                const std::vector<std::complex<U> >& value = node.getValue<std::vector<std::complex<U> > >();
                 hsize_t len = value.size();
                 hsize_t dims[] = {len, 2};
                 hid_t spaceId = H5Screate_simple(2, dims, NULL);
@@ -297,13 +309,12 @@ namespace karabo {
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
             }
-
         }
 
 
         // Attributes
 
-        template<typename T>
+        template <typename T>
         inline void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const T& value, const std::string& key) {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<T>();
@@ -319,8 +330,9 @@ namespace karabo {
             }
         }
 
-        template<typename T>
-        inline void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector<T>& value, const std::string& key) {
+        template <typename T>
+        inline void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector<T>& value,
+                                                               const std::string& key) {
             try {
                 hsize_t len = value.size();
                 hsize_t dims[] = {len};
@@ -340,17 +352,20 @@ namespace karabo {
             }
         }
 
-        template<typename T>
-        herr_t HashHdf5Serializer::wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid, const std::vector<T>& value) {
+        template <typename T>
+        herr_t HashHdf5Serializer::wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid,
+                                                                 const std::vector<T>& value) {
             return H5Awrite(attrId, ntid, &value[0]);
         }
 
-        template<>
-        herr_t HashHdf5Serializer::wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid, const std::vector<std::string>& value) {
-            // std::string is NOT guaranteed to look like a C-style string in memory. Copy pointers to the strings before writing.
+        template <>
+        herr_t HashHdf5Serializer::wrappedSequenceAttributeWrite(const hid_t attrId, const hid_t ntid,
+                                                                 const std::vector<std::string>& value) {
+            // std::string is NOT guaranteed to look like a C-style string in memory. Copy pointers to the strings
+            // before writing.
             size_t len = value.size();
             std::vector<const char*> converted(len, NULL);
-            for (size_t i=0; i < len; ++i) {
+            for (size_t i = 0; i < len; ++i) {
                 converted[i] = value[i].c_str();
             }
             return H5Awrite(attrId, ntid, &converted[0]);
@@ -359,14 +374,16 @@ namespace karabo {
 
         //
 
-        template<class T>
-        inline void HashHdf5Serializer::readSingleValue(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
+        template <class T>
+        inline void HashHdf5Serializer::readSingleValue(hid_t dsId, hid_t tid, const std::string& name,
+                                                        karabo::util::Hash& data) {
             T& value = data.bindReference<T>(name);
             KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
         }
 
-        template<class T>
-        inline void HashHdf5Serializer::readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+        template <class T>
+        inline void HashHdf5Serializer::readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims,
+                                                          const std::string& name, karabo::util::Hash& data) {
             hsize_t size = dims[0];
             for (size_t i = 1; i < dims.size(); ++i) {
                 size *= dims[i];
@@ -376,11 +393,13 @@ namespace karabo {
             KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
         }
 
-        template<class T>
-        inline void HashHdf5Serializer::readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+        template <class T>
+        inline void HashHdf5Serializer::readSequenceFloatingPoint(hid_t dsId, hid_t tid,
+                                                                  const std::vector<hsize_t>& dims,
+                                                                  const std::string& name, karabo::util::Hash& data) {
             hsize_t size = dims[0];
             if (dims.size() == 2) {
-                //vector< complex<T> >
+                // vector< complex<T> >
                 std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(name);
                 vec.resize(size, std::complex<T>(0, 0));
                 KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
@@ -396,21 +415,24 @@ namespace karabo {
                 } else {
                     // vector<T>
                     std::vector<T>& vec = data.bindReference<std::vector<T> >(name);
-                    vec.resize(size, static_cast<T> (0));
+                    vec.resize(size, static_cast<T>(0));
                     KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
                 }
             }
         }
 
-        template<class T>
-        inline void HashHdf5Serializer::readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name) {
+        template <class T>
+        inline void HashHdf5Serializer::readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node,
+                                                            const std::string& name) {
             T value;
             KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &value));
             node.setAttribute(name, value);
         }
 
-        template<class T>
-        inline void HashHdf5Serializer::readSequenceAttribute(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
+        template <class T>
+        inline void HashHdf5Serializer::readSequenceAttribute(hid_t attrId, hid_t typeId,
+                                                              const std::vector<hsize_t>& dims,
+                                                              karabo::util::Hash::Node& node, const std::string& name) {
             hsize_t size = dims[0];
             node.setAttribute(name, std::vector<T>(0, 0));
             std::vector<T>& vec = node.getAttribute<std::vector<T> >(name);
@@ -418,11 +440,14 @@ namespace karabo {
             KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &vec[0]));
         }
 
-        template<class T>
-        inline void HashHdf5Serializer::readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
+        template <class T>
+        inline void HashHdf5Serializer::readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid,
+                                                                           const std::vector<hsize_t>& dims,
+                                                                           karabo::util::Hash::Node& node,
+                                                                           const std::string& name) {
             hsize_t size = dims[0];
             if (dims.size() == 2) {
-                //vector< complex<T> >
+                // vector< complex<T> >
                 std::vector<std::complex<T> > vec(size, std::complex<T>(0, 0));
                 KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
                 node.setAttribute(name, vec);
@@ -439,7 +464,7 @@ namespace karabo {
                     node.setAttribute(name, value);
                 } else {
                     // vector<T>
-                    std::vector<T> vec(size, static_cast<T> (0));
+                    std::vector<T> vec(size, static_cast<T>(0));
                     KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
                     node.setAttribute(name, vec);
                 }
@@ -447,10 +472,8 @@ namespace karabo {
         }
 
 
-
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 
 #endif
-

@@ -1,11 +1,12 @@
-#include <iostream>
 #include "ScopedGILAcquire.hh"
+
+#include <iostream>
 
 namespace karathon {
 
     /**
      * Here we are implementing C API version of what is similar to the following Python code
-     * 
+     *
      * exc = ""
      * try:
      *    ... <Python code that can raise exception...>
@@ -17,7 +18,7 @@ namespace karathon {
     std::string getPythonExceptionAsString() {
         // Fetch parameters of error indicator ... the error indicator is getting cleared!
         // ... the new references returned!
-        PyObject *ptype, *pvalue, * ptraceback;
+        PyObject *ptype, *pvalue, *ptraceback;
 
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
         PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
@@ -36,7 +37,7 @@ namespace karathon {
                 } else {
                     pystr = NULL;
                 }
-            } 
+            }
             if (pvalue && !pystr) {
                 pystr = PyObject_Str(pvalue);
             }
@@ -55,5 +56,4 @@ namespace karathon {
 
         return result;
     }
-}
-
+} // namespace karathon

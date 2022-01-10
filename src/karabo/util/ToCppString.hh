@@ -9,16 +9,14 @@
 #include "ToType.hh"
 
 #ifndef KARABO_UTIL_TOCPPSTRING_HH
-#define	KARABO_UTIL_TOCPPSTRING_HH
+#define KARABO_UTIL_TOCPPSTRING_HH
 
 namespace karabo {
 
     namespace util {
 
         class ToCppString {
-
-        public:
-
+           public:
             typedef std::string ReturnType;
 
             template <int RefType>
@@ -81,8 +79,7 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, HASH_POINTER, "Hash::Pointer")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_HASH_POINTER, "vector<Hash::Pointer>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, BYTE_ARRAY, "std::pair<boost::shared_ptr<char>,size_t>")
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif
-

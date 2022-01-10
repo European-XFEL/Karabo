@@ -6,40 +6,32 @@
  */
 
 #include "StatisticalEvaluator_Test.hh"
-#include <karabo/util/TimePeriod.hh>
-#include <karabo/util/TimeDuration.hh>
-#include <karabo/util/TimeProfiler.hh>
-#include <karabo/util/Validator.hh>
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/SimpleElement.hh>
-
-
-#include <iostream>
+#include <karabo/util/TimeDuration.hh>
+#include <karabo/util/TimePeriod.hh>
+#include <karabo/util/TimeProfiler.hh>
+#include <karabo/util/Validator.hh>
 #include <sstream>
-#include <iomanip>
-#include <cmath>
-
-
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION(StatisticalEvaluator);
 
 
-StatisticalEvaluator::StatisticalEvaluator() {
-}
+StatisticalEvaluator::StatisticalEvaluator() {}
 
 
-StatisticalEvaluator::~StatisticalEvaluator() {
-}
+StatisticalEvaluator::~StatisticalEvaluator() {}
 
 
-void StatisticalEvaluator::setUp() {
-
-}
+void StatisticalEvaluator::setUp() {}
 
 
-void StatisticalEvaluator::tearDown() {
-}
+void StatisticalEvaluator::tearDown() {}
 
 
 void StatisticalEvaluator::testMean() {
@@ -103,7 +95,6 @@ void StatisticalEvaluator::testSmallNumbers() {
         stat100.update(123e-9);
         stat100.update(-123e-9);
         stat100.update(4123e-9);
-
     }
 
     CPPUNIT_ASSERT(fabs(stat100.getRollingWindowMean() - 4.494e-07) < EPSILON_MEAN);
@@ -125,8 +116,6 @@ void StatisticalEvaluator::testSmallNumbers() {
 
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 4.494e-07) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50465324e-12) < EPSILON_VAR);
-
-
 }
 
 
@@ -190,9 +179,6 @@ void StatisticalEvaluator::testLargeNumbers() {
 
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowMean() - 449400000000.0) < EPSILON_MEAN);
     CPPUNIT_ASSERT(fabs(stat1000.getRollingWindowVariance() - 1.50616e+24) < EPSILON_VAR);
-
-
-
 }
 
 
@@ -270,14 +256,12 @@ void StatisticalEvaluator::testPerformance() {
 
     profiler.close();
 
-    KARABO_LOG_FRAMEWORK_DEBUG << "Single var time (100000 updates and reads): " << profiler.getPeriod("varianceSingle").getDuration() << " [s]";
-
-
+    KARABO_LOG_FRAMEWORK_DEBUG << "Single var time (100000 updates and reads): "
+                               << profiler.getPeriod("varianceSingle").getDuration() << " [s]";
 }
 
 
 void StatisticalEvaluator::testValidatorPerformance() {
-
     using namespace karabo::util;
 
     TimeProfiler profiler("TestProfiler");
@@ -289,35 +273,62 @@ void StatisticalEvaluator::testValidatorPerformance() {
     for (int i = 0; i < 50; i++) {
         std::ostringstream key_s;
         key_s << i;
-        INT8_ELEMENT(schema).key("i8_" + key_s.str())
-                .readOnly().initialValue(0)
-                .enableRollingStats()
-                .warnVarianceLow(0).needsAcknowledging(true)
-                .warnVarianceHigh(255).needsAcknowledging(true)
-                .evaluationInterval(100)
-                .commit();
-        UINT16_ELEMENT(schema).key("ui16_" + key_s.str())
-                .readOnly().initialValue(0)
-                .enableRollingStats()
-                .warnVarianceLow(0).needsAcknowledging(true)
-                .warnVarianceHigh(255).info("Test").needsAcknowledging(true)
-                .evaluationInterval(1000)
-                .commit();
-        FLOAT_ELEMENT(schema).key("f_" + key_s.str())
-                .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).needsAcknowledging(true)
-                .warnVarianceHigh(255).needsAcknowledging(true).evaluationInterval(10)
-                .commit();
-        DOUBLE_ELEMENT(schema).key("d_" + key_s.str())
-                .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).needsAcknowledging(true)
-                .warnVarianceHigh(255).needsAcknowledging(true).evaluationInterval(1000)
-                .commit();
-        UINT64_ELEMENT(schema).key("ui64_" + key_s.str())
-                .readOnly().initialValue(0)
-                .enableRollingStats().warnVarianceLow(0).needsAcknowledging(true)
-                .warnVarianceHigh(255).needsAcknowledging(true).evaluationInterval(100)
-                .commit();
+        INT8_ELEMENT(schema)
+              .key("i8_" + key_s.str())
+              .readOnly()
+              .initialValue(0)
+              .enableRollingStats()
+              .warnVarianceLow(0)
+              .needsAcknowledging(true)
+              .warnVarianceHigh(255)
+              .needsAcknowledging(true)
+              .evaluationInterval(100)
+              .commit();
+        UINT16_ELEMENT(schema)
+              .key("ui16_" + key_s.str())
+              .readOnly()
+              .initialValue(0)
+              .enableRollingStats()
+              .warnVarianceLow(0)
+              .needsAcknowledging(true)
+              .warnVarianceHigh(255)
+              .info("Test")
+              .needsAcknowledging(true)
+              .evaluationInterval(1000)
+              .commit();
+        FLOAT_ELEMENT(schema)
+              .key("f_" + key_s.str())
+              .readOnly()
+              .initialValue(0)
+              .enableRollingStats()
+              .warnVarianceLow(0)
+              .needsAcknowledging(true)
+              .warnVarianceHigh(255)
+              .needsAcknowledging(true)
+              .evaluationInterval(10)
+              .commit();
+        DOUBLE_ELEMENT(schema)
+              .key("d_" + key_s.str())
+              .readOnly()
+              .initialValue(0)
+              .enableRollingStats()
+              .warnVarianceLow(0)
+              .needsAcknowledging(true)
+              .warnVarianceHigh(255)
+              .needsAcknowledging(true)
+              .evaluationInterval(1000)
+              .commit();
+        UINT64_ELEMENT(schema)
+              .key("ui64_" + key_s.str())
+              .readOnly()
+              .initialValue(0)
+              .enableRollingStats()
+              .warnVarianceLow(0)
+              .needsAcknowledging(true)
+              .warnVarianceHigh(255)
+              .needsAcknowledging(true)
+              .evaluationInterval(100)
+              .commit();
     }
 
     profiler.startPeriod("varianceValidator");
@@ -335,14 +346,12 @@ void StatisticalEvaluator::testValidatorPerformance() {
             h.set("d_" + key_s.str(), 1);
             h.set("ui64_" + key_s.str(), 1);
             std::pair<bool, std::string> r = val.validate(schema, h, h_out);
-
         }
     }
     profiler.stopPeriod("varianceValidator");
 
     profiler.close();
 
-    KARABO_LOG_FRAMEWORK_DEBUG << "Validation time 250 properties: " << profiler.getPeriod("varianceValidator").getDuration() / 10 << " [s/per validation]";
-
-
+    KARABO_LOG_FRAMEWORK_DEBUG << "Validation time 250 properties: "
+                               << profiler.getPeriod("varianceValidator").getDuration() / 10 << " [s/per validation]";
 }

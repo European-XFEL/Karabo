@@ -12,42 +12,40 @@ namespace karathon {
      * Specialisation of HandlerWrap for error handling
      */
     class ErrorHandlerWrap : public HandlerWrap<> {
-        public:
-            ErrorHandlerWrap(const bp::object& handler, char const * const where)
-                : HandlerWrap<>(handler, where) {
-            }
+       public:
+        ErrorHandlerWrap(const bp::object& handler, char const* const where) : HandlerWrap<>(handler, where) {}
 
-            void operator() () const {
-                std::string msg;
-                try {
-                    throw; // rethrow the exception
-                } catch (karabo::util::Exception& e) {
-                    // TODO: Optimise on the string content!
-                    //       E.g. just type and message from ExceptionInfo
-                    msg = e.userFriendlyMsg(true);
-                } catch (const std::exception& e) {
-                    msg = e.what();
-                }
-                ScopedGILAcquire gil;
-                try {
-                    if (*m_handler) {
-                        (*m_handler)(msg);
-                    }
-                } catch (const bp::error_already_set& e) {
-                    karathon::detail::treatError_already_set(*m_handler, m_where);
-                } catch (...) {
-                    KARABO_RETHROW
-                }
+        void operator()() const {
+            std::string msg;
+            try {
+                throw; // rethrow the exception
+            } catch (karabo::util::Exception& e) {
+                // TODO: Optimise on the string content!
+                //       E.g. just type and message from ExceptionInfo
+                msg = e.userFriendlyMsg(true);
+            } catch (const std::exception& e) {
+                msg = e.what();
             }
+            ScopedGILAcquire gil;
+            try {
+                if (*m_handler) {
+                    (*m_handler)(msg);
+                }
+            } catch (const bp::error_already_set& e) {
+                karathon::detail::treatError_already_set(*m_handler, m_where);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
     };
 
 
     SignalSlotableWrap::RequestorWrap::RequestorWrap(karabo::xms::SignalSlotable* signalSlotable)
-        : karabo::xms::SignalSlotable::Requestor(signalSlotable) {
-    }
+        : karabo::xms::SignalSlotable::Requestor(signalSlotable) {}
 
-    void SignalSlotableWrap::RequestorWrap::receiveAsyncPy(const bp::object& replyCallback, const bp::object& errorCallback,
-                                                           const bp::object& timeoutMs, const bp::object& numCallbackArgs) {
+    void SignalSlotableWrap::RequestorWrap::receiveAsyncPy(const bp::object& replyCallback,
+                                                           const bp::object& errorCallback, const bp::object& timeoutMs,
+                                                           const bp::object& numCallbackArgs) {
         // Forward timeout if specified
         if (timeoutMs.ptr() != Py_None) {
             timeout(bp::extract<int>(timeoutMs));
@@ -65,10 +63,9 @@ namespace karathon {
             numReturnArgs = Wrapper::numArgs(replyCallback);
         }
         switch (numReturnArgs) {
-            case 0:
-            {
+            case 0: {
                 // Do everthing (incl. copying) on boost::object with GIL.
-                boost::function<void ()> handler(HandlerWrap<>(replyCallback, "receiveAsyncPy0"));
+                boost::function<void()> handler(HandlerWrap<>(replyCallback, "receiveAsyncPy0"));
                 // Release GIL since receiveAsync(..) in fact synchronously writes the message.
                 ScopedGILRelease nogil;
                 // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
@@ -77,36 +74,37 @@ namespace karathon {
                 receiveAsync(std::move(handler), std::move(errorHandler));
                 break;
             }
-            case 1:
-            {
-                boost::function<void (const boost::any&)> handler(HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
+            case 1: {
+                boost::function<void(const boost::any&)> handler(HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
                 ScopedGILRelease nogil;
                 receiveAsync<boost::any>(std::move(handler), std::move(errorHandler));
                 break;
             }
-            case 2:
-            {
-                boost::function<void (const boost::any&, const boost::any&)> handler(HandlerWrapAny2(replyCallback, "receiveAsyncPy2"));
+            case 2: {
+                boost::function<void(const boost::any&, const boost::any&)> handler(
+                      HandlerWrapAny2(replyCallback, "receiveAsyncPy2"));
                 ScopedGILRelease nogil;
                 receiveAsync<boost::any, boost::any>(std::move(handler), std::move(errorHandler));
                 break;
             }
-            case 3:
-            {
-                boost::function<void (const boost::any&, const boost::any&, const boost::any&)> handler(HandlerWrapAny3(replyCallback, "receiveAsyncPy3"));
+            case 3: {
+                boost::function<void(const boost::any&, const boost::any&, const boost::any&)> handler(
+                      HandlerWrapAny3(replyCallback, "receiveAsyncPy3"));
                 ScopedGILRelease nogil;
                 receiveAsync<boost::any, boost::any, boost::any>(std::move(handler), std::move(errorHandler));
                 break;
             }
-            case 4:
-            {
-                boost::function<void (const boost::any&, const boost::any&, const boost::any&, const boost::any&)> handler(HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
+            case 4: {
+                boost::function<void(const boost::any&, const boost::any&, const boost::any&, const boost::any&)>
+                      handler(HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
                 ScopedGILRelease nogil;
-                receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler), std::move(errorHandler));
+                receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler),
+                                                                             std::move(errorHandler));
                 break;
             }
             default:
-                throw KARABO_SIGNALSLOT_EXCEPTION("Detected/specified " + toString(numReturnArgs) += " (> 4) arguments");
+                throw KARABO_SIGNALSLOT_EXCEPTION("Detected/specified " + toString(numReturnArgs) +=
+                                                  " (> 4) arguments");
         }
     }
 
@@ -154,8 +152,8 @@ namespace karathon {
                     // Handling an error, so double check that input is as expected, i.e. body has key "a1":
                     const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
                     const std::string text(textNode && textNode->is<std::string>()
-                                           ? textNode->getValue<std::string>()
-                                           : "Error signaled, but body without string at key \"a1\"");
+                                                 ? textNode->getValue<std::string>()
+                                                 : "Error signaled, but body without string at key \"a1\"");
                     throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"));
                 }
             }
@@ -174,7 +172,8 @@ namespace karathon {
                 case 4:
                     return prepareTuple4(*body);
                 default:
-                    throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
+                    throw KARABO_SIGNALSLOT_EXCEPTION(
+                          "Too many arguments send as response (max 4 are currently supported");
             }
         } catch (const karabo::util::Exception& e) {
             KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error while receiving message on instance \"" +
@@ -185,25 +184,25 @@ namespace karathon {
     }
 
 
-    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple0(const karabo::util::Hash & body) {
+    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple0(const karabo::util::Hash& body) {
         return bp::make_tuple();
     }
 
 
-    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple1(const karabo::util::Hash & body) {
+    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple1(const karabo::util::Hash& body) {
         bp::object a1 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a1"));
         return bp::make_tuple(a1);
     }
 
 
-    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple2(const karabo::util::Hash & body) {
+    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple2(const karabo::util::Hash& body) {
         bp::object a1 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a1"));
         bp::object a2 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a2"));
         return bp::make_tuple(a1, a2);
     }
 
 
-    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple3(const karabo::util::Hash & body) {
+    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple3(const karabo::util::Hash& body) {
         bp::object a1 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a1"));
         bp::object a2 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a2"));
         bp::object a3 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a3"));
@@ -211,7 +210,7 @@ namespace karathon {
     }
 
 
-    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple4(const karabo::util::Hash & body) {
+    bp::tuple SignalSlotableWrap::RequestorWrap::prepareTuple4(const karabo::util::Hash& body) {
         bp::object a1 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a1"));
         bp::object a2 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a2"));
         bp::object a3 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a3"));
@@ -221,8 +220,7 @@ namespace karathon {
 
 
     SignalSlotableWrap::AsyncReplyWrap::AsyncReplyWrap(SignalSlotable* signalSlotable)
-        : karabo::xms::SignalSlotable::AsyncReply(signalSlotable) {
-    }
+        : karabo::xms::SignalSlotable::AsyncReply(signalSlotable) {}
 
 
     void SignalSlotableWrap::AsyncReplyWrap::replyPy0() const {
@@ -266,8 +264,8 @@ namespace karathon {
     }
 
 
-    void SignalSlotableWrap::AsyncReplyWrap::replyPy4(const bp::object& a1, const bp::object& a2,
-                                                      const bp::object& a3, const bp::object& a4) const {
+    void SignalSlotableWrap::AsyncReplyWrap::replyPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3,
+                                                      const bp::object& a4) const {
         // Convert Python objects to boost::any - may involve copies :-(
         boost::any a1Any, a2Any, a3Any, a4Any;
         Wrapper::toAny(a1, a1Any);
@@ -281,26 +279,22 @@ namespace karathon {
 
 
     SignalSlotableWrap::SignalSlotableWrap(const std::string& instanceId,
-                                           const karabo::util::Hash& connectionParameters,
-                                           int heartbeatInterval,
+                                           const karabo::util::Hash& connectionParameters, int heartbeatInterval,
                                            const karabo::util::Hash& instanceInfo)
-        : SignalSlotable(instanceId, connectionParameters, heartbeatInterval, instanceInfo) {
-    }
+        : SignalSlotable(instanceId, connectionParameters, heartbeatInterval, instanceInfo) {}
 
 
-    SignalSlotableWrap::~SignalSlotableWrap() {
-    }
+    SignalSlotableWrap::~SignalSlotableWrap() {}
 
 
     void SignalSlotableWrap::registerSlotPy(const bp::object& slotFunction, std::string slotName, int numArgs) {
-
         if (slotName.empty()) {
             slotName = bp::extract<std::string>((slotFunction.attr("__name__")));
         }
         boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
         SlotInstances::const_iterator it = m_slotInstances.find(slotName);
         if (it != m_slotInstances.end()) { // Already registered
-            (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction, numArgs);
+            (boost::static_pointer_cast<SlotWrap>(it->second))->registerSlotFunction(slotFunction, numArgs);
         } else {
             boost::shared_ptr<SlotWrap> s(boost::make_shared<SlotWrap>(slotName));
             s->registerSlotFunction(slotFunction, numArgs); // Bind user's slot-function to Slot
@@ -309,12 +303,12 @@ namespace karathon {
     }
 
 
-    karabo::xms::InputChannel::Pointer
-    SignalSlotableWrap::createInputChannelPy(const std::string& channelName,
-                                             const karabo::util::Hash& config,
-                                             const bp::object& onDataHandler, const bp::object& onInputHandler,
-                                             const bp::object& onEndOfStreamHandler,
-                                             const bp::object& connectionTracker) {
+    karabo::xms::InputChannel::Pointer SignalSlotableWrap::createInputChannelPy(const std::string& channelName,
+                                                                                const karabo::util::Hash& config,
+                                                                                const bp::object& onDataHandler,
+                                                                                const bp::object& onInputHandler,
+                                                                                const bp::object& onEndOfStreamHandler,
+                                                                                const bp::object& connectionTracker) {
         // Basically just call createInputChannel from C++, but take care that data and input handlers
         // stay empty if their input is empty, although the proxies are able
         // to deal with 'None' Python handlers (as we make use of for the end of stream handler).
@@ -328,9 +322,10 @@ namespace karathon {
             inputHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onInputHandler, "input");
         }
 
-        return this->createInputChannel(channelName, config,
-                                        dataHandler, inputHandler,
-                                        HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"),
-                                        HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker, "channelStatusTracker"));
+        return this->createInputChannel(
+              channelName, config, dataHandler, inputHandler,
+              HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"),
+              HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker,
+                                                                             "channelStatusTracker"));
     }
-}
+} // namespace karathon

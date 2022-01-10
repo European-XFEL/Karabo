@@ -7,18 +7,15 @@
  */
 
 
-
-
-
 #ifndef KARABO_IO_H5_ATTRIBUTE_HH
-#define	KARABO_IO_H5_ATTRIBUTE_HH
+#define KARABO_IO_H5_ATTRIBUTE_HH
 
 
-#include <string>
-
+#include <karabo/log/Logger.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
-#include <karabo/log/Logger.hh>
+#include <string>
+
 #include "ErrorHandler.hh"
 #include "TypeTraits.hh"
 
@@ -31,8 +28,7 @@ namespace karabo {
              * @brief This class maps Karabo attributes to HDF5 attributes
              */
             class Attribute {
-
-            public:
+               public:
                 KARABO_CLASSINFO(Attribute, "Attribute", "1.0");
                 KARABO_CONFIGURATION_BASE_CLASS
 
@@ -59,7 +55,6 @@ namespace karabo {
                  */
                 template <class Derived>
                 Attribute(const karabo::util::Hash& input, Derived* d) {
-
                     input.get("h5name", m_h5name);
                     if (input.has("key")) {
                         input.get("key", m_key);
@@ -86,26 +81,20 @@ namespace karabo {
                  */
                 void save(const karabo::util::Hash::Node& data, hid_t element);
 
-            protected:
+               protected:
+                virtual void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) = 0;
 
-                virtual void writeNodeAttribute(const karabo::util::Element<std::string>& node,
-                                                hid_t attribute) = 0;
-
-            public:
-
+               public:
                 /**
                  * Read attribute from HDF5 as defined by configuration to a Hash::Node
                  * @param data
                  */
                 void read(karabo::util::Hash::Node& data);
 
-            protected:
+               protected:
+                virtual void readNodeAttribute(karabo::util::Element<std::string>& attrNode, hid_t attribute) = 0;
 
-                virtual void readNodeAttribute(karabo::util::Element<std::string>& attrNode,
-                                               hid_t attribute) = 0;
-
-            public:
-
+               public:
                 /**
                  * Create attribute
                  */
@@ -133,12 +122,10 @@ namespace karabo {
                 virtual karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node&) = 0;
 
 
-            protected:
-
+               protected:
                 const karabo::util::Dims& dims() const {
                     return m_dims;
                 }
-
 
 
                 std::string m_h5name;
@@ -157,23 +144,21 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace));
                 }
 
-            private:
+               private:
                 karabo::util::Dims m_dims; // dimension of written/read objects
                 hid_t m_dataSetProperties;
 
                 hid_t m_nativeTypeId;
                 hid_t m_standardTypeId;
 
-                void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
-
-
+                void configureDataDimensions(const karabo::util::Hash& input,
+                                             const karabo::util::Dims& singleValueDims);
             };
 
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
 
 #endif
-

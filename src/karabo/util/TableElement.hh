@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_UTIL_TABLEELEMENT_HH
-#define	KARABO_UTIL_TABLEELEMENT_HH
+#define KARABO_UTIL_TABLEELEMENT_HH
 
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
@@ -31,16 +31,13 @@ namespace karabo {
          * @class TableDefaultValue
          * @brief The TableDefaultValue class defines a default value for the TableElement.
          */
-        template<typename Element>
+        template <typename Element>
         class TableDefaultValue {
-
             Element* m_genericElement;
 
 
-        public:
-
-            TableDefaultValue() : m_genericElement(0) {
-            }
+           public:
+            TableDefaultValue() : m_genericElement(0) {}
 
             void setElement(Element* el) {
                 m_genericElement = el;
@@ -62,10 +59,11 @@ namespace karabo {
 
                 for (std::vector<Hash>::const_iterator it = defaultValue.begin(); it != defaultValue.end(); ++it) {
                     Hash validatedHash;
-                    std::pair<bool, std::string> validationResult = validator.validate(m_genericElement->m_nodeSchema, *it, validatedHash);
+                    std::pair<bool, std::string> validationResult =
+                          validator.validate(m_genericElement->m_nodeSchema, *it, validatedHash);
                     if (!validationResult.first) {
-                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema: "
-                                                         + validationResult.second);
+                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema: " +
+                                                         validationResult.second);
                     }
                     validated.push_back(validatedHash);
                 }
@@ -82,7 +80,6 @@ namespace karabo {
             Element& noDefaultValue() {
                 return *m_genericElement;
             }
-
         };
 
         /**
@@ -99,7 +96,6 @@ namespace karabo {
          * these specifications and will perform validation on these elements.
          */
         class TableElement : public GenericElement<TableElement> {
-
             friend class TableDefaultValue<TableElement>;
 
             Schema m_nodeSchema;
@@ -107,8 +103,7 @@ namespace karabo {
             ReadOnlySpecific<TableElement, std::vector<Hash>> m_readOnlySpecific;
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
-        public:
-
+           public:
             TableElement(Schema& expected) : GenericElement<TableElement>(expected) {
                 m_defaultValue.setElement(this);
                 m_readOnlySpecific.setElement(this);
@@ -125,19 +120,20 @@ namespace karabo {
                 return *this;
             }
 
-            virtual ReadOnlySpecific<TableElement, std::vector<Hash> >& readOnly() {
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
-                    && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM
-                    && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+            virtual ReadOnlySpecific<TableElement, std::vector<Hash>>& readOnly() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT) &&
+                    this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM &&
+                    this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
                     std::string msg;
                     msg.append("Error in element '")
-                            .append(this->m_node->getKey())
-                            .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
-                            .append("Use readOnly().initialValue(v) instead.");
+                          .append(this->m_node->getKey())
+                          .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
+                          .append("Use readOnly().initialValue(v) instead.");
                     throw KARABO_LOGIC_EXCEPTION(msg);
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-                // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
+                // Set the assignment and defaults here, as the API would look strange to assign something to a
+                // read-only
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, m_defaultValue);
                 return m_readOnlySpecific;
@@ -151,11 +147,12 @@ namespace karabo {
              */
             TableElement& allowedStates(const std::vector<karabo::util::State>& value) {
                 const std::string stateString = karabo::util::toString(value);
-                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(stateString, ","));
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES,
+                                           karabo::util::fromString<std::string, std::vector>(stateString, ","));
                 return *this;
             }
 
-            //overloads for up to six elements
+            // overloads for up to six elements
 
             TableElement& allowedStates(const karabo::util::State& s1) {
                 const karabo::util::State arr[] = {s1};
@@ -167,22 +164,28 @@ namespace karabo {
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 2));
             }
 
-            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3) {
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                        const karabo::util::State& s3) {
                 const karabo::util::State arr[] = {s1, s2, s3};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 3));
             }
 
-            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4) {
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                        const karabo::util::State& s3, const karabo::util::State& s4) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 4));
             }
 
-            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5) {
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                        const karabo::util::State& s3, const karabo::util::State& s4,
+                                        const karabo::util::State& s5) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4, s5};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 5));
             }
 
-            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
+            TableElement& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2,
+                                        const karabo::util::State& s3, const karabo::util::State& s4,
+                                        const karabo::util::State& s5, const karabo::util::State& s6) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr + 6));
             }
@@ -259,10 +262,9 @@ namespace karabo {
              * @return reference to the Element (chaining)
              */
             KARABO_DEPRECATED TableElement& setNodeSchema(const Schema& schema) {
-
                 m_nodeSchema = schema;
 
-                //this->addRow(); //set first element to containt parameter Hash
+                // this->addRow(); //set first element to containt parameter Hash
 
                 return *this;
             }
@@ -303,12 +305,10 @@ namespace karabo {
             }
 
 
-        protected:
-
+           protected:
             void beforeAddition();
 
-        private:
-
+           private:
             /**
              * @brief Controlling method for row schema sanitization.
              *
@@ -353,27 +353,22 @@ namespace karabo {
              * type of the column with the invalid type (UNKNOWN if there is no
              * column of an invalid type).
              */
-            std::pair<std::string, karabo::util::Types::ReferenceType>
-                findUnsupportedColumnType(const karabo::util::Schema& rowSchema);
+            std::pair<std::string, karabo::util::Types::ReferenceType> findUnsupportedColumnType(
+                  const karabo::util::Schema& rowSchema);
 
-            void setDefaultValueForColumn(
-                const std::string& colName,
-                const karabo::util::Types::ReferenceType& colType,
-                karabo::util::Schema& rowSchema);
+            void setDefaultValueForColumn(const std::string& colName, const karabo::util::Types::ReferenceType& colType,
+                                          karabo::util::Schema& rowSchema);
 
-            void checkNumericDefaultInRange(
-                const std::string& colName, const karabo::util::Schema& rowSchema);
+            void checkNumericDefaultInRange(const std::string& colName, const karabo::util::Schema& rowSchema);
 
-            void checkSimpleDefaultInOptions(
-                const std::string& colName,
-                const karabo::util::Types::ReferenceType& colType,
-                const karabo::util::Schema& rowSchema);
-
+            void checkSimpleDefaultInOptions(const std::string& colName,
+                                             const karabo::util::Types::ReferenceType& colType,
+                                             const karabo::util::Schema& rowSchema);
         };
 
         typedef util::TableElement TABLE_ELEMENT;
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 
-#endif	/* TABLEELEMENT_HH */
+#endif /* TABLEELEMENT_HH */

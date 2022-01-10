@@ -8,14 +8,14 @@
 
 
 #ifndef INFLUXLOGREADER_HH
-#define	INFLUXLOGREADER_HH
+#define INFLUXLOGREADER_HH
 
+#include <boost/shared_ptr.hpp>
 #include <deque>
 #include <string>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-
+#include "DataLogReader.hh"
 #include "karabo/core/Device.hh"
 #include "karabo/core/NoFsm.hh"
 #include "karabo/io/BinarySerializer.hh"
@@ -30,20 +30,15 @@
 #include "karabo/util/Version.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
-#include "DataLogReader.hh"
-
 namespace karabo {
 
     namespace devices {
 
         // Context of an ongoing slotGetPropertyHistory process.
         struct PropertyHistoryContext {
-            PropertyHistoryContext(const std::string &deviceId,
-                                   const std::string &property,
-                                   const karabo::util::Epochstamp &from,
-                                   const karabo::util::Epochstamp &to,
-                                   int maxDataPoints,
-                                   const karabo::xms::SignalSlotable::AsyncReply &aReply);
+            PropertyHistoryContext(const std::string &deviceId, const std::string &property,
+                                   const karabo::util::Epochstamp &from, const karabo::util::Epochstamp &to,
+                                   int maxDataPoints, const karabo::xms::SignalSlotable::AsyncReply &aReply);
 
             std::string deviceId;
             std::string property;
@@ -57,9 +52,8 @@ namespace karabo {
         };
 
 
-        struct  PropFromPastInfo {
-            PropFromPastInfo(const std::string& name,
-                             const karabo::util::Types::ReferenceType type,
+        struct PropFromPastInfo {
+            PropFromPastInfo(const std::string &name, const karabo::util::Types::ReferenceType type,
                              bool infiniteOrNan);
 
             std::string name;
@@ -70,8 +64,7 @@ namespace karabo {
 
         // Context of an ongoing slotGetConfigurationFromPast process.
         struct ConfigFromPastContext {
-            ConfigFromPastContext(const std::string &deviceId,
-                                  const karabo::util::Epochstamp &atTime,
+            ConfigFromPastContext(const std::string &deviceId, const karabo::util::Epochstamp &atTime,
                                   const karabo::xms::SignalSlotable::AsyncReply &aReply);
 
             std::string deviceId;
@@ -95,9 +88,7 @@ namespace karabo {
 
 
         class InfluxLogReader : public DataLogReader {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(InfluxLogReader, "InfluxLogReader", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema &expected);
@@ -106,17 +97,14 @@ namespace karabo {
 
             virtual ~InfluxLogReader();
 
-        protected:
+           protected:
+            virtual void slotGetPropertyHistoryImpl(const std::string &deviceId, const std::string &property,
+                                                    const karabo::util::Hash &params) override;
 
-            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId,
-                                                    const std::string& property,
-                                                    const karabo::util::Hash& params) override;
+            virtual void slotGetConfigurationFromPastImpl(const std::string &deviceId,
+                                                          const std::string &timepoint) override;
 
-            virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
-                                                          const std::string& timepoint) override;
-
-        private:
-
+           private:
             /**
              * Triggers the retrieval of the number of data points for a given device property during a
              * time interval.
@@ -173,8 +161,7 @@ namespace karabo {
              * @param columnPrefixToRemove
              * @param context
              */
-            void onPropertyValues(const karabo::net::HttpResponse &valuesResp,
-                                  const std::string &columnPrefixToRemove,
+            void onPropertyValues(const karabo::net::HttpResponse &valuesResp, const std::string &columnPrefixToRemove,
                                   const boost::shared_ptr<PropertyHistoryContext> &ctxt);
             /**
              * Handles the retrieval of the values of a property in an ongoing GetPropertyHistory
@@ -193,25 +180,23 @@ namespace karabo {
 
             void asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                            const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
             void asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onLastLoginFormatBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                         const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+                                             const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
             void asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse &valueResp,
                                               const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
-            void asyncSchemaForDigest(const std::string &digest,
-                                      const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void asyncSchemaForDigest(const std::string &digest, const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
                                    const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
 
             void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onPropValueBeforeTime(const PropFromPastInfo& propInfo,
-                                       const karabo::net::HttpResponse &propValueResp,
+            void onPropValueBeforeTime(const PropFromPastInfo &propInfo, const karabo::net::HttpResponse &propValueResp,
                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
             std::string toInfluxDurationUnit(const karabo::util::TIME_UNITS &karaboDurationUnit);
@@ -221,14 +206,11 @@ namespace karabo {
             void influxResultSetToVectorHash(const karabo::util::InfluxResultSet &influxResult,
                                              std::vector<karabo::util::Hash> &vectHash);
 
-            void addNodeToHash(karabo::util::Hash &hash,
-                               const std::string &path,
-                               const karabo::util::Types::ReferenceType& type,
-                               unsigned long long trainId,
-                               const karabo::util::Epochstamp &epoch,
-                               const std::string &valueAsString);
+            void addNodeToHash(karabo::util::Hash &hash, const std::string &path,
+                               const karabo::util::Types::ReferenceType &type, unsigned long long trainId,
+                               const karabo::util::Epochstamp &epoch, const std::string &valueAsString);
 
-           /**
+            /**
              * Unescapes a logged string. A logged string has its new lines mangled, then its double slashes
              * escaped and then its double quotes scaped. This functions applies those transformations in the
              * reverse order.
@@ -277,4 +259,4 @@ namespace karabo {
 
 } // namespace karabo
 
-#endif	/* INFLUXLOGREADER_HH */
+#endif /* INFLUXLOGREADER_HH */

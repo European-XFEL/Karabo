@@ -8,12 +8,12 @@
  */
 
 #ifndef KARABO_NET_UTILS_HH
-#define	KARABO_NET_UTILS_HH
+#define KARABO_NET_UTILS_HH
 
-#include <string>
+#include <boost/asio/io_service.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/asio/io_service.hpp>
+#include <string>
 
 
 namespace karabo {
@@ -40,7 +40,7 @@ namespace karabo {
 
         /**
          * Parses a URL and returns a tuple.
-         * 
+         *
          * The URL must of format: <scheme>://<domain>:<port>/<path>?<query>
          *
          * @param url A well formed URL
@@ -65,7 +65,6 @@ namespace karabo {
             CONNECTED,
             DISCONNECTING // needed?
         };
-    }
-}
-#endif	/* KARABO_NET_UTILS_HH */
-
+    } // namespace net
+} // namespace karabo
+#endif /* KARABO_NET_UTILS_HH */

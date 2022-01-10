@@ -11,17 +11,19 @@
 
 
 #ifndef KARABO_NET_JMSCONSUMER_HH
-#define	KARABO_NET_JMSCONSUMER_HH
+#define KARABO_NET_JMSCONSUMER_HH
 
-#include "JmsConnection.hh"
-#include "utils.hh"
-#include "Broker.hh"
-#include "Strand.hh"
-#include "karabo/io/BinarySerializer.hh"
 #include <openmqc/mqtypes.h>
+
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+
+#include "Broker.hh"
+#include "JmsConnection.hh"
+#include "Strand.hh"
+#include "karabo/io/BinarySerializer.hh"
+#include "utils.hh"
 
 
 /**
@@ -39,11 +41,9 @@ namespace karabo {
          * @brief A class consuming messages from a JMS broker
          */
         class JmsConsumer : public boost::enable_shared_from_this<JmsConsumer> {
-
             friend class JmsConnection;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(JmsConsumer, "JmsChannel", "0.1")
 
             /**
@@ -57,7 +57,8 @@ namespace karabo {
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
              *                      string indicating the problem
              */
-            void startReading(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier());
+            void startReading(const consumer::MessageHandler& handler,
+                              const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier());
 
             /**
              * Stop permanent reading after having started it with startReading(..).
@@ -88,18 +89,18 @@ namespace karabo {
 
             virtual ~JmsConsumer();
 
-        private:
+           private:
             // The 'skipSerialisation' flag is for expert use: Instead of deserialising the message body, the body
             // provided to the consumer::MessageHandler will be a Hash with a single key "raw" containing an
             // std::vector<char> of the serialised message.
             // This is e.g. used in karabo-brokerrates to speed up (it digests all messages of a topic!).
-            JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
-                        const std::string& selector, bool skipSerialisation = false);
+            JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic, const std::string& selector,
+                        bool skipSerialisation = false);
 
             void setHandlers(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier);
 
-            void postSetHandlers(const Strand::Pointer& strand,
-                                 const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier);
+            void postSetHandlers(const Strand::Pointer& strand, const consumer::MessageHandler& handler,
+                                 const consumer::ErrorNotifier& errorNotifier);
 
             void consumeMessages(JmsConsumer::Pointer& selfGuard);
 
@@ -114,8 +115,8 @@ namespace karabo {
 
             MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
 
-            std::pair<MQSessionHandle, MQDestinationHandle> ensureConsumerDestinationAvailable(const std::string& topic,
-                                                                                               const std::string& selector);
+            std::pair<MQSessionHandle, MQDestinationHandle> ensureConsumerDestinationAvailable(
+                  const std::string& topic, const std::string& selector);
 
             MQSessionHandle ensureConsumerSessionAvailable(const std::string& topic, const std::string& selector);
 
@@ -129,8 +130,7 @@ namespace karabo {
              */
             void clearConsumerHandles();
 
-        private:
-
+           private:
             // OpenMQ failed to provide an publicly available constant to check handle validity
             // This constant is copied from the openMQ source in which
             // it is used for exactly the aforementioned purpose
@@ -139,14 +139,14 @@ namespace karabo {
             JmsConnection::Pointer m_connection;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
 
-            typedef std::map<std::string, MQSessionHandle > ConsumerSessions;
+            typedef std::map<std::string, MQSessionHandle> ConsumerSessions;
             ConsumerSessions m_consumerSessions;
 
-            typedef std::map<std::string, std::pair<MQSessionHandle, MQDestinationHandle > > ConsumerDestinations;
+            typedef std::map<std::string, std::pair<MQSessionHandle, MQDestinationHandle> > ConsumerDestinations;
             ConsumerDestinations m_consumerDestinations;
 
-            typedef std::map<std::string, MQConsumerHandle > Consumers;
-            std::map<std::string, MQConsumerHandle > m_consumers;
+            typedef std::map<std::string, MQConsumerHandle> Consumers;
+            std::map<std::string, MQConsumerHandle> m_consumers;
 
             bool m_reading;
             consumer::MessageHandler m_messageHandler;
@@ -161,7 +161,7 @@ namespace karabo {
 
             std::string m_selector;
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 #endif

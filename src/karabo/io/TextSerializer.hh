@@ -10,11 +10,11 @@
  */
 
 #ifndef KARABO_IO_TEXTSERIALIZER_HH
-#define	KARABO_IO_TEXTSERIALIZER_HH
+#define KARABO_IO_TEXTSERIALIZER_HH
 
-#include <vector>
-#include <sstream>
 #include <karabo/util/Configurator.hh>
+#include <sstream>
+#include <vector>
 
 namespace karabo {
     namespace io {
@@ -27,9 +27,7 @@ namespace karabo {
          */
         template <class T>
         class TextSerializer {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(TextSerializer<T>, "TextSerializer", "1.0")
 
             KARABO_CONFIGURATION_BASE_CLASS
@@ -71,7 +69,9 @@ namespace karabo {
              * @param archive to load the object from
              */
             virtual void load(T& object, const char* archive) {
-                this->load(object, std::string(archive ? archive : "")); // Creates a copy, but may be overridden for more performance
+                this->load(object,
+                           std::string(archive ? archive
+                                               : "")); // Creates a copy, but may be overridden for more performance
             }
 
             /**
@@ -108,7 +108,7 @@ namespace karabo {
              * Return the serialized text representation of an object, i.e. save into an empty
              * archive and return this
              * @param object
-             * @return 
+             * @return
              */
             virtual std::string save(const T& object) {
                 std::string archive;
@@ -146,9 +146,8 @@ namespace karabo {
                 this->load(object, archive, nBytes);
                 return object;
             }
-
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 #endif

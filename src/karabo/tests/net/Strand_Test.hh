@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Strand_Test.hh
  * Author: flucke
  *
@@ -6,29 +6,27 @@
  */
 
 #ifndef STRAND_TEST_HH
-#define	STRAND_TEST_HH
-
-#include <boost/thread.hpp>
-#include <boost/shared_ptr.hpp>
+#define STRAND_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+
 class Strand_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(Strand_Test);
     CPPUNIT_TEST(testSequential);
     CPPUNIT_TEST(testThrowing);
     CPPUNIT_TEST(testStrandDies);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Strand_Test();
     virtual ~Strand_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testSequential();
 
     void testThrowing();
@@ -39,5 +37,4 @@ private:
     const unsigned int m_nThreadsInPool;
 };
 
-#endif	/* STRAND_TEST_HH */
-
+#endif /* STRAND_TEST_HH */

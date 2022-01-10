@@ -10,19 +10,19 @@
 
 
 #ifndef KARABO_IO_BINARYFILEOUTPUT_HH
-#define	KARABO_IO_BINARYFILEOUTPUT_HH
+#define KARABO_IO_BINARYFILEOUTPUT_HH
 
-#include <iosfwd>
-#include <fstream>
-#include <sstream>
 #include <boost/filesystem.hpp>
-
-#include <karabo/util/Configurator.hh>
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/PathElement.hh>
+#include <fstream>
+#include <iosfwd>
 #include <karabo/util/ChoiceElement.hh>
-#include "Output.hh"
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <sstream>
+
 #include "BinarySerializer.hh"
+#include "Output.hh"
 
 namespace karabo {
 
@@ -37,44 +37,45 @@ namespace karabo {
          */
         template <class T>
         class BinaryFileOutput : public Output<T> {
-
-
             boost::filesystem::path m_filename;
             std::string m_writeMode;
             typename BinarySerializer<T>::Pointer m_serializer;
             std::vector<T> m_sequenceBuffer;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(BinaryFileOutput<T>, "BinaryFile", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
-
                 using namespace karabo::util;
 
-                PATH_ELEMENT(expected).key("filename")
-                        .description("Name of the file to be written")
-                        .displayedName("Filename")
-                        .assignmentMandatory()
-                        .commit();
+                PATH_ELEMENT(expected)
+                      .key("filename")
+                      .description("Name of the file to be written")
+                      .displayedName("Filename")
+                      .assignmentMandatory()
+                      .commit();
 
-                STRING_ELEMENT(expected).key("writeMode")
-                        .description("Defines the behaviour in case of already existent file")
-                        .displayedName("Write Mode")
-                        .options("exclusive, truncate")
-                        .assignmentOptional().defaultValue(std::string("truncate"))
-                        .commit();
+                STRING_ELEMENT(expected)
+                      .key("writeMode")
+                      .description("Defines the behaviour in case of already existent file")
+                      .displayedName("Write Mode")
+                      .options("exclusive, truncate")
+                      .assignmentOptional()
+                      .defaultValue(std::string("truncate"))
+                      .commit();
 
-                CHOICE_ELEMENT(expected).key("format")
-                        .displayedName("Format")
-                        .description("Select the format which should be used to interprete the data")
-                        .appendNodesOfConfigurationBase<BinarySerializer<T> >()
-                        .assignmentOptional().noDefaultValue()
-                        .commit();
+                CHOICE_ELEMENT(expected)
+                      .key("format")
+                      .displayedName("Format")
+                      .description("Select the format which should be used to interprete the data")
+                      .appendNodesOfConfigurationBase<BinarySerializer<T> >()
+                      .assignmentOptional()
+                      .noDefaultValue()
+                      .commit();
             }
 
-            BinaryFileOutput(const karabo::util::Hash& config) : Output<T>(config)
-            , m_filename(config.get<std::string>("filename")) {
+            BinaryFileOutput(const karabo::util::Hash& config)
+                : Output<T>(config), m_filename(config.get<std::string>("filename")) {
                 config.get("writeMode", m_writeMode);
                 if (config.has("format")) {
                     m_serializer = BinarySerializer<T>::createChoice("format", config);
@@ -93,8 +94,7 @@ namespace karabo {
                 }
             }
 
-        private:
-
+           private:
             void update() {
                 if (this->m_appendModeEnabled) {
                     std::vector<char> archive;
@@ -105,7 +105,6 @@ namespace karabo {
             }
 
             void guessAndSetFormat() {
-
                 using namespace std;
                 using namespace karabo::util;
 
@@ -125,7 +124,6 @@ namespace karabo {
             }
 
             void writeFile(std::vector<char>& buffer) {
-
                 using namespace std;
 
                 string filename = m_filename.string();
@@ -142,11 +140,9 @@ namespace karabo {
                     file.close();
                 }
             }
-
-
         };
 
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 #endif

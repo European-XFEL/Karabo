@@ -5,19 +5,18 @@
  * Created on Apr 4, 2013, 1:24:22 PM
  */
 
-#include <cppunit/TestAssert.h>
-
 #include "SignalSlotable_LongTest.hh"
 
-#include "karabo/xms/SignalSlotable.hh"
-#include "karabo/util/StringTools.hh"
+#include <cppunit/TestAssert.h>
+
+#include <chrono>
+#include <future>
+#include <iostream>
+#include <string>
 
 #include "boost/shared_ptr.hpp"
-
-#include <string>
-#include <chrono>
-#include <iostream>
-#include <future>
+#include "karabo/util/StringTools.hh"
+#include "karabo/xms/SignalSlotable.hh"
 
 using namespace karabo::util;
 using namespace karabo::xms;
@@ -26,34 +25,28 @@ using namespace karabo::xms;
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_LongTest);
 
 
-SignalSlotable_LongTest::SignalSlotable_LongTest() {
-}
+SignalSlotable_LongTest::SignalSlotable_LongTest() {}
 
 
-SignalSlotable_LongTest::~SignalSlotable_LongTest() {
-}
+SignalSlotable_LongTest::~SignalSlotable_LongTest() {}
 
 
 void SignalSlotable_LongTest::setUp() {
-    //Logger::configure(Hash("priority", "ERROR"));
-    //Logger::useOstream();
-    // Event loop is started in xmsLongTestRunner.cc's main()
+    // Logger::configure(Hash("priority", "ERROR"));
+    // Logger::useOstream();
+    //  Event loop is started in xmsLongTestRunner.cc's main()
 }
 
 
-void SignalSlotable_LongTest::tearDown() {
-}
+void SignalSlotable_LongTest::tearDown() {}
 
 
 void SignalSlotable_LongTest::testStressSyncReplies() {
-
     auto instance = boost::make_shared<SignalSlotable>("instance");
     instance->start();
 
     std::atomic<size_t> firstCalledCounter(0);
-    auto first = [&firstCalledCounter]() {
-        firstCalledCounter++;
-    };
+    auto first = [&firstCalledCounter]() { firstCalledCounter++; };
     instance->registerSlot(first, "slot");
 
 
@@ -78,26 +71,26 @@ void SignalSlotable_LongTest::testStressSyncReplies() {
     CPPUNIT_ASSERT_EQUAL(sentRequests, firstCalledCounter.load());
     CPPUNIT_ASSERT_EQUAL(sentRequests, receivedReplies);
 
-    float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - testStartTime).count();
+    float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+                                                                      testStartTime)
+                      .count();
     sec /= 1000.f;
     std::clog << "Test duration: " << sec << " s, i.e. request-receive at " << numIterations / sec << " Hz"
-            << std::endl;
+              << std::endl;
 }
 
 
 void SignalSlotable_LongTest::testStressAsyncReplies() {
-
     auto instance = boost::make_shared<SignalSlotable>("instance");
     instance->start();
 
-    auto slot = [&instance](unsigned int counter) {
-        instance->reply(counter);
-    };
+    auto slot = [&instance](unsigned int counter) { instance->reply(counter); };
     instance->registerSlot<unsigned int>(slot, "slot");
 
-    std::promise <unsigned int> promise;
+    std::promise<unsigned int> promise;
     unsigned int counter = 0;
-    boost::function<void(bool, unsigned int) > handler = [&instance, &promise, &counter, &handler](bool failure, unsigned int countdown) {
+    boost::function<void(bool, unsigned int)> handler = [&instance, &promise, &counter, &handler](
+                                                              bool failure, unsigned int countdown) {
         ++counter;
         if (failure || --countdown == 0) {
             promise.set_value(countdown);
@@ -107,8 +100,9 @@ void SignalSlotable_LongTest::testStressAsyncReplies() {
             }
             auto successHandler = boost::bind(handler, false, _1);
             auto failureHandler = boost::bind(handler, true, countdown);
-            instance->request("", "slot", countdown).timeout(1000)
-                    .receiveAsync<unsigned int>(successHandler, failureHandler);
+            instance->request("", "slot", countdown)
+                  .timeout(1000)
+                  .receiveAsync<unsigned int>(successHandler, failureHandler);
         }
     };
 
@@ -124,8 +118,10 @@ void SignalSlotable_LongTest::testStressAsyncReplies() {
     CPPUNIT_ASSERT_EQUAL(0u, future.get());
     CPPUNIT_ASSERT_EQUAL(numIterations, counter);
 
-    float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - testStartTime).count();
+    float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+                                                                      testStartTime)
+                      .count();
     sec /= 1000.f;
     std::clog << "Test duration: " << sec << " s, i.e. request-receiveAsync at " << numIterations / sec << " Hz"
-            << std::endl;
+              << std::endl;
 }

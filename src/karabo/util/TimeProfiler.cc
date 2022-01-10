@@ -1,27 +1,26 @@
-/* 
+/*
  * File:   TimeProfiler.cc
  * Author: boukhelef
- * 
+ *
  * Created on June 18, 2013, 9:21 PM
  */
 
-#include "Hash.hh"
-
 #include "TimeProfiler.hh"
+
+#include "Hash.hh"
 
 using namespace std;
 namespace karabo {
     namespace util {
 
 
-        TimeProfiler::TimeProfiler(const std::string& name) : m_name(name) {
-        }
+        TimeProfiler::TimeProfiler(const std::string& name) : m_name(name) {}
 
 
-        TimeProfiler::~TimeProfiler() {
-        }
+        TimeProfiler::~TimeProfiler() {}
 
-        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try : m_name(hash.get<string>("KRB_name")), m_periods(hash) {
+        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try
+            : m_name(hash.get<string>("KRB_name")), m_periods(hash) {
         } catch (Exception& e) {
             m_name = "Profiler";
             m_periods = hash;
@@ -143,7 +142,7 @@ namespace karabo {
             if (!details.empty()) {
                 TimeDuration td;
                 for (size_t i = 0; i < details.size(); ++i) {
-                    //if (details[i].get<string>("KRB_name").empty()) {
+                    // if (details[i].get<string>("KRB_name").empty()) {
                     if (!details[i].has("KRB_name")) {
                         td += TimePeriod(details[i]).getDuration();
                     } else {
@@ -190,7 +189,7 @@ namespace karabo {
         }
 
 
-        std::ostream & operator<<(std::ostream& os, const TimeProfiler & profiler) {
+        std::ostream& operator<<(std::ostream& os, const TimeProfiler& profiler) {
             profiler.serialize(os);
             return os;
         }
@@ -205,35 +204,35 @@ namespace karabo {
 
         std::string TimeProfiler::sql() const {
             std::ostringstream oss;
-            oss << "INSERT INTO Profiler(key, parent, value, start-sec, start-frac, stop-sec, stop-frac, durree-sec, durree-frac) VALUES";
+            oss << "INSERT INTO Profiler(key, parent, value, start-sec, start-frac, stop-sec, stop-frac, durree-sec, "
+                   "durree-frac) VALUES";
             sql(oss, m_name, m_periods, -1);
 
             return oss.str();
         }
 
 
-        void TimeProfiler::sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period, const int parent_key) {
+        void TimeProfiler::sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period,
+                               const int parent_key) {
             int current_key = key++;
-            os << "\n('"
-                    << current_key << "','"
-                    << parent_key << "','"
-                    << name << "','"
-                    << period.get<unsigned long long>("KRB_start.seconds") << "','"
-                    << period.get<unsigned long long>("KRB_start.fractions") << "','"
-                    << period.get<unsigned long long>("KRB_stop.seconds") << "','"
-                    << period.get<unsigned long long>("KRB_stop.fractions") << "','"
-                    << period.get<unsigned long long>("KRB_duration.seconds") << "','"
-                    << period.get<unsigned long long>("KRB_duration.fractions")
-                    << "')";
+            os << "\n('" << current_key << "','" << parent_key << "','" << name << "','"
+               << period.get<unsigned long long>("KRB_start.seconds") << "','"
+               << period.get<unsigned long long>("KRB_start.fractions") << "','"
+               << period.get<unsigned long long>("KRB_stop.seconds") << "','"
+               << period.get<unsigned long long>("KRB_stop.fractions") << "','"
+               << period.get<unsigned long long>("KRB_duration.seconds") << "','"
+               << period.get<unsigned long long>("KRB_duration.fractions") << "')";
 
             vector<string> keys;
             period.getKeys(keys);
 
             for (size_t i = 1; i < keys.size(); ++i) {
-                if ((keys[i] == "KRB_start") || (keys[i] == "KRB_stop") || (keys[i] == "KRB_duration") || (keys[i] == "KRB_details")) continue;
+                if ((keys[i] == "KRB_start") || (keys[i] == "KRB_stop") || (keys[i] == "KRB_duration") ||
+                    (keys[i] == "KRB_details"))
+                    continue;
                 sql(os, keys[i], period.get<Hash>(keys[i]), current_key);
             }
         }
 
-    }
-}
+    } // namespace util
+} // namespace karabo

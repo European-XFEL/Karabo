@@ -6,11 +6,11 @@
  */
 
 #include "StringTools_Test.hh"
-#include <karabo/util/StringTools.hh>
-#include <boost/core/null_deleter.hpp>
 
-#include <unordered_set>
+#include <boost/core/null_deleter.hpp>
+#include <karabo/util/StringTools.hh>
 #include <set>
+#include <unordered_set>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(StringTools_Test);
 
@@ -18,35 +18,30 @@ using namespace karabo::util;
 using namespace std;
 
 
-StringTools_Test::StringTools_Test() {
-}
+StringTools_Test::StringTools_Test() {}
 
 
-StringTools_Test::~StringTools_Test() {
-}
+StringTools_Test::~StringTools_Test() {}
 
 
-void StringTools_Test::setUp() {
-}
+void StringTools_Test::setUp() {}
 
 
-void StringTools_Test::tearDown() {
-}
+void StringTools_Test::tearDown() {}
 
 
 void StringTools_Test::testFromString() {
-
     // Unsigned integer
-    CPPUNIT_ASSERT((unsigned char) 234 == fromString<unsigned char>("234"));
-    CPPUNIT_ASSERT((unsigned short) 34567 == fromString<unsigned short>("34567"));
-    CPPUNIT_ASSERT((unsigned int) 2345678901 == fromString<unsigned int>("2345678901"));
-    CPPUNIT_ASSERT((unsigned long long) 123456789012 == fromString<unsigned long long>("123456789012"));
+    CPPUNIT_ASSERT((unsigned char)234 == fromString<unsigned char>("234"));
+    CPPUNIT_ASSERT((unsigned short)34567 == fromString<unsigned short>("34567"));
+    CPPUNIT_ASSERT((unsigned int)2345678901 == fromString<unsigned int>("2345678901"));
+    CPPUNIT_ASSERT((unsigned long long)123456789012 == fromString<unsigned long long>("123456789012"));
 
     // Signed integer
-    CPPUNIT_ASSERT((signed char) 123 == fromString<signed char>("123"));
-    CPPUNIT_ASSERT((short) 23456 == fromString<short>("23456"));
-    CPPUNIT_ASSERT((int) 1234567890 == fromString<int>("1234567890"));
-    CPPUNIT_ASSERT((long long) 123456789012 == fromString<long long>("123456789012"));
+    CPPUNIT_ASSERT((signed char)123 == fromString<signed char>("123"));
+    CPPUNIT_ASSERT((short)23456 == fromString<short>("23456"));
+    CPPUNIT_ASSERT((int)1234567890 == fromString<int>("1234567890"));
+    CPPUNIT_ASSERT((long long)123456789012 == fromString<long long>("123456789012"));
 
     // Boolean
     CPPUNIT_ASSERT(false == fromString<bool>("false"));
@@ -60,8 +55,8 @@ void StringTools_Test::testFromString() {
     CPPUNIT_ASSERT(true == fromString<bool>("1"));
 
     // Floating point
-    CPPUNIT_ASSERT((float) 1.234567 == fromString<float>("1.234567"));
-    CPPUNIT_ASSERT((double) 1.23456789012345 == fromString<double>("1.23456789012345"));
+    CPPUNIT_ASSERT((float)1.234567 == fromString<float>("1.234567"));
+    CPPUNIT_ASSERT((double)1.23456789012345 == fromString<double>("1.23456789012345"));
 
     // Complex
     CPPUNIT_ASSERT(std::complex<float>(1.234, 5.678) == fromString<std::complex<float> >("(1.234,5.678)"));
@@ -70,14 +65,14 @@ void StringTools_Test::testFromString() {
     // Test from vector
     // Vector bool is always special
     {
-        std::vector<bool> aVector = fromString<bool, std::vector > ("true", ",");
+        std::vector<bool> aVector = fromString<bool, std::vector>("true", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
         CPPUNIT_ASSERT(true == aVector[0]);
 
-        aVector = fromString<bool, std::vector > ("", ",");
+        aVector = fromString<bool, std::vector>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
 
-        aVector = fromString<bool, std::vector > ("y,0,false,1", ",");
+        aVector = fromString<bool, std::vector>("y,0,false,1", ",");
         CPPUNIT_ASSERT_EQUAL(4ul, aVector.size());
         CPPUNIT_ASSERT(true == aVector[0]);
         CPPUNIT_ASSERT(false == aVector[1]);
@@ -86,30 +81,30 @@ void StringTools_Test::testFromString() {
     }
     // Vector short is using the templated version
     {
-        std::vector<short> aVector = fromString<short, std::vector > ("77", ",");
+        std::vector<short> aVector = fromString<short, std::vector>("77", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
-        CPPUNIT_ASSERT_EQUAL(static_cast<short> (77), aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<short>(77), aVector[0]);
 
-        aVector = fromString<short, std::vector > ("", ",");
+        aVector = fromString<short, std::vector>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
 
-        aVector = fromString<short, std::vector > ("-32768, -77, 32767", ",");
+        aVector = fromString<short, std::vector>("-32768, -77, 32767", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
-        CPPUNIT_ASSERT_EQUAL(static_cast<short> (-32768), aVector[0]);
-        CPPUNIT_ASSERT_EQUAL(static_cast<short> (-77), aVector[1]);
-        CPPUNIT_ASSERT_EQUAL(static_cast<short> (32767), aVector[2]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<short>(-32768), aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<short>(-77), aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<short>(32767), aVector[2]);
     }
 
     // Vector int has a template specialisation
     {
-        std::vector<int> aVector = fromString<int, std::vector > ("77", ",");
+        std::vector<int> aVector = fromString<int, std::vector>("77", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(77, aVector[0]);
 
-        aVector = fromString<int, std::vector > ("", ",");
+        aVector = fromString<int, std::vector>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
 
-        aVector = fromString<int, std::vector > ("-32768, -77, 32767", ",");
+        aVector = fromString<int, std::vector>("-32768, -77, 32767", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(-32768, aVector[0]);
         CPPUNIT_ASSERT_EQUAL(-77, aVector[1]);
@@ -118,14 +113,14 @@ void StringTools_Test::testFromString() {
 
     // Vector unsigned int has another template specialisation
     {
-        std::vector<unsigned int> aVector = fromString<unsigned int, std::vector > ("77", ",");
+        std::vector<unsigned int> aVector = fromString<unsigned int, std::vector>("77", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(77u, aVector[0]);
 
-        aVector = fromString<unsigned int, std::vector > ("", ",");
+        aVector = fromString<unsigned int, std::vector>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
 
-        aVector = fromString<unsigned int, std::vector > (" [0, 77, 65535] ", ",");
+        aVector = fromString<unsigned int, std::vector>(" [0, 77, 65535] ", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(0u, aVector[0]);
         CPPUNIT_ASSERT_EQUAL(77u, aVector[1]);
@@ -134,14 +129,14 @@ void StringTools_Test::testFromString() {
 
     // Vector long long has yet another template specialisation
     {
-        std::vector<long long> aVector = fromString<long long, std::vector > (" 77 ", ",");
+        std::vector<long long> aVector = fromString<long long, std::vector>(" 77 ", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(77ll, aVector[0]);
 
-        aVector = fromString<long long, std::vector > ("", ",");
+        aVector = fromString<long long, std::vector>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
 
-        aVector = fromString<long long, std::vector > (" -2147483648, -77 , 2147483647", ",");
+        aVector = fromString<long long, std::vector>(" -2147483648, -77 , 2147483647", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(-2147483648ll, aVector[0]);
         CPPUNIT_ASSERT_EQUAL(-77ll, aVector[1]);
@@ -150,14 +145,14 @@ void StringTools_Test::testFromString() {
 
     // Vector unsigned long long has yet another template specialisation
     {
-        std::vector<unsigned long long> aVector = fromString<unsigned long long, std::vector > ("77", ",");
+        std::vector<unsigned long long> aVector = fromString<unsigned long long, std::vector>("77", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(77ull, aVector[0]);
 
-        aVector = fromString<unsigned long long, std::vector > ("", ",");
+        aVector = fromString<unsigned long long, std::vector>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
 
-        aVector = fromString<unsigned long long, std::vector > (" 0, 77, 4294967295      ", ",");
+        aVector = fromString<unsigned long long, std::vector>(" 0, 77, 4294967295      ", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
         CPPUNIT_ASSERT_EQUAL(0ull, aVector[0]);
         CPPUNIT_ASSERT_EQUAL(77ull, aVector[1]);
@@ -166,14 +161,14 @@ void StringTools_Test::testFromString() {
 
     // tests for set
     {
-        auto aSet = fromString<int, std::set> ("77", ",");
+        auto aSet = fromString<int, std::set>("77", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aSet.size());
         CPPUNIT_ASSERT_EQUAL(77, *(aSet.begin()));
 
-        aSet = fromString<int, std::set> ("", ",");
+        aSet = fromString<int, std::set>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aSet.size());
 
-        aSet = fromString<int, std::set> ("-32768, -77, 32767, -77", ",");
+        aSet = fromString<int, std::set>("-32768, -77, 32767, -77", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aSet.size());
         auto it = aSet.begin();
         CPPUNIT_ASSERT_EQUAL(-32768, *it);
@@ -182,22 +177,21 @@ void StringTools_Test::testFromString() {
         ++it;
         CPPUNIT_ASSERT_EQUAL(32767, *it);
     }
-
 }
 
 
 void StringTools_Test::testToString() {
     // Unsigned int types
-    CPPUNIT_ASSERT(toString((unsigned char) 234) == "234");
-    CPPUNIT_ASSERT(toString((unsigned short) 34567) == "34567");
-    CPPUNIT_ASSERT(toString((unsigned int) 2345678901) == "2345678901");
-    CPPUNIT_ASSERT(toString((unsigned long long) 123456789012) == "123456789012");
+    CPPUNIT_ASSERT(toString((unsigned char)234) == "234");
+    CPPUNIT_ASSERT(toString((unsigned short)34567) == "34567");
+    CPPUNIT_ASSERT(toString((unsigned int)2345678901) == "2345678901");
+    CPPUNIT_ASSERT(toString((unsigned long long)123456789012) == "123456789012");
 
     // Signed int types
-    CPPUNIT_ASSERT(toString((signed char) 123) == "123");
-    CPPUNIT_ASSERT(toString((short) 23456) == "23456");
-    CPPUNIT_ASSERT(toString((int) 1234567890) == "1234567890");
-    CPPUNIT_ASSERT(toString((long long) 123456789012) == "123456789012");
+    CPPUNIT_ASSERT(toString((signed char)123) == "123");
+    CPPUNIT_ASSERT(toString((short)23456) == "23456");
+    CPPUNIT_ASSERT(toString((int)1234567890) == "1234567890");
+    CPPUNIT_ASSERT(toString((long long)123456789012) == "123456789012");
 
     // Boolean
     CPPUNIT_ASSERT(toString(false) == "0");
@@ -223,13 +217,16 @@ void StringTools_Test::testToString() {
 
     // Complex types
     CPPUNIT_ASSERT(toString(std::complex<float>(1.2345678f, 1.3456789f)) == "(1.234568,1.345679)");
-    CPPUNIT_ASSERT(toString(std::complex<float>(123456700000.0f, 0.00000000013456780f)) == "(1.234567e+11,1.345678e-10)");
-    CPPUNIT_ASSERT(toString(std::complex<double>(1.234567890123456, 6.543210987654321)) == "(1.23456789012346,6.54321098765432)");
+    CPPUNIT_ASSERT(toString(std::complex<float>(123456700000.0f, 0.00000000013456780f)) ==
+                   "(1.234567e+11,1.345678e-10)");
+    CPPUNIT_ASSERT(toString(std::complex<double>(1.234567890123456, 6.543210987654321)) ==
+                   "(1.23456789012346,6.54321098765432)");
 
     // Vectors
     std::vector<unsigned int> uint32Vector(4, 12345);
     CPPUNIT_ASSERT(toString(uint32Vector) == "12345,12345,12345,12345");
-    std::vector<float> floatVector{1.f,0.5f,3.1415956f,0.1f, 0.09999878f, 2.8790123f,99.8765411f, -0.00000000003456789f};
+    std::vector<float> floatVector{1.f,         0.5f,       3.1415956f,  0.1f,
+                                   0.09999878f, 2.8790123f, 99.8765411f, -0.00000000003456789f};
     CPPUNIT_ASSERT(toString(floatVector) == "1,0.5,3.141596,0.1,0.09999878,2.879012,99.87654,-3.456789e-11");
 
     // Vectors, but playing with maximum number
@@ -279,13 +276,12 @@ void StringTools_Test::testToString() {
     CPPUNIT_ASSERT(toString(wstr) == "abcd0123");
 
     // ByteArray
-    static char s[]={0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                     0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
-                     0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x22, 0x23};
+    static char s[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11,
+                       0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x22, 0x23};
     ByteArray ba = std::make_pair(boost::shared_ptr<char>(s, boost::null_deleter()), 24);
-    CPPUNIT_ASSERT(toString(ba,16) == "0x0001020304050607...(skip 8 bytes)...1617181920212223");
-    CPPUNIT_ASSERT(toString(ba,24) == "0x000102030405060708091011121314151617181920212223");
-    CPPUNIT_ASSERT(toString(ba,4) == "0x0001...(skip 20 bytes)...2223");
+    CPPUNIT_ASSERT(toString(ba, 16) == "0x0001020304050607...(skip 8 bytes)...1617181920212223");
+    CPPUNIT_ASSERT(toString(ba, 24) == "0x000102030405060708091011121314151617181920212223");
+    CPPUNIT_ASSERT(toString(ba, 4) == "0x0001...(skip 20 bytes)...2223");
 }
 
 
@@ -296,7 +292,6 @@ void StringTools_Test::testWiden() {
 
 
 void StringTools_Test::testTokenize() {
-
     std::vector<string> out;
 
     // Test 1, 2, 3 single character tokens

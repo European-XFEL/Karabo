@@ -6,10 +6,9 @@
  */
 
 #ifndef KARABO_ALARMSERVICE_HH
-#define	KARABO_ALARMSERVICE_HH
+#define KARABO_ALARMSERVICE_HH
 
 #include <atomic>
-
 #include <boost/thread.hpp>
 
 #include "karabo/core/Device.hh"
@@ -47,9 +46,7 @@ namespace karabo {
          *
          */
         class AlarmService : public karabo::core::Device<> {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(AlarmService, "AlarmService", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
@@ -58,8 +55,7 @@ namespace karabo {
 
             virtual ~AlarmService();
 
-        private: // Functions
-
+           private: // Functions
             void initialize();
 
             void preDestruction() override;
@@ -82,7 +78,8 @@ namespace karabo {
              * means alarms will not silently disappear, but because it can't be assured that the device instance
              * that disappeared will ever clear them for acknowledgment they are acknowledgeble. Note that if the
              * device instance does happen to reappear it will be asked to resubmit its current alarm state, bringing
-             * all alarms pertinent to it back into a consistent needsacknowledging, acknowledging and cleared condition.
+             * all alarms pertinent to it back into a consistent needsacknowledging, acknowledging and cleared
+             * condition.
              *
              * @param instanceId: the instance id of the device the disappeared
              * @param instanceInfo: not used but forwarded by the device client
@@ -148,7 +145,8 @@ namespace karabo {
              * @param alarms: A hash of property names -> hashes of alarm type entry hashes
              * @param rowUpdates: A Hash of updated rows which will be emitted to connected slots
              */
-            void addDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms, karabo::util::Hash& rowUpdates);
+            void addDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms,
+                                 karabo::util::Hash& rowUpdates);
 
             /**
              * Clear the alarms for a device
@@ -156,11 +154,13 @@ namespace karabo {
              * @param alarms: A hash of property names -> hashes of alarm type entry hashes
              * @param rowUpdates: A Hash of updated rows which will be emitted to connected slots
              */
-            void removeDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms, karabo::util::Hash& rowUpdates);
+            void removeDeviceAlarms(const std::string& deviceId, const karabo::util::Hash& alarms,
+                                    karabo::util::Hash& rowUpdates);
 
             /**
              * Slot to be called if a client wishes to acknowledge an alarm
-             * @param alarmServiceId: Alarm service the alarm should be registered at. Should be this device's instance id
+             * @param alarmServiceId: Alarm service the alarm should be registered at. Should be this device's instance
+             * id
              * @param acknowledgedRows: the rows which should be acknowledged. It is a Hash where the keys give the
              * unique row id, the value is currently not evaluated.
              */
@@ -195,21 +195,21 @@ namespace karabo {
              *
              * NOTE: `m_alarmChangeMutex` must be locked when calling this method!
              *
-             * @param propertyAlarms: The sub-Hash of m_alarms containing all the alarm type hashes for a single property
+             * @param propertyAlarms: The sub-Hash of m_alarms containing all the alarm type hashes for a single
+             * property
              * @param lastAdded: An alarm type to compare against
              * @param rowUpdates: A row updates Hash which will be emitted to connected slots
              */
-            void  makeMoreSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms,
-                                                     const karabo::util::AlarmCondition& lastAdded,
-                                                     karabo::util::Hash& rowUpdates);
+            void makeMoreSignificantAcknowledgeable(karabo::util::Hash& propertyAlarms,
+                                                    const karabo::util::AlarmCondition& lastAdded,
+                                                    karabo::util::Hash& rowUpdates);
 
             /* Internal method to send a bulk hash of alarm system updates */
             void sendAlarmUpdates(const boost::system::error_code& error);
 
-        private: // members
-
+           private: // members
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
-            karabo::util::Hash m_alarms; //base data container, organized hierarchically
+            karabo::util::Hash m_alarms; // base data container, organized hierarchically
 
             /*
              These two maps contain the indexing and addressing information for alarms
@@ -233,9 +233,8 @@ namespace karabo {
             boost::asio::deadline_timer m_updateTimer; // our update timer for bulksets
 
             std::atomic<unsigned long long> m_alarmIdCounter;
-
         };
-    }
-}
+    } // namespace devices
+} // namespace karabo
 
-#endif	/* KARABO_ALARMSERVICE_HH */
+#endif /* KARABO_ALARMSERVICE_HH */
