@@ -74,7 +74,7 @@ def get_array_data(data, path=None, squeeze=True):
     :param squeeze: If the array should be squeezed if the
                     latest dimension is 1. Default is `True`.
 
-    :returns : A numpy array containing the extracted data
+    :returns: A numpy array containing the extracted data
     """
     text = "Expected a Hash, but got type %s instead!" % type(data)
     assert isinstance(data, Hash), text
@@ -112,7 +112,8 @@ def get_image_data(data):
     output channel)
 
     :param data: A hash containing the image data hash
-    :returns : A numpy array containing the extracted pixel data
+
+    :returns: A numpy array containing the extracted pixel data
     """
     text = "Expected a Hash, but got type %s instead!" % type(data)
     assert isinstance(data, Hash), text
