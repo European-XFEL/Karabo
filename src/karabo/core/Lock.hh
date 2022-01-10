@@ -8,7 +8,7 @@
  */
 
 #ifndef KARABO_CORE_LOCK_HH
-#define	KARABO_CORE_LOCK_HH
+#define KARABO_CORE_LOCK_HH
 #include "karabo/xms/SignalSlotable.hh"
 
 
@@ -16,16 +16,15 @@ namespace karabo {
     namespace core {
 
         class Lock {
-
-        public:
-
+           public:
             /**
              * Create a lock on a device. Throws a karabo::util::LockException if the lock cannot be acquired
              * @param sigSlot: a SignalSlotable instance to use for locking the remote device
              * @param deviceId: the deviceId of the device to lock
              * @param recursive: allow recursive locking if true
              */
-            Lock(boost::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId, bool recursive = false);
+            Lock(boost::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId,
+                 bool recursive = false);
 
 
             /**
@@ -65,8 +64,7 @@ namespace karabo {
              */
             bool valid() const;
 
-        private:
-
+           private:
             /**
              * Perform locking. Calling this function leads to the following
              * remote calls:
@@ -95,14 +93,10 @@ namespace karabo {
             const std::string m_deviceId;
             mutable bool m_valid;
             const int m_lockQueryTimeout = 5000;
-
-
         };
 
 
-    }
-}
+    } // namespace core
+} // namespace karabo
 
-#endif	/* KARABO_CORE_LOCK_HH */
-
-
+#endif /* KARABO_CORE_LOCK_HH */

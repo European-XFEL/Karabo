@@ -6,12 +6,11 @@
  */
 
 #ifndef VALIDATOR_TEST_HH
-#define	VALIDATOR_TEST_HH
+#define VALIDATOR_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class Validator_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(Validator_Test);
     CPPUNIT_TEST(testTableOptionalColumn);
     CPPUNIT_TEST(testTableMandatoryColumn);
@@ -22,14 +21,13 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testAlarms);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Validator_Test();
     virtual ~Validator_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     /**
      * @brief Checks that optional columns with default values in the
      * row schema are properly initialized to their default values,
@@ -91,4 +89,4 @@ private:
     void testAlarms();
 };
 
-#endif	/* VALIDATOR_TEST_HH */
+#endif /* VALIDATOR_TEST_HH */

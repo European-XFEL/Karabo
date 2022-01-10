@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   InstanceMessageThrottler.hh
  * Author: <raul.costa@xfel.eu>
  *
@@ -8,19 +8,17 @@
  */
 
 #ifndef KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH
-#define	KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH
+#define KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH
 
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/function.hpp>
+#include <boost/thread/mutex.hpp>
+#include <karabo/util/ClassInfo.hh>
+#include <karabo/util/Hash.hh>
 #include <queue>
 #include <string>
 #include <unordered_map>
-
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/function.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/thread/mutex.hpp>
-
-#include <karabo/util/ClassInfo.hh>
-#include <karabo/util/Hash.hh>
 
 namespace karabo {
 
@@ -48,17 +46,13 @@ namespace karabo {
          * hash will be an empty hash with the input InstanceInfo fields as attributes. For "gone" changes the third
          * level hash will not be empty and will have the same lay-out as the input InstanceInfo hash.
          */
-        class InstanceChangeThrottler: public boost::enable_shared_from_this<InstanceChangeThrottler> {
-
-        public:
-
+        class InstanceChangeThrottler : public boost::enable_shared_from_this<InstanceChangeThrottler> {
+           public:
             KARABO_CLASSINFO(InstanceChangeThrottler, "InstanceMessageThrottler", "2.0")
 
-            typedef boost::function<void (const karabo::util::Hash&) > InstanceChangeHandler;
+            typedef boost::function<void(const karabo::util::Hash&)> InstanceChangeHandler;
 
-            enum class InstChangeType {
-                NEW, UPDATE, GONE
-            };
+            enum class InstChangeType { NEW, UPDATE, GONE };
 
             /**
              * InstanceChangeThrottler factory.
@@ -78,9 +72,9 @@ namespace karabo {
              * DeviceClient::prepareTopologyEntry without directly knowing DeviceClient.
              *
              */
-            static boost::shared_ptr<InstanceChangeThrottler> createThrottler(const InstanceChangeHandler& instChangeHandler,
-                                                                              unsigned int cycleIntervalMs = 500u,
-                                                                              unsigned int maxChangesPerCycle = 100);
+            static boost::shared_ptr<InstanceChangeThrottler> createThrottler(
+                  const InstanceChangeHandler& instChangeHandler, unsigned int cycleIntervalMs = 500u,
+                  unsigned int maxChangesPerCycle = 100);
 
             virtual ~InstanceChangeThrottler();
 
@@ -94,7 +88,7 @@ namespace karabo {
 
             /**
              * Submits an instance update change for dispatching by the throttler.
-             * 
+             *
              * @param instanceId The id of the instance the update change refers to.
              * @param instanceInfo Information about the instance the update change refers to.
              */
@@ -102,7 +96,7 @@ namespace karabo {
 
             /**
              * Submits an instance gone change for dispatching by the throttler.
-             * 
+             *
              * @param instanceId The id of the instance the gone change refers to.
              * @param instanceInfo Information about the instance the gone change refers to.
              */
@@ -133,11 +127,9 @@ namespace karabo {
              */
             void flush();
 
-        private:
-
+           private:
             explicit InstanceChangeThrottler(const InstanceChangeHandler& instChangeHandler,
-                                             unsigned int cycleIntervalMs,
-                                             unsigned int maxChangesPerCycle);
+                                             unsigned int cycleIntervalMs, unsigned int maxChangesPerCycle);
 
 
             /**
@@ -171,8 +163,8 @@ namespace karabo {
              * @return a hash whose only key is the instanceId, with the keys/values in instanceInfo as attributes and
              * an empty hash as the only value.
              */
-            karabo::util::Hash
-            instNewUpdateEncoder(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const;
+            karabo::util::Hash instNewUpdateEncoder(const std::string& instanceId,
+                                                    const karabo::util::Hash& instanceInfo) const;
 
             /**
              * Encodes the instanceInfo hash into the format that the Throttler uses internally for changes
@@ -181,12 +173,12 @@ namespace karabo {
              * @param instanceInfo the instanceInfo hash as used by the karabo GUI.
              * @return a hash whose only key is the instanceId and whose only value is the instanceInfo hash.
              */
-            karabo::util::Hash
-            instGoneEncoder(const std::string& instanceId, const karabo::util::Hash& instanceInfo) const;
+            karabo::util::Hash instGoneEncoder(const std::string& instanceId,
+                                               const karabo::util::Hash& instanceInfo) const;
 
             /**
              * Adds an instance change to m_instChanges.
-             * 
+             *
              * As part of the addition, performs some optimizations to the set of events already in the hash. It can
              * happen that the new change actually "cancels" a set of changes that had been previously added.
              * An example: an 'instance gone' event can "cancel" all the 'instance new' and 'instance update' events
@@ -197,8 +189,7 @@ namespace karabo {
              * @param instanceId
              * @param instanceInfo
              */
-            void addChange(InstChangeType changeType,
-                           const std::string& instanceId,
+            void addChange(InstChangeType changeType, const std::string& instanceId,
                            const karabo::util::Hash& instanceInfo);
 
             /**
@@ -217,18 +208,16 @@ namespace karabo {
              * Flushes the throttler by running its dispatching loop immediately.
              *
              * @param if true, the next throttler cycle is scheduled after the flush completes.
-             * 
+             *
              * @note Assumes that the mutex for acessing instanceChange data is acquired by a caller (either the
              * direct caller or another caller down the activation stack).
              */
             void flushThrottler(bool kickNextCycle = true);
+        };
 
-         };
+    } // namespace core
 
-    }
-
-}
+} // namespace karabo
 
 
-#endif	/* KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH */
-
+#endif /* KARABO_CORE_INSTANCEMESSAGETHROTTLER_HH */

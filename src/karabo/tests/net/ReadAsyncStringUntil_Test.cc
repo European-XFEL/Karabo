@@ -1,26 +1,24 @@
-/* 
+/*
  * File:   ReadAsyncStringUntil_Test.cc
  * Author: giovanet
- * 
+ *
  * Created on May 16, 2018, 1:46 PM
  */
 
 #include "ReadAsyncStringUntil_Test.hh"
 
-#include "karabo/net/Connection.hh"
-#include "karabo/net/Channel.hh"
-#include "karabo/net/EventLoop.hh"
-
-#include <karabo/karabo.hpp>
-
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
-#include <boost/asio.hpp>
-
-#include <iostream>
-#include <fstream>
 #include <cassert>
+#include <fstream>
 #include <iosfwd>
+#include <iostream>
+#include <karabo/karabo.hpp>
+
+#include "karabo/net/Channel.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/net/EventLoop.hh"
 
 
 using boost::asio::ip::tcp;
@@ -38,21 +36,20 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ReadAsyncStringUntil_Test);
 // It runs on separate thread.
 
 struct TestClient {
-
     KARABO_CLASSINFO(TestClient, "TestClient", "1.0");
 
 
     TestClient(const karabo::util::Hash& input)
-            : m_repetition(5)   // we want to read 5 times
-            , m_expected("")
-            , m_promise(std::promise<std::string>()) {
+        : m_repetition(5) // we want to read 5 times
+          ,
+          m_expected(""),
+          m_promise(std::promise<std::string>()) {
         m_connection = karabo::net::Connection::create("Tcp", input);
         m_connection->startAsync(boost::bind(&TestClient::connectHandler, this, _1, _2));
     }
 
 
-    virtual ~TestClient() {
-    }
+    virtual ~TestClient() {}
 
 
     std::future<std::string> get_future() {
@@ -71,13 +68,13 @@ struct TestClient {
         // The first statement will be read in two steps by changing terminator...
         const std::string& tmp = "When the going gets tough... the tough get going\r\n";
         auto datap = boost::make_shared<std::vector<char>>(tmp.begin(), tmp.end());
-        //NOTE: First we use "..." as a terminator!
-        channel->writeAsyncVectorPointer(datap, boost::bind(&TestClient::writeCompleteHandler, this, _1, channel, "..."));
+        // NOTE: First we use "..." as a terminator!
+        channel->writeAsyncVectorPointer(datap,
+                                         boost::bind(&TestClient::writeCompleteHandler, this, _1, channel, "..."));
     }
 
 
-    void writeCompleteHandler(const karabo::net::ErrorCode& ec,
-                              const karabo::net::Channel::Pointer& channel,
+    void writeCompleteHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel,
                               const std::string& terminator) {
         if (ec) {
             channel->close();
@@ -95,7 +92,7 @@ struct TestClient {
             // The second one:                " the tough get going\r\n"
             // The third one and others:      "Yet another test string\r\n"
             // Uncomment print statement below to see how does it work
-            //std::cerr << data;
+            // std::cerr << data;
             if (data != m_expected && data != " the tough get going\r\n") {
                 channel->close();
                 m_promise.set_value("Error on data comparison");
@@ -109,16 +106,15 @@ struct TestClient {
 
             m_expected = "Yet another test string\r\n";
             auto datap = boost::make_shared<std::vector<char>>(m_expected.begin(), m_expected.end());
-            //NOTE: After first reading we change terminator to "\r\n" (CRLF) to read
-            // a second part of first statement and all others ...
+            // NOTE: After first reading we change terminator to "\r\n" (CRLF) to read
+            //  a second part of first statement and all others ...
             channel->writeAsyncVectorPointer(datap,
-                                             boost::bind(&TestClient::writeCompleteHandler,
-                                                         this, _1, channel, "\r\n"));
+                                             boost::bind(&TestClient::writeCompleteHandler, this, _1, channel, "\r\n"));
         };
         channel->readAsyncStringUntil(terminator, readHandler);
     }
 
-private:
+   private:
     karabo::net::Connection::Pointer m_connection;
     int m_repetition;
     std::string m_expected;
@@ -126,20 +122,16 @@ private:
 };
 
 
-ReadAsyncStringUntil_Test::ReadAsyncStringUntil_Test() {
-}
+ReadAsyncStringUntil_Test::ReadAsyncStringUntil_Test() {}
 
 
-ReadAsyncStringUntil_Test::~ReadAsyncStringUntil_Test() {
-}
+ReadAsyncStringUntil_Test::~ReadAsyncStringUntil_Test() {}
 
 
-void ReadAsyncStringUntil_Test::setUp() {
-}
+void ReadAsyncStringUntil_Test::setUp() {}
 
 
-void ReadAsyncStringUntil_Test::tearDown() {
-}
+void ReadAsyncStringUntil_Test::tearDown() {}
 
 
 void ReadAsyncStringUntil_Test::runTest() {
@@ -156,14 +148,14 @@ void ReadAsyncStringUntil_Test::runTest() {
                 boost::system::error_code ec;
 
                 size_t length = sock.read_some(boost::asio::buffer(data), ec);
-                if (ec == boost::asio::error::eof) break; // The other side closed connection
+                if (ec == boost::asio::error::eof) break;      // The other side closed connection
                 if (ec) throw boost::system::system_error(ec); // some other error.
                 // no errors : synchronously write back
                 boost::asio::write(sock, boost::asio::buffer(data, length));
             }
         } catch (std::exception& e) {
             std::cerr << "Exception in thread: " << e.what() << "\n";
-        }        
+        }
     });
     // Start client ...
     karabo::util::Hash input("hostname", "localhost", "port", port, "type", "client", "sizeofLength", 0);

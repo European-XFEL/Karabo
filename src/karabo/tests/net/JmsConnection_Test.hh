@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   JmsConnection_Test.hh
  * Author: heisenb
  *
@@ -6,18 +6,18 @@
  */
 
 #ifndef JMSCONNECTION_TEST_HH
-#define	JMSCONNECTION_TEST_HH
+#define JMSCONNECTION_TEST_HH
 
-#include "karabo/net/JmsConsumer.hh"
-#include "karabo/net/JmsProducer.hh"
-#include "karabo/net/JmsConnection.hh"
 #include <cppunit/extensions/HelperMacros.h>
+
 #include <atomic>
 #include <string>
 
+#include "karabo/net/JmsConnection.hh"
+#include "karabo/net/JmsConsumer.hh"
+#include "karabo/net/JmsProducer.hh"
+
 class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(JmsConnection_Test);
     CPPUNIT_TEST(testConnect);
     CPPUNIT_TEST(testCommunication1);
@@ -33,12 +33,11 @@ class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
     std::vector<std::string> m_failures;
     boost::posix_time::ptime m_tick;
 
-public:
+   public:
     JmsConnection_Test();
     virtual ~JmsConnection_Test();
 
-private:
-
+   private:
     void testConnect();
 
     void testCommunication1();
@@ -47,16 +46,11 @@ private:
 
     void testPermanentRead();
 
-    void readHandler1(karabo::net::JmsConsumer::Pointer consumer,
-                      karabo::net::JmsProducer::Pointer producer,
-                     karabo::util::Hash::Pointer header,
-                      karabo::util::Hash::Pointer body);
+    void readHandler1(karabo::net::JmsConsumer::Pointer consumer, karabo::net::JmsProducer::Pointer producer,
+                      karabo::util::Hash::Pointer header, karabo::util::Hash::Pointer body);
 
-    void readHandler2(karabo::net::JmsConsumer::Pointer channel,
-                      karabo::util::Hash::Pointer header,
+    void readHandler2(karabo::net::JmsConsumer::Pointer channel, karabo::util::Hash::Pointer header,
                       karabo::util::Hash::Pointer body);
-
 };
 
-#endif	/* JMSCONNECTION_TEST_HH */
-
+#endif /* JMSCONNECTION_TEST_HH */

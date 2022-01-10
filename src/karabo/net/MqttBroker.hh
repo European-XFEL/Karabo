@@ -1,23 +1,23 @@
-/* 
+/*
  * File:   MqttBroker.hh
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  * Created on June 27, 2020, 9:23 PM
  */
 
 #ifndef KARABO_NET_MQTTBROKER_HH
-#define	KARABO_NET_MQTTBROKER_HH
+#define KARABO_NET_MQTTBROKER_HH
 
 
 #include "karabo/net/Broker.hh"
-#include "karabo/net/Strand.hh"
 #include "karabo/net/MqttClient.hh"
+#include "karabo/net/Strand.hh"
 
 
 namespace karabo {
     namespace net {
 
 
-        class MqttBroker : public Broker  {
+        class MqttBroker : public Broker {
             /**
              * MqttBroker operates currently with the following set of topics..
              *
@@ -55,11 +55,10 @@ namespace karabo {
              *
              */
 
-        public:
-
+           public:
             KARABO_CLASSINFO(MqttBroker, "mqtt", "1.0")
-            
-            static void expectedParameters(karabo::util::Schema& s);      
+
+            static void expectedParameters(karabo::util::Schema& s);
 
             explicit MqttBroker(const karabo::util::Hash& configuration = karabo::util::Hash());
 
@@ -75,25 +74,24 @@ namespace karabo {
 
             std::string getBrokerUrl() const override;
 
-            std::string getBrokerType() const override { return getClassInfo().getClassId(); }
+            std::string getBrokerType() const override {
+                return getClassInfo().getClassId();
+            }
 
             std::string getClientId() const;
 
-            boost::system::error_code subscribeToRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) override;
+            boost::system::error_code subscribeToRemoteSignal(const std::string& signalInstanceId,
+                                                              const std::string& signalFunction) override;
 
-            boost::system::error_code unsubscribeFromRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) override;
+            boost::system::error_code unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+                                                                  const std::string& signalFunction) override;
 
-            void subscribeToRemoteSignalAsync(const std::string& signalInstanceId,
-                                        const std::string& signalFunction,
-                                        const AsyncHandler& completionHandler) override;
+            void subscribeToRemoteSignalAsync(const std::string& signalInstanceId, const std::string& signalFunction,
+                                              const AsyncHandler& completionHandler) override;
 
             void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
-                                           const std::string& signalFunction,
-                                           const AsyncHandler& completionHandler) override;
+                                                  const std::string& signalFunction,
+                                                  const AsyncHandler& completionHandler) override;
 
             /**
              * MQTT subscription:
@@ -122,8 +120,9 @@ namespace karabo {
              * @param handler       - success handler
              * @param errorNotifier - error handler
              */
-            void startReadingHeartbeats(const consumer::MessageHandler& handler,
-                                const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
+            void startReadingHeartbeats(
+                  const consumer::MessageHandler& handler,
+                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
             /**
              * MQTT subscription.
@@ -134,33 +133,24 @@ namespace karabo {
              * @param errorNotifier - error handler
              */
             void startReadingLogs(const consumer::MessageHandler& handler,
-                          const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
+                                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            void write(const std::string& topic,
-                       const karabo::util::Hash::Pointer& header,
-                       const karabo::util::Hash::Pointer& body,
-                       const int priority = 4,
+            void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
+                       const karabo::util::Hash::Pointer& body, const int priority = 4,
                        const int timeToLive = 0) override;
 
-        protected:
+           protected:
+            virtual void publish(const std::string& topic, const karabo::util::Hash::Pointer& msg, PubOpts options);
 
-            virtual void publish(const std::string& topic,
-                                 const karabo::util::Hash::Pointer& msg,
-                                 PubOpts options);
-
-        private:
-
+           private:
             MqttBroker(const MqttBroker& o) = delete;
             MqttBroker(const MqttBroker& o, const std::string& newInstanceId);
 
-            void mqttReadHashHandler(const boost::system::error_code& ec,
-                                     const std::string& topic,
-                                     const karabo::util::Hash::Pointer & msg,
-                                     const consumer::MessageHandler& handler,
+            void mqttReadHashHandler(const boost::system::error_code& ec, const std::string& topic,
+                                     const karabo::util::Hash::Pointer& msg, const consumer::MessageHandler& handler,
                                      const consumer::ErrorNotifier& errorNotifier);
 
-            void registerMqttTopic(const std::string& topic,
-                                   const karabo::net::SubOpts& subopts,
+            void registerMqttTopic(const std::string& topic, const karabo::net::SubOpts& subopts,
                                    const consumer::MessageHandler& handler,
                                    const consumer::ErrorNotifier& errorNotifier);
 
@@ -173,8 +163,7 @@ namespace karabo {
 
             void unregisterMqttTopics(const std::vector<std::string>& topics);
 
-            void checkOrder(const std::string& topic,
-                            const karabo::util::Hash::Pointer& msg,
+            void checkOrder(const std::string& topic, const karabo::util::Hash::Pointer& msg,
                             const consumer::MessageHandler& handler);
 
             void setOrderNumbers(const std::string& consumers, const karabo::util::Hash::Pointer& header);
@@ -189,12 +178,10 @@ namespace karabo {
              */
             void cleanObsolete(const std::string& producerId, const double validTimestamp);
 
-        protected:
+           protected:
+            karabo::net::MqttClient::Pointer m_client;
 
-            karabo::net::MqttClient::Pointer  m_client;
-
-        private:
-
+           private:
             karabo::net::Strand::Pointer m_handlerStrand;
             consumer::MessageHandler m_messageHandler;
             consumer::ErrorNotifier m_errorNotifier;
@@ -234,20 +221,18 @@ namespace karabo {
             // storage for temporarily keeping "pending" messages in hope the message with number that restores the
             // order will come soon ...
             //                 producerId -> map orderNumber -> (producer timestamp, callback)
-            std::unordered_map<std::string,
-                               std::map<long long, std::pair<double, boost::function<void()> > > > m_store;
+            std::unordered_map<std::string, std::map<long long, std::pair<double, boost::function<void()> > > > m_store;
 
             typedef boost::shared_ptr<boost::asio::deadline_timer> DeadlinePointer;
             // Deadline is established on producer: any disorder should be resolved before deadline.
-            std::unordered_map<std::string, DeadlinePointer >  m_deadlines;
+            std::unordered_map<std::string, DeadlinePointer> m_deadlines;
             // Deadline timer setup: timeout
             unsigned int m_deadlineTimeout;
             // producer timestamp is a "marker" of MqttBroker instance incarnation for m_instanceId in time
-            const double m_timestamp;    // timestamp used by this instance when in producer role
+            const double m_timestamp; // timestamp used by this instance when in producer role
         };
 
-    }
-}
+    } // namespace net
+} // namespace karabo
 
-#endif	/* KARABO_NET_MQTTBROKER_HH */
-
+#endif /* KARABO_NET_MQTTBROKER_HH */

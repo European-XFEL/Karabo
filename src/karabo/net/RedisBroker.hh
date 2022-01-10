@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   RedisBroker.hh
  * Author: Sergey Esenov serguei.essenov@xfel.eu
  *
@@ -6,19 +6,19 @@
  */
 
 #ifndef KARABO_NET_REDISBROKER_HH
-#define	KARABO_NET_REDISBROKER_HH
+#define KARABO_NET_REDISBROKER_HH
 
 
 #include "karabo/net/Broker.hh"
-#include "karabo/net/Strand.hh"
 #include "karabo/net/RedisClient.hh"
+#include "karabo/net/Strand.hh"
 
 
 namespace karabo {
     namespace net {
 
 
-        class RedisBroker : public Broker  {
+        class RedisBroker : public Broker {
             /**
              * RedisBroker operates currently with the following set of topics..
              *
@@ -56,11 +56,10 @@ namespace karabo {
              *
              */
 
-        public:
-
+           public:
             KARABO_CLASSINFO(RedisBroker, "redis", "1.0")
-            
-            static void expectedParameters(karabo::util::Schema& s);      
+
+            static void expectedParameters(karabo::util::Schema& s);
 
             explicit RedisBroker(const karabo::util::Hash& configuration = karabo::util::Hash());
 
@@ -76,18 +75,17 @@ namespace karabo {
 
             std::string getBrokerUrl() const override;
 
-            std::string getBrokerType() const override { return getClassInfo().getClassId(); }
+            std::string getBrokerType() const override {
+                return getClassInfo().getClassId();
+            }
 
-            boost::system::error_code subscribeToRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) override;
+            boost::system::error_code subscribeToRemoteSignal(const std::string& signalInstanceId,
+                                                              const std::string& signalFunction) override;
 
-            boost::system::error_code unsubscribeFromRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) override;
+            boost::system::error_code unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+                                                                  const std::string& signalFunction) override;
 
-            void subscribeToRemoteSignalAsync(const std::string& signalInstanceId,
-                                              const std::string& signalFunction,
+            void subscribeToRemoteSignalAsync(const std::string& signalInstanceId, const std::string& signalFunction,
                                               const AsyncHandler& completionHandler) override;
 
             void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
@@ -121,8 +119,9 @@ namespace karabo {
              * @param handler       - success handler
              * @param errorNotifier - error handler
              */
-            void startReadingHeartbeats(const consumer::MessageHandler& handler,
-                                        const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
+            void startReadingHeartbeats(
+                  const consumer::MessageHandler& handler,
+                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
             /**
              * REDIS subscription.
@@ -135,41 +134,32 @@ namespace karabo {
             void startReadingLogs(const consumer::MessageHandler& handler,
                                   const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            void write(const std::string& topic,
-                       const karabo::util::Hash::Pointer& header,
-                       const karabo::util::Hash::Pointer& body,
-                       const int priority = 4,
+            void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
+                       const karabo::util::Hash::Pointer& body, const int priority = 4,
                        const int timeToLive = 0) override;
 
-        protected:
-
+           protected:
             virtual void publish(const std::string& topic, const karabo::util::Hash::Pointer& msg);
 
-        private:
-
+           private:
             RedisBroker(const RedisBroker& o) = delete;
             RedisBroker(const RedisBroker& o, const std::string& newInstanceId);
 
-            void redisReadHashHandler(const boost::system::error_code& ec,
-                                      const std::string& topic,
-                                      const karabo::util::Hash::Pointer & msg,
-                                      const consumer::MessageHandler& handler,
+            void redisReadHashHandler(const boost::system::error_code& ec, const std::string& topic,
+                                      const karabo::util::Hash::Pointer& msg, const consumer::MessageHandler& handler,
                                       const consumer::ErrorNotifier& errorNotifier);
 
-            void registerRedisTopic(const std::string& topic,
-                                    const consumer::MessageHandler& handler,
+            void registerRedisTopic(const std::string& topic, const consumer::MessageHandler& handler,
                                     const consumer::ErrorNotifier& errorNotifier);
 
             void unregisterRedisTopic(const std::string& topic);
 
-            void registerRedisTopics(const std::vector<std::string>& topics,
-                                     const consumer::MessageHandler& handler,
+            void registerRedisTopics(const std::vector<std::string>& topics, const consumer::MessageHandler& handler,
                                      const consumer::ErrorNotifier& errorNotifier);
 
             void unregisterRedisTopics(const std::vector<std::string>& topics);
 
-            void checkOrder(const std::string& topic,
-                            const karabo::util::Hash::Pointer& msg,
+            void checkOrder(const std::string& topic, const karabo::util::Hash::Pointer& msg,
                             const consumer::MessageHandler& handler);
 
             void setOrderNumbers(const std::string& consumers, const karabo::util::Hash::Pointer& header);
@@ -184,12 +174,10 @@ namespace karabo {
              */
             void cleanObsolete(const std::string& producerId, const double validTimestamp);
 
-        protected:
+           protected:
+            karabo::net::RedisClient::Pointer m_client;
 
-            karabo::net::RedisClient::Pointer  m_client;
-
-        private:
-
+           private:
             karabo::net::Strand::Pointer m_handlerStrand;
             consumer::MessageHandler m_messageHandler;
             consumer::ErrorNotifier m_errorNotifier;
@@ -206,17 +194,15 @@ namespace karabo {
             // storage for temporarily keeping "pending" messages in hope the message with number that restores the
             // order will come soon ...
             //                 producerId -> map orderNumber -> (producer timestamp, callback)
-            std::unordered_map<std::string,
-                               std::map<long long, std::pair<double, boost::function<void()> > > > m_store;
+            std::unordered_map<std::string, std::map<long long, std::pair<double, boost::function<void()> > > > m_store;
 
             unsigned int m_subscribeTimeout;
             // producer timestamp is a "marker" of RedisBroker instance incarnation for m_instanceId in time
-            const double m_timestamp;    // timestamp used by this instance when in producer role
+            const double m_timestamp; // timestamp used by this instance when in producer role
         };
 
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 
-#endif	/* KARABO_NET_REDISBROKER_HH */
-
+#endif /* KARABO_NET_REDISBROKER_HH */

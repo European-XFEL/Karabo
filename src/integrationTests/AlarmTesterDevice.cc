@@ -2,184 +2,178 @@
  * $Id: AlarmTester.cc 7755 2016-06-24 14:10:56Z haufs $
  *
  * Author: <steffen.hauf@xfel.eu>
- * 
+ *
  * Created on June, 2016, 03:03 PM
  *
  * Copyright (c) 2010-2013 European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include "AlarmTesterDevice.hh"
+
 #include <cassert>
 
 using namespace std;
 
 USING_KARABO_NAMESPACES
 
-        namespace karabo {
+namespace karabo {
 
 
     KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, AlarmTester)
 
     void AlarmTester::expectedParameters(Schema& expected) {
+        NODE_ELEMENT(expected).key("nodeA").commit();
 
-        NODE_ELEMENT(expected).key("nodeA")
-                .commit();
+        FLOAT_ELEMENT(expected)
+              .key("nodeA.floatPropNoAck2")
+              .displayedName("Float Property2 NO needsAcknowledging")
+              .readOnly()
+              .initialValue(0)
+              .warnLow(-2.0)
+              .info("A floatPropNoAck2 warnLow")
+              .needsAcknowledging(false)
+              .warnHigh(2.0)
+              .info("A floatPropNoAck2 warnHigh")
+              .needsAcknowledging(false)
+              .alarmLow(-3.0)
+              .info("A floatPropNoAck2 alarmLow")
+              .needsAcknowledging(false)
+              .alarmHigh(3.0)
+              .info("A floatPropNoAck2 alarmHigh")
+              .needsAcknowledging(false)
+              //                .enableRollingStats().warnVarianceHigh(2.5).needsAcknowledging(true).evaluationInterval(100)
+              .commit();
 
-        FLOAT_ELEMENT(expected).key("nodeA.floatPropNoAck2")
-                .displayedName("Float Property2 NO needsAcknowledging")
-                .readOnly().initialValue(0)
-                .warnLow(-2.0).info("A floatPropNoAck2 warnLow").needsAcknowledging(false)
-                .warnHigh(2.0).info("A floatPropNoAck2 warnHigh").needsAcknowledging(false)
-                .alarmLow(-3.0).info("A floatPropNoAck2 alarmLow").needsAcknowledging(false)
-                .alarmHigh(3.0).info("A floatPropNoAck2 alarmHigh").needsAcknowledging(false)
-//                .enableRollingStats().warnVarianceHigh(2.5).needsAcknowledging(true).evaluationInterval(100)
-                .commit();
+        FLOAT_ELEMENT(expected)
+              .key("nodeA.floatPropNeedsAck2")
+              .displayedName("Float Property2 needsAcknowledging")
+              .readOnly()
+              .initialValue(0)
+              .warnLow(-2.0)
+              .info("A floatPropNeedsAck2 warnLow")
+              .needsAcknowledging(true)
+              .warnHigh(2.0)
+              .info("A floatPropNeedsAck2 warnHigh")
+              .needsAcknowledging(true)
+              .alarmLow(-3.0)
+              .info("A floatPropNeedsAck2 alarmLow")
+              .needsAcknowledging(true)
+              .alarmHigh(3.0)
+              .info("A floatPropNeedsAck2 alarmHigh")
+              .needsAcknowledging(true)
+              .commit();
 
-        FLOAT_ELEMENT(expected).key("nodeA.floatPropNeedsAck2")
-                .displayedName("Float Property2 needsAcknowledging")
-                .readOnly().initialValue(0)
-                .warnLow(-2.0).info("A floatPropNeedsAck2 warnLow").needsAcknowledging(true)
-                .warnHigh(2.0).info("A floatPropNeedsAck2 warnHigh").needsAcknowledging(true)
-                .alarmLow(-3.0).info("A floatPropNeedsAck2 alarmLow").needsAcknowledging(true)
-                .alarmHigh(3.0).info("A floatPropNeedsAck2 alarmHigh").needsAcknowledging(true)
-                .commit();
+        INT32_ELEMENT(expected)
+              .key("intPropNeedsAck")
+              .displayedName("Int Property needsAcknowledging")
+              .readOnly()
+              .initialValue(0)
+              .warnLow(-30)
+              .info("A intPropNeedsAck warnLow")
+              .needsAcknowledging(true)
+              .warnHigh(30)
+              .info("A intPropNeedsAck warnHigh")
+              .needsAcknowledging(true)
+              .alarmLow(-40)
+              .info("A intPropNeedsAck alarmLow")
+              .needsAcknowledging(true)
+              .alarmHigh(40)
+              .info("A intPropNeedsAck alarmHigh")
+              .needsAcknowledging(true)
+              //                .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
+              .commit();
 
-        INT32_ELEMENT(expected).key("intPropNeedsAck")
-                .displayedName("Int Property needsAcknowledging")
-                .readOnly().initialValue(0)
-                .warnLow(-30).info("A intPropNeedsAck warnLow").needsAcknowledging(true)
-                .warnHigh(30).info("A intPropNeedsAck warnHigh").needsAcknowledging(true)
-                .alarmLow(-40).info("A intPropNeedsAck alarmLow").needsAcknowledging(true)
-                .alarmHigh(40).info("A intPropNeedsAck alarmHigh").needsAcknowledging(true)
-//                .enableRollingStats().warnVarianceHigh(3).needsAcknowledging(false).evaluationInterval(100)
-                .commit();
+        INT32_ELEMENT(expected)
+              .key("intPropNoAck")
+              .displayedName("Int Property NO needsAcknowledging")
+              .readOnly()
+              .initialValue(0)
+              .warnLow(-30)
+              .info("A intPropNoAck warnLow")
+              .needsAcknowledging(false)
+              .warnHigh(30)
+              .info("A intPropNoAck warnHigh")
+              .needsAcknowledging(false)
+              .alarmLow(-40)
+              .info("A intPropNoAck alarmLow")
+              .needsAcknowledging(false)
+              .alarmHigh(40)
+              .info("A intPropNoAck alarmHigh")
+              .needsAcknowledging(false)
+              .commit();
 
-        INT32_ELEMENT(expected).key("intPropNoAck")
-                .displayedName("Int Property NO needsAcknowledging")
-                .readOnly().initialValue(0)
-                .warnLow(-30).info("A intPropNoAck warnLow").needsAcknowledging(false)
-                .warnHigh(30).info("A intPropNoAck warnHigh").needsAcknowledging(false)
-                .alarmLow(-40).info("A intPropNoAck alarmLow").needsAcknowledging(false)
-                .alarmHigh(40).info("A intPropNoAck alarmHigh").needsAcknowledging(false)
-                .commit();
+        STRING_ELEMENT(expected).key("result").displayedName("Result").readOnly().initialValue("").commit();
 
-        STRING_ELEMENT(expected).key("result")
-                .displayedName("Result")
-                .readOnly().initialValue("")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerWarnLowAck").displayedName("Trigger warnLow needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnLowAck")
-                .displayedName("Trigger warnLow needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerWarnHighAck").displayedName("Trigger warnHigh needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnHighAck")
-                .displayedName("Trigger warnHigh needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerAlarmLowAck").displayedName("Trigger alarmLow needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerAlarmLowAck")
-                .displayedName("Trigger alarmLow needsAck")
-                .commit();
-        
-        SLOT_ELEMENT(expected).key("triggerAlarmHighAck")
-                .displayedName("Trigger alarmHigh needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerAlarmHighAck").displayedName("Trigger alarmHigh needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnLowNoAck")
-                .displayedName("Trigger warnLow NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerWarnLowNoAck").displayedName("Trigger warnLow NO needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnHighNoAck")
-                .displayedName("Trigger warnHigh NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerWarnHighNoAck").displayedName("Trigger warnHigh NO needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerAlarmLowNoAck")
-                .displayedName("Trigger alarmLow NO needsAck")
-                .commit();
-        
-        SLOT_ELEMENT(expected).key("triggerAlarmHighNoAck")
-                .displayedName("Trigger alarmHigh NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerAlarmLowNoAck").displayedName("Trigger alarmLow NO needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnLowAckNode")
-                .displayedName("Trigger nodewarnLow needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerAlarmHighNoAck").displayedName("Trigger alarmHigh NO needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnHighAckNode")
-                .displayedName("Trigger node warnHigh needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerWarnLowAckNode").displayedName("Trigger nodewarnLow needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerAlarmLowAckNode")
-                .displayedName("Trigger node alarmLow needsAck")
-                .commit();
-        
-        SLOT_ELEMENT(expected).key("triggerAlarmHighAckNode")
-                .displayedName("Trigger node alarmHigh needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerWarnHighAckNode").displayedName("Trigger node warnHigh needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnLowNoAckNode")
-                .displayedName("Trigger node warnLow NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerAlarmLowAckNode").displayedName("Trigger node alarmLow needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerWarnHighNoAckNode")
-                .displayedName("Trigger node warnHigh NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerAlarmHighAckNode").displayedName("Trigger node alarmHigh needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerAlarmLowNoAckNode")
-                .displayedName("Trigger node alarmLow NO needsAck")
-                .commit();
-        
-        SLOT_ELEMENT(expected).key("triggerAlarmHighNoAckNode")
-                .displayedName("Trigger node alarmHigh NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected)
+              .key("triggerWarnLowNoAckNode")
+              .displayedName("Trigger node warnLow NO needsAck")
+              .commit();
 
-        SLOT_ELEMENT(expected).key("triggerGlobalWarnAck")
-                .displayedName("Trigger Global Warn needsAck")
-                .commit();
+        SLOT_ELEMENT(expected)
+              .key("triggerWarnHighNoAckNode")
+              .displayedName("Trigger node warnHigh NO needsAck")
+              .commit();
 
-        SLOT_ELEMENT(expected).key("triggerGlobalAlarmAck")
-                .displayedName("Trigger Global Alarm needsAck")
-                .commit();
+        SLOT_ELEMENT(expected)
+              .key("triggerAlarmLowNoAckNode")
+              .displayedName("Trigger node alarmLow NO needsAck")
+              .commit();
 
-        SLOT_ELEMENT(expected).key("triggerInterlockAck")
-                .displayedName("Trigger INTERLOCK needsAck")
-                .commit();
+        SLOT_ELEMENT(expected)
+              .key("triggerAlarmHighNoAckNode")
+              .displayedName("Trigger node alarmHigh NO needsAck")
+              .commit();
 
-        SLOT_ELEMENT(expected).key("triggerGlobalWarn")
-                .displayedName("Trigger Global Warn")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerGlobalWarnAck").displayedName("Trigger Global Warn needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerGlobalAlarm")
-                .displayedName("Trigger Global Alarm")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerGlobalAlarmAck").displayedName("Trigger Global Alarm needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerInterlock")
-                .displayedName("Trigger INTERLOCK")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerInterlockAck").displayedName("Trigger INTERLOCK needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("triggerNormalAck")
-                .displayedName("Back to normal needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerGlobalWarn").displayedName("Trigger Global Warn").commit();
 
-        SLOT_ELEMENT(expected).key("triggerNormalNoAck")
-                .displayedName("Back to normal NO needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerGlobalAlarm").displayedName("Trigger Global Alarm").commit();
 
-        SLOT_ELEMENT(expected).key("triggerNormalAckNode")
-                .displayedName("Back to node normal needsAck")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerInterlock").displayedName("Trigger INTERLOCK").commit();
 
-        SLOT_ELEMENT(expected).key("triggerNormalNoAckNode")
-                .displayedName("Back to node normal NO needsAck")
-                .commit();
-        
-        SLOT_ELEMENT(expected).key("triggerGlobalNormal")
-                .displayedName("Back to global normal")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerNormalAck").displayedName("Back to normal needsAck").commit();
 
-        SLOT_ELEMENT(expected).key("alarmConditionToResult")
-                .displayedName("Put the alarm condition in the result string")
-                .commit();
+        SLOT_ELEMENT(expected).key("triggerNormalNoAck").displayedName("Back to normal NO needsAck").commit();
 
+        SLOT_ELEMENT(expected).key("triggerNormalAckNode").displayedName("Back to node normal needsAck").commit();
+
+        SLOT_ELEMENT(expected).key("triggerNormalNoAckNode").displayedName("Back to node normal NO needsAck").commit();
+
+        SLOT_ELEMENT(expected).key("triggerGlobalNormal").displayedName("Back to global normal").commit();
+
+        SLOT_ELEMENT(expected)
+              .key("alarmConditionToResult")
+              .displayedName("Put the alarm condition in the result string")
+              .commit();
     }
 
     AlarmTester::AlarmTester(const karabo::util::Hash& config) : Device<>(config) {
@@ -223,8 +217,7 @@ USING_KARABO_NAMESPACES
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
-    AlarmTester::~AlarmTester() {
-    }
+    AlarmTester::~AlarmTester() {}
 
     void AlarmTester::initialize() {
         Schema schema = getFullSchema();
@@ -242,12 +235,10 @@ USING_KARABO_NAMESPACES
         appendSchema(schema, true);
     }
 
-    void AlarmTester::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
-    }
+    void AlarmTester::preReconfigure(karabo::util::Hash& incomingReconfiguration) {}
 
 
-    void AlarmTester::postReconfigure() {
-    }
+    void AlarmTester::postReconfigure() {}
 
     void AlarmTester::triggerWarnLowAck() {
         set("intPropNeedsAck", -4);
@@ -301,7 +292,7 @@ USING_KARABO_NAMESPACES
 
         KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerWarnLowAckNode");
-    } 
+    }
 
     void AlarmTester::triggerWarnHighAckNode() {
         set("nodeA.floatPropNeedsAck2", 2.2);
@@ -415,4 +406,4 @@ USING_KARABO_NAMESPACES
         const karabo::util::AlarmCondition alarmCondition = getAlarmCondition();
         set("result", alarmCondition.asString());
     }
-}
+} // namespace karabo

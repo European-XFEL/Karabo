@@ -8,11 +8,11 @@
 
 
 #ifndef KARABO_UTIL_DIMS_HH
-#define	KARABO_UTIL_DIMS_HH
+#define KARABO_UTIL_DIMS_HH
 
 #include <algorithm>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "karaboDll.hh"
 
@@ -25,15 +25,13 @@ namespace karabo {
          * @brief A class describing array dimensions
          */
         class Dims {
-
             typedef unsigned long long ull64;
 
             std::vector<ull64> m_vec;
             ull64 m_numberOfElements;
             size_t m_rank;
 
-        public:
-
+           public:
             Dims() : m_vec(std::vector<ull64>()) {
                 calculate();
             }
@@ -67,12 +65,11 @@ namespace karabo {
                 calculate();
             }
 
-            virtual ~Dims() {
-            }
+            virtual ~Dims() {}
 
             /**
              * Return the rank of the dimensions
-             * @return 
+             * @return
              */
             std::size_t rank() const {
                 return m_rank;
@@ -80,7 +77,7 @@ namespace karabo {
 
             /**
              * Return the total number of elements in the array
-             * @return 
+             * @return
              */
             ull64 size() const {
                 return m_numberOfElements;
@@ -89,7 +86,7 @@ namespace karabo {
             /**
              * Return the extend of the array in the dimension identified by idx
              * @param idx, needs to be >= 0 and , rank
-             * @return 
+             * @return
              */
             ull64 extentIn(size_t idx) const {
                 return m_vec[idx];
@@ -97,7 +94,7 @@ namespace karabo {
 
             /**
              * Return a std::vector holding the dimension sizes
-             * @return 
+             * @return
              */
             const std::vector<ull64>& toVector() const {
                 return m_vec;
@@ -114,7 +111,7 @@ namespace karabo {
 
             /**
              * Return size of first dimension
-             * @return 
+             * @return
              */
             ull64 x1() const {
                 if (m_rank >= 1) return m_vec[0];
@@ -123,7 +120,7 @@ namespace karabo {
 
             /**
              * Return size of second dimension
-             * @return 
+             * @return
              */
             ull64 x2() const {
                 if (m_rank >= 2) return m_vec[1];
@@ -132,7 +129,7 @@ namespace karabo {
 
             /**
              * Return size of third dimension
-             * @return 
+             * @return
              */
             ull64 x3() const {
                 if (m_rank >= 3) return m_vec[2];
@@ -141,7 +138,7 @@ namespace karabo {
 
             /**
              * Return size of fourth dimension
-             * @return 
+             * @return
              */
             ull64 x4() const {
                 if (m_rank >= 4) return m_vec[3];
@@ -155,8 +152,7 @@ namespace karabo {
                 std::reverse(m_vec.begin(), m_vec.end());
             }
 
-        private:
-
+           private:
             /**
              * calculate rank and number of elements in array.
              */
@@ -167,10 +163,10 @@ namespace karabo {
                     return;
                 }
                 m_numberOfElements = m_vec[0];
-                //std::clog << "calculate numEl: " << m_numberOfElements << std::endl;
+                // std::clog << "calculate numEl: " << m_numberOfElements << std::endl;
                 for (size_t i = 1; i < m_rank; i++) {
-                    m_numberOfElements *= static_cast<ull64> (m_vec[i]);
-                    //std::clog << "calculate i=" << i << " numEl= " << m_numberOfElements << std::endl;
+                    m_numberOfElements *= static_cast<ull64>(m_vec[i]);
+                    // std::clog << "calculate i=" << i << " numEl= " << m_numberOfElements << std::endl;
                 }
             }
         };
@@ -183,10 +179,8 @@ namespace karabo {
             }
             return result;
         }
-    }
-}
-
+    } // namespace util
+} // namespace karabo
 
 
 #endif
-

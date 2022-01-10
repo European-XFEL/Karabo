@@ -4,6 +4,7 @@
  */
 
 #include "AlarmConditionElement.hh"
+
 #include "AlarmConditions.hh"
 #include "Schema.hh"
 
@@ -11,8 +12,8 @@ namespace karabo {
     namespace util {
 
 
-        AlarmConditionElement::AlarmConditionElement(Schema& expected) : GenericElement<AlarmConditionElement>(expected) {
-        }
+        AlarmConditionElement::AlarmConditionElement(Schema& expected)
+            : GenericElement<AlarmConditionElement>(expected) {}
 
 
         AlarmConditionElement& AlarmConditionElement::initialValue(const AlarmCondition& a) {
@@ -31,7 +32,7 @@ namespace karabo {
             m_node->setAttribute<std::string>(KARABO_SCHEMA_CLASS_ID, "AlarmCondition");
             m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, "AlarmCondition");
 
-            //finally protect setting options etc to alarm element via overwrite
+            // finally protect setting options etc to alarm element via overwrite
             OverwriteElement::Restrictions restrictions;
             restrictions.options = true;
             restrictions.minInc = true;
@@ -43,8 +44,6 @@ namespace karabo {
             restrictions.displayedName = true;
             restrictions.overwriteRestrictions = true;
             m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
-            
         }
-    }
-}
-
+    } // namespace util
+} // namespace karabo

@@ -5,20 +5,20 @@
  * Created on July 10, 2013, 2:35 PM
  */
 
-#include <iostream>
-#include <iomanip>
+#include "TimeClasses_Test.hh"
+
 #include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <karabo/util/Epochstamp.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/TimeDuration.hh>
+#include <karabo/util/TimePeriod.hh>
+#include <karabo/util/TimeProfiler.hh>
 #include <limits>
 
-#include <karabo/util/Epochstamp.hh>
-#include <karabo/util/TimePeriod.hh>
-#include <karabo/util/TimeDuration.hh>
-#include <karabo/util/TimeProfiler.hh>
-#include <karabo/util/Hash.hh>
-
-#include "TimeClasses_Test.hh"
-#include "karabo/util/Trainstamp.hh"
 #include "karabo/util/Timestamp.hh"
+#include "karabo/util/Trainstamp.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TimeClasses_Test);
 
@@ -27,20 +27,16 @@ using namespace karabo;
 using namespace karabo::util;
 
 
-TimeClasses_Test::TimeClasses_Test() {
-}
+TimeClasses_Test::TimeClasses_Test() {}
 
 
-TimeClasses_Test::~TimeClasses_Test() {
-}
+TimeClasses_Test::~TimeClasses_Test() {}
 
 
-void TimeClasses_Test::setUp() {
-}
+void TimeClasses_Test::setUp() {}
 
 
-void TimeClasses_Test::tearDown() {
-}
+void TimeClasses_Test::tearDown() {}
 
 
 void TimeClasses_Test::testEpochstamp() {
@@ -77,14 +73,14 @@ void TimeClasses_Test::testEpochstamp() {
 void TimeClasses_Test::testEpochstampConversion() {
     // to boost::posix_time::ptime
     const Epochstamp stamp(3600ull * 24ull * (365ull + 30ull) // 31.1.1971 0.00 h
-                           + 3ull * 3600ull // => 3.00 h
-                           + 125ull, // => 3.02:05 h
-                           123456ull * 1000000000ull); // 123456 nanosec
+                                 + 3ull * 3600ull             // => 3.00 h
+                                 + 125ull,                    // => 3.02:05 h
+                           123456ull * 1000000000ull);        // 123456 nanosec
     const boost::posix_time::ptime asPtime = stamp.getPtime();
 
-    CPPUNIT_ASSERT_EQUAL(1971, static_cast<int> (asPtime.date().year()));
-    CPPUNIT_ASSERT_EQUAL(1, static_cast<int> (asPtime.date().month()));
-    CPPUNIT_ASSERT_EQUAL(31, static_cast<int> (asPtime.date().day()));
+    CPPUNIT_ASSERT_EQUAL(1971, static_cast<int>(asPtime.date().year()));
+    CPPUNIT_ASSERT_EQUAL(1, static_cast<int>(asPtime.date().month()));
+    CPPUNIT_ASSERT_EQUAL(31, static_cast<int>(asPtime.date().day()));
 
     CPPUNIT_ASSERT_EQUAL(3, static_cast<int>(asPtime.time_of_day().hours()));
     CPPUNIT_ASSERT_EQUAL(2, static_cast<int>(asPtime.time_of_day().minutes()));
@@ -131,12 +127,11 @@ void TimeClasses_Test::testTimePeriod() {
 
 
 void TimeClasses_Test::testTimeDuration() {
-
     const TimeDuration durZero;
     CPPUNIT_ASSERT(durZero.getSeconds() == 0ull);
     CPPUNIT_ASSERT(durZero.getFractions() == 0ull);
 
-    const TimeValue seconds = 3600ull; // one hour
+    const TimeValue seconds = 3600ull;                 // one hour
     const TimeValue fractionsAtto = 456546'000'000ull; // 456.546 micro seconds
 
     const TimeDuration dur1(seconds, fractionsAtto);
@@ -295,17 +290,12 @@ void TimeClasses_Test::testTimeProfiler() {
         {
             usleep(500000);
             profiler.startPeriod();
-            {
-                usleep(500000);
-            }
+            { usleep(500000); }
             profiler.stopPeriod();
 
             profiler.startPeriod();
-            {
-                usleep(500000);
-            }
+            { usleep(500000); }
             profiler.stopPeriod();
-
         }
         profiler.stopPeriod("read");
     }
@@ -316,7 +306,7 @@ void TimeClasses_Test::testTimeProfiler() {
     KARABO_LOG_FRAMEWORK_DEBUG << "Write time: " << profiler.getPeriod("write").getDuration() << " [s]";
     KARABO_LOG_FRAMEWORK_DEBUG << "Read time : " << profiler.getPeriod("write.read").getDuration() << " [s]";
 
-    //TimeProfiler profiler("Test");
+    // TimeProfiler profiler("Test");
     profiler.open();
 
     profiler.startPeriod("write");
@@ -332,18 +322,14 @@ void TimeClasses_Test::testTimeProfiler() {
                 {
                     usleep(100000);
                     profiler.startPeriod();
-                    {
-                        usleep(100000);
-                    }
+                    { usleep(100000); }
                     profiler.stopPeriod();
                     usleep(100000);
                     profiler.startPeriod("flush");
                     {
                         usleep(100000);
                         profiler.startPeriod();
-                        {
-                            usleep(100000);
-                        }
+                        { usleep(100000); }
                         profiler.stopPeriod();
                         usleep(100000);
                     }
@@ -353,30 +339,22 @@ void TimeClasses_Test::testTimeProfiler() {
                 profiler.stopPeriod();
                 usleep(100000);
                 profiler.startPeriod();
-                {
-                    usleep(100000);
-                }
+                { usleep(100000); }
                 profiler.stopPeriod();
                 usleep(100000);
             }
             profiler.stopPeriod();
             usleep(100000);
             profiler.startPeriod("close");
-            {
-                usleep(100000);
-            }
+            { usleep(100000); }
             profiler.stopPeriod("close");
             usleep(100000);
             profiler.startPeriod();
-            {
-                usleep(100000);
-            }
+            { usleep(100000); }
             profiler.stopPeriod();
             usleep(100000);
             profiler.startPeriod();
-            {
-                usleep(100000);
-            }
+            { usleep(100000); }
             profiler.stopPeriod();
             usleep(100000);
         }
@@ -397,14 +375,14 @@ void TimeClasses_Test::testTimeProfiler() {
     //
     //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler write.format: " << profiler.getPeriod("write.format").getDuration();
     //
-    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler write.format.open: " << profiler.getPeriod("write.format.open").getDuration();
+    //    KARABO_LOG_FRAMEWORK_DEBUG << "Profiler write.format.open: " <<
+    //    profiler.getPeriod("write.format.open").getDuration();
 
     CPPUNIT_ASSERT(true);
 }
 
 
 void TimeClasses_Test::testTrainstamp() {
-
     // default ctr.
     const Trainstamp stamp;
     CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTrainId());
@@ -478,12 +456,10 @@ void TimeClasses_Test::testTrainstamp() {
     tid = std::numeric_limits<decltype(trainId)>::max();
     attrs.set("tid", tid);
     CPPUNIT_ASSERT_THROW(castToUInt(), karabo::util::CastException);
-
 }
 
 
 void TimeClasses_Test::testTimestamp() {
-
     const Epochstamp eStamp(1234567123ull, 79837534348ull);
     const Trainstamp trStamp(987654321ull);
 

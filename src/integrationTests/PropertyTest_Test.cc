@@ -6,6 +6,7 @@
  */
 
 #include "PropertyTest_Test.hh"
+
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
@@ -13,20 +14,18 @@
 
 
 USING_KARABO_NAMESPACES;
-using std::vector;
 using std::string;
+using std::vector;
 
 #define KRB_TEST_MAX_TIMEOUT 10
 
 CPPUNIT_TEST_SUITE_REGISTRATION(PropertyTest_Test);
 
 
-PropertyTest_Test::PropertyTest_Test() {
-}
+PropertyTest_Test::PropertyTest_Test() {}
 
 
-PropertyTest_Test::~PropertyTest_Test() {
-}
+PropertyTest_Test::~PropertyTest_Test() {}
 
 
 void PropertyTest_Test::setUp() {
@@ -51,10 +50,8 @@ void PropertyTest_Test::tearDown() {
 
 
 void PropertyTest_Test::allTestRunner() {
-
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("propertyTestServer_0", "PropertyTest",
-                                                                       Hash("deviceId", "testPropertyTest_0"),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "propertyTestServer_0", "PropertyTest", Hash("deviceId", "testPropertyTest_0"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     testSimpleProperties();
@@ -289,12 +286,12 @@ void PropertyTest_Test::testSimpleProperties() {
 
 
 void PropertyTest_Test::testReadOnlyProperties() {
-
     // Read-only float
     float initialFloatReadOnly;
     m_deviceClient->get("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly);
-    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly + 1.0F),
-                         karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(
+          m_deviceClient->set("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly + 1.0F),
+          karabo::util::ParameterException);
     float finalFloatReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "floatPropertyReadOnly", finalFloatReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialFloatReadOnly, finalFloatReadOnly);
@@ -302,8 +299,9 @@ void PropertyTest_Test::testReadOnlyProperties() {
     // Read-only double
     double initialDoubleReadOnly;
     m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly);
-    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly + 1.0),
-                         karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(
+          m_deviceClient->set("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly + 1.0),
+          karabo::util::ParameterException);
     double finalDoubleReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", finalDoubleReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialDoubleReadOnly, finalDoubleReadOnly);
@@ -381,21 +379,17 @@ void PropertyTest_Test::testReadOnlyProperties() {
     CPPUNIT_ASSERT_EQUAL(initialInt64ReadOnly, finalInt64ReadOnly);
 
     std::clog << "Tested read-only properties.. Ok" << std::endl;
-
 }
 
 
 void PropertyTest_Test::testVectorProperties() {
-
     { // bool
         vector<bool> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
         CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
-            if (i % 2 == 0)
-                CPPUNIT_ASSERT(value[i] == true);
-            else
-                CPPUNIT_ASSERT(value[i] == false);
+            if (i % 2 == 0) CPPUNIT_ASSERT(value[i] == true);
+            else CPPUNIT_ASSERT(value[i] == false);
         }
 
         value.assign(5, true);
@@ -450,7 +444,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->get("testPropertyTest_0", "vectors.int8Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
-            CPPUNIT_ASSERT_EQUAL(static_cast<signed char> (41 + i), value[i]);
+            CPPUNIT_ASSERT_EQUAL(static_cast<signed char>(41 + i), value[i]);
         }
 
         value.assign(3, 42);
@@ -493,7 +487,7 @@ void PropertyTest_Test::testVectorProperties() {
         vector<short> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int16Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<short> (20041 + i), value[i]);
+        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<short>(20041 + i), value[i]);
 
         value.assign(4, -3200);
         m_deviceClient->set("testPropertyTest_0", "vectors.int16Property", value);
@@ -535,7 +529,7 @@ void PropertyTest_Test::testVectorProperties() {
         vector<int> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int32Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<int> (20000041 + i), value[i]);
+        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<int>(20000041 + i), value[i]);
 
         value.assign(6, 1234);
         m_deviceClient->set("testPropertyTest_0", "vectors.int32Property", value);
@@ -578,7 +572,8 @@ void PropertyTest_Test::testVectorProperties() {
         vector<long long> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int64Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<long long> (i) + 20000000041LL, value[i]);
+        for (size_t i = 0; i < value.size(); ++i)
+            CPPUNIT_ASSERT_EQUAL(static_cast<long long>(i) + 20000000041LL, value[i]);
 
         value.assign(10, 1234LL);
         m_deviceClient->set("testPropertyTest_0", "vectors.int64Property", value);
@@ -773,7 +768,6 @@ void PropertyTest_Test::testReadOnlyTableProperties() {
 
 
 void PropertyTest_Test::testAttributeEditing() {
-
     // Here we test attribute editing affecting reconfiguration requests.
     // The example attributes tested here are maxSize and minSize for vectors.
     // Attributes relevant for readOnly values are tested in the
@@ -791,61 +785,57 @@ void PropertyTest_Test::testAttributeEditing() {
     // Allowed size is 1 - 10 elements
     vec = std::vector<int>{1, 2, 3};
     CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                            .timeout(1000) // in ms
-                            .receive());
+                                  .timeout(1000) // in ms
+                                  .receive());
 
     // Empty is too short
     vec = std::vector<int>();
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                         .timeout(1000) // in ms
-                         .receive(),
+                               .timeout(1000) // in ms
+                               .receive(),
                          karabo::util::RemoteException);
 
     // 11 is too long
     vec = std::vector<int>(11, 1);
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                         .timeout(1000) // in ms
-                         .receive(),
+                               .timeout(1000) // in ms
+                               .receive(),
                          karabo::util::RemoteException);
 
     // Now make 11 to be fine
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
-                                 KARABO_SCHEMA_MAX_SIZE, 11u);
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MAX_SIZE, 11u);
     CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                            .timeout(1000) // in ms
-                            .receive());
+                                  .timeout(1000) // in ms
+                                  .receive());
 
     // But 12 is still too long
     vec = std::vector<int>(12, 2);
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                         .timeout(1000) // in ms
-                         .receive(),
+                               .timeout(1000) // in ms
+                               .receive(),
                          karabo::util::RemoteException);
 
     // Now make empty vec to be fine
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
-                                 KARABO_SCHEMA_MIN_SIZE, 0u);
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MIN_SIZE, 0u);
     vec.clear();
     CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                            .timeout(1000) // in ms
-                            .receive());
+                                  .timeout(1000) // in ms
+                                  .receive());
 
     // Now make 2 the minumum and test that size 1 is not ok
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
-                                 KARABO_SCHEMA_MIN_SIZE, 2u);
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MIN_SIZE, 2u);
     vec = std::vector<int>(1, 0);
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                         .timeout(1000) // in ms
-                         .receive(),
+                               .timeout(1000) // in ms
+                               .receive(),
                          karabo::util::RemoteException);
 
     // Now make 8 the minumum and test that size 9 now is too long
-    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
-                                 KARABO_SCHEMA_MAX_SIZE, 8u);
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property", KARABO_SCHEMA_MAX_SIZE, 8u);
     vec = std::vector<int>(9, 100);
     CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
-                         .timeout(1000) // in ms
-                         .receive(),
+                               .timeout(1000) // in ms
+                               .receive(),
                          karabo::util::RemoteException);
 
     std::clog << "Tested attribute editing.. Ok" << std::endl;
@@ -862,13 +852,13 @@ void PropertyTest_Test::testNodedSlots() {
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get("testPropertyTest_0", "node.counter", counter));
         CPPUNIT_ASSERT_EQUAL(i, counter);
         CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "node.increment")
-                                .timeout(1000) // in ms
-                                .receive(remoteState));
+                                      .timeout(1000) // in ms
+                                      .receive(remoteState));
         CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(), remoteState);
     }
     CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "node.reset")
-                            .timeout(1000) // in ms
-                            .receive(remoteState));
+                                  .timeout(1000) // in ms
+                                  .receive(remoteState));
     CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(), remoteState);
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get("testPropertyTest_0", "node.counter", counter));
     CPPUNIT_ASSERT_EQUAL(0u, counter);

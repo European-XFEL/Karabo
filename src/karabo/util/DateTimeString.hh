@@ -1,21 +1,21 @@
-/* 
+/*
  * File:   DateTimeString.hh
  * Author: <luis.maia@xfel.eu>
  *
  * Created on March 19, 2014, 3:32 AM
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_DATETIMESTRING_HH
-#define	KARABO_UTIL_DATETIMESTRING_HH
+#define KARABO_UTIL_DATETIMESTRING_HH
 
 #include <boost/date_time.hpp>
 #include <boost/regex.hpp>
 
-#include "TimeDuration.hh"
 #include "Exception.hh"
 #include "Hash.hh"
+#include "TimeDuration.hh"
 
 namespace karabo {
     namespace util {
@@ -27,29 +27,26 @@ namespace karabo {
          * - Subset (of ISO-8601) defined as Karabo date and time API
          *   * Compact version: yyyymmddThhmmss[.|,]ffffff[Z|z|±hhmm] (max. digits for ffffff is 18)
          *   * Extended version: yyyy-mm-ddThh:mm:ss[.|,]ffffff[Z|z|±hh:mm] (max. digits for ffffff is 18)
-         * 
+         *
          * The default constructor initializes a DateTimeString object with the Epoch values ("19700101T000000Z").
-         * 
+         *
          */
         class DateTimeString {
-
-
             // Considering the following example: "2013-01-20T20:30:00.123456Z"
             // each string should contain the following values:
-            std::string m_date; //"2013-01-20"
-            std::string m_time; //"20:30:00"
+            std::string m_date;              //"2013-01-20"
+            std::string m_time;              //"20:30:00"
             std::string m_fractionalSeconds; //"123456"
-            std::string m_timeZone; //"Z" or "+0000" or "-07:00"
+            std::string m_timeZone;          //"Z" or "+0000" or "-07:00"
 
             // Extra field that concatenates date with time
-            std::string m_dateTime; //"2013-01-20T20:30:00"
+            std::string m_dateTime;          //"2013-01-20T20:30:00"
             std::string m_dateTimeStringAll; //"2013-01-20T20:30:00.123456+00:00"
             std::string m_timeZoneSignal;
             int m_timeZoneHours;
             int m_timeZoneMinutes;
 
-        public:
-
+           public:
             /**
              * Constructor without parameters, that creates a instance with epoch Timestamp ("19700101T000000Z")
              */
@@ -57,7 +54,8 @@ namespace karabo {
 
             /**
              * Constructor from string
-             * @param timePoint String that represents a complete and valid date format using Karabo agreed ISO-8601 subset API
+             * @param timePoint String that represents a complete and valid date format using Karabo agreed ISO-8601
+             * subset API
              */
             DateTimeString(const std::string& timePoint);
 
@@ -65,8 +63,10 @@ namespace karabo {
              * Constructor from string
              * @param inputDateStr String that represents the date part of the Karabo agreed ISO-8601 subset API
              * @param inputTimeStr String that represents the time part of the Karabo agreed ISO-8601 subset API
-             * @param inputFractionSecondStr String that represents the fractional part of the Karabo agreed ISO-8601 subset API
-             * @param inputTimeZoneStr String that represents the time zone part of the Karabo agreed ISO-8601 subset API
+             * @param inputFractionSecondStr String that represents the fractional part of the Karabo agreed ISO-8601
+             * subset API
+             * @param inputTimeZoneStr String that represents the time zone part of the Karabo agreed ISO-8601 subset
+             * API
              */
             DateTimeString(const std::string& inputDate, const std::string& inputTime,
                            const std::string& inputFractionSecond, const std::string& inputTimeZone);
@@ -91,10 +91,11 @@ namespace karabo {
             }
 
             /**
-             * Get string or unsigned long long that represents the fractional part of the Karabo agreed ISO-8601 subset API (i.e. "123456")
+             * Get string or unsigned long long that represents the fractional part of the Karabo agreed ISO-8601 subset
+             * API (i.e. "123456")
              * @return string
              */
-            template<typename T>
+            template <typename T>
             inline const T getFractionalSeconds() const {
                 return boost::lexical_cast<T>(m_fractionalSeconds);
             }
@@ -108,7 +109,8 @@ namespace karabo {
             }
 
             /**
-             * Get string that represents the date and time part of the Karabo agreed ISO-8601 subset API (i.e. "2013-01-20T20:30:00")
+             * Get string that represents the date and time part of the Karabo agreed ISO-8601 subset API (i.e.
+             * "2013-01-20T20:30:00")
              * @return string
              */
             inline const std::string& getDateTime() const {
@@ -118,7 +120,7 @@ namespace karabo {
 
             /**
              * Validates if a string representing a timestamp is valid according to ISO-8601 definition
-             * 
+             *
              * @param timePoint String that represents a Timestamp
              * @return boolean (True is string is valid, False otherwise)
              */
@@ -127,7 +129,7 @@ namespace karabo {
 
             /**
              * Validates if a string representing a time zone is valid according to ISO-8601 definition
-             * 
+             *
              * @param iso8601TimeZone String that represents a Time Zone (i.e. "+01:00" or "-07:00")
              * @return boolean (True is string is valid, False otherwise)
              */
@@ -135,8 +137,8 @@ namespace karabo {
 
 
             /**
-             * Validates if a string representing a timestamp is valid according to Karabo agreed ISO-8601 subset API definition
-             * Some examples:
+             * Validates if a string representing a timestamp is valid according to Karabo agreed ISO-8601 subset API
+             * definition Some examples:
              * => Extended strings:
              * - 1985-01-20T23:20:50
              * - 1985-01-20T23:20:50,123
@@ -157,7 +159,7 @@ namespace karabo {
              * - 19850120T232050Z
              * - 19850120T232050+0000
              * - 19850120T232050-0700
-             * 
+             *
              * @param timePoint String that represents a Timestamp
              * @return boolean (True is string is valid, False otherwise)
              */
@@ -166,7 +168,7 @@ namespace karabo {
 
             /**
              * Returns the number of seconds elapsed since epoch for this object
-             * 
+             *
              * @return unsigned long long (Seconds elapsed since Epoch)
              */
             const unsigned long long getSecondsSinceEpoch();
@@ -174,22 +176,28 @@ namespace karabo {
 
             /**
              * Converts a fractional second value into it's value with a smaller precision
-             * Because fractional seconds are received as an UNSIGNED LONG LONG, this function assumes the algarisms are the right most algarisms.
-             * Due to this reason, if there are missing algarisms to perform the desired precision resolution, zeros will be added to this left of the fractional seconds number received.
-             * 
-             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * Because fractional seconds are received as an UNSIGNED LONG LONG, this function assumes the algarisms are
+             * the right most algarisms. Due to this reason, if there are missing algarisms to perform the desired
+             * precision resolution, zeros will be added to this left of the fractional seconds number received.
+             *
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC,
+             * PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
              * @param fractionalSeconds - Fractional seconds to be return with the correct desired precision
              * @param skipDot - if true, skip leading dot "." in result [Default: false]
-             * @return String started with a "." (dot) (except skipDot is true) and followed by the fractional second till the desired precision
+             * @return String started with a "." (dot) (except skipDot is true) and followed by the fractional second
+             * till the desired precision
              */
-            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC, const unsigned long long fractionalSeconds = 0, bool skipDot = false);
+            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC,
+                                                              const unsigned long long fractionalSeconds = 0,
+                                                              bool skipDot = false);
 
 
             /**
              * Converts a STRING fractional second value into it's value in ATTOSEC precision
-             * Because fractional seconds are received as a STRING, this function assumes the algarisms are the left most algarisms.
-             * Due to this reason, if there are missing algarisms to perform ATTOSEC resolution, zeros will be added to this right of the fractional seconds number received.
-             * 
+             * Because fractional seconds are received as a STRING, this function assumes the algarisms are the left
+             * most algarisms. Due to this reason, if there are missing algarisms to perform ATTOSEC resolution, zeros
+             * will be added to this right of the fractional seconds number received.
+             *
              * @param fractionalSeconds - Fractional seconds to be return with ATTOSEC precision
              * @return String started with a "." (dot) and followed by the fractional second till the desired precision
              */
@@ -198,40 +206,40 @@ namespace karabo {
 
             /**
              * Split an ISO-8601 valid Time Zone
-             * 
-             * @param iso8601TimeZone String that represents a Time Zone (i.e. "Z" or "+01:00" or "-07:00") [Default: "Z"]
-             * @return Hash containing the Time Zone information in three different keys (<std::string>("timeZoneSignal"), <int>("timeZoneHours"), <int>("timeZoneMinutes"))
+             *
+             * @param iso8601TimeZone String that represents a Time Zone (i.e. "Z" or "+01:00" or "-07:00") [Default:
+             * "Z"]
+             * @return Hash containing the Time Zone information in three different keys
+             * (<std::string>("timeZoneSignal"), <int>("timeZoneHours"), <int>("timeZoneMinutes"))
              */
             static const karabo::util::Hash getTimeDurationFromTimeZone(const std::string& iso8601TimeZone = "Z");
 
 
-        private:
-
+           private:
             /**
              * Convert a specific boost ptime to the number of seconds since epoch (1970-Jan-1 00:00:00)
-             * 
+             *
              * @param pt specific boost ptime
              * @return number of seconds since epoch
              */
             static const unsigned long long ptimeToSecondsSinceEpoch(boost::posix_time::ptime& pt);
 
             /**
-             * Creates an DateTimeString from an ISO-8601 formatted string (string must be a complete and valid timestamp using Karabo agreed ISO-8601 subset API)
-             * 
+             * Creates an DateTimeString from an ISO-8601 formatted string (string must be a complete and valid
+             * timestamp using Karabo agreed ISO-8601 subset API)
+             *
              * @param timePoint ISO 8601 formatted string (see formats locale to more information)
              * @return DateTimeString object
              */
             static const DateTimeString iso8601KaraboApiStringToDateTimeString(const std::string& timePoint);
-
         };
 
-        template<>
+        template <>
         const std::string DateTimeString::getFractionalSeconds() const;
-        template<>
+        template <>
         const unsigned long long DateTimeString::getFractionalSeconds() const;
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* DATETIMESTRING_HH */
-
+#endif /* DATETIMESTRING_HH */

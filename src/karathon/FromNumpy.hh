@@ -1,41 +1,37 @@
-/* 
+/*
  * File:   FromNumpy.hh
  * Author: <burkhard.heisen@xsmail.com>
  *
  * Created on May 23, 2014 6:34 PM
- * 
+ *
  */
 
 #ifndef KARABO_UTIL_FROMNUMPY_HH
-#define	KARABO_UTIL_FROMNUMPY_HH
+#define KARABO_UTIL_FROMNUMPY_HH
 
-#include <map>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/FromType.hh>
+#include <map>
 
 namespace karathon {
 
     class FromNumpy {
-
-        public:
-
+       public:
         typedef int ArgumentType;
 
         static karabo::util::Types::ReferenceType from(const ArgumentType& type) {
             TypeInfoMap::const_iterator it = FromNumpy::init()._typeInfoMap.find(type);
-            if (it == FromNumpy::init()._typeInfoMap.end()) throw KARABO_PARAMETER_EXCEPTION("Requested argument type not registered");
+            if (it == FromNumpy::init()._typeInfoMap.end())
+                throw KARABO_PARAMETER_EXCEPTION("Requested argument type not registered");
             return it->second;
         }
 
-    private:
-
+       private:
         FromNumpy();
 
-        FromNumpy(const FromNumpy&) {
-        };
+        FromNumpy(const FromNumpy&){};
 
-        virtual ~FromNumpy() {
-        };
+        virtual ~FromNumpy(){};
 
         static FromNumpy& init() {
             static FromNumpy singleInstance;
@@ -48,7 +44,6 @@ namespace karathon {
         TypeInfoMap _typeInfoMap;
     };
 
-}
+} // namespace karathon
 
 #endif
-

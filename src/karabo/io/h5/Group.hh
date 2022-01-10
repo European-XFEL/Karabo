@@ -8,14 +8,14 @@
 
 
 #ifndef KARABO_IO_H5_GROUP_HH
-#define	KARABO_IO_H5_GROUP_HH
+#define KARABO_IO_H5_GROUP_HH
 
+#include <karabo/util/Configurator.hh>
 #include <string>
 
 #include "Element.hh"
-#include "TypeTraits.hh"
-#include <karabo/util/Configurator.hh>
 #include "ErrorHandler.hh"
+#include "TypeTraits.hh"
 
 namespace karabo {
 
@@ -29,16 +29,12 @@ namespace karabo {
              * @deprecated This class seams to not be used. Deprecate it.S
              */
             class Group : public karabo::io::h5::Element {
-
-                public:
-
+               public:
                 KARABO_CLASSINFO(Group, "Group", "1.0")
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
-                Group(const karabo::util::Hash& input) : Element(input),
-                    m_isVectorHash(false), m_vectorSize(0) {
-
+                Group(const karabo::util::Hash& input) : Element(input), m_isVectorHash(false), m_vectorSize(0) {
                     if (input.has("type")) {
                         if (input.get<std::string>("type") == "VECTOR_HASH") {
                             m_isVectorHash = true;
@@ -51,8 +47,7 @@ namespace karabo {
                     }
                 }
 
-                virtual ~Group() {
-                }
+                virtual ~Group() {}
 
                 bool isGroup() const {
                     return true;
@@ -71,35 +66,28 @@ namespace karabo {
 
                 hid_t open(hid_t group);
 
-                void write(const karabo::util::Hash& data, hsize_t recordId) {
-                }
+                void write(const karabo::util::Hash& data, hsize_t recordId) {}
 
-                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-                }
-
+                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {}
 
 
                 void close();
 
-                void bind(karabo::util::Hash & data);
+                void bind(karabo::util::Hash& data);
 
-                void bind(karabo::util::Hash & data, hsize_t len);
+                void bind(karabo::util::Hash& data, hsize_t len);
 
-                void read(karabo::util::Hash& data, hsize_t recordId) {
-                }
+                void read(karabo::util::Hash& data, hsize_t recordId) {}
 
-                inline void read(hsize_t recordId) {
-                }
+                inline void read(hsize_t recordId) {}
 
-                void read(hsize_t recordId, hsize_t len) {
-                }
+                void read(hsize_t recordId, hsize_t len) {}
 
                 karabo::util::Dims getDims() const {
                     return karabo::util::Dims(m_vectorSize);
                 }
 
-            private:
-
+               private:
                 void openH5(hid_t group) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "group m_h5obj = " << m_h5obj;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "group m_h5PathName = " << m_h5PathName;
@@ -119,13 +107,11 @@ namespace karabo {
 
                 bool m_isVectorHash;
                 unsigned long long m_vectorSize;
-
             };
 
 
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
-        }
-    }
-}
-
-#endif	
+#endif

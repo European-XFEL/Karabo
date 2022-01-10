@@ -1,20 +1,20 @@
-/* 
+/*
  * File:   Broker.hh
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  * Created on May 4, 2020, 8:27 AM
  */
 
 #ifndef KARABO_NET_BROKER_HH
-#define	KARABO_NET_BROKER_HH
+#define KARABO_NET_BROKER_HH
 
+#include <boost/enable_shared_from_this.hpp>
 #include <list>
 #include <vector>
+
+#include "karabo/net/utils.hh"
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Schema.hh"
-#include "karabo/net/utils.hh"
-
-#include <boost/enable_shared_from_this.hpp>
 
 
 namespace karabo {
@@ -26,23 +26,22 @@ namespace karabo {
             enum class Error {
 
                 drop = 0, /// messages have been dropped
-                type, /// message of wrong type (i.e. non binary format) received and dropped
-                unknown /// status reported by openmqc that is not specially treated
+                type,     /// message of wrong type (i.e. non binary format) received and dropped
+                unknown   /// status reported by openmqc that is not specially treated
             };
 
-            typedef boost::function< void (karabo::util::Hash::Pointer, karabo::util::Hash::Pointer) > MessageHandler;
+            typedef boost::function<void(karabo::util::Hash::Pointer, karabo::util::Hash::Pointer)> MessageHandler;
 
-            typedef boost::function< void (Error, const std::string& description) > ErrorNotifier;
-        }
+            typedef boost::function<void(Error, const std::string& description)> ErrorNotifier;
+        } // namespace consumer
 
 
-        class Broker : public boost::enable_shared_from_this<Broker>  {
-        public:
-
+        class Broker : public boost::enable_shared_from_this<Broker> {
+           public:
             KARABO_CLASSINFO(Broker, "Broker", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
-            
-            static void expectedParameters(karabo::util::Schema& s);      
+
+            static void expectedParameters(karabo::util::Schema& s);
 
             Broker(const karabo::util::Hash& configuration);
 
@@ -121,9 +120,8 @@ namespace karabo {
              * @param signalInstanceId device instance ID of a signal
              * @param signalFunction   signal name
              */
-            virtual boost::system::error_code subscribeToRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) = 0;
+            virtual boost::system::error_code subscribeToRemoteSignal(const std::string& signalInstanceId,
+                                                                      const std::string& signalFunction) = 0;
 
             /**
              * Close logical signal-slot connection.  De-registration in broker
@@ -131,20 +129,18 @@ namespace karabo {
              * @param signalInstanceId
              * @param signalFunction
              */
-            virtual boost::system::error_code unsubscribeFromRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) = 0;
+            virtual boost::system::error_code unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+                                                                          const std::string& signalFunction) = 0;
 
             /**
-             * Establish signal-slot connection asynchronously 
+             * Establish signal-slot connection asynchronously
              * @param signalInstanceId
              * @param signalFunction
              * @param completionHandler this callback is called when complete
              */
-            virtual void subscribeToRemoteSignalAsync(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction,
-                    const AsyncHandler& completionHandler) = 0;
+            virtual void subscribeToRemoteSignalAsync(const std::string& signalInstanceId,
+                                                      const std::string& signalFunction,
+                                                      const AsyncHandler& completionHandler) = 0;
 
             /**
              * Unsubscribe from (remote) signal asynchronously
@@ -152,10 +148,9 @@ namespace karabo {
              * @param signalFunction
              * @param completionHandler
              */
-            virtual void unsubscribeFromRemoteSignalAsync(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction,
-                    const AsyncHandler& completionHandler) = 0;
+            virtual void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
+                                                          const std::string& signalFunction,
+                                                          const AsyncHandler& completionHandler) = 0;
 
             /**
              * Set up handlers for processing messages arriving via main communication path
@@ -163,8 +158,7 @@ namespace karabo {
              * @param errorNotifier - error handler
              */
             virtual void startReading(const consumer::MessageHandler& handler,
-                                      const consumer::ErrorNotifier& errorNotifier
-                                          = consumer::ErrorNotifier()) = 0;
+                                      const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) = 0;
 
             /**
              * Stop processing messages coming via main path
@@ -180,7 +174,7 @@ namespace karabo {
              * @param errorNotifier - error handler
              */
             virtual void startReadingHeartbeats(const consumer::MessageHandler& handler,
-                                        const consumer::ErrorNotifier& errorNotifier) = 0;
+                                                const consumer::ErrorNotifier& errorNotifier) = 0;
 
             /**
              * Set up handlers for processing log messages using special path.
@@ -189,7 +183,7 @@ namespace karabo {
              * @param errorNotifier - error handler
              */
             virtual void startReadingLogs(const consumer::MessageHandler& handler,
-                                  const consumer::ErrorNotifier& errorNotifier) = 0;
+                                          const consumer::ErrorNotifier& errorNotifier) = 0;
 
             /**
              * Send message to broker
@@ -200,11 +194,8 @@ namespace karabo {
              * @param priority
              * @param timeToLive
              */
-            virtual void write(const std::string& topic,
-                               const karabo::util::Hash::Pointer& header,
-                               const karabo::util::Hash::Pointer& body,
-                               const int priority,
-                               const int timeToLive) = 0;
+            virtual void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
+                               const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) = 0;
 
             /**
              *  Specifies the string of broker URLs from the environment variable KARABO_BROKER.
@@ -235,8 +226,7 @@ namespace karabo {
              */
             static std::string brokerDomainFromEnv();
 
-        protected:
-
+           protected:
             Broker(const Broker& o) = delete;
             Broker(const Broker& o, const std::string& newInstanceId);
 
@@ -247,8 +237,7 @@ namespace karabo {
             consumer::MessageHandler m_messageHandler;
             consumer::ErrorNotifier m_errorNotifier;
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
-#endif	/* KARABO_NET_BROKER_HH */
-
+#endif /* KARABO_NET_BROKER_HH */

@@ -6,17 +6,19 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <map>
-#include <vector>
-#include <cstdlib>
-#include <sstream>
-#include <algorithm>
-#include <streambuf>
+#include "FileLogReader.hh"
 
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <cstdlib>
+#include <map>
 #include <nlohmann/json.hpp>
+#include <sstream>
+#include <streambuf>
+#include <vector>
 
+#include "DataLogReader.hh"
 #include "karabo/core/Device.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/DataLogUtils.hh"
@@ -27,15 +29,10 @@
 #include "karabo/util/TimeProfiler.hh"
 #include "karabo/util/Version.hh"
 
-#include "DataLogReader.hh"
-#include "FileLogReader.hh"
-
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
-                                    karabo::core::Device<karabo::core::OkErrorFsm>,
-                                    karabo::devices::DataLogReader,
-                                    karabo::devices::FileLogReader)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>,
+                                  karabo::devices::DataLogReader, karabo::devices::FileLogReader)
 
 namespace karabo {
     namespace devices {
@@ -56,14 +53,12 @@ namespace karabo {
         }
 
 
-        IndexBuilderService::IndexBuilderService() :
-            m_cache(),
-            m_idxBuildStrand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {
-        }
+        IndexBuilderService::IndexBuilderService()
+            : m_cache(),
+              m_idxBuildStrand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {}
 
 
-        IndexBuilderService::~IndexBuilderService() {
-        }
+        IndexBuilderService::~IndexBuilderService() {}
 
 
         void IndexBuilderService::buildIndexFor(const std::string& commandLineArguments) {
@@ -84,7 +79,7 @@ namespace karabo {
             try {
                 const std::string command = "karabo-idxbuild " + commandLineArguments;
                 KARABO_LOG_FRAMEWORK_INFO << "********* Index File Building *********\n"
-                        << "*** Execute :\n \"" << command << "\"\n***";
+                                          << "*** Execute :\n \"" << command << "\"\n***";
                 const int ret = system(command.c_str());
                 KARABO_LOG_FRAMEWORK_INFO << "*** Index file building command finished with return code " << ret;
             } catch (const std::exception& e) {
@@ -100,24 +95,26 @@ namespace karabo {
         const boost::regex FileLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
         const boost::regex FileLogReader::m_lineLogRegex(karabo::util::DATALOG_LOGOUT_REGEX, boost::regex::extended);
-        
-        const boost::regex FileLogReader::m_indexLineRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended);
 
-        const boost::regex FileLogReader::m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended);
+        const boost::regex FileLogReader::m_indexLineRegex(karabo::util::DATALOG_INDEX_LINE_REGEX,
+                                                           boost::regex::extended);
+
+        const boost::regex FileLogReader::m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX,
+                                                           boost::regex::extended);
 
 
         void FileLogReader::expectedParameters(Schema& expected) {
-
-            PATH_ELEMENT(expected).key("directory")
-                    .displayedName("Directory")
-                    .description("The directory where the log files should be placed")
-                    .assignmentOptional().defaultValue("karaboHistory")
-                    .commit();
+            PATH_ELEMENT(expected)
+                  .key("directory")
+                  .displayedName("Directory")
+                  .description("The directory where the log files should be placed")
+                  .assignmentOptional()
+                  .defaultValue("karaboHistory")
+                  .commit();
         }
 
 
-        FileLogReader::FileLogReader(const Hash& input)
-            : karabo::devices::DataLogReader(input) {
+        FileLogReader::FileLogReader(const Hash& input) : karabo::devices::DataLogReader(input) {
             m_serializer = TextSerializer<Hash>::create("Xml");
             m_schemaSerializer = TextSerializer<Schema>::create("Xml");
             m_ibs = IndexBuilderService::getInstance();
@@ -129,23 +126,24 @@ namespace karabo {
         }
 
 
-        void FileLogReader::slotGetPropertyHistoryImpl(const std::string& deviceId,
-                                                       const std::string& property,
+        void FileLogReader::slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
                                                        const Hash& params) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", "
-                        << property << ", from/to parameters)";
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", " << property
+                                           << ", from/to parameters)";
 
                 // Safety check that the directory contains something about 'deviceId'
                 try {
                     bf::path dirPath(get<string>("directory") + "/" + deviceId + "/raw/");
                     if (!bf::exists(dirPath) || !bf::is_directory(dirPath)) {
                         KARABO_LOG_FRAMEWORK_WARN << "slotGetPropertyHistory: " << dirPath
-                                << " not existing or not a directory";
-                        throw KARABO_FILENOTFOUND_IO_EXCEPTION(getInstanceId() + " misses data directory: " + dirPath.string());
+                                                  << " not existing or not a directory";
+                        throw KARABO_FILENOTFOUND_IO_EXCEPTION(getInstanceId() +
+                                                               " misses data directory: " + dirPath.string());
                     }
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "slotGetPropertyHistory Standard Exception while checking deviceId path : " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR
+                          << "slotGetPropertyHistory Standard Exception while checking deviceId path : " << e.what();
                     throw KARABO_SYSTEM_EXCEPTION(getInstanceId() + " fails accessing raw directory path");
                 }
 
@@ -170,7 +168,7 @@ namespace karabo {
                     if (!bf::exists(propPath)) {
                         // create prop file
                         m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo());
-                        //boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
+                        // boost::mutex::scoped_lock lock(m_mapPropFileInfo[deviceId]->filelock);
                         ofstream out(propPath.c_str(), ios::out | ios::app);
                         out << property << "\n";
                         out.close();
@@ -183,7 +181,7 @@ namespace karabo {
                         time_t lastTime = bf::last_write_time(propPath);
                         size_t propsize = bf::file_size(propPath);
 
-                        map<string, PropFileInfo::Pointer >::iterator mapit = m_mapPropFileInfo.find(deviceId);
+                        map<string, PropFileInfo::Pointer>::iterator mapit = m_mapPropFileInfo.find(deviceId);
                         // check if deviceId is new
                         if (mapit == m_mapPropFileInfo.end()) {
                             m_mapPropFileInfo[deviceId] = PropFileInfo::Pointer(new PropFileInfo()); // filesize = 0
@@ -208,7 +206,7 @@ namespace karabo {
                             // not found, then add to vector
                             ptr->properties.push_back(property);
                             {
-                                //boost::mutex::scoped_lock lock(ptr->filelock);
+                                // boost::mutex::scoped_lock lock(ptr->filelock);
                                 ofstream out(propPath.c_str(), ios::out | ios::app);
                                 out << property << "\n";
                                 out.close();
@@ -220,8 +218,7 @@ namespace karabo {
                     }
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR
-                            << "slotGetPropertyHistory Standard Exception while registering property file : "
-                            << e.what();
+                          << "slotGetPropertyHistory Standard Exception while registering property file : " << e.what();
                     throw KARABO_LOGIC_EXCEPTION(getInstanceId() + " fails registering property file");
                 }
 
@@ -241,13 +238,13 @@ namespace karabo {
                     while (idx >= 0) {
                         // files are processed starting from the most recent as we arbitrarily assume user is more
                         // likely interested to recent data
-                        m_ibs->buildIndexFor(get<string>("directory") + " " + deviceId + " "
-                                             + property + " " + toString(idx));
+                        m_ibs->buildIndexFor(get<string>("directory") + " " + deviceId + " " + property + " " +
+                                             toString(idx));
                         idx--;
                     }
-                    throw KARABO_NOT_SUPPORTED_EXCEPTION(getInstanceId() + " cannot fulfill first history request to "
-                                                         + deviceId + "." + property
-                                                         + ". Try again once index building is done.");
+                    throw KARABO_NOT_SUPPORTED_EXCEPTION(getInstanceId() + " cannot fulfill first history request to " +
+                                                         deviceId + "." + property +
+                                                         ". Try again once index building is done.");
                 }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();
@@ -255,29 +252,28 @@ namespace karabo {
 
                 p.startPeriod("findingNearestIndex");
                 FileLoggerIndex idxFrom = findNearestLoggerIndex(deviceId, from, true); // before
-                FileLoggerIndex idxTo = findNearestLoggerIndex(deviceId, to, false); // after
+                FileLoggerIndex idxTo = findNearestLoggerIndex(deviceId, to, false);    // after
                 p.stopPeriod("findingNearestIndex");
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "From - Event: \"" << idxFrom.m_event
-                        << "\", epoch: " << idxFrom.m_epoch.toIso8601Ext()
-                        << ", pos: " << idxFrom.m_position << ", fileindex: " << idxFrom.m_fileindex
-                        << ", To - Event: \"" << idxTo.m_event << "\", epoch: " << idxTo.m_epoch.toIso8601Ext()
-                        << ", pos: " << idxTo.m_position << ", fileindex: " << idxTo.m_fileindex;
+                KARABO_LOG_FRAMEWORK_DEBUG
+                      << "From - Event: \"" << idxFrom.m_event << "\", epoch: " << idxFrom.m_epoch.toIso8601Ext()
+                      << ", pos: " << idxFrom.m_position << ", fileindex: " << idxFrom.m_fileindex << ", To - Event: \""
+                      << idxTo.m_event << "\", epoch: " << idxTo.m_epoch.toIso8601Ext() << ", pos: " << idxTo.m_position
+                      << ", fileindex: " << idxTo.m_fileindex;
 
                 if (idxFrom.m_fileindex == -1) {
-                    const std::string reason("Requested time point '" + params.get<string>("from")
-                                             + "' for device configuration is earlier than anything logged");
+                    const std::string reason("Requested time point '" + params.get<string>("from") +
+                                             "' for device configuration is earlier than anything logged");
                     KARABO_LOG_FRAMEWORK_WARN << reason;
                     throw KARABO_LOGIC_EXCEPTION(getInstanceId() + ": " + reason);
                 }
 
                 karabo::util::MetaSearchResult msr =
-                        navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex,
-                                          property, from, to);
+                      navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, from, to);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber
-                        << " record=" << msr.fromRecord << ", to : filenum=" << msr.toFileNumber
-                        << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
+                                           << " record=" << msr.fromRecord << ", to : filenum=" << msr.toFileNumber
+                                           << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
 
                 // add together the number of data points in all files
                 size_t ndata = 0;
@@ -286,16 +282,17 @@ namespace karabo {
                 const size_t reductionFactor = (maxNumData ? (ndata + maxNumData - 1) / maxNumData : 0);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: total " << ndata
-                        << " data points and reductionFactor : " << reductionFactor;
+                                           << " data points and reductionFactor : " << reductionFactor;
 
                 if (msr.toFileNumber < msr.fromFileNumber) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult: bad file range " << msr.fromFileNumber
-                            << "-" << msr.toFileNumber << ", skip everything.";
+                    KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult: bad file range " << msr.fromFileNumber << "-"
+                                               << msr.toFileNumber << ", skip everything.";
                 } else if (ndata) {
                     const unsigned int numFiles = (msr.toFileNumber - msr.fromFileNumber + 1);
                     if (msr.nrecList.size() != numFiles) {
                         KARABO_LOG_FRAMEWORK_ERROR << "MetaSearchResult mismatch: " << numFiles
-                                << ", but list of records has " << msr.nrecList.size() << " entries.";
+                                                   << ", but list of records has " << msr.nrecList.size()
+                                                   << " entries.";
                         // Heal as good as we can (nrecList cannot be empty here - ndata would be zero).
                         if (msr.nrecList.size() > numFiles) {
                             msr.nrecList.resize(numFiles);
@@ -311,11 +308,10 @@ namespace karabo {
                     for (size_t fnum = msr.fromFileNumber; fnum <= msr.toFileNumber; ++fnum) {
                         if (mf && mf.is_open()) mf.close();
                         if (df && df.is_open()) df.close();
-                        const string idxname =
-                                get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(fnum)
-                                + "-" + property + "-index.bin";
+                        const string idxname = get<string>("directory") + "/" + deviceId + "/idx/archive_" +
+                                               toString(fnum) + "-" + property + "-index.bin";
                         const string dataname =
-                                get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
+                              get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(fnum) + ".txt";
                         if (!bf::exists(bf::path(idxname))) {
                             KARABO_LOG_FRAMEWORK_WARN << "Miss file " << idxname;
                             continue;
@@ -327,19 +323,19 @@ namespace karabo {
                         mf.open(idxname.c_str(), ios::in | ios::binary);
                         df.open(dataname.c_str());
                         if (!mf || !mf.is_open() || !df || !df.is_open()) {
-                            KARABO_LOG_FRAMEWORK_WARN << "Either " << dataname << " or "
-                                    << idxname << " could not be opened";
+                            KARABO_LOG_FRAMEWORK_WARN << "Either " << dataname << " or " << idxname
+                                                      << " could not be opened";
                             continue;
                         }
 
                         // Set start position in index file - i.e. file beginning except for first file.
                         const size_t idxpos = (fnum == msr.fromFileNumber ? msr.fromRecord : 0);
-                        mf.seekg(idxpos * sizeof (MetaData::Record), ios::beg);
+                        mf.seekg(idxpos * sizeof(MetaData::Record), ios::beg);
                         // Now loop to read all records in index file and eventually process raw file entries.
                         const size_t numRecords = msr.nrecList[fnum - msr.fromFileNumber];
                         for (size_t iRec = 0; iRec < numRecords; ++iRec) {
                             MetaData::Record record;
-                            mf.read((char*) &record, sizeof (MetaData::Record));
+                            mf.read((char*)&record, sizeof(MetaData::Record));
                             if (reductionFactor && (indx++ % reductionFactor) != 0 && (record.extent2 & (1 << 30)) == 0)
                                 continue; // skip data point
 
@@ -352,7 +348,7 @@ namespace karabo {
                                 if (!search_res) {
                                     // attempt to parse login/logout line instead
                                     search_res = boost::regex_search(line, tokens, m_lineLogRegex);
-                                } 
+                                }
                                 if (search_res) {
                                     const string& flag = tokens[8];
                                     if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
@@ -362,9 +358,10 @@ namespace karabo {
                                     if (path != property) {
                                         // if you don't like the index record (for example, it pointed to the
                                         // wrong property) just skip it.
-                                        KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId
-                                                << "\", property : \"" << property << "\" and file number : " << fnum
-                                                << " points out to the wrong property in the raw file. Skip it ...";
+                                        KARABO_LOG_FRAMEWORK_WARN
+                                              << "The index for \"" << deviceId << "\", property : \"" << property
+                                              << "\" and file number : " << fnum
+                                              << " points out to the wrong property in the raw file. Skip it ...";
                                         // TODO: Here we can start index rebuilding for fnum != lastFileIndex
                                         continue;
                                     }
@@ -377,7 +374,7 @@ namespace karabo {
                                         // Special case: there's already one history record and it may have a timepoint
                                         // before the requested timeframe. If that's the case, remove that record before
                                         // adding the new one.
-                                        const auto &firstRecAttrs = result[0].getAttributes("v");
+                                        const auto& firstRecAttrs = result[0].getAttributes("v");
                                         Epochstamp recEpoch = Epochstamp::fromHashAttributes(firstRecAttrs);
                                         if (recEpoch < from) {
                                             result.clear();
@@ -389,15 +386,14 @@ namespace karabo {
                                     readToHash(result.back(), "v", tst, tokens[5], tokens[6]);
                                 } else {
                                     KARABO_LOG_FRAMEWORK_DEBUG
-                                            << "slotGetPropertyHistory: skip corrupted record or old format '"
-                                            << line << "'";
+                                          << "slotGetPropertyHistory: skip corrupted record or old format '" << line
+                                          << "'";
                                 }
                             }
                         }
                     }
                     if (mf && mf.is_open()) mf.close();
                     if (df && df.is_open()) df.close();
-
                 }
 
                 reply(deviceId, property, result);
@@ -405,9 +401,9 @@ namespace karabo {
                 p.stopPeriod("reaction");
                 p.close();
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: sent " << result.size()
-                        << " data points. Request processing time : "
-                        << p.getPeriod("reaction").getDuration() << " [s]";
+                KARABO_LOG_FRAMEWORK_DEBUG
+                      << "slotGetPropertyHistory: sent " << result.size()
+                      << " data points. Request processing time : " << p.getPeriod("reaction").getDuration() << " [s]";
 
             } catch (...) {
                 KARABO_RETHROW
@@ -415,18 +411,18 @@ namespace karabo {
         }
 
 
-        void FileLogReader::slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint) {
+        void FileLogReader::slotGetConfigurationFromPastImpl(const std::string& deviceId,
+                                                             const std::string& timepoint) {
             // Go directly to event loop to avoid blocking the slot
             AsyncReply aReply(this);
-            karabo::net::EventLoop::getIOService().post(bind_weak(&FileLogReader::getConfigurationFromPast, this,
-                                                                  deviceId, timepoint, aReply));
+            karabo::net::EventLoop::getIOService().post(
+                  bind_weak(&FileLogReader::getConfigurationFromPast, this, deviceId, timepoint, aReply));
         }
 
 
         void FileLogReader::getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint,
                                                      SignalSlotable::AsyncReply& aReply) {
             try {
-
                 Hash hash;
                 Schema schema;
                 const Epochstamp target(timepoint);
@@ -446,15 +442,13 @@ namespace karabo {
                         Epochstamp current(seconds, fraction);
                         if (current <= target) {
                             archived.clear();
-                            if (!getline(schemastream, archived))
-                                break;
-                        } else
-                            break;
+                            if (!getline(schemastream, archived)) break;
+                        } else break;
                     }
                     schemastream.close();
                     if (archived.empty()) {
                         KARABO_LOG_FRAMEWORK_WARN << "Requested time point for configuration of '" << deviceId
-                                << "' is earlier than anything logged";
+                                                  << "' is earlier than anything logged";
                         aReply.error("Requested time point for device configuration is earlier than anything logged.");
                         return;
                     }
@@ -470,14 +464,15 @@ namespace karabo {
                 FileLoggerIndex index = result.second;
 
                 if (index.m_fileindex == -1) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Requested time point, "
-                            << timepoint << ", precedes any logged data for device '" << deviceId << "'.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Requested time point, " << timepoint
+                                              << ", precedes any logged data for device '" << deviceId << "'.";
                     aReply.error("Requested time point precedes any logged data.");
                     return;
                 } else if (index.m_event != "+LOG") {
-                    KARABO_LOG_FRAMEWORK_WARN << "Unexpected event type '" << index.m_event
-                            << "' found as for the initial sweeping of last known good configuration.\n"
-                            "Event type should be '+LOG ";
+                    KARABO_LOG_FRAMEWORK_WARN
+                          << "Unexpected event type '" << index.m_event
+                          << "' found as for the initial sweeping of last known good configuration.\n"
+                             "Event type should be '+LOG ";
                     aReply.error("Unexpected event type '" + index.m_event + "' found - should be '+LOG'.");
                     return;
                 }
@@ -488,9 +483,8 @@ namespace karabo {
                     Epochstamp current(0, 0);
                     long position = index.m_position;
                     for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++) {
-                        string filename =
-                                get<string>("directory") + "/" + deviceId
-                                + "/raw/archive_" + karabo::util::toString(i) + ".txt";
+                        string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_" +
+                                          karabo::util::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
 
@@ -501,16 +495,14 @@ namespace karabo {
                             if (!search_res) {
                                 // attempt to parse login/logout line instead
                                 search_res = boost::regex_search(line, tokens, m_lineLogRegex);
-                            } 
+                            }
                             if (search_res) {
                                 const string& flag = tokens[8];
-                                if (flag == "LOGOUT")
-                                    break;
+                                if (flag == "LOGOUT") break;
                                 const string& path = tokens[4];
                                 if (!schema.has(path)) continue;
                                 current = stringDoubleToEpochstamp(tokens[2]);
-                                if (current > target)
-                                    break;
+                                if (current > target) break;
                                 // configTimepoint is the stamp for the latest logged property value that
                                 // precedes the input timepoint.
                                 if (current > configTimepoint) {
@@ -522,7 +514,7 @@ namespace karabo {
                                 readToHash(hash, path, timestamp, tokens[5], tokens[6]);
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG
-                                        << "slotGetPropertyHistory: skip corrupted record or old format: " << line;
+                                      << "slotGetPropertyHistory: skip corrupted record or old format: " << line;
                             }
                         }
                         file.close();
@@ -549,27 +541,24 @@ namespace karabo {
             std::string unknownError = "";
             try {
                 type = Types::from<FromLiteral>(typeString);
-            } catch(const ParameterException& e) {
+            } catch (const ParameterException& e) {
                 unknownError.assign(e.what());
             }
 
-            Hash::Node *node = nullptr;
+            Hash::Node* node = nullptr;
 
             switch (type) {
-                case Types::VECTOR_HASH:
-                {
-                    node = &hashOut.set<vector < Hash >> (path, vector<Hash>());
+                case Types::VECTOR_HASH: {
+                    node = &hashOut.set<vector<Hash>>(path, vector<Hash>());
                     // Re-mangle new line characters of any string value inside any of the Hashes,
                     // see DataLogger. But only when needed to avoid copies in "normal" cases.
                     const bool mangle = (value.find(DATALOG_NEWLINE_MANGLE) != std::string::npos);
-                    m_serializer->load(node->getValue<vector < Hash >> (),
-                                       (mangle
-                                        ? boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n")
-                                        : value));
+                    m_serializer->load(
+                          node->getValue<vector<Hash>>(),
+                          (mangle ? boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n") : value));
                     break;
                 }
-                case Types::UNKNOWN:
-                {
+                case Types::UNKNOWN: {
                     if (typeString == "VECTOR_STRING_BASE64") {
                         // New format for VECTOR_STRING data.
                         // Convert value (base64) from base64 -> JSON -> vector<string> ...
@@ -578,7 +567,7 @@ namespace karabo {
                         base64Decode(value, decoded);
                         json j = json::parse(decoded.begin(), decoded.end());
                         for (json::iterator ii = j.begin(); ii != j.end(); ++ii) {
-                            node->getValue<std::vector<std::string> >().push_back(*ii);
+                            node->getValue<std::vector<std::string>>().push_back(*ii);
                         }
                         node->setType(Types::VECTOR_STRING);
                     } else {
@@ -586,8 +575,7 @@ namespace karabo {
                     }
                     break;
                 }
-                case Types::VECTOR_STRING:
-                {
+                case Types::VECTOR_STRING: {
                     // Old format for VECTOR_STRING data (for backward compatibility)
                     node = &hashOut.set(path, std::vector<std::string>());
                     // Empty value could come from an empty vector of strings or from a vector with a single empty
@@ -595,49 +583,47 @@ namespace karabo {
                     // and was the interpretation in the past.
                     // This ambiguity and other mangling issues led to the new format.
                     if (!value.empty()) {
-                        std::vector<std::string>& valref = node->getValue<std::vector<std::string> >();
+                        std::vector<std::string>& valref = node->getValue<std::vector<std::string>>();
                         // Re-mangle new line characters, see DataLogger :-|
-                        const std::string unmangled = boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n");
+                        const std::string unmangled =
+                              boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n");
                         boost::split(valref, unmangled, boost::is_any_of(","));
                     }
                     node->setType(type);
                     break;
                 }
-#define HANDLE_VECTOR_TYPE(VectorType, ElementType) \
-                case Types::VectorType: \
-                { \
-                    node = &hashOut.set(path, std::vector<ElementType>()); \
-                    std::vector<ElementType> &valref = node->getValue<std::vector<ElementType>>(); \
-                    if (!value.empty()) { \
-                        valref = std::move(fromString<ElementType, std::vector>(value, ",")); \
-                    } \
-                    break; \
-                }
+#define HANDLE_VECTOR_TYPE(VectorType, ElementType)                                    \
+    case Types::VectorType: {                                                          \
+        node = &hashOut.set(path, std::vector<ElementType>());                         \
+        std::vector<ElementType>& valref = node->getValue<std::vector<ElementType>>(); \
+        if (!value.empty()) {                                                          \
+            valref = std::move(fromString<ElementType, std::vector>(value, ","));      \
+        }                                                                              \
+        break;                                                                         \
+    }
 
-                HANDLE_VECTOR_TYPE(VECTOR_BOOL, bool);
-                HANDLE_VECTOR_TYPE(VECTOR_CHAR, char);
-                HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
-                HANDLE_VECTOR_TYPE(VECTOR_UINT8, unsigned char);
-                HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
-                HANDLE_VECTOR_TYPE(VECTOR_UINT16, unsigned short);
-                HANDLE_VECTOR_TYPE(VECTOR_INT32, int);
-                HANDLE_VECTOR_TYPE(VECTOR_UINT32, unsigned int);
-                HANDLE_VECTOR_TYPE(VECTOR_INT64, long long);
-                HANDLE_VECTOR_TYPE(VECTOR_UINT64, unsigned long long);
-                HANDLE_VECTOR_TYPE(VECTOR_FLOAT, float);
-                HANDLE_VECTOR_TYPE(VECTOR_DOUBLE, double);
-                HANDLE_VECTOR_TYPE(VECTOR_COMPLEX_FLOAT, std::complex<float>);
-                HANDLE_VECTOR_TYPE(VECTOR_COMPLEX_DOUBLE, std::complex<double>);
+                    HANDLE_VECTOR_TYPE(VECTOR_BOOL, bool);
+                    HANDLE_VECTOR_TYPE(VECTOR_CHAR, char);
+                    HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
+                    HANDLE_VECTOR_TYPE(VECTOR_UINT8, unsigned char);
+                    HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
+                    HANDLE_VECTOR_TYPE(VECTOR_UINT16, unsigned short);
+                    HANDLE_VECTOR_TYPE(VECTOR_INT32, int);
+                    HANDLE_VECTOR_TYPE(VECTOR_UINT32, unsigned int);
+                    HANDLE_VECTOR_TYPE(VECTOR_INT64, long long);
+                    HANDLE_VECTOR_TYPE(VECTOR_UINT64, unsigned long long);
+                    HANDLE_VECTOR_TYPE(VECTOR_FLOAT, float);
+                    HANDLE_VECTOR_TYPE(VECTOR_DOUBLE, double);
+                    HANDLE_VECTOR_TYPE(VECTOR_COMPLEX_FLOAT, std::complex<float>);
+                    HANDLE_VECTOR_TYPE(VECTOR_COMPLEX_DOUBLE, std::complex<double>);
 #undef HANDLE_VECTOR_TYPE
-                case Types::STRING:
-                {
+                case Types::STRING: {
                     node = &hashOut.set(path, value);
                     // Re-mangle new line characters, see DataLogger :-|
                     boost::algorithm::replace_all(node->getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
                     break;
                 }
-                default:
-                {
+                default: {
                     node = &hashOut.set<string>(path, value);
                     node->setType(type);
                 }
@@ -678,8 +664,9 @@ namespace karabo {
                     bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
                         // The line doesn't have the required values; ignore it and go to the next line.
-                        KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "):"
-                                << " line should start with an event followed by two white space separated timestamps.";
+                        KARABO_LOG_FRAMEWORK_ERROR
+                              << "DataLogReader (" << contentpath << ", ln. " << lineNum << "):"
+                              << " line should start with an event followed by two white space separated timestamps.";
                         continue;
                     } else {
                         event = indexFields[1];
@@ -706,8 +693,9 @@ namespace karabo {
                             // }
                         }
                     }
-                } catch (const exception &e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): " << e.what();
+                } catch (const exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum
+                                               << "): " << e.what();
                     continue;
                 }
             }
@@ -716,14 +704,14 @@ namespace karabo {
             if (!tail.empty()) {
                 try {
                     this->extractTailOfArchiveIndex(tail, lastLogPlusEntry);
-                } catch (const exception &e) {
+                } catch (const exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader - error extracting tail of selected event: "
-                            << e.what();
+                                               << e.what();
                 }
 
                 // If the tail is not empty, it means a 'device became online event' (LOG+) has been found. If there's
-                // no 'device became offline' event (LOG-) that comes after the 'became online' event, it means the device
-                // was being logged at the timepoint.
+                // no 'device became offline' event (LOG-) that comes after the 'became online' event, it means the
+                // device was being logged at the timepoint.
                 // FIXME: If -LOG is missing since logger crashed/was killed with -9, we might be fooled here...
                 //        But I see no way to fix this since any exact information is lost. Two consecutive +LOG events
                 //        (separated by =NEW lines only) are a hint that we _might_ be fooled.
@@ -741,8 +729,8 @@ namespace karabo {
             }
 
             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << lastLogPlusEntry.m_event << " "
-                    << lastLogPlusEntry.m_position << " " << lastLogPlusEntry.m_user << " "
-                    << lastLogPlusEntry.m_fileindex;
+                                       << lastLogPlusEntry.m_position << " " << lastLogPlusEntry.m_user << " "
+                                       << lastLogPlusEntry.m_fileindex;
 
             return make_pair(configAtTimepoint, lastLogPlusEntry);
         }
@@ -773,8 +761,9 @@ namespace karabo {
                     bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
                         // The line doesn't have the expected values; ignore it and go to the next line.
-                        KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
-                                << "line should start with an event followed by two white space separated timestamps.";
+                        KARABO_LOG_FRAMEWORK_ERROR
+                              << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
+                              << "line should start with an event followed by two white space separated timestamps.";
                         continue;
                     } else {
                         event = indexFields[1];
@@ -803,9 +792,9 @@ namespace karabo {
                         // Stop if greater than target time point or we search the first after the target and got it.
                         if (epochstamp > target && (before || gotAfter)) break;
                     }
-                } catch (const exception &e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader ("
-                            << contentpath << ", ln. " << lineNum << "): " << e.what();
+                } catch (const exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum
+                                               << "): " << e.what();
                     continue;
                 }
             }
@@ -817,8 +806,8 @@ namespace karabo {
         int FileLogReader::getFileIndex(const std::string& deviceId) {
             string filename = get<string>("directory") + "/" + deviceId + "/raw/archive.last";
             if (!bf::exists(bf::path(filename))) {
-                KARABO_LOG_FRAMEWORK_WARN << "File \"" << get<string>("directory") << "/"
-                        << deviceId << "/raw/archive.last\" not found.";
+                KARABO_LOG_FRAMEWORK_WARN << "File \"" << get<string>("directory") << "/" << deviceId
+                                          << "/raw/archive.last\" not found.";
                 throw KARABO_FILENOTFOUND_IO_EXCEPTION(getInstanceId() + " misses file " + filename);
             }
             ifstream ifs(filename.c_str());
@@ -828,8 +817,8 @@ namespace karabo {
             return idx;
         }
 
-#define ROUND10MS(x) std::floor(x*100 + 0.5)/100
-#define ROUND1MS(x)  std::floor(x*1000 + 0.5)/1000
+#define ROUND10MS(x) std::floor(x * 100 + 0.5) / 100
+#define ROUND1MS(x) std::floor(x * 1000 + 0.5) / 1000
 
 
         karabo::util::MetaSearchResult FileLogReader::navigateMetaRange(const std::string& deviceId, size_t startnum,
@@ -849,7 +838,6 @@ namespace karabo {
 
             // Find record number of "from" in index file ..
             for (size_t fnum = startnum; fnum <= tonum; fnum++) {
-
                 ifstream f;
                 size_t filesize = 0;
                 try {
@@ -857,23 +845,23 @@ namespace karabo {
                     if (!f || !f.is_open()) continue;
                     filesize = f.tellg();
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in "
-                            << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                               << e.what();
                 }
-                const size_t nrecs = filesize / sizeof (MetaData::Record);
-                if (filesize % sizeof (MetaData::Record) != 0) {
+                const size_t nrecs = filesize / sizeof(MetaData::Record);
+                if (filesize % sizeof(MetaData::Record) != 0) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Index file " << fnum << " for '" << deviceId << "." << path
-                            << "' corrupt, skip it.";
+                                               << "' corrupt, skip it.";
                     continue;
                 }
 
                 try {
                     // read last record
-                    f.seekg(filesize - sizeof (MetaData::Record), ios::beg);
-                    f.read((char*) &record, sizeof (MetaData::Record));
+                    f.seekg(filesize - sizeof(MetaData::Record), ios::beg);
+                    f.read((char*)&record, sizeof(MetaData::Record));
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in "
-                            << __FILE__ << ":" << __LINE__ << "   :   " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                               << e.what();
                 }
                 if (ROUND1MS(from) > ROUND1MS(record.epochstamp)) {
                     // This file is too far in the past - try next if there is one.
@@ -893,7 +881,8 @@ namespace karabo {
 
             bool foundLast = false;
             // Loop backwards (to open as few files as possible) to find file of 'to' timestamp.
-            // Loop on 'fnum + 1' to avoid decrementing 0 (of type size_t) which gives a large number and an endless loop
+            // Loop on 'fnum + 1' to avoid decrementing 0 (of type size_t) which gives a large number and an endless
+            // loop
             for (size_t fnumPlus1 = tonum + 1; fnumPlus1 > result.fromFileNumber; --fnumPlus1) {
                 result.toFileNumber = fnumPlus1 - 1; // best guess so far - to have for sure a result
 
@@ -902,17 +891,17 @@ namespace karabo {
                     f.open((namePrefix + toString(result.toFileNumber) + nameSuffix).c_str(), ios::in | ios::binary);
                     if (!f || !f.is_open()) continue;
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":"
-                            << __LINE__ << "   :   " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                               << e.what();
                 }
 
                 try {
                     // read first record
-                    f.read((char*) &record, sizeof (MetaData::Record));
+                    f.read((char*)&record, sizeof(MetaData::Record));
                     if (!f) continue; // reading failed (file too short?)
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":"
-                            << __LINE__ << "   :   " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                               << e.what();
                 }
 
                 if (ROUND1MS(record.epochstamp) > ROUND1MS(to)) {
@@ -936,12 +925,12 @@ namespace karabo {
                 const size_t filesize = bf::file_size(namePrefix + toString(iFile) + nameSuffix, ec);
                 if (ec) continue;
 
-                const size_t nrecs = filesize / sizeof (MetaData::Record);
-                if (filesize % sizeof (MetaData::Record) == 0) {
+                const size_t nrecs = filesize / sizeof(MetaData::Record);
+                if (filesize % sizeof(MetaData::Record) == 0) {
                     result.nrecList.back() = nrecs;
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << "Index file " << iFile << " for '" << deviceId << "." << path
-                            << "' corrupt, skip its content.";
+                                               << "' corrupt, skip its content.";
                 }
             }
 
@@ -952,8 +941,8 @@ namespace karabo {
                 f.open((namePrefix + toString(result.toFileNumber) + nameSuffix).c_str(), ios::in | ios::binary);
                 if (!f || !f.is_open()) result.nrecList.back() = 0;
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":"
-                        << __LINE__ << "   :   " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                           << e.what();
             }
             if (result.nrecList.back()) {
                 // Do this before correcting nrecList[0] for fromRecord - first/last could be the same!
@@ -978,11 +967,11 @@ namespace karabo {
                 // divide by 2 and check middle point
                 const size_t recnum = left + (right - left) / 2;
                 try {
-                    f.seekg(recnum * sizeof (MetaData::Record));
-                    f.read((char*) records, sizeof (MetaData::Record));
+                    f.seekg(recnum * sizeof(MetaData::Record));
+                    f.read((char*)records, sizeof(MetaData::Record));
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":"
-                            << __LINE__ << "   :   " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                               << e.what();
                 }
                 const double epoch = records[0].epochstamp;
                 if (ROUND1MS(epoch) == roundedT) {
@@ -996,11 +985,11 @@ namespace karabo {
 
             try {
                 // Load all records from left to (including) right:
-                f.seekg(left * sizeof (MetaData::Record));
-                f.read((char*) records, (right - left + 1) * sizeof (MetaData::Record));
+                f.seekg(left * sizeof(MetaData::Record));
+                f.read((char*)records, (right - left + 1) * sizeof(MetaData::Record));
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":"
-                        << __LINE__ << "   :   " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in " << __FILE__ << ":" << __LINE__ << "   :   "
+                                           << e.what();
             }
             // Loop and find record with best matching timestamp:
             for (size_t i = 0; i <= (right - left); ++i) {
@@ -1044,6 +1033,4 @@ namespace karabo {
 } // namespace karabo
 
 boost::mutex karabo::devices::FileLogReader::m_propFileInfoMutex;
-std::map<std::string, karabo::devices::PropFileInfo::Pointer > karabo::devices::FileLogReader::m_mapPropFileInfo;
-
-
+std::map<std::string, karabo::devices::PropFileInfo::Pointer> karabo::devices::FileLogReader::m_mapPropFileInfo;

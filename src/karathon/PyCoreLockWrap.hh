@@ -6,7 +6,7 @@
  */
 
 #ifndef KARATHON_PYCORELOCKWRAP_HH
-#define	KARATHON_PYCORELOCKWRAP_HH
+#define KARATHON_PYCORELOCKWRAP_HH
 
 #include <karabo/core/Lock.hh>
 
@@ -14,12 +14,10 @@
 namespace karathon {
 
     class LockWrap {
-
         boost::shared_ptr<karabo::core::Lock> m_lock;
-    public:
 
-        LockWrap(const boost::shared_ptr<karabo::core::Lock>& l) : m_lock(l) {
-        };
+       public:
+        LockWrap(const boost::shared_ptr<karabo::core::Lock>& l) : m_lock(l){};
 
 
         /**
@@ -39,8 +37,6 @@ namespace karathon {
          * asking for lock validity.
          */
         bool valid();
-
     };
-}
-#endif	/* KARATHON_PYCORELOCKWRAP_HH */
-
+} // namespace karathon
+#endif /* KARATHON_PYCORELOCKWRAP_HH */

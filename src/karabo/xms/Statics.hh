@@ -9,7 +9,7 @@
  */
 
 #ifndef KARABO_XMS_STATICS_HH
-#define	KARABO_XMS_STATICS_HH
+#define KARABO_XMS_STATICS_HH
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -26,20 +26,16 @@ namespace karabo {
          * The Statics class.
          */
         class Statics {
-
-            public:
-
+           public:
             /**
              * Default constructor.
              */
-            Statics() {
-            };
+            Statics(){};
 
             /**
              * Destructor.
              */
-            virtual ~Statics() {
-            };
+            virtual ~Statics(){};
 
             static std::string generateUUID() {
                 return boost::uuids::to_string(m_uuidGenerator());
@@ -49,18 +45,15 @@ namespace karabo {
                 return 10000 + ((m_serverPorts++) % 50000);
             }
 
-        private: // members
-
+           private: // members
             static boost::uuids::random_generator m_uuidGenerator;
 
             static unsigned int m_serverPorts;
 
-        private: // functions
-
+           private: // functions
         };
 
-    }
-}
+    } // namespace xms
+} // namespace karabo
 
 #endif
-

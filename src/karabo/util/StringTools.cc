@@ -10,9 +10,10 @@
  */
 
 #include "StringTools.hh"
+
 #include "FromTypeInfo.hh"
-#include "ToCppString.hh"
 #include "NDArray.hh"
+#include "ToCppString.hh"
 
 using namespace std;
 
@@ -20,13 +21,14 @@ namespace karabo {
     namespace util {
 
 
-        std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt) {
-            std::string srcType = Types::convert<FromTypeInfo, ToCppString > (src);
+        std::string createCastFailureMessage(const std::string& key, const std::type_info& src,
+                                             const std::type_info& tgt) {
+            std::string srcType = Types::convert<FromTypeInfo, ToCppString>(src);
             if (Types::from<FromTypeInfo>(src) == Types::ReferenceType::UNKNOWN) {
                 // type_info::name() is implementation dependent - but is at least a hint
                 ((srcType += " (std::type_info: ") += src.name()) += ")";
             }
-            std::string tgtType = Types::convert<FromTypeInfo, ToCppString > (tgt);
+            std::string tgtType = Types::convert<FromTypeInfo, ToCppString>(tgt);
             if (Types::from<FromTypeInfo>(tgt) == Types::ReferenceType::UNKNOWN) {
                 ((tgtType += " (std::type_info: ") += tgt.name()) += ")";
             }
@@ -34,7 +36,8 @@ namespace karabo {
         }
 
 
-        std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src, const Types::ReferenceType& tgt) {
+        std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src,
+                                             const Types::ReferenceType& tgt) {
             std::string srcType = ToType<ToCppString>::to(src);
             std::string tgtType = ToType<ToCppString>::to(tgt);
             return "Failed conversion from \"" + srcType + "\" into \"" + tgtType + "\" on key \"" + key + "\"";
@@ -91,7 +94,8 @@ namespace karabo {
                     return toString<unsigned int>(data);
                 }
                 case Types::UINT64: {
-                    const std::pair<const unsigned long long*, size_t> data(value.getData<unsigned long long>(), value.size());
+                    const std::pair<const unsigned long long*, size_t> data(value.getData<unsigned long long>(),
+                                                                            value.size());
                     return toString<unsigned long long>(data);
                 }
                 case Types::FLOAT: {
@@ -103,7 +107,8 @@ namespace karabo {
                     return toString<double>(data);
                 }
                 default:
-                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to string not implemented for this NDArray type");
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION(
+                          "Conversion to string not implemented for this NDArray type");
             }
         }
 
@@ -117,19 +122,19 @@ namespace karabo {
             if (maxBytesShown == 0) {
                 maxBytesShown = std::numeric_limits<size_t>::max();
             }
-            const std::size_t nBytes = maxBytesShown/2;
+            const std::size_t nBytes = maxBytesShown / 2;
             os << "0x" << std::hex;
             for (std::size_t i = 0; i < size;) {
                 if (i < nBytes || i >= (size - nBytes)) {
                     os << std::setw(2) << std::setfill('0') << int(ptr.get()[i]);
                     ++i;
                 } else {
-                    os << "...(skip " << std::dec << (size - 2*nBytes) << " bytes)..." << std::hex;
+                    os << "...(skip " << std::dec << (size - 2 * nBytes) << " bytes)..." << std::hex;
                     i = size - nBytes;
                 }
             }
             os << std::dec;
             return os.str();
         }
-    }
-}
+    } // namespace util
+} // namespace karabo

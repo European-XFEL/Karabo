@@ -8,8 +8,9 @@
 
 
 #include "FormatDiscoveryPolicy.hh"
-#include <karabo/util/SimpleElement.hh>
+
 #include <karabo/log/Logger.hh>
+#include <karabo/util/SimpleElement.hh>
 
 using namespace karabo::io::h5;
 using namespace karabo::util;
@@ -21,22 +22,23 @@ namespace karabo {
         namespace h5 {
 
             void FormatDiscoveryPolicy::expectedParameters(karabo::util::Schema& expected) {
-
                 UINT64_ELEMENT(expected)
-                        .key("chunkSize")
-                        .displayedName("Default Chunk Size")
-                        .description("Default chunk size for discovery")
-                        .assignmentOptional().defaultValue(1)
-                        .commit();
+                      .key("chunkSize")
+                      .displayedName("Default Chunk Size")
+                      .description("Default chunk size for discovery")
+                      .assignmentOptional()
+                      .defaultValue(1)
+                      .commit();
 
                 UINT32_ELEMENT(expected)
-                        .key("compressionLevel")
-                        .displayedName("Default compression Level")
-                        .description("Default compression Level")
-                        .minInc(0)
-                        .maxInc(9)
-                        .assignmentOptional().defaultValue(0)
-                        .commit();
+                      .key("compressionLevel")
+                      .displayedName("Default compression Level")
+                      .description("Default compression Level")
+                      .minInc(0)
+                      .maxInc(9)
+                      .assignmentOptional()
+                      .defaultValue(0)
+                      .commit();
             }
 
 
@@ -45,6 +47,6 @@ namespace karabo {
                 m_defaultCompressionLevel = input.getAs<int>("compressionLevel");
             }
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo

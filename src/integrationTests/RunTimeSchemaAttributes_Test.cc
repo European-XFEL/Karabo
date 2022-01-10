@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   RunTimeSchemaAttributes.cc
  * Author: steffen
- * 
+ *
  * Created on September 13, 2016, 7:10 PM
  */
 
@@ -15,18 +15,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION(RunTimeSchemaAttributes_Test);
 #define KRB_TEST_MAX_TIMEOUT 10
 
 
-RunTimeSchemaAttributes_Test::RunTimeSchemaAttributes_Test() {
-
-}
+RunTimeSchemaAttributes_Test::RunTimeSchemaAttributes_Test() {}
 
 
-RunTimeSchemaAttributes_Test::~RunTimeSchemaAttributes_Test() {
-
-}
+RunTimeSchemaAttributes_Test::~RunTimeSchemaAttributes_Test() {}
 
 
 void RunTimeSchemaAttributes_Test::setUp() {
-
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
@@ -46,18 +41,21 @@ void RunTimeSchemaAttributes_Test::tearDown() {
 
 
 void RunTimeSchemaAttributes_Test::appTestRunner() {
-
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerSchema", "GuiServerDevice", Hash("deviceId", "testGuiServerSchema", "port", 44447), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate("testServerSchema", "GuiServerDevice",
+                                      Hash("deviceId", "testGuiServerSchema", "port", 44447), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u/*, "debug", true*/)));
+    m_tcpAdapter =
+          boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u /*, "debug", true*/)));
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
     m_tcpAdapter->login();
 
 
-    success = m_deviceClient->instantiate("testServerSchema", "AlarmTester", Hash("deviceId", "alarmTesterSchema"), KRB_TEST_MAX_TIMEOUT);
+    success = m_deviceClient->instantiate("testServerSchema", "AlarmTester", Hash("deviceId", "alarmTesterSchema"),
+                                          KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
@@ -69,13 +67,13 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
     }
-
 }
 
 
 void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
-    //register a dummy monitor to assure that signals from the device are tracked
-    m_deviceClient->registerDeviceMonitor("alarmTesterSchema", boost::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
+    // register a dummy monitor to assure that signals from the device are tracked
+    m_deviceClient->registerDeviceMonitor("alarmTesterSchema",
+                                          boost::bind(&RunTimeSchemaAttributes_Test::dummyMonitor, this, _1, _2));
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
     m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "warnLow", -1000);
     m_deviceClient->setAttribute("alarmTesterSchema", "intPropNeedsAck", "minInc", -10);
@@ -90,21 +88,19 @@ void RunTimeSchemaAttributes_Test::testRuntimeApplication() {
 
 
 void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
-
     std::vector<karabo::util::Hash> schemaUpdates;
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "warnHigh", "value", 1000));
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", 10));
-    
+
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] {
-        m_tcpAdapter->sendMessage(message);
-    });
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] { m_tcpAdapter->sendMessage(message); });
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
     CPPUNIT_ASSERT(lastMessage.get<bool>("reply.success"));
     CPPUNIT_ASSERT(lastMessage.get<std::string>("reply.instanceId") == "alarmTesterSchema");
-    CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> > ("reply.requestedUpdate") == schemaUpdates);
+    CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> >("reply.requestedUpdate") == schemaUpdates);
     const Schema& s = lastMessage.get<Schema>("reply.updatedSchema");
     CPPUNIT_ASSERT(s.getWarnHigh<int>("intPropNeedsAck") == 1000);
     CPPUNIT_ASSERT(s.getMaxInc<int>("intPropNeedsAck") == 10);
@@ -114,7 +110,6 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
 
 
 void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
-
     // Retrieves the current values of the alarm attributes whose updates should fail.
     Schema currentSchema = m_deviceClient->getDeviceSchema("alarmTesterSchema");
     int currentWarnHigh = currentSchema.getWarnHigh<int>("intPropNeedsAck");
@@ -124,19 +119,19 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
     std::vector<karabo::util::Hash> schemaUpdates;
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "warnHigh", "value", 50));
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", "this will Fail"));
-    schemaUpdates.push_back(Hash("path", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", "attribute", "maxInc", "value", "this will Fail"));
+    schemaUpdates.push_back(Hash("path", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2",
+                                 "attribute", "maxInc", "value", "this will Fail"));
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "alarmHigh", "value", 500));
 
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] {
-        m_tcpAdapter->sendMessage(message);
-    });
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("attributesUpdated", 1, [&] { m_tcpAdapter->sendMessage(message); });
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
     CPPUNIT_ASSERT(lastMessage.get<bool>("reply.success") == false);
     CPPUNIT_ASSERT(lastMessage.get<std::string>("reply.instanceId") == "alarmTesterSchema");
-    CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> > ("reply.requestedUpdate") == schemaUpdates);
+    CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> >("reply.requestedUpdate") == schemaUpdates);
     const Schema& s = lastMessage.get<Schema>("reply.updatedSchema");
 
     // All the updates should have been rolled-back due to the failing 'maxInc' updates.
@@ -148,6 +143,6 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
 }
 
 
-void RunTimeSchemaAttributes_Test::dummyMonitor(const std::string&, const karabo::util::Hash&) {
+void RunTimeSchemaAttributes_Test::dummyMonitor(const std::string&, const karabo::util::Hash&){
 
 };

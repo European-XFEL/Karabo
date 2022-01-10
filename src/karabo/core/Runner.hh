@@ -11,10 +11,11 @@
  */
 
 #ifndef KARABO_CORE_RUNNER_HH
-#define	KARABO_CORE_RUNNER_HH
+#define KARABO_CORE_RUNNER_HH
+
+#include <boost/range/algorithm/count.hpp>
 
 #include "DeviceServer.hh"
-#include <boost/range/algorithm/count.hpp>
 
 /**
  * The main karabo namespace
@@ -31,9 +32,7 @@ namespace karabo {
          * command line arguments to deduce configuration.
          */
         class Runner {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(Runner, "Runner", karabo::util::Version::getVersion())
 
             KARABO_CONFIGURATION_BASE_CLASS;
@@ -53,9 +52,9 @@ namespace karabo {
             static bool parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration,
                                          bool silent = false);
 
-        protected:
-
-            static void parseToken(const std::string& prefix, const std::string& token, std::vector<std::string>& tokenList);
+           protected:
+            static void parseToken(const std::string& prefix, const std::string& token,
+                                   std::vector<std::string>& tokenList);
 
             static void resolveTokens(const std::vector<std::string>& argv, std::vector<std::string>& args);
 
@@ -63,11 +62,11 @@ namespace karabo {
 
             static void showUsage(const std::string& programName, const std::string& what = "");
 
-            static int buildToken(const std::vector<std::string>& args, int start, std::string & token);
+            static int buildToken(const std::vector<std::string>& args, int start, std::string& token);
 
-            static void readToken(const std::string& token, karabo::util::Hash & config);
+            static void readToken(const std::string& token, karabo::util::Hash& config);
         };
-    }
-}
+    } // namespace core
+} // namespace karabo
 
 #endif

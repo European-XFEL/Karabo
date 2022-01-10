@@ -1,15 +1,16 @@
-/* 
+/*
  * File:   EventLoop_Test.cc
  * Author: heisenb
- * 
+ *
  * Created on July 29, 2016, 2:06 PM
  */
 
+#include "karabo/net/EventLoop.hh"
+
 #include <csignal>
 
-#include "karabo/net/EventLoop.hh"
-#include "karabo/log/Logger.hh"
 #include "EventLoop_Test.hh"
+#include "karabo/log/Logger.hh"
 
 
 using namespace karabo::util;
@@ -18,16 +19,13 @@ using namespace karabo::net;
 CPPUNIT_TEST_SUITE_REGISTRATION(EventLoop_Test);
 
 
-EventLoop_Test::EventLoop_Test() {
-}
+EventLoop_Test::EventLoop_Test() {}
 
 
-EventLoop_Test::~EventLoop_Test() {   
-}
+EventLoop_Test::~EventLoop_Test() {}
 
 
 void EventLoop_Test::handler1(boost::asio::deadline_timer& timer, int count) {
-
     if (count == -1) {
         CPPUNIT_ASSERT(EventLoop::getNumberOfThreads() == 0);
         return;
@@ -52,7 +50,6 @@ void EventLoop_Test::handler1(boost::asio::deadline_timer& timer, int count) {
 
 
 void EventLoop_Test::testMethod() {
-
     boost::asio::deadline_timer timer(EventLoop::getIOService(), boost::posix_time::millisec(500));
     timer.async_wait(boost::bind(&EventLoop_Test::handler1, this, boost::ref(timer), 0));
 
@@ -61,9 +58,8 @@ void EventLoop_Test::testMethod() {
 
 
 void EventLoop_Test::handler2() {
-    
     if (m_finished) return;
-    
+
     boost::asio::deadline_timer timer(EventLoop::getIOService(), boost::posix_time::millisec(5));
     EventLoop::getIOService().post(boost::bind(&EventLoop_Test::handler2, this));
 }
@@ -75,7 +71,6 @@ void EventLoop_Test::handler3() {
 
 
 void EventLoop_Test::testMethod2() {
-
     boost::asio::io_service::work work(EventLoop::getIOService());
     boost::thread t(boost::bind(&EventLoop::run));
 
@@ -88,14 +83,12 @@ void EventLoop_Test::testMethod2() {
     t.join();
 
     m_finished = true;
-    
-    CPPUNIT_ASSERT(true);
 
+    CPPUNIT_ASSERT(true);
 }
 
 
 void EventLoop_Test::testSignalCapture() {
-
     boost::thread t(boost::bind(&EventLoop::work));
 
     bool terminateCaught = false;

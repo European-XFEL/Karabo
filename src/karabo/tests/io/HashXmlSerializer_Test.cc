@@ -1,65 +1,64 @@
-/* 
+/*
  * File:   HashXmlSerializer_Test.cc
  * Author: heisenb
- * 
+ *
  * Created on February 25, 2013, 6:03 PM
  */
 
-#include <vector>
-#include <ctime>
-
-#include <karabo/io/HashXmlSerializer.hh>
 #include "HashXmlSerializer_Test.hh"
+
+#include <ctime>
+#include <iostream>
+#include <karabo/io/HashXmlSerializer.hh>
+#include <vector>
+
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/util/GenericElement.hh"
 #include "karabo/util/SimpleElement.hh"
-
-#include <iostream>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 
 using namespace karabo::io;
 using namespace karabo::util;
-using std::vector;
 using std::string;
+using std::vector;
 
-HashXmlSerializer_Test::HashXmlSerializer_Test() {
-}
+HashXmlSerializer_Test::HashXmlSerializer_Test() {}
 
 
-HashXmlSerializer_Test::~HashXmlSerializer_Test() {
-}
+HashXmlSerializer_Test::~HashXmlSerializer_Test() {}
 
 
 void HashXmlSerializer_Test::setUp() {
-
     Schema sch("schema_attr");
     INT32_ELEMENT(sch).key("metric").assignmentOptional().defaultValue(12).commit();
 
-    Hash rooted("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
+    Hash rooted("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash>(2, Hash("a", 1)), "a.d",
+                std::complex<double>(1.2, 4.2));
     rooted.setAttribute("a", "a1", true);
     rooted.setAttribute("a", "a2", 3.4);
     rooted.setAttribute("a", "a3", vector<Hash>{Hash("row1", "value1"), Hash("row2", "value2")});
     rooted.setAttribute("a", "a4", sch);
     rooted.setAttribute("a.b", "b1", "3");
     rooted.setAttribute("a.b.c", "c1", 2);
-    rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
+    rooted.setAttribute("a.b.c", "c2", vector<string>(3, "bla"));
     rooted.setAttribute("a.b.c", "c3", vector<Hash>{Hash("row1", 1), Hash("row2", 2)});
     rooted.setAttribute("a.b.e", "myAttr", "Hallo");
-    rooted.setAttribute("a.b.e", "eAttr", vector<string > (2, "abc"));
+    rooted.setAttribute("a.b.e", "eAttr", vector<string>(2, "abc"));
     rooted.set("an/element/with/slashes", true);
     rooted.set("vec", std::vector<float>());
     m_rootedHash = rooted;
 
     Hash big("a.b", std::vector<double>(10000, 1.0));
-    vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
+    vector<Hash>& tmp = big.bindReference<vector<Hash>>("a.c");
     tmp.resize(1000);
     for (size_t i = 0; i < tmp.size(); ++i) {
         tmp[i] = m_rootedHash;
     }
     m_bigHash = big;
 
-    Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
+    Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long>(5, 5),
+                  "F.f.f.f.f", Hash("x.y.z", 99));
     unrooted.setAttribute("F.f.f", "attr1", true);
     unrooted.set("a1", string());
     m_unrootedHash = unrooted;
@@ -70,12 +69,10 @@ void HashXmlSerializer_Test::setUp() {
 }
 
 
-void HashXmlSerializer_Test::tearDown() {
-}
+void HashXmlSerializer_Test::tearDown() {}
 
 
 void HashXmlSerializer_Test::testSerialization() {
-
     TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
 
     {
@@ -88,9 +85,10 @@ void HashXmlSerializer_Test::testSerialization() {
 
         CPPUNIT_ASSERT_MESSAGE("'schemaIncluded' and 'deserialized' hashes should be fullyEquals.",
                                schemaIncluded.fullyEquals(deserialized));
-        CPPUNIT_ASSERT_MESSAGE("Hashes for original schema 's' and the deserialized schema node in key 'a2' should be fullyEquals.",
-                               s.getParameterHash().fullyEquals(deserialized.get<Schema>("a2").getParameterHash()));
-      }
+        CPPUNIT_ASSERT_MESSAGE(
+              "Hashes for original schema 's' and the deserialized schema node in key 'a2' should be fullyEquals.",
+              s.getParameterHash().fullyEquals(deserialized.get<Schema>("a2").getParameterHash()));
+    }
 
 
     {
@@ -102,31 +100,36 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash h;
         p->load(h, archive1);
 
-        CPPUNIT_ASSERT_MESSAGE("Deserialized version of m_rootedHash, 'h', and 'm_rootedHash' itself should be fullyEquals.",
-                               h.fullyEquals(m_rootedHash));
+        CPPUNIT_ASSERT_MESSAGE(
+              "Deserialized version of m_rootedHash, 'h', and 'm_rootedHash' itself should be fullyEquals.",
+              h.fullyEquals(m_rootedHash));
 
         // Checks serialization of attribute of type vector<string>.
-        const vector<std::string> serVectStrAttr = h.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
-        const vector<std::string> origVectStrAttr = m_rootedHash.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
+        const vector<std::string> serVectStrAttr = h.getAttribute<vector<std::string>>("a.b.e", "eAttr");
+        const vector<std::string> origVectStrAttr = m_rootedHash.getAttribute<vector<std::string>>("a.b.e", "eAttr");
         CPPUNIT_ASSERT_EQUAL(origVectStrAttr.size(), serVectStrAttr.size());
         for (vector<std::string>::size_type i = 0; i < serVectStrAttr.size(); i++) {
             CPPUNIT_ASSERT_EQUAL(origVectStrAttr[i], serVectStrAttr[i]);
         }
 
         // Checks serialization of attribute of type vector<Hash>.
-        const vector<Hash> serVectHashAttr = h.getAttribute<vector < Hash >> ("a", "a3");
-        const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector < Hash >> ("a", "a3");
+        const vector<Hash> serVectHashAttr = h.getAttribute<vector<Hash>>("a", "a3");
+        const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector<Hash>>("a", "a3");
         CPPUNIT_ASSERT_EQUAL(origVectStrAttr.size(), serVectStrAttr.size());
         for (vector<std::string>::size_type i = 0; i < serVectHashAttr.size(); i++) {
-            CPPUNIT_ASSERT_MESSAGE("Hashes at vector<Hash> attribute 'a.a3' of 'origVectHashAttr' and 'serVectHashAttr' are not fullyEquals.",
-                                   origVectHashAttr[i].fullyEquals(serVectHashAttr[i]));
+            CPPUNIT_ASSERT_MESSAGE(
+                  "Hashes at vector<Hash> attribute 'a.a3' of 'origVectHashAttr' and 'serVectHashAttr' are not "
+                  "fullyEquals.",
+                  origVectHashAttr[i].fullyEquals(serVectHashAttr[i]));
         }
 
         // Checks serialization of attribute of type Schema.
         const Schema serSchemaAttr = h.getAttribute<Schema>("a", "a4");
         const Schema origSchemaAttr = m_rootedHash.getAttribute<Schema>("a", "a4");
-        CPPUNIT_ASSERT_MESSAGE("Hashes corresponding to original schema attribute, 'origSchemaAttr', and its serialized version, 'serSchemaAttr', are not fullyEquals.",
-                               origSchemaAttr.getParameterHash().fullyEquals(serSchemaAttr.getParameterHash()));
+        CPPUNIT_ASSERT_MESSAGE(
+              "Hashes corresponding to original schema attribute, 'origSchemaAttr', and its serialized version, "
+              "'serSchemaAttr', are not fullyEquals.",
+              origSchemaAttr.getParameterHash().fullyEquals(serSchemaAttr.getParameterHash()));
 
         p->save(h, archive2);
 
@@ -148,8 +151,10 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash h;
         p->load(h, archive1);
 
-        CPPUNIT_ASSERT_MESSAGE("Specially crafted hash, 'rooted', with node named to try to provoque collision, and its serialized form, 'h', should be fullyEquals.",
-                               rooted.fullyEquals(h));
+        CPPUNIT_ASSERT_MESSAGE(
+              "Specially crafted hash, 'rooted', with node named to try to provoque collision, and its serialized "
+              "form, 'h', should be fullyEquals.",
+              rooted.fullyEquals(h));
 
         p->save(h, archive2);
 
@@ -158,7 +163,7 @@ void HashXmlSerializer_Test::testSerialization() {
 
 
     {
-        const int nSave = 1; // increase for measurements, minimum 1
+        const int nSave = 1;                      // increase for measurements, minimum 1
         std::vector<std::string> archives(nSave); // an individial archive for each save
         const std::string& archive1 = archives[0];
         std::string archive2;
@@ -169,7 +174,7 @@ void HashXmlSerializer_Test::testSerialization() {
         }
         std::clock_t c_end = std::clock();
 
-        double time_elapsed_ms = 1000.0 / nSave * (c_end-c_start) / CLOCKS_PER_SEC;
+        double time_elapsed_ms = 1000.0 / nSave * (c_end - c_start) / CLOCKS_PER_SEC;
         KARABO_LOG_FRAMEWORK_DEBUG << "Average serialization big Hash: " << time_elapsed_ms << " ms";
 
         std::vector<Hash> vecH(nSave); // A new Hash for each deserialisation
@@ -179,7 +184,7 @@ void HashXmlSerializer_Test::testSerialization() {
         }
         c_end = std::clock();
 
-        time_elapsed_ms = 1000.0 / nSave * (c_end-c_start) / CLOCKS_PER_SEC;
+        time_elapsed_ms = 1000.0 / nSave * (c_end - c_start) / CLOCKS_PER_SEC;
         KARABO_LOG_FRAMEWORK_DEBUG << "Average de-serialization big Hash: " << time_elapsed_ms << " ms";
 
         Hash& h = vecH[0];
@@ -187,7 +192,6 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(h, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
-
     }
 
     {
@@ -203,7 +207,6 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(h, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
-
     }
 
     {
@@ -213,28 +216,37 @@ void HashXmlSerializer_Test::testSerialization() {
         vector<Hash> hs;
         p->load(hs, archive1);
         for (size_t i = 0; i < 10; ++i) {
-            CPPUNIT_ASSERT_MESSAGE("Serialized hash in vector of hashes, hs[i] should be fullyEquals to its original form, 'm_rootedHash'.",
-                                   m_rootedHash.fullyEquals(hs[i]));
+            CPPUNIT_ASSERT_MESSAGE(
+                  "Serialized hash in vector of hashes, hs[i] should be fullyEquals to its original form, "
+                  "'m_rootedHash'.",
+                  m_rootedHash.fullyEquals(hs[i]));
         }
 
         p->save(hs, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
     }
-
 }
 
 
 void HashXmlSerializer_Test::testLegacyDeserialization() {
     std::string legacyXml =
-            "<?xml version=\"1.0\"?>"
-            "<root KRB_Artificial=\"\" KRB_Type=\"HASH\">"
-            "<table displayedName=\"KRB_STRING:Table property\" description=\"KRB_STRING:Table containing one node.\" assignment=\"KRB_INT32:0\" "
-            "defaultValue=\"KRB_VECTOR_HASH:'e1' =&gt; abc STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 1 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 12 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 0.9837 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 1.2345 DOUBLE&#10;,'e1' =&gt; xyz STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 0 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 42 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 2.33333 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 7.77777 DOUBLE&#10;\" "
-            "accessMode=\"KRB_INT32:4\" nodeType=\"KRB_INT32:0\" leafType=\"KRB_INT32:0\" displayType=\"KRB_STRING:Table\" valueType=\"KRB_STRING:VECTOR_HASH\" "
-            "rowSchema=\"KRB_SCHEMA:Schema Object\" requiredAccessLevel=\"KRB_INT32:1\" "
-            "overwriteRestrictions=\"KRB_VECTOR_BOOL:0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0\" KRB_Type=\"INT32\">0"
-            "</table>"
-            "</root>";
+          "<?xml version=\"1.0\"?>"
+          "<root KRB_Artificial=\"\" KRB_Type=\"HASH\">"
+          "<table displayedName=\"KRB_STRING:Table property\" description=\"KRB_STRING:Table containing one node.\" "
+          "assignment=\"KRB_INT32:0\" "
+          "defaultValue=\"KRB_VECTOR_HASH:'e1' =&gt; abc STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 1 "
+          "BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 12 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; "
+          "0.9837 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 1.2345 DOUBLE&#10;,'e1' =&gt; xyz "
+          "STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 0 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; "
+          "42 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 2.33333 FLOAT&#10;'e5' "
+          "alarmCondition=&quot;none&quot; =&gt; 7.77777 DOUBLE&#10;\" "
+          "accessMode=\"KRB_INT32:4\" nodeType=\"KRB_INT32:0\" leafType=\"KRB_INT32:0\" "
+          "displayType=\"KRB_STRING:Table\" valueType=\"KRB_STRING:VECTOR_HASH\" "
+          "rowSchema=\"KRB_SCHEMA:Schema Object\" requiredAccessLevel=\"KRB_INT32:1\" "
+          "overwriteRestrictions=\"KRB_VECTOR_BOOL:0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0\" "
+          "KRB_Type=\"INT32\">0"
+          "</table>"
+          "</root>";
 
     TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
     Hash deserialized;
@@ -261,5 +273,3 @@ void HashXmlSerializer_Test::testLegacyDeserialization() {
 
     CPPUNIT_ASSERT(attrs.has("overwriteRestrictions"));
 }
-
-

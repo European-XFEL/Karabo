@@ -1,14 +1,13 @@
-/* 
+/*
  * File:   TimeDuration.cc
  * Author: boukhelef
- * 
+ *
  * Created on April 27, 2013, 10:55 PM
  */
 
 #include "TimeDuration.hh"
 
 #include <boost/multiprecision/cpp_int.hpp>
-
 #include <limits>
 
 namespace karabo {
@@ -17,10 +16,7 @@ namespace karabo {
         std::string TimeDuration::DEFAULT_FORMAT("%s.%N");
 
 
-        TimeDuration::TimeDuration() :
-            m_Seconds(0ULL),
-            m_Fractions(0ULL) {
-        }
+        TimeDuration::TimeDuration() : m_Seconds(0ULL), m_Fractions(0ULL) {}
 
 
         TimeDuration::TimeDuration(const karabo::util::Hash& hash) {
@@ -28,22 +24,20 @@ namespace karabo {
         }
 
 
-        TimeDuration::TimeDuration(const TimeValue seconds, const TimeValue fractions) :
-            m_Seconds(seconds),
-            m_Fractions(fractions) {
+        TimeDuration::TimeDuration(const TimeValue seconds, const TimeValue fractions)
+            : m_Seconds(seconds), m_Fractions(fractions) {
             sanitize(m_Seconds, m_Fractions);
         }
 
 
-        TimeDuration::TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) :
-            m_Seconds(days*DAY + hours*HOUR + minutes*MINUTE + seconds),
-            m_Fractions(fractions) {
+        TimeDuration::TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds,
+                                   const TimeValue fractions)
+            : m_Seconds(days * DAY + hours * HOUR + minutes * MINUTE + seconds), m_Fractions(fractions) {
             sanitize(m_Seconds, m_Fractions);
         }
 
 
-        TimeDuration::~TimeDuration() {
-        }
+        TimeDuration::~TimeDuration() {}
 
 
         TimeDuration& TimeDuration::set(const TimeValue seconds, const TimeValue fractions) {
@@ -54,7 +48,8 @@ namespace karabo {
         }
 
 
-        TimeDuration & TimeDuration::set(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
+        TimeDuration& TimeDuration::set(const int days, const int hours, const int minutes, const TimeValue seconds,
+                                        const TimeValue fractions) {
             m_Seconds = days * DAY + hours * HOUR + minutes * MINUTE + seconds;
             m_Fractions = fractions;
             sanitize(m_Seconds, m_Fractions);
@@ -67,7 +62,8 @@ namespace karabo {
         }
 
 
-        TimeDuration & TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
+        TimeDuration& TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds,
+                                        const TimeValue fractions) {
             return (*this) += TimeDuration(days * DAY + hours * HOUR + minutes * MINUTE + seconds, fractions);
         }
 
@@ -84,7 +80,8 @@ namespace karabo {
         }
 
 
-        TimeDuration & TimeDuration::sub(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
+        TimeDuration& TimeDuration::sub(const int days, const int hours, const int minutes, const TimeValue seconds,
+                                        const TimeValue fractions) {
             m_Seconds -= days * DAY + hours * HOUR + minutes * MINUTE + seconds;
             if (m_Fractions < fractions) {
                 m_Fractions = (m_oneSecondInAtto - fractions) + m_Fractions;
@@ -108,7 +105,6 @@ namespace karabo {
 
         uint64_t TimeDuration::getHours() const {
             return (m_Seconds / HOUR) % 24;
-
         }
 
 
@@ -148,61 +144,80 @@ namespace karabo {
         std::string TimeDuration::format(const std::string& fmt) const {
             std::ostringstream oss;
             oss.fill('0');
-            for (char const * ptr = fmt.c_str(); *ptr; ++ptr) {
+            for (char const* ptr = fmt.c_str(); *ptr; ++ptr) {
                 if (*ptr == '%') {
                     ++ptr;
                     switch (*ptr) {
                         case 'd':
-                        case 'D': oss << getDays();
+                        case 'D':
+                            oss << getDays();
                             break;
-                        case 'H': oss.width(2);
+                        case 'H':
+                            oss.width(2);
                             oss << getHours();
                             break;
-                        case 'M':oss.width(2);
+                        case 'M':
+                            oss.width(2);
                             oss << getMinutes();
                             break;
-                        case 'S': oss.width(2);
+                        case 'S':
+                            oss.width(2);
                             oss << getSeconds();
                             break;
-                        case 'h': oss.width(0);
+                        case 'h':
+                            oss.width(0);
                             oss << getHours();
                             break;
-                        case 'm': oss.width(0);
+                        case 'm':
+                            oss.width(0);
                             oss << getMinutes();
                             break;
-                        case 's': oss.width(0);
+                        case 's':
+                            oss.width(0);
                             oss << getSeconds();
                             break;
-                        default:
-                        {
+                        default: {
                             int w;
                             TIME_UNITS p = ATTOSEC;
                             switch (*ptr) {
-                                case 'l': w = 0, p = MILLISEC;
+                                case 'l':
+                                    w = 0, p = MILLISEC;
                                     break;
-                                case 'u': w = 0, p = MICROSEC;
+                                case 'u':
+                                    w = 0, p = MICROSEC;
                                     break;
-                                case 'n': w = 0, p = NANOSEC;
+                                case 'n':
+                                    w = 0, p = NANOSEC;
                                     break;
-                                case 'p': w = 0, p = PICOSEC;
+                                case 'p':
+                                    w = 0, p = PICOSEC;
                                     break;
-                                case 'f': w = 0, p = FEMTOSEC;
+                                case 'f':
+                                    w = 0, p = FEMTOSEC;
                                     break;
-                                case 'a': w = 0, p = ATTOSEC;
+                                case 'a':
+                                    w = 0, p = ATTOSEC;
                                     break;
-                                case 'L': w = 3, p = MILLISEC;
+                                case 'L':
+                                    w = 3, p = MILLISEC;
                                     break;
-                                case 'U': w = 6, p = MICROSEC;
+                                case 'U':
+                                    w = 6, p = MICROSEC;
                                     break;
-                                case 'N': w = 9, p = NANOSEC;
+                                case 'N':
+                                    w = 9, p = NANOSEC;
                                     break;
-                                case 'P': w = 12, p = PICOSEC;
+                                case 'P':
+                                    w = 12, p = PICOSEC;
                                     break;
-                                case 'F': w = 15, p = FEMTOSEC;
+                                case 'F':
+                                    w = 15, p = FEMTOSEC;
                                     break;
-                                case 'A': w = 18, p = ATTOSEC;
+                                case 'A':
+                                    w = 18, p = ATTOSEC;
                                     break;
-                                default: throw "Unrecognized format";
+                                default:
+                                    throw "Unrecognized format";
                             }
                             oss.width(w);
                             oss << getFractions(p);
@@ -241,9 +256,9 @@ namespace karabo {
             // Now split it into two 64-bit values, i.e.
             static const uint128_t lower64BitsSet = std::numeric_limits<uint64_t>::max();
             // ...lower part
-            const auto fractions64bits = static_cast<unsigned long long> (fractions128bits & lower64BitsSet);
+            const auto fractions64bits = static_cast<unsigned long long>(fractions128bits & lower64BitsSet);
             // and higher part.
-            const auto fractions64bitsOverflow = static_cast<unsigned long long> (fractions128bits >> 64ull);
+            const auto fractions64bitsOverflow = static_cast<unsigned long long>(fractions128bits >> 64ull);
 
             // Treat non-overflow part...
             m_Fractions = fractions64bits % m_oneSecondInAtto;
@@ -252,7 +267,8 @@ namespace karabo {
             // ... and add overflow if needed:
             if (fractions64bitsOverflow) {
                 // Calculate duration of single overflow
-                TimeValue attos = std::numeric_limits<TimeValue>::max(); // all bits are set, i.e. maximum TimeValue (which is unsigned)!
+                TimeValue attos = std::numeric_limits<TimeValue>::max(); // all bits are set, i.e. maximum TimeValue
+                                                                         // (which is unsigned)!
                 TimeValue seconds = 0ull;
                 sanitize(seconds, attos);
                 // + 1 since overflow is one more than all 64 bits set
@@ -265,5 +281,5 @@ namespace karabo {
 
             return *this;
         }
-    }
-}
+    } // namespace util
+} // namespace karabo

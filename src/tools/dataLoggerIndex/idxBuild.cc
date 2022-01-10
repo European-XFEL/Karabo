@@ -1,22 +1,22 @@
-/* 
+/*
  * File:   idxBuild.cc
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
  * Created on July 28, 2015, 2:35 PM
  */
 
+#include <algorithm>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <vector>
-#include <boost/algorithm/string/predicate.hpp> 
-#include <boost/filesystem.hpp>
+#include <karabo/io/TextSerializer.hh>
+#include <karabo/util/DataLogUtils.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
-#include <karabo/util/DataLogUtils.hh>
-#include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Schema.hh>
+#include <sstream>
+#include <vector>
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
@@ -28,8 +28,6 @@ static std::map<string, MetaData::Pointer> idxMap;
 
 
 struct SchemaHistoryRange {
-
-
     unsigned long long fromSeconds;
     unsigned long long fromFraction;
     unsigned long long fromTrainId;
@@ -55,17 +53,14 @@ void findDevices(const std::string& root, const std::string& prefix, std::vector
     if (!bf::exists(dirpath)) return;
 
     for (bf::directory_iterator it(dirpath); it != bf::directory_iterator(); ++it) {
-
         // we expect that entry should be a directory
         if (!bf::is_directory(it->path())) continue;
 
         // build candidate
         string candidate;
 
-        if (prefix.empty())
-            candidate.assign(it->path().filename().string());
-        else
-            candidate.assign(prefix + "/" + it->path().filename().string());
+        if (prefix.empty()) candidate.assign(it->path().filename().string());
+        else candidate.assign(prefix + "/" + it->path().filename().string());
 
         // check if it fits the requirement(s)
         bf::path archiveLast(root + "/" + candidate + "/raw/archive.last");
@@ -82,10 +77,9 @@ void findDevices(const std::string& root, const std::string& prefix, std::vector
 
 
 /*
- * 
+ *
  */
 int main(int argc, char** argv) {
-
     if (argc < 2) {
         cout << "\nUsage: " << argv[0] << " <karabo_history_dir> [deviceId [property [filenum]]]\n" << endl;
         return 1;
@@ -94,23 +88,22 @@ int main(int argc, char** argv) {
     string karaboHistory(argv[1]);
     string requestedDeviceId = ""; // means "all devices found in karaboHistory"
     string requestedProperty = ""; // means "all registered properties"
-    int requestedFilenum = -1; // means "all file numbers found in raw subdirectory"
+    int requestedFilenum = -1;     // means "all file numbers found in raw subdirectory"
 
     if (argc > 2) {
         requestedDeviceId.assign(argv[2]);
         if (argc > 3) {
             requestedProperty.assign(argv[3]);
-            if (argc > 4)
-                requestedFilenum = fromString<int>(string(argv[4]));
+            if (argc > 4) requestedFilenum = fromString<int>(string(argv[4]));
         }
     }
 
 
     cout << "\nInput parameters are ...\n\tkaraboHistory =\t\"" << karaboHistory << "\"\n"
-            << "\tdeviceId =\t\"" << requestedDeviceId << "\"\n"
-            << "\tproperty =\t\"" << requestedProperty << "\"\n"
-            << "\tfile_num =\t\"" << requestedFilenum << "\"\n"
-            << endl;
+         << "\tdeviceId =\t\"" << requestedDeviceId << "\"\n"
+         << "\tproperty =\t\"" << requestedProperty << "\"\n"
+         << "\tfile_num =\t\"" << requestedFilenum << "\"\n"
+         << endl;
 
     bf::path history(karaboHistory);
     if (!bf::exists(history))
@@ -141,7 +134,8 @@ int main(int argc, char** argv) {
     //                }
     //                for (bf::directory_iterator ii(rawdir); ii != bf::directory_iterator(); ++ii) {
     //                    if (boost::starts_with(ii->path().filename().string(), deviceId)) {
-    //                        bf::copy_file(ii->path(), bf::path(deviceRawDir.string() + ii->path().filename().string()));
+    //                        bf::copy_file(ii->path(), bf::path(deviceRawDir.string() +
+    //                        ii->path().filename().string()));
     //                    }
     //                }
     //            }
@@ -178,7 +172,7 @@ int main(int argc, char** argv) {
     for (vector<string>::const_iterator it = devices.begin(); it != devices.end(); ++it) {
         string deviceId = *it;
 
-        //cout << "Process the device : \"" << deviceId << "\"" << endl;
+        // cout << "Process the device : \"" << deviceId << "\"" << endl;
 
         bf::path oldSchemaPath(karaboHistory + "/" + deviceId + "/raw/archive_schema.txt");
 
@@ -198,7 +192,7 @@ int main(int argc, char** argv) {
             if (filename == "archive_index.txt" || filename == "archive_schema.txt") continue;
             string pattern = "archive_";
             if (filename.substr(0, pattern.length()) != pattern) continue;
-            //cout << "Filename being processed : " << dit->path().filename() << endl;
+            // cout << "Filename being processed : " << dit->path().filename() << endl;
             rawtxt.push_back(dit->path());
         }
 
@@ -223,8 +217,7 @@ int main(int argc, char** argv) {
                     content.assign((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
                     in.close();
                     boost::split(idxprops, content, boost::is_any_of("\n\t\r "), boost::token_compress_on);
-                } else
-                    idxprops.push_back(requestedProperty);
+                } else idxprops.push_back(requestedProperty);
             }
         }
 
@@ -245,7 +238,7 @@ int main(int argc, char** argv) {
         }
 
         string pattern = "archive_";
-        // Process most recent file first as it is most likely what is needed 
+        // Process most recent file first as it is most likely what is needed
         // first from user that triggers indexing
         for (vector<bf::path>::reverse_iterator i = rawtxt.rbegin(); i != rawtxt.rend(); ++i) {
             // extract filenum from file name
@@ -268,14 +261,12 @@ bool byLastFileModificationTime(const bf::path& lhs, const bf::path& rhs) {
 }
 
 
-void processNextFile(const std::string& deviceId, size_t number, const std::string& historyDir,
-                     ifstream& sfs, bool buildContent, const vector<string>& idxprops) {
-
+void processNextFile(const std::string& deviceId, size_t number, const std::string& historyDir, ifstream& sfs,
+                     bool buildContent, const vector<string>& idxprops) {
     TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml"));
     Schema::Pointer schema(new Schema);
     serializer->load(*schema, schemaRange.fromSchemaArchive);
-    boost::regex lineRegex(karabo::util::DATALOG_LINE_REGEX,
-                           boost::regex::extended);
+    boost::regex lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
     string infile = historyDir + "/" + deviceId + "/raw/archive_" + toString(number) + ".txt";
     ifstream irs(infile.c_str());
@@ -295,17 +286,18 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 // entry to be indexed was empty or its position in
                 // the log file could not be obtained.
                 if (position == -1) {
-                    cout << "Skip processing of record " << recnum + 1 << " of file '" <<
-                            infile << "':\n"
-                            << "\tProcessing that record would result on an entry with position -1 in the archive_index.txt file"
-                            << std::endl;
+                    cout << "Skip processing of record " << recnum + 1 << " of file '" << infile << "':\n"
+                         << "\tProcessing that record would result on an entry with position -1 in the "
+                            "archive_index.txt file"
+                         << std::endl;
                 }
                 continue;
             }
             boost::smatch tokens;
             bool search_res = boost::regex_search(line, tokens, lineRegex);
             if (!search_res) {
-                cout << "*** idxBuild: skip corrupted record : line = " << line << ", token.size() = " << tokens.size() << endl;
+                cout << "*** idxBuild: skip corrupted record : line = " << line << ", token.size() = " << tokens.size()
+                     << endl;
                 continue; // This record is corrupted -- skip it
             }
             recnum++;
@@ -322,11 +314,12 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
             const Epochstamp epstamp(karabo::util::stringDoubleToEpochstamp(epochDoubleStr));
 
-            //cout << "*** " << recnum << " *** "
-            //        "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;
+            // cout << "*** " << recnum << " *** "
+            //         "\t" << "position in input : " << position << ", epoch: " << seconds << "." << fraction << endl;
 
             while (epstamp.getSeconds() > schemaRange.toSeconds ||
-                   (epstamp.getSeconds() == schemaRange.toSeconds && epstamp.getFractionalSeconds() > schemaRange.toFraction)) {
+                   (epstamp.getSeconds() == schemaRange.toSeconds &&
+                    epstamp.getFractionalSeconds() > schemaRange.toFraction)) {
                 if (sfs.fail()) break;
                 schemaRange.fromSeconds = schemaRange.toSeconds;
                 schemaRange.fromFraction = schemaRange.toFraction;
@@ -338,29 +331,28 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                 schema = Schema::Pointer(new Schema);
                 serializer->load(*schema, schemaRange.fromSchemaArchive);
             }
-            //cout << "*** Current schema for range from " << schemaRange.fromSeconds << "." << schemaRange.fromFraction
-            //        << " to " << schemaRange.toSeconds << "." << schemaRange.toFraction << endl;
+            // cout << "*** Current schema for range from " << schemaRange.fromSeconds << "." <<
+            // schemaRange.fromFraction
+            //         << " to " << schemaRange.toSeconds << "." << schemaRange.toFraction << endl;
 
             if ((flag == "LOGIN" || flag == "LOGOUT" || newFileFlag)) {
                 newFileFlag = false;
                 if (buildContent) {
                     string contentFile = historyDir + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream ocs(contentFile.c_str(), ios::out | ios::app);
-                    if (flag == "LOGIN")
-                        ocs << "+LOG ";
-                    else if (flag == "LOGOUT")
-                        ocs << "-LOG ";
-                    else
-                        ocs << "=NEW ";
+                    if (flag == "LOGIN") ocs << "+LOG ";
+                    else if (flag == "LOGOUT") ocs << "-LOG ";
+                    else ocs << "=NEW ";
 
-                    ocs << epochISO8601 << " " << epochDoubleStr << " " << " " << trainIdStr
-                            << " " << position << " " << (user.empty() ? "." : user) << " " << number << "\n";
+                    ocs << epochISO8601 << " " << epochDoubleStr << " "
+                        << " " << trainIdStr << " " << position << " " << (user.empty() ? "." : user) << " " << number
+                        << "\n";
 
                     ocs.close();
                 }
 
-                //cout << epochISO8601 << " " << epochDouble << " " << trainIdStr
-                //        << " " << position << " " << user << " " << number << endl;
+                // cout << epochISO8601 << " " << epochDouble << " " << trainIdStr
+                //         << " " << position << " " << user << " " << number << endl;
 
                 if (flag == "LOGOUT") {
                     map<string, MetaData::Pointer>::iterator ii = idxMap.begin();
@@ -374,7 +366,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                         }
                     }
                 } else {
-                    // set the marker up 
+                    // set the marker up
                     for (map<string, MetaData::Pointer>::iterator it = idxMap.begin(); it != idxMap.end(); it++) {
                         MetaData::Pointer mdp = it->second;
                         mdp->marker = true;
@@ -386,15 +378,17 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
             // check if we have any property registered
             if (idxprops.empty()) continue; // no interest for building binary index
-            if (find(idxprops.begin(), idxprops.end(), property) == idxprops.end()) continue; // property is not in the prop file
+            if (find(idxprops.begin(), idxprops.end(), property) == idxprops.end())
+                continue; // property is not in the prop file
 
             // Check if we need to build index for this property by inspecting schema ... checking only existence
             if (schema->has(property)) {
-                MetaData::Pointer& mdp = idxMap[property]; //Pointer by reference!
+                MetaData::Pointer& mdp = idxMap[property]; // Pointer by reference!
                 if (!mdp) {
                     // a property not yet indexed - create meta data and set file
                     mdp = MetaData::Pointer(new MetaData);
-                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + property + "-index.bin";
+                    mdp->idxFile = historyDir + "/" + deviceId + "/idx/archive_" + toString(number) + "-" + property +
+                                   "-index.bin";
                 }
                 if (!mdp->idxStream.is_open()) {
                     mdp->idxStream.open(mdp->idxFile.c_str(), ios::out | ios::trunc | ios::binary);
@@ -408,7 +402,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
                     mdp->marker = false;
                     mdp->record.extent2 |= (1 << 30);
                 }
-                mdp->idxStream.write((char*) &mdp->record, sizeof (MetaData::Record));
+                mdp->idxStream.write((char*)&mdp->record, sizeof(MetaData::Record));
             }
         }
     }

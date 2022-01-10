@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   StringTools_Test.hh
  * Author: parenti
  *
@@ -6,13 +6,11 @@
  */
 
 #ifndef STRINGTOOLS_TEST_HH
-#define	STRINGTOOLS_TEST_HH
+#define STRINGTOOLS_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class StringTools_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(StringTools_Test);
     CPPUNIT_TEST(testFromString);
     CPPUNIT_TEST(testToString);
@@ -20,18 +18,17 @@ class StringTools_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTokenize);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     StringTools_Test();
     virtual ~StringTools_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testFromString();
     void testToString();
     void testWiden();
     void testTokenize();
 };
 
-#endif	/* STRINGTOOLS_TEST_HH */
-
+#endif /* STRINGTOOLS_TEST_HH */

@@ -6,13 +6,13 @@
 
 #include "TelegrafLogging_Test.hh"
 
+#include <sstream>
+
 #include "karabo/net/EventLoop.hh"
-#include "karabo/util/Hash.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/StringTools.hh"
-
-#include <sstream>
 
 USING_KARABO_NAMESPACES;
 
@@ -20,7 +20,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TelegrafLogging_Test);
 
 
 TelegrafLogging_Test::TelegrafLogging_Test() {
-
     // Adjust the test timing parameters to the Telegraf environment.
     PAUSE_BEFORE_RETRY_MILLIS = 1000;
     NUM_RETRY = 2200;
@@ -47,9 +46,8 @@ void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
 
     std::clog << "Testing handling of Influx Database not available scenarios ...." << std::endl;
 
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
-                                                                       Hash("deviceId", m_deviceId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Starts the loggers with an invalid database name.
@@ -64,7 +62,7 @@ void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
     int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
     karabo::util::State loggerState = karabo::util::State::UNKNOWN;
     std::string loggerStatus;
-    const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string& dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     while (timeout > 0) {
         loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
         loggerStatus = m_deviceClient->get<std::string>(dataLoggerId, "status");
@@ -85,23 +83,20 @@ void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
 
 
 std::pair<bool, std::string> TelegrafLogging_Test::setupTelegrafEnv() {
+    const std::vector<std::string> varEnds{"_DBNAME",     "_QUERY_USER",     "_QUERY_PASSWORD", "_QUERY_URL",
+                                           "_WRITE_USER", "_WRITE_PASSWORD", "_WRITE_URL"};
 
-    const std::vector<std::string> varEnds {
-        "_DBNAME", "_QUERY_USER", "_QUERY_PASSWORD", "_QUERY_URL",
-        "_WRITE_USER", "_WRITE_PASSWORD", "_WRITE_URL"
-    };
-
-    const std::string telegrafPrefix {"KARABO_TEST_TELEGRAF"};
-    const std::string influxPrefix {"KARABO_INFLUXDB"};
+    const std::string telegrafPrefix{"KARABO_TEST_TELEGRAF"};
+    const std::string influxPrefix{"KARABO_INFLUXDB"};
 
     std::vector<std::string> missingVars;
 
     for (const std::string& varEnd : varEnds) {
-        const std::string reqVar {telegrafPrefix + varEnd};
+        const std::string reqVar{telegrafPrefix + varEnd};
         if (!::getenv(reqVar.c_str())) {
             missingVars.push_back(reqVar);
         } else {
-            const std::string influxVar {influxPrefix + varEnd};
+            const std::string influxVar{influxPrefix + varEnd};
             ::setenv(influxVar.c_str(), ::getenv(reqVar.c_str()), 1);
         }
     }
@@ -123,10 +118,8 @@ std::pair<bool, std::string> TelegrafLogging_Test::setupTelegrafEnv() {
 bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
     const int timeoutSecs = 45;
 
-    std::clog
-            << "Check if Telegraf environment is responsive (updates retrieved within "
-            << karabo::util::toString(timeoutSecs) << " secs.) ... "
-            << std::endl;
+    std::clog << "Check if Telegraf environment is responsive (updates retrieved within "
+              << karabo::util::toString(timeoutSecs) << " secs.) ... " << std::endl;
 
     bool envResponsive = false;
 
@@ -134,8 +127,8 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
     // followed by a property history retrieval will be used as the "probing" operation.
     const std::string deviceId(getDeviceIdPrefix() + "TelegrafEnvProbe");
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
-                                               KRB_TEST_MAX_TIMEOUT);
+    auto success =
+          m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
 
     if (!success.first) {
         return false;
@@ -143,13 +136,11 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
 
     // Checks that the probing device is being logged.
     bool isLogged = waitForCondition(
-        [this, &loggerId, &deviceId]() {
-            auto loggedIds =
-                 m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
-            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
-        },
-        KRB_TEST_MAX_TIMEOUT * 1000
-    );
+          [this, &loggerId, &deviceId]() {
+              auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
+              return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
 
     if (!isLogged) {
         return false;
@@ -162,8 +153,7 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
     try {
         m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT);
     } catch (std::exception& e) {
-        std::clog << "... (not responsive).\nError during property update: "
-                << e.what() << std::endl;
+        std::clog << "... (not responsive).\nError during property update: " << e.what() << std::endl;
         return false;
     }
 
@@ -174,12 +164,9 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
 
     // Makes sure all the writes are done before retrieval.
     try {
-        m_sigSlot->request(loggerId, "flush")
-                   .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
-                   .receive();
-    } catch(std::exception &e) {
-        std::clog << "... (not responsive).\nError during flush "
-                  << e.what() << std::endl;
+        m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive();
+    } catch (std::exception& e) {
+        std::clog << "... (not responsive).\nError during flush " << e.what() << std::endl;
         return false;
     }
 
@@ -201,7 +188,8 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
     while (nTries >= 0 && history.size() != 1) {
         try {
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "value", params)
-                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                  .receive(replyDevice, replyProperty, history);
         } catch (const karabo::util::TimeoutException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
@@ -224,7 +212,6 @@ bool TelegrafLogging_Test::isTelegrafEnvResponsive() {
 
 
 void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
-
     // delete logger directory after this test
     m_keepLoggerDirectory = false;
 
@@ -237,16 +224,14 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
-                                                                       Hash("deviceId", m_deviceId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     setPropertyTestSchema();
 
     // Starts the same set of tests with InfluxDb logging instead of text-file based logging
-    std::clog << "\n==== Starting sequence of Influx Logging tests on \""
-            << m_deviceId << "\" ====" << std::endl;
+    std::clog << "\n==== Starting sequence of Influx Logging tests on \"" << m_deviceId << "\" ====" << std::endl;
     success = startDataLoggerManager("InfluxDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -288,7 +273,8 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
 
     // These deal with their own devices, so comment above about using the PropertyTest instance
     // in m_deviceId is not applicable.
-    testCfgFromPastRestart(false); // in influx logging, old, past device incarnation stamps are logged as start of device logging
+    testCfgFromPastRestart(
+          false); // in influx logging, old, past device incarnation stamps are logged as start of device logging
     testSchemaEvolution();
     testNans();
 

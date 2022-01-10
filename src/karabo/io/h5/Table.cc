@@ -6,23 +6,18 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <boost/smart_ptr/shared_array.hpp>
-
-#include <karabo/log/Logger.hh>
-
 #include "Table.hh"
-#include "Scalar.hh"
 
+#include <boost/smart_ptr/shared_array.hpp>
+#include <karabo/io/HashXmlSerializer.hh>
+#include <karabo/log/Logger.hh>
+#include <karabo/util/HashFilter.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
-
-#include <karabo/io/HashXmlSerializer.hh>
-#include <karabo/util/HashFilter.hh>
-
-
-#include "ioProfiler.hh"
 #include <karabo/util/TimeProfiler.hh>
 
+#include "Scalar.hh"
+#include "ioProfiler.hh"
 
 
 using namespace std;
@@ -37,14 +32,11 @@ namespace karabo {
             const char* Table::TABLE_SIZE = "tableSize";
 
 
-            Table::~Table() {
-            }
+            Table::~Table() {}
 
 
             void Table::openNew(const Format::Pointer dataFormat) {
-
-
-                //                                TimeProfiler p("hdf5");                
+                //                                TimeProfiler p("hdf5");
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new Table: " << m_name;
                 //                                p.start("createEmptyTable");
                 createEmptyTable(m_h5file, m_name);
@@ -65,28 +57,30 @@ namespace karabo {
                     elements[i]->create(m_group);
                 }
                 //                                p.stop("create");
-                //          
-                //                                clog << "createEmptyTable: " << HighResolutionTimer::time2double(p.getTime("createEmptyTable")) << endl;
-                //                                clog << "createSchemaVersionAttribute: " << HighResolutionTimer::time2double(p.getTime("createSchemaVersionAttribute")) << endl;
-                //                                clog << "createNumberOfRecordsAttribute " << HighResolutionTimer::time2double(p.getTime("createNumberOfRecordsAttribute")) << endl;
-                //                                clog << "saveTableFormat " << HighResolutionTimer::time2double(p.getTime("saveTableFormat")) << endl;
-                //                                clog << "create:   " << HighResolutionTimer::time2double(p.getTime("create")) << endl;
-
+                //
+                //                                clog << "createEmptyTable: " <<
+                //                                HighResolutionTimer::time2double(p.getTime("createEmptyTable")) <<
+                //                                endl; clog << "createSchemaVersionAttribute: " <<
+                //                                HighResolutionTimer::time2double(p.getTime("createSchemaVersionAttribute"))
+                //                                << endl; clog << "createNumberOfRecordsAttribute " <<
+                //                                HighResolutionTimer::time2double(p.getTime("createNumberOfRecordsAttribute"))
+                //                                << endl; clog << "saveTableFormat " <<
+                //                                HighResolutionTimer::time2double(p.getTime("saveTableFormat")) <<
+                //                                endl; clog << "create:   " <<
+                //                                HighResolutionTimer::time2double(p.getTime("create")) << endl;
             }
 
 
             void Table::openReadOnly(const karabo::io::h5::Format::Pointer dataFormat, hsize_t numberOfRecords) {
-
                 setUniqueId(dataFormat, numberOfRecords);
 
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Open file for reading with specific user defined format: " << m_name;
                 m_dataFormat = dataFormat;
                 try {
-
                     m_group = H5Gopen(m_h5file, m_name.c_str(), H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_group);
 
-                    const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                    const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                     for (size_t i = 0; i < elements.size(); ++i) {
                         elements[i]->open(m_group);
                     }
@@ -105,12 +99,14 @@ namespace karabo {
                 // there are 3 ways of opening file for reading
                 // 1 - table structure is read from the file. Hdf5 group contains the attribute table
                 // 2 - table structure is discovered from the file/group structure
-                // 3 - user defines the table structure - this is implemented by openReadOnly(DataFormat::Pointer) function
+                // 3 - user defines the table structure - this is implemented by openReadOnly(DataFormat::Pointer)
+                // function
                 //
-                // 1) standard way, only files written by this software can use it as it requires the attribute ("table") is set
-                // 2) this is more general, but still requires that within the table (h5 group) datasets have the same number of
-                // entries (implemented as NDim dataset) and there is one-to-one relation. 
-                // 3) this should allow essentially any file to be read. Here the table could be even just one dataset
+                // 1) standard way, only files written by this software can use it as it requires the attribute
+                // ("table") is set 2) this is more general, but still requires that within the table (h5 group)
+                // datasets have the same number of entries (implemented as NDim dataset) and there is one-to-one
+                // relation. 3) this should allow essentially any file to be read. Here the table could be even just one
+                // dataset
                 //
 
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Open file for reading using stored table definition: " << m_name;
@@ -118,34 +114,33 @@ namespace karabo {
                 setUniqueId();
 
                 try {
-
                     m_group = H5Gopen(m_h5file, m_name.c_str(), H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_group);
 
                     if (hasAttribute(m_group, "table")) {
                         Hash readDataFormatConfig;
-                        //clog << m_name << " before read   " << HighResolutionTimer::now().sec << endl;
+                        // clog << m_name << " before read   " << HighResolutionTimer::now().sec << endl;
                         readTableFormatFromAttribute(readDataFormatConfig);
-                        //clog << m_name << " before format " << HighResolutionTimer::now().sec << endl;
+                        // clog << m_name << " before format " << HighResolutionTimer::now().sec << endl;
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "read format: \n" << readDataFormatConfig;
                         m_dataFormat = Format::createFormat(readDataFormatConfig);
-                        //clog << m_name << " after format  " << HighResolutionTimer::now().sec << endl;
+                        // clog << m_name << " after format  " << HighResolutionTimer::now().sec << endl;
                     } else {
                         throw KARABO_HDF_IO_EXCEPTION("auto discovery not enabled yet");
                         // if format not defined as attribute discover it from data structure
-                        //discover(m_dataFormat, m_name.c_str());
-                        //KARABO_LOG_FRAMEWORK_TRACE_CF << m_dataFormat->getConfig() << endl;
+                        // discover(m_dataFormat, m_name.c_str());
+                        // KARABO_LOG_FRAMEWORK_TRACE_CF << m_dataFormat->getConfig() << endl;
                     }
                 } catch (...) {
                     KARABO_RETHROW
                 }
 
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "elements.size() : " << elements.size();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->open(m_group);
                 }
-                //clog << m_name << " after open    " << HighResolutionTimer::now().sec << endl;
+                // clog << m_name << " after open    " << HighResolutionTimer::now().sec << endl;
                 retrieveNumberOfRecordsFromFile();
             }
 
@@ -156,15 +151,14 @@ namespace karabo {
 
 
             void Table::write(const karabo::util::Hash& data, size_t recordId) {
-
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     try {
                         elements[i]->write(data, recordId);
                     } catch (Exception& ex) {
-                        //TODO think what to do here
+                        // TODO think what to do here
                         ex.clearTrace();
-                        //clog << "element " << i << " could not be written" << endl;
+                        // clog << "element " << i << " could not be written" << endl;
                     }
                 }
                 if (m_tableSize <= recordId) {
@@ -172,29 +166,25 @@ namespace karabo {
                     updateTableSizeAttribute();
                 }
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
-
-
             }
 
 
             void Table::write(const karabo::util::Hash& data, size_t recordId, size_t len) {
-
                 // Here we collect all write errors, but only re-throw it once we have written what we could.
                 bool h5_err = false;
                 std::string err_log("Problems writing the following elements:\n");
 
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     try {
                         elements[i]->write(data, recordId, len);
                     } catch (const std::exception& e) {
                         h5_err = true;
                         std::ostringstream oss;
-                        oss << "Exception when writing element: " << elements[i]->getKey() <<
-                                "\n\tFull path: " << elements[i]->getFullName() <<
-                                "\n\tElement type: " << elements[i]->getElementType() <<
-                                "\n\tInto H5 path: " << elements[i]->getH5path() <<
-                                "\n\tDetailed error log:\n";
+                        oss << "Exception when writing element: " << elements[i]->getKey()
+                            << "\n\tFull path: " << elements[i]->getFullName()
+                            << "\n\tElement type: " << elements[i]->getElementType()
+                            << "\n\tInto H5 path: " << elements[i]->getH5path() << "\n\tDetailed error log:\n";
                         err_log += oss.str();
                         err_log += e.what();
                     }
@@ -224,7 +214,7 @@ namespace karabo {
 
 
             void Table::bind(karabo::util::Hash& data) {
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->bind(data);
                 }
@@ -233,7 +223,7 @@ namespace karabo {
 
 
             void Table::bind(karabo::util::Hash& data, size_t bufferLen) {
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->bind(data, bufferLen);
                 }
@@ -242,26 +232,28 @@ namespace karabo {
 
 
             size_t Table::read(size_t recordNumber) {
-                if(!m_bindWasExecuted){
-                    throw KARABO_LOGIC_EXCEPTION("You need to bind a data structure to read to with Table::bind(Hash&) before reading");
+                if (!m_bindWasExecuted) {
+                    throw KARABO_LOGIC_EXCEPTION(
+                          "You need to bind a data structure to read to with Table::bind(Hash&) before reading");
                 }
                 if (recordNumber >= m_tableSize) return 0;
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read element " << elements[i]->getFullName();
                     elements[i]->read(recordNumber);
                 }
                 return 1ul;
-
             }
 
 
             size_t Table::read(size_t recordNumber, size_t len) {
-                if(!m_bindLenWasExecuted){
-                    throw KARABO_LOGIC_EXCEPTION("You need to bind a data structure to read to with Table::bind(Hash&, size_t) before reading");
+                if (!m_bindLenWasExecuted) {
+                    throw KARABO_LOGIC_EXCEPTION(
+                          "You need to bind a data structure to read to with Table::bind(Hash&, size_t) before "
+                          "reading");
                 }
                 size_t numberReadRecords = (recordNumber + len) < m_tableSize ? len : (m_tableSize - recordNumber);
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
                     elements[i]->read(recordNumber, numberReadRecords);
@@ -271,7 +263,7 @@ namespace karabo {
 
 
             void Table::readAttributes(karabo::util::Hash& data) {
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->openAttributes();
                     elements[i]->bind(data);
@@ -287,9 +279,8 @@ namespace karabo {
 
 
             void Table::close() {
-
                 KARABO_LOG_FRAMEWORK_TRACE_CF << " closing " << m_id;
-                const vector<Element::Pointer >& elements = m_dataFormat->getElements();
+                const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->close();
                 }
@@ -302,17 +293,13 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Aclose(m_numberOfRecordsAttribute));
                     m_numberOfRecordsAttribute = -1;
                 }
-
             }
-
-
 
 
             // end of public functions
 
 
             void Table::createEmptyTable(hid_t h5file, const boost::filesystem::path& fullPath) {
-
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Table fullpath: " << fullPath.string();
                 try {
                     string path = boost::replace_all_copy(fullPath.string(), "//", "/");
@@ -328,22 +315,21 @@ namespace karabo {
                     // The order tracking influences the performance - do not use it unless really needed
                     // KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
 
-                    //create table group
+                    // create table group
                     m_group = H5Gcreate(h5file, path.c_str(), lcpl, gcpl, H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_group);
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table: " << fullPath.string() << " created. group id = " << m_group;
-                    //KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table: " << fullPath.string()
+                                                  << " created. group id = " << m_group;
+                    // KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
                     KARABO_CHECK_HDF5_STATUS(H5Pclose(lcpl))
                     KARABO_CHECK_HDF5_STATUS(H5Pclose(gcpl))
                 } catch (...) {
                     KARABO_RETHROW
                 }
-
             }
 
 
             void Table::createSchemaVersionAttribute() {
-
                 hid_t stringType = H5Tcopy(H5T_C_S1);
                 herr_t status = H5Tset_size(stringType, H5T_VARIABLE);
                 KARABO_CHECK_HDF5_STATUS(status)
@@ -352,7 +338,8 @@ namespace karabo {
                 hid_t dataSpace = H5Screate_simple(1, dims, NULL);
                 KARABO_CHECK_HDF5_STATUS(dataSpace);
 
-                hid_t schemaVersion = H5Acreate(m_group, "schemaVersion", stringType, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                hid_t schemaVersion =
+                      H5Acreate(m_group, "schemaVersion", stringType, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(schemaVersion)
                 string version = Format::classInfo().getVersion();
                 const char* versionPtr = version.c_str();
@@ -361,14 +348,13 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(schemaVersion));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stringType))
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace))
-
             }
 
 
             void Table::createInitialNumberOfRecordsAttribute() {
-
                 hid_t dataSpace = H5Screate(H5S_SCALAR);
-                m_numberOfRecordsAttribute = H5Acreate(m_group, TABLE_SIZE, H5T_STD_U64LE, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                m_numberOfRecordsAttribute =
+                      H5Acreate(m_group, TABLE_SIZE, H5T_STD_U64LE, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace))
                 updateTableSizeAttribute();
@@ -386,25 +372,23 @@ namespace karabo {
 
 
             void Table::retrieveNumberOfRecordsFromFile() {
-
                 if (hasAttribute(m_group, TABLE_SIZE)) {
                     m_numberOfRecordsAttribute = H5Aopen(m_group, TABLE_SIZE, H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
 
                     KARABO_CHECK_HDF5_STATUS(H5Aread(m_numberOfRecordsAttribute, H5T_NATIVE_HSIZE, &m_tableSize));
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_tableSize;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute for " << m_name.c_str() << " is "
+                                                  << m_tableSize;
                 } else {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute not defined for " << m_name;
-                    //calculateNumberOfRecords();
+                    // calculateNumberOfRecords();
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Calculated number of records: " << m_tableSize;
                 }
             }
 
 
             void Table::saveTableFormatAsAttribute(const karabo::io::h5::Format::Pointer dataFormat) {
-
                 try {
-
                     Hash persistentDataFormatConfig;
                     dataFormat->getPersistentConfig(persistentDataFormatConfig);
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
@@ -415,7 +399,9 @@ namespace karabo {
 
                     serializer->save(persistentDataFormatConfig, dataFormatConfigXml);
 
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Description of format to be written to hdf5 file as group attribute:\n " << dataFormatConfigXml;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF
+                          << "Description of format to be written to hdf5 file as group attribute:\n "
+                          << dataFormatConfigXml;
                     hid_t dataSpace = H5Screate(H5S_SCALAR);
                     hid_t type = ScalarTypes::getHdf5StandardType<string>();
                     hid_t tableAttribute = H5Acreate(m_group, "table", type, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
@@ -434,7 +420,6 @@ namespace karabo {
 
 
             void Table::readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig) {
-
                 try {
                     // read the format from group attribute
 
@@ -460,7 +445,7 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(memtype));
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(space));
 
-                    //KARABO_CHECK_HDF5_STATUS(H5Tclose(tid))
+                    // KARABO_CHECK_HDF5_STATUS(H5Tclose(tid))
                     KARABO_CHECK_HDF5_STATUS(H5Aclose(tableAttribute));
 
 
@@ -471,7 +456,7 @@ namespace karabo {
 
 
             bool Table::hasAttribute(hid_t group, const string& name) const {
-                return ( H5Aexists(group, name.c_str()) > 0 ? true : false);
+                return (H5Aexists(group, name.c_str()) > 0 ? true : false);
             }
 
 
@@ -497,13 +482,14 @@ namespace karabo {
             }
 
 
-            std::string Table::generateUniqueId(const std::string& name, const Format::ConstPointer dataFormat, hsize_t numberOfRecords) {
+            std::string Table::generateUniqueId(const std::string& name, const Format::ConstPointer dataFormat,
+                                                hsize_t numberOfRecords) {
                 std::ostringstream oss;
                 oss << name << "|" << dataFormat.get() << "|" << numberOfRecords;
                 return oss.str();
             }
 
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
