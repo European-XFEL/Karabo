@@ -113,8 +113,7 @@ KARABO_SCHEMA_ATTRIBUTES = (
 
 # A tuple containing only the attributes which are editable pre-instantiation
 KARABO_EDITABLE_ATTRIBUTES = (
-    KARABO_WARN_LOW, KARABO_WARN_HIGH, KARABO_ALARM_LOW, KARABO_ALARM_HIGH,
-    KARABO_SCHEMA_DAQ_POLICY
+    KARABO_WARN_LOW, KARABO_WARN_HIGH, KARABO_ALARM_LOW, KARABO_ALARM_HIGH
 )
 
 # A tuple containing only the attributes which are editable on run-time

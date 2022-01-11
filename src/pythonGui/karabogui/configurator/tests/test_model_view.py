@@ -114,33 +114,25 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         assert bar_index.isValid()
         assert bar_index.data() == "bar"
 
-        # warnHigh and daqPolicy attributes
-        assert self.model.rowCount(parent=bar_index) == 2
+        # Only warnHigh attributes
+        assert self.model.rowCount(parent=bar_index) == 1
 
         # warnHigh
         warnHigh_index = bar_index.child(0, 0)
         assert warnHigh_index.data() == "warnHigh"
-
-        # daqPolicy
-        daq_index = bar_index.child(1, 1)
-        assert daq_index.data() == "-1"
-
-        max_inc_index = bar_index.child(1, 2)
-        flags = (Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
-                 | Qt.ItemNeverHasChildren)
-        assert max_inc_index.flags() == flags
+        wv_index = bar_index.child(0, 1)
+        assert Qt.ItemIsEnabled & wv_index.flags() == Qt.ItemIsEnabled
+        assert Qt.ItemIsSelectable & wv_index.flags() == Qt.ItemIsSelectable
+        assert Qt.ItemIsEditable & wv_index.flags() != Qt.ItemIsEditable
+        assert Qt.ItemNeverHasChildren & wv_index.flags() == Qt.ItemNeverHasChildren  # noqa
 
         # ------------------------------------
         # Test the vector
         vector_index = self.model.index(5, 0)
         assert vector_index.isValid()
         assert vector_index.data() == "vector"
-        # Only daqPolicy left
-        assert self.model.rowCount(parent=vector_index) == 1
-
-        # daqPolicy
-        min_size_index = vector_index.child(0, 0)
-        assert min_size_index.data() == "daqPolicy"
+        # No attribute left
+        assert self.model.rowCount(parent=vector_index) == 0
 
     def test_flags(self):
         bar_index = self.model.index(2, 0)
