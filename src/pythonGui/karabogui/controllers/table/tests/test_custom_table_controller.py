@@ -30,6 +30,7 @@ filter_model = False
 
 
 class MyTableController(BaseTableController):
+    # A table model without resizeToContents
     hasCustomMenu = True
     tableModelClass = MyTableModel
 
