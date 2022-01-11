@@ -1,16 +1,17 @@
 __enable_gcc7() {
     # for the Centos7 build
-    if [ "$1" = "7" ]; then
+    DIST_MAJOR=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    if [[ $1 = "CentOS" && $DIST_MAJOR = "7" ]]; then
         source /opt/rh/devtoolset-7/enable
     fi
 }
 
 __lang_setting() {
     case "$1" in
-        CentOS)
+        CentOS|AlmaLinux)
             localedef -c -i en_US -f UTF-8 en_US.utf8
             export LANG=en_US.UTF-8
-            __enable_gcc7 $(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+            __enable_gcc7 $1
             ;;
         Ubuntu)
             locale-gen en_US.UTF-8
@@ -32,7 +33,7 @@ XVFB_ARGS="$XVFB_DISP -screen 0 1024x768x24 -ac"
 
 __start_Xvfb() {
     case "$1" in
-        CentOS)
+        CentOS|AlmaLinux)
             export DISPLAY=$XVFB_DISP
             $XVFB $XVFB_ARGS &
             ;;
