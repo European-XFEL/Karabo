@@ -201,12 +201,8 @@ namespace karabo {
 
         string Exception::userFriendlyMsg(bool clearTrace) const {
             stringstream err;
-            err << "An error has occurred: ";
-            bool hasMsg = false;
-            if (!m_exceptionInfo.message.empty()) {
-                err << m_exceptionInfo.message;
-                hasMsg = true;
-            }
+            err << m_exceptionInfo.message;
+            bool hasMsg = !m_exceptionInfo.message.empty();
             {
                 boost::mutex::scoped_lock lock(Exception::m_mutex);
                 unsigned int j = 0;
