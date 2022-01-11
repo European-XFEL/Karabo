@@ -114,6 +114,8 @@ class TableElementModel(BaseDisplayEditableWidget):
     """
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
+    # True if the table is resizing the columns to contents
+    resizeToContents = Bool(False)
 
 
 @register_scene_reader('DisplayCommand', version=2)
@@ -344,6 +346,9 @@ def _single_bit_writer(model, parent):
 @register_scene_reader('EditableTableElement', version=1)
 def _table_element_reader(element):
     traits = read_empty_display_editable_widget(element)
+    resizeToContents = element.get(NS_KARABO + 'resizeToContents', '')
+    resizeToContents = resizeToContents.lower() == 'true'
+    traits['resizeToContents'] = resizeToContents
     return TableElementModel(**traits)
 
 
@@ -351,4 +356,6 @@ def _table_element_reader(element):
 def _table_element_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
+    element.set(NS_KARABO + 'resizeToContents',
+                str(model.resizeToContents).lower())
     return element
