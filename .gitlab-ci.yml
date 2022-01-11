@@ -314,6 +314,10 @@ release build miniconda-win64:
 
 # prerelease build
 
+prerelease build almalinux8:
+  <<: *image_almalinux8
+  <<: *prerelease-build
+
 prerelease build centos7:
   <<: *image_centos7
   <<: *prerelease-build
