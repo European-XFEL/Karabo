@@ -159,19 +159,19 @@ class profiler:
     def __call__(self, func):
         """Decorate a function to profile the execution time"""
         name = func.__name__ if self.name is None else self.name
-        if not asyncio.iscoroutine(func):
+        if asyncio.iscoroutinefunction(func):
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            async def wrapper(*args, **kwargs):
                 t_start = perf_counter()
-                ret = func(*args, **kwargs)
+                ret = await func(*args, **kwargs)
                 elapsed = perf_counter() - t_start
                 print(f"{name} took {elapsed}")
                 return ret
         else:
             @wraps(func)
-            async def wrapper(*args, **kwargs):
+            def wrapper(*args, **kwargs):
                 t_start = perf_counter()
-                ret = await func(*args, **kwargs)
+                ret = func(*args, **kwargs)
                 elapsed = perf_counter() - t_start
                 print(f"{name} took {elapsed}")
                 return ret

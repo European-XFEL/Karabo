@@ -269,6 +269,7 @@ class UtilsTests(TestCase):
         def slow_func_no_deco():
             time.sleep(sleep_time)
 
+        self.assertFalse(asyncio.iscoroutinefunction(slow_func))
         before = time.time()
         ret = slow_func(5, more_param=3)
         self.assertEqual(ret, 8)
@@ -276,6 +277,7 @@ class UtilsTests(TestCase):
         diff = after - before
         self.assertAlmostEqual(diff, sleep_time, delta=0.2)
 
+        self.assertTrue(asyncio.iscoroutinefunction(slow_func_async))
         before = time.time()
         ret = run_coro(slow_func_async(2, more_param=1))
         self.assertEqual(ret, 3)
