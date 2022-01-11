@@ -5,7 +5,7 @@ from glob import glob
 import numpy as np
 from traits.api import Undefined
 
-from karabo.common.api import KARABO_ALARM_LOW, KARABO_SCHEMA_DAQ_POLICY, State
+from karabo.common.api import KARABO_ALARM_LOW, State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Schema,
     String, Timestamp, decodeBinary)
@@ -287,15 +287,6 @@ def test_attribute_modification():
                                     'attribute', KARABO_ALARM_LOW,
                                     'value', 42)
 
-    binding = build_binding(schema)
-    attributes = binding.value.h.attributes
-    attributes[KARABO_SCHEMA_DAQ_POLICY] = 2
-    modifications = extract_attribute_modifications(schema, binding)
-    assert modifications[0] == Hash(
-        'path', 'h',
-        'attribute', KARABO_SCHEMA_DAQ_POLICY,
-        'value', 2)
-
 
 def test_property_attributes():
     schema = get_all_props_schema()
@@ -366,5 +357,7 @@ def test_extract_reconfigurable_configuration():
     assert "node.charlie" not in extracted
     assert "node.foo" in extracted
     foo_attr = extracted["node.foo", ...]
-    assert foo_attr["daqPolicy"] == 1
+    assert "daqPolicy" not in foo_attr
     assert "node.bar" not in extracted
+    assert "floatProperty" in extracted
+    assert extracted["floatProperty", "alarmLow"] == 2
