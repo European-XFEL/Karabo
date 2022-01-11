@@ -421,6 +421,15 @@ class TestTableModelView(GuiTestCase):
         self.assertIsNone(self.controller.widget)
         self.assertIsNone(self.controller._item_model)
 
+    def test_table_actions(self):
+        actions = self.controller.widget.actions()
+        self.assertEqual(len(actions), 1)
+        action = actions[0]
+        self.assertEqual(action.text(), "Resize To Contents")
+        self.assertFalse(action.isChecked())
+        action.trigger()
+        self.assertTrue(action.isChecked())
+
 
 if __name__ == "__main__":
     main()

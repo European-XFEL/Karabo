@@ -184,7 +184,9 @@ def test_table_element_widget():
     for klass_name in ('DisplayTableElement', 'EditableTableElement'):
         traits = base_widget_traits()
         traits['klass'] = klass_name
+        traits['resizeToContents'] = True
         model = api.TableElementModel(**traits)
         read_model = single_model_round_trip(model)
         assert_base_traits(read_model)
         assert read_model.klass == klass_name
+        assert read_model.resizeToContents
