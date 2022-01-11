@@ -1,6 +1,6 @@
 from qtpy.QtCore import QModelIndex, Qt
-from qtpy.QtWidgets import QAbstractItemView, QMenu
-from traits.api import Bool, Dict, Type, Undefined, WeakRef
+from qtpy.QtWidgets import QAbstractItemView, QAction, QHeaderView, QMenu
+from traits.api import Bool, Dict, Instance, Type, Undefined, WeakRef
 
 import karabogui.icons as icons
 from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
@@ -32,6 +32,8 @@ class BaseTableController(BaseBindingController):
     _item_model = WeakRef(TableModel, allow_none=True)
     _table_widget = WeakRef(KaraboTableView)
 
+    _resizeAction = Instance(QAction)
+
     # ---------------------------------------------------------------------
     # Abstract Methods
 
@@ -41,10 +43,19 @@ class BaseTableController(BaseBindingController):
         table_widget = KaraboTableView(parent=parent)
         table_widget.setSelectionBehavior(QAbstractItemView.SelectItems
                                           | QAbstractItemView.SelectRows)
-        table_widget.horizontalHeader().setStretchLastSection(True)
-
         # Create an internal weak ref to subclass create widget
         self._table_widget = table_widget
+
+        # Not every table model might have the `resizeToContents` setting
+        model = self.model
+        if "resizeToContents" in model.copyable_trait_names():
+            resize_action = QAction("Resize To Contents")
+            resize_action.triggered.connect(self._resize_contents)
+            resize_action.setCheckable(True)
+            resize_action.setChecked(self.model.resizeToContents)
+            self._resizeAction = resize_action
+
+            table_widget.addAction(resize_action)
 
         return table_widget
 
@@ -85,6 +96,10 @@ class BaseTableController(BaseBindingController):
             has_schema = not binding.row_schema.empty()
             if has_schema:
                 self._set_bindings(binding)
+                model = self.model
+                if "resizeToContents" not in model.copyable_trait_names():
+                    return
+                self._set_table_resize_mode(model)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
@@ -232,6 +247,20 @@ class BaseTableController(BaseBindingController):
         index = self.currentIndex()
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
+    def _resize_contents(self):
+        self.model.resizeToContents = not self.model.resizeToContents
+        self._set_table_resize_mode(self.model)
+
+    def _set_table_resize_mode(self, model):
+        mode = (QHeaderView.ResizeToContents if model.resizeToContents
+                else QHeaderView.Interactive)
+
+        length = len(self.getBindings().keys())
+        for index in range(length - 1):
+            self._table_widget.horizontalHeader().setSectionResizeMode(
+                index, mode)
+        self._table_widget.horizontalHeader().setStretchLastSection(True)
+
     def _context_menu(self, pos):
         """The custom context menu of a reconfigurable table element"""
         selection_model = self._table_widget.selectionModel()
@@ -243,22 +272,22 @@ class BaseTableController(BaseBindingController):
         index = selection_model.currentIndex()
         menu = QMenu(parent=self._table_widget)
         if index.isValid():
-            set_default_action = menu.addAction('Set Cell Default')
+            set_default_action = menu.addAction("Set Cell Default")
             set_default_action.triggered.connect(self._set_index_default)
             menu.addSeparator()
 
-            up_action = menu.addAction(icons.arrowFancyUp, 'Move Row Up')
+            up_action = menu.addAction(icons.arrowFancyUp, "Move Row Up")
             up_action.triggered.connect(self._move_row_up)
-            down_action = menu.addAction(icons.arrowFancyDown, 'Move Row Down')
+            down_action = menu.addAction(icons.arrowFancyDown, "Move Row Down")
             down_action.triggered.connect(self._move_row_down)
             menu.addSeparator()
 
-            add_action = menu.addAction(icons.add, 'Add Row below')
+            add_action = menu.addAction(icons.add, "Add Row below")
             add_action.triggered.connect(self._add_row)
-            du_action = menu.addAction(icons.editCopy, 'Duplicate Row below')
+            du_action = menu.addAction(icons.editCopy, "Duplicate Row below")
             du_action.triggered.connect(self._duplicate_row)
 
-            remove_action = menu.addAction(icons.delete, 'Delete Row')
+            remove_action = menu.addAction(icons.delete, "Delete Row")
             remove_action.triggered.connect(self._remove_row)
 
             # Check for min and max size of the table
@@ -274,7 +303,7 @@ class BaseTableController(BaseBindingController):
             du_action.setEnabled(add_row)
             remove_action.setEnabled(rm_row)
         else:
-            add_action = menu.addAction(icons.add, 'Add Row below')
+            add_action = menu.addAction(icons.add, "Add Row below")
             add_action.triggered.connect(self._add_row)
 
         menu.exec(self._table_widget.viewport().mapToGlobal(pos))
