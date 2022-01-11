@@ -1,7 +1,7 @@
 import json
 
-from qtpy.QtCore import QModelIndex, Qt
-from qtpy.QtWidgets import QTableView
+from qtpy.QtCore import QModelIndex, Qt, Slot
+from qtpy.QtWidgets import QHeaderView, QTableView
 
 from karabogui.binding.api import StringBinding
 from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
@@ -25,6 +25,8 @@ class KaraboTableView(QTableView):
         self._header = None
         self._bindings = None
         self._drag_column = None
+        header = self.horizontalHeader()
+        header.sectionDoubleClicked.connect(self._header_resize)
 
     def set_bindings(self, bindings):
         self._bindings = bindings
@@ -36,6 +38,14 @@ class KaraboTableView(QTableView):
             if isinstance(binding, StringBinding):
                 self._drag_column = index
                 break
+
+    @Slot()
+    def _header_resize(self):
+        if self._header is not None and len(self._header) > 1:
+            columns = len(self._header) - 1
+            header = self.horizontalHeader()
+            header.resizeSections(QHeaderView.ResizeToContents)
+            header.resizeSection(columns, QHeaderView.Stretch)
 
     def dragEnterEvent(self, event):
         self._check_drag_event(event)
