@@ -313,6 +313,10 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.StickerModel)
         self._assert_geometry(sm.WebLinkModel)
 
+    def test_tool_widgets(self):
+        self._assert_geometry(sm.ImageRendererModel,
+                              image=sm.convert_to_svg_image("svg", b"karabo"))
+
     def test_trend_graph_widgets(self):
         self._assert_geometry(sm.AlarmGraphModel)
         self._assert_geometry(sm.StateGraphModel)
