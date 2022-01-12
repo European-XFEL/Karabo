@@ -435,9 +435,9 @@ class SceneView(QWidget):
     def widget_at_position(self, pos):
         """Returns the topmost widget whose bounds contain `pos`."""
         widget = self.inner.childAt(pos)
-        if widget is not None:
-            while not is_widget(widget):
-                widget = widget.parent()
+        while (widget is not None
+               and not is_widget(widget)):
+            widget = widget.parent()
         return widget
 
     def items_in_rect(self, rect):
