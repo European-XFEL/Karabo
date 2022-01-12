@@ -1,5 +1,4 @@
 import datetime
-import os.path as op
 from collections import OrderedDict
 from itertools import cycle
 
@@ -22,20 +21,21 @@ from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
 
-FILE_PATH = op.dirname(__file__)
+from .util import get_ui_file
 
 # NOTE: We limit ourselves to selected karabo actions!
-ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes', 'y_range',
-                   'view']
+BASE_ACTIONS = ["x_grid", "y_grid", "y_invert", "y_log", "axes", "view"]
+TIME_ACTIONS = BASE_ACTIONS + ["y_range"]
+
 MIN_TIMESTAMP = datetime.datetime(1970, 1, 31).timestamp()
 MAX_TIMESTAMP = datetime.datetime(2038, 12, 31).timestamp()
 
 
 class RequestTime(QDialog):
     def __init__(self, start, end, parent=None):
-        super(RequestTime, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(False)
-        uic.loadUi(op.join(FILE_PATH, 'ui_trendline_detail.ui'), self)
+        uic.loadUi(get_ui_file("ui_trendline_detail.ui"), self)
         self.dt_start.setDateTime(start)
         self.dt_end.setDateTime(end)
 
@@ -44,6 +44,11 @@ class RequestTime(QDialog):
         start = self.dt_start.dateTime().toMSecsSinceEpoch() / 1000
         end = self.dt_end.dateTime().toMSecsSinceEpoch() / 1000
         return start, end
+
+
+def curve_to_actions(axis_type):
+    """Return the allowed actions for the curve type"""
+    return TIME_ACTIONS if axis_type is AxisType.Time else BASE_ACTIONS
 
 
 def curve_to_axis(value):
@@ -76,7 +81,7 @@ class BaseSeriesGraph(BaseBindingController):
     def create_widget(self, parent):
         """Setup all widgets correctly"""
         widget = QWidget(parent)
-        uic.loadUi(op.join(FILE_PATH, "ui_trendline.ui"), widget)
+        uic.loadUi(get_ui_file("ui_trendline.ui"), widget)
         self._start_time = QDateTime.currentDateTime()
 
         widget.dt_start.setDateTime(self._start_time)
@@ -93,8 +98,10 @@ class BaseSeriesGraph(BaseBindingController):
         widget.bt_window.setVisible(False)
         widget.bg_x_axis.buttonClicked.connect(self._x_axis_btns_toggled)
 
-        self._plot = KaraboPlotView(axis=curve_to_axis(self.curve_type),
-                                    actions=ALLOWED_ACTIONS,
+        axis_type = curve_to_axis(self.curve_type)
+        actions = curve_to_actions(axis_type)
+        self._plot = KaraboPlotView(axis=axis_type,
+                                    actions=actions,
                                     parent=widget.time_frame)
         self._plot.stateChanged.connect(self._change_model)
         self._plot.add_legend(visible=False)
@@ -331,7 +338,7 @@ class BaseSeriesGraph(BaseBindingController):
 
 
 @register_binding_controller(
-    ui_name='Trend Graph', klassname='DisplayTrendGraph',
+    ui_name="Trend Graph", klassname="DisplayTrendGraph",
     binding_type=(BoolBinding, FloatBinding, IntBinding),
     can_show_nothing=False)
 class DisplayTrendGraph(BaseSeriesGraph):
@@ -350,9 +357,9 @@ class DisplayTrendGraph(BaseSeriesGraph):
 
 
 @register_binding_controller(
-    ui_name='State Graph', klassname='DisplayStateGraph',
+    ui_name="State Graph", klassname="DisplayStateGraph",
     binding_type=StringBinding,
-    is_compatible=with_display_type('State'),
+    is_compatible=with_display_type("State"),
     can_show_nothing=False)
 class DisplayStateGraph(BaseSeriesGraph):
     model = Instance(StateGraphModel, args=())
@@ -371,9 +378,9 @@ class DisplayStateGraph(BaseSeriesGraph):
 
 
 @register_binding_controller(
-    ui_name='Alarm Graph', klassname='DisplayAlarmGraph',
+    ui_name="Alarm Graph", klassname="DisplayAlarmGraph",
     binding_type=StringBinding,
-    is_compatible=with_display_type('AlarmCondition'),
+    is_compatible=with_display_type("AlarmCondition"),
     can_show_nothing=False)
 class DisplayAlarmGraph(BaseSeriesGraph):
     model = Instance(AlarmGraphModel, args=())
