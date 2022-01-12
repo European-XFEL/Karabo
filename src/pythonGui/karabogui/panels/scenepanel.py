@@ -18,7 +18,7 @@ from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
     ArrowSceneTool, BoxHSceneAction, BoxVSceneAction, CreateToolAction,
-    GroupEntireSceneAction, GroupSceneAction, LineSceneTool,
+    GroupEntireSceneAction, GroupSceneAction, ImageRendererTool, LineSceneTool,
     RectangleSceneTool, SceneBringToFrontAction, SceneCopyAction,
     SceneCutAction, SceneDeleteAction, SceneLinkTool, SceneMoveAction,
     ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction,
@@ -315,6 +315,11 @@ class ScenePanel(BasePanelWidget):
                                         icon=icons.sticker,
                                         text="Add a sticker widget",
                                         tooltip="Add sticker to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=ImageRendererTool,
+                                        icon=icons.image,
+                                        text="Add an image to the scene",
+                                        tooltip="Add image to scene",
                                         checkable=True))
         return actions
 

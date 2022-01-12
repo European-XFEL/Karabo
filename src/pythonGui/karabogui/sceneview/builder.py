@@ -7,14 +7,14 @@ from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import ArrowShape, LineShape, PathShape, RectangleShape
 from .widget.api import (
-    ControllerContainer, LabelWidget, SceneLinkWidget, StickerWidget,
-    UnknownSvgWidget, UnknownWidget, WebLinkWidget)
+    ControllerContainer, ImageRendererWidget, LabelWidget, SceneLinkWidget,
+    StickerWidget, UnknownSvgWidget, UnknownWidget, WebLinkWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (ArrowShape, LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (ControllerContainer, LabelWidget, SceneLinkWidget,
                    StickerWidget, WebLinkWidget, UnknownSvgWidget,
-                   UnknownWidget)
+                   UnknownWidget, ImageRendererWidget)
 
 _SCENE_OBJ_FACTORIES = {
     models.BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
@@ -29,6 +29,7 @@ _SCENE_OBJ_FACTORIES = {
     models.StickerModel: StickerWidget,
     models.WebLinkModel: WebLinkWidget,
     models.UnknownWidgetDataModel: UnknownWidget,
+    models.ImageRendererModel: ImageRendererWidget,
     models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),  # noqa
 }
 
