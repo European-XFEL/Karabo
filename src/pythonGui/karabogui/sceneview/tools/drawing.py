@@ -1,15 +1,21 @@
+import sys
+
 from qtpy.QtCore import QLine, QLineF, QPoint, QRect, Qt
-from qtpy.QtGui import QBrush, QPainterPath, QPen, QTransform
+from qtpy.QtGui import (
+    QBrush, QImageReader, QPainterPath, QPen, QPixmap, QTransform)
+from qtpy.QtSvg import QSvgRenderer
 from qtpy.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    ARROW_HEAD, ArrowModel, LineModel, RectangleModel, SceneLinkModel,
-    StickerModel, WebLinkModel)
+    ARROW_HEAD, ArrowModel, ImageRendererModel, LineModel, RectangleModel,
+    SceneLinkModel, StickerModel, WebLinkModel, convert_to_svg_image)
+from karabogui import messagebox
 from karabogui.dialogs.api import SceneLinkDialog, TextDialog, WebDialog
 from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.utils import calc_rotated_point, calc_snap_pos
+from karabogui.util import getOpenFileName
 
 
 class TextSceneTool(BaseSceneTool):
@@ -74,7 +80,7 @@ class LineSceneTool(BaseSceneTool):
         if self.line is not None:
             model = LineModel(x1=self.line.x1(), y1=self.line.y1(),
                               x2=self.line.x2(), y2=self.line.y2(),
-                              stroke='#000000')
+                              stroke="#000000")
             scene_view.add_models(model, initialize=True)
             scene_view.set_tool(None)
             scene_view.select_model(model)
@@ -112,7 +118,7 @@ class ArrowSceneTool(LineSceneTool):
             # Define an arrow model from the start and end points
             arrow_model = ArrowModel(x1=self.line.x1(), y1=self.line.y1(),
                                      x2=self.line.x2(), y2=self.line.y2(),
-                                     stroke='#000000')
+                                     stroke="#000000")
             scene_view.add_models(arrow_model, initialize=True)
             scene_view.set_tool(None)
             scene_view.select_model(arrow_model)
@@ -156,7 +162,7 @@ class RectangleSceneTool(BaseSceneTool):
             model = RectangleModel(x=self.rect.x(), y=self.rect.y(),
                                    height=self.rect.height(),
                                    width=self.rect.width(),
-                                   stroke='#000000')
+                                   stroke="#000000")
             scene_view.add_models(model, initialize=True)
             scene_view.set_tool(None)
 
@@ -221,3 +227,61 @@ class WebLinkTool(BaseSceneTool):
             model.target = dialog.target
             scene_view.add_models(model, initialize=True)
             scene_view.set_tool(None)
+
+
+class ImageRendererTool(BaseSceneTool):
+    """This tool will place an `ImageRenderer` widget on the scene"""
+    def mouse_down(self, scene_view, event):
+        pass
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        fn = getOpenFileName(filter="Images (*.png *.jpg *.jpeg *.svg)")
+        if not fn:
+            return
+
+        with open(fn, "rb") as fp:
+            b = fp.read()
+
+        limit = 102400  # 100 KB
+        file_size = sys.getsizeof(b)
+        if file_size > limit:
+            scene_view.set_tool(None)
+            messagebox.show_error("Selected image byte size is larger than "
+                                  f"the allowed size of {limit // 1024}kB.",
+                                  parent=scene_view)
+            return
+
+        image_format = str(QImageReader.imageFormat(fn), "utf-8")
+        if image_format == "svg":
+            renderer = QSvgRenderer(b)
+            if not renderer.isValid() or renderer.defaultSize().isNull():
+                scene_view.set_tool(None)
+                messagebox.show_error(
+                    "Selected image is not a valid svg file.",
+                    parent=scene_view)
+                return
+            size = renderer.defaultSize()
+        else:
+            pixmap = QPixmap()
+            pixmap.loadFromData(b)
+            if pixmap.isNull():
+                scene_view.set_tool(None)
+                messagebox.show_error(
+                    "Selected image is not a valid image file.",
+                    parent=scene_view)
+                return
+            size = pixmap.size()
+
+        mouse_pos = event.pos()
+        image = convert_to_svg_image(image_format, b)
+        model = ImageRendererModel(x=mouse_pos.x(), y=mouse_pos.y(),
+                                   image=image,
+                                   width=size.width(), height=size.height())
+        scene_view.add_models(model, initialize=True)
+        scene_view.set_tool(None)
