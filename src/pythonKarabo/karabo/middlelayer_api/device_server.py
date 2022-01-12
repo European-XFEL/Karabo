@@ -3,7 +3,7 @@ import os
 import socket
 import sys
 from asyncio import (
-    TimeoutError, create_subprocess_exec, ensure_future, gather,
+    TimeoutError, all_tasks, create_subprocess_exec, ensure_future, gather,
     get_event_loop, set_event_loop, sleep, wait, wait_for)
 from enum import Enum
 from json import loads
@@ -344,13 +344,24 @@ class DeviceServerBase(SignalSlotable):
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
             server.is_server = True
-            server.startInstance(broadcast=True)
             try:
-                loop.run_forever()
-            except KeyboardInterrupt:
-                pass
-            finally:
-                loop.close()
+                loop.run_until_complete(
+                    server.startInstance(broadcast=True))
+            except BaseException:
+                # ServerId is already in use for KaraboError
+                # User might cancel even with Interrupt and a
+                # slotKillDevice is running. We wait for finish off
+                pending = all_tasks(loop)
+                loop.run_until_complete(
+                    wait_for(gather(*pending, return_exceptions=False),
+                             timeout=5))
+            else:
+                try:
+                    loop.run_forever()
+                except KeyboardInterrupt:
+                    pass
+                finally:
+                    loop.close()
 
     async def onInitialization(self):
         """Initialization coroutine of the server to start up devices
