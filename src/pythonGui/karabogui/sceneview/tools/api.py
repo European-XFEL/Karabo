@@ -8,8 +8,8 @@ from .clipboard import (
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
     ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction)
 from .drawing import (
-    ArrowSceneTool, LineSceneTool, RectangleSceneTool, SceneLinkTool,
-    StickerTool, TextSceneTool, WebLinkTool)
+    ArrowSceneTool, ImageRendererTool, LineSceneTool, RectangleSceneTool,
+    SceneLinkTool, StickerTool, TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
     ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler)
 from .selection import ProxySelectionTool, SceneSelectionTool, is_resizable
