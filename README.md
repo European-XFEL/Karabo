@@ -5,7 +5,7 @@
 
 # Available Operating Systems
 
-The supported OS are: 
+The supported OS are:
 
 > Ubuntu 20.04 LTS
 > Ubuntu 18.04 LTS
@@ -21,11 +21,40 @@ The GUI application is furthermore available under:
 ## Building from command-line ###
 
 The quickest way to build the Karabo framework is by using the auto_build_all.sh script. Simply execute:
-    
+
     ./auto_build_all.sh
 
 and get informed how to use this script.
 
+## Formatting compliance
+
+In order to have your commits accepted by the CI's linting jobs, your modified Python source files must be compliant
+with `flake8` and `isort` and your modified C++ source files must be compliant with
+the `clang-format` settings in the `.clang-format` file at the root of the
+repository.
+
+The CI linting job currently use `clang-format 13.0.0`. Please make sure
+that you have this version available on your development system.
+
+There are instructions on how to setup a development system based on Visual Studio Code at [(https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html)](https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html) (which corresponds to
+file `doc/tools/vscode.rst` in the repository). As a result of executing those instructions, you'll have
+a Conda environment with `clang-format 13.0.0` installed and Visual Studio Code using that `clang-format`
+instance to format all the C++ source files in the project at save time.
+
+To manually run the CI linting job on your local system, please execute the following script:
+
+    $REPO_ROOT/ci/lint
+
+If you followed the setup instructions for Visual Studio Code, please activate the Conda environment
+with `clang-format` installed before running the CI linting job:
+
+    conda activate karabo-cpp
+
+There is a pre-commit Git hook at `githooks/pre-commit` that you should enable if you want to be warned early about C++ source formatting that will be rejected by the CI lint job. To enable that pre-commit hook, please create a symbolic link named `pre-commit` at directory `.git/hooks` referencing `githooks/pre-commit`:
+
+    ln -s $REPO_ROOT/githooks/pre-commit $REPO_ROOT/.git/hooks/pre-commit
+
+where `REPO_ROOT` is the path of the root directory of your local Framework repository.
 
 # Documentation
 
@@ -40,4 +69,3 @@ Or use the documentation available at this [link](https://rtd.xfel.eu/docs/karab
 or the old [link](https://in.xfel.eu/readthedocs/docs/karabo/en/latest/)
 
 Thank you for using Karabo!
-
