@@ -82,8 +82,7 @@ void Exception_Test::testMethod() {
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"),
-                             e.userFriendlyMsg(false));
+        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"), e.userFriendlyMsg(false));
 
         const std::string details = e.detailedMsg();
         // Detailed message looks e.g. like this:
@@ -278,8 +277,7 @@ void Exception_Test::testMethod() {
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"),
-                             e.userFriendlyMsg(true));
+        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"), e.userFriendlyMsg(true));
         // Previous call to userFriendlyMsg(true) cleared the stack trace, so a further call has only the most recent
         // exception Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type
         // is printed.
