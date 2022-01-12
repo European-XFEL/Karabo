@@ -57,16 +57,9 @@ __lint_clang_format() {
 
     echo "Linting format with `clang-format --version` ..."
 
-    # TODO: Uncomment the line below
-    # SRC_FILES=($(find $SCAN_DIRS -type f \( -name "*.cc" -o -name "*.hh" -o -name "*.hpp" \)))
+    SRC_FILES=($(find $SCAN_DIRS -type f \( -name "*.cc" -o -name "*.cpp" -o -name "*.h" -o -name "*.hh" -o -name "*.hpp" \)))
+    echo "# of C++ lintable files: ${#SRC_FILES[@]}"
 
-    # TODO: Delete the assignment of hardcoded list of files below. These are the corner cases to clear out before going for the full batch.
-    SRC_FILES=("$CI_PROJECT_DIR/src/karabo/util/Configurator.hh" \
-    "$CI_PROJECT_DIR/src/karabo/core/FsmMacros.hh" \
-    "$CI_PROJECT_DIR/src/karathon/PyCoreDeviceClient.cc" \
-    "$CI_PROJECT_DIR/src/karathon/PyH5Tools.cc" \
-    "$CI_PROJECT_DIR/src/karathon/PyXmsSignalSlotable.cc" \
-    "$CI_PROJECT_DIR/src/cppLongTests/xms/InputOutputChannel_LongTest.cc")
     local -i ok_files=0
     local -i err_files=0
     local file_check_code
