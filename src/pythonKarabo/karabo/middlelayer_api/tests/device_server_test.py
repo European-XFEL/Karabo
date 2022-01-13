@@ -161,6 +161,9 @@ class ServerTest(TestCase):
             self.assertIn(deviceId, server.deviceInstanceMap)
             vis = server.getVisibilities()
             self.assertEqual(vis, {"PropertyTestMDL": 4})
+
+            device = server.deviceInstanceMap[deviceId]
+            self.assertEqual(server, device.device_server)
         finally:
             await self._shutdown_server(server)
 
