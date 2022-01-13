@@ -13,7 +13,7 @@ from collections import defaultdict
 
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Descriptor,
-    Hash, Int32, KaraboError, Node, Slot, String, TypeHash)
+    Hash, Int32, KaraboError, Node, Slot, String, TypeHash, Weak)
 
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
@@ -150,6 +150,8 @@ class SignalSlotable(Configurable):
     naming_regex = re.compile("[A-Za-z0-9_/-]+")
     signalChanged = Signal(TypeHash(), String())
 
+    __deviceServer = Weak
+
     @String(
         displayedName="_DeviceID_",
         description="Do not set this property, it will be set by the "
@@ -198,8 +200,19 @@ class SignalSlotable(Configurable):
 
     @property
     def is_initialized(self):
-        """Check if the signal slotable is online and initialized"""
+        """Check if the signal slotable is online and initialized
+
+        This property has been added with Karabo 2.14.
+        """
         return self._ss is not None and self.__initialized
+
+    @property
+    def device_server(self):
+        """Get the device server instance hosting this device
+
+        This property has been added with Karabo 2.14.
+        """
+        return self.__deviceServer
 
     def startInstance(self, server=None, *, loop=None, broadcast=True):
         """Start this (device) instance
@@ -340,6 +353,7 @@ class SignalSlotable(Configurable):
             if server is not None:
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
+                self.__deviceServer = server
             await super(SignalSlotable, self)._run(**kwargs)
             await wait_for(get_event_loop().run_coroutine_or_thread(
                 self.preInitialization), timeout=5)
