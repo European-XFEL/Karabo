@@ -111,7 +111,7 @@ namespace karabo {
                 header->set("exchange", exchange);
                 header->set("routingkey", routingkey);
                 auto body = boost::make_shared<Hash>(msg->get<Hash>("body"));
-                handler(header, body);
+                m_handlerStrand->post(boost::bind(handler, header, body));
             } else {
                 // Error ...
                 std::ostringstream oss;
