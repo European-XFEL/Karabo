@@ -50,6 +50,10 @@ with `clang-format` installed before running the CI linting job:
 
     conda activate karabo-cpp
 
+Another script, `src/tools/scripts/lint_modified.sh`, allows all modified
+source files in the Framework that are not yet staged to be formatted with
+`clang-format` (C++ files) or with `isort` (Python files). This script also checks the modified Python files for PEP8 compliance with `flake8`.
+
 There is a pre-commit Git hook at `githooks/pre-commit` that you should enable if you want to be warned early about C++ source formatting that will be rejected by the CI lint job. To enable that pre-commit hook, please create a symbolic link named `pre-commit` at directory `.git/hooks` referencing `githooks/pre-commit`:
 
     ln -s $REPO_ROOT/githooks/pre-commit $REPO_ROOT/.git/hooks/pre-commit
