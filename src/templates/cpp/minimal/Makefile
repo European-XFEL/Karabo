@@ -6,8 +6,12 @@ CONF ?= Debug
 # Keep default target as make all
 all: install
 
-# legacy target
+# legacy targets
 build: install
+
+package: install
+	@# this script will look for a library file in dist/$(CONF)/cmake
+	@$(KARABO)/bin/.bundle-cppplugin.sh dist $(CONF) cmake
 
 # the .install.sh script will only build and copy into a dist directory
 install:
