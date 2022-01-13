@@ -178,7 +178,6 @@ void logRedis(const std::vector<std::string>& brokerUrls, const std::string& dom
 }
 
 void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& selector) {
-
     // AMQP: 'selector' string is sequence of pairs of exchange and binding key
     //   separated by comma where each pair is separated by colon:
     //     "exchange1:bindingKey1,exchange2:bindingKey2,..."
