@@ -77,7 +77,8 @@ def main():
     output_scene += indent + 'return write_scene(scene)\n'
 
     # change Ubuntu font (can be removed after some transitional period)
-    output_scene = output_scene.replace("font='Ubuntu,", "font='Sans Serif,")
+    output_scene = output_scene.replace("font='Ubuntu,",
+                                        "font='Source Sans Pro,")
 
     # Substitute deviceId and print
     if ns.deviceId:
