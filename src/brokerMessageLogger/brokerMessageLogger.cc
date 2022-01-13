@@ -178,14 +178,6 @@ void logRedis(const std::vector<std::string>& brokerUrls, const std::string& dom
 }
 
 void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& selector) {
-    // The network layer for AMQPCPP package uses internal one threaded
-    // io_context object but the callbacks are posted on karabo multithreaded
-    // EventLoop.  Below we use "synchronous" connect and subscribe functions.
-    // To make them working the running EventLoop is required before we call
-    // those synchronous functions. The solution is to run EventLoop on the
-    // thread and at the end to wait for joining such a thread.
-
-    auto t = boost::thread(EventLoop::work);
 
     // AMQP: 'selector' string is sequence of pairs of exchange and binding key
     //   separated by comma where each pair is separated by colon:
@@ -261,7 +253,7 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     }
     std::cout << std::endl;
 
-    t.join(); // block here
+    EventLoop::work(); // block for ever
 }
 
 
