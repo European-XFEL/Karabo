@@ -302,6 +302,11 @@ namespace karabo {
 
            private:
             template <typename CompletionToken>
+            void post(CompletionToken&& token) {
+                m_connector->getContext()->post(std::forward<CompletionToken>(token)); // post on EventLoop
+            }
+
+            template <typename CompletionToken>
             void dispatch(CompletionToken&& token) {
                 m_connector->getContext()->dispatch(std::forward<CompletionToken>(token)); // post on EventLoop
             }
@@ -347,7 +352,6 @@ namespace karabo {
             void onUnbindQueueSuccess(const AsyncHandler& onComplete);
 
            protected:
-            Strand::Pointer m_strand;
             std::vector<std::string> m_brokerUrls;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
             std::string m_domain;
