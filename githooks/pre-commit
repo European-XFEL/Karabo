@@ -9,7 +9,7 @@ __lint_clang_format() {
     # Put all staged files that conform to C++ source filename suffixes and
     # that are not Deleted or Renamed into the collection of files to be
     # checked for formatting.
-    SRC_FILES=($(git diff --cached --name-only --diff-filter=dr | grep -e ".cc\'" -e ".cpp\'"  -e ".hh\'" -e ".h\'" -e ".hpp\'"))
+    SRC_FILES=($(git diff --cached --name-only --diff-filter=dr | grep -e "\.cc\'" -e "\.cpp\'"  -e "\.hh\'" -e "\.h\'" -e "\.hpp\'"))
     local -i num_files=${#SRC_FILES[@]}
     if [[ $num_files -eq 0 ]]; then
         return 0  # no file to be checked
