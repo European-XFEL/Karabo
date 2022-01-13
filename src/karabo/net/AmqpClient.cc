@@ -143,8 +143,7 @@ namespace karabo {
               m_reliable(),
               m_queue(""),
               m_consumerTag(""),
-              m_onRead() {
-        }
+              m_onRead() {}
 
 
         AmqpClient::~AmqpClient() {
