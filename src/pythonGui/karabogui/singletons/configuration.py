@@ -105,10 +105,7 @@ class Configuration(QObject):
     # ----------------------------------------------
     # Last directories stored and used
 
-    config_dir = Item(q_set=True, group=DIRECTORIES)
     data_dir = Item(q_set=True, group=DIRECTORIES)
-    macro_dir = Item(q_set=True, group=DIRECTORIES)
-    scene_dir = Item(q_set=True, group=DIRECTORIES)
 
     # ----------------------------------------------
     # Panels
