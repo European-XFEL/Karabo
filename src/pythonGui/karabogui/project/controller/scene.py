@@ -112,7 +112,7 @@ class SceneController(BaseProjectController):
         """
         # Make sure scene is closed before!
         scene = self.model
-        path = get_config()['scene_dir']
+        path = get_config()['data_dir']
         directory = path if path and op.isdir(path) else ""
 
         fn = getOpenFileName(caption='Replace scene',
@@ -123,7 +123,7 @@ class SceneController(BaseProjectController):
             return
 
         # Store scene dir path
-        get_config()['scene_dir'] = op.dirname(fn)
+        get_config()['data_dir'] = op.dirname(fn)
 
         project = project_controller.model
         # NOTE: Close the old one first!
@@ -214,7 +214,7 @@ class SceneController(BaseProjectController):
 
     def _save_scene_to_file(self, parent=None):
         config = get_config()
-        path = config['scene_dir']
+        path = config['data_dir']
         directory = path if path and op.isdir(path) else ""
         scene = self.model
         filename = scene.simple_name
@@ -229,7 +229,7 @@ class SceneController(BaseProjectController):
             return
 
         # Store old scene dialog path
-        config['scene_dir'] = op.dirname(fn)
+        config['data_dir'] = op.dirname(fn)
 
         if not fn.endswith('.svg'):
             fn = '{}.svg'.format(fn)
