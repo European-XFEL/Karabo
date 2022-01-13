@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 from qtpy.QtCore import QLine, QLineF, QPoint, QRect, Qt
 from qtpy.QtGui import (
@@ -15,6 +16,7 @@ from karabogui.dialogs.api import SceneLinkDialog, TextDialog, WebDialog
 from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.utils import calc_rotated_point, calc_snap_pos
+from karabogui.singletons.api import get_config
 from karabogui.util import getOpenFileName
 
 
@@ -241,10 +243,12 @@ class ImageRendererTool(BaseSceneTool):
         """A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
-        fn = getOpenFileName(filter="Images (*.png *.jpg *.jpeg *.svg)")
+        fn = getOpenFileName(filter="Images (*.png *.jpg *.jpeg *.svg)",
+                             directory=get_config()["data_dir"])
         if not fn:
             return
 
+        get_config()["data_dir"] = str(Path(fn).parent)
         with open(fn, "rb") as fp:
             b = fp.read()
 
