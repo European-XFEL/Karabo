@@ -62,7 +62,7 @@ __release_build() {
     esac
 
     case "$1" in
-        ubuntu*|centos*)
+        ubuntu*|centos*|almalinux*)
             export REL_OS_NAME=$(lsb_release -is)
             export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
             export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
@@ -75,7 +75,10 @@ __release_build() {
             sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
             sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
             ;;
-        *) echo "unknown target OS: $1" ;;
+        *)
+            echo "unknown target OS: $1"
+            exit 1
+            ;;
     esac
 
     if [ "$REL_TAG" != "$NIGHTLY_TAG" ]; then
