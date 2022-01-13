@@ -121,7 +121,7 @@ class ConfigPreviewDialog(QDialog):
             return
 
         config = get_config()
-        path = config['config_dir']
+        path = config['data_dir']
         directory = path if path and op.isdir(path) else ""
 
         class_id = self.configuration.get("classId", "unknown-class")
@@ -149,4 +149,4 @@ class ConfigPreviewDialog(QDialog):
             writeXML(config, fp)
 
         # save the last config directory
-        get_config()['config_dir'] = op.dirname(filename)
+        get_config()['data_dir'] = op.dirname(filename)

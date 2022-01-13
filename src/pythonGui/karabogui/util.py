@@ -127,7 +127,7 @@ def load_configuration_from_file(device_proxy, parent=None):
         messagebox.show_error(msg.format('class' if is_class else 'device'))
         return
     config = get_config()
-    path = config['config_dir']
+    path = config['data_dir']
     directory = path if path and op.isdir(path) else ""
 
     filename = getOpenFileName(caption="Open configuration",
@@ -141,7 +141,7 @@ def load_configuration_from_file(device_proxy, parent=None):
         config = decodeXML(fp.read())
 
     # Save the directory information
-    get_config()['config_dir'] = op.dirname(filename)
+    get_config()['data_dir'] = op.dirname(filename)
     # Broadcast so the configurator can handle the complexities of applying
     # a configuration.
     broadcast_event(KaraboEvent.LoadConfiguration,
@@ -155,7 +155,7 @@ def save_configuration_to_file(device_proxy, parent=None):
         messagebox.show_error("No configuration available. Saving failed.")
         return
     config = get_config()
-    path = config['config_dir']
+    path = config['data_dir']
     directory = path if path and op.isdir(path) else ""
 
     class_id = device_proxy.binding.class_id
@@ -190,7 +190,7 @@ def save_configuration_to_file(device_proxy, parent=None):
         writeXML(config, fp)
 
     # save the last config directory
-    get_config()['config_dir'] = op.dirname(filename)
+    get_config()['data_dir'] = op.dirname(filename)
 
 
 @contextmanager
