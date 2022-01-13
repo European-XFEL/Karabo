@@ -131,8 +131,7 @@ namespace karabo {
 
 
         AmqpClient::AmqpClient(const karabo::util::Hash& input)
-            : m_strand(boost::make_shared<Strand>(EventLoop::getIOService())),
-              m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
+            : m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
               m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
               m_domain(input.get<std::string>("domain")),
               m_instanceId(input.get<std::string>("instanceId")),
@@ -145,7 +144,6 @@ namespace karabo {
               m_queue(""),
               m_consumerTag(""),
               m_onRead() {
-            EventLoop::addThread();
         }
 
 
@@ -158,7 +156,6 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(amqpMutex);
                 m_connector.reset();
             }
-            EventLoop::removeThread();
         }
 
 
@@ -273,7 +270,7 @@ namespace karabo {
             if (!m_onRead) return;
             karabo::util::Hash::Pointer msg = boost::make_shared<Hash>();
             m_binarySerializer->load(*msg, m.body(), m.bodySize());
-            m_strand->post(boost::bind(m_onRead, KARABO_ERROR_CODE_SUCCESS, m.exchange(), m.routingkey(), msg));
+            m_onRead(KARABO_ERROR_CODE_SUCCESS, m.exchange(), m.routingkey(), msg);
         }
 
 
@@ -281,7 +278,7 @@ namespace karabo {
             // If the client is already connected, calls the m_onConnect handler
             if (this->isConnected()) {
                 if (onConnect) {
-                    m_strand->post(boost::bind(onConnect, KARABO_ERROR_CODE_SUCCESS));
+                    post(boost::bind(onConnect, KARABO_ERROR_CODE_SUCCESS));
                 }
                 return;
             }
@@ -289,7 +286,7 @@ namespace karabo {
             // start connection attempts using m_brokerUrls
             std::shared_ptr<AMQP::TcpConnection> connection = createClientForUrls(m_brokerUrls);
             if (!connection) {
-                m_strand->post(boost::bind(onConnect, KARABO_ERROR_CODE_CONNECT_REFUSED));
+                post(boost::bind(onConnect, KARABO_ERROR_CODE_CONNECT_REFUSED));
                 return;
             }
             createChannel(connection, onConnect);
@@ -349,12 +346,12 @@ namespace karabo {
 
         void AmqpClient::onCloseError(const char* message, const AsyncHandler& onComplete) {
             KARABO_LOG_FRAMEWORK_ERROR << "Channel close() failed : " << message;
-            if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+            if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
         }
 
 
         void AmqpClient::onCloseSuccess(const AsyncHandler& onComplete) {
-            if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+            if (onComplete) onComplete(KARABO_ERROR_CODE_SUCCESS);
         }
 
 
@@ -382,7 +379,7 @@ namespace karabo {
                                         const AsyncHandler& onComplete) {
             using namespace boost::algorithm;
             if (isSubscribed(exchange, bindingKey)) {
-                if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
                 return;
             }
 
@@ -396,7 +393,7 @@ namespace karabo {
         void AmqpClient::onDeclareExchangeError(const char* message, const std::string& exchange,
                                                 const AsyncHandler& onComplete) {
             KARABO_LOG_FRAMEWORK_ERROR << "Declare exchange \"" << exchange << "\" failed : " << message;
-            m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+            onComplete(KARABO_ERROR_CODE_IO_ERROR);
         }
 
 
@@ -414,7 +411,7 @@ namespace karabo {
                                           const std::string& bindingKey, const AsyncHandler& onComplete) {
             KARABO_LOG_FRAMEWORK_ERROR << "Bind exchange \"" << exchange << "\" to internal queue \"" << m_queue
                                        << "\" with binding key->\"" << bindingKey << "\" failed : " << message;
-            m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+            onComplete(KARABO_ERROR_CODE_IO_ERROR);
         }
 
 
@@ -424,7 +421,7 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
                 m_subscriptions.insert(exchange + bindingKey);
             }
-            m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+            onComplete(KARABO_ERROR_CODE_SUCCESS);
         }
 
 
@@ -448,7 +445,7 @@ namespace karabo {
         void AmqpClient::unsubscribeAsync(const std::string& exchange, const std::string& routingKey,
                                           const AsyncHandler& onComplete) {
             if (!isConnected()) {
-                if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
 
@@ -459,7 +456,7 @@ namespace karabo {
                 // return immediately if not found
                 if (it == m_subscriptions.end()) {
                     if (onComplete) {
-                        m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                        post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
                     }
                     return;
                 }
@@ -477,13 +474,13 @@ namespace karabo {
                                             const std::string& routingKey, const AsyncHandler& onComplete) {
             KARABO_LOG_FRAMEWORK_ERROR << "Unbind exchange->\"" << exchange << "\", internal queue->\"" << m_queue
                                        << "\", routing key->\"" << routingKey << "\" failed: " << message;
-            if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+            if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
         }
 
 
         void AmqpClient::onUnbindQueueSuccess(const AsyncHandler& onComplete) {
             if (!onComplete) return;
-            m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+            onComplete(KARABO_ERROR_CODE_SUCCESS);
         }
 
 
