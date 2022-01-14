@@ -33,7 +33,7 @@ class BaseTableController(BaseBindingController):
     _table_widget = WeakRef(KaraboTableView)
 
     _resizeAction = Instance(QAction)
-
+    _hasResize = Bool(False)
     # ---------------------------------------------------------------------
     # Abstract Methods
 
@@ -48,7 +48,8 @@ class BaseTableController(BaseBindingController):
 
         # Not every table model might have the `resizeToContents` setting
         model = self.model
-        if "resizeToContents" in model.copyable_trait_names():
+        self._hasResize = "resizeToContents" in model.copyable_trait_names()
+        if self._hasResize:
             resize_action = QAction("Resize To Contents")
             resize_action.triggered.connect(self._resize_contents)
             resize_action.setCheckable(True)
@@ -96,10 +97,8 @@ class BaseTableController(BaseBindingController):
             has_schema = not binding.row_schema.empty()
             if has_schema:
                 self._set_bindings(binding)
-                model = self.model
-                if "resizeToContents" not in model.copyable_trait_names():
-                    return
-                self._set_table_resize_mode(model)
+                if self._hasResize:
+                    self._set_table_resize_mode(self.model)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
