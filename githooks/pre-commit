@@ -5,6 +5,9 @@
 # it wants to stop the commit.
 #
 
+# Returns true if the first version argument is less than the second version argument
+__version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
+
 __lint_clang_format() {
     # Put all staged files that conform to C++ source filename suffixes and
     # that are not Deleted or Renamed into the collection of files to be
@@ -15,6 +18,7 @@ __lint_clang_format() {
         return 0  # no file to be checked
     fi
     echo "clang-format version in use: `clang-format --version`"
+    echo ""
 
     local -i ok_files=0
     local -i err_files=0
@@ -42,26 +46,30 @@ __lint_clang_format() {
 
 # Checks if clang-format is available and its version matches the CI (13.0.0)
 CI_CLANG_FORMAT_VERSION="13.0.0"
-CLANG_FORMAT_VERSION=$(clang-format --version)
+CLANG_FORMAT_VERSION=$(clang-format --version | grep -P '\d+\.\d+\.\d+' -o)
 ret_code=$?
 if [[ $ret_code != 0 ]]; then
+    echo ""
     echo "WARNING: pre-commit C++ format linting SKIPPED."
     echo "         Reason: clang-format not available. Please install clang-format version $CI_CLANG_FORMAT_VERSION."
+    echo ""
     exit 0
 fi
-if [[ "$CLANG_FORMAT_VERSION" != *"$CI_CLANG_FORMAT_VERSION"* ]]; then
+if __version_lt $CLANG_FORMAT_VERSION $CI_CLANG_FORMAT_VERSION; then
+    echo ""
     echo "WARNING: pre-commit C++ format linting SKIPPED."
-    echo "         Reason: clang-format version does not match the CI's version, $CI_CLANG_FORMAT_VERSION"
-    echo "                 Local clang-format version is '$CLANG_FORMAT_VERSION'."
+    echo "         Reason: Local clang-format version, $CLANG_FORMAT_VERSION, is older than the CI's, $CI_CLANG_FORMAT_VERSION."
+    echo ""
     exit 0
 fi
 
 __lint_clang_format
 retval=$?
 if [[ retval -eq 0 ]]; then
-    echo "Commit will proceed."
     exit 0
 else
-    echo "Commit will not proceed."
+    echo ""
+    echo "COMMIT ABORTED."
+    echo ""
     exit 1
 fi
