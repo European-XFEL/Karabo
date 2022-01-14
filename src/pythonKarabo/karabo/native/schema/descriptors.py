@@ -1242,8 +1242,8 @@ class VectorHash(Vector):
         if rows is not None:
             self.rowSchema = rows.getClassSchema()
 
-        if self.rowSchema is None:
-            raise KaraboError("The table element {} does not have row "
+        if self.rowSchema is None or self.rowSchema.hash.empty():
+            raise KaraboError("The table element {} does not have a valid row "
                               "schema".format(self.key))
         else:
             readonly = self.accessMode is AccessMode.READONLY
