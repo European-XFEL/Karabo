@@ -579,6 +579,14 @@ class Tests(TestCase):
         self.assertEqual(len(v), 3)
 
     def test_vector_hash_init(self):
+        # Test vector hash without schema
+        with self.assertRaises(KaraboError):
+            d = VectorHash()
+
+        # Test with empty row schema
+        with self.assertRaises(KaraboError):
+            d = VectorHash(rowSchema=Schema("rs", hash=Hash()))
+
         rowSchema = Hash("int", None, "string", None)
         rowSchema["int", "valueType"] = "INT32"
         rowSchema["int", "unitSymbol"] = "m"
@@ -662,7 +670,6 @@ class Tests(TestCase):
         rowSchema["int", "metricPrefixSymbol"] = "m"
         rowSchema["string", "valueType"] = "STRING"
         rowSchema["vector", "valueType"] = "VECTOR_DOUBLE"
-
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
         v = d.toKaraboValue([(3, "hallo", np.arange(5, dtype=float)),
                              (2.5, "bla", np.array([], dtype=float))])
