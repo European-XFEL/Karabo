@@ -8,6 +8,9 @@
 # have Python source files formatted in conformity to PEP8.
 #
 
+# Returns true if the first version argument is less than the second version argument
+__version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
+
 __lint_clang_format() {
     # Put all locally modified files that conform to C++ source filename suffixes
     # and that are not Deleted or Renamed into the collection of files to be
@@ -20,9 +23,11 @@ __lint_clang_format() {
         return 0  # no file to be formatted
     fi
 
-    # Checks if clang-format is available and its version matches the CI (13.0.0)
+    # Checks if clang-format is available and its version is at least the CI
+    # version.
     CI_CLANG_FORMAT_VERSION="13.0.0"
-    CLANG_FORMAT_VERSION=$(clang-format --version)
+    CLANG_FORMAT_VERSION=$(clang-format --version | grep -P '\d+\.\d+\.\d+' -o)
+    echo "CLANG_FORMAT_VERSION = $CLANG_FORMAT_VERSION"
     ret_code=$?
     if [[ $ret_code != 0 ]]; then
         echo ""
@@ -30,11 +35,11 @@ __lint_clang_format() {
         echo "         Reason: clang-format not available. Please install clang-format version $CI_CLANG_FORMAT_VERSION."
         echo ""
         return
-    elif [[ "$CLANG_FORMAT_VERSION" != *"$CI_CLANG_FORMAT_VERSION"* ]]; then
+    fi
+    if __version_lt $CLANG_FORMAT_VERSION $CI_CLANG_FORMAT_VERSION; then
         echo ""
         echo "WARNING: C++ format linting SKIPPED."
-        echo "         Reason: clang-format version does not match the CI's version, $CI_CLANG_FORMAT_VERSION"
-        echo "                 Local clang-format version is '$CLANG_FORMAT_VERSION'."
+        echo "         Reason: Local clang-format version, $CLANG_FORMAT_VERSION, is older than the CI's, $CI_CLANG_FORMAT_VERSION."
         echo ""
         return
     fi
@@ -141,7 +146,7 @@ __lint_flake8() {
 
 # ----- main -----
 REPO_ROOT=`git rev-parse --show-toplevel`
-pushd $REPO_ROOT
+pushd $REPO_ROOT > /dev/null
 
 # Performs linting of the modified C++ files in the Framework
 __lint_clang_format
