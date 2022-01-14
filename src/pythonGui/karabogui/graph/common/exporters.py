@@ -4,9 +4,10 @@ from pyqtgraph.exporters import ImageExporter as PgImageExporter
 
 from karabo.native import Timestamp
 from karabogui import util
+from karabogui.singletons.api import get_config
 
 
-class PlotDataExporter(object):
+class PlotDataExporter:
     def __init__(self, data_items):
         if len(data_items) == 1:
             x_data, y_data = data_items[0].getData()
@@ -35,7 +36,7 @@ class PlotDataExporter(object):
         return np.vstack((x_data, y_data))
 
 
-class ArrayExporter(object):
+class ArrayExporter:
     """Exporter for single numpy arrays. This is typically used for images and
        plots with single curves.
 
@@ -63,18 +64,19 @@ class ArrayExporter(object):
         filename = util.getSaveFileName(caption="Export Data",
                                         filter="Numpy File (*.npy)",
                                         suffix="npy",
+                                        directory=get_config()["data_dir"],
                                         selectFile=name)
 
         if not filename:
             return
 
-        if not filename.endswith('.npy'):
-            filename = '{}.npy'.format(filename)
+        if not filename.endswith(".npy"):
+            filename = "{}.npy".format(filename)
 
         np.save(filename, self._data)
 
 
-class MultiArrayExporter(object):
+class MultiArrayExporter:
     """Exporter for multiple numpy arrays. This is typically used for
        multicurve plots. This utilizes proxy names as keys:
 
@@ -110,23 +112,24 @@ class MultiArrayExporter(object):
         filename = util.getSaveFileName(caption="Export Data",
                                         filter="Numpy Zipped File (*.npz)",
                                         suffix="npz",
+                                        directory=get_config()["data_dir"],
                                         selectFile=name)
 
         if not filename:
             return
 
-        if not filename.endswith('.npz'):
-            filename = '{}.npz'.format(filename)
+        if not filename.endswith(".npz"):
+            filename = "{}.npz".format(filename)
 
         np.savez(filename, **self._zipped)
 
 
-class ImageExporter(object):
+class ImageExporter:
     def __init__(self, item):
         self._exporter = PgImageExporter(item)
         params = self._exporter.parameters()
-        params['antialias'] = False
-        params["background"] = mkColor('w')
+        params["antialias"] = False
+        params["background"] = mkColor("w")
 
     def export(self):
         """Exports the plot to an image"""
@@ -136,12 +139,13 @@ class ImageExporter(object):
         filename = util.getSaveFileName(caption="Save Snapshot",
                                         filter="PNG (*.png)",
                                         suffix="png",
+                                        directory=get_config()["data_dir"],
                                         selectFile=name)
 
         if not filename:
             return
 
-        if not filename.endswith('.png'):
-            filename = '{}.png'.format(filename)
+        if not filename.endswith(".png"):
+            filename = "{}.png".format(filename)
 
         qimage.save(filename)
