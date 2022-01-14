@@ -150,7 +150,7 @@ class SignalSlotable(Configurable):
     naming_regex = re.compile("[A-Za-z0-9_/-]+")
     signalChanged = Signal(TypeHash(), String())
 
-    __deviceServer = Weak
+    __deviceServer = Weak()
 
     @String(
         displayedName="_DeviceID_",
