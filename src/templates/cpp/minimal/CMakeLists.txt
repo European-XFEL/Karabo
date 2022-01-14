@@ -35,10 +35,10 @@ endif()
 
 # Creates an IMPORTED target for the Karabo Framework Library and stores the
 # target name in the variable KARABO_LIB_TARGET_NAME to be used downstream.
-if(EXISTS "$ENV{KARABO}/lib/cmake/import_karabo_lib_target.cmake")
+if(EXISTS "$ENV{KARABO}/lib/cmake/karaboLibConfig.cmake")
     # The Karabo installation the device is being built against is CMake-based.
-    include($ENV{KARABO}/lib/cmake/import_karabo_lib.cmake)
-    importKaraboLibTarget()
+    include($ENV{KARABO}/lib/cmake/karaboLibConfig.cmake)
+    set(KARABO_LIB_TARGET_NAME "karabo")
 else()
     # The Karabo installation the device is being built against is
     # Netbeans-based.
