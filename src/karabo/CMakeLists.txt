@@ -427,16 +427,13 @@ foreach (FILE_PATH ${INCLUDE_FILES})
 endforeach()
 
 install(TARGETS ${KARABO_LIB_TARGET_NAME}
-        EXPORT "karaboLib"
         LIBRARY DESTINATION "lib"
         PUBLIC_HEADER DESTINATION "include/karabo"
         RUNTIME DESTINATION bin
 )
 
-install(EXPORT "karaboLib"
-        DESTINATION "lib/cmake"
-        FILE "karaboLibConfig.cmake"
-)
+install(FILES "../cmake/import_karabo_lib.cmake"
+        DESTINATION "lib/cmake")
 
 file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_VERSION})
 install(FILES "${CMAKE_BINARY_DIR}/VERSION" DESTINATION .)
