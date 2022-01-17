@@ -51,6 +51,8 @@ _PANEL_TITLE_CONFIG = {
     AlARM_TITLE: 'alarm_panel'
 }
 
+MENU_HEIGHT = 40
+
 
 class MainWindowBanner(QTextBrowser):
     """The MainWindow Banner"""
@@ -58,7 +60,7 @@ class MainWindowBanner(QTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
-        self.setFixedHeight(40)
+        self.setFixedHeight(MENU_HEIGHT)
         self.setFrameStyle(QFrame.NoFrame)
         self.setSizePolicy(QSizePolicy.Expanding,
                            QSizePolicy.Fixed)
@@ -168,7 +170,7 @@ class MainWindow(QMainWindow):
     """
 
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         # Create projects folder, if not exists
         if not os.path.exists(const.KARABO_PROJECT_FOLDER):
@@ -552,7 +554,7 @@ class MainWindow(QMainWindow):
 
     def _setupToolBar(self):
 
-        toolbar = self.addToolBar("Standard")
+        self.toolbar = toolbar = self.addToolBar("Standard")
         toolbar.setObjectName(generateObjectName(toolbar))
         toolbar.addAction(self.acExit)
 
