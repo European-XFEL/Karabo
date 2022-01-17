@@ -59,6 +59,9 @@ class Network(QObject):
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
 
+        if get_config()["development"]:
+            self.togglePerformanceMonitor()
+
     def connectToServer(self, parent=None) -> bool:
         """Connection to server via LoginDialog
 
