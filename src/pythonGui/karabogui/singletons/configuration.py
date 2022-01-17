@@ -123,6 +123,7 @@ class Configuration(QObject):
     wizard = Item(default=True, q_set=True, group=USER)
     highDPI = Item(default=True, q_set=True, group=USER)
     main_geometry = Item(q_set=True, group=USER)
+    development = Item(default=False, q_set=False, group=USER)
 
     # ----------------------------------------------
     # Project db interface
