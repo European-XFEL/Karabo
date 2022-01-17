@@ -4,12 +4,15 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import QObject, Slot
+from qtpy.QtWidgets import QPushButton
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
-from karabogui import messagebox
+from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.controllers.util import load_extensions
 from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.logger import get_logger
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model
@@ -58,6 +61,14 @@ class PanelWrangler(QObject):
 
     # -------------------------------------------------------------------
     # public interface
+
+    def toggleReloadExtensions(self):
+        """Enable the reload extensions on the mainwindow"""
+        button = QPushButton(icons.refresh, "Reload Extensions")
+        button.clicked.connect(self._reload_extensions)
+        button.setFixedHeight(40)
+        button.setVisible(True)
+        self.main_window.toolbar.addWidget(button)
 
     def is_showing_project_item(self, model):
         """Returns True if the given `model` has a view currently showing.
@@ -221,6 +232,8 @@ class PanelWrangler(QObject):
 
         # Show the connection dialog after processing all pending events
         self.main_window.acServerConnect.trigger()
+        if get_config()["development"]:
+            self.toggleReloadExtensions()
 
     def _open_macro(self, model):
         if model is None:
@@ -278,10 +291,23 @@ class PanelWrangler(QObject):
             self.main_window.addPanel(panel, PanelAreaEnum.Middle)
         self.main_window.selectPanel(panel, PanelAreaEnum.Middle)
 
+    @Slot()
+    def _reload_extensions(self):
+        """Request to reload the gui extensions and close all scenes"""
+        get_logger().info("Reloading the GUI Extensions ...")
+        load_extensions()
+        panels = [p for p in self._project_item_panels.values()
+                  if isinstance(p, ScenePanel)]
+        for panel in panels:
+            self._close_panel(panel)
+        # And all unattached scene panels
+        self._close_unattached_panels()
+
 
 def _find_scene_model(name, uuid):
     """Find a SceneModel which is already open in the project.
     """
+
     class _Visitor(object):
         found = None
 
