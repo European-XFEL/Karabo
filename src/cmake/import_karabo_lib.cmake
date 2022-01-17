@@ -4,10 +4,7 @@
 #
 # Also creates a variable, KARABO_LIB_TARGET_NAME, with the name of the
 # IMPORTED target created for the library.
-#
-# Note: this is aimed at versions of the Karabo Framework built using the
-# Netbeans generated Makefiles.
-macro (importKaraboLibLegacy)
+macro (importKaraboLib)
 
     if(NOT EXISTS "$ENV{KARABO}/lib/karaboDependencies.pc")
         message(FATAL_ERROR
