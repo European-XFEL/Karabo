@@ -20,7 +20,8 @@ from karabogui.binding.api import (
 from karabogui.const import KARABO_CLIENT_ID
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
-from karabogui.singletons.api import get_alarm_model, get_network, get_topology
+from karabogui.singletons.api import (
+    get_alarm_model, get_config, get_network, get_topology)
 from karabogui.util import move_to_cursor, show_wait_cursor
 
 from .util import get_error_message, realign_topo_hash
@@ -68,6 +69,9 @@ class Manager(QObject):
         network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
         network.signalReceivedData.connect(self.onReceivedData)
+
+        if get_config()["development"]:
+            self.toggleBigDataPerformanceMonitor()
 
     def toggleBigDataPerformanceMonitor(self):
         self._show_big_data_proc = True
