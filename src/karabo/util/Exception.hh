@@ -38,10 +38,10 @@ namespace karabo {
 
 
             /**
-             * Constructor using message, exception type, filename, line number and function name.
+             * Constructor using message, exception type, filename, function name, line number and possible detailsMsg
              */
             Exception(const std::string& message, const std::string& type, const std::string& filename,
-                      const std::string& function, int lineNumber);
+                      const std::string& function, int lineNumber, const std::string& detailsMsg = std::string());
 
             /**
              * Destructor
@@ -134,12 +134,21 @@ namespace karabo {
              */
             const std::string& type() const;
 
+            /**
+             * The details of the exception - without trace.
+             *
+             * Some exceptions do not offer to provide details, then an empty string is returned.
+             * Stack is not touched/cleared.
+             */
+            const std::string& details() const;
+
            protected:
             // Generic Exception information structure
 
             typedef struct {
                 std::string type;
                 std::string message;
+                std::string details; // some exception provide further details
                 std::string filename;
                 std::string function;
                 std::string lineNumber;
@@ -436,11 +445,13 @@ namespace karabo {
          */
         class PythonException : public Exception {
            public:
-            PythonException(const std::string& message, const std::string& filename, const std::string& function,
-                            int lineNumber)
-                : Exception(message, "Python Exception", filename, function, lineNumber) {}
+            PythonException(const std::string& message, const std::string& detailsMsg, const std::string& filename,
+                            const std::string& function, int lineNumber)
+                : Exception(message, "Python Exception", filename, function, lineNumber, detailsMsg) {}
         };
-#define KARABO_PYTHON_EXCEPTION(msg) karabo::util::PythonException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define KARABO_PYTHON_EXCEPTION(msg) karabo::util::PythonException(msg, "", __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define KARABO_PYTHON_EXCEPTION2(msg, details) \
+    karabo::util::PythonException(msg, details, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The CudaException handles exceptions that are caused by the NVIDIA CUDA runtime
@@ -494,9 +505,9 @@ namespace karabo {
          */
         class RemoteException : public Exception {
            public:
-            RemoteException(const std::string& message, const std::string& device, const std::string& filename = "",
-                            const std::string& function = "", int lineNumber = -1)
-                : Exception(message, "Remote Exception from " + device, filename, function, lineNumber) {}
+            RemoteException(const std::string& message, const std::string& device, const std::string& detailsMsg = "",
+                            const std::string& filename = "", const std::string& function = "", int lineNumber = -1)
+                : Exception(message, "Remote Exception from " + device, filename, function, lineNumber, detailsMsg) {}
         };
 
         /**
