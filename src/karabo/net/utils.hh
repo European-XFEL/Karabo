@@ -40,14 +40,23 @@ namespace karabo {
 
         /**
          * Parses a URL and returns a tuple.
-         * 
+         *
+         * The URL must of format: <scheme>:<scheme-dependent-part>
+         *
+         * @param url A well formed URL
+         * @return tuple containing scheme and scheme dependent part
+         */
+        boost::tuple<std::string, std::string> parseGenericUrl(const std::string& url);
+
+        /**
+         * Parses a HTTP-like URL and returns a tuple.
+         *
          * The URL must of format: <scheme>://<domain>:<port>/<path>?<query>
          *
          * @param url A well formed URL
          * @return tuple containing scheme, domain, port, path and query
          */
         boost::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);
-
 
         std::string urlencode(const std::string& value);
 
