@@ -2076,7 +2076,7 @@ namespace karabo {
                         msg << "Command "
                             << "\"" << slotName << "\""
                             << " is not allowed as device is locked by "
-                            << "\"" << lockHolder << ".";
+                            << "\"" << lockHolder << "\".";
                         throw KARABO_LOCK_EXCEPTION(msg.str());
                     }
                 }
