@@ -11,11 +11,13 @@ from functools import wraps
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, DaqPolicy, Descriptor, Int32, Slot, String)
+    AccessLevel, AccessMode, DaqPolicy, Descriptor, Hash, Int32, Slot, String,
+    VectorString)
 
 from .device import Device
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
+from .signalslot import slot
 
 
 def Monitor():
@@ -208,6 +210,7 @@ class Macro(Device):
         if configuration is None:
             configuration = {}
         configuration.update(kwargs)
+        self.code = ""
         super().__init__(configuration)
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
@@ -320,3 +323,23 @@ class Macro(Device):
 
         with closing(loop):
             loop.run_until_complete(run())
+
+    availableMacros = VectorString(
+        displayedName="Available Macros",
+        description="Provides the macro's own code",
+        accessMode=AccessMode.READONLY,
+        defaultValue=[])
+
+    def store_macro_code(self, code):
+        self.code = code
+        self.availableMacros = ["macro"]
+
+    @slot
+    def requestMacro(self, params):
+        name = params.get("name", default="")
+        payload = Hash(
+            "success", name in self.availableMacros.value,
+            "data", self.code)
+        return Hash("type", "deviceMacro",
+                    "origin", self.deviceId,
+                    "payload", payload)
