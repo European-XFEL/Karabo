@@ -19,7 +19,7 @@ from karabo.middlelayer_api.synchronization import background, sleep
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sync_tst)
 from karabo.native import (
-    AccessMode, Configurable, Int32 as Int, KaraboError, Node, Slot)
+    AccessMode, Configurable, Hash, Int32 as Int, KaraboError, Node, Slot)
 
 
 class Superslot(Slot):
@@ -669,6 +669,42 @@ class Tests(DeviceTest):
             await d.cancel()
             self.assertEqual(self.local.cancelled_slot, Local.asyncSleep)
             self.assertEqual(d.state, State.PASSIVE)
+
+    @async_tst
+    async def test_request_macro(self):
+        """test that the macro can provide its own code"""
+        # at first the code is missing in the tests.
+        self.assertEqual(self.local.code, "")
+        request = Hash("name", "macro")
+        bad_request = Hash("name", "non existing macro")
+
+        # check that we can handle a non existing macro correctly
+        result = self.local.requestMacro(bad_request)
+        self.assertIn("payload", result)
+        self.assertIn("success", result["payload"])
+        self.assertFalse(result["payload.success"])
+
+        # check that we can handle an existing macro correctly
+        # when the code is not set
+        result = self.local.requestMacro(request)
+        self.assertIn("payload", result)
+        self.assertIn("success", result["payload"])
+        self.assertFalse(result["payload.success"])
+
+        # check that we can handle an existing macro correctly
+        example_code = "The macro's own code."
+        self.local.store_macro_code(example_code)
+        self.assertIn("macro", self.local.availableMacros.value)
+        self.assertEqual(self.local.code, example_code)
+        result = self.local.requestMacro(request)
+        self.assertTrue(result["payload.success"])
+        self.assertEqual(result["payload.data"], example_code)
+
+        # check that we can handle a non existing macro correctly
+        result = self.local.requestMacro(bad_request)
+        self.assertIn("payload", result)
+        self.assertIn("success", result["payload"])
+        self.assertFalse(result["payload.success"])
 
 
 class AbstractMacroTest(DeviceTest):
