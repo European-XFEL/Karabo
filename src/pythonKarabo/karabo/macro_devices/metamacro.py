@@ -61,6 +61,9 @@ class MetaMacro(Device):
             # representation of a `String`
             deviceId = self.deviceId.value
             parameters["_deviceId_"] = f"{deviceId}-{klass.__name__}"
-            objs.append(klass(parameters))
+            macro = klass(parameters)
+            macro.store_macro_code(self.code.value)
+            objs.append(macro)
+
         return gather(*(o.startInstance(server,
                                         broadcast=broadcast) for o in objs))
