@@ -8,6 +8,7 @@
 #include "Wrapper.hh"
 
 #include <algorithm>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <karabo/net/Broker.hh>
@@ -791,18 +792,70 @@ namespace karathon {
         }
     }
 
+    std::tuple<std::string, std::string> getPythonExceptionStrings() {
+        // Fetch parameters of error indicator ... the error indicator is getting cleared!
+        // ... the new references returned!
+        PyObject *pexceptType, *pexception, *ptraceback;
+
+        PyErr_Fetch(&pexceptType, &pexception, &ptraceback); // ref count incremented
+        PyErr_NormalizeException(&pexceptType, &pexception, &ptraceback);
+
+        std::string pythonErrorMessage;
+        std::string pythonErrorDetails;
+
+        if (pexceptType && pexception && ptraceback) {
+            // Try to extract full traceback
+            PyObject* moduleTraceback = PyImport_ImportModule("traceback");
+            if (moduleTraceback != 0) {
+                // Letter "O" in format string denotes conversion from Object ... 3 arguments
+                PyObject* plist = PyObject_CallMethod(moduleTraceback, "format_exception", "OOO", pexceptType,
+                                                      pexception, ptraceback);
+                if (plist) {
+                    // "format_exception" returns list of strings
+                    Py_ssize_t size = PyList_Size(plist); // > 0, see doc of "format_exception"/"print_exception"
+                    for (Py_ssize_t i = 0; i < size - 1; ++i) {
+                        // All but last line in list is traceback
+                        PyObject* pstrItem = PyList_GetItem(plist, i); // this "borrowed reference" - no decref!
+                        pythonErrorDetails.append(PyUnicode_AsUTF8(pstrItem));
+                    }
+                    // Last line is type and message
+                    PyObject* pstrItem = PyList_GetItem(plist, size - 1); // this "borrowed reference" - no decref!
+                    pythonErrorMessage = PyUnicode_AsUTF8(pstrItem);
+                    Py_DECREF(plist);
+                }
+                Py_DECREF(moduleTraceback);
+            } else {
+                PyObject* pythonRepr = PyObject_Repr(pexception); // apply repr()
+                pythonErrorMessage.assign(PyUnicode_AsUTF8(pythonRepr));
+                Py_DECREF(pythonRepr);
+            }
+        } // else there is no exception, so keep pythonErrorMessage empty
+
+        // we reset it for later processing
+        PyErr_Restore(pexceptType, pexception, ptraceback); // ref count decremented
+        PyErr_Clear();
+        // Remove trailing newline
+        boost::algorithm::trim_right(pythonErrorMessage);
+        boost::algorithm::trim_right(pythonErrorDetails);
+
+        return std::make_tuple(pythonErrorMessage, pythonErrorDetails);
+    }
+
     namespace detail {
         void treatError_already_set(const bp::object& handler, const char* where) {
-            const std::string errstr(PyErr_Occurred() ? getPythonExceptionAsString() : std::string());
+            std::string errStr, errDetails;
+            if (PyErr_Occurred()) {
+                std::tie(errStr, errDetails) = getPythonExceptionStrings();
+            }
             const std::string funcName(Wrapper::hasattr(handler, "__name__")
                                              ? std::string(bp::extract<std::string>(handler.attr("__name__")))
                                              : "unknown"); // e.g. 'partial' does not provide __name__
             std::ostringstream oss;
             oss << "Python " << (where ? where : "undefined") << " handler '" << funcName
-                << "' has thrown an exception ...\n...\n"
-                << errstr << "...";
-            std::cerr << '\n' << oss.str() << '\n' << std::endl;
-            throw KARABO_PYTHON_EXCEPTION(oss.str());
+                << "' has thrown an exception: " << errStr;
+            errStr = oss.str();
+            std::cerr << '\n' << errStr << '\n' << errDetails << std::endl;
+            throw KARABO_PYTHON_EXCEPTION2(errStr, errDetails);
         }
     } // namespace detail
 } // namespace karathon
