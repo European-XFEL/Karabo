@@ -86,7 +86,7 @@ void Exception_Test::testMethod() {
 
         const std::string details = e.detailedMsg();
         // Detailed message looks e.g. like this:
-        //  Exception with trace (listed from inner to outer):
+        // Exception with trace (listed from inner to outer):
         // 1. Exception =====>  {
         //     Exception Type....:  Cast Exception
         //     Message...........:  A casting problem
@@ -112,7 +112,7 @@ void Exception_Test::testMethod() {
         //           Line Number.......:  29
         //           Timestamp.........:  2021-Dec-16 16:21:57.353614
         //       }
-        const size_t exceptWith = details.find("\n Exception with trace (listed from inner to outer):");
+        const size_t exceptWith = details.find("Exception with trace (listed from inner to outer):");
         const size_t except1 = details.find("1. Exception =====>  {");
         const size_t type1 = details.find("    Exception Type....:  Cast Exception");
         const size_t mesg1 = details.find("    Message...........:  A casting problem");
@@ -169,6 +169,9 @@ void Exception_Test::testMethod() {
         CPPUNIT_ASSERT_GREATER(line3, stamp3);
         // The last one we have to check explicitly against npos:
         CPPUNIT_ASSERT_MESSAGE(details, std::string::npos != stamp3);
+
+        // Involved exceptions do not have details:
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, std::string::npos, details.find("Details...........:"));
 
         // Call to detailedMsg() cleared the exception stack trace, so we cannot just test details == e.what().
         // Instead we need to test the details twice.
@@ -182,7 +185,7 @@ void Exception_Test::testMethod() {
         // Redo exactly the same as for e.detailedMsg(), see above.
         const std::string details = e.what();
         // Detailed message looks e.g. like this:
-        //  Exception with trace (listed from inner to outer):
+        // Exception with trace (listed from inner to outer):
         // 1. Exception =====>  {
         //     Exception Type....:  Cast Exception
         //     Message...........:  A casting problem
@@ -208,7 +211,7 @@ void Exception_Test::testMethod() {
         //           Line Number.......:  29
         //           Timestamp.........:  2021-Dec-16 16:21:57.353614
         //       }
-        const size_t exceptWith = details.find("\n Exception with trace (listed from inner to outer):");
+        const size_t exceptWith = details.find("Exception with trace (listed from inner to outer):");
         const size_t except1 = details.find("1. Exception =====>  {");
         const size_t type1 = details.find("    Exception Type....:  Cast Exception");
         const size_t mesg1 = details.find("    Message...........:  A casting problem");
@@ -265,6 +268,9 @@ void Exception_Test::testMethod() {
         CPPUNIT_ASSERT_GREATER(line3, stamp3);
         // The last one we have to check explicitly against npos:
         CPPUNIT_ASSERT_MESSAGE(details, std::string::npos != stamp3);
+
+        // Involved exceptions do not have details:
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(details, std::string::npos, details.find("Details...........:"));
     } catch (...) {
         CPPUNIT_ASSERT_MESSAGE("Expected exception not thrown", false);
     }
@@ -282,5 +288,48 @@ void Exception_Test::testMethod() {
         // exception Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type
         // is printed.
         CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.userFriendlyMsg());
+    }
+}
+
+
+void Exception_Test::testDetails() {
+    try {
+        throw KARABO_PYTHON_EXCEPTION("Some message");
+    } catch (const karabo::util::PythonException& e) {
+        CPPUNIT_ASSERT_EQUAL(std::string("Some message"), e.userFriendlyMsg(true));
+        // No second argument given, so no details:
+        CPPUNIT_ASSERT_EQUAL(std::string(), e.details());
+    } catch (...) {
+        CPPUNIT_ASSERT_MESSAGE("Missed PythonException", false);
+    }
+
+    try {
+        throw KARABO_PYTHON_EXCEPTION2("Some message", "...with details!");
+    } catch (const karabo::util::PythonException& e) {
+        CPPUNIT_ASSERT_EQUAL(std::string("Some message"), e.userFriendlyMsg(false));
+        CPPUNIT_ASSERT_EQUAL(std::string("...with details!"), e.details());
+        // Now check that both, message and details are in the trace:
+        const std::string fullMsg(e.detailedMsg());
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Some message"));
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details...........:"));
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("...with details!"));
+    } catch (...) {
+        CPPUNIT_ASSERT_MESSAGE("Missed PythonException", false);
+    }
+
+
+    try {
+        throw karabo::util::RemoteException("A message", "bob", "Details are usually the trace. Not now...");
+    } catch (const karabo::util::RemoteException& e) {
+        CPPUNIT_ASSERT_EQUAL(std::string("Remote Exception from bob"), e.type());
+        CPPUNIT_ASSERT_EQUAL(std::string("Details are usually the trace. Not now..."), e.details());
+        CPPUNIT_ASSERT_EQUAL(std::string("A message"), e.userFriendlyMsg(false));
+        // Now check that both, message and details are in the trace:
+        const std::string fullMsg(e.detailedMsg());
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("A message"));
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details...........:"));
+        CPPUNIT_ASSERT_MESSAGE(fullMsg, std::string::npos != fullMsg.find("Details are usually the trace. Not now..."));
+    } catch (...) {
+        CPPUNIT_ASSERT_MESSAGE("Missed RemoteException", false);
     }
 }
