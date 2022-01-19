@@ -33,8 +33,9 @@ namespace karabo {
 
 
         Exception::Exception(const string& message, const string& type, const string& filename, const string& function,
-                             int lineNumber) {
+                             int lineNumber, const std::string& detailsMsg) {
             m_exceptionInfo.message = message;
+            m_exceptionInfo.details = detailsMsg;
             m_exceptionInfo.type = type;
             m_exceptionInfo.function = function;
             path pf(filename);
@@ -147,7 +148,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             if (m_trace.empty()) return;
             ostringstream oss;
-            oss << endl << " Exception with trace (listed from inner to outer):" << endl;
+            oss << "Exception with trace (listed from inner to outer):" << endl;
             for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
                 string fill(i * 3, ' ');
                 oss << fill << i + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
@@ -177,6 +178,8 @@ namespace karabo {
             if (!exceptionInfo.type.empty()) os << spacing << "    Exception Type....:  " << exceptionInfo.type << endl;
             if (!exceptionInfo.message.empty())
                 os << spacing << "    Message...........:  " << exceptionInfo.message << endl;
+            if (!exceptionInfo.details.empty())
+                os << spacing << "    Details...........:  " << exceptionInfo.details << endl; // typically multiline...
             if (!exceptionInfo.filename.empty())
                 os << spacing << "    File..............:  " << exceptionInfo.filename << endl;
             if (!exceptionInfo.function.empty())
@@ -238,8 +241,14 @@ namespace karabo {
             return os.str();
         }
 
+
         const std::string& Exception::type() const {
             return m_exceptionInfo.type;
+        }
+
+
+        const std::string& Exception::details() const {
+            return m_exceptionInfo.details;
         }
     } // namespace util
 } // namespace karabo
