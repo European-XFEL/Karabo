@@ -171,7 +171,7 @@ class JmsBroker(Broker):
     def replyException(self, message, exception):
         trace = ''.join(traceback.format_exception(
             type(exception), exception, exception.__traceback__))
-        self.reply(message, trace, error=True)
+        self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signals, slot):
         """This is an interface for establishing connection netween local slot
@@ -272,6 +272,7 @@ class JmsBroker(Broker):
                     [(self.slots[s], s)
                      for s in slots.get("*", []) if s in self.slots])
         except KeyError:
+
             self.logger.exception("Slot does not exist")
             return
         try:
@@ -376,7 +377,10 @@ class JmsBroker(Broker):
             f = self.repliers.get(replyFrom.decode("ascii"))
             if f is not None and not f.done():
                 if message.properties.get('error', False):
-                    f.set_exception(KaraboError(params[0]))
+                    exceptTxt = params[0]
+                    if len(params) >= 2 and params[1]:
+                        exceptTxt += "\nDETAILS: " + params[1]
+                    f.set_exception(KaraboError(exceptTxt))
                 else:
                     if len(params) == 1:
                         params = params[0]
