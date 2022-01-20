@@ -9,7 +9,6 @@
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <karabo/util/Exception.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
 #include <string>
@@ -28,21 +27,6 @@ typedef karabo::util::Element<std::string,
                               karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > >
       HashNode;
 
-// Translate C++ karabo::util::Exception into python RuntimeError exception
-
-
-void translator(const karabo::util::Exception &e) {
-    // TODO: Do we really want both, user friendly msg and the full trace with line numbers etc.?
-    //       The latter could just be printed to 'cerr' instead of becoming part of the Python exception text
-    // Note: Order of calls to userFriendlyMsg(false) and detailedMsg() matters since the latter clears the stack.
-
-    // Assemble message and then pass C-pointer to Python
-    std::string msg(e.userFriendlyMsg(false));
-    msg += " -- ";
-    msg += e.detailedMsg();
-    PyErr_SetString(PyExc_RuntimeError, msg.c_str());
-}
-
 
 void exportPyUtilHash() {
     //    #ifdef WITH_BOOST_NUMPY
@@ -50,9 +34,6 @@ void exportPyUtilHash() {
     //    #endif
 
     bp::docstring_options docs(true, true, false);
-
-    // register a translator
-    bp::register_exception_translator<karabo::util::Exception>(translator);
 
     // Types
     bp::enum_<PyTypes::ReferenceType>("Types",
