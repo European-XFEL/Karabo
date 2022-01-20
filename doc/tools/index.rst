@@ -5,7 +5,6 @@
 Contents:
 
 .. toctree::
-   netbeans
    python
    vscode
    git

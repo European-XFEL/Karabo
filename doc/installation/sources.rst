@@ -7,7 +7,7 @@ Build from sources
 Get and install the Karabo framework (quick - no details)
 =========================================================
 
-1. Create or move into a folder where you want to check out the 
+1. Create or move into a folder where you want to check out the
    Karabo Framework, e.g.
 
   .. code-block:: bash
@@ -35,14 +35,14 @@ Get and install the Karabo framework (quick - no details)
     ./auto_build_all.sh Release
 
   .. note::
-  
+
      The compilation will only succeed if you installed all of the base
      dependencies. You must do this manually (see below)
 
 4. When using a supported platform (and running from inside the DESY network),
    external dependencies are downloaded and installed rather than built locally
    on your computer. If this is the case, you can skip to the next step.
-   
+
    When the above is not the case, there is a long (ca. 1 hour) build of the
    external dependencies. If part of this failed to build for some reason, try
    and fix the error in the dependency and compile again. For reference,
@@ -93,25 +93,13 @@ local working copy.
       ./auto_build_all.sh Debug
 
 
-2. If there were any changes to netbeans project files like
-   configuration.xml or makefiles like Karabo-???.mk
-
-  * clean first and then rebuild:
-
-    .. code-block:: bash
-
-      ./auto_build_all.sh Clean
-      ./auto_build_all.sh Debug
-
-  or recompile in NetBeans
-
-3.  If there were only code changes then simply rebuild:
+2.  If there were only code changes then simply rebuild:
 
   .. code-block:: bash
 
     ./auto_build_all.sh Debug
 
-  or recompile in Netbeans
+  or recompile in the IDE you are using.
 
 
 
@@ -159,35 +147,53 @@ The simplest way to run all tests is:
 .. code-block:: bash
 
   ./auto_build_all.sh Debug --runTests --runIntegrationTests
-  
+
 
 Karabo (C++)
 ------------
 
-To run the Karabo unit tests please guarantee your local changes are
-compiled (via Terminal or Netbeans).
- 
-To run the unit tests using the Terminal, please go to the
-installed karaboFramework folder and execute the following scripts:
+To run one of the Framework unit or integration tests from the command line,
+please open a terminal, go to your build directory and issue a `ctest`
+command. In the example below, all tests are run in the default non verbose
+mode (please note that ``build_debug`` is specific to this example; for Release
+builds from `auto_build_all.sh`, for instance, it would be `build_release`)::
 
-.. code-block:: bash
+   .. code-block: bash
 
-  cd build/netbeans/karabo
-  make test
+     cd $REPO_ROOT/build_debug
+     source ./activateKarabo.sh
+     ctest
 
-To run the integration unit tests, do the following:
+In the example above, $REPO_ROOT is the directory where you have git cloned the
+Karabo Framework repository (the directory where file `auto_build_all.sh` is).
+The script `activateKarabo.sh` is a subset of the `activate` script found in a
+full blown Karabo installation and handles the configurations needed to be able
+to run the C++ unit and integration tests directly from the C++ build tree of
+the Framework.
 
-.. code-block:: bash
+It is also possible to run all tests whose names match a given regular expression
+in either verbose mode (`-V` option) or extra verbose mode (`-VV`). In the example
+below, `dataLoggingIntegrTestRunner` is the only test run, and in extra verbose
+mode::
 
-  cd build/netbeans/integrationTests
-  make test
+   ctest -VV -R "dataLogging*"
 
-To run the tests using Netbeans:
+Verbose and extra verbose modes cause `ctest` to output, among other things,
+one line per successful test case execution. The default verbosity
+level only emits intermediate reports for failed test cases - the number of
+successful test cases executed, without their names, is reported at the end
+of the test execution when in default verbosity level.
 
-* Go to Karabo project (for the unit tests) or to integrationTests project
-  (for the extended tests)
-* Right-click on the "Test Files" folder or any of its logic sub-folders
-* Select "Test"
+To list all the tests that are available for `ctest`::
+
+   ctest -N
+
+`ctest` also supports a `-E` option which is the complement of the `-R` option,
+meaning execute all tests that do not match the given regular expression.
+
+For instructions on how to run the C++ tests from the Visual Studio Code IDE,
+please refer to
+`this section of the related documentation <https://rtd.xfel.eu/docs/karabo/en/latest/tools/vscode.html#run-and-debug-the-framework-tests>`_.
 
 
 PythonKarabo (Python)
@@ -203,36 +209,12 @@ In Terminal you can do that running:
 
   ./auto_build_all.sh Debug/Release
 
-In Netbeans you can do that:
-
-* Right-click in Karabo project Makefile
-* Go to "Make Target"
-* Select "bundle-install" (if this option doesn't exist, please add it
-  using the add button)
- 
 To run the Unit Tests using the Terminal, execute the following scripts:
 
 .. code-block:: bash
 
   # This will run ZERO tests if you are in the framework root directory
   nosetests-3.4 -sv karabo  # or karabo.bound_api or karabo.middlelayer_api or karabo.tests, etc.
- 
-To run the Unit Tests using Netbeans:
-
-#. Go to Tools > Python Platforms
-#. Make as Default Python the Python under your current KaraboFramework
-   installation
-
-  #. Select "New"
-
-  #. Add python available on your current installation extern folder
-     (i.e. /.../your_current_karaboFramework/package/Debug/Ubuntu/14.04/x86_64/karabo/extern/bin/python)
-
-  #. Choose new Python and make it default, selecting "Make Default"
-
-  #. Select Close
-
-#. Run Python Karabo project
 
 
 Get and install the Karabo framework (all the details)
@@ -261,7 +243,7 @@ following structure of files and sources:
     system.
 
   **integrationTests/**
-  
+
     Contains code for high-level integration tests.
 
   **karabo/**
@@ -287,7 +269,7 @@ following structure of files and sources:
 
   **templates/**
 
-    Here the templates for Karabo's three API's are placed 
+    Here the templates for Karabo's three API's are placed
     (will be utilized upon ``karabo new [...]``)
 
 **build/**
@@ -295,146 +277,33 @@ following structure of files and sources:
   Contains all build instructions and tools to generate
   libraries/executables and software bundles.
 
-  The three targeted architectures (Linux, MacOS and Windows) are
-  separated into two radically different build systems.
-
-  **<projects>/**
-
-    Each directory reflects a regular NetBeans project and can be
-    operated directly via NetBeans. The projects reflect those
-    mentioned in the src/ directory (see above) one-to-one. NetBeans
-    build system was extended to support also builds from
-    commandline. Simply type:
-
-    .. code-block:: bash
-    
-      make CONF=Debug
-
-    or
-
-    .. code-block:: bash
-
-      make CONF=Release 
-
-    for debug or release configuration, respectively.
-
-    HINT: Append the "-j" option to either build command for high-speed parallel build.
-
-    The (central) karabo makefile supports some extra targets to
-    trigger creation of a software bundle, which is the way we
-    distribute Karabo. A self-extracting install-script for Karabo can
-    for example be created by:
-
-    .. code-block:: bash
-
-      make CONF=Debug bundle-package
-
-    or 
-
-    .. code-block:: bash
-
-      make CONF=Release bundle-package
-
-    If you are going to work at the same time on the Karabo framework
-    and some packages (plugins) for Karabo you should finalize your
-    framework codings with a:
-
-    .. code-block:: bash
-
-      make bundle-install
-
-    Which creates a ready to use bundle under 
-
-    .. code-block:: bash
-
-      package/<Configuration>/<OS>/<Version>/<Arch>/karabo
-                  
-    and also updates the $HOME/.karabo/karaboFramework file pointing
-    to this "local" bundle.
 
 **extern/**
 
   Any third-party sources which are compiled and added to the software
   bundle are here.
-    
+
   **resources/**
 
     Contains the sources and build configurations of the different external
     dependencies
-        
+
   **<platform>/**
 
     Organized collection of the installed dependencies (acts as
     INSTALL_PREFIX)
 
-If you want to compile all karabo projects as bundle consequently proceed:
-
-
-1. From command-line (using make):
-
-  .. code-block:: bash
-
-    cd karaboFramework/build/netbeans/karabo
-    make -j CONF=Debug bundle-install
-
-  Be careful with the -j option, you may run out of memory if you use
-  too many threads. For a release build choose CONF=Release.
-
-2. From Netbeans (one possible way)
-
-  * Start Netbeans
-  * Open project: *karaboFramework/build/netbeans/karabo*
-  * Build project
-  * Open project: *karaboFramework/build/netbeans/karathon*
-  * Build project
-
-  In the karabo project navigate to the Makefile and run the target
-  bundle-install
-
-3. (Updated) If you fail during compilation of any of extern packages,
-   please try to fix missing dependencies or other reason for errors
-   and proceed with above command again. This file
-
-  .. code-block:: bash
-
-    karaboFramework/build/netbeans/karabo/.marker.txt
-
-  contains list of all packages that are succesfully installed on your
-  machine.
-
-
-4. HINT: All bundle makefile targets will write into
-   $HOME/.karabo/karaboFramework file the path to the current
-   karaboFramework installation directory, which is used i.e. when
-   compiling plugins.
-
-  They will also go through all other projects (pythonGui, pythonCli,
-  pythonKarabo, deviceServer and brokerMessageLogger) and compile and
-  install them along with karabo library. In case of python projects,
-  scripts are created and copied to installation directories along
-  with python sources.
-
-5. Finally you may want to update code asistance in net beans (see
-   chapter :ref:`Code Assistance <netbeansCodeAssistance>`)
-
 
 Creation of binary software bundle for shipping
 ===============================================
 
-1. Create installer script including karabo libs and binaries and all
-   external dependencies for shipping or for package developement:
+Create installer script including karabo libs and binaries and all
+external dependencies for shipping or for package developement:
 
   .. code-block:: bash
 
      ./auto_build_install.sh Release --bundle
-  
-  After successfull bundling you should find a ``karabo-<version>.sh`` in 
+
+  After successfull bundling you should find a ``karabo-<version>.sh`` in
 
   ``package/<Conf>/<OS-Name>/<OS-Version>/<Arch>/``
-
-2. Create installer script without GUI:
-
-  .. code-block:: bash
-
-    cd karaboFramework/build/netbeans/karabo
-    make package GUIOPT=NOGUI
