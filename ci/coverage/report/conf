@@ -18,10 +18,9 @@ FILE_TOTAL=$SCRIPT_BASE/coverage_total.info
 FILE_FILTERED=$SCRIPT_BASE/coverage_filtered.info
 SRC_DIR=$KARABO_BASE/src
 PROJECT_BASE=$SRC_DIR/karabo
-BUILD_BASE=$KARABO_BASE/build/netbeans
-UT_BASE=$KARABO_BASE/build/netbeans/karabo/build/$MAKE_CONF
-IT_BASE=$KARABO_BASE/build/netbeans/integrationTests/build/$MAKE_CONF
+BUILD_BASE=$KARABO_BASE/build/coverage
+UT_BASE=$KARABO_BASE/build/coverage/karabo/build/$MAKE_CONF
+IT_BASE=$KARABO_BASE/build/coverage/integrationTests/build/$MAKE_CONF
 OUT_DIR=$SCRIPT_BASE/out
 IT_REPORTS=$SCRIPT_BASE/get_it
 UT_REPORTS=$SCRIPT_BASE/get_ut
-
