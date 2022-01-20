@@ -86,11 +86,15 @@ namespace karabo {
                 return std::string(envKarabo);
             }
 
+            // TODO: remove this exceptional handling for older Karabo versions.
+            //       suggested time-frame: Summer 2022.
+
             // Check whether we are acting as framework developers with the build
             // directory located inside the source tree (at build/netbeans/karabo).
-            // This is the directory structure used by the Netbeans based build
-            // system and is checked before all the others known possibilities for
-            // backward compatibility reasons.
+            // This is the directory structure used by the deprecated Netbeans
+            // based build system and is checked for backward compatibility
+            // reasons - Karabo versions released before Summer 2021 used the
+            // Netbeans based build.
             const std::string karaboParentDir("../../../karabo");
             boost::system::error_code ec;
             bool karaboParentDirFound = boost::filesystem::exists(karaboParentDir, ec);
