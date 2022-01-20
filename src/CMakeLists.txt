@@ -65,7 +65,7 @@ set(GEN_CODE_COVERAGE OFF CACHE BOOL "Generate test code coverage report?")
 
 if (GEN_CODE_COVERAGE)
     if(NOT DEFINED ENV{LCOV_PATH_HINT})
-        set(ENV{LCOV_PATH_HINT} ${CMAKE_SOURCE_DIR}/ci/coverage/lcov)
+        set(ENV{LCOV_PATH_HINT} ${CMAKE_SOURCE_DIR}/../ci/coverage/lcov)
     endif()
     include("cmake/code-coverage.cmake")
     append_coverage_compiler_flags()
