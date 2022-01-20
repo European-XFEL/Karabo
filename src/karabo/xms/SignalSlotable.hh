@@ -589,7 +589,7 @@ namespace karabo {
 
                 /**
                  * Place the reply - almost like using SignalSlotable::reply in the synchronous case.
-                 * The difference is that here the reply is immediately send and cannot be overwritten
+                 * The difference is that here the reply is immediately sent and cannot be overwritten
                  * by a following call.
                  */
                 template <typename... Args>
@@ -597,9 +597,11 @@ namespace karabo {
 
                 /**
                  * If a proper reply cannot be placed, please use this to reply an error
-                 * @param message is the text for the RemoteException
+                 * @param message is the short text for the RemoteException
+                 * @param details further details, usually an exception trace (e.g. util::Exception::detailedMsg()),
+                 *                default is empty for backward compatibility reasons
                  */
-                void error(const std::string& message) const;
+                void error(const std::string& message, const std::string& details = std::string()) const;
 
                private:
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
@@ -913,7 +915,8 @@ namespace karabo {
                                    const std::string& signalInstanceId, const karabo::util::Hash::Pointer& header,
                                    const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs);
 
-            void replyException(const karabo::util::Hash& header, const std::string& message);
+            void replyException(const karabo::util::Hash& header, const std::string& message,
+                                const std::string& details);
 
             void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
 
@@ -1229,7 +1232,7 @@ namespace karabo {
             karabo::util::Hash::Pointer header;
             try {
                 karabo::util::Hash::Pointer body;
-                receiveResponse(header, body);
+                receiveResponse(header, body); // sends request and blocks until reply arrives or times out
                 const boost::optional<karabo::util::Hash::Node&> errorNode = header->find("error");
                 if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
                     // Handling an error, so double check that input is as expected, i.e. body has key "a1":
@@ -1237,7 +1240,11 @@ namespace karabo {
                     const std::string text(textNode && textNode->is<std::string>()
                                                  ? textNode->getValue<std::string>()
                                                  : "Error signaled, but body without string at key \"a1\"");
-                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"));
+                    const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2"); // since 2.14.0
+                    const std::string details(detailsNode && detailsNode->is<std::string>()
+                                                    ? detailsNode->getValue<std::string>()
+                                                    : std::string());
+                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
                 }
                 karabo::util::unpack(*body, args...);
 
@@ -1247,7 +1254,9 @@ namespace karabo {
                 }
 
             } catch (const karabo::util::TimeoutException&) {
-                KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
+                // rethrow as same type without message: detailedMsg() will show the full trace, userFriendlyMsg() just
+                // one line
+                KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION(std::string()));
             } catch (const karabo::util::RemoteException&) {
                 throw; // Do not change the type, just throw again.
             } catch (const karabo::util::CastException&) {
