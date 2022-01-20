@@ -270,7 +270,7 @@ namespace karabo {
             if (karabo::util::getAndCropIndex(key) == -1) {
                 return hash.m_container.getNode(key);
             }
-            throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
+            throw KARABO_LOGIC_EXCEPTION("Array syntax on leaf '" + path + "' is not possible");
         }
 
 
