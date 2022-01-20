@@ -6,7 +6,7 @@ from karabo.native.schema import descriptors as hashmod
 
 
 class RowSchema(Configurable):
-    pass
+    akey = hashmod.String(defaultValue="")
 
 
 class Tests(TestCase):
