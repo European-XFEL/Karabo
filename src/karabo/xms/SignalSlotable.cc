@@ -468,9 +468,13 @@ namespace karabo {
                 const std::string text(textNode && textNode->is<std::string>()
                                              ? textNode->getValue<std::string>()
                                              : "Error signaled, but body without string at key 'a1'");
+                const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2"); // since Karabo 2.14.0
+                const std::string details(detailsNode && detailsNode->is<std::string>()
+                                                ? detailsNode->getValue<std::string>()
+                                                : std::string());
                 if (timerAndHandler.second) {
                     try {
-                        throw karabo::util::RemoteException(text, signalId);
+                        throw karabo::util::RemoteException(text, signalId, details);
                     } catch (const std::exception&) {
                         try {
                             // Handler can do: try {throw;} catch(const karabo::util::RemoteException&) {...;}
@@ -486,7 +490,8 @@ namespace karabo {
                     Exception::clearTrace();
                 } else {
                     KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": Received error from '" << signalId
-                                              << "' for request id '" << replyId << "'";
+                                              << "': " << text
+                                              << (details.empty() ? std::string() : "\ndetails: " + details);
                 }
             }
 
@@ -757,10 +762,16 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Miss globally called slot " << slotFunction;
                 }
+            } catch (const karabo::util::Exception& e) {
+                const std::string friendlyMsg(e.userFriendlyMsg(false));
+                const std::string details(e.detailedMsg());
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction
+                                           << "': " << details;
+                replyException(*header, friendlyMsg, details);
             } catch (const std::exception& e) {
                 const std::string msg(e.what());
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in slot '" << slotFunction << "': " << msg;
-                replyException(*header, msg);
+                replyException(*header, msg, std::string());
             }
         }
 
@@ -834,7 +845,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::AsyncReply::error(const std::string& message) const {
+        void SignalSlotable::AsyncReply::error(const std::string& message, const std::string& details) const {
             // See SignalSlotable::registerAsyncReply() about empty id
             if (m_replyId.empty()) return;
             util::Hash::Pointer header;
@@ -847,7 +858,7 @@ namespace karabo {
                       << "' :" << e.what();
             }
             if (header) {
-                m_signalSlotable->replyException(*header, message);
+                m_signalSlotable->replyException(*header, message, details);
             }
         }
 
@@ -859,7 +870,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::replyException(const karabo::util::Hash& header, const std::string& message) {
+        void SignalSlotable::replyException(const karabo::util::Hash& header, const std::string& message,
+                                            const std::string& details) {
             if (header.has("replyTo")) {
                 const std::string targetInstanceId = header.get<string>("signalInstanceId");
                 Hash::Pointer replyHeader = boost::make_shared<Hash>();
@@ -868,7 +880,7 @@ namespace karabo {
                 replyHeader->set("signalInstanceId", m_instanceId);
                 replyHeader->set("signalFunction", "__reply__");
                 replyHeader->set("slotInstanceIds", "|" + targetInstanceId + "|");
-                Hash::Pointer replyBody = boost::make_shared<Hash>("a1", message);
+                Hash::Pointer replyBody = boost::make_shared<Hash>("a1", message, "a2", details);
                 doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             }
             // else {
