@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Script for automated building and packaging of the entire karaboFramework
+# Script for automated building and packaging of the entire karaboFramework.
+# Uses cmake 3.14+ for building the C++ components of the karaboFramework.
 #
-# Author: <burkhard.heisen@xfel.eu>
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #
 
 # Help function for checking successful execution of commands
@@ -42,97 +43,34 @@ activateKarabo() {
 }
 
 checkCppUnitTestResults() {
-    local testDir="$1"
-    local testNames="$2"
+    # activate karabo to get a python environment
+    activateKarabo
     local mergeArgs=""
-    safeRunCommand "python -m pip install --upgrade $scriptDir/ci/utils/cppunitxmlparser/."
-    for name in $testNames; do
-        local path=$(printf "%s/testresults/%sTest.xml" $testDir $name)
-        mergeArgs="${mergeArgs} ${path}"
+    safeRunCommand "python -m pip install --upgrade ${scriptDir}/ci/utils/cppunitxmlparser/."
+    for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
+        mergeArgs="${mergeArgs} ${name}"
     done
-    cppunitxml-check -f${mergeArgs} -o cpp.junit.xml
-    ret_code=$?
-    if [ $ret_code != 0 ]; then
-        # the output file is expected to be 'junitoutput.xml'
-        # by the CI application, if we do not fail here, the python
-        # tests will aggreagate this file into a global result file.
-        mv cpp.junit.xml junitoutput.xml
-        exit $ret_code
-    fi
-    # Fail when new test suites are added and we don't expect them
-    pushd $testDir/testresults/ &> /dev/null
-    local actualNames=$(ls *.xml | cut -d'.' -f1 | tr '\n' ' ')
-    popd &> /dev/null
-
-    local expectedCount=$(echo $testNames | wc -w)
-    local actualCount=$(echo $actualNames | wc -w)
-    if [ "$expectedCount" != "$actualCount" ]; then
-        echo "Test result files in '$testDir/testresults' don't match expectation:"
-        echo "    Expected: $testNames"
-        echo "    Got: $actualNames"
-        echo
-        echo
+    if [[ ${mergeArgs} = "" ]]; then
+        echo "ERROR! No XML output file was generated!"
         exit 1
     fi
+    # process the cppunit report files into a junit compatible file
+    cppunitxml-check -f${mergeArgs} -o $scriptDir/junit.cpp.xml
+    # this should have a non-zero return value if errors are present.
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        exit $ret_code
+    fi
+    deactivate
 }
 
-runIntegrationTests() {
+
+runPythonUnitTests() {
     activateKarabo
 
-    local testNames="AlarmService_ DataLogging_ Device_ GuiVersion_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_ SceneProvider_ Timing_"
-    local testDir=$scriptDir/build/netbeans/integrationTests
-
     echo
-    echo Running Karabo C++ integration tests ...
+    echo Running Karabo Python unit tests ...
     echo
-    cd $testDir
-    rm -rf testresults/
-    safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
-    cd $scriptDir
-
-    # Parse the XML test outputs
-    checkCppUnitTestResults "$testDir" "$testNames"
-
-}
-
-runCppLongTests() {
-    activateKarabo
-
-    local testNames=$(ls $scriptDir/src/cppLongTests --ignore=CMakeLists.txt)
-    local testDir=$scriptDir/build/netbeans/cppLongTests
-
-    echo
-    echo Running Karabo C++ long tests ...
-    echo
-    cd $testDir
-    rm -rf testresults/
-    safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
-    cd $scriptDir
-
-    # Parse the XML test outputs
-    checkCppUnitTestResults "$testDir" "$testNames"
-
-}
-
-runUnitTests() {
-    activateKarabo
-    local testNames=$(ls $scriptDir/src/karabo/tests --ignore=CMakeLists.txt)
-    local testDir=$scriptDir/build/netbeans/karabo
-
-    echo
-    echo Running Karabo unit tests ...
-    echo
-    cd $testDir
-    rm -rf testresults/
-    safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
-    cd $scriptDir
-
-    # Parse the XML test outputs
-    checkCppUnitTestResults "$testDir" "$testNames"
-
-    #
-    # Running pythonKarabo tests
-    #
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
@@ -147,14 +85,15 @@ runUnitTests() {
             --runUnitTests \
             --rootDir $scriptDir
     fi
+    deactivate
 }
 
 runPythonIntegrationTests() {
     activateKarabo
 
-    #
-    # Running Karabo Python integration tests ...
-    #
+    echo
+    echo Running Karabo Python integration tests ...
+    echo
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
@@ -169,10 +108,15 @@ runPythonIntegrationTests() {
             --runIntegrationTests \
             --rootDir $scriptDir
     fi
+    deactivate
 }
 
 runPythonLongTests() {
     activateKarabo
+
+    echo
+    echo Running Karabo Python long running tests ...
+    echo
 
     if [ $CODECOVERAGE = "y" ]; then
        # Collect code coverage.
@@ -185,10 +129,11 @@ runPythonLongTests() {
            --runLongTests \
            --rootDir $scriptDir
     fi
+    deactivate
 }
 
-produceCodeCoverageReport() {
-    echo "### Producing code coverage reports..."
+producePythonCodeCoverageReport() {
+    echo "### Producing code coverage reports for Python tests ..."
     echo
 
     # Needed for 'run_python_tests.sh --clean ...':
@@ -198,19 +143,12 @@ produceCodeCoverageReport() {
     safeRunCommand "find . -name \"*.gcda\" -delete"
     safeRunCommand $scriptDir/run_python_tests.sh --clean --rootDir $scriptDir
 
-    runUnitTests
-    runIntegrationTests
+    runPythonUnitTests
     runPythonIntegrationTests
-    runCppLongTests
-    runPythonLongTests
-
-    # produce initial C++ coverage information
-    safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
-
-    safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
-
-    # Most recent zip file - there mightbe others from previous runs
-    local ZIP_FILE_NAME=`ls -t ./ci/coverage/report/*.zip | head -1`
+    # To include long running Python tests in the coverage report, uncomment
+    # the following line - they currently don't influence the coverage metrics
+    # significantly and add a long time to the CI job execution.
+    # runPythonLongTests
 
     # produce initial Python coverage information
     safeRunCommand $scriptDir/run_python_tests.sh \
@@ -219,10 +157,7 @@ produceCodeCoverageReport() {
         --reportDir $scriptDir/ci/coverage
 
     echo
-    echo "### The C++ coverage results can be found at:"
-    echo "### $scriptDir/ci/coverage/report/out/index.html"
-    echo "### or in zipped form: $ZIP_FILE_NAME"
-    echo
+    deactivate
 }
 
 # Make sure the script runs in the correct directory
@@ -236,24 +171,29 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release|CodeCoverage|Dependencies|Clean|Clean-All [flags]
+Usage: $0 Debug|Release|CodeCoverage|Clean|Clean-All [flags]
 
 Available flags:
   --bundle     - Installs Karabo and creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode
+  --buildAllTests
+               - Build all test executables, but do not execute them
+  --skipCppTests
+               - Skips C++ tests
+  --skipPythonTests
+               - Skips Python tests
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
   --runLongTests
                - Run long running tests after building (for Debug|Release)
-  --numJobs N  - Specify the number of jobs that make should use to run simultaneously
+  --numJobs N  - Specify the number of build jobs to run simultaneously
   --quiet      - suppress commands' stdout on success
 
-Note: "Dependencies" builds only the external dependencies
-      "Clean" cleans all Karabo code (src folder)
+Note: "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
       "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
-                     but also implicitly runs the unit, integration and long tests
+                     but also implicitly runs the unit and integration tests
                      and produces code coverage reports. The CodeCoverage configuration
                      also disables --pyDevelop option.
       The environment variable "KARABO_TEST_BROKER" can be set to force the unit
@@ -265,34 +205,57 @@ End-of-help
     exit 0
 fi
 
-EXTERN_ONLY="n"
+# Get some information about our system
+MACHINE=$(uname -m)
+OS=$(uname -s)
+if [ "$OS" = "Linux" ]; then
+    DISTRO_ID=( $(lsb_release -is) )
+    DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+fi
+
+# External dependencies have to be outside the source tree. This is
+# required by CMake since it doesn't allow a path in CMAKE_PREFIX_PATH to
+# be internal to the source tree.
+EXTERN_DEPS_BASE_DIR="$scriptDir/extern"
+EXTERN_DEPS_DIR="$EXTERN_DEPS_BASE_DIR/$DISTRO_ID-$DISTRO_RELEASE-$MACHINE"
 
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
     CONF=$1
-elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
-    safeRunCommand "cd $scriptDir/build/netbeans/karabo"
-    safeRunCommand "make bundle-clean CONF=Debug"
-    safeRunCommand "make bundle-clean CONF=Release"
-    safeRunCommand "make bundle-clean CONF=CodeCoverage"
-    if [[ $1 = "Clean-All" ]]; then
-        safeRunCommand "make clean-extern"
+    if [[ ( $CONF = "Debug" || $CONF = "Release" ) ]]; then
+        CMAKE_CONF=$CONF
+    elif [ $CONF = "CodeCoverage" ]; then
+        # CodeCoverage requires Debug cmake build configurations
+        CMAKE_CONF="Debug"
     fi
-    safeRunCommand "cd $scriptDir/build/netbeans/karabo"
-    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-    safeRunCommand "cd $scriptDir/build/netbeans/karathon"
-    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-    safeRunCommand "cd $scriptDir/build/netbeans/deviceServer"
-    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-    safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger"
-    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
+    echo "### Cleaning build output directories for all configurations ###"
+    if [ -d $scriptDir/build_debug ]; then
+        rm -rf $scriptDir/build_debug
+        echo "    removed $scriptDir/build_debug"
+    fi
+    if [ -d $scriptDir/build_release ]; then
+        rm -rf $scriptDir/build_release
+        echo "    removed $scriptDir/build_release"
+    fi
+    if [ -d $scriptDir/build_codecoverage ]; then
+        rm -rf $scriptDir/build_codecoverage
+        echo "    removed $scriptDir/build_codecoverage"
+    fi
+    if [[ $1 = "Clean-All" ]]; then
+        echo "### Cleaning extern (third-party dependencies) directory ###"
+        # Also cleans the extern artifacts
+        if [ -d $EXTERN_DEPS_DIR ]; then
+            rm -rf $EXTERN_DEPS_DIR
+            echo "    removed $EXTERN_DEPS_DIR"
+        fi
+        git clean -fxd $scriptDir/extern/resources
+        echo "    Did git clean -fxd on $scriptDir/extern/resources"
+    fi
     exit 0
-elif [[ $1 = "Dependencies" ]]; then
-    echo "Building external dependencies"
-    EXTERN_ONLY="y"
 else
     echo
-    echo "Invalid option supplied. Allowed options: Release|Debug|CodeCoverage|Dependencies|Clean|Clean-All"
+    echo "Invalid option supplied. Allowed options: Release|Debug|CodeCoverage|Clean|Clean-All"
     echo
     exit 1
 fi
@@ -302,9 +265,12 @@ shift
 
 # Parse the commandline flags
 BUNDLE="n"
+BUILDALLTESTS="n"
 RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 RUNLONGTESTS="n"
+SKIP_PYTHON_TESTS="n"
+SKIP_CPP_TESTS="n"
 PYOPT="normal"
 NUM_JOBS=0
 CODECOVERAGE="n"
@@ -318,6 +284,10 @@ while [ -n "$1" ]; do
             # Build Python packages in development mode
             PYOPT="develop"
             ;;
+        --buildAllTests)
+            # Build all tests
+            BUILDALLTESTS="y"
+            ;;
         --runTests)
             # Run all the unit tests too
             RUNTESTS="y"
@@ -328,6 +298,12 @@ while [ -n "$1" ]; do
             ;;
         --runLongTests)
             RUNLONGTESTS="y"
+            ;;
+        --skipPythonTests)
+            SKIP_PYTHON_TESTS="y"
+            ;;
+        --skipCppTests)
+            SKIP_CPP_TESTS="y"
             ;;
         --numJobs)
             # Limit the numbers of jobs for make runs
@@ -350,6 +326,11 @@ while [ -n "$1" ]; do
     shift
 done
 
+if [ "$NUM_JOBS" = "0" ]; then
+    # numJobs not specified in command-line; use the number of active cores.
+    NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
+fi
+
 # selecting configuration CodeCoverage implies --runTests, --runIntegrationTests and
 # --runLongTests called by the code coverage function. Also, other options are disabled.
 # No need to run those separately, so we turn them off explicitly in case the user specified them.
@@ -361,58 +342,201 @@ if [ "$CONF" = "CodeCoverage" ]; then
     PYOPT="normal"
 fi
 
-
-# Get some information about our system
-OS=$(uname -s)
-if [ "$OS" = "Linux" ]; then
-    DISTRO_ID=( $(lsb_release -is) )
-    DISTRO_RELEASE=$(lsb_release -rs)
-    if [ "$NUM_JOBS" = "0" ]; then
-        NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
-    fi
-fi
-
-echo
-echo "### Starting compilation (using $NUM_JOBS jobs) and packaging of the karaboFramework. ###"
-echo
-
 sleep 2
 
-safeRunCommand "cd $scriptDir/build/netbeans/karabo"
-
-if [ $EXTERN_ONLY = "y" ]; then
-    safeRunCommand "make -j$NUM_JOBS extern"
-    if [ "$BUNDLE" = "y" ]; then
-        safeRunCommand "make -j$NUM_JOBS package-extern"
-    fi
-elif [ "$BUNDLE" = "y" ]; then
-    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-package"
-else
-    safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-install"
-fi
-
-# enable prints from now on.
-if [ "$KARABO_CI_QUIET" ]; then
-    echo "### Successfully finished building and packaging of karaboFramework ###"
-    unset KARABO_CI_QUIET
-fi
-
+# Sets the test building and execution variables
 if [ "$RUNTESTS" = "y" ]; then
-    runUnitTests
+    BUILD_UNIT_TESTING="1"
+else
+    BUILD_UNIT_TESTING="0"
 fi
-
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
-    runIntegrationTests
-    runPythonIntegrationTests
+    BUILD_INTEGRATION_TESTING="1"
+else
+    BUILD_INTEGRATION_TESTING="0"
+fi
+if [ "$RUNLONGTESTS" = "y" ]; then
+    BUILD_LONG_RUN_TESTING="1"
+else
+    BUILD_LONG_RUN_TESTING="0"
 fi
 
-if [ "$RUNLONGTESTS" = "y" ]; then
-    runCppLongTests
-    runPythonLongTests
+if [ "$BUILDALLTESTS" = "y" ]; then
+    BUILD_UNIT_TESTING="1"
+    BUILD_INTEGRATION_TESTING="1"
+    BUILD_LONG_RUN_TESTING="1"
 fi
 
 if [ "$CODECOVERAGE" = "y" ]; then
-    produceCodeCoverageReport
+    GEN_CODE_COVERAGE="1"
+    # For CodeCoverage, the long running tests are disabled due to the Telegraf
+    # based tests, that are currently unreliable. Setting BUILD_LONG_RUN_TESTING
+    # to 1 below will include the long running tests in the coverage report.
+    BUILD_UNIT_TESTING="1"
+    BUILD_INTEGRATION_TESTING="1"
+    BUILD_LONG_RUN_TESTING="0"
+    RUNINTEGRATIONTESTS="y"
+    RUNTESTS="y"
+    RUNLONGTESTS="n"
+else
+    GEN_CODE_COVERAGE="0"
+fi
+
+echo "### Now building and packaging Karabo... ###";
+
+mkdir -p $EXTERN_DEPS_BASE_DIR
+$scriptDir/extern/build.sh $EXTERN_DEPS_DIR ALL
+
+LOWER_CMAKE_CONF=$(echo "$CONF" | tr '[:upper:]' '[:lower:]')
+FRAMEWORK_BUILD_DIR="$scriptDir/build_$LOWER_CMAKE_CONF"
+mkdir -p $FRAMEWORK_BUILD_DIR
+FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/karabo"
+
+pushd $FRAMEWORK_BUILD_DIR
+
+if [ -d $FRAMEWORK_INSTALL_DIR ]; then
+    # Preserve any installed device, plugin and all contents under var dir.
+    PRESERV_DIR=`mktemp -d -p $scriptDir`
+    if [ -d $FRAMEWORK_INSTALL_DIR/devices ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/devices $PRESERV_DIR/devices
+    fi
+    if [ -d $FRAMEWORK_INSTALL_DIR/installed ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/installed $PRESERV_DIR/installed
+    fi
+    if [ -d $FRAMEWORK_INSTALL_DIR/plugins ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/plugins $PRESERV_DIR/plugins
+    fi
+    if [ -d $FRAMEWORK_INSTALL_DIR/var ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/var $PRESERV_DIR/var
+    fi
+fi
+
+# Use the cmake from the EXTERN_DEPS_DIR - cmake is an external dependency
+# of Karabo as it is used to compile some other dependencies, like the
+# MQTT client lib.
+safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
+      -DBUILD_UNIT_TESTING=$BUILD_UNIT_TESTING \
+      -DBUILD_INTEGRATION_TESTING=$BUILD_INTEGRATION_TESTING \
+      -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
+      -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
+      -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
+      -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
+      $scriptDir/src/.
+
+if [ $? -ne 0 ]; then
+    # Have to restore any preserved directory that might have been moved before
+    # exiting the script.
+    if [[  -n $PRESERV_DIR && -d $PRESERV_DIR ]]; then
+        mv $PRESERV_DIR/* $FRAMEWORK_INSTALL_DIR
+        if [ $? -ne 0 ]; then
+            echo "WARNING: Failed to restore content from \"$PRESERVE_DIR\" into \"$FRAMEWORK_INSTALL_DIR\"."
+            echo "         Please try to restore it manually."
+        else
+            rmdir $PRESERV_DIR
+        fi
+    fi
+    echo
+    echo "#### Error on cmake project configuration phase. Exiting. ####"
+    exit 1
+fi
+
+# Cleans-up the installation dir, restoring any previously existing device,
+# plugin and all contents under var.
+rm -rf $FRAMEWORK_INSTALL_DIR
+mkdir -p $FRAMEWORK_INSTALL_DIR
+if [[  -n $PRESERV_DIR && -d $PRESERV_DIR ]]; then
+    mv $PRESERV_DIR/* $FRAMEWORK_INSTALL_DIR
+    if [ $? -ne 0 ]; then
+        echo "WARNING: Failed to restore content from \"$PRESERVE_DIR\" into \"$FRAMEWORK_INSTALL_DIR\"."
+        echo "         Please try to restore it manually."
+    else
+        rmdir $PRESERV_DIR
+    fi
+fi
+
+# Builds libkarabo, libkarathon, karabo-* utilities and install them
+# in FRAMEWORK_INSTALL_DIR.
+safeRunCommand $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target install
+if [ $? -ne 0 ]; then
+    echo
+    echo "#### Error on cmake project building phase. Exiting. ####"
+    exit 1
+fi
+
+# Installs the components of the Karabo Framework that are not built
+# with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be
+# run from the activated Karabo environment hosted in the install
+# tree.
+BUNDLE_ACTION="install"
+if [ "$BUNDLE" = "y" ]; then
+    BUNDLE_ACTION="package"
+fi
+safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
+
+# enable prints from now on.
+if [ ! -z "$KARABO_CI_QUIET" ]; then
+    unset KARABO_CI_QUIET
+fi
+
+echo "### Successfully finished building of karaboFramework ###"
+
+if [ "$GEN_CODE_COVERAGE" = "1" ]; then
+    echo
+    echo Running Karabo C++ tests and generating coverage report ...
+    echo
+    # Activate the karabo environment to allow tests to be run from the
+    # build tree.
+    source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+    # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
+    # a 'test_coverage_report' target, than when built runs the tests and
+    # generates the coverage report.
+    $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target test_coverage_report
+    deactivateKarabo
+    # Generate the coverage report for the Python tests - all of them.
+    producePythonCodeCoverageReport
+    exit 0
+fi
+
+if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS" = "y" ];}; then
+    echo
+    echo Running Karabo C++ tests ...
+    echo
+    # Activate the karabo environment to allow tests to be run from the
+    # build tree.
+    typeset tests_ret_code
+    source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+    # clear previous tests
+    for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
+        rm -f ${name}
+    done
+    # NOTE: the tests are not executed inside a `safeRunCommand` function.
+    #       this is to give us the chance to process the result files.
+    ctest -VV
+    tests_ret_code=$?
+    # deactivate the environment where C++ tests are run
+    deactivateKarabo
+    # Parse the XML test outputs
+    checkCppUnitTestResults
+    if [ $tests_ret_code != 0 ]; then
+        echo "Test execution FAILED"
+        echo "Report files processing did not find errors..."
+        echo "A test file is likely missing due to a segmentation fault in tests."
+        exit $tests_ret_code
+    fi
+fi
+
+popd
+
+if [ "$RUNTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ] ; then
+    runPythonUnitTests
+fi
+
+if [ "$RUNINTEGRATIONTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
+    runPythonIntegrationTests
+fi
+
+if [ "$RUNLONGTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
+    runPythonLongTests
 fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
