@@ -2,7 +2,9 @@
  Testing
 *********
 
-Karabo extensively uses two technologies, C++ and Python. Code for both technologies is tested using unit tests. Because of the distributed nature of Karabo also more complex functional tests need to be executed.
+Karabo extensively uses two technologies, C++ and Python. Code for both
+technologies is tested using unit tests. Because of the distributed nature of
+Karabo also more complex functional tests need to be executed.
 For that reason we distinguish *unit*, *integration* and *long* tests.
 During development, the *unit* tests are run for each branch update pushed to
 the GitLab repository. The *integration* tests are run when a branch is merged
@@ -25,23 +27,29 @@ Best practice is to do this in a single commit that is removed via
 *git rebase -i* before merging.
 
 
-
 Unit tests for the C++ core
 ===========================
 
 We are using `CppUnit <http://sourceforge.net/projects/cppunit/>`_ as
-unit testing framework, which is nicely supported by NetBeans.
+unit testing framework.
 
 All unit tests are placed in *src/karabo/tests*. Within the *tests*
 folder the file structure of Karabo's sources is repeated and the
 corresponding test classes are finally placed there.
 
-Every sub-folder in *tests* implements an own ``main()`` function which runs all registered classes of the folder. By convention all test classes should end with <className>_Test.cpp or
-<className>_Test.hh, respectively. 
+Every sub-folder in *tests* implements an own ``main()`` function which runs all
+registered classes of the folder. By convention all test classes should end with
+<className>_Test.cpp or <className>_Test.hh, respectively.
 
 
-Creating a whole new test 
+Creating a whole new test
 --------------------------
+
+UPDATE: Use of CppUnit/Netbeans for creating new C++ tests is discouraged.
+Supporting C++ unit and integration tests using Google Test
+(https://github.com/google/googletest) in an IDE agnostic way is
+the path the Karabo Framework is moving towards. Documentation on that will
+come through the year of 2022.
 
 HINT: You have do this only in the unlikely case that Karabo gets an new sources sub-folder!
 
@@ -72,7 +80,7 @@ Creating a new test class
      Folder:      tests/<subfolder>
      Extension:   cc and hh
 
-4. In case the new test class 
+4. In case the new test class
 
  * does not appear in NetBeans' project view
  * and/or the tests are not executed using the recipes does not run (see :ref:`running-tests-label`)
