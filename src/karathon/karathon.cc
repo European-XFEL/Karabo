@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Author: <krzysztof.wrona@xfel.eu>, <irina.kozlova@xfel.eu>
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
@@ -28,6 +26,7 @@ void exportPyUtilClassInfo();
 void exportPyUtilTrainstamp();
 void exportPyUtilDateTimeString();
 void exportPyUtilEpochstamp();
+void exportPyUtilException();
 void exportPyUtilTimestamp();
 void exportPyUtilTimeDuration();
 void exportPyUtilDims();
@@ -105,6 +104,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilClassInfo();
     exportPyUtilTrainstamp();
     exportPyUtilEpochstamp();
+    exportPyUtilException();
     exportPyUtilTimestamp();
     exportPyUtilTimeDuration();
     exportPyUtilDims();
