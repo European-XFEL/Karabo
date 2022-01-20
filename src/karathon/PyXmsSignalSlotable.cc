@@ -61,9 +61,9 @@ void exportPyXmsSignalSlotable() { // exposing karabo::xms::SignalSlotable
                "Reply slot call with three arguments")
           .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy4,
                (bp::arg("a1"), bp::arg("a2"), bp::arg("a4"), bp::arg("a4")), "Reply slot call with four arguments")
-
-          .def("error", &SignalSlotableWrap::AsyncReply::error, (bp::arg("message")),
-               "Reply failure of slot call stating an error message");
+          .def("error", &SignalSlotableWrap::AsyncReply::error,
+               (bp::arg("message"), bp::arg("details") = std::string()),
+               "Reply failure of slot call stating an error message and details like a stack trace");
 
     bp::class_<SignalSlotable, boost::noncopyable>("SignalSlotableIntern")
           .def(bp::init<const std::string&, const karabo::net::Broker::Pointer&>());

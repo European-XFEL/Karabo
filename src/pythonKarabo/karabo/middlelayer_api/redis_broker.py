@@ -240,7 +240,7 @@ class RedisBroker(Broker):
     def replyException(self, message, exception):
         trace = ''.join(traceback.format_exception(
             type(exception), exception, exception.__traceback__))
-        self.reply(message, trace, error=True)
+        self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signal, slot):
         """This is way of establishing "karabo signalslot"connection with
@@ -545,7 +545,10 @@ class RedisBroker(Broker):
             f = self.repliers.get(replyFrom)
             if f is not None and not f.done():
                 if header.get('error', False):
-                    f.set_exception(KaraboError(params[0]))
+                    exceptTxt = params[0]
+                    if len(params) >= 2 and params[1]:
+                        exceptTxt += "\nDETAILS: " + params[1]
+                    f.set_exception(KaraboError(exceptTxt))
                 else:
                     if len(params) == 1:
                         params = params[0]
