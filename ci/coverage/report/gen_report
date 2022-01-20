@@ -28,12 +28,12 @@ $LCOV_BASE/lcov --capture --no-external --directory $BUILD_BASE --output-file $F
 # combine base and test data
 $LCOV_BASE/lcov -a $FILE_BASE -a $FILE_TEST -o $FILE_TOTAL
 
-sed -i -e "s/$KARABO_BASE\/build\/netbeans\/integrationTests\/build\/$MAKE_CONF\/src/$KARABO_BASE\/src/g" $FILE_TOTAL
-sed -i -e "s/$KARABO_BASE\/build\/netbeans\/karabo\/build\/$MAKE_CONF\/src/$KARABO_BASE\/src/g" $FILE_TOTAL
-sed -i -e "s/$KARABO_BASE\/build\/netbeans\/src/$KARABO_BASE\/src/g" $FILE_TOTAL
+sed -i -e "s/$KARABO_BASE\/build\/coverage\/integrationTests\/build\/$MAKE_CONF\/src/$KARABO_BASE\/src/g" $FILE_TOTAL
+sed -i -e "s/$KARABO_BASE\/build\/coverage\/karabo\/build\/$MAKE_CONF\/src/$KARABO_BASE\/src/g" $FILE_TOTAL
+sed -i -e "s/$KARABO_BASE\/build\/coverage\/src/$KARABO_BASE\/src/g" $FILE_TOTAL
 
 # remove needless coverage reports
-$LCOV_BASE/lcov --remove $FILE_TOTAL '*/boost/*' '/usr/*' 'webAuth/*' "$KARABO_BASE/build/netbeans/karabo/dist/*" "$KARABO_BASE/src/*" 'tests/*' 'integrationTests/*' 'PropertyTest.*' --output-file $FILE_FILTERED
+$LCOV_BASE/lcov --remove $FILE_TOTAL '*/boost/*' '/usr/*' 'webAuth/*' "$KARABO_BASE/build/coverage/karabo/dist/*" "$KARABO_BASE/src/*" 'tests/*' 'integrationTests/*' 'PropertyTest.*' --output-file $FILE_FILTERED
 
 # generate a report
 $LCOV_BASE/genhtml $FILE_FILTERED --output-directory $OUT_DIR
