@@ -178,15 +178,6 @@ class PythonDevice(NoFsm):
             .readOnly().initialValue("")
             .commit(),
 
-            BOOL_ELEMENT(expected).key("archive")
-            .displayedName("Archive")
-            .description("Decides whether the properties of this"
-                         " device will be logged or not")
-            .init()
-            .expertAccess()
-            .assignmentOptional().defaultValue(True)
-            .commit(),
-
             INT32_ELEMENT(expected).key("heartbeatInterval")
             .displayedName("Heartbeat interval")
             .description("The heartbeat interval")
@@ -402,7 +393,8 @@ class PythonDevice(NoFsm):
         else:
             status = "ok"
         info["status"] = status
-        info["archive"] = self.get("archive")
+        # XXX: remove this legacy key in 2.17.
+        info["archive"] = True
 
         # device capabilities are encoded in a bit mask field
         capabilities = 0
