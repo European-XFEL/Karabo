@@ -806,10 +806,7 @@ namespace karabo {
 
             if (type == "device") {
                 const Hash& entry = topologyEntry.begin()->getValue<Hash>();
-                if (entry.hasAttribute(instanceId, "archive") && entry.getAttribute<bool>(instanceId, "archive")) {
-                    // A device that should be archived
-                    newDeviceToLog(instanceId);
-                }
+                newDeviceToLog(instanceId);
                 if (entry.hasAttribute(instanceId, "classId") &&
                         entry.getAttribute<std::string>(instanceId, "classId") == m_logger) {
                     // A new logger has started - check whether there is more work for it to do
