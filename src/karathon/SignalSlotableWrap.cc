@@ -17,19 +17,27 @@ namespace karathon {
 
         void operator()() const {
             std::string msg;
+            std::string details;
             try {
                 throw; // rethrow the exception
-            } catch (karabo::util::Exception& e) {
-                // TODO: Optimise on the string content!
-                //       E.g. just type and message from ExceptionInfo
-                msg = e.userFriendlyMsg(true);
+            } catch (const karabo::util::RemoteException& e) {
+                details = e.type(); // contains e.g. id of remote side
+                details += ":\n";
+                details += e.details();
+                msg = e.type();
+                msg += ": ";
+                msg += e.userFriendlyMsg(true);
+            } catch (const karabo::util::Exception& e) {
+                // No need to treat TimeoutException separately
+                msg = e.userFriendlyMsg(false);
+                details = e.detailedMsg();
             } catch (const std::exception& e) {
                 msg = e.what();
             }
             ScopedGILAcquire gil;
             try {
                 if (*m_handler) {
-                    (*m_handler)(msg);
+                    (*m_handler)(msg, details);
                 }
             } catch (const bp::error_already_set& e) {
                 karathon::detail::treatError_already_set(*m_handler, m_where);
@@ -154,7 +162,11 @@ namespace karathon {
                     const std::string text(textNode && textNode->is<std::string>()
                                                  ? textNode->getValue<std::string>()
                                                  : "Error signaled, but body without string at key \"a1\"");
-                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"));
+                    const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2");
+                    const std::string& details = (detailsNode && detailsNode->is<std::string>() // since Karabo 2.14.0
+                                                        ? detailsNode->getValue<std::string>()
+                                                        : std::string());
+                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
                 }
             }
 
@@ -175,7 +187,13 @@ namespace karathon {
                     throw KARABO_SIGNALSLOT_EXCEPTION(
                           "Too many arguments send as response (max 4 are currently supported");
             }
+        } catch (const karabo::util::RemoteException&) {
+            // Just rethrow as is: No further addition to Karabo stack trace, but keeping type and details().
+            throw;
+        } catch (const karabo::util::TimeoutException&) {
+            throw; // Rethrow as TimeoutException for proper conversion to Python TimeoutError
         } catch (const karabo::util::Exception& e) {
+            // No need to add stack trace from detailesMsg() here - code converting this to Python exception will do so
             KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error while receiving message on instance \"" +
                                                           m_signalSlotable->getInstanceId() + "\""));
             // For compiler happiness
