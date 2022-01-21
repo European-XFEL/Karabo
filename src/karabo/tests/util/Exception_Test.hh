@@ -14,6 +14,7 @@ class Exception_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Exception_Test);
     CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testDetails);
+    CPPUNIT_TEST(testTraceOrder);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -23,6 +24,7 @@ class Exception_Test : public CPPUNIT_NS::TestFixture {
    private:
     void testMethod();
     void testDetails();
+    void testTraceOrder();
 };
 
 #endif /* EXCEPTION_TEST_HH */
