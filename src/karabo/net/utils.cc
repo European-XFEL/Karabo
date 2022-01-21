@@ -67,22 +67,39 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
 }
 
 
-boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(const std::string& url) {
-    boost::regex ex("(.+)://([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
+boost::tuple<std::string, std::string> karabo::net::parseGenericUrl(const std::string& url) {
+    boost::regex ex("([^:]+):(?://)?(.+)");
     boost::cmatch what;
-    string protocol;
+    string scheme;
+    string schemeSpecific;
+    if (regex_match(url.c_str(), what, ex)) {
+        scheme = string(what[1].first, what[1].second);
+        schemeSpecific = string(what[2].first, what[2].second);
+    }
+    return boost::make_tuple(scheme, schemeSpecific);
+}
+
+
+boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(
+      const std::string& url) {
+    const boost::tuple<std::string, std::string> parsed_url = karabo::net::parseGenericUrl(url);
+    const string& scheme = parsed_url.get<0>();
+    const string& schemeDependent = parsed_url.get<1>();
+
+    boost::regex ex("([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
+    boost::cmatch what;
     string domain;
     string port;
     string path;
     string query;
-    if (regex_match(url.c_str(), what, ex)) {
-        protocol = string(what[1].first, what[1].second);
-        domain = string(what[2].first, what[2].second);
-        port = string(what[3].first, what[3].second);
-        path = string(what[4].first, what[4].second);
-        query = string(what[5].first, what[5].second);
+
+    if (scheme.size() > 0 && schemeDependent.size() && regex_match(schemeDependent.c_str(), what, ex)) {
+        domain = string(what[1].first, what[1].second);
+        port = string(what[2].first, what[2].second);
+        path = string(what[3].first, what[3].second);
+        query = string(what[4].first, what[4].second);
     }
-    return boost::make_tuple(protocol, domain, port, path, query);
+    return boost::make_tuple(scheme, domain, port, path, query);
 }
 
 
