@@ -373,16 +373,6 @@ namespace karabo {
                       .initialValue("")
                       .commit();
 
-                BOOL_ELEMENT(expected)
-                      .key("archive")
-                      .displayedName("Archive")
-                      .description("Decides whether the properties of this device will be logged or not")
-                      .init()
-                      .expertAccess()
-                      .assignmentOptional()
-                      .defaultValue(true)
-                      .commit();
-
                 INT32_ELEMENT(expected)
                       .key("heartbeatInterval")
                       .displayedName("Heartbeat interval")
@@ -1768,7 +1758,8 @@ namespace karabo {
                     status = "ok";
                 }
                 instanceInfo.set("status", status);
-                instanceInfo.set("archive", this->get<bool>("archive"));
+                // XXX: remove this legacy in 2.17.
+                instanceInfo.set("archive", true);
 
                 // the capabilities field specifies the optional capabilities a device provides.
                 unsigned int capabilities = 0;
