@@ -1343,10 +1343,6 @@ void Device_Test::testGetconfigReconfig() {
           m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
 
-    // And we cannot set archive since not reconfigurable.
-    CPPUNIT_ASSERT_THROW(
-          m_deviceServer->request(deviceId, "slotReconfigure", Hash("archive", false)).timeout(timeoutInMs).receive(),
-          karabo::util::RemoteException);
     // But we can set the performance statistics
     hash.clear();
     CPPUNIT_ASSERT_NO_THROW(
