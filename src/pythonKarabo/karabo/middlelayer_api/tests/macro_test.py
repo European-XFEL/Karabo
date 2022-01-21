@@ -10,8 +10,8 @@ from karabo.middlelayer_api.compat import amqp, jms, mqtt
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
-    getDevice, getSchema, lock, setNoWait, setWait, updateDevice, waitUntil,
-    waitUntilNew, waitWhile)
+    getDevice, getInstanceInfo, getSchema, lock, setNoWait, setWait,
+    updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.signalslot import slot
@@ -175,6 +175,15 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             d.doit()
         self.assertTrue(self.remote.done)
+
+    @sync_tst
+    def test_archive(self):
+        """test the archive setting of a macro"""
+        with getDevice("remote") as d:
+            with self.assertRaises(AttributeError):
+                arch = d.archive
+        info = getInstanceInfo("local")
+        self.assertFalse(info["archive"])
 
     @sync_tst
     def test_change(self):
