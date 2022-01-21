@@ -3,7 +3,7 @@ import time
 import unittest
 from functools import partial
 
-from karabo.bound import EventLoop, SignalSlotable
+from karabo.bound import EventLoop, Hash, SignalSlotable
 
 # To switch on debugging, also import these:
 # from karabo.bound import Logger, Hash
@@ -274,6 +274,13 @@ class Xms_TestCase(unittest.TestCase):
             raise RuntimeError("What's the universe and the rest?")
         self.bob.registerSlot(slotError)
 
+        def slotErrorCpp():
+            # A slot triggering an exception in Karabo C++ code
+            self.called = 43
+            h = Hash()
+            h["non_existing_key"]
+        self.bob.registerSlot(slotErrorCpp)
+
         def slot0():
             self.called = 0
             self.bob.reply()
@@ -354,11 +361,11 @@ class Xms_TestCase(unittest.TestCase):
             EventLoop.post(replyer)
         self.bob.registerSlot(asyncSlot4)
 
-        def asyncSlotError(errorMessage):
+        def asyncSlotError(errorMessage, details):
             aReply = self.bob.createAsyncReply()
 
             def replyer():
-                aReply.error(errorMessage)
+                aReply.error(errorMessage, details)
 
             # Call replyer on event loop
             EventLoop.post(replyer)
@@ -510,26 +517,87 @@ class Xms_TestCase(unittest.TestCase):
             # Test error handling
             handled = False
             errorMsg = ""
+            detailsMsg = ""
+            self.called = -1
 
-            def handleError(msg):
-                nonlocal errorMsg, handled
-                handled = True
+            def handleError(msg, details):
+                nonlocal errorMsg, detailsMsg, handled
                 errorMsg = msg
+                detailsMsg = details
+                handled = True
 
+            # Slot raising a pure Python exception
             req = self.alice.request(self.bob_id, "slotError")
             req.receiveAsync(lambda: None, handleError)
             wait_for_handled()
             self.assertEqual(42, self.called)
-            self.assertIn("What's the universe and the rest?", errorMsg)
+
+            # This also tests a bit the exception handling:
+            # errorMsg has the main message,
+            # detailsMsg contains C++ and Python traces.
+            msgWhoFailed = "Remote Exception from bob"
+            msgSlotFailure = 'An exception was thrown in slot "slotError"'
+            msgRuntimeError = "What's the universe and the rest?"
+            self.assertIn(msgWhoFailed, errorMsg)
+            self.assertIn(msgSlotFailure, errorMsg)
+            self.assertIn(msgRuntimeError, errorMsg)
+            self.assertNotIn("Exception Type....:", errorMsg)  # no C++ trace!
+
+            self.assertIn(msgWhoFailed, detailsMsg)
+            self.assertIn(msgSlotFailure, detailsMsg)
+            self.assertIn(msgRuntimeError, detailsMsg)
+            # C++ trace:
+            self.assertIn("Exception with trace (listed from inner to outer):",
+                          detailsMsg)
+            self.assertIn("Exception Type....:", detailsMsg)
+            # Parts of Python trace
+            self.assertIn("Traceback (most recent call last):", detailsMsg)
+            self.assertIn(__file__, detailsMsg)  # raising is here in this file
+            self.assertIn("raise RuntimeError", detailsMsg)
+
+            # Check how exception from underlying C++ looks like
+            handled = False
+            errorMsg = ""
+            detailsMsg = ""
+            self.called = -1
+
+            req = self.alice.request(self.bob_id, "slotErrorCpp")
+            req.receiveAsync(lambda: None, handleError)
+            wait_for_handled()
+            self.assertEqual(43, self.called)
+            # msgWhoFailed = "Remote Exception from bob" as before
+            msgSlotFailure = 'An exception was thrown in slot "slotErrorCpp"'
+            msgKeyFailure = "Key 'non_existing_key' does not exist"
+            self.assertIn(msgWhoFailed, errorMsg)
+            self.assertIn(msgSlotFailure, errorMsg)
+            self.assertIn(msgKeyFailure, errorMsg)
+            self.assertNotIn("Exception Type....:", errorMsg)  # no C++ trace!
+
+            self.assertIn(msgWhoFailed, detailsMsg)
+            self.assertIn(msgSlotFailure, detailsMsg)
+            self.assertIn(msgKeyFailure, errorMsg)
+
+            # C++ trace:
+            self.assertIn("Exception with trace (listed from inner to outer):",
+                          detailsMsg)
+            self.assertIn("Exception Type....:  Python Exception", detailsMsg)
+            # Parts of Python trace
+            self.assertIn("Traceback (most recent call last):", detailsMsg)
+            self.assertIn(__file__, detailsMsg)  # raising is here in this file
+            self.assertIn('h["non_existing_key"]', detailsMsg)  # the bad line
 
             # Test timeout handling
             handled = False
             errorMsg = ""
+            detailsMsg = ""
 
             req = self.alice.request("non/existing/id", "slotNoMatter")
             req.receiveAsync(lambda: None, handleError, timeoutMs=1)
             wait_for_handled()
             self.assertIn("Timeout of asynchronous request", errorMsg)
+
+            self.assertIn("Timeout of asynchronous request", detailsMsg)
+            self.assertIn("Exception Type....:  Timeout Exception", detailsMsg)
 
             # Forbidden number of return values
             req = self.alice.request("doesnt/matter/id", "slotNoMatter")
@@ -636,6 +704,72 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(13, res[3])
             self.assertEqual(36, self.called)
 
+            # Now error caused by raising Python exception
+            req = self.alice.request(self.bob_id, "slotError")
+            with self.assertRaises(RuntimeError) as cm:
+                res = req.waitForReply(to)
+
+            # The error string contains both, user friendly and detailed
+            # message, separated by "\nDETAILS: "
+            exceptStrs = str(cm.exception).split("\nDETAILS: ", 1)
+
+            self.assertEqual(2, len(exceptStrs), exceptStrs)
+            (friendlyMsg, details) = exceptStrs
+            msgWhoFailed = "Remote Exception from bob"
+            msgSlotFailure = 'An exception was thrown in slot "slotError"'
+            msgRuntimeError = ("RuntimeError: "
+                               "What's the universe and the rest?")
+            self.assertIn(msgWhoFailed, friendlyMsg)
+            self.assertIn(msgSlotFailure, friendlyMsg)
+            self.assertIn(msgRuntimeError, friendlyMsg)
+            self.assertIn(msgWhoFailed, details, str(exceptStrs))
+            self.assertIn(msgSlotFailure, details)
+            self.assertIn(msgRuntimeError, details)
+            # C++ trace:
+            self.assertIn("Exception with trace (listed from inner to outer):",
+                          details)
+            self.assertIn("Exception Type....:", details)
+            # Parts of Python trace
+            self.assertIn("Traceback (most recent call last):", details)
+            self.assertIn(__file__, details)  # raising is in this file
+            self.assertIn("raise RuntimeError", details)
+
+            # Now error caused by throwing C++ exception in C++ called from Py
+            req = self.alice.request(self.bob_id, "slotErrorCpp")
+            with self.assertRaises(RuntimeError) as cm:
+                res = req.waitForReply(to)
+
+            # Again, friendly and detailed message, separated by
+            # "\nDETAILS: "
+            exceptStrs = str(cm.exception).split("\nDETAILS: ", 1)
+            self.assertEqual(2, len(exceptStrs), exceptStrs)
+            (friendlyMsg, details) = exceptStrs
+            msgWhoFailed = "Remote Exception from bob"
+            msgSlotFailure = ('An exception was thrown in slot "slotErrorCpp"')
+            msgKeyFailure = "Key 'non_existing_key' does not exist"
+            self.assertIn(msgWhoFailed, friendlyMsg)
+            self.assertIn(msgSlotFailure, friendlyMsg)
+            self.assertIn(msgKeyFailure, friendlyMsg)
+
+            self.assertIn(msgWhoFailed, details)
+            self.assertIn(msgSlotFailure, details)
+            self.assertIn(msgKeyFailure, details)
+
+            # C++ trace:
+            self.assertIn("Exception with trace (listed from inner to outer):",
+                          details)
+            self.assertIn("Exception Type....:  Python Exception",
+                          details)
+            # Parts of Python trace
+            self.assertIn("Traceback (most recent call last):", details)
+            self.assertIn(__file__, details)  # raising is this file
+            self.assertIn('h["non_existing_key"]', details)  # the bad line
+
+            # Now timeout error
+            req = self.alice.request("not/an/instance", "slotDoesNotMatter")
+            with self.assertRaises(TimeoutError):
+                req.waitForReply(2)  # ms - short timeout intended
+
             del req
             self.called = -1
 
@@ -678,9 +812,22 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(36, self.called)
 
             msg = "Bad things happen!"
-            req = self.alice.request(self.bob_id, "asyncSlotError", msg)
-            with self.assertRaisesRegex(RuntimeError, msg):
-                req.waitForReply(to)
+            details = "No details nor trace!"
+            req = self.alice.request(self.bob_id, "asyncSlotError",
+                                     msg, details)
+            with self.assertRaises(RuntimeError) as cm:
+                res = req.waitForReply(to)
+
+            # Again, friendly and detailed message, separated by
+            # "\nDETAILS: "
+            exceptStrs = str(cm.exception).split("\nDETAILS: ", 1)
+            self.assertEqual(2, len(exceptStrs), exceptStrs)
+            (friendlyMsg, detailsMsg) = exceptStrs
+            msgWhoFailed = "Remote Exception from bob"
+            self.assertIn(msgWhoFailed, friendlyMsg)
+            self.assertIn(msg, friendlyMsg)
+            self.assertIn(msgWhoFailed, detailsMsg)
+            self.assertIn(details, detailsMsg)
 
             del req
             self.called = -1
