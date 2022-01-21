@@ -220,6 +220,7 @@ class Macro(Device):
         info["type"] = "macro" if self._has_server else "client"
         info["project"] = self.project
         info["module"] = self.module
+        info["archive"] = False
         return info
 
     async def _run(self, **kwargs):
