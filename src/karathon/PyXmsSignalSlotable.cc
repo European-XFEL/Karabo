@@ -35,7 +35,8 @@ void exportPyXmsSignalSlotable() { // exposing karabo::xms::SignalSlotable
                "Asynchronously receive the reply to the requested slot via a callback\n\n"
                "replyCallback   - called when slot reply arrives, argument number must match number replied by slot\n"
                "errorCallback   - if specified, called when the slot replies an error or the reply times out,\n"
-               "                  single argument is a str describing the problem\n"
+               "                  will receive two str arguments:\n"
+               "                  short description of the problem and details (e.g. stack trace)\n"
                "timeoutMs       - specify timeout in milliseconds (otherwise a long default is used)\n"
                "numCallbackArgs - only needed to specify if number of arguments cannot be deduced from replyCallback")
           // Keep the following (with number of return arguments in function name, but without error handling) for
@@ -61,8 +62,7 @@ void exportPyXmsSignalSlotable() { // exposing karabo::xms::SignalSlotable
                "Reply slot call with three arguments")
           .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy4,
                (bp::arg("a1"), bp::arg("a2"), bp::arg("a4"), bp::arg("a4")), "Reply slot call with four arguments")
-          .def("error", &SignalSlotableWrap::AsyncReply::error,
-               (bp::arg("message"), bp::arg("details") = std::string()),
+          .def("error", &SignalSlotableWrap::AsyncReply::error, (bp::arg("message"), bp::arg("details")),
                "Reply failure of slot call stating an error message and details like a stack trace");
 
     bp::class_<SignalSlotable, boost::noncopyable>("SignalSlotableIntern")
