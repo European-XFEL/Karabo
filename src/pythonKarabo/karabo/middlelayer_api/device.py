@@ -5,9 +5,8 @@ from karabo import __version__ as karaboVersion
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, DaqPolicy, Hash, Int32,
-    KaraboError, Node, Slot, String, TimeMixin, TypeHash, TypeSchema,
-    get_timestamp, isSet)
+    AccessLevel, AccessMode, Assignment, DaqPolicy, Hash, Int32, KaraboError,
+    Node, Slot, String, TimeMixin, TypeHash, TypeSchema, get_timestamp, isSet)
 
 from .alarm import AlarmMixin
 from .injectable import InjectMixin
@@ -126,15 +125,6 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         daqPolicy=DaqPolicy.OMIT)
 
-    archive = Bool(
-        displayedName="Archive",
-        description="Decides whether the properties of this device "
-                    "will be logged or not",
-        requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.INITONLY, assignment=Assignment.OPTIONAL,
-        defaultValue=True,
-        daqPolicy=DaqPolicy.OMIT)
-
     log = Node(Logger,
                description="Logging settings",
                displayedName="Logger",
@@ -183,7 +173,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         info["visibility"] = self.visibility.value
         info["host"] = self.hostName
         info["status"] = self._statusInfo
-        info["archive"] = self.archive.value
+        info["archive"] = True  # XXX: legacy key, scheduled for removal
 
         # device capabilities are encoded in a bit mask field
         capabilities = 0
