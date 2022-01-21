@@ -15,8 +15,8 @@ from karabo.middlelayer import (
     KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
     Timestamp, Unit, VectorChar, VectorFloat, VectorInt16, VectorString,
     background, call, connectDevice, coslot, decodeBinary, execute,
-    filterByTags, getDevice, isAlive, isSet, lock, setNoWait, setWait, slot,
-    unit, updateDevice, waitUntil, waitUntilNew)
+    filterByTags, getDevice, getInstanceInfo, isAlive, isSet, lock, setNoWait,
+    setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
@@ -1279,13 +1279,15 @@ class Tests(DeviceTest):
         self.assertTrue(proxy.done)
 
     @async_tst
-    async def test_set_archive_fails(self):
+    async def test_archive_fails(self):
+        """Test that devices don't have archive in their schema"""
         with (await getDevice("remote")) as d:
             if not jms:
                 await updateDevice(d)
-            with self.assertRaises(KaraboError):
-                new_archive = not d.archive.value
-                await setWait(d, archive=new_archive)
+            with self.assertRaises(AttributeError):
+                archive = d.archive.value
+        info = await getInstanceInfo("remote")
+        self.assertEqual(info["archive"], True)
 
     @async_tst
     async def test_config_handler(self):
