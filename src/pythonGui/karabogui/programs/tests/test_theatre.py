@@ -42,11 +42,13 @@ class TestExtraApplication(GuiTestCase):
                 self.assertEqual(len(waiter.device_scenes), 1)
                 network.signalServerConnectionChanged.emit(True)
 
-                network.onSubscribeLogs.assert_called_with(False)
+                network.onSubscribeLogs.assert_not_called()
                 # Initialize the trees
                 topology.initialize(system_hash())
                 self.process_qt_events(1000)
                 scene.assert_called_with("divvy", "scene")
+
+                network.onSubscribeLogs.assert_called_with(False)
 
     def test_theatre_timeout(self):
         """Test the karabo theatre with a timeout for the topology"""
@@ -71,10 +73,10 @@ class TestExtraApplication(GuiTestCase):
                 self.assertEqual(len(waiter.device_scenes), 1)
                 network.signalServerConnectionChanged.emit(True)
 
-                network.onSubscribeLogs.assert_called_with(False)
                 self.process_qt_events(1000)
                 scene.assert_not_called()
                 mbox.show_warning.assert_called_once()
+                network.onSubscribeLogs.assert_not_called()
 
 
 if __name__ == "__main__":
