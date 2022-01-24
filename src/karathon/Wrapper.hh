@@ -16,6 +16,7 @@
 #include <karabo/util/MetaTools.hh>
 #include <karabo/util/NDArray.hh>
 #include <string>
+#include <tuple>
 #include <typeinfo>
 
 #include "FromNumpy.hh"
@@ -706,6 +707,16 @@ namespace karathon {
 
         void operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) const;
     };
+
+    /**
+     * Provide exception text and details (i.e. traceback)
+     * To be called from within a "catch (const bp::error_already_set& e)" block.
+     *
+     * @return tuple of two strings:
+     *         - first is (Python) exception text,
+     *         - second the multiline traceback like from traceback.print_exception (skipping last line)
+     */
+    std::tuple<std::string, std::string> getPythonExceptionStrings();
 
     // Specializations
     template <>
