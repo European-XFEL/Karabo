@@ -27,6 +27,7 @@ class MyTableModel(TableModel):
 
 count = 0
 filter_model = False
+legacy_model = False
 
 
 class MyTableController(BaseTableController):
@@ -41,6 +42,15 @@ class MyTableController(BaseTableController):
     def createFilterModel(self, item_model):
         global filter_model
         filter_model = True
+        return item_model
+
+
+class LegacyTableController(BaseTableController):
+    tableModelClass = MyTableModel
+
+    def createModel(self, item_model):
+        global legacy_model
+        legacy_model = True
         return item_model
 
 
@@ -84,6 +94,15 @@ class TestCustomBaseController(GuiTestCase):
     def test_stretch_last_section(self):
         table_widget = self.controller.tableWidget()
         self.assertTrue(table_widget.horizontalHeader().stretchLastSection())
+
+    def test_legacy_controller(self):
+        proxy = get_property_proxy(Object.getClassSchema(), "prop")
+        model = TableElementModel()
+        controller = LegacyTableController(proxy=proxy,
+                                           model=model)
+        controller.create(None)
+        self.assertTrue(controller.isReadOnly())
+        self.assertTrue(legacy_model)
 
 
 if __name__ == "__main__":
