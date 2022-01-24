@@ -171,7 +171,7 @@ class BaseTableController(BaseBindingController):
     def createFilterModel(self, item_model):
         """Subclass the `createFilterModel` to create a filter model
 
-        Note: Function added with Karabo > 2.13.X
+        Note: Future use with 2.15
         """
         return item_model
 
@@ -331,7 +331,7 @@ class BaseTableController(BaseBindingController):
                                             self._table_widget)
         self._item_model = source_model
         self._item_model.set_readonly(self._readonly)
-        model = self.createFilterModel(self._item_model)
+        model = self.createModel(self._item_model)
         self._table_widget.setModel(model)
         self._table_widget.set_bindings(binding.bindings)
         self.create_delegates()
