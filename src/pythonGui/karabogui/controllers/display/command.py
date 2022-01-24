@@ -119,6 +119,7 @@ class DisplayCommand(BaseBindingController):
         display_name = proxy.binding.displayed_name or proxy.path
         # if displayed name is not set, use path
         item.action.setText(display_name)
+        item.action.setToolTip(proxy.key)
         # only initially we connect signals and slots
         if initial:
             item.action.triggered.connect(
