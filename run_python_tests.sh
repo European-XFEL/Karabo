@@ -273,6 +273,7 @@ runPythonIntegrationTests() {
     safeRunTests "karabo.integration_tests.device_cross_test"
     safeRunTests "karabo.integration_tests.device_provided_scenes_test"
     safeRunTests "karabo.integration_tests.device_schema_injection_test"
+    # safeRunTests "karabo.integration_tests.pipeline_cross_test" # this will run in the long tests.
     safeRunTests "karabo.integration_tests.pipeline_processing_test"
     safeRunTests "karabo.integration_tests.signal_slot_order_test"
     echo
