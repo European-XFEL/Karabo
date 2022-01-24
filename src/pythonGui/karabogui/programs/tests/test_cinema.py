@@ -33,7 +33,8 @@ class TestCinemaApplication(GuiTestCase):
 
                 self.assertEqual(success, True)
                 network.signalServerConnectionChanged.emit(True)
-                network.onSubscribeLogs.assert_called_with(False)
+
+                network.onSubscribeLogs.assert_not_called()
 
                 # Initialize the trees
                 topology.initialize(system_hash())
@@ -42,6 +43,9 @@ class TestCinemaApplication(GuiTestCase):
                     {'name': 'CTRL-uuid-1231231321',
                      'target_window': SceneTargetWindow.MainWindow,
                      'target': 'uuid-1231231321'})
+
+                # Must be called after topology
+                network.onSubscribeLogs.assert_called_with(False)
 
 
 if __name__ == "__main__":
