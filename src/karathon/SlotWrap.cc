@@ -3,6 +3,7 @@
 #include <Python.h>
 
 #include "ScopedGILAcquire.hh"
+#include "Wrapper.hh" // for getPythonExceptionStrings()
 
 namespace bp = boost::python;
 
@@ -126,49 +127,10 @@ namespace karathon {
 
 
     void SlotWrap::rethrowPythonException() {
-        PyObject *e, *v, *t;
-        // get the error indicators
-        PyErr_Fetch(&e, &v, &t); // ref count incremented
-        PyErr_NormalizeException(&e, &v, &t);
+        std::string pythonErrorMessage, pythonErrorDetails;
+        std::tie(pythonErrorMessage, pythonErrorDetails) = getPythonExceptionStrings();
 
-        std::string pythonErrorMessage;
-
-        // Try to extract full traceback
-        PyObject* moduleName = PyUnicode_FromString("traceback");
-        PyObject* pythonModule = PyImport_Import(moduleName);
-        Py_DECREF(moduleName);
-
-        if (pythonModule != 0) {
-            PyObject* pythonFunction = PyObject_GetAttrString(pythonModule, "format_exception");
-            if (pythonFunction && PyCallable_Check(pythonFunction)) {
-                PyObject* pythonValue = PyObject_CallFunctionObjArgs(pythonFunction, e, v, t, 0);
-                if (pythonValue) {
-                    if (PyList_Check(pythonValue)) {
-                        pythonErrorMessage.append("Python reports ...\n\n");
-                        Py_ssize_t size = PyList_Size(pythonValue);
-                        for (Py_ssize_t i = 0; i < size; i++) {
-                            PyObject* item = PyList_GetItem(pythonValue, i); // this "borrowed reference" - no decref!
-                            PyObject* pythonString = PyObject_Str(item);
-                            pythonErrorMessage.append(PyUnicode_AsUTF8(pythonString));
-                            Py_DECREF(pythonString);
-                        }
-                    }
-                    Py_DECREF(pythonValue);
-                }
-                Py_DECREF(pythonFunction);
-            }
-            Py_DECREF(pythonModule);
-        } else {
-            PyObject* pythonRepr = PyObject_Repr(v); // apply str()
-            pythonErrorMessage.assign(PyUnicode_AsUTF8(pythonRepr));
-            Py_DECREF(pythonRepr);
-        }
-
-        // we reset it for later processing
-        PyErr_Restore(e, v, t); // ref count decremented
-        PyErr_Clear();
-
-        throw KARABO_PYTHON_EXCEPTION(pythonErrorMessage);
+        throw KARABO_PYTHON_EXCEPTION2(pythonErrorMessage, pythonErrorDetails);
     }
 
 } // namespace karathon
