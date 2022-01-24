@@ -1299,17 +1299,15 @@ class Tests(TestCase):
             prop_a = getattr(a, key)
             self.assertIsNone(prop_a.descriptor.archivePolicy)
             # b does not archive
-            self.assertEqual(schema_b.hash[key, 'archivePolicy'],
-                             ArchivePolicy.NO_ARCHIVING.value)
+            with self.assertRaises(KeyError):
+                self.assertEqual(schema_b.hash[key, 'archivePolicy'],
+                                 ArchivePolicy.NO_ARCHIVING.value)
             prop_b = getattr(b, key)
             self.assertEqual(prop_b.descriptor.archivePolicy,
-                             ArchivePolicy.NO_ARCHIVING, key)
+                             None, key)
 
         i = Int32(archivePolicy=2)
-        self.assertEqual(i.archivePolicy,
-                         ArchivePolicy.EVERY_1S)
-        with self.assertRaises(ValueError):
-            Int32(archivePolicy=42)
+        self.assertEqual(i.archivePolicy, None)
 
     def test_runtime_updates(self):
         """We cannot test and create overwrite schema injection in this test,
