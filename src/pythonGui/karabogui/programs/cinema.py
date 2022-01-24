@@ -19,12 +19,14 @@ def create_cinema(ns):
             trigger_scenes, 'initialized', remove=True)
         domain = ns.domain
         get_db_conn().default_domain = domain
-        get_network().onSubscribeLogs(False)
         for uuid in ns.scene_uuid:
             db_scene = {'name': f'{domain}-{uuid}',
                         'target_window': SceneTargetWindow.MainWindow,
                         'target': uuid}
             broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
+
+        # We are logged in and can now unsubscribe to logs!
+        get_network().onSubscribeLogs(False)
 
     topology = get_topology()
     # Attach to the topology
@@ -42,8 +44,6 @@ def create_cinema(ns):
             topology.system_tree.on_trait_change(
                 trigger_scenes, 'initialized', remove=True)
             app.quit()
-        else:
-            network.onSubscribeLogs(False)
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
