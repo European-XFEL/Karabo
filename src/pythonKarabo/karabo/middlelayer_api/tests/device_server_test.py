@@ -6,7 +6,7 @@ from unittest import TestCase, main, skipIf
 from unittest.mock import Mock
 
 from karabo.middlelayer_api.compat import amqp
-from karabo.middlelayer_api.device_client import getInstanceInfo
+from karabo.middlelayer_api.device_client import call, getInstanceInfo
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop
 from karabo.middlelayer_api.signalslot import SignalSlotable
@@ -129,6 +129,12 @@ class ServerTest(TestCase):
 
             info = await getInstanceInfo(serverId)
             self.assertEqual(info["log"], "ERROR")
+
+            logs = await call(serverId, "slotLoggerContent", Hash())
+            self.assertEqual(logs["serverId"], serverId)
+            self.assertIsInstance(logs["content"], list)
+            logs = await call(serverId, "slotLoggerContent", Hash("logs", 20))
+            self.assertIsInstance(logs["content"], list)
         finally:
             await self._shutdown_server(server)
 

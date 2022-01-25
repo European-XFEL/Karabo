@@ -1,11 +1,28 @@
 import logging
 import traceback
 from bisect import bisect
+from collections import deque
 from contextlib import contextmanager
 from datetime import datetime
 
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Hash, String, VectorString)
+
+
+class PrintLog:
+    """The PrintLog is an internal singleton collecting the print logs"""
+    events = deque(maxlen=100)
+
+    @classmethod
+    def add_event(cls, entry):
+        cls.events.append(entry)
+
+    @classmethod
+    def summary(cls, num):
+        """Get the summary of the last `num` log entries"""
+        # Make a list for slicing
+        events = list(cls.events)[-num:]
+        return events
 
 
 class NetworkHandler(logging.Handler):
@@ -38,10 +55,15 @@ class PrintHandler(logging.Handler):
         # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
         level = ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
                  )[bisect([20, 30, 40, 50], record.levelno)]
-        print(datetime.fromtimestamp(record.created), level,
-              self.parent.broker.deviceId)
-        print(self.format(record))
+        timestamp = datetime.fromtimestamp(record.created)
+        deviceId = self.parent.broker.deviceId
+        message = self.format(record)
+        print(timestamp, level, deviceId)
+        print(message)
         print("---------- Logger end -----------")
+        PrintLog.add_event(
+            Hash("type", level, "message", message,
+                 "timestamp", record.created, "category", deviceId))
 
 
 _LOGGER_HANDLER = {
