@@ -209,8 +209,9 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(Exception::m_mutex);
                 unsigned int j = 0;
-                for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
-                    const Exception::ExceptionInfo& myException = Exception::m_trace[i];
+                for (size_t i = Exception::m_trace.size(); i > 0; --i) {
+                    // Caveat: Do not loop "...i = ...size() - 1; i >= 0;" - that's end endless due to unsigend-ness
+                    const Exception::ExceptionInfo& myException = Exception::m_trace[i - 1]; // ...so we need -1 here
                     if (!myException.message.empty()) {
                         if (hasMsg) {
                             err << "\n";
