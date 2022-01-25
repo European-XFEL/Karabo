@@ -34,6 +34,7 @@ class BaseTableController(BaseBindingController):
 
     _resizeAction = Instance(QAction)
     _hasResize = Bool(False)
+
     # ---------------------------------------------------------------------
     # Abstract Methods
 
@@ -43,6 +44,7 @@ class BaseTableController(BaseBindingController):
         table_widget = KaraboTableView(parent=parent)
         table_widget.setSelectionBehavior(QAbstractItemView.SelectItems
                                           | QAbstractItemView.SelectRows)
+        table_widget.horizontalHeader().setStretchLastSection(True)
         # Create an internal weak ref to subclass create widget
         self._table_widget = table_widget
 
