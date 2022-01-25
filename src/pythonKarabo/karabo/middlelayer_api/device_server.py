@@ -20,7 +20,7 @@ from karabo.native import (
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
-from .logger import Logger
+from .logger import Logger, PrintLog
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, coslot, slot
@@ -402,6 +402,17 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         if isSet(self.timeServerId):
             await self._ss.async_connect(self.timeServerId, "signalTimeTick",
                                          self.slotTimeTick)
+
+    @slot
+    def slotLoggerContent(self, info):
+        """Slot call to receive logger content from the print logger
+
+        :param info: input Hash
+        """
+        logs = int(info.get("logs", 10))
+        content = PrintLog.summary(logs)
+
+        return Hash("serverId", self.serverId, "content", content)
 
     @slot
     def slotTimeTick(self, train_id, sec, frac, period):
