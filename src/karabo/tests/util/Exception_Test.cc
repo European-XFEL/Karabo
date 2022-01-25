@@ -82,7 +82,7 @@ void Exception_Test::testMethod() {
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"), e.userFriendlyMsg(false));
+        CPPUNIT_ASSERT_EQUAL(std::string("Propagated\n  because: A casting problem"), e.userFriendlyMsg(false));
 
         const std::string details = e.detailedMsg();
         // Detailed message looks e.g. like this:
@@ -283,7 +283,7 @@ void Exception_Test::testMethod() {
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"), e.userFriendlyMsg(true));
+        CPPUNIT_ASSERT_EQUAL(std::string("Propagated\n  because: A casting problem"), e.userFriendlyMsg(true));
         // Previous call to userFriendlyMsg(true) cleared the stack trace, so a further call has only the most recent
         // exception Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type
         // is printed.
@@ -332,4 +332,43 @@ void Exception_Test::testDetails() {
     } catch (...) {
         CPPUNIT_ASSERT_MESSAGE("Missed RemoteException", false);
     }
+}
+
+
+void Exception_Test::testTraceOrder() {
+    // Check ordering of exception stack in detailedMsg() and userFriendlyMsg()
+    std::string shortMsg, stackMsg;
+    try {
+        try {
+            try {
+                throw KARABO_CAST_EXCEPTION("Exception 1");
+            } catch (const std::exception&) {
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Exception 2"));
+            }
+        } catch (const std::exception&) {
+            KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Exception 3"));
+        }
+    } catch (const karabo::util::Exception& e) {
+        shortMsg = e.userFriendlyMsg(false);
+        stackMsg = e.detailedMsg();
+    }
+
+    // Short message is an "argumentation chain", so last exception first, i.e. here:
+    // "Exception 3\n  because: Exception 2\n     because: Exception 1"
+    // Here we just test the order, not the indentation or the "because:" prefix:
+    const size_t pos1Short = shortMsg.find("Exception 1");
+    const size_t pos2Short = shortMsg.find("Exception 2");
+    const size_t pos3Short = shortMsg.find("Exception 3");
+    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos3Short < pos2Short);          // 3 is before 2
+    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos2Short < pos1Short);          // 2 is before 1
+    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos1Short != std::string::npos); // 1 exists (npos is the biggest size_t)
+
+    // In detailed message, the exception stack is ordered from inner to outer as can be seen in
+    // Exception_Test::testMethod Here we just test the order, not all the other stack print formatting.
+    const size_t pos1Stack = stackMsg.find("Exception 1");
+    const size_t pos2Stack = stackMsg.find("Exception 2");
+    const size_t pos3Stack = stackMsg.find("Exception 3");
+    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos1Stack < pos2Stack);
+    CPPUNIT_ASSERT_MESSAGE(shortMsg, pos2Stack < pos3Stack);
+    CPPUNIT_ASSERT_MESSAGE(stackMsg, pos3Stack != std::string::npos);
 }
