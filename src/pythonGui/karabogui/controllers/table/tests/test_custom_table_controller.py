@@ -81,6 +81,10 @@ class TestCustomBaseController(GuiTestCase):
         # Calls custom_menu
         self.assertEqual(count, 1)
 
+    def test_stretch_last_section(self):
+        table_widget = self.controller.tableWidget()
+        self.assertTrue(table_widget.horizontalHeader().stretchLastSection())
+
 
 if __name__ == "__main__":
     main()
