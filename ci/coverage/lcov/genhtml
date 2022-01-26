@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #   Copyright (c) International Business Machines  Corp., 2002,2012
 #
@@ -10,11 +10,11 @@
 #   This program is distributed in the hope that it will be useful, but
 #   WITHOUT ANY WARRANTY;  without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#   General Public License for more details. 
+#   General Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License
-#   along with this program;  if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#   along with this program;  if not, see
+#   <http://www.gnu.org/licenses/>.
 #
 #
 # genhtml
@@ -65,16 +65,23 @@
 #
 
 use strict;
-use File::Basename; 
+use warnings;
+use File::Basename;
+use File::Temp qw(tempfile);
 use Getopt::Long;
 use Digest::MD5 qw(md5_base64);
+use Cwd qw/abs_path cwd/;
 
 
 # Global constants
 our $title		= "LCOV - code coverage report";
-our $lcov_version	= 'LCOV version 1.10';
+our $tool_dir		= abs_path(dirname($0));
+our $lcov_version	= 'LCOV version 1.15';
 our $lcov_url		= "http://ltp.sourceforge.net/coverage/lcov.php";
 our $tool_name		= basename($0);
+
+# Specify coverage rate default precision
+our $default_precision = 1;
 
 # Specify coverage rate limits (in %) for classifying file entries
 # HI:   $hi_limit <= rate <= 100          graph color: green
@@ -139,13 +146,6 @@ our $HEAD_NO_DETAIL	= 1;
 our $HEAD_DETAIL_HIDDEN	= 2;
 our $HEAD_DETAIL_SHOWN	= 3;
 
-# Offsets for storing branch coverage data in vectors
-our $BR_BLOCK		= 0;
-our $BR_BRANCH		= 1;
-our $BR_TAKEN		= 2;
-our $BR_VEC_ENTRIES	= 3;
-our $BR_VEC_WIDTH	= 32;
-
 # Additional offsets used when converting branch coverage data to HTML
 our $BR_LEN	= 3;
 our $BR_OPEN	= 4;
@@ -154,6 +154,9 @@ our $BR_CLOSE	= 5;
 # Branch data combination types
 our $BR_SUB = 0;
 our $BR_ADD = 1;
+
+# Block value used for unnamed blocks
+our $UNNAMED_BLOCK = vec(pack('b*', 1 x 32), 0, 32);
 
 # Error classes which users may specify to ignore during processing
 our $ERROR_SOURCE	= 0;
@@ -187,7 +190,7 @@ sub get_affecting_tests($$$);
 sub combine_info_files($$);
 sub merge_checksums($$$);
 sub combine_info_entries($$$);
-sub apply_prefix($$);
+sub apply_prefix($@);
 sub system_no_output($@);
 sub read_config($);
 sub apply_config($);
@@ -195,16 +198,12 @@ sub get_html_prolog($);
 sub get_html_epilog($);
 sub write_dir_page($$$$$$$$$$$$$$$$$);
 sub classify_rate($$$$);
-sub br_taken_add($$);
-sub br_taken_sub($$);
-sub br_ivec_len($);
-sub br_ivec_get($$);
-sub br_ivec_push($$$$);
-sub combine_brcount($$$);
+sub combine_brcount($$$;$);
 sub get_br_found_and_hit($);
 sub warn_handler($);
 sub die_handler($);
 sub parse_ignore_errors(@);
+sub parse_dir_prefix(@);
 sub rate($$;$$$);
 
 
@@ -239,7 +238,7 @@ sub write_test_table_epilog(*);
 
 sub write_source($$$$$$$);
 sub write_source_prolog(*);
-sub write_source_line(*$$$$$$);
+sub write_source_line(*$$$$$);
 sub write_source_epilog(*);
 
 sub write_frameset(*$$$);
@@ -247,12 +246,13 @@ sub write_overview_line(*$$$);
 sub write_overview(*$$$$);
 
 # External prototype (defined in genpng)
-sub gen_png($$$@);
+sub gen_png($$$$@);
 
 
 # Global variables & initialization
 our %info_data;		# Hash containing all data from .info file
-our $dir_prefix;	# Prefix to remove from all sub directories
+our @opt_dir_prefix;	# Array of prefixes to remove from all sub directories
+our @dir_prefix;
 our %test_description;	# Hash containing test descriptions if available
 our $date = get_date_string();
 
@@ -287,10 +287,14 @@ our $html_epilog;	# Actual HTML epilog
 our $html_ext = "html";	# Extension for generated HTML files
 our $html_gzip = 0;	# Compress with gzip
 our $demangle_cpp = 0;	# Demangle C++ function names
+our $demangle_cpp_tool = "c++filt"; # Default demangler for C++ function names
+our $demangle_cpp_params = ""; # Extra parameters for demangling
 our @opt_ignore_errors;	# Ignore certain error classes during processing
 our @ignore;
 our $opt_config_file;	# User-specified configuration file location
 our %opt_rc;
+our $opt_missed;	# List/sort lines by missed counts
+our $dark_mode;         # Use dark mode palette or normal
 our $charset = "UTF-8";	# Default charset for HTML pages
 our @fileview_sortlist;
 our @fileview_sortname = ("", "-sort-l", "-sort-f", "-sort-b");
@@ -299,10 +303,9 @@ our @rate_name = ("Lo", "Med", "Hi");
 our @rate_png = ("ruby.png", "amber.png", "emerald.png");
 our $lcov_func_coverage = 1;
 our $lcov_branch_coverage = 0;
+our $rc_desc_html = 0;	# lcovrc: genhtml_desc_html
 
-our $cwd = `pwd`;	# Current working directory
-chomp($cwd);
-our $tool_dir = dirname($0);	# Directory where genhtml tool is installed
+our $cwd = cwd();	# Current working directory
 
 
 #
@@ -312,20 +315,24 @@ our $tool_dir = dirname($0);	# Directory where genhtml tool is installed
 $SIG{__WARN__} = \&warn_handler;
 $SIG{__DIE__} = \&die_handler;
 
-# Prettify version string
-$lcov_version =~ s/\$\s*Revision\s*:?\s*(\S+)\s*\$/$1/;
-
-# Add current working directory if $tool_dir is not already an absolute path
-if (! ($tool_dir =~ /^\/(.*)$/))
-{
-	$tool_dir = "$cwd/$tool_dir";
-}
-
 # Check command line for a configuration file name
 Getopt::Long::Configure("pass_through", "no_auto_abbrev");
 GetOptions("config-file=s" => \$opt_config_file,
 	   "rc=s%" => \%opt_rc);
 Getopt::Long::Configure("default");
+
+{
+	# Remove spaces around rc options
+	my %new_opt_rc;
+
+	while (my ($key, $value) = each(%opt_rc)) {
+		$key =~ s/^\s+|\s+$//g;
+		$value =~ s/^\s+|\s+$//g;
+
+		$new_opt_rc{$key} = $value;
+	}
+	%opt_rc = %new_opt_rc;
+}
 
 # Read configuration file if available
 if (defined($opt_config_file)) {
@@ -337,6 +344,9 @@ if (defined($opt_config_file)) {
 elsif (-r "/etc/lcovrc")
 {
 	$config = read_config("/etc/lcovrc");
+} elsif (-r "/usr/local/etc/lcovrc")
+{
+	$config = read_config("/usr/local/etc/lcovrc");
 }
 
 if ($config || %opt_rc)
@@ -360,6 +370,7 @@ if ($config || %opt_rc)
 		"genhtml_html_epilog"		=> \$html_epilog_file,
 		"genhtml_html_extension"	=> \$html_ext,
 		"genhtml_html_gzip"		=> \$html_gzip,
+		"genhtml_precision"		=> \$default_precision,
 		"genhtml_function_hi_limit"	=> \$fn_hi_limit,
 		"genhtml_function_med_limit"	=> \$fn_med_limit,
 		"genhtml_function_coverage"	=> \$func_coverage,
@@ -369,6 +380,12 @@ if ($config || %opt_rc)
 		"genhtml_branch_field_width"	=> \$br_field_width,
 		"genhtml_sort"			=> \$sort,
 		"genhtml_charset"		=> \$charset,
+		"genhtml_desc_html"		=> \$rc_desc_html,
+		"genhtml_demangle_cpp"		=> \$demangle_cpp,
+		"genhtml_demangle_cpp_tool"	=> \$demangle_cpp_tool,
+		"genhtml_demangle_cpp_params"	=> \$demangle_cpp_params,
+		"genhtml_dark_mode"             => \$dark_mode,
+		"genhtml_missed"		=> \$opt_missed,
 		"lcov_function_coverage"	=> \$lcov_func_coverage,
 		"lcov_branch_coverage"		=> \$lcov_branch_coverage,
 		});
@@ -389,7 +406,7 @@ if (!GetOptions("output-directory|o=s"	=> \$output_directory,
 		"keep-descriptions|k"	=> \$keep_descriptions,
 		"css-file|c=s"		=> \$css_filename,
 		"baseline-file|b=s"	=> \$base_filename,
-		"prefix|p=s"		=> \$dir_prefix,
+		"prefix|p=s"		=> \@opt_dir_prefix,
 		"num-spaces=i"		=> \$tab_size,
 		"no-prefix"		=> \$no_prefix,
 		"no-sourceview"		=> \$no_sourceview,
@@ -414,6 +431,9 @@ if (!GetOptions("output-directory|o=s"	=> \$output_directory,
 		"ignore-errors=s"	=> \@opt_ignore_errors,
 		"config-file=s"		=> \$opt_config_file,
 		"rc=s%"			=> \%opt_rc,
+		"precision=i"		=> \$default_precision,
+		"missed"		=> \$opt_missed,
+		"dark-mode"		=> \$dark_mode,
 		))
 {
 	print(STDERR "Use $tool_name --help to get usage information\n");
@@ -451,6 +471,9 @@ if ($version)
 
 # Determine which errors the user wants us to ignore
 parse_ignore_errors(@opt_ignore_errors);
+
+# Split the list of prefixes if needed
+parse_dir_prefix(@opt_dir_prefix);
 
 # Check for info filename
 if (!@info_filenames)
@@ -505,11 +528,11 @@ if ($no_sourceview && defined($frames))
 }
 
 # Issue a warning if --no-prefix is enabled together with --prefix
-if ($no_prefix && defined($dir_prefix))
+if ($no_prefix && @dir_prefix)
 {
 	warn("WARNING: option --prefix disabled because --no-prefix was ".
 	     "specified!\n");
-	$dir_prefix = undef;
+	@dir_prefix = undef;
 }
 
 @fileview_sortlist = ($SORT_FILE);
@@ -531,11 +554,18 @@ if ($frames)
 # Ensure that the c++filt tool is available when using --demangle-cpp
 if ($demangle_cpp)
 {
-	if (system_no_output(3, "c++filt", "--version")) {
-		die("ERROR: could not find c++filt tool needed for ".
+	if (system_no_output(3, $demangle_cpp_tool, "--version")) {
+		die("ERROR: could not find $demangle_cpp_tool tool needed for ".
 		    "--demangle-cpp\n");
 	}
 }
+
+# Make sure precision is within valid range
+if ($default_precision < 1 || $default_precision > 4)
+{
+	die("ERROR: specified precision is out of range (1 to 4)\n");
+}
+
 
 # Make sure output_directory exists, create it if necessary
 if ($output_directory)
@@ -604,6 +634,9 @@ HTML output:
       --html-gzip                   Use gzip to compress HTML
       --(no-)sort                   Enable (disable) sorted coverage views
       --demangle-cpp                Demangle C++ function names
+      --precision NUM               Set precision of coverage rate
+      --missed                      Show miss counts as negative numbers
+      --dark-mode                   Use the dark-mode CSS
 
 For more information see: $lcov_url
 END_OF_USAGE
@@ -672,6 +705,116 @@ sub print_overall_rate($$$$$$$$$)
 		if ($br_do);
 }
 
+sub get_fn_list($)
+{
+	my ($info) = @_;
+	my %fns;
+	my @result;
+
+	foreach my $filename (keys(%{$info})) {
+		my $data = $info->{$filename};
+		my $funcdata = $data->{"func"};
+		my $sumfnccount = $data->{"sumfnc"};
+
+		if (defined($funcdata)) {
+			foreach my $func_name (keys(%{$funcdata})) {
+				$fns{$func_name} = 1;
+			}
+		}
+
+		if (defined($sumfnccount)) {
+			foreach my $func_name (keys(%{$sumfnccount})) {
+				$fns{$func_name} = 1;
+			}
+		}
+	}
+
+	@result = keys(%fns);
+
+	return \@result;
+}
+
+#
+# rename_functions(info, conv)
+#
+# Rename all function names in INFO according to CONV: OLD_NAME -> NEW_NAME.
+# In case two functions demangle to the same name, assume that they are
+# different object code implementations for the same source function.
+#
+
+sub rename_functions($$)
+{
+	my ($info, $conv) = @_;
+
+	foreach my $filename (keys(%{$info})) {
+		my $data = $info->{$filename};
+		my $funcdata;
+		my $testfncdata;
+		my $sumfnccount;
+		my %newfuncdata;
+		my %newsumfnccount;
+		my $f_found;
+		my $f_hit;
+
+		# funcdata: function name -> line number
+		$funcdata = $data->{"func"};
+		foreach my $fn (keys(%{$funcdata})) {
+			my $cn = $conv->{$fn};
+
+			# Abort if two functions on different lines map to the
+			# same demangled name.
+			if (defined($newfuncdata{$cn}) &&
+			    $newfuncdata{$cn} != $funcdata->{$fn}) {
+				die("ERROR: Demangled function name $cn ".
+				    "maps to different lines (".
+				    $newfuncdata{$cn}." vs ".
+				    $funcdata->{$fn}.") in $filename\n");
+			}
+			$newfuncdata{$cn} = $funcdata->{$fn};
+		}
+		$data->{"func"} = \%newfuncdata;
+
+		# testfncdata: test name -> testfnccount
+		# testfnccount: function name -> execution count
+		$testfncdata = $data->{"testfnc"};
+		foreach my $tn (keys(%{$testfncdata})) {
+			my $testfnccount = $testfncdata->{$tn};
+			my %newtestfnccount;
+
+			foreach my $fn (keys(%{$testfnccount})) {
+				my $cn = $conv->{$fn};
+
+				# Add counts for different functions that map
+				# to the same name.
+				$newtestfnccount{$cn} +=
+					$testfnccount->{$fn};
+			}
+			$testfncdata->{$tn} = \%newtestfnccount;
+		}
+
+		# sumfnccount: function name -> execution count
+		$sumfnccount = $data->{"sumfnc"};
+		foreach my $fn (keys(%{$sumfnccount})) {
+			my $cn = $conv->{$fn};
+
+			# Add counts for different functions that map
+			# to the same name.
+			$newsumfnccount{$cn} += $sumfnccount->{$fn};
+		}
+		$data->{"sumfnc"} = \%newsumfnccount;
+
+		# Update function found and hit counts since they may have
+		# changed
+		$f_found = 0;
+		$f_hit = 0;
+		foreach my $fn (keys(%newsumfnccount)) {
+			$f_found++;
+			$f_hit++ if ($newsumfnccount{$fn} > 0);
+		}
+		$data->{"f_found"} = $f_found;
+		$data->{"f_hit"} = $f_hit;
+	}
+}
 
 #
 # gen_html()
@@ -737,14 +880,16 @@ sub gen_html()
 		# User requested that we leave filenames alone
 		info("User asked not to remove filename prefix\n");
 	}
-	elsif (!defined($dir_prefix))
+	elsif (! @dir_prefix)
 	{
 		# Get prefix common to most directories in list
-		$dir_prefix = get_prefix(1, keys(%info_data));
+		my $prefix = get_prefix(1, keys(%info_data));
 
-		if ($dir_prefix)
+		if ($prefix)
 		{
-			info("Found common filename prefix \"$dir_prefix\"\n");
+			info("Found common filename prefix \"$prefix\"\n");
+			$dir_prefix[0] = $prefix;
+
 		}
 		else
 		{
@@ -754,9 +899,16 @@ sub gen_html()
 	}
 	else
 	{
-		info("Using user-specified filename prefix \"".
-		     "$dir_prefix\"\n");
+		my $msg = "Using user-specified filename prefix ";
+		for my $i (0 .. $#dir_prefix)
+		{
+				$dir_prefix[$i] =~ s/\/+$//;
+				$msg .= ", " unless 0 == $i;
+				$msg .= "\"" . $dir_prefix[$i] . "\"";
+		}
+		info($msg . "\n");
 	}
+
 
 	# Read in test description file if specified
 	if ($desc_filename)
@@ -803,10 +955,10 @@ sub gen_html()
 		$dir_name = "root" if ($dir_name eq "");
 
 		# Remove prefix if applicable
-		if (!$no_prefix && $dir_prefix)
+		if (!$no_prefix && @dir_prefix)
 		{
-			# Match directory names beginning with $dir_prefix
-			$dir_name = apply_prefix($dir_name, $dir_prefix);
+			# Match directory names beginning with one of @dir_prefix
+			$dir_name = apply_prefix($dir_name,@dir_prefix);
 		}
 
 		# Generate name for directory overview HTML page
@@ -944,8 +1096,8 @@ sub process_dir($)
 	# Remove prefix if applicable
 	if (!$no_prefix)
 	{
-		# Match directory name beginning with $dir_prefix
-		$rel_dir = apply_prefix($rel_dir, $dir_prefix);
+		# Match directory name beginning with one of @dir_prefix
+		$rel_dir = apply_prefix($rel_dir,@dir_prefix);
 	}
 
 	$trunc_dir = $rel_dir;
@@ -1009,7 +1161,7 @@ sub process_dir($)
 
 	# Create sorted pages
 	foreach (@fileview_sortlist) {
-		# Generate directory overview page (without details)	
+		# Generate directory overview page (without details)
 		write_dir_page($fileview_sortname[$_], $rel_dir, $base_dir,
 			       $test_title, $trunc_dir, $overall_found,
 			       $overall_hit, $total_fn_found, $total_fn_hit,
@@ -1127,7 +1279,7 @@ sub write_function_page($$$$$$$$$$$$$$$$$$)
 
 sub process_file($$$)
 {
-	info("Processing file ".apply_prefix($_[2], $dir_prefix)."\n");
+	info("Processing file ".apply_prefix($_[2], @dir_prefix)."\n");
 
 	my $trunc_dir = $_[0];
 	my $rel_dir = $_[1];
@@ -1205,7 +1357,7 @@ sub process_file($$$)
 	}
 
 	# Create overview png file
-	gen_png("$rel_dir/$base_name.gcov.png", $overview_width, $tab_size,
+	gen_png("$rel_dir/$base_name.gcov.png", $dark_mode, $overview_width, $tab_size,
 		@source);
 
 	# Create frameset page
@@ -1226,6 +1378,16 @@ sub process_file($$$)
 }
 
 
+sub compress_brcount($)
+{
+	my ($brcount) = @_;
+	my $db;
+
+	$db = brcount_to_db($brcount);
+	return db_to_brcount($db, $brcount);
+}
+
+
 #
 # read_info_file(info_filename)
 #
@@ -1239,6 +1401,10 @@ sub process_file($$$)
 #        "func"  -> \%funcdata
 #        "found" -> $lines_found (number of instrumented lines found in file)
 #	 "hit"   -> $lines_hit (number of executed lines in file)
+#        "f_found" -> $fn_found (number of instrumented functions found in file)
+#	 "f_hit"   -> $fn_hit (number of executed functions in file)
+#        "b_found" -> $br_found (number of instrumented branches found in file)
+#	 "b_hit"   -> $br_hit (number of executed branches in file)
 #        "check" -> \%checkdata
 #        "testfnc" -> \%testfncdata
 #        "sumfnc"  -> \%sumfnccount
@@ -1258,7 +1424,7 @@ sub process_file($$$)
 # %funcdata    : function name -> line number
 # %checkdata   : line number   -> checksum of source code line
 # $brdata      : vector of items: block, branch, taken
-# 
+#
 # Note that .info file sections referring to the same file and test name
 # will automatically be combined by adding all execution counts.
 #
@@ -1293,8 +1459,7 @@ sub read_info_file($)
 	my $negative;			# If set, warn about negative counts
 	my $changed_testname;		# If set, warn about changed testname
 	my $line_checksum;		# Checksum of current line
-	my $br_found;
-	my $br_hit;
+	my $notified_about_relative_paths;
 	local *INFO_HANDLE;		# Filehandle for .info file
 
 	info("Reading data file $tracefile\n");
@@ -1361,7 +1526,16 @@ sub read_info_file($)
 			{
 				# Filename information found
 				# Retrieve data for new entry
-				$filename = $1;
+				$filename = File::Spec->rel2abs($1, $cwd);
+
+				if (!File::Spec->file_name_is_absolute($1) &&
+				    !$notified_about_relative_paths)
+				{
+					info("Resolved relative source file ".
+					     "path \"$1\" with CWD to ".
+					     "\"$filename\".\n");
+					$notified_about_relative_paths = 1;
+				}
 
 				$data = $result{$filename};
 				($testdata, $sumcount, $funcdata, $checkdata,
@@ -1462,17 +1636,14 @@ sub read_info_file($)
 				   ($1, $2, $3, $4);
 
 				last if (!$br_coverage);
-				$sumbrcount->{$line} =
-					br_ivec_push($sumbrcount->{$line},
-						     $block, $branch, $taken);
+				$block = -1 if ($block == $UNNAMED_BLOCK);
+				$sumbrcount->{$line} .=
+					"$block,$branch,$taken:";
 
 				# Add test-specific counts
 				if (defined($testname)) {
-					$testbrcount->{$line} =
-						br_ivec_push(
-							$testbrcount->{$line},
-							$block, $branch,
-							$taken);
+					$testbrcount->{$line} .=
+						"$block,$branch,$taken:";
 				}
 				last;
 			};
@@ -1491,7 +1662,7 @@ sub read_info_file($)
 							$testfnccount;
 						$testbrdata->{$testname} =
 							$testbrcount;
-					}	
+					}
 
 					set_info_entry($data, $testdata,
 						       $sumcount, $funcdata,
@@ -1557,11 +1728,12 @@ sub read_info_file($)
 		}
 		$data->{"f_hit"} = $hitcount;
 
-		# Get found/hit values for branch data
-		($br_found, $br_hit) = get_br_found_and_hit($sumbrcount);
-
-		$data->{"b_found"} = $br_found;
-		$data->{"b_hit"} = $br_hit;
+		# Combine branch data for the same branches
+		(undef, $data->{"b_found"}, $data->{"b_hit"}) =
+			compress_brcount($sumbrcount);
+		foreach $testname (keys(%{$testbrdata})) {
+			compress_brcount($testbrdata->{$testname});
+		}
 	}
 
 	if (scalar(keys(%result)) == 0)
@@ -1662,8 +1834,8 @@ sub set_info_entry($$$$$$$$$;$$$$$$)
 
 sub add_counts($$)
 {
-	my %data1 = %{$_[0]};	# Hash 1
-	my %data2 = %{$_[1]};	# Hash 2
+	my $data1_ref = $_[0];	# Hash 1
+	my $data2_ref = $_[1];	# Hash 2
 	my %result;		# Resulting hash
 	my $line;		# Current line iteration scalar
 	my $data1_count;	# Count of line in hash1
@@ -1671,10 +1843,10 @@ sub add_counts($$)
 	my $found = 0;		# Total number of lines found
 	my $hit = 0;		# Number of lines with a count > 0
 
-	foreach $line (keys(%data1))
+	foreach $line (keys(%$data1_ref))
 	{
-		$data1_count = $data1{$line};
-		$data2_count = $data2{$line};
+		$data1_count = $data1_ref->{$line};
+		$data2_count = $data2_ref->{$line};
 
 		# Add counts if present in both hashes
 		if (defined($data2_count)) { $data1_count += $data2_count; }
@@ -1686,14 +1858,14 @@ sub add_counts($$)
 		if ($data1_count > 0) { $hit++; }
 	}
 
-	# Add lines unique to data2
-	foreach $line (keys(%data2))
+	# Add lines unique to data2_ref
+	foreach $line (keys(%$data2_ref))
 	{
-		# Skip lines already in data1
-		if (defined($data1{$line})) { next; }
+		# Skip lines already in data1_ref
+		if (defined($data1_ref->{$line})) { next; }
 
-		# Copy count from data2
-		$result{$line} = $data2{$line};
+		# Copy count from data2_ref
+		$result{$line} = $data2_ref->{$line};
 
 		$found++;
 		if ($result{$line} > 0) { $hit++; }
@@ -1859,16 +2031,21 @@ sub brcount_to_db($)
 	my $line;
 	my $db;
 
-	# Add branches from first count to database
+	# Add branches to database
 	foreach $line (keys(%{$brcount})) {
 		my $brdata = $brcount->{$line};
-		my $i;
-		my $num = br_ivec_len($brdata);
 
-		for ($i = 0; $i < $num; $i++) {
-			my ($block, $branch, $taken) = br_ivec_get($brdata, $i);
+		foreach my $entry (split(/:/, $brdata)) {
+			my ($block, $branch, $taken) = split(/,/, $entry);
+			my $old = $db->{$line}->{$block}->{$branch};
 
-			$db->{$line}->{$block}->{$branch} = $taken;
+			if (!defined($old) || $old eq "-") {
+				$old = $taken;
+			} elsif ($taken ne "-") {
+				$old += $taken;
+			}
+
+			$db->{$line}->{$block}->{$branch} = $old;
 		}
 	}
 
@@ -1877,16 +2054,16 @@ sub brcount_to_db($)
 
 
 #
-# db_to_brcount(db)
+# db_to_brcount(db[, brcount])
 #
-# Convert branch coverage data back to brcount format.
+# Convert branch coverage data back to brcount format. If brcount is specified,
+# the converted data is directly inserted in brcount.
 #
 
-sub db_to_brcount($)
+sub db_to_brcount($;$)
 {
-	my ($db) = @_;
+	my ($db, $brcount) = @_;
 	my $line;
-	my $brcount = {};
 	my $br_found = 0;
 	my $br_hit = 0;
 
@@ -1905,8 +2082,7 @@ sub db_to_brcount($)
 
 				$br_found++;
 				$br_hit++ if ($taken ne "-" && $taken > 0);
-				$brdata = br_ivec_push($brdata, $block,
-						       $branch, $taken);
+				$brdata .= "$block,$branch,$taken:";
 			}
 		}
 		$brcount->{$line} = $brdata;
@@ -1917,50 +2093,91 @@ sub db_to_brcount($)
 
 
 #
-# combine_brcount(brcount1, brcount2, type)
+# brcount_db_combine(db1, db2, op)
 #
-# If add is BR_ADD, add branch coverage data and return list (brcount_added,
-# br_found, br_hit). If add is BR_SUB, subtract the taken values of brcount2
-# from brcount1 and return (brcount_sub, br_found, br_hit).
+# db1 := db1 op db2, where
+#   db1, db2: brcount data as returned by brcount_to_db
+#   op:       one of $BR_ADD and BR_SUB
 #
-
-sub combine_brcount($$$)
+sub brcount_db_combine($$$)
 {
-	my ($brcount1, $brcount2, $type) = @_;
-	my $line;
-	my $block;
-	my $branch;
-	my $taken;
-	my $db;
-	my $br_found = 0;
-	my $br_hit = 0;
-	my $result;
+	my ($db1, $db2, $op) = @_;
 
-	# Convert branches from first count to database
-	$db = brcount_to_db($brcount1);
-	# Combine values from database and second count
-	foreach $line (keys(%{$brcount2})) {
-		my $brdata = $brcount2->{$line};
-		my $num = br_ivec_len($brdata);
-		my $i;
+	foreach my $line (keys(%{$db2})) {
+		my $ldata = $db2->{$line};
 
-		for ($i = 0; $i < $num; $i++) {
-			($block, $branch, $taken) = br_ivec_get($brdata, $i);
-			my $new_taken = $db->{$line}->{$block}->{$branch};
+		foreach my $block (keys(%{$ldata})) {
+			my $bdata = $ldata->{$block};
 
-			if ($type == $BR_ADD) {
-				$new_taken = br_taken_add($new_taken, $taken);
-			} elsif ($type == $BR_SUB) {
-				$new_taken = br_taken_sub($new_taken, $taken);
+			foreach my $branch (keys(%{$bdata})) {
+				my $taken = $bdata->{$branch};
+				my $new = $db1->{$line}->{$block}->{$branch};
+
+				if (!defined($new) || $new eq "-") {
+					$new = $taken;
+				} elsif ($taken ne "-") {
+					if ($op == $BR_ADD) {
+						$new += $taken;
+					} elsif ($op == $BR_SUB) {
+						$new -= $taken;
+						$new = 0 if ($new < 0);
+					}
+				}
+
+				$db1->{$line}->{$block}->{$branch} = $new;
 			}
-			$db->{$line}->{$block}->{$branch} = $new_taken
-				if (defined($new_taken));
 		}
 	}
-	# Convert database back to brcount format
-	($result, $br_found, $br_hit) = db_to_brcount($db);
+}
 
-	return ($result, $br_found, $br_hit);
+
+#
+# brcount_db_get_found_and_hit(db)
+#
+# Return (br_found, br_hit) for db.
+#
+
+sub brcount_db_get_found_and_hit($)
+{
+	my ($db) = @_;
+	my ($br_found , $br_hit) = (0, 0);
+
+	foreach my $line (keys(%{$db})) {
+		my $ldata = $db->{$line};
+
+		foreach my $block (keys(%{$ldata})) {
+			my $bdata = $ldata->{$block};
+
+			foreach my $branch (keys(%{$bdata})) {
+				my $taken = $bdata->{$branch};
+
+				$br_found++;
+				$br_hit++ if ($taken ne "-" && $taken > 0);
+			}
+		}
+	}
+
+	return ($br_found, $br_hit);
+}
+
+
+# combine_brcount(brcount1, brcount2, type, inplace)
+#
+# If add is BR_ADD, add branch coverage data and return list brcount_added.
+# If add is BR_SUB, subtract the taken values of brcount2 from brcount1 and
+# return brcount_sub. If inplace is set, the result is inserted into brcount1.
+#
+
+sub combine_brcount($$$;$)
+{
+	my ($brcount1, $brcount2, $type, $inplace) = @_;
+	my ($db1, $db2);
+
+	$db1 = brcount_to_db($brcount1);
+	$db2 = brcount_to_db($brcount2);
+	brcount_db_combine($db1, $db2, $type);
+
+	return db_to_brcount($db1, $inplace ? $brcount1 : undef);
 }
 
 
@@ -2066,7 +2283,7 @@ sub combine_info_entries($$$)
 	$result_testfncdata = add_testfncdata($testfncdata1, $testfncdata2);
 	($result_sumfnccount, $fn_found, $fn_hit) =
 		add_fnccount($sumfnccount1, $sumfnccount2);
-	
+
 	# Combine branch coverage data
 	$result_testbrdata = add_testbrdata($testbrdata1, $testbrdata2);
 	($result_sumbrcount, $br_found, $br_hit) =
@@ -2108,7 +2325,7 @@ sub combine_info_entries($$$)
 			add_counts($result_sumcount,
 				   $result_testdata{$testname});
 	}
-	
+
 	# Calculate resulting sumcount
 
 	# Store result
@@ -2348,6 +2565,9 @@ sub read_testfile($)
 		# Match lines beginning with TD:<whitespace(s)>
 		if (/^TD:\s+(.*?)\s*$/)
 		{
+			if (!defined($test_name)) {
+				die("ERROR: Found test description without prior test name in $_[0]:$.\n");
+			}
 			# Check for empty line
 			if ($1)
 			{
@@ -2415,10 +2635,24 @@ sub get_date_string()
 	my $year;
 	my $month;
 	my $day;
+	my $hour;
+	my $min;
+	my $sec;
+	my @timeresult;
 
-	($year, $month, $day) = (localtime())[5, 4, 3];
+	if (defined $ENV{'SOURCE_DATE_EPOCH'})
+	{
+		@timeresult = gmtime($ENV{'SOURCE_DATE_EPOCH'});
+	}
+	else
+	{
+		@timeresult = localtime();
+	}
+	($year, $month, $day, $hour, $min, $sec) =
+		@timeresult[5, 4, 3, 2, 1, 0];
 
-	return sprintf("%d-%02d-%02d", $year+1900, $month+1, $day);
+	return sprintf("%d-%02d-%02d %02d:%02d:%02d", $year+1900, $month+1,
+		       $day, $hour, $min, $sec);
 }
 
 
@@ -2475,8 +2709,10 @@ sub write_description_file($$$$$$$)
 
 	foreach $test_name (sort(keys(%description)))
 	{
-		write_test_table_entry(*HTML_HANDLE, $test_name,
-				       escape_html($description{$test_name}));
+		my $desc = $description{$test_name};
+
+		$desc = escape_html($desc) if (!$rc_desc_html);
+		write_test_table_entry(*HTML_HANDLE, $test_name, $desc);
 	}
 
 	write_test_table_epilog(*HTML_HANDLE);
@@ -2501,101 +2737,183 @@ sub write_png_files()
 	my %data;
 	local *PNG_HANDLE;
 
-	$data{"ruby.png"} =
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 
-		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 
-		 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x25, 
-		 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00, 0x07, 0x74, 0x49, 0x4d, 
-		 0x45, 0x07, 0xd2, 0x07, 0x11, 0x0f, 0x18, 0x10, 0x5d, 0x57, 
-		 0x34, 0x6e, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 
-		 0x00, 0x00, 0x0b, 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 
-		 0xdd, 0x7e, 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 
-		 0x41, 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00, 
-		 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0x35, 0x2f, 
-		 0x00, 0x00, 0x00, 0xd0, 0x33, 0x9a, 0x9d, 0x00, 0x00, 0x00, 
-		 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x60, 0x00, 
-		 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5, 0x27, 0xde, 0xfc, 0x00, 
-		 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 
-		 0x82];
-	$data{"amber.png"} =
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 
-		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 
-		 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x25, 
-		 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00, 0x07, 0x74, 0x49, 0x4d, 
-		 0x45, 0x07, 0xd2, 0x07, 0x11, 0x0f, 0x28, 0x04, 0x98, 0xcb, 
-		 0xd6, 0xe0, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 
-		 0x00, 0x00, 0x0b, 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 
-		 0xdd, 0x7e, 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 
-		 0x41, 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00, 
-		 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xe0, 0x50, 
-		 0x00, 0x00, 0x00, 0xa2, 0x7a, 0xda, 0x7e, 0x00, 0x00, 0x00, 
-		 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x60, 0x00, 
-	  	 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5, 0x27, 0xde, 0xfc, 0x00, 
-		 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 
-		 0x82];
-	$data{"emerald.png"} =
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 
-		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 
-		 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x25, 
-		 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00, 0x07, 0x74, 0x49, 0x4d, 
-		 0x45, 0x07, 0xd2, 0x07, 0x11, 0x0f, 0x22, 0x2b, 0xc9, 0xf5, 
-		 0x03, 0x33, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 
-		 0x00, 0x00, 0x0b, 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 
-		 0xdd, 0x7e, 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 
-		 0x41, 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00, 
-		 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0x1b, 0xea, 0x59, 
-		 0x0a, 0x0a, 0x0a, 0x0f, 0xba, 0x50, 0x83, 0x00, 0x00, 0x00, 
-		 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x60, 0x00, 
-		 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5, 0x27, 0xde, 0xfc, 0x00, 
-		 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 
-		 0x82];
-	$data{"snow.png"} =
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 
-		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 
-		 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x25, 
-		 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00, 0x07, 0x74, 0x49, 0x4d, 
-		 0x45, 0x07, 0xd2, 0x07, 0x11, 0x0f, 0x1e, 0x1d, 0x75, 0xbc, 
-		 0xef, 0x55, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 
-		 0x00, 0x00, 0x0b, 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 
-		 0xdd, 0x7e, 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 
-		 0x41, 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00, 
-		 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xff, 0xff, 
-		 0x00, 0x00, 0x00, 0x55, 0xc2, 0xd3, 0x7e, 0x00, 0x00, 0x00, 
-		 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x60, 0x00, 
-		 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5, 0x27, 0xde, 0xfc, 0x00, 
-		 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 
-		 0x82];
+	if ($dark_mode) {
+		$data{"ruby.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x06, 0x50, 0x4c, 0x54, 0x45, 0x80, 0x1b, 0x18, 0x00,
+			 0x00, 0x00, 0x39, 0x4a, 0x74, 0xf4, 0x00, 0x00, 0x00,
+			 0x0a, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0x60,
+			 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
+			 0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+			 0xae, 0x42, 0x60, 0x82];
+	} else {
+		$data{"ruby.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x07, 0x74, 0x49, 0x4d, 0x45, 0x07, 0xd2, 0x07, 0x11,
+			 0x0f, 0x18, 0x10, 0x5d, 0x57, 0x34, 0x6e, 0x00, 0x00,
+			 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0b,
+			 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 0xdd, 0x7e,
+			 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 0x41,
+			 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00,
+			 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0x35,
+			 0x2f, 0x00, 0x00, 0x00, 0xd0, 0x33, 0x9a, 0x9d, 0x00,
+			 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda,
+			 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5,
+			 0x27, 0xde, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+			 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+	}
+	if ($dark_mode) {
+		$data{"amber.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x06, 0x50, 0x4c, 0x54, 0x45, 0x99, 0x86, 0x30, 0x00,
+			 0x00, 0x00, 0x51, 0x83, 0x43, 0xd7, 0x00, 0x00, 0x00,
+			 0x0a, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0x60,
+			 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
+			 0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+			 0xae, 0x42, 0x60, 0x82];
+	} else {
+		$data{"amber.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x07, 0x74, 0x49, 0x4d, 0x45, 0x07, 0xd2, 0x07, 0x11,
+			 0x0f, 0x28, 0x04, 0x98, 0xcb, 0xd6, 0xe0, 0x00, 0x00,
+			 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0b,
+			 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 0xdd, 0x7e,
+			 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 0x41,
+			 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00,
+			 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xe0,
+			 0x50, 0x00, 0x00, 0x00, 0xa2, 0x7a, 0xda, 0x7e, 0x00,
+			 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda,
+			 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5,
+			 0x27, 0xde, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+			 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+	}
+	if ($dark_mode) {
+		$data{"emerald.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x06, 0x50, 0x4c, 0x54, 0x45, 0x00, 0x66, 0x00, 0x0a,
+			 0x0a, 0x0a, 0xa4, 0xb8, 0xbf, 0x60, 0x00, 0x00, 0x00,
+			 0x0a, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0x60,
+			 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
+			 0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+			 0xae, 0x42, 0x60, 0x82];
+	} else {
+		$data{"emerald.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x07, 0x74, 0x49, 0x4d, 0x45, 0x07, 0xd2, 0x07, 0x11,
+			 0x0f, 0x22, 0x2b, 0xc9, 0xf5, 0x03, 0x33, 0x00, 0x00,
+			 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0b,
+			 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 0xdd, 0x7e,
+			 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 0x41,
+			 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00,
+			 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0x1b, 0xea,
+			 0x59, 0x0a, 0x0a, 0x0a, 0x0f, 0xba, 0x50, 0x83, 0x00,
+			 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda,
+			 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5,
+			 0x27, 0xde, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+			 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+	}
+	if ($dark_mode) {
+		$data{"snow.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x06, 0x50, 0x4c, 0x54, 0x45, 0xdd, 0xdd, 0xdd, 0x00,
+			 0x00, 0x00, 0xae, 0x9c, 0x6c, 0x92, 0x00, 0x00, 0x00,
+			 0x0a, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0x60,
+			 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
+			 0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+			 0xae, 0x42, 0x60, 0x82];
+	} else {
+		$data{"snow.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00,
+			 0x00, 0x00, 0x25, 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00,
+			 0x07, 0x74, 0x49, 0x4d, 0x45, 0x07, 0xd2, 0x07, 0x11,
+			 0x0f, 0x1e, 0x1d, 0x75, 0xbc, 0xef, 0x55, 0x00, 0x00,
+			 0x00, 0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0b,
+			 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 0xd2, 0xdd, 0x7e,
+			 0xfc, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 0x41,
+			 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00,
+			 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xff,
+			 0xff, 0x00, 0x00, 0x00, 0x55, 0xc2, 0xd3, 0x7e, 0x00,
+			 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda,
+			 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0xe5,
+			 0x27, 0xde, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
+			 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+	}
+
 	$data{"glass.png"} =
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 
-		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 
-		 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x25, 
-		 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 
-		 0x41, 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00, 
-		 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xff, 0xff, 
-		 0x00, 0x00, 0x00, 0x55, 0xc2, 0xd3, 0x7e, 0x00, 0x00, 0x00, 
-		 0x01, 0x74, 0x52, 0x4e, 0x53, 0x00, 0x40, 0xe6, 0xd8, 0x66, 
-		 0x00, 0x00, 0x00, 0x01, 0x62, 0x4b, 0x47, 0x44, 0x00, 0x88, 
-		 0x05, 0x1d, 0x48, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59, 
-		 0x73, 0x00, 0x00, 0x0b, 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01, 
-		 0xd2, 0xdd, 0x7e, 0xfc, 0x00, 0x00, 0x00, 0x07, 0x74, 0x49, 
-		 0x4d, 0x45, 0x07, 0xd2, 0x07, 0x13, 0x0f, 0x08, 0x19, 0xc4, 
-		 0x40, 0x56, 0x10, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 
-		 0x54, 0x78, 0x9c, 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 
-		 0x01, 0x48, 0xaf, 0xa4, 0x71, 0x00, 0x00, 0x00, 0x00, 0x49, 
+		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00,
+		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01,
+		 0x00, 0x00, 0x00, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x25,
+		 0xdb, 0x56, 0xca, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d,
+		 0x41, 0x00, 0x00, 0xb1, 0x8f, 0x0b, 0xfc, 0x61, 0x05, 0x00,
+		 0x00, 0x00, 0x06, 0x50, 0x4c, 0x54, 0x45, 0xff, 0xff, 0xff,
+		 0x00, 0x00, 0x00, 0x55, 0xc2, 0xd3, 0x7e, 0x00, 0x00, 0x00,
+		 0x01, 0x74, 0x52, 0x4e, 0x53, 0x00, 0x40, 0xe6, 0xd8, 0x66,
+		 0x00, 0x00, 0x00, 0x01, 0x62, 0x4b, 0x47, 0x44, 0x00, 0x88,
+		 0x05, 0x1d, 0x48, 0x00, 0x00, 0x00, 0x09, 0x70, 0x48, 0x59,
+		 0x73, 0x00, 0x00, 0x0b, 0x12, 0x00, 0x00, 0x0b, 0x12, 0x01,
+		 0xd2, 0xdd, 0x7e, 0xfc, 0x00, 0x00, 0x00, 0x07, 0x74, 0x49,
+		 0x4d, 0x45, 0x07, 0xd2, 0x07, 0x13, 0x0f, 0x08, 0x19, 0xc4,
+		 0x40, 0x56, 0x10, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41,
+		 0x54, 0x78, 0x9c, 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00,
+		 0x01, 0x48, 0xaf, 0xa4, 0x71, 0x00, 0x00, 0x00, 0x00, 0x49,
 		 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
-	$data{"updown.png"} =
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 
-		 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x0a, 
-		 0x00, 0x00, 0x00, 0x0e, 0x08, 0x06, 0x00, 0x00, 0x00, 0x16, 
-		 0xa3, 0x8d, 0xab, 0x00, 0x00, 0x00, 0x3c, 0x49, 0x44, 0x41, 
-		 0x54, 0x28, 0xcf, 0x63, 0x60, 0x40, 0x03, 0xff, 0xa1, 0x00, 
-		 0x5d, 0x9c, 0x11, 0x5d, 0x11, 0x8a, 0x24, 0x23, 0x23, 0x23, 
-		 0x86, 0x42, 0x6c, 0xa6, 0x20, 0x2b, 0x66, 0xc4, 0xa7, 0x08, 
-		 0x59, 0x31, 0x23, 0x21, 0x45, 0x30, 0xc0, 0xc4, 0x30, 0x60, 
-		 0x80, 0xfa, 0x6e, 0x24, 0x3e, 0x78, 0x48, 0x0a, 0x70, 0x62, 
-		 0xa2, 0x90, 0x81, 0xd8, 0x44, 0x01, 0x00, 0xe9, 0x5c, 0x2f, 
-		 0xf5, 0xe2, 0x9d, 0x0f, 0xf9, 0x00, 0x00, 0x00, 0x00, 0x49, 
-		 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82] if ($sort);
+
+	if ($dark_mode) {
+		$data{"updown.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x0a, 0x00, 0x00, 0x00, 0x0e, 0x08, 0x06, 0x00,
+			 0x00, 0x00, 0x16, 0xa3, 0x8d, 0xab, 0x00, 0x00, 0x00,
+			 0x43, 0x49, 0x44, 0x41, 0x54, 0x28, 0xcf, 0x63, 0x60,
+			 0x40, 0x03, 0x77, 0xef, 0xde, 0xfd, 0x7f, 0xf7, 0xee,
+			 0xdd, 0xff, 0xe8, 0xe2, 0x8c, 0xe8, 0x8a, 0x90, 0xf9,
+			 0xca, 0xca, 0xca, 0x8c, 0x18, 0x0a, 0xb1, 0x99, 0x82,
+			 0xac, 0x98, 0x11, 0x9f, 0x22, 0x64, 0xc5, 0x8c, 0x84,
+			 0x14, 0xc1, 0x00, 0x13, 0xc3, 0x80, 0x01, 0xea, 0xbb,
+			 0x91, 0xf8, 0xe0, 0x21, 0x29, 0xc0, 0x89, 0x89, 0x42,
+			 0x06, 0x62, 0x13, 0x05, 0x00, 0xe1, 0xd3, 0x2d, 0x91,
+			 0x93, 0x15, 0xa4, 0xb2, 0x00, 0x00, 0x00, 0x00, 0x49,
+			 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82] if ($sort);
+	} else {
+		$data{"updown.png"} =
+			[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00,
+			 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
+			 0x00, 0x0a, 0x00, 0x00, 0x00, 0x0e, 0x08, 0x06, 0x00,
+			 0x00, 0x00, 0x16, 0xa3, 0x8d, 0xab, 0x00, 0x00, 0x00,
+			 0x3c, 0x49, 0x44, 0x41, 0x54, 0x28, 0xcf, 0x63, 0x60,
+			 0x40, 0x03, 0xff, 0xa1, 0x00, 0x5d, 0x9c, 0x11, 0x5d,
+			 0x11, 0x8a, 0x24, 0x23, 0x23, 0x23, 0x86, 0x42, 0x6c,
+			 0xa6, 0x20, 0x2b, 0x66, 0xc4, 0xa7, 0x08, 0x59, 0x31,
+			 0x23, 0x21, 0x45, 0x30, 0xc0, 0xc4, 0x30, 0x60, 0x80,
+			 0xfa, 0x6e, 0x24, 0x3e, 0x78, 0x48, 0x0a, 0x70, 0x62,
+			 0xa2, 0x90, 0x81, 0xd8, 0x44, 0x01, 0x00, 0xe9, 0x5c,
+			 0x2f, 0xf5, 0xe2, 0x9d, 0x0f, 0xf9, 0x00, 0x00, 0x00,
+			 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]
+			 if ($sort);
+	}
 	foreach (keys(%data))
 	{
 		open(PNG_HANDLE, ">", $_)
@@ -2659,31 +2977,31 @@ sub write_css_file()
 	/* All views: initial background and text color */
 	body
 	{
-	  color: #000000;
-	  background-color: #FFFFFF;
+	  color: #COLOR_00;
+	  background-color: #COLOR_14;
 	}
-	
+
 	/* All views: standard link format*/
 	a:link
 	{
-	  color: #284FA8;
+	  color: #COLOR_15;
 	  text-decoration: underline;
 	}
-	
+
 	/* All views: standard link - visited format */
 	a:visited
 	{
-	  color: #00CB40;
+	  color: #COLOR_01;
 	  text-decoration: underline;
 	}
-	
+
 	/* All views: standard link - activated format */
 	a:active
 	{
-	  color: #FF0040;
+	  color: #COLOR_11;
 	  text-decoration: underline;
 	}
-	
+
 	/* All views: main title format */
 	td.title
 	{
@@ -2694,7 +3012,7 @@ sub write_css_file()
 	  font-style: italic;
 	  font-weight: bold;
 	}
-	
+
 	/* All views: header item format */
 	td.headerItem
 	{
@@ -2705,12 +3023,12 @@ sub write_css_file()
 	  vertical-align: top;
 	  white-space: nowrap;
 	}
-	
+
 	/* All views: header item value format */
 	td.headerValue
 	{
 	  text-align: left;
-	  color: #284FA8;
+	  color: #COLOR_02;
 	  font-family: sans-serif;
 	  font-weight: bold;
 	  white-space: nowrap;
@@ -2727,76 +3045,76 @@ sub write_css_file()
 	  font-size: 80%;
 	  white-space: nowrap;
 	}
-	
+
 	/* All views: header item coverage table entry */
 	td.headerCovTableEntry
 	{
 	  text-align: right;
-	  color: #284FA8;
+	  color: #COLOR_02;
 	  font-family: sans-serif;
 	  font-weight: bold;
 	  white-space: nowrap;
 	  padding-left: 12px;
 	  padding-right: 4px;
-	  background-color: #DAE7FE;
+	  background-color: #COLOR_08;
 	}
-	
+
 	/* All views: header item coverage table entry for high coverage rate */
 	td.headerCovTableEntryHi
 	{
 	  text-align: right;
-	  color: #000000;
+	  color: #COLOR_00;
 	  font-family: sans-serif;
 	  font-weight: bold;
 	  white-space: nowrap;
 	  padding-left: 12px;
 	  padding-right: 4px;
-	  background-color: #A7FC9D;
+	  background-color: #COLOR_04;
 	}
-	
+
 	/* All views: header item coverage table entry for medium coverage rate */
 	td.headerCovTableEntryMed
 	{
 	  text-align: right;
-	  color: #000000;
+	  color: #COLOR_00;
 	  font-family: sans-serif;
 	  font-weight: bold;
 	  white-space: nowrap;
 	  padding-left: 12px;
 	  padding-right: 4px;
-	  background-color: #FFEA20;
+	  background-color: #COLOR_13;
 	}
-	
+
 	/* All views: header item coverage table entry for ow coverage rate */
 	td.headerCovTableEntryLo
 	{
 	  text-align: right;
-	  color: #000000;
+	  color: #COLOR_00;
 	  font-family: sans-serif;
 	  font-weight: bold;
 	  white-space: nowrap;
 	  padding-left: 12px;
 	  padding-right: 4px;
-	  background-color: #FF0000;
+	  background-color: #COLOR_10;
 	}
-	
+
 	/* All views: header legend value for legend entry */
 	td.headerValueLeg
 	{
 	  text-align: left;
-	  color: #000000;
+	  color: #COLOR_00;
 	  font-family: sans-serif;
 	  font-size: 80%;
 	  white-space: nowrap;
 	  padding-top: 4px;
 	}
-	
+
 	/* All views: color of horizontal ruler */
 	td.ruler
 	{
-	  background-color: #6688D4;
+	  background-color: #COLOR_03;
 	}
-	
+
 	/* All views: version string format */
 	td.versionInfo
 	{
@@ -2805,14 +3123,14 @@ sub write_css_file()
 	  font-family: sans-serif;
 	  font-style: italic;
 	}
-	
+
 	/* Directory view/File view (all)/Test case descriptions:
 	   table headline format */
 	td.tableHead
 	{
 	  text-align: center;
-	  color: #FFFFFF;
-	  background-color: #6688D4;
+	  color: #COLOR_16;
+	  background-color: #COLOR_03;
 	  font-family: sans-serif;
 	  font-size: 120%;
 	  font-weight: bold;
@@ -2825,32 +3143,32 @@ sub write_css_file()
 	{
 	  padding-right: 4px;
 	}
-	
+
 	/* Directory view/File view (all): filename entry format */
 	td.coverFile
 	{
 	  text-align: left;
 	  padding-left: 10px;
-	  padding-right: 20px; 
-	  color: #284FA8;
-	  background-color: #DAE7FE;
+	  padding-right: 20px;
+	  color: #COLOR_02;
+	  background-color: #COLOR_08;
 	  font-family: monospace;
 	}
-	
+
 	/* Directory view/File view (all): bar-graph entry format*/
 	td.coverBar
 	{
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #DAE7FE;
+	  background-color: #COLOR_08;
 	}
-	
+
 	/* Directory view/File view (all): bar-graph outline color */
 	td.coverBarOutline
 	{
-	  background-color: #000000;
+	  background-color: #COLOR_00;
 	}
-	
+
 	/* Directory view/File view (all): percentage entry for files with
 	   high coverage rate */
 	td.coverPerHi
@@ -2858,11 +3176,11 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #A7FC9D;
+	  background-color: #COLOR_04;
 	  font-weight: bold;
 	  font-family: sans-serif;
 	}
-	
+
 	/* Directory view/File view (all): line count entry for files with
 	   high coverage rate */
 	td.coverNumHi
@@ -2870,11 +3188,11 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #A7FC9D;
+	  background-color: #COLOR_04;
 	  white-space: nowrap;
 	  font-family: sans-serif;
 	}
-	
+
 	/* Directory view/File view (all): percentage entry for files with
 	   medium coverage rate */
 	td.coverPerMed
@@ -2882,11 +3200,11 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #FFEA20;
+	  background-color: #COLOR_13;
 	  font-weight: bold;
 	  font-family: sans-serif;
 	}
-	
+
 	/* Directory view/File view (all): line count entry for files with
 	   medium coverage rate */
 	td.coverNumMed
@@ -2894,11 +3212,11 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #FFEA20;
+	  background-color: #COLOR_13;
 	  white-space: nowrap;
 	  font-family: sans-serif;
 	}
-	
+
 	/* Directory view/File view (all): percentage entry for files with
 	   low coverage rate */
 	td.coverPerLo
@@ -2906,11 +3224,11 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #FF0000;
+	  background-color: #COLOR_10;
 	  font-weight: bold;
 	  font-family: sans-serif;
 	}
-	
+
 	/* Directory view/File view (all): line count entry for files with
 	   low coverage rate */
 	td.coverNumLo
@@ -2918,68 +3236,68 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #FF0000;
+	  background-color: #COLOR_10;
 	  white-space: nowrap;
 	  font-family: sans-serif;
 	}
-	
+
 	/* File view (all): "show/hide details" link format */
 	a.detail:link
 	{
 	  color: #B8D0FF;
 	  font-size:80%;
 	}
-	
+
 	/* File view (all): "show/hide details" link - visited format */
 	a.detail:visited
 	{
 	  color: #B8D0FF;
 	  font-size:80%;
 	}
-	
+
 	/* File view (all): "show/hide details" link - activated format */
 	a.detail:active
 	{
-	  color: #FFFFFF;
+	  color: #COLOR_14;
 	  font-size:80%;
 	}
-	
+
 	/* File view (detail): test name entry */
 	td.testName
 	{
 	  text-align: right;
 	  padding-right: 10px;
-	  background-color: #DAE7FE;
+	  background-color: #COLOR_08;
 	  font-family: sans-serif;
 	}
-	
+
 	/* File view (detail): test percentage entry */
 	td.testPer
 	{
 	  text-align: right;
 	  padding-left: 10px;
-	  padding-right: 10px; 
-	  background-color: #DAE7FE;
+	  padding-right: 10px;
+	  background-color: #COLOR_08;
 	  font-family: sans-serif;
 	}
-	
+
 	/* File view (detail): test lines count entry */
 	td.testNum
 	{
 	  text-align: right;
 	  padding-left: 10px;
-	  padding-right: 10px; 
-	  background-color: #DAE7FE;
+	  padding-right: 10px;
+	  background-color: #COLOR_08;
 	  font-family: sans-serif;
 	}
-	
+
 	/* Test case descriptions: test name format*/
 	dt
 	{
 	  font-family: sans-serif;
 	  font-weight: bold;
 	}
-	
+
 	/* Test case descriptions: description table body */
 	td.testDescription
 	{
@@ -2987,17 +3305,17 @@ sub write_css_file()
 	  padding-left: 30px;
 	  padding-bottom: 10px;
 	  padding-right: 30px;
-	  background-color: #DAE7FE;
+	  background-color: #COLOR_08;
 	}
-	
+
 	/* Source code view: function entry */
 	td.coverFn
 	{
 	  text-align: left;
 	  padding-left: 10px;
-	  padding-right: 20px; 
-	  color: #284FA8;
-	  background-color: #DAE7FE;
+	  padding-right: 20px;
+	  color: #COLOR_02;
+	  background-color: #COLOR_08;
 	  font-family: monospace;
 	}
 
@@ -3007,7 +3325,7 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #FF0000;
+	  background-color: #COLOR_10;
 	  font-weight: bold;
 	  font-family: sans-serif;
 	}
@@ -3018,7 +3336,7 @@ sub write_css_file()
 	  text-align: right;
 	  padding-left: 10px;
 	  padding-right: 10px;
-	  background-color: #DAE7FE;
+	  background-color: #COLOR_08;
 	  font-weight: bold;
 	  font-family: sans-serif;
 	}
@@ -3030,78 +3348,78 @@ sub write_css_file()
 	  white-space: pre;
 	  margin-top: 2px;
 	}
-	
+
 	/* Source code view: line number format */
 	span.lineNum
 	{
-	  background-color: #EFE383;
+	  background-color: #COLOR_09;
 	}
-	
+
 	/* Source code view: format for lines which were executed */
 	td.lineCov,
 	span.lineCov
 	{
-	  background-color: #CAD7FE;
+	  background-color: #COLOR_07;
 	}
-	
+
 	/* Source code view: format for Cov legend */
 	span.coverLegendCov
 	{
 	  padding-left: 10px;
 	  padding-right: 10px;
 	  padding-bottom: 2px;
-	  background-color: #CAD7FE;
+	  background-color: #COLOR_07;
 	}
-	
+
 	/* Source code view: format for lines which were not executed */
 	td.lineNoCov,
 	span.lineNoCov
 	{
-	  background-color: #FF6230;
+	  background-color: #COLOR_12;
 	}
-	
+
 	/* Source code view: format for NoCov legend */
 	span.coverLegendNoCov
 	{
 	  padding-left: 10px;
 	  padding-right: 10px;
 	  padding-bottom: 2px;
-	  background-color: #FF6230;
+	  background-color: #COLOR_12;
 	}
-	
+
 	/* Source code view (function table): standard link - visited format */
 	td.lineNoCov > a:visited,
 	td.lineCov > a:visited
-	{  
-	  color: black;
+	{
+	  color: #COLOR_00;
 	  text-decoration: underline;
-	}  
-	
+	}
+
 	/* Source code view: format for lines which were executed only in a
 	   previous version */
 	span.lineDiffCov
 	{
-	  background-color: #B5F7AF;
+	  background-color: #COLOR_05;
 	}
-	
+
 	/* Source code view: format for branches which were executed
 	 * and taken */
 	span.branchCov
 	{
-	  background-color: #CAD7FE;
+	  background-color: #COLOR_07;
 	}
 
 	/* Source code view: format for branches which were executed
 	 * but not taken */
 	span.branchNoCov
 	{
-	  background-color: #FF6230;
+	  background-color: #COLOR_12;
 	}
 
 	/* Source code view: format for branches which were not executed */
 	span.branchNoExec
 	{
-	  background-color: #FF6230;
+	  background-color: #COLOR_12;
 	}
 
 	/* Source code view: format for the source code heading line */
@@ -3121,7 +3439,7 @@ sub write_css_file()
 	  white-space: nowrap;
 	  padding-left: 4px;
 	  padding-right: 2px;
-	  background-color: #FF0000;
+	  background-color: #COLOR_10;
 	  font-size: 80%;
 	}
 
@@ -3133,7 +3451,7 @@ sub write_css_file()
 	  white-space: nowrap;
 	  padding-left: 2px;
 	  padding-right: 2px;
-	  background-color: #FFEA20;
+	  background-color: #COLOR_13;
 	  font-size: 80%;
 	}
 
@@ -3145,7 +3463,7 @@ sub write_css_file()
 	  white-space: nowrap;
 	  padding-left: 2px;
 	  padding-right: 4px;
-	  background-color: #A7FC9D;
+	  background-color: #COLOR_04;
 	  font-size: 80%;
 	}
 
@@ -3155,7 +3473,7 @@ sub write_css_file()
 	  padding-left: 10px;
 	  padding-right: 10px;
 	  padding-top: 2px;
-	  background-color: #FF0000;
+	  background-color: #COLOR_10;
 	}
 
 	/* All views except source code view: legend format for med coverage */
@@ -3164,7 +3482,7 @@ sub write_css_file()
 	  padding-left: 10px;
 	  padding-right: 10px;
 	  padding-top: 2px;
-	  background-color: #FFEA20;
+	  background-color: #COLOR_13;
 	}
 
 	/* All views except source code view: legend format for hi coverage */
@@ -3173,7 +3491,7 @@ sub write_css_file()
 	  padding-left: 10px;
 	  padding-right: 10px;
 	  padding-top: 2px;
-	  background-color: #A7FC9D;
+	  background-color: #COLOR_04;
 	}
 END_OF_CSS
 	;
@@ -3183,6 +3501,48 @@ END_OF_CSS
 
 	# Remove leading tab from all lines
 	$css_data =~ s/^\t//gm;
+	my %palette = ( 'COLOR_00' => "000000",
+			'COLOR_01' => "00cb40",
+			'COLOR_02' => "284fa8",
+			'COLOR_03' => "6688d4",
+			'COLOR_04' => "a7fc9d",
+			'COLOR_05' => "b5f7af",
+			'COLOR_06' => "b8d0ff",
+			'COLOR_07' => "cad7fe",
+			'COLOR_08' => "dae7fe",
+			'COLOR_09' => "efe383",
+			'COLOR_10' => "ff0000",
+			'COLOR_11' => "ff0040",
+			'COLOR_12' => "ff6230",
+			'COLOR_13' => "ffea20",
+			'COLOR_14' => "ffffff",
+			'COLOR_15' => "284fa8",
+			'COLOR_16' => "ffffff");
+
+	if ($dark_mode) {
+		%palette =  (   'COLOR_00' => "e4e4e4",
+				'COLOR_01' => "58a6ff",
+				'COLOR_02' => "8b949e",
+				'COLOR_03' => "3b4c71",
+				'COLOR_04' => "006600",
+				'COLOR_05' => "4b6648",
+				'COLOR_06' => "495366",
+				'COLOR_07' => "143e4f",
+				'COLOR_08' => "1c1e23",
+				'COLOR_09' => "202020",
+				'COLOR_10' => "801b18",
+				'COLOR_11' => "66001a",
+				'COLOR_12' => "772d16",
+				'COLOR_13' => "796a25",
+				'COLOR_14' => "000000",
+				'COLOR_15' => "58a6ff",
+				'COLOR_16' => "eeeeee");
+	}
+
+	# Apply palette
+	for (keys %palette) {
+            $css_data =~ s/$_/$palette{$_}/gm;
+	}
 
 	print(CSS_HANDLE $css_data);
 
@@ -3522,6 +3882,10 @@ END_OF_HTML
 			$class = $rate_name[classify_rate($found, $hit,
 					    $med, $hi)];
 		}
+		if ($opt_missed) {
+			# Show negative number of items without coverage
+			$hit = -($found - $hit);
+		}
 		write_html($handle, <<END_OF_HTML);
 	      <td class="coverPer$class">$rate</td>
 	      <td class="coverNum$class">$hit / $found</td>
@@ -3678,8 +4042,8 @@ sub fmt_centered($$)
 {
 	my ($width, $text) = @_;
 	my $w0 = length($text);
-	my $w1 = int(($width - $w0) / 2);
-	my $w2 = $width - $w0 - $w1;
+	my $w1 = $width > $w0 ? int(($width - $w0) / 2) : 0;
+	my $w2 = $width > $w0 ? $width - $w0 - $w1 : 0;
 
 	return (" "x$w1).$text.(" "x$w2);
 }
@@ -3719,6 +4083,14 @@ END_OF_HTML
 	# *************************************************************
 }
 
+sub cmp_blocks($$)
+{
+	my ($a, $b) = @_;
+	my ($fa, $fb) = ($a->[0], $b->[0]);
+
+	return $fa->[0] <=> $fb->[0] if ($fa->[0] != $fb->[0]);
+	return $fa->[1] <=> $fb->[1];
+}
 
 #
 # get_branch_blocks(brdata)
@@ -3736,12 +4108,12 @@ sub get_branch_blocks($)
 	my $last_block_num;
 	my $block = [];
 	my @blocks;
-	my $i;
-	my $num = br_ivec_len($brdata);
+
+	return () if (!defined($brdata));
 
 	# Group branches
-	for ($i = 0; $i < $num; $i++) {
-		my ($block_num, $branch, $taken) = br_ivec_get($brdata, $i);
+	foreach my $entry (split(/:/, $brdata)) {
+		my ($block_num, $branch, $taken) = split(/,/, $entry);
 		my $br;
 
 		if (defined($last_block_num) && $block_num != $last_block_num) {
@@ -3762,7 +4134,7 @@ sub get_branch_blocks($)
 		$block->[scalar(@{$block}) - 1]->[$BR_LEN]++;
 	}
 
-	return @blocks;
+	return sort(cmp_blocks @blocks);
 }
 
 #
@@ -3919,16 +4291,15 @@ sub format_count($$)
 
 #
 # write_source_line(filehandle, line_num, source, hit_count, converted,
-#                   brdata, add_anchor)
+#                   brdata)
 #
 # Write formatted source code line. Return a line in a format as needed
 # by gen_png()
 #
 
-sub write_source_line(*$$$$$$)
+sub write_source_line(*$$$$$)
 {
-	my ($handle, $line, $source, $count, $converted, $brdata,
-	    $add_anchor) = @_;
+	my ($handle, $line, $source, $count, $converted, $brdata) = @_;
 	my $source_format;
 	my $count_format;
 	my $result;
@@ -3965,11 +4336,8 @@ sub write_source_line(*$$$$$$)
 
 	# Write out a line number navigation anchor every $nav_resolution
 	# lines if necessary
-	if ($add_anchor)
-	{
-		$anchor_start	= "<a name=\"$_[1]\">";
-		$anchor_end	= "</a>";
-	}
+	$anchor_start	= "<a name=\"$_[1]\">";
+	$anchor_end	= "</a>";
 
 
 	# *************************************************************
@@ -4273,7 +4641,11 @@ sub write_header(*$$$$$$$$$$)
 		if ($func_coverage) {
 			$view .= "<span style=\"font-size: 80%;\">";
 			if ($type == $HDR_SOURCE) {
-				$view .= " (source / <a href=\"$base_name.func.$html_ext\">functions</a>)";
+				if ($sort) {
+					$view .= " (source / <a href=\"$base_name.func-sort-c.$html_ext\">functions</a>)";
+				} else {
+					$view .= " (source / <a href=\"$base_name.func.$html_ext\">functions</a>)";
+				}
 			} elsif ($type == $HDR_FUNC) {
 				$view .= " (<a href=\"$base_name.gcov.$html_ext\">source</a> / functions)";
 			}
@@ -4410,9 +4782,56 @@ END_OF_HTML
 	write_header_epilog(*HTML_HANDLE, $base_dir);
 }
 
+sub get_sorted_by_rate($$)
+{
+	my ($hash, $type) = @_;
+
+	if ($type == $SORT_LINE) {
+		# Sort by line coverage
+		return sort({$hash->{$a}[7] <=> $hash->{$b}[7]} keys(%{$hash}));
+	} elsif ($type == $SORT_FUNC) {
+		# Sort by function coverage;
+		return sort({$hash->{$a}[8] <=> $hash->{$b}[8]}	keys(%{$hash}));
+	} elsif ($type == $SORT_BRANCH) {
+		# Sort by br coverage;
+		return sort({$hash->{$a}[9] <=> $hash->{$b}[9]}	keys(%{$hash}));
+	}
+}
+
+sub get_sorted_by_missed($$)
+{
+	my ($hash, $type) = @_;
+
+	if ($type == $SORT_LINE) {
+		# Sort by number of instrumented lines without coverage
+		return sort(
+			{
+				($hash->{$b}[0] - $hash->{$b}[1]) <=>
+				($hash->{$a}[0] - $hash->{$a}[1])
+			} keys(%{$hash}));
+	} elsif ($type == $SORT_FUNC) {
+		# Sort by number of instrumented functions without coverage
+		return sort(
+			{
+				($hash->{$b}[2] - $hash->{$b}[3]) <=>
+				($hash->{$a}[2] - $hash->{$a}[3])
+			} keys(%{$hash}));
+	} elsif ($type == $SORT_BRANCH) {
+		# Sort by number of instrumented branches without coverage
+		return sort(
+			{
+				($hash->{$b}[4] - $hash->{$b}[5]) <=>
+				($hash->{$a}[4] - $hash->{$a}[5])
+			} keys(%{$hash}));
+	}
+}
 
 #
 # get_sorted_keys(hash_ref, sort_type)
+#
+# hash_ref: filename -> stats
+# stats: [ lines_found, lines_hit, fn_found, fn_hit, br_found, br_hit,
+#          link_name, line_rate, fn_rate, br_rate ]
 #
 
 sub get_sorted_keys($$)
@@ -4422,15 +4841,10 @@ sub get_sorted_keys($$)
 	if ($type == $SORT_FILE) {
 		# Sort by name
 		return sort(keys(%{$hash}));
-	} elsif ($type == $SORT_LINE) {
-		# Sort by line coverage
-		return sort({$hash->{$a}[7] <=> $hash->{$b}[7]} keys(%{$hash}));
-	} elsif ($type == $SORT_FUNC) {
-		# Sort by function coverage;
-		return sort({$hash->{$a}[8] <=> $hash->{$b}[8]}	keys(%{$hash}));
-	} elsif ($type == $SORT_BRANCH) {
-		# Sort by br coverage;
-		return sort({$hash->{$a}[9] <=> $hash->{$b}[9]}	keys(%{$hash}));
+	} elsif ($opt_missed) {
+		return get_sorted_by_missed($hash, $type);
+	} else {
+		return get_sorted_by_rate($hash, $type);
 	}
 }
 
@@ -4718,7 +5132,7 @@ sub get_found_and_hit($)
 	# Calculate sum
 	$found = 0;
 	$hit = 0;
-			
+
 	foreach (keys(%hash))
 	{
 		$found++;
@@ -4753,183 +5167,14 @@ sub get_func_found_and_hit($)
 }
 
 
-#
-# br_taken_to_num(taken)
-#
-# Convert a branch taken value .info format to number format.
-#
-
-sub br_taken_to_num($)
-{
-	my ($taken) = @_;
-
-	return 0 if ($taken eq '-');
-	return $taken + 1;
-}
-
-
-#
-# br_num_to_taken(taken)
-#
-# Convert a branch taken value in number format to .info format.
-#
-
-sub br_num_to_taken($)
-{
-	my ($taken) = @_;
-
-	return '-' if ($taken == 0);
-	return $taken - 1;
-}
-
-
-#
-# br_taken_add(taken1, taken2)
-#
-# Return the result of taken1 + taken2 for 'branch taken' values.
-#
-
-sub br_taken_add($$)
-{
-	my ($t1, $t2) = @_;
-
-	return $t1 if (!defined($t2));
-	return $t2 if (!defined($t1));
-	return $t1 if ($t2 eq '-');
-	return $t2 if ($t1 eq '-');
-	return $t1 + $t2;
-}
-
-
-#
-# br_taken_sub(taken1, taken2)
-#
-# Return the result of taken1 - taken2 for 'branch taken' values. Return 0
-# if the result would become negative.
-#
-
-sub br_taken_sub($$)
-{
-	my ($t1, $t2) = @_;
-
-	return $t1 if (!defined($t2));
-	return undef if (!defined($t1));
-	return $t1 if ($t1 eq '-');
-	return $t1 if ($t2 eq '-');
-	return 0 if $t2 > $t1;
-	return $t1 - $t2;
-}
-
-
-#
-# br_ivec_len(vector)
-#
-# Return the number of entries in the branch coverage vector.
-#
-
-sub br_ivec_len($)
-{
-	my ($vec) = @_;
-
-	return 0 if (!defined($vec));
-	return (length($vec) * 8 / $BR_VEC_WIDTH) / $BR_VEC_ENTRIES;
-}
-
-
-#
-# br_ivec_get(vector, number)
-#
-# Return an entry from the branch coverage vector.
-#
-
-sub br_ivec_get($$)
-{
-	my ($vec, $num) = @_;
-	my $block;
-	my $branch;
-	my $taken;
-	my $offset = $num * $BR_VEC_ENTRIES;
-
-	# Retrieve data from vector
-	$block	= vec($vec, $offset + $BR_BLOCK, $BR_VEC_WIDTH);
-	$branch = vec($vec, $offset + $BR_BRANCH, $BR_VEC_WIDTH);
-	$taken	= vec($vec, $offset + $BR_TAKEN, $BR_VEC_WIDTH);
-
-	# Decode taken value from an integer
-	$taken = br_num_to_taken($taken);
-
-	return ($block, $branch, $taken);
-}
-
-
-#
-# br_ivec_push(vector, block, branch, taken)
-#
-# Add an entry to the branch coverage vector. If an entry with the same
-# branch ID already exists, add the corresponding taken values.
-#
-
-sub br_ivec_push($$$$)
-{
-	my ($vec, $block, $branch, $taken) = @_;
-	my $offset;
-	my $num = br_ivec_len($vec);
-	my $i;
-
-	$vec = "" if (!defined($vec));
-
-	# Check if branch already exists in vector
-	for ($i = 0; $i < $num; $i++) {
-		my ($v_block, $v_branch, $v_taken) = br_ivec_get($vec, $i);
-
-		next if ($v_block != $block || $v_branch != $branch);
-
-		# Add taken counts
-		$taken = br_taken_add($taken, $v_taken);
-		last;
-	}
-
-	$offset = $i * $BR_VEC_ENTRIES;
-	$taken = br_taken_to_num($taken);
-
-	# Add to vector
-	vec($vec, $offset + $BR_BLOCK, $BR_VEC_WIDTH) = $block;
-	vec($vec, $offset + $BR_BRANCH, $BR_VEC_WIDTH) = $branch;
-	vec($vec, $offset + $BR_TAKEN, $BR_VEC_WIDTH) = $taken;
-
-	return $vec;
-}
-
-
-#
-# get_br_found_and_hit(sumbrcount)
-#
-# Return (br_found, br_hit) for sumbrcount
-#
-
 sub get_br_found_and_hit($)
 {
-	my ($sumbrcount) = @_;
-	my $line;
-	my $br_found = 0;
-	my $br_hit = 0;
+	my ($brcount) = @_;
+	my $db;
 
-	foreach $line (keys(%{$sumbrcount})) {
-		my $brdata = $sumbrcount->{$line};
-		my $i;
-		my $num = br_ivec_len($brdata);
+	$db = brcount_to_db($brcount);
 
-		for ($i = 0; $i < $num; $i++) {
-			my $taken;
-
-			(undef, undef, $taken) = br_ivec_get($brdata, $i);
-
-			$br_found++;
-			$br_hit++ if ($taken ne "-" && $taken > 0);
-		}
-	}
-
-	return ($br_found, $br_hit);
+	return brcount_db_get_found_and_hit($db);
 }
 
 
@@ -5014,7 +5259,6 @@ sub write_source($$$$$$$)
 	my $funcdata  = $_[5];
 	my $sumbrcount = $_[6];
 	my $datafunc = get_hash_reverse($funcdata);
-	my $add_anchor;
 	my @file;
 
 	if ($_[2])
@@ -5047,7 +5291,7 @@ sub write_source($$$$$$$)
 	} else {
 		@file = <SOURCE_HANDLE>;
 	}
-	
+
 	write_source_prolog(*HTML_HANDLE);
 	$line_number = 0;
 	foreach (@file) {
@@ -5065,25 +5309,11 @@ sub write_source($$$$$$$)
 			    "$line_number\n");
 		}
 
-		$add_anchor = 0;
-		if ($frames) {
-			if (($line_number - 1) % $nav_resolution == 0) {
-				$add_anchor = 1;
-			}
-		}
-		if ($func_coverage) {
-			if ($line_number == 1) {
-				$add_anchor = 1;
-			} elsif (defined($datafunc->{$line_number +
-						     $func_offset})) {
-				$add_anchor = 1;
-			}
-		}
 		push (@result,
 		      write_source_line(HTML_HANDLE, $line_number,
 					$_, $count_data{$line_number},
 					$converted->{$line_number},
-					$sumbrcount->{$line_number}, $add_anchor));
+					$sumbrcount->{$line_number}));
 	}
 
 	close(SOURCE_HANDLE);
@@ -5136,8 +5366,58 @@ sub funcview_get_sorted($$$)
 	if ($type == 0) {
 		return sort(keys(%{$funcdata}));
 	}
-	return sort({$sumfncdata->{$b} <=> $sumfncdata->{$a}}
-		    keys(%{$sumfncdata}));
+	return sort({
+		$sumfncdata->{$b} == $sumfncdata->{$a} ?
+			$a cmp $b : $sumfncdata->{$a} <=> $sumfncdata->{$b}
+		} keys(%{$sumfncdata}));
+}
+
+sub demangle_list($)
+{
+	my ($list) = @_;
+	my $tmpfile;
+	my $handle;
+	my %demangle;
+	my $demangle_arg = $demangle_cpp_params;
+	my %versions;
+
+	# Write function names to file
+	($handle, $tmpfile) = tempfile();
+	die("ERROR: could not create temporary file") if (!defined($tmpfile));
+	print($handle join("\n", @$list));
+	close($handle);
+
+	# Extra flag necessary on OS X so that symbols listed by gcov get demangled
+	# properly.
+	if ($demangle_arg eq "" && $^O eq "darwin") {
+		$demangle_arg = "--no-strip-underscore";
+	}
+
+	# Build translation hash from c++filt output
+	open($handle, "-|", "$demangle_cpp_tool $demangle_arg < $tmpfile") or
+		die("ERROR: could not run c++filt: $!\n");
+	foreach my $func (@$list) {
+		my $translated = <$handle>;
+		my $version;
+
+		last if (!defined($translated));
+		chomp($translated);
+
+		$version = ++$versions{$translated};
+		$translated .= ".$version" if ($version > 1);
+		$demangle{$func} = $translated;
+	}
+	close($handle);
+
+	if (scalar(keys(%demangle)) != scalar(@$list)) {
+		die("ERROR: c++filt output not as expected (".
+		    scalar(keys(%demangle))." vs ".scalar(@$list).") lines\n");
+	}
+
+	unlink($tmpfile) or
+		warn("WARNING: could not remove temporary file $tmpfile: $!\n");
+
+	return \%demangle;
 }
 
 #
@@ -5167,6 +5447,7 @@ sub write_function_table(*$$$$$$$$$$)
 	my $func;
 	my $func_code;
 	my $count_code;
+	my $demangle;
 
 	# Get HTML code for headings
 	$func_code = funcview_get_func_code($name, $base, $type);
@@ -5181,7 +5462,12 @@ sub write_function_table(*$$$$$$$$$$)
 	    </tr>
 END_OF_HTML
 	;
-	
+
+	# Get demangle translation hash
+	if ($demangle_cpp) {
+		$demangle = demangle_list([ sort(keys(%{$funcdata})) ]);
+	}
+
 	# Get a sorted table
 	foreach $func (funcview_get_sorted($funcdata, $sumfncdata, $type)) {
 		if (!defined($funcdata->{$func}))
@@ -5194,12 +5480,10 @@ END_OF_HTML
 		my $count = $sumfncdata->{$name};
 		my $countstyle;
 
-		# Demangle C++ function names if requested
-		if ($demangle_cpp) {
-			$name = `c++filt "$name"`;
-			chomp($name);
-		}
-		# Escape any remaining special characters
+		# Replace function name with demangled version if available
+		$name = $demangle->{$name} if (exists($demangle->{$name}));
+
+		# Escape special characters
 		$name = escape_html($name);
 		if ($startline < 1) {
 			$startline = 1;
@@ -5462,7 +5746,7 @@ sub remove_unused_descriptions()
 	my $test_data;		# Reference to hash test_name -> count_data
 	my $before;		# Initial number of descriptions
 	my $after;		# Remaining number of descriptions
-	
+
 	$before = scalar(keys(%test_description));
 
 	foreach $filename (keys(%info_data))
@@ -5493,22 +5777,29 @@ sub remove_unused_descriptions()
 
 
 #
-# apply_prefix(filename, prefix)
+# apply_prefix(filename, PREFIXES)
 #
-# If FILENAME begins with PREFIX, remove PREFIX from FILENAME and return
-# resulting string, otherwise return FILENAME.
+# If FILENAME begins with PREFIX from PREFIXES, remove PREFIX from FILENAME
+# and return resulting string, otherwise return FILENAME.
 #
 
-sub apply_prefix($$)
+sub apply_prefix($@)
 {
-	my $filename = $_[0];
-	my $prefix = $_[1];
+	my $filename = shift;
+	my @dir_prefix = @_;
 
-	if (defined($prefix) && ($prefix ne ""))
+	if (@dir_prefix)
 	{
-		if ($filename =~ /^\Q$prefix\E\/(.*)$/)
+		foreach my $prefix (@dir_prefix)
 		{
-			return substr($filename, length($prefix) + 1);
+			if ($prefix eq $filename)
+			{
+				return "root";
+			}
+			if ($prefix ne "" && $filename =~ /^\Q$prefix\E\/(.*)$/)
+			{
+				return substr($filename, length($prefix) + 1);
+			}
 		}
 	}
 
@@ -5613,7 +5904,7 @@ sub read_config($)
 #
 # where KEY_STRING is a keyword and VAR_REF is a reference to an associated
 # variable. If the global configuration hashes CONFIG or OPT_RC contain a value
-# for keyword KEY_STRING, VAR_REF will be assigned the value for that keyword. 
+# for keyword KEY_STRING, VAR_REF will be assigned the value for that keyword.
 #
 
 sub apply_config($)
@@ -5765,6 +6056,30 @@ sub parse_ignore_errors(@)
 }
 
 #
+# parse_dir_prefix(@dir_prefix)
+#
+# Parse user input about the prefix list
+#
+
+sub parse_dir_prefix(@)
+{
+	my (@opt_dir_prefix) = @_;
+	my $item;
+
+	return if (!@opt_dir_prefix);
+
+	foreach $item (@opt_dir_prefix) {
+		if ($item =~ /,/) {
+			# Split and add comma-separated parameters
+			push(@dir_prefix, split(/,/, $item));
+		} else {
+			# Add single parameter
+			push(@dir_prefix, $item);
+		}
+	}
+}
+
+#
 # rate(hit, found[, suffix, precision, width])
 #
 # Return the coverage rate [0..100] for HIT and FOUND values. 0 is only
@@ -5778,13 +6093,13 @@ sub parse_ignore_errors(@)
 sub rate($$;$$$)
 {
         my ($hit, $found, $suffix, $precision, $width) = @_;
-        my $rate; 
+        my $rate;
 
 	# Assign defaults if necessary
-        $precision	= 1	if (!defined($precision));
+	$precision	= $default_precision if (!defined($precision));
 	$suffix		= ""	if (!defined($suffix));
 	$width		= 0	if (!defined($width));
-        
+
         return sprintf("%*s", $width, "-") if (!defined($found) || $found == 0);
         $rate = sprintf("%.*f", $precision, $hit * 100 / $found);
 
