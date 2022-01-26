@@ -339,6 +339,7 @@ class SceneView(QWidget):
     def destroy(self):
         """Do some cleanup of the scene's objects before death.
         """
+        self._widget_removal_timer.stop()
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.destroy()
