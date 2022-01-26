@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #   Copyright (c) International Business Machines  Corp., 2002,2012
 #
@@ -10,11 +10,11 @@
 #   This program is distributed in the hope that it will be useful, but
 #   WITHOUT ANY WARRANTY;  without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#   General Public License for more details.                 
+#   General Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License
-#   along with this program;  if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#   along with this program;  if not, see
+#   <http://www.gnu.org/licenses/>.
 #
 #
 # lcov
@@ -31,7 +31,7 @@
 #   2002-10-16 / Peter Oberparleiter: implemented --add-tracefile option
 #   2002-10-17 / Peter Oberparleiter: implemented --extract option
 #   2002-11-04 / Peter Oberparleiter: implemented --list option
-#   2003-03-07 / Paul Larson: Changed to make it work with the latest gcov 
+#   2003-03-07 / Paul Larson: Changed to make it work with the latest gcov
 #                kernel patch.  This will break it with older gcov-kernel
 #                patches unless you change the value of $gcovmod in this script
 #   2003-04-07 / Peter Oberparleiter: fixed bug which resulted in an error
@@ -60,6 +60,7 @@
 #
 
 use strict;
+use warnings;
 use File::Basename;
 use File::Path;
 use File::Find;
@@ -71,7 +72,8 @@ use Cwd qw /abs_path getcwd/;
 
 
 # Global constants
-our $lcov_version	= 'LCOV version 1.10';
+our $tool_dir		= abs_path(dirname($0));
+our $lcov_version	= 'LCOV version 1.15';
 our $lcov_url		= "http://ltp.sourceforge.net/coverage/lcov.php";
 our $tool_name		= basename($0);
 
@@ -87,12 +89,6 @@ our $GKV_SYS = 1;	# gcov-kernel data in /sys via vanilla 2.6.31+
 our @GKV_NAME = ( "external", "upstream" );
 our $pkg_gkv_file = ".gcov_kernel_version";
 our $pkg_build_file = ".build_directory";
-
-our $BR_BLOCK		= 0;
-our $BR_BRANCH		= 1;
-our $BR_TAKEN		= 2;
-our $BR_VEC_ENTRIES	= 3;
-our $BR_VEC_WIDTH	= 32;
 
 # Branch data combination types
 our $BR_SUB = 0;
@@ -135,10 +131,10 @@ sub temp_cleanup();
 sub setup_gkv();
 sub get_overall_line($$$$);
 sub print_overall_rate($$$$$$$$$);
+sub check_rates($$);
 sub lcov_geninfo(@);
 sub create_package($$$;$);
 sub get_func_found_and_hit($);
-sub br_ivec_get($$);
 sub summary();
 sub rate($$;$$$);
 
@@ -161,9 +157,10 @@ our $convert_filenames;	# If set, convert filenames when applying diff
 our $strip;		# If set, strip leading directories when applying diff
 our $temp_dir_name;	# Name of temporary directory
 our $cwd = `pwd`;	# Current working directory
-our $to_file;		# If set, indicates that output is written to a file
+our $data_stdout;	# If set, indicates that data is written to stdout
 our $follow;		# If set, indicates that find shall follow links
 our $diff_path = "";	# Path removed from tracefile when applying diff
+our $opt_fail_under_lines = 0;
 our $base_directory;	# Base directory (cwd of gcc during compilation)
 our $checksum;		# If set, calculate a checksum for each line
 our $no_checksum;	# If set, don't calculate a checksum for each line
@@ -172,6 +169,8 @@ our $no_compat_libtool;	# If set, indicates that libtool mode is to be disabled
 our $gcov_tool;
 our @opt_ignore_errors;
 our $initial;
+our @include_patterns; # List of source file patterns to include
+our @exclude_patterns; # List of source file patterns to exclude
 our $no_recursion = 0;
 our $to_package;
 our $from_package;
@@ -179,7 +178,6 @@ our $maxdepth;
 our $no_markers;
 our $config;		# Configuration file contents
 chomp($cwd);
-our $tool_dir = dirname($0);	# Directory where genhtml tool is installed
 our @temp_dirs;
 our $gcov_gkv;		# gcov kernel support version found on machine
 our $opt_derive_func_data;
@@ -213,20 +211,24 @@ $SIG{__DIE__} = \&die_handler;
 $SIG{'INT'} = \&abort_handler;
 $SIG{'QUIT'} = \&abort_handler;
 
-# Prettify version string
-$lcov_version =~ s/\$\s*Revision\s*:?\s*(\S+)\s*\$/$1/;
-
-# Add current working directory if $tool_dir is not already an absolute path
-if (! ($tool_dir =~ /^\/(.*)$/))
-{
-	$tool_dir = "$cwd/$tool_dir";
-}
-
 # Check command line for a configuration file name
 Getopt::Long::Configure("pass_through", "no_auto_abbrev");
 GetOptions("config-file=s" => \$opt_config_file,
 	   "rc=s%" => \%opt_rc);
 Getopt::Long::Configure("default");
+
+{
+	# Remove spaces around rc options
+	my %new_opt_rc;
+
+	while (my ($key, $value) = each(%opt_rc)) {
+		$key =~ s/^\s+|\s+$//g;
+		$value =~ s/^\s+|\s+$//g;
+
+		$new_opt_rc{$key} = $value;
+	}
+	%opt_rc = %new_opt_rc;
+}
 
 # Read configuration file if available
 if (defined($opt_config_file)) {
@@ -238,6 +240,9 @@ if (defined($opt_config_file)) {
 elsif (-r "/etc/lcovrc")
 {
 	$config = read_config("/etc/lcovrc");
+} elsif (-r "/usr/local/etc/lcovrc")
+{
+	$config = read_config("/usr/local/etc/lcovrc");
 }
 
 if ($config || %opt_rc)
@@ -251,6 +256,7 @@ if ($config || %opt_rc)
 		"lcov_list_truncate_max"=> \$opt_list_truncate_max,
 		"lcov_branch_coverage"	=> \$br_coverage,
 		"lcov_function_coverage"=> \$func_coverage,
+		"lcov_fail_under_lines" => \$opt_fail_under_lines,
 	});
 }
 
@@ -281,6 +287,8 @@ if (!GetOptions("directory|d|di=s" => \@directory,
 		"gcov-tool=s" => \$gcov_tool,
 		"ignore-errors=s" => \@opt_ignore_errors,
 		"initial|i" => \$initial,
+		"include=s" => \@include_patterns,
+		"exclude=s" => \@exclude_patterns,
 		"no-recursion" => \$no_recursion,
 		"to-package=s" => \$to_package,
 		"from-package=s" => \$from_package,
@@ -295,6 +303,7 @@ if (!GetOptions("directory|d|di=s" => \@directory,
 		"compat=s" => \$opt_compat,
 		"config-file=s" => \$opt_config_file,
 		"rc=s%" => \%opt_rc,
+		"fail-under-lines=s" => \$opt_fail_under_lines,
 		))
 {
 	print(STDERR "Use $tool_name --help to get usage information\n");
@@ -379,11 +388,11 @@ if (@ARGV && !($extract || $remove || $diff || @opt_summary))
 }
 
 # Check for output filename
-$to_file = ($output_filename && ($output_filename ne "-"));
+$data_stdout = !($output_filename && ($output_filename ne "-"));
 
 if ($capture)
 {
-	if (!$to_file)
+	if ($data_stdout)
 	{
 		# Option that tells geninfo to write to stdout
 		$output_filename = "-";
@@ -395,9 +404,11 @@ if (!$from_package && !@directory && ($capture || $reset)) {
 	($gcov_gkv, $gcov_dir) = setup_gkv();
 }
 
+our $exit_code = 0;
 # Check for requested functionality
 if ($reset)
 {
+	$data_stdout = 0;
 	# Differentiate between user space and kernel reset
 	if (@directory)
 	{
@@ -447,6 +458,7 @@ elsif ($extract)
 }
 elsif ($list)
 {
+	$data_stdout = 0;
 	list();
 }
 elsif ($diff)
@@ -462,9 +474,11 @@ elsif ($diff)
 }
 elsif (@opt_summary)
 {
+	$data_stdout = 0;
 	($ln_overall_found, $ln_overall_hit,
 	 $fn_overall_found, $fn_overall_hit,
 	 $br_overall_found, $br_overall_hit) = summary();
+	$exit_code = check_rates($ln_overall_found, $ln_overall_hit);
 }
 
 temp_cleanup();
@@ -476,7 +490,7 @@ if (defined($ln_overall_found)) {
 } else {
 	info("Done.\n") if (!$list && !$capture);
 }
-exit(0);
+exit($exit_code);
 
 #
 # print_usage(handle)
@@ -535,6 +549,10 @@ Options:
       --config-file FILENAME      Specify configuration file location
       --rc SETTING=VALUE          Override configuration file setting
       --compat MODE=on|off|auto   Set compat MODE (libtool, hammer, split_crc)
+      --include PATTERN           Include files matching PATTERN
+      --exclude PATTERN           Exclude files matching PATTERN
+      --fail-under-lines MIN      Exit with a status of 1 if the total line
+                                  coverage is less than MIN (summary option).
 
 For more information see: $lcov_url
 END_OF_USAGE
@@ -561,7 +579,7 @@ sub check_options()
 	$list && $i++;
 	$diff && $i++;
 	@opt_summary && $i++;
-	
+
 	if ($i == 0)
 	{
 		die("Need one of options -z, -c, -a, -e, -r, -l, ".
@@ -594,7 +612,7 @@ sub userspace_reset()
 	{
 		info("Deleting all .da files in $current_dir".
 		     ($no_recursion?"\n":" and subdirectories\n"));
-		@file_list = `find "$current_dir" $maxdepth $follow -name \\*\\.da -o -name \\*\\.gcda -type f 2>/dev/null`;
+		@file_list = `find "$current_dir" $maxdepth $follow -name \\*\\.da -type f -o -name \\*\\.gcda -type f 2>/dev/null`;
 		chomp(@file_list);
 		foreach (@file_list)
 		{
@@ -665,7 +683,7 @@ sub kernel_reset()
 
 #
 # lcov_copy_single(from, to)
-# 
+#
 # Copy single regular file FROM to TO without checking its size. This is
 # required to work with special files generated by the kernel
 # seq_file-interface.
@@ -711,7 +729,7 @@ sub lcov_find($$$;@)
 
 		if (defined($result)) {
 			return;
-		}		
+		}
 		$filename = abs2rel($filename, $dir);
 		foreach (@pattern) {
 			if ($filename =~ /$_/) {
@@ -766,7 +784,7 @@ sub lcov_copy_fn($$$)
 
 #
 # lcov_copy(from, to, subdirs)
-# 
+#
 # Copy all specified SUBDIRS and files from directory FROM to directory TO. For
 # regular files, copy file contents without checking its size. This is required
 # to work with seq_file-generated files.
@@ -879,6 +897,15 @@ sub lcov_geninfo(@)
 			@param = (@param, "--rc", "$key=".$opt_rc{$key});
 		}
 	}
+	if (defined($opt_config_file)) {
+		@param = (@param, "--config-file", $opt_config_file);
+	}
+	foreach (@include_patterns) {
+		@param = (@param, "--include", $_);
+	}
+	foreach (@exclude_patterns) {
+		@param = (@param, "--exclude", $_);
+	}
 
 	system(@param) and exit($? >> 8);
 }
@@ -922,17 +949,21 @@ sub get_package($)
 	local *HANDLE;
 
 	info("Reading package $file:\n");
-	info("  data directory .......: $dir\n");
 	$file = abs_path($file);
 	chdir($dir);
 	open(HANDLE, "-|", "tar xvfz '$file' 2>/dev/null")
 		or die("ERROR: could not process package $file\n");
+	$count = 0;
 	while (<HANDLE>) {
 		if (/\.da$/ || /\.gcda$/) {
 			$count++;
 		}
 	}
 	close(HANDLE);
+	if ($count == 0) {
+		die("ERROR: no data file found in package $file\n");
+	}
+	info("  data directory .......: $dir\n");
 	$build = read_file("$dir/$pkg_build_file");
 	if (defined($build)) {
 		info("  build directory ......: $build\n");
@@ -1006,6 +1037,10 @@ sub create_package($$$;$)
 	my ($file, $dir, $build, $gkv) = @_;
 	my $cwd = getcwd();
 
+	# Check for availability of tar tool first
+	system("tar --help > /dev/null")
+		and die("ERROR: tar command not available\n");
+
 	# Print information about the package
 	info("Creating package $file:\n");
 	info("  data directory .......: $dir\n");
@@ -1034,6 +1069,7 @@ sub create_package($$$;$)
 	chdir($dir);
 	system("tar cfz $file .")
 		and die("ERROR: could not create package $file\n");
+	chdir($cwd);
 
 	# Remove temporary files
 	unlink("$dir/$pkg_build_file");
@@ -1047,7 +1083,6 @@ sub create_package($$$;$)
 			info("  data files ...........: $count\n");
 		}
 	}
-	chdir($cwd);
 }
 
 sub find_link_fn($$$)
@@ -1270,6 +1305,113 @@ sub kernel_capture()
 }
 
 #
+# link_data_cb(datadir, rel, graphdir)
+#
+# Create symbolic link in GRAPDIR/REL pointing to DATADIR/REL.
+#
+
+sub link_data_cb($$$)
+{
+	my ($datadir, $rel, $graphdir) = @_;
+	my $absfrom = catfile($datadir, $rel);
+	my $absto = catfile($graphdir, $rel);
+	my $base;
+	my $dir;
+
+	if (-e $absto) {
+		die("ERROR: could not create symlink at $absto: ".
+		    "File already exists!\n");
+	}
+	if (-l $absto) {
+		# Broken link - possibly from an interrupted earlier run
+		unlink($absto);
+	}
+
+	# Check for graph file
+	$base = $absto;
+	$base =~ s/\.(gcda|da)$//;
+	if (! -e $base.".gcno" && ! -e $base.".bbg" && ! -e $base.".bb") {
+		die("ERROR: No graph file found for $absfrom in ".
+		    dirname($base)."!\n");
+	}
+
+	symlink($absfrom, $absto) or
+		die("ERROR: could not create symlink at $absto: $!\n");
+}
+
+#
+# unlink_data_cb(datadir, rel, graphdir)
+#
+# Remove symbolic link from GRAPHDIR/REL to DATADIR/REL.
+#
+
+sub unlink_data_cb($$$)
+{
+	my ($datadir, $rel, $graphdir) = @_;
+	my $absfrom = catfile($datadir, $rel);
+	my $absto = catfile($graphdir, $rel);
+	my $target;
+
+	return if (!-l $absto);
+	$target = readlink($absto);
+	return if (!defined($target) || $target ne $absfrom);
+
+	unlink($absto) or
+		warn("WARNING: could not remove symlink $absto: $!\n");
+}
+
+#
+# link_data(datadir, graphdir, create)
+#
+# If CREATE is non-zero, create symbolic links in GRAPHDIR for data files
+# found in DATADIR. Otherwise remove link in GRAPHDIR.
+#
+
+sub link_data($$$)
+{
+	my ($datadir, $graphdir, $create) = @_;
+
+	$datadir = abs_path($datadir);
+	$graphdir = abs_path($graphdir);
+	if ($create) {
+		lcov_find($datadir, \&link_data_cb, $graphdir, '\.gcda$',
+			  '\.da$');
+	} else {
+		lcov_find($datadir, \&unlink_data_cb, $graphdir, '\.gcda$',
+			  '\.da$');
+	}
+}
+
+#
+# find_graph_cb(datadir, rel, count_ref)
+#
+# Count number of files found.
+#
+
+sub find_graph_cb($$$)
+{
+	my ($dir, $rel, $count_ref) = @_;
+
+	($$count_ref)++;
+}
+
+#
+# find_graph(dir)
+#
+# Search DIR for a graph file. Return non-zero if one was found, zero otherwise.
+#
+
+sub find_graph($)
+{
+	my ($dir) = @_;
+	my $count = 0;
+
+	lcov_find($dir, \&find_graph_cb, \$count, '\.gcno$', '\.bb$', '\.bbg$');
+
+	return $count > 0 ? 1 : 0;
+}
+
+#
 # package_capture()
 #
 # Capture coverage data from a package of unprocessed coverage data files
@@ -1298,13 +1440,22 @@ sub package_capture()
 			$build = adjust_kernel_dir($dir, $build);
 		}
 		if (@kernel_directory) {
-			$dir = copy_gcov_dir($dir, @kernel_directory);	
+			$dir = copy_gcov_dir($dir, @kernel_directory);
 		}
 		kernel_capture_from_dir($dir, $gkv, $build);
 	} else {
 		# Build directory needs to be passed to geninfo
 		$base_directory = $build;
-		lcov_geninfo($dir);
+		if (find_graph($dir)) {
+			# Package contains graph files - collect from there
+			lcov_geninfo($dir);
+		} else {
+			# No graph files found, link data files next to
+			# graph files
+			link_data($dir, $base_directory, 1);
+			lcov_geninfo($base_directory);
+			link_data($dir, $base_directory, 0);
+		}
 	}
 }
 
@@ -1321,7 +1472,7 @@ sub info(@)
 	if (!$quiet)
 	{
 		# Print info string
-		if ($to_file)
+		if (!$data_stdout)
 		{
 			printf(@_)
 		}
@@ -1359,185 +1510,23 @@ sub create_temp_dir()
 	return $dir;
 }
 
-
-#
-# br_taken_to_num(taken)
-#
-# Convert a branch taken value .info format to number format.
-#
-
-sub br_taken_to_num($)
+sub compress_brcount($)
 {
-	my ($taken) = @_;
+	my ($brcount) = @_;
+	my $db;
 
-	return 0 if ($taken eq '-');
-	return $taken + 1;
+	$db = brcount_to_db($brcount);
+	return db_to_brcount($db, $brcount);
 }
-
-
-#
-# br_num_to_taken(taken)
-#
-# Convert a branch taken value in number format to .info format.
-#
-
-sub br_num_to_taken($)
-{
-	my ($taken) = @_;
-
-	return '-' if ($taken == 0);
-	return $taken - 1;
-}
-
-
-#
-# br_taken_add(taken1, taken2)
-#
-# Return the result of taken1 + taken2 for 'branch taken' values.
-#
-
-sub br_taken_add($$)
-{
-	my ($t1, $t2) = @_;
-
-	return $t1 if (!defined($t2));
-	return $t2 if (!defined($t1));
-	return $t1 if ($t2 eq '-');
-	return $t2 if ($t1 eq '-');
-	return $t1 + $t2;
-}
-
-
-#
-# br_taken_sub(taken1, taken2)
-#
-# Return the result of taken1 - taken2 for 'branch taken' values. Return 0
-# if the result would become negative.
-#
-
-sub br_taken_sub($$)
-{
-	my ($t1, $t2) = @_;
-
-	return $t1 if (!defined($t2));
-	return undef if (!defined($t1));
-	return $t1 if ($t1 eq '-');
-	return $t1 if ($t2 eq '-');
-	return 0 if $t2 > $t1;
-	return $t1 - $t2;
-}
-
-
-#
-#
-# br_ivec_len(vector)
-#
-# Return the number of entries in the branch coverage vector.
-#
-
-sub br_ivec_len($)
-{
-	my ($vec) = @_;
-
-	return 0 if (!defined($vec));
-	return (length($vec) * 8 / $BR_VEC_WIDTH) / $BR_VEC_ENTRIES;
-}
-
-
-#
-# br_ivec_push(vector, block, branch, taken)
-#
-# Add an entry to the branch coverage vector. If an entry with the same
-# branch ID already exists, add the corresponding taken values.
-#
-
-sub br_ivec_push($$$$)
-{
-	my ($vec, $block, $branch, $taken) = @_;
-	my $offset;
-	my $num = br_ivec_len($vec);
-	my $i;
-
-	$vec = "" if (!defined($vec));
-
-	# Check if branch already exists in vector
-	for ($i = 0; $i < $num; $i++) {
-		my ($v_block, $v_branch, $v_taken) = br_ivec_get($vec, $i);
-
-		next if ($v_block != $block || $v_branch != $branch);
-
-		# Add taken counts
-		$taken = br_taken_add($taken, $v_taken);
-		last;
-	}
-
-	$offset = $i * $BR_VEC_ENTRIES;
-	$taken = br_taken_to_num($taken);
-
-	# Add to vector
-	vec($vec, $offset + $BR_BLOCK, $BR_VEC_WIDTH) = $block;
-	vec($vec, $offset + $BR_BRANCH, $BR_VEC_WIDTH) = $branch;
-	vec($vec, $offset + $BR_TAKEN, $BR_VEC_WIDTH) = $taken;
-
-	return $vec;
-}
-
-
-#
-# br_ivec_get(vector, number)
-#
-# Return an entry from the branch coverage vector.
-#
-
-sub br_ivec_get($$)
-{
-	my ($vec, $num) = @_;
-	my $block;
-	my $branch;
-	my $taken;
-	my $offset = $num * $BR_VEC_ENTRIES;
-
-	# Retrieve data from vector
-	$block	= vec($vec, $offset + $BR_BLOCK, $BR_VEC_WIDTH);
-	$branch = vec($vec, $offset + $BR_BRANCH, $BR_VEC_WIDTH);
-	$taken	= vec($vec, $offset + $BR_TAKEN, $BR_VEC_WIDTH);
-
-	# Decode taken value from an integer
-	$taken = br_num_to_taken($taken);
-
-	return ($block, $branch, $taken);
-}
-
-
-#
-# get_br_found_and_hit(brcount)
-#
-# Return (br_found, br_hit) for brcount
-#
 
 sub get_br_found_and_hit($)
 {
 	my ($brcount) = @_;
-	my $line;
-	my $br_found = 0;
-	my $br_hit = 0;
+	my $db;
 
-	foreach $line (keys(%{$brcount})) {
-		my $brdata = $brcount->{$line};
-		my $i;
-		my $num = br_ivec_len($brdata);
+	$db = brcount_to_db($brcount);
 
-		for ($i = 0; $i < $num; $i++) {
-			my $taken;
-
-			(undef, undef, $taken) = br_ivec_get($brdata, $i);
-
-			$br_found++;
-			$br_hit++ if ($taken ne "-" && $taken > 0);
-		}
-	}
-
-	return ($br_found, $br_hit);
+	return brcount_db_get_found_and_hit($db);
 }
 
 
@@ -1554,6 +1543,10 @@ sub get_br_found_and_hit($)
 #        "func"  -> \%funcdata
 #        "found" -> $lines_found (number of instrumented lines found in file)
 #	 "hit"   -> $lines_hit (number of executed lines in file)
+#        "f_found" -> $fn_found (number of instrumented functions found in file)
+#	 "f_hit"   -> $fn_hit (number of executed functions in file)
+#        "b_found" -> $br_found (number of instrumented branches found in file)
+#	 "b_hit"   -> $br_hit (number of executed branches in file)
 #        "check" -> \%checkdata
 #        "testfnc" -> \%testfncdata
 #        "sumfnc"  -> \%sumfnccount
@@ -1572,8 +1565,8 @@ sub get_br_found_and_hit($)
 # %sumbrcount  : line number   -> branch coverage data for all tests
 # %funcdata    : function name -> line number
 # %checkdata   : line number   -> checksum of source code line
-# $brdata      : vector of items: block, branch, taken
-# 
+# $brdata      : text "block,branch,taken:..."
+#
 # Note that .info file sections referring to the same file and test name
 # will automatically be combined by adding all execution counts.
 #
@@ -1776,17 +1769,13 @@ sub read_info_file($)
 				   ($1, $2, $3, $4);
 
 				last if (!$br_coverage);
-				$sumbrcount->{$line} =
-					br_ivec_push($sumbrcount->{$line},
-						     $block, $branch, $taken);
+				$sumbrcount->{$line} .=
+					"$block,$branch,$taken:";
 
 				# Add test-specific counts
 				if (defined($testname)) {
-					$testbrcount->{$line} =
-						br_ivec_push(
-							$testbrcount->{$line},
-							$block, $branch,
-							$taken);
+					$testbrcount->{$line} .=
+						"$block,$branch,$taken:";
 				}
 				last;
 			};
@@ -1805,7 +1794,7 @@ sub read_info_file($)
 							$testfnccount;
 						$testbrdata->{$testname} =
 							$testbrcount;
-					}	
+					}
 
 					set_info_entry($data, $testdata,
 						       $sumcount, $funcdata,
@@ -1871,12 +1860,11 @@ sub read_info_file($)
 		}
 		$data->{"f_hit"} = $hitcount;
 
-		# Get found/hit values for branch data
-		{
-			my ($br_found, $br_hit) = get_br_found_and_hit($sumbrcount);
-
-			$data->{"b_found"} = $br_found;
-			$data->{"b_hit"} = $br_hit;
+		# Combine branch data for the same branches
+		(undef, $data->{"b_found"}, $data->{"b_hit"}) =
+			compress_brcount($sumbrcount);
+		foreach $testname (keys(%{$testbrdata})) {
+			compress_brcount($testbrdata->{$testname});
 		}
 	}
 
@@ -1979,8 +1967,8 @@ sub set_info_entry($$$$$$$$$;$$$$$$)
 
 sub add_counts($$)
 {
-	my %data1 = %{$_[0]};	# Hash 1
-	my %data2 = %{$_[1]};	# Hash 2
+	my $data1_ref = $_[0];	# Hash 1
+	my $data2_ref = $_[1];	# Hash 2
 	my %result;		# Resulting hash
 	my $line;		# Current line iteration scalar
 	my $data1_count;	# Count of line in hash1
@@ -1988,10 +1976,10 @@ sub add_counts($$)
 	my $found = 0;		# Total number of lines found
 	my $hit = 0;		# Number of lines with a count > 0
 
-	foreach $line (keys(%data1))
+	foreach $line (keys(%$data1_ref))
 	{
-		$data1_count = $data1{$line};
-		$data2_count = $data2{$line};
+		$data1_count = $data1_ref->{$line};
+		$data2_count = $data2_ref->{$line};
 
 		# Add counts if present in both hashes
 		if (defined($data2_count)) { $data1_count += $data2_count; }
@@ -2003,14 +1991,14 @@ sub add_counts($$)
 		if ($data1_count > 0) { $hit++; }
 	}
 
-	# Add lines unique to data2
-	foreach $line (keys(%data2))
+	# Add lines unique to data2_ref
+	foreach $line (keys(%$data2_ref))
 	{
-		# Skip lines already in data1
-		if (defined($data1{$line})) { next; }
+		# Skip lines already in data1_ref
+		if (defined($data1_ref->{$line})) { next; }
 
-		# Copy count from data2
-		$result{$line} = $data2{$line};
+		# Copy count from data2_ref
+		$result{$line} = $data2_ref->{$line};
 
 		$found++;
 		if ($result{$line} > 0) { $hit++; }
@@ -2174,18 +2162,23 @@ sub brcount_to_db($)
 {
 	my ($brcount) = @_;
 	my $line;
-	my $db;
+	my $db = {};
 
-	# Add branches from first count to database
+	# Add branches to database
 	foreach $line (keys(%{$brcount})) {
 		my $brdata = $brcount->{$line};
-		my $i;
-		my $num = br_ivec_len($brdata);
 
-		for ($i = 0; $i < $num; $i++) {
-			my ($block, $branch, $taken) = br_ivec_get($brdata, $i);
+		foreach my $entry (split(/:/, $brdata)) {
+			my ($block, $branch, $taken) = split(/,/, $entry);
+			my $old = $db->{$line}->{$block}->{$branch};
 
-			$db->{$line}->{$block}->{$branch} = $taken;
+			if (!defined($old) || $old eq "-") {
+				$old = $taken;
+			} elsif ($taken ne "-") {
+				$old += $taken;
+			}
+
+			$db->{$line}->{$block}->{$branch} = $old;
 		}
 	}
 
@@ -2194,16 +2187,16 @@ sub brcount_to_db($)
 
 
 #
-# db_to_brcount(db)
+# db_to_brcount(db[, brcount])
 #
-# Convert branch coverage data back to brcount format.
+# Convert branch coverage data back to brcount format. If brcount is specified,
+# the converted data is directly inserted in brcount.
 #
 
-sub db_to_brcount($)
+sub db_to_brcount($;$)
 {
-	my ($db) = @_;
+	my ($db, $brcount) = @_;
 	my $line;
-	my $brcount = {};
 	my $br_found = 0;
 	my $br_hit = 0;
 
@@ -2222,8 +2215,7 @@ sub db_to_brcount($)
 
 				$br_found++;
 				$br_hit++ if ($taken ne "-" && $taken > 0);
-				$brdata = br_ivec_push($brdata, $block,
-						       $branch, $taken);
+				$brdata .= "$block,$branch,$taken:";
 			}
 		}
 		$brcount->{$line} = $brdata;
@@ -2233,50 +2225,92 @@ sub db_to_brcount($)
 }
 
 
-# combine_brcount(brcount1, brcount2, type)
 #
-# If add is BR_ADD, add branch coverage data and return list (brcount_added,
-# br_found, br_hit). If add is BR_SUB, subtract the taken values of brcount2
-# from brcount1 and return (brcount_sub, br_found, br_hit).
+# brcount_db_combine(db1, db2, op)
 #
-
-sub combine_brcount($$$)
+# db1 := db1 op db2, where
+#   db1, db2: brcount data as returned by brcount_to_db
+#   op:       one of $BR_ADD and BR_SUB
+#
+sub brcount_db_combine($$$)
 {
-	my ($brcount1, $brcount2, $type) = @_;
-	my $line;
-	my $block;
-	my $branch;
-	my $taken;
-	my $db;
-	my $br_found = 0;
-	my $br_hit = 0;
-	my $result;
+	my ($db1, $db2, $op) = @_;
 
-	# Convert branches from first count to database
-	$db = brcount_to_db($brcount1);
-	# Combine values from database and second count
-	foreach $line (keys(%{$brcount2})) {
-		my $brdata = $brcount2->{$line};
-		my $num = br_ivec_len($brdata);
-		my $i;
+	foreach my $line (keys(%{$db2})) {
+		my $ldata = $db2->{$line};
 
-		for ($i = 0; $i < $num; $i++) {
-			($block, $branch, $taken) = br_ivec_get($brdata, $i);
-			my $new_taken = $db->{$line}->{$block}->{$branch};
+		foreach my $block (keys(%{$ldata})) {
+			my $bdata = $ldata->{$block};
 
-			if ($type == $BR_ADD) {
-				$new_taken = br_taken_add($new_taken, $taken);
-			} elsif ($type == $BR_SUB) {
-				$new_taken = br_taken_sub($new_taken, $taken);
+			foreach my $branch (keys(%{$bdata})) {
+				my $taken = $bdata->{$branch};
+				my $new = $db1->{$line}->{$block}->{$branch};
+
+				if (!defined($new) || $new eq "-") {
+					$new = $taken;
+				} elsif ($taken ne "-") {
+					if ($op == $BR_ADD) {
+						$new += $taken;
+					} elsif ($op == $BR_SUB) {
+						$new -= $taken;
+						$new = 0 if ($new < 0);
+					}
+				}
+
+				$db1->{$line}->{$block}->{$branch} = $new;
 			}
-			$db->{$line}->{$block}->{$branch} = $new_taken
-				if (defined($new_taken));
 		}
 	}
-	# Convert database back to brcount format
-	($result, $br_found, $br_hit) = db_to_brcount($db);
+}
 
-	return ($result, $br_found, $br_hit);
+
+#
+# brcount_db_get_found_and_hit(db)
+#
+# Return (br_found, br_hit) for db.
+#
+
+sub brcount_db_get_found_and_hit($)
+{
+	my ($db) = @_;
+	my ($br_found , $br_hit) = (0, 0);
+
+	foreach my $line (keys(%{$db})) {
+		my $ldata = $db->{$line};
+
+		foreach my $block (keys(%{$ldata})) {
+			my $bdata = $ldata->{$block};
+
+			foreach my $branch (keys(%{$bdata})) {
+				my $taken = $bdata->{$branch};
+
+				$br_found++;
+				$br_hit++ if ($taken ne "-" && $taken > 0);
+			}
+		}
+	}
+
+	return ($br_found, $br_hit);
+}
+
+
+# combine_brcount(brcount1, brcount2, type, inplace)
+#
+# If add is BR_ADD, add branch coverage data and return list brcount_added.
+# If add is BR_SUB, subtract the taken values of brcount2 from brcount1 and
+# return brcount_sub. If inplace is set, the result is inserted into brcount1.
+#
+
+sub combine_brcount($$$;$)
+{
+	my ($brcount1, $brcount2, $type, $inplace) = @_;
+	my ($db1, $db2);
+
+	$db1 = brcount_to_db($brcount1);
+	$db2 = brcount_to_db($brcount2);
+	brcount_db_combine($db1, $db2, $type);
+
+	return db_to_brcount($db1, $inplace ? $brcount1 : undef);
 }
 
 
@@ -2425,7 +2459,7 @@ sub combine_info_entries($$$)
 			add_counts($result_sumcount,
 				   $result_testdata{$testname});
 	}
-	
+
 	# Calculate resulting sumcount
 
 	# Store result
@@ -2503,7 +2537,7 @@ sub add_traces()
 	}
 
 	# Write combined data
-	if ($to_file)
+	if (!$data_stdout)
 	{
 		info("Writing data to $output_filename\n");
 		open(INFO_HANDLE, ">", $output_filename)
@@ -2608,12 +2642,10 @@ sub write_info_file(*$)
 			foreach $line (sort({$a <=> $b}
 					    keys(%{$testbrcount}))) {
 				my $brdata = $testbrcount->{$line};
-				my $num = br_ivec_len($brdata);
-				my $i;
 
-				for ($i = 0; $i < $num; $i++) {
+				foreach my $brentry (split(/:/, $brdata)) {
 					my ($block, $branch, $taken) =
-						br_ivec_get($brdata, $i);
+						split(/,/, $brentry);
 
 					print(INFO_HANDLE "BRDA:$line,$block,".
 					      "$branch,$taken\n");
@@ -2732,7 +2764,7 @@ sub extract()
 	}
 
 	# Write extracted data
-	if ($to_file)
+	if (!$data_stdout)
 	{
 		info("Extracted $extracted files\n");
 		info("Writing data to $output_filename\n");
@@ -2775,7 +2807,7 @@ sub remove()
 
 		foreach $pattern (@pattern_list)
 		{
-			$match_found ||= ($filename =~ (/$pattern$/));
+			$match_found ||= ($filename =~ (/^$pattern$/));
 		}
 
 
@@ -2788,7 +2820,7 @@ sub remove()
 	}
 
 	# Write data
-	if ($to_file)
+	if (!$data_stdout)
 	{
 		info("Deleted $removed files\n");
 		info("Writing data to $output_filename\n");
@@ -3707,10 +3739,10 @@ sub adjust_fncdata($$$)
 
 	# Remove count data in testfncdata for functions which are no longer
 	# in funcdata
-	foreach $testname (%{$testfncdata}) {
+	foreach $testname (keys(%{$testfncdata})) {
 		my $fnccount = $testfncdata->{$testname};
 
-		foreach $func (%{$fnccount}) {
+		foreach $func (keys(%{$fnccount})) {
 			if (!defined($funcdata->{$func})) {
 				delete($fnccount->{$func});
 			}
@@ -3718,7 +3750,7 @@ sub adjust_fncdata($$$)
 	}
 	# Remove count data in sumfnccount for functions which are no longer
 	# in funcdata
-	foreach $func (%{$sumfnccount}) {
+	foreach $func (keys(%{$sumfnccount})) {
 		if (!defined($funcdata->{$func})) {
 			delete($sumfnccount->{$func});
 		}
@@ -3854,10 +3886,10 @@ sub diff()
 					$testfncdata->{$testname.",diff"});
 				delete($testfncdata->{$testname.",diff"});
 				# Add branch counts
-				($testbrdata->{$testname}) = combine_brcount(
+				combine_brcount(
 					$testbrdata->{$testname},
 					$testbrdata->{$testname.",diff"},
-					$BR_ADD);
+					$BR_ADD, 1);
 				delete($testbrdata->{$testname.",diff"});
 			}
 			# Move test data to new testname
@@ -3922,7 +3954,7 @@ sub diff()
 	     "unchanged.\n");
 
 	# Write data
-	if ($to_file)
+	if (!$data_stdout)
 	{
 		info("Writing data to $output_filename\n");
 		open(INFO_HANDLE, ">", $output_filename)
@@ -4018,7 +4050,7 @@ sub system_no_output($@)
 	# Redirect to /dev/null
 	($mode & 1) && open(STDOUT, ">", "/dev/null");
 	($mode & 2) && open(STDERR, ">", "/dev/null");
- 
+
 	system(@_);
 	$result = $?;
 
@@ -4029,7 +4061,7 @@ sub system_no_output($@)
 	# Restore old handles
 	($mode & 1) && open(STDOUT, ">>&", "OLD_STDOUT");
 	($mode & 2) && open(STDERR, ">>&", "OLD_STDERR");
- 
+
 	return $result;
 }
 
@@ -4089,7 +4121,7 @@ sub read_config($)
 #
 # where KEY_STRING is a keyword and VAR_REF is a reference to an associated
 # variable. If the global configuration hashes CONFIG or OPT_RC contain a value
-# for keyword KEY_STRING, VAR_REF will be assigned the value for that keyword. 
+# for keyword KEY_STRING, VAR_REF will be assigned the value for that keyword.
 #
 
 sub apply_config($)
@@ -4110,7 +4142,6 @@ sub warn_handler($)
 {
 	my ($msg) = @_;
 
-	temp_cleanup();
 	warn("$tool_name: $msg");
 }
 
@@ -4130,6 +4161,9 @@ sub abort_handler($)
 
 sub temp_cleanup()
 {
+	# Ensure temp directory is not in use by current process
+	chdir("/");
+
 	if (@temp_dirs) {
 		info("Removing temporary directories.\n");
 		foreach (@temp_dirs) {
@@ -4267,6 +4301,33 @@ sub print_overall_rate($$$$$$$$$)
 		if ($br_do);
 }
 
+#
+# check_rates(ln_found, ln_hit)
+#
+# Check line coverage if it meets a specified threshold.
+#
+
+sub check_rates($$)
+{
+	my ($ln_found, $ln_hit) = @_;
+
+	if ($opt_fail_under_lines <= 0) {
+		return 0;
+	}
+
+	if ($ln_found == 0) {
+		return 1;
+	}
+
+	my $actual_rate = ($ln_hit / $ln_found);
+	my $expected_rate = $opt_fail_under_lines / 100;
+	if ($actual_rate >= $expected_rate) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
 
 #
 # rate(hit, found[, suffix, precision, width])
@@ -4282,13 +4343,13 @@ sub print_overall_rate($$$$$$$$$)
 sub rate($$;$$$)
 {
         my ($hit, $found, $suffix, $precision, $width) = @_;
-        my $rate; 
+        my $rate;
 
 	# Assign defaults if necessary
         $precision	= 1	if (!defined($precision));
 	$suffix		= ""	if (!defined($suffix));
 	$width		= 0	if (!defined($width));
-        
+
         return sprintf("%*s", $width, "-") if (!defined($found) || $found == 0);
         $rate = sprintf("%.*f", $precision, $hit * 100 / $found);
 
