@@ -1,5 +1,12 @@
-from qtpy.QtCore import QModelIndex, Qt
-from qtpy.QtWidgets import QAbstractItemView, QAction, QHeaderView, QMenu
+#############################################################################
+# Author: <dennis.goeries@xfel.eu>
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
+from qtpy.QtWidgets import (
+    QAbstractItemView, QAction, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
+    QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
 from traits.api import Bool, Dict, Instance, Type, Undefined, WeakRef
 
 import karabogui.icons as icons
@@ -32,7 +39,6 @@ class BaseTableController(BaseBindingController):
     _item_model = WeakRef(TableModel, allow_none=True)
     _table_widget = WeakRef(KaraboTableView)
 
-    _resizeAction = Instance(QAction)
     _hasResize = Bool(False)
 
     # ---------------------------------------------------------------------
@@ -52,12 +58,10 @@ class BaseTableController(BaseBindingController):
         model = self.model
         self._hasResize = "resizeToContents" in model.copyable_trait_names()
         if self._hasResize:
-            resize_action = QAction("Resize To Contents")
+            resize_action = QAction("Resize To Contents", table_widget)
             resize_action.triggered.connect(self._resize_contents)
             resize_action.setCheckable(True)
             resize_action.setChecked(self.model.resizeToContents)
-            self._resizeAction = resize_action
-
             table_widget.addAction(resize_action)
 
         return table_widget
@@ -178,16 +182,15 @@ class BaseTableController(BaseBindingController):
     # ---------------------------------------------------------------------
     # Public interface
 
-    def getModelData(self, row, column, role=Qt.DisplayRole):
+    def getModelData(self, row, column):
         """Get data from the sourceModel with `row` and `column`
 
         :param row: row of the data
         :param column: column of the data
-        :param role: Role to be looked up. Default is Qt.DisplayRole
 
         Note: Function added with Karabo > 2.13.X
         """
-        return self.sourceModel().index(row, column).data(role=role)
+        return self.sourceModel().get_model_data(row, column)
 
     def getInstanceId(self):
         """Retrieve the `instanceId` of the root proxy of this controller
@@ -343,3 +346,84 @@ class BaseTableController(BaseBindingController):
             return
 
         return self.custom_menu(pos)
+
+
+# --------------------------------------------------------------------------
+# Filter Table Controller
+
+
+class SortFilterModel(QSortFilterProxyModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def get_model_data(self, row, column):
+        """Relay the request of model data to the source model"""
+        index = self.index(row, column)
+        source_index = self.mapToSource(index)
+        return self.sourceModel().get_model_data(source_index.row(),
+                                                 source_index.column())
+
+
+class BaseFilterTableController(BaseTableController):
+    columnLabel = Instance(QLabel)
+    searchLabel = Instance(QLineEdit)
+
+    def create_widget(self, parent):
+        table_widget = super().create_widget(parent)
+        widget = QWidget(parent)
+        widget.addActions(table_widget.actions())
+
+        widget_layout = QVBoxLayout()
+        widget_layout.setContentsMargins(0, 0, 0, 0)
+        widget_layout.setSizeConstraint(QLayout.SetNoConstraint)
+
+        hor_layout = QHBoxLayout()
+        hor_layout.setContentsMargins(0, 0, 0, 0)
+        hor_layout.setSizeConstraint(QLayout.SetNoConstraint)
+
+        self.columnLabel = QLabel(parent=widget)
+        self.columnLabel.setStyleSheet("font-weight: bold")
+        self.columnLabel.setText(f"Column: {self.model.filterKeyColumn}")
+        self.searchLabel = QLineEdit(widget)
+        clear_button = QPushButton("Clear", parent=widget)
+        clear_button.clicked.connect(self.searchLabel.clear)
+
+        hor_layout.addWidget(self.columnLabel)
+        hor_layout.addWidget(self.searchLabel)
+        hor_layout.addWidget(clear_button)
+
+        # Complete widget layout and return widget
+        widget_layout.addLayout(hor_layout)
+        widget_layout.addWidget(table_widget)
+        widget.setLayout(widget_layout)
+
+        ac_column_filter = QAction("Set Filter Column", table_widget)
+        ac_column_filter.triggered.connect(self._change_filter_column)
+        widget.addAction(ac_column_filter)
+
+        return widget
+
+    def createFilterModel(self, item_model):
+        """Create the filter model for the table"""
+        filter_model = SortFilterModel(self.tableWidget())
+        filter_model.setSourceModel(item_model)
+        key = self.model.filterKeyColumn
+        filter_model.setFilterKeyColumn(key)
+        filter_model.setFilterRole(Qt.DisplayRole)
+        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterFixedString("")
+        self.searchLabel.textChanged.connect(filter_model.setFilterFixedString)
+
+        return filter_model
+
+    def _change_filter_column(self):
+        max_col = len(self.getBindings())
+        column, ok = QInputDialog.getInt(
+            self.widget, "Filter Column", "Filter Key Column:",
+            value=self.model.filterKeyColumn,
+            min=0, max=max_col)
+        if ok:
+            self.model.filterKeyColumn = column
+            filter_model = self.tableWidget().model()
+            filter_model.setFilterKeyColumn(column)
+            self.columnLabel.setText(f"Column: {column}")

@@ -6,7 +6,7 @@ from traits.api import Enum, Instance
 from karabo.common.api import BaseSavableModel
 
 # Hey Code Reviewers! Be sure to ask questions when this value changes!
-EXPECTED_HASH = "d2ab5105652b0dbf514f4ce48f1abdd0599ba0fa7eb186009125405d5fe25738"  # noqa
+EXPECTED_HASH = "5464f21f02dcc3e5d826b41fbb993ac05e18864f70faa303ead840e97f3ac6f6"  # noqa
 FAILURE_MSG = """
 ##############################################################################
                             !!! WARNING !!!
@@ -77,5 +77,4 @@ def _trait_sig(trait):
 
 def test_datamodel_structure():
     model_hash = _hash_model_structure()
-    print(model_hash)
     assert model_hash == EXPECTED_HASH, FAILURE_MSG
