@@ -148,7 +148,7 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
         setup_target_for_coverage_lcov(
             NAME ${TEST_COVERAGE_TARGET}
             EXECUTABLE ctest -VV
-            BASE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+            BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
             LCOV_ARGS --no-external --quiet
             EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/cppunit/*" "*/nlohmann/*"
                     "*/krb_log4cpp/*" "*/tests/*" "*/include/python*"
