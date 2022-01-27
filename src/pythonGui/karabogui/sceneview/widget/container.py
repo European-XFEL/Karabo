@@ -15,38 +15,37 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
     """A container for scene widgets which provides the interface needed
     by the scene tools.
     """
+
     def __init__(self, klass, model, parent):
-        super(ControllerContainer, self).__init__(model=model, parent=parent)
+        super().__init__(model=model, parent=parent)
         # Variables used by editable widgets
         self.is_editable = False
-        self._style_sheet = ''
+        self._style_sheet = ""
 
-        self.status_symbol = QLabel('', self)
+        self.status_symbol = QLabel("", self)
         self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
 
         self.layout = QStackedLayout(self)
         self.layout.setStackingMode(QStackedLayout.StackAll)
         self.layout.addWidget(self.status_symbol)
 
-        proxies = [get_proxy(*key.split('.', 1)) for key in self.model.keys]
+        proxies = [get_proxy(*key.split(".", 1)) for key in self.model.keys]
         self.widget_controller = self._create_controller(klass, proxies)
         self._setup_wrapped_widget()
 
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-        self.setToolTip(', '.join(self.model.keys))
+        self.setToolTip(", ".join(self.model.keys))
 
         # Trigger the status change once (might be offline)
         proxy = self.widget_controller.proxy.root_proxy
         self._proxy_status_changed("status", proxy.status)
-        # ... and the access level check
-        self.update_global_access_level(krb_access.GLOBAL_ACCESS_LEVEL)
 
     def add_proxies(self, proxies):
         """Add more proxies to a controller which allows more than one proxy.
         ``True`` is returned when this was possible, otherwise ``False`` is
         returned.
         """
-        if self.model.parent_component != 'DisplayComponent':
+        if self.model.parent_component != "DisplayComponent":
             return False
 
         controller = self.widget_controller
@@ -76,18 +75,20 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         self.widget_controller.on_decline()
 
     def destroy(self):
-        """Tell the controller to clean up
-        """
+        """Tell the controller to clean up"""
         proxy = self.widget_controller.proxy
-        proxy.on_trait_change(self._proxy_status_changed, 'existing',
+        proxy.on_trait_change(self._proxy_status_changed, "existing",
                               remove=True)
-        proxy.root_proxy.on_trait_change(self._proxy_status_changed, 'status',
+        proxy.root_proxy.on_trait_change(self._proxy_status_changed, "status",
                                          remove=True)
         if self.is_editable:
             proxy.on_trait_change(
-                self._on_user_edit, 'edit_value,binding.config_update',
+                self._on_user_edit, "edit_value,binding.config_update",
                 remove=True)
-
+        if proxy.binding is None:
+            proxy.on_trait_change(
+                self._proxy_binding_changed, "binding.schema_update",
+                remove=True)
         self.widget_controller.destroy()
         self.widget_controller = None
 
@@ -109,10 +110,9 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         self.move(new_pos)
 
     def update_global_access_level(self, level):
-        """Update the widget based on a new global access level.
-        """
-        # enable/disable based on level
-        binding = self.widget_controller.proxy.binding
+        """Enable the widget based on a new global access level."""
+        proxy = self.widget_controller.proxy
+        binding = proxy.binding
         if binding is not None:
             enabled = (binding.required_access_level <= level)
             self.widget_controller.setEnabled(enabled)
@@ -128,7 +128,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
             self.decline_changes()
         elif key_code in (Qt.Key_Enter, Qt.Key_Return):
             self.apply_changes()
-        super(ControllerContainer, self).keyPressEvent(event)
+        super().keyPressEvent(event)
 
     # ---------------------------------------------------------------------
     # Internal methods
@@ -142,12 +142,29 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
             # XXX: Assert that this returns True??
             controller.visualize_additional_property(proxy)
 
-        # Attach a handler for the 'status' trait of our main device
+        # Attach a handler for the "status" trait of our main device
         proxy = controller.proxy
-        proxy.on_trait_change(self._proxy_status_changed, 'existing')
-        proxy.root_proxy.on_trait_change(self._proxy_status_changed, 'status')
+        proxy.on_trait_change(self._proxy_status_changed, "existing")
+        proxy.root_proxy.on_trait_change(self._proxy_status_changed, "status")
+        binding = proxy.binding
+        if binding is None:
+            proxy.on_trait_change(self._proxy_binding_changed,
+                                  "binding.schema_update")
+        else:
+            enabled = (binding.required_access_level
+                       <= krb_access.GLOBAL_ACCESS_LEVEL)
+            controller.setEnabled(enabled)
 
         return controller
+
+    def _proxy_binding_changed(self, proxy, name, new):
+        """Traits notification callback when the binding of the proxy changes.
+
+        This is set to synchronize the access level of the widget
+        """
+        proxy.on_trait_change(self._proxy_binding_changed,
+                              "binding.schema_update", remove=True)
+        self.update_global_access_level(krb_access.GLOBAL_ACCESS_LEVEL)
 
     def _proxy_status_changed(self, name, value):
         """Traits notification callback when the status of the proxy changes.
@@ -156,12 +173,12 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         to the schema status change!
         """
         proxy = self.widget_controller.proxy
-        if name == 'status':
+        if name == "status":
             existing = proxy.existing
             status = value
             if status is ProxyStatus.OFFLINE:
                 self.widget_controller.clear_widget()
-        elif name == 'existing':
+        elif name == "existing":
             existing = value
             status = proxy.root_proxy.status
         if not existing:
@@ -189,13 +206,13 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         layout_widget.setLayout(layout)
         objectName = generateObjectName(self)
         layout_widget.setObjectName(objectName)
-        self._style_sheet = ('QWidget#{}'.format(objectName) +
-                             ' {{ background-color : rgba{}; }}')
+        self._style_sheet = ("QWidget#{}".format(objectName) +
+                             " {{ background-color : rgba{}; }}")
 
-        if self.model.parent_component == 'EditableApplyLaterComponent':
+        if self.model.parent_component == "EditableApplyLaterComponent":
             self.is_editable = True
             controller.proxy.on_trait_change(
-                self._on_user_edit, 'edit_value,binding.config_update')
+                self._on_user_edit, "edit_value,binding.config_update")
             layout.setContentsMargins(2, 1, 2, 1)
         else:
             layout.setContentsMargins(0, 0, 1, 1)
@@ -215,7 +232,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         changes from user or external action.
         """
         # Do some trait name filtering
-        if name not in ('edit_value', 'config_update'):
+        if name not in ("edit_value", "config_update"):
             return
         self._update_background_color()
 
