@@ -1,4 +1,37 @@
 ***************************
+What's New in Karabo 2.13.3
+***************************
+
+Version aimed mainly at data logger installations
+
+The DataLogger system will now record the device's configurations and schemas
+regardless of the value of a device's ``archive`` flag.
+
+A new function in the C++ library to parse Urls is added as a convenience tool.
+
+
+***************************
+What's New in Karabo 2.13.2
+***************************
+
+Version aimed mainly at data logger installations on InfluxDB backend.
+The usecases of data older than the device's age is now handled to
+avoid unwanted old values for properties that do not have a default value.
+
+The Output Channel for the C++ and Python Bound API handles in a
+cleaner way the underlying TCP server's lifetime. This addresses
+the connection loss after output schema injection.
+
+
+***************************
+What's New in Karabo 2.13.1
+***************************
+
+Version aimed at addressing a bug in the middlelayer macros,
+potentially causing broker pileup events.
+
+
+***************************
 What's New in Karabo 2.13.0
 ***************************
 
