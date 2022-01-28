@@ -599,6 +599,9 @@ class ConfigurationPanel(BasePanelWidget):
         if proxy is not None and len(proxy.binding.value) == 0:
             self._awaiting_schema = proxy
             proxy.on_trait_change(self._schema_update, 'schema_update')
+            # Project device must be refreshed with a class schema
+            if isinstance(proxy, ProjectDeviceProxy):
+                proxy.refresh_class_schema()
 
         # Finally, set _showing_proxy
         self._showing_proxy = proxy
@@ -652,11 +655,6 @@ class ConfigurationPanel(BasePanelWidget):
                 dev_id == cur_dev_id):
             # If current showing device proxy matches the updated one,
             # refresh the view.
-            # The device might have been gone from online to offline. In case
-            # of a project device proxy, make sure we have a schema!
-            if isinstance(proxy, ProjectDeviceProxy):
-                proxy.ensure_class_schema()
-
             self._show_configuration(proxy)
 
     # -----------------------------------------------------------------------
