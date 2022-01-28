@@ -23,8 +23,9 @@ from .shapes import (
 from .widgets.complex import (
     ColorBoolModel, DeviceSceneLinkModel, DisplayCommandModel,
     DisplayIconCommandModel, DisplayProgressBarModel, DisplayStateColorModel,
-    DoubleLineEditModel, ErrorBoolModel, EvaluatorModel, FloatSpinBoxModel,
-    MonitorModel, SingleBitModel, TableElementModel)
+    DoubleLineEditModel, ErrorBoolModel, EvaluatorModel,
+    FilterTableElementModel, FloatSpinBoxModel, MonitorModel, SingleBitModel,
+    TableElementModel)
 # deprecated widgets
 # Graph widgets
 from .widgets.graph_image import (
