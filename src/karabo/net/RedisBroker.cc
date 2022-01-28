@@ -45,6 +45,7 @@ namespace karabo {
               m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
               m_messageHandler(),
               m_errorNotifier(),
+              m_handlerMutex(),
               m_producerMap(),
               m_producerMapMutex(),
               m_consumerMap(),
@@ -62,10 +63,7 @@ namespace karabo {
         }
 
 
-        RedisBroker::~RedisBroker() {
-            stopReading();
-            m_client.reset();
-        }
+        RedisBroker::~RedisBroker() {}
 
 
         RedisBroker::RedisBroker(const RedisBroker& o, const std::string& newInstanceId)
@@ -76,6 +74,7 @@ namespace karabo {
               m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
               m_messageHandler(),
               m_errorNotifier(),
+              m_handlerMutex(),
               m_producerMap(),
               m_producerMapMutex(),
               m_consumerMap(),
@@ -162,9 +161,23 @@ namespace karabo {
             }
             std::string topic =
                   m_topic + "/signals/" + boost::replace_all_copy(signalInstanceId, "/", "|") + "/" + signalFunction;
-            auto readHandler =
-                  bind_weak(&RedisBroker::redisReadHashHandler, this, _1, _2, _3, m_messageHandler, m_errorNotifier);
-            m_client->subscribeAsync(topic, readHandler, completionHandler);
+            {
+                boost::mutex::scoped_lock lock(m_handlerMutex);
+                if (!m_messageHandler || !m_errorNotifier) {
+                    std::ostringstream oss;
+                    oss << "Attempt to subscribe to \"" << topic << "\" before startReading is called!";
+                    if (completionHandler) {
+                        KARABO_LOG_FRAMEWORK_ERROR << oss.str();
+                        m_handlerStrand->post(boost::bind(completionHandler, KARABO_ERROR_CODE_IO_ERROR));
+                        return;
+                    } else {
+                        throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    }
+                }
+                auto readHandler = bind_weak(&RedisBroker::redisReadHashHandler, this, _1, _2, _3, m_messageHandler,
+                                             m_errorNotifier);
+                m_client->subscribeAsync(topic, readHandler, completionHandler);
+            }
         }
 
 
@@ -427,13 +440,16 @@ namespace karabo {
 
         void RedisBroker::startReading(const consumer::MessageHandler& handler,
                                        const consumer::ErrorNotifier& errorNotifier) {
-            m_messageHandler = handler;
-            m_errorNotifier = errorNotifier;
             std::string id = boost::replace_all_copy(m_instanceId, "/", "|");
             std::vector<std::string> topics;
             topics.push_back(m_topic + "/slots/" + id);
             if (m_consumeBroadcasts) {
                 topics.push_back(m_topic + "/global_slots");
+            }
+            {
+                boost::mutex::scoped_lock lock(m_handlerMutex);
+                if (handler) m_messageHandler = handler;
+                if (errorNotifier) m_errorNotifier = errorNotifier;
             }
             registerRedisTopics(topics, handler, errorNotifier);
         }
@@ -442,6 +458,8 @@ namespace karabo {
         void RedisBroker::stopReading() {
             if (m_topic.empty() || m_instanceId.empty()) return;
             m_client->unsubscribeAll();
+            // Reset for symmetry
+            boost::mutex::scoped_lock lock(m_handlerMutex);
             m_messageHandler = consumer::MessageHandler();
             m_errorNotifier = consumer::ErrorNotifier();
         }
