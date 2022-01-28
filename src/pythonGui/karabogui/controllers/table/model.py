@@ -39,8 +39,7 @@ class TableModel(QAbstractTableModel):
             return None
 
         row, column = index.row(), index.column()
-        if role == Qt.CheckStateRole and not self._readonly:
-            # Note: Only for editable tables we can return Qt.Checked state.
+        if role == Qt.CheckStateRole:
             key = self._header[column]
             value = self._data[row][key]
             binding = self._bindings[key]
@@ -120,9 +119,7 @@ class TableModel(QAbstractTableModel):
         access_mode = binding.access_mode
         if isinstance(binding, BoolBinding) and not self._readonly:
             flags &= ~Qt.ItemIsEditable
-            if access_mode is AccessMode.READONLY:
-                flags &= ~Qt.ItemIsEnabled
-            else:
+            if access_mode is AccessMode.RECONFIGURABLE:
                 flags |= Qt.ItemIsUserCheckable
         elif access_mode is AccessMode.READONLY:
             flags &= ~Qt.ItemIsEditable
