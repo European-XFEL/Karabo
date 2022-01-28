@@ -118,6 +118,14 @@ class TableElementModel(BaseDisplayEditableWidget):
     resizeToContents = Bool(False)
 
 
+class FilterTableElementModel(BaseDisplayEditableWidget):
+    """ A model for FilterTableElement"""
+    klass = Enum('DisplayFilterTableElement', 'EditableFilterTableElement')
+    # True if the table is resizing the columns to contents
+    resizeToContents = Bool(False)
+    filterKeyColumn = Int(0)
+
+
 @register_scene_reader('DisplayCommand', version=2)
 def __display_command_reader(element):
     confirmation = element.get(NS_KARABO + 'requires_confirmation', '')
@@ -358,4 +366,27 @@ def _table_element_writer(model, parent):
     write_base_widget_data(model, element, model.klass)
     element.set(NS_KARABO + 'resizeToContents',
                 str(model.resizeToContents).lower())
+    return element
+
+
+@register_scene_reader('DisplayFilterTableElement')
+@register_scene_reader('EditableFilterTableElement')
+def _filter_table_element_reader(element):
+    traits = read_empty_display_editable_widget(element)
+    resizeToContents = element.get(NS_KARABO + 'resizeToContents', '')
+    resizeToContents = resizeToContents.lower() == 'true'
+    traits['resizeToContents'] = resizeToContents
+    filterKeyColumn = int(element.get(NS_KARABO + 'filterKeyColumn', 0))
+    traits['filterKeyColumn'] = filterKeyColumn
+    return FilterTableElementModel(**traits)
+
+
+@register_scene_writer(FilterTableElementModel)
+def _filter_table_element_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, model.klass)
+    element.set(NS_KARABO + 'resizeToContents',
+                str(model.resizeToContents).lower())
+    element.set(NS_KARABO + 'filterKeyColumn', str(model.filterKeyColumn))
+
     return element
