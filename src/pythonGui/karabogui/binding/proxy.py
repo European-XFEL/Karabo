@@ -244,6 +244,11 @@ class ProjectDeviceProxy(DeviceClassProxy):
         topology.ensure_proxy_class_schema(
             self.device_id, self.server_id, self.binding.class_id)
 
+    def refresh_class_schema(self):
+        """Request a class schema, but only when the proxy is offline"""
+        if self.status is ProxyStatus.OFFLINE:
+            self.refresh_schema()
+
 
 class PropertyProxy(HasStrictTraits):
     """A proxy for a single device property
