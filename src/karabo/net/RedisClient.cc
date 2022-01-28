@@ -67,6 +67,8 @@ namespace karabo {
               m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
               m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
               m_requestTimeout(input.get<std::uint32_t>("requestTimeout")) {
+            m_consumer->installErrorHandler(
+                  [this](const std::string& msg) { KARABO_LOG_FRAMEWORK_ERROR << "REDIS: " << msg; });
             run();
         }
 
@@ -264,10 +266,10 @@ namespace karabo {
             // Subscribe to the requested topic
             auto completionHandler = [this, onComplete{std::move(onComplete)}](const redisclient::RedisValue& value) {
                 if (value.isOk()) {
-                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    if (onComplete) onComplete(KARABO_ERROR_CODE_SUCCESS);
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << "subscribe error : \"" << value.toString() << "\"";
-                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+                    if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
                 }
             };
             auto msgHandler = [this, wptr{weak_from_this()}, topic,
@@ -278,7 +280,7 @@ namespace karabo {
                 karabo::util::Hash::Pointer result = boost::make_shared<Hash>();
                 m_binarySerializer->load(*result, payload);
                 // onRead(KARABO_ERROR_CODE_SUCCESS, topic, result);
-                post(boost::bind(onRead, KARABO_ERROR_CODE_SUCCESS, topic, result));
+                onRead(KARABO_ERROR_CODE_SUCCESS, topic, result);
             };
             // search the wildcard character in topic
             std::size_t found = topic.find_first_of("*");
@@ -335,7 +337,7 @@ namespace karabo {
                                    std::lock_guard<std::mutex> lock(m_subscribeMutex);
                                    *bits |= (1ULL << n);
                                    if (*bits == -1) {
-                                       post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                                       onComplete(KARABO_ERROR_CODE_SUCCESS);
                                    }
                                });
                 n++;
@@ -366,10 +368,10 @@ namespace karabo {
                 auto guard = wptr.lock();
                 if (!guard) return;
                 if (value.isOk()) {
-                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    if (onComplete) onComplete(KARABO_ERROR_CODE_SUCCESS);
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << "unsubscribe error : \"" << value.toString() << "\"";
-                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+                    if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
                 }
             };
             std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
@@ -428,7 +430,7 @@ namespace karabo {
                     *bits |= (1ULL << n);
                     // report error immediately or success for all
                     if (ec || *bits == -1) {
-                        post(boost::bind(onComplete, ec));
+                        onComplete(ec);
                     }
                 });
                 n++;
@@ -492,10 +494,10 @@ namespace karabo {
             if (msg) m_binarySerializer->save(*msg, payload); // msg -> payload
             auto callback = [this, onComplete{std::move(onComplete)}](const redisclient::RedisValue& value) {
                 if (value.isOk()) {
-                    if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    if (onComplete) onComplete(KARABO_ERROR_CODE_SUCCESS);
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << "publish error : \"" << value.toString() << "\"";
-                    if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+                    if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
                 }
             };
             if (!m_producer->isConnected()) {
