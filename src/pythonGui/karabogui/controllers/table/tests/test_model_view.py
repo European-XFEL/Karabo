@@ -7,13 +7,15 @@ from qtpy.QtCore import (
 from qtpy.QtGui import QDropEvent
 
 from karabo.common.api import State
-from karabo.common.scenemodel.api import TableElementModel
+from karabo.common.scenemodel.api import (
+    FilterTableElementModel, TableElementModel)
 from karabo.native import (
     AccessMode, Bool, Configurable, Double, Hash, Int32, MetricPrefix, String,
     Unit, VectorHash, VectorString)
 from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import (
-    BaseTableController, KaraboTableView, TableButtonDelegate, list2string)
+    BaseFilterTableController, BaseTableController, KaraboTableView,
+    TableButtonDelegate, list2string)
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.testing import GuiTestCase, get_property_proxy
 
@@ -216,14 +218,14 @@ class TestTableModelView(GuiTestCase):
 
         # Test model data
         value = self.controller.getModelData(0, 0)
-        self.assertEqual(value, "a")
+        self.assertEqual(value, ("arch", "a"))
         value = self.controller.getModelData(0, 1)
-        self.assertEqual(value, "True")
+        self.assertEqual(value, ("foo", True))
         value = self.controller.getModelData(0, 2)
-        self.assertEqual(value, "ACTIVE")
+        self.assertEqual(value, ("bar", "ACTIVE"))
 
         value = self.controller.getModelData(1, 0)
-        self.assertEqual(value, "b")
+        self.assertEqual(value, ("arch", "b"))
 
     def test_background_value(self):
         model = self.controller._item_model
@@ -429,6 +431,102 @@ class TestTableModelView(GuiTestCase):
         self.assertFalse(action.isChecked())
         action.trigger()
         self.assertTrue(action.isChecked())
+
+
+class TestFilterTableModelView(GuiTestCase):
+    def setUp(self):
+        super().setUp()
+        self.proxy = get_property_proxy(Object.getClassSchema(), "prop")
+        self.model = FilterTableElementModel()
+        self.controller = BaseFilterTableController(proxy=self.proxy,
+                                                    model=self.model)
+        self.controller.create(None)
+        self.assertTrue(self.controller.isReadOnly())
+        self.controller.set_read_only(False)
+        self.table_hash = Hash(
+            "prop",
+            [Hash("arch", "a", "foo", True, "bar", "ACTIVE", "cat", 1,
+                  "dog", 2.0, "eagle", ["a"]),
+             Hash("arch", "b", "foo", False, "bar", "ERROR", "cat", 3,
+                  "dog", 4.0, "eagle", ["b"]),
+             Hash("arch", "c", "foo", False, "bar", "UNKNOWN", "cat", 2,
+                  "dog", 1.0, "eagle", ["c"]),
+             Hash("arch", "d", "foo", True, "bar", "CHANGING", "cat", 1,
+                  "dog", 5.0, "eagle", ["d"])])
+        apply_configuration(self.table_hash, self.proxy.root_proxy.binding)
+
+    def tearDown(self):
+        self.controller.destroy()
+
+    def assertModelRow(self, row, first_column, second_column, third_column,
+                       fourth_column, fifth_column, sixth_column, size=None):
+        model = self.controller._item_model
+        # Boolean is represented as Qt value in table model
+
+        self.assertEqual(model.index(row, 0).data(), first_column)
+        qt_bool = Qt.Checked if second_column else Qt.Unchecked
+        self.assertEqual(model.index(row, 1).data(role=Qt.CheckStateRole),
+                         qt_bool)
+        self.assertEqual(model.index(row, 2).data(), third_column)
+        # integer and floating point are string data to outside
+        self.assertEqual(model.index(row, 3).data(), str(fourth_column))
+        self.assertEqual(model.index(row, 4).data(), str(fifth_column))
+        # Vector data is always retrieved as string list
+        self.assertEqual(model.index(row, 5).data(), list2string(sixth_column))
+
+        data = self.controller._item_model._data
+        # Our Hash still has real booleans, but the model does not!
+        self.assertEqual(data[row], Hash("arch", first_column,
+                                         "foo", second_column,
+                                         "bar", third_column,
+                                         "cat", fourth_column,
+                                         "dog", fifth_column,
+                                         "eagle", sixth_column))
+        if size is not None:
+            self.assertEqual(data, size)
+
+    def test_set_value(self):
+        self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
+        self.assertModelRow(1, "b", False, "ERROR", 3, 4.0, ["b"])
+        self.assertModelRow(2, "c", False, "UNKNOWN", 2, 1.0, ["c"])
+        self.assertModelRow(3, "d", True, "CHANGING", 1, 5.0, ["d"])
+
+    def test_table_actions(self):
+        actions = self.controller.widget.actions()
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].text(), "Resize To Contents")
+        self.assertEqual(actions[1].text(), "Set Filter Column")
+
+        self.assertEqual(self.model.filterKeyColumn, 0)
+        path = "karabogui.controllers.table.controller.QInputDialog"
+        with mock.patch(path) as dia:
+            dia.getInt.return_value = 2, True
+            actions[1].trigger()
+            self.assertEqual(self.model.filterKeyColumn, 2)
+
+    def test_model_data(self):
+        model = self.controller.tableWidget().model()
+
+        h = Hash(
+            "prop",
+            [Hash("arch", "a", "foo", True, "bar", "ACTIVE", "cat", 1,
+                  "dog", 2.0, "eagle", ["a"]),
+             Hash("arch", "b", "foo", False, "bar", "ERROR", "cat", 3,
+                  "dog", 4.0, "eagle", ["b"]),
+             Hash("arch", "c", "foo", False, "bar", "UNKNOWN", "cat", 2,
+                  "dog", 1.0, "eagle", ["c"])])
+        apply_configuration(h, self.proxy.root_proxy.binding)
+        self.assertEqual(model.rowCount(QModelIndex()), 3)
+
+        # Test model data
+        value = self.controller.getModelData(0, 0)
+        self.assertEqual(value, ("arch", "a"))
+        value = self.controller.getModelData(0, 1)
+        self.assertEqual(value, ("foo", True))
+        value = self.controller.getModelData(0, 2)
+        self.assertEqual(value, ("bar", "ACTIVE"))
+        value = self.controller.getModelData(1, 0)
+        self.assertEqual(value, ("arch", "b"))
 
 
 if __name__ == "__main__":
