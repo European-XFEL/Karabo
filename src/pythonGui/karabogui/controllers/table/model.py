@@ -1,6 +1,4 @@
 #############################################################################
-# Author: <steffen.hauf@xfel.eu> & <dennis.goeries@xfel.eu>
-# Created on August 10, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import copy
@@ -17,12 +15,15 @@ from .utils import is_state_display_type, list2string, string2list
 
 class TableModel(QAbstractTableModel):
     def __init__(self, binding, set_edit_value, parent=None):
-        super(QAbstractTableModel, self).__init__(parent)
+        super().__init__(parent)
         self._set_edit_value = set_edit_value
         self._readonly = False
         self._data = []
         self._bindings = binding.bindings
         self._header = list(binding.bindings.keys())
+
+    # Qt Methods
+    # ----------------------------------------------------------------------
 
     def rowCount(self, parent=None):
         """Reimplemented function of QAbstractTableModel"""
@@ -203,13 +204,41 @@ class TableModel(QAbstractTableModel):
 
         return True
 
+    # Public Interface
+    # -----------------------------------------------------------------------
+
+    def get_model_data(self, row, column):
+        """Retrieve the validated model data for `row` and `column`"""
+        key = self._header[column]
+        binding = self._bindings[key]
+
+        if isinstance(binding, BoolBinding):
+            value = self.index(row, column).data(
+                role=Qt.CheckStateRole) == Qt.Checked
+        else:
+            value = self.index(row, column).data(role=Qt.DisplayRole)
+            if isinstance(binding, VectorBinding):
+                value = string2list(value)
+            value = binding.validate_trait("value", value)
+        return key, value
+
     def clear_model(self):
-        """Clear the model and remove all dat"""
+        """Clear the model and remove all data"""
         self.beginResetModel()
         try:
             self._data = []
         finally:
             self.endResetModel()
+
+    def set_readonly(self, value):
+        """Set the readonly role of the table element"""
+        self._readonly = value
+
+    # ------------------------------------------------------------------------
+    # Additional methods
+
+    def duplicate_row(self, pos):
+        self.insertRows(pos + 1, 1, QModelIndex(), copy_row=self._data[pos])
 
     def move_row_up(self, row):
         """In a simple two step process move a row element up"""
@@ -224,13 +253,3 @@ class TableModel(QAbstractTableModel):
             copy_row = self._data[row]
             self.removeRows(row, 1, QModelIndex())
             self.insertRows(row + 1, 1, QModelIndex(), copy_row=copy_row)
-
-    # ------------------------------------------------------------------------
-    # Additional methods
-
-    def duplicate_row(self, pos):
-        self.insertRows(pos + 1, 1, QModelIndex(), copy_row=self._data[pos])
-
-    def set_readonly(self, value):
-        """Set the readonly role of the table element"""
-        self._readonly = value
