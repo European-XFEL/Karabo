@@ -179,8 +179,10 @@ namespace karabo {
 
            private:
             karabo::net::Strand::Pointer m_handlerStrand;
+            // Store handlers set during 'startReading' for use in signal subscriptions
             consumer::MessageHandler m_messageHandler;
             consumer::ErrorNotifier m_errorNotifier;
+            boost::mutex m_handlerMutex; // to protect m_messageHandler & m_errorNotifier settings
             // Message ordering.
             // ----------------
             //                 consumerId,  last serial number sent
