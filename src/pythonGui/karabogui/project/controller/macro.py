@@ -247,7 +247,7 @@ class MacroController(BaseProjectGroupController):
     # @Slot()
     def _save_macro_to_file(self, parent=None):
         config = get_config()
-        path = config['macro_dir']
+        path = config['data_dir']
         directory = path if path and op.isdir(path) else ""
 
         macro = self.model
@@ -262,7 +262,7 @@ class MacroController(BaseProjectGroupController):
         if not fn:
             return
 
-        config['macro_dir'] = op.dirname(fn)
+        config['data_dir'] = op.dirname(fn)
 
         if not fn.endswith('.py'):
             fn = '{}.py'.format(fn)

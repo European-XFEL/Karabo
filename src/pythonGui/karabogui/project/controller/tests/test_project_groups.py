@@ -38,7 +38,7 @@ class TestProjectGroupController(GuiTestCase):
     def _assert_load_macro_name(self, name, is_valid):
         patched_get_config = patch(
             "karabogui.project.controller.project_groups.get_config",
-            return_value={"macro_dir": ""})
+            return_value={"data_dir": ""})
 
         patched_get_filename = patch(
             "karabogui.project.controller.project_groups.getOpenFileName",
@@ -66,7 +66,7 @@ class TestProjectGroupController(GuiTestCase):
     def _assert_load_scene_name(self, name, is_valid):
         patched_get_config = patch(
             "karabogui.project.controller.project_groups.get_config",
-            return_value={"scene_dir": ""})
+            return_value={"data_dir": ""})
 
         patched_get_filename = patch(
             "karabogui.project.controller.project_groups.getOpenFileName",
