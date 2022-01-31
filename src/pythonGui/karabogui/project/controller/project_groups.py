@@ -194,7 +194,7 @@ def _add_macro(project_controller, parent=None):
 
 
 def _load_macro(project_controller, parent=None):
-    path = get_config()['macro_dir']
+    path = get_config()['data_dir']
     directory = path if path and op.isdir(path) else ""
 
     fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)',
@@ -209,7 +209,7 @@ def _load_macro(project_controller, parent=None):
         return
 
     # Store old macro dialog path
-    get_config()['macro_dir'] = op.dirname(fn)
+    get_config()['data_dir'] = op.dirname(fn)
 
     project = project_controller.model
     # Read MacroModel
@@ -268,7 +268,7 @@ def _about_scene(project_controller, parent=None):
 def _load_scene(project_controller, parent=None):
     """ Load a scene from local disk
     """
-    path = get_config()['scene_dir']
+    path = get_config()['data_dir']
     directory = path if path and op.isdir(path) else ""
 
     fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)',
@@ -283,7 +283,7 @@ def _load_scene(project_controller, parent=None):
         return
 
     # Store old scene dialog path
-    get_config()['scene_dir'] = op.dirname(fn)
+    get_config()['data_dir'] = op.dirname(fn)
 
     project = project_controller.model
     # Read SceneModel
