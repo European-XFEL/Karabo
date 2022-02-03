@@ -219,6 +219,10 @@ class TableModel(QAbstractTableModel):
             value = binding.validate_trait("value", value)
         return key, value
 
+    def get_header_key(self, section):
+        """Retrieve the key of the binding for the section"""
+        return self._header[section]
+
     def clear_model(self):
         """Clear the model and remove all data"""
         self.beginResetModel()
