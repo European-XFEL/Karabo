@@ -14,7 +14,7 @@ from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
 from karabogui.binding.api import get_default_value, get_editor_value
 from karabogui.controllers.api import BaseBindingController
 
-from .edit_delegates import get_table_delegate
+from .delegates import get_display_delegate, get_table_delegate
 from .model import TableModel
 from .view import KaraboTableView
 
@@ -148,16 +148,12 @@ class BaseTableController(BaseBindingController):
         """Create all the table delegates in the table element"""
         bindings = self._bindings
         keys = bindings.keys()
-        if self._readonly:
-            # If we are readOnly, we erase all edit delegates
-            for column, key in enumerate(keys):
-                self._table_widget.setItemDelegateForColumn(column, None)
-        else:
-            # Create binding specific edit delegates
-            for column, key in enumerate(keys):
-                binding = bindings[key]
-                delegate = get_table_delegate(binding, self._table_widget)
-                self._table_widget.setItemDelegateForColumn(column, delegate)
+        get_delegate = (get_display_delegate if self._readonly
+                        else get_table_delegate)
+        for column, key in enumerate(keys):
+            binding = bindings[key]
+            delegate = get_delegate(self.proxy, binding, self._table_widget)
+            self._table_widget.setItemDelegateForColumn(column, delegate)
 
     def custom_menu(self, pos):
         """Subclass method for own custom menu if ``hasCustomMenu`` is `True`
@@ -362,6 +358,10 @@ class SortFilterModel(QSortFilterProxyModel):
         source_index = self.mapToSource(index)
         return self.sourceModel().get_model_data(source_index.row(),
                                                  source_index.column())
+
+    def get_header_key(self, section):
+        """Relay the request of header data to the source model"""
+        return self.sourceModel().get_header_key(section)
 
 
 class BaseFilterTableController(BaseTableController):
