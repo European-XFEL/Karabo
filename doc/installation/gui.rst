@@ -69,24 +69,18 @@ are not reachable with the command::
     conda config --remove channels http://channel_to_be_removed
 
 The second option is to use a proxy and dynamic port forwarding, i.e.
-setup connection
+setup connection::
 
-```
-ssh user@bastion.desy.de -D 9090
-```
+    ssh user@bastion.desy.de -D 9090
 
-and tell ``conda`` to use a proxy server:
+and tell ``conda`` to use a proxy server::
 
-```
-conda config --set proxy_servers.http socks5://localhost:9090
-```
+    conda config --set proxy_servers.http socks5://localhost:9090
 
 After everything is installed, you may want to remove the proxy definition
-again:
+again::
 
-```
-conda config --remove-key proxy_servers.http
-```
+    conda config --remove-key proxy_servers.http
 
 Installing KaraboGUI
 ====================
@@ -155,11 +149,9 @@ Developing
 For developing in KaraboGUI using Qt5 we need to be inside a conda environment
 
 After installing your miniconda3 distribution, install the package
-``conda-devenv`` from the conda-forge channel:
+``conda-devenv`` from the conda-forge channel::
 
-```
-conda install conda-devenv -c conda-forge
-```
+    conda install conda-devenv -c conda-forge
 
 ``conda-devenv`` is a tool for creating a development environment that always
 follows the dependencies specified in your environment.devenv.yml, purging
@@ -169,11 +161,9 @@ If you are working outside the DESY network, use the second option
 (using ``conda config --set proxy_servers.http ...`` ) mentioned
 in :ref:`framework/remote_installation`.
 
-Now run:
+Now run::
 
-```
-conda devenv --file conda-recipes/karabogui/environment.devenv.yml
-```
+    conda devenv --file conda-recipes/karabogui/environment.devenv.yml
 
 This will solve your environment dependencies and create an environment
 called ``karabogui``. Call ``conda activate karabogui`` to activate it.
@@ -188,11 +178,9 @@ Still, the Karabo code has to be installed::
 Now all the code from ``karabogui``, ``common`` and ``native`` will be on
 your ``PYTHONPATH``.
 
-Finally, generate the version file using
+Finally, generate the version file using::
 
-```
-python setup.py develop
-```
+    python setup.py develop
 
 inside the ``pythonGui`` directory. Repeat that step from time to time to keep
 the version number up-to-date.
