@@ -272,6 +272,13 @@ class TestTableModelView(GuiTestCase):
         model = self.controller._item_model
         index = model.index(0, 5)
         data = index.data(role=Qt.ToolTipRole)
+        self.assertEqual(data, "a")
+        ret = model.setData(index, "Not allowed", role=Qt.ToolTipRole)
+        self.assertFalse(ret)
+
+        # Check the header
+        data = model.headerData(section=5, orientation=Qt.Horizontal,
+                                role=Qt.ToolTipRole)
         self.assertIn("metricPrefixSymbol", data)
         self.assertIn("unitSymbol", data)
         self.assertIn("defaultValue", data)
@@ -281,9 +288,6 @@ class TestTableModelView(GuiTestCase):
         self.assertIn("This is a description for a table", data)
         self.assertNotIn("minExc", data)
         self.assertNotIn("minInc", data)
-
-        ret = model.setData(index, "Not allowed", role=Qt.ToolTipRole)
-        self.assertFalse(ret)
 
     def test_invalid_model_index(self):
         model = self.controller._item_model
