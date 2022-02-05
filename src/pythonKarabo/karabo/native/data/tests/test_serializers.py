@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase, main
 from zlib import adler32
 
-from ..bin_reader import decodeBinary
+from ..bin_reader import decodeBinary, decodeBinaryPos
 from ..bin_writer import encodeBinary, writeBinary
 from ..hash import Hash, HashList, Schema
 from ..xml_reader import decodeXML, loadFromFile
@@ -249,6 +249,20 @@ class TestSerializers(TestCase):
         check_hash(decoded)
 
         assert decoded.fullyEqual(h)
+
+        header = Hash('a', 12, 'b.c', 3.1415, 'c.d.e', 'header')
+        body = h
+        encodedHeader = encodeBinary(header)
+        encodedBody = encodeBinary(body)
+
+        m = b''.join([encodedHeader, encodedBody])
+
+        decodedHeader, pos = decodeBinaryPos(m)
+        assert pos, len(encodedHeader)
+        assert decodedHeader.fullyEqual(header)
+        decodedBody = decodeBinary(m[pos:])
+        check_hash(decodedBody)
+        assert decodedBody.fullyEqual(body)
 
     def test_xml_serialization(self):
         from .test_hash import check_hash, create_hash

@@ -53,13 +53,13 @@ namespace karabo {
 
             virtual void save(const karabo::util::Hash& object, BufferSet& buffers);
 
-            virtual void load(karabo::util::Hash& object, const char* archive, const size_t nBytes);
+            virtual size_t load(karabo::util::Hash& object, const char* archive, const size_t nBytes);
 
             virtual void load(karabo::util::Hash& object, const BufferSet& buffers);
 
             void save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive);
 
-            void load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);
+            size_t load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);
 
             /**
              * Destructor.
