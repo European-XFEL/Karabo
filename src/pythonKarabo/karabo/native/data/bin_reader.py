@@ -6,7 +6,7 @@ import numpy as np
 from .hash import Hash, HashByte, HashElement, HashList, Schema
 from .typenums import HashType
 
-__all__ = ['decodeBinary']
+__all__ = ['decodeBinary', 'decodeBinaryPos']
 
 
 class BinaryParser(object):
@@ -34,6 +34,11 @@ class BinaryParser(object):
 def decodeBinary(data):
     parser = BinaryParser()
     return parser.read(data)
+
+
+def decodeBinaryPos(data):
+    parser = BinaryParser()
+    return parser.read(data), parser.pos
 
 
 def read_binary_string(file):
