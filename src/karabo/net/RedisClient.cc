@@ -54,6 +54,14 @@ namespace karabo {
                   .defaultValue(defTimeout)
                   .unit(Unit::SECOND)
                   .commit();
+
+            BOOL_ELEMENT(expected)
+                  .key("skipFlag")
+                  .displayedName("Skip body deserialization")
+                  .description("Skip body deserialization, i.e. keep message body as a binary blob")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
         }
 
 
@@ -64,9 +72,10 @@ namespace karabo {
               m_consumer(boost::make_shared<redisclient::RedisAsyncClient>(*m_ios)),
               m_resolver(*m_ios),
               m_brokerIndex(0),
-              m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
+              m_brokerUrls(input.get<std::vector<std::string>>("brokers")),
               m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
-              m_requestTimeout(input.get<std::uint32_t>("requestTimeout")) {
+              m_requestTimeout(input.get<std::uint32_t>("requestTimeout")),
+              m_skipFlag(input.get<bool>("skipFlag")) {
             m_consumer->installErrorHandler(
                   [this](const std::string& msg) { KARABO_LOG_FRAMEWORK_ERROR << "REDIS: " << msg; });
             run();
@@ -84,7 +93,7 @@ namespace karabo {
 
         boost::system::error_code RedisClient::connect() {
             boost::system::error_code ec = KARABO_ERROR_CODE_CONN_REFUSED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             // Calls connectAsycn passing as argument a lambda that sets the promise value
             connectAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
@@ -241,7 +250,7 @@ namespace karabo {
          */
         boost::system::error_code RedisClient::subscribe(const std::string& topic, const ReadHashHandler& onRead) {
             if (!m_consumer->isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto future = prom->get_future();
             subscribeAsync(topic, onRead, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_requestTimeout));
@@ -278,7 +287,15 @@ namespace karabo {
                 if (!guard) return;
                 // 'guard' prevents object destruction, so 'this' is valid
                 karabo::util::Hash::Pointer result = boost::make_shared<Hash>();
-                m_binarySerializer->load(*result, payload);
+                Hash& header = result->bindReference<Hash>("header");
+                size_t bytes = m_binarySerializer->load(header, payload.data(), payload.size());
+                if (m_skipFlag) {
+                    std::vector<char>& raw = result->bindReference<std::vector<char>>("raw");
+                    std::copy(payload.data() + bytes, payload.data() + payload.size(), std::back_inserter(raw));
+                } else {
+                    Hash& body = result->bindReference<Hash>("body");
+                    m_binarySerializer->load(body, payload.data() + bytes, payload.size() - bytes);
+                }
                 // onRead(KARABO_ERROR_CODE_SUCCESS, topic, result);
                 onRead(KARABO_ERROR_CODE_SUCCESS, topic, result);
             };
@@ -300,7 +317,7 @@ namespace karabo {
 
         boost::system::error_code RedisClient::subscribe(const RedisTopicSubOptions& params) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             subscribeAsync(params, [prom](boost::system::error_code ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
@@ -347,7 +364,7 @@ namespace karabo {
 
         boost::system::error_code RedisClient::unsubscribe(const std::string& topic) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto future = prom->get_future();
             unsubscribeAsync(topic, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_requestTimeout));
@@ -393,7 +410,7 @@ namespace karabo {
 
         boost::system::error_code RedisClient::unsubscribe(const std::vector<std::string>& topics) {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             unsubscribeAsync(topics, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
@@ -440,7 +457,7 @@ namespace karabo {
 
         boost::system::error_code RedisClient::unsubscribeAll() {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             unsubscribeAllAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
@@ -477,7 +494,7 @@ namespace karabo {
         boost::system::error_code RedisClient::publish(const std::string& topic,
                                                        const karabo::util::Hash::Pointer& msg) {
             if (!m_producer->isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             publishAsync(topic, msg, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
@@ -491,7 +508,10 @@ namespace karabo {
         void RedisClient::publishAsync(const std::string& topic, const karabo::util::Hash::Pointer& msg,
                                        const AsyncHandler& onComplete) {
             auto payload = std::vector<char>();
-            if (msg) m_binarySerializer->save(*msg, payload); // msg -> payload
+            if (msg) {
+                m_binarySerializer->save2(msg->get<Hash>("header"), payload); // header -> payload
+                m_binarySerializer->save2(msg->get<Hash>("body"), payload);   // body   -> payload
+            }
             auto callback = [this, onComplete{std::move(onComplete)}](const redisclient::RedisValue& value) {
                 if (value.isOk()) {
                     if (onComplete) onComplete(KARABO_ERROR_CODE_SUCCESS);

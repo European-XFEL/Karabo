@@ -141,11 +141,31 @@ void HashBinarySerializer_Test::testSerialization() {
     tick = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < ntestsSchema; ++i) {
         hash.clear();
-        p->load(hash, archiveSchema);
+        size_t size = p->load(hash, archiveSchema);
+        CPPUNIT_ASSERT_EQUAL(archiveSchema.size(), size);
     }
     diff = boost::posix_time::microsec_clock::local_time() - tick;
     ave = diff.total_milliseconds() / static_cast<double>(ntestsSchema);
     KARABO_LOG_FRAMEWORK_DEBUG << " Average de-serialization time schema only: " << ave << " ms";
+
+    // Check how save2 and load work together
+    archiveSchema.clear();
+    Hash schemaOnlyHash2(schemaOnlyHash);
+    for (int i = 0; i < ntestsSchema; ++i) {
+        schemaOnlyHash2.set("counter", i);
+        p->save2(schemaOnlyHash2, archiveSchema);
+    }
+
+    // Load back ...
+    size_t bytes = 0;
+    for (int i = 0; i < ntestsSchema; ++i) {
+        hash.clear();
+        schemaOnlyHash2.set("counter", i);
+        bytes += p->load(hash, archiveSchema.data() + bytes, archiveSchema.size() - bytes);
+        CPPUNIT_ASSERT(hash.fullyEquals(schemaOnlyHash2));
+    }
+
+    CPPUNIT_ASSERT_EQUAL(bytes, archiveSchema.size());
 
     tick = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < ntests; ++i) {
