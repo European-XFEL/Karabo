@@ -46,7 +46,7 @@ namespace karabo {
             save(object, archive);
         }
 
-        void SchemaBinarySerializer::load(karabo::util::Schema& object, const char* archive, const size_t nBytes) {
+        size_t SchemaBinarySerializer::load(karabo::util::Schema& object, const char* archive, const size_t nBytes) {
             std::stringstream is;
             is.rdbuf()->pubsetbuf(const_cast<char*>(archive), nBytes);
 
@@ -57,9 +57,10 @@ namespace karabo {
             rootName[size] = 0;
             object.setRootName(rootName);
             Hash hash;
-            m_serializer->load(hash, archive + sizeof(size) + size, nBytes - sizeof(size) - size);
+            size_t bytes = m_serializer->load(hash, archive + sizeof(size) + size, nBytes - sizeof(size) - size);
             object.setParameterHash(std::move(hash));
             object.updateAliasMap();
+            return bytes + sizeof(size) + size_t(size);
         }
     } // namespace io
 } // namespace karabo
