@@ -368,6 +368,7 @@ namespace karabo {
             std::string m_consumerTag;
             AmqpReadHashHandler m_onRead;
             static std::unordered_set<std::string> m_registeredExchanges;
+            bool m_skipFlag;
         };
     } // namespace net
 } // namespace karabo
