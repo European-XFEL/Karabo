@@ -1,6 +1,3 @@
-# To change this license header, choose License Headers in Project Properties.
-# To change this template file, choose Tools | Templates
-# and open the template in the editor.
 from __future__ import absolute_import, unicode_literals
 
 import asyncio
@@ -20,7 +17,8 @@ from itertools import count
 
 import aioredis
 
-from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
+from karabo.native import (
+    Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
 from .eventloop import Broker
 
@@ -89,8 +87,7 @@ class RedisBroker(Broker):
         header['__format'] = 'Bin'
         header['producerTimestamp'] = self.timestamp
         self.incrementOrderNumbers(topic, header)
-        data = Hash('header', header, 'body', body)
-        m = encodeBinary(data)
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
         self.loop.call_soon_threadsafe(
                 self.loop.create_task, self.publish(topic, m))
 
@@ -115,16 +112,15 @@ class RedisBroker(Broker):
                  + "/signalHeartbeat")
         header = Hash("signalFunction", "signalHeartbeat")
         # Note: C++ adds
-        # header["signalInstanceId"] = self.deviceId # redundant and unused
-        # header["slotInstanceIds"] = "__none__" # unused
-        # header["slotFunctions"] = "__none__" # unused
+        header["signalInstanceId"] = self.deviceId  # redundant and unused
+        header["slotInstanceIds"] = "__none__"      # unused
+        header["slotFunctions"] = "__none__"        # unused
         header["__format"] = "Bin"
         body = Hash()
         body["a1"] = self.deviceId
         body["a2"] = interval
         body["a3"] = self.info
-        data = Hash("header", header, "body", body)
-        m = encodeBinary(data)
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
         await self.redis.publish(topic, m)
 
     def notify_network(self, info):
@@ -198,9 +194,9 @@ class RedisBroker(Broker):
 
     def log(self, message):
         topic = self.domain + "/log"
-        data = Hash("header", Hash("target", "log"),
-                    "body", Hash("messages", [message]))
-        m = encodeBinary(data)
+        header = Hash("target", "log")
+        body = Hash("messages", [message])
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
 
         async def inner():
             await self.redis.publish(topic, m)
@@ -328,7 +324,9 @@ class RedisBroker(Broker):
         """
         try:
             topic = message.topic
-            hash = decodeBinary(message.payload)
+            header, pos = decodeBinaryPos(message.payload)
+            body = decodeBinary(message.payload[pos:])
+            hash = Hash("header", header, "body", body)
             self.checkOrder(topic, device, hash)
         except BaseException as e:
             self.logger.exception(f"Malformed message: {e}")

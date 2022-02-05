@@ -253,6 +253,7 @@ namespace karabo {
             std::mutex m_subscriptionsMutex;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
             std::uint32_t m_requestTimeout;
+            bool m_skipFlag;
         };
 
 

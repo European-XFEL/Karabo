@@ -51,7 +51,7 @@ namespace karabo {
               m_connection(),
               m_url("") {
             for (const auto& url : urls) {
-                auto prom = std::make_shared<std::promise<bool> >();
+                auto prom = std::make_shared<std::promise<bool>>();
                 auto fut = prom->get_future();
                 m_handler.setPromise(prom);
                 m_connection.reset(new AMQP::TcpConnection(&m_handler, url));
@@ -127,11 +127,19 @@ namespace karabo {
                   .defaultValue(defTimeout)
                   .unit(Unit::SECOND)
                   .commit();
+
+            BOOL_ELEMENT(expected)
+                  .key("skipFlag")
+                  .displayedName("Skip body deserialization")
+                  .description("Skip body deserialization, i.e. keep message body as a binary blob")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
         }
 
 
         AmqpClient::AmqpClient(const karabo::util::Hash& input)
-            : m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
+            : m_brokerUrls(input.get<std::vector<std::string>>("brokers")),
               m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
               m_domain(input.get<std::string>("domain")),
               m_instanceId(input.get<std::string>("instanceId")),
@@ -143,7 +151,8 @@ namespace karabo {
               m_reliable(),
               m_queue(""),
               m_consumerTag(""),
-              m_onRead() {}
+              m_onRead(),
+              m_skipFlag(input.get<bool>("skipFlag")) {}
 
 
         AmqpClient::~AmqpClient() {
@@ -160,7 +169,7 @@ namespace karabo {
 
         boost::system::error_code AmqpClient::connect() {
             boost::system::error_code ec = KARABO_ERROR_CODE_CONNECT_REFUSED;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
             // Calls connectAsycn passing as argument a lambda that sets the promise value
             connectAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
@@ -268,7 +277,15 @@ namespace karabo {
             }
             if (!m_onRead) return;
             karabo::util::Hash::Pointer msg = boost::make_shared<Hash>();
-            m_binarySerializer->load(*msg, m.body(), m.bodySize());
+            Hash& header = msg->bindReference<Hash>("header");
+            size_t bytes = m_binarySerializer->load(header, m.body(), m.bodySize());
+            if (m_skipFlag) {
+                std::vector<char>& raw = msg->bindReference<std::vector<char>>("raw");
+                std::copy(m.body() + bytes, m.body() + m.bodySize(), std::back_inserter(raw));
+            } else {
+                Hash& body = msg->bindReference<Hash>("body");
+                m_binarySerializer->load(body, m.body() + bytes, m.bodySize() - bytes);
+            }
             m_onRead(KARABO_ERROR_CODE_SUCCESS, m.exchange(), m.routingkey(), msg);
         }
 
@@ -302,7 +319,7 @@ namespace karabo {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
 
             // Uses a pair of promise and future for synchronization
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto fut = prom->get_future();
 
             // Calls disconnectAsycn passing as argument a lambda that sets the promise value
@@ -323,7 +340,7 @@ namespace karabo {
 
 
         boost::system::error_code AmqpClient::close() {
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto future = prom->get_future();
             closeAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
@@ -361,7 +378,7 @@ namespace karabo {
 
         boost::system::error_code AmqpClient::subscribe(const std::string& exchange, const std::string& bindingKey) {
             if (isSubscribed(exchange, bindingKey)) return KARABO_ERROR_CODE_SUCCESS;
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto future = prom->get_future();
 
             subscribeAsync(exchange, bindingKey, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
@@ -427,7 +444,7 @@ namespace karabo {
         boost::system::error_code AmqpClient::unsubscribe(const std::string& exchange, const std::string& routingKey) {
             if (!isSubscribed(exchange, routingKey)) return KARABO_ERROR_CODE_SUCCESS;
 
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto future = prom->get_future();
 
             unsubscribeAsync(exchange, routingKey,
@@ -492,7 +509,7 @@ namespace karabo {
 
         boost::system::error_code AmqpClient::publish(const std::string& exchange, const std::string& routingKey,
                                                       const karabo::util::Hash::Pointer& msg) {
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
+            auto prom = std::make_shared<std::promise<boost::system::error_code>>();
             auto future = prom->get_future();
 
             publishAsync(exchange, routingKey, msg,
@@ -508,8 +525,11 @@ namespace karabo {
 
         void AmqpClient::publishAsync(const std::string& exchange, const std::string& routingKey,
                                       const karabo::util::Hash::Pointer& msg, const AsyncHandler& onComplete) {
-            std::shared_ptr<std::vector<char> > payload(new std::vector<char>());
-            if (msg) m_binarySerializer->save(*msg, *payload); // msg -> payload
+            auto payload = std::make_shared<std::vector<char>>();
+            if (msg) {
+                m_binarySerializer->save2(msg->get<Hash>("header"), *payload); // header -> payload
+                m_binarySerializer->save2(msg->get<Hash>("body"), *payload);   // body   -> payload
+            }
             std::lock_guard<std::mutex> lock(amqpMutex);
             if (m_registeredExchanges.find(exchange) == m_registeredExchanges.end()) {
                 m_channel->declareExchange(exchange, AMQP::topic);

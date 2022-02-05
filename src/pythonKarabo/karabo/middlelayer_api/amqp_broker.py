@@ -18,7 +18,8 @@ from itertools import count
 
 import aio_pika
 
-from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
+from karabo.native import (
+    Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
 from .eventloop import Broker
 
@@ -104,8 +105,7 @@ class AmqpBroker(Broker):
         header['signalInstanceId'] = self.deviceId
         header['__format'] = 'Bin'
         header['producerTimestamp'] = self.timestamp
-        data = Hash('header', header, 'body', body)
-        bindata = encodeBinary(data)
+        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
         # publish is awaitable
         self.loop.call_soon_threadsafe(
@@ -116,16 +116,15 @@ class AmqpBroker(Broker):
         routing_key = self.deviceId + ".signalHeartbeat"
         header = Hash("signalFunction", "signalHeartbeat")
         # Note: C++ adds
-        # header["signalInstanceId"] = self.deviceId # redundant and unused
-        # header["slotInstanceIds"] = "__none__" # unused
-        # header["slotFunctions"] = "__none__" # unused
+        header["signalInstanceId"] = self.deviceId  # redundant and unused
+        header["slotInstanceIds"] = "__none__"      # unused
+        header["slotFunctions"] = "__none__"        # unused
         header["__format"] = "Bin"
         body = Hash()
         body["a1"] = self.deviceId
         body["a2"] = interval
         body["a3"] = self.info
-        data = Hash("header", header, "body", body)
-        bindata = encodeBinary(data)
+        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
         # publish is awaitable
         self.loop.call_soon_threadsafe(
@@ -208,9 +207,9 @@ class AmqpBroker(Broker):
     def log(self, message):
         exchange = self.domain + ".log"
         routing_key = ""
-        data = Hash("header", Hash("target", "log"),
-                    "body", Hash("messages", [message]))
-        bindata = encodeBinary(data)
+        header = Hash("target", "log")
+        body = Hash("messages", [message])
+        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
         self.loop.call_soon_threadsafe(
                 self.loop.create_task, self.publish(exchange, routing_key, m))
@@ -356,7 +355,9 @@ class AmqpBroker(Broker):
         simply call handle the message as usual...
         """
         try:
-            decoded = decodeBinary(message)
+            header, pos = decodeBinaryPos(message)
+            body = decodeBinary(message[pos:])
+            decoded = Hash("header", header, "body", body)
         except BaseException:
             self.logger.exception("Malformed message")
             return
