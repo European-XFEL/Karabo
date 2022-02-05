@@ -77,18 +77,18 @@ namespace karabo {
                 writeType(buffer, Types::HASH_POINTER);
                 writeAttributes(element.getAttributes(), buffer);
                 writeHash(*(element.getValue<Hash::Pointer>()), buffer);
-            } else if (element.is<vector<Hash> >()) {
+            } else if (element.is<vector<Hash>>()) {
                 writeType(buffer, Types::VECTOR_HASH);
                 writeAttributes(element.getAttributes(), buffer);
-                const vector<Hash>& tmp = element.getValue<vector<Hash> >();
+                const vector<Hash>& tmp = element.getValue<vector<Hash>>();
                 writeSize(buffer, tmp.size());
                 for (size_t i = 0; i < tmp.size(); ++i) {
                     writeHash(tmp[i], buffer);
                 }
-            } else if (element.is<vector<Hash::Pointer> >()) {
+            } else if (element.is<vector<Hash::Pointer>>()) {
                 writeType(buffer, Types::VECTOR_HASH_POINTER);
                 writeAttributes(element.getAttributes(), buffer);
-                const vector<Hash::Pointer>& tmp = element.getValue<vector<Hash::Pointer> >();
+                const vector<Hash::Pointer>& tmp = element.getValue<vector<Hash::Pointer>>();
                 writeSize(buffer, tmp.size());
                 for (size_t i = 0; i < tmp.size(); ++i) {
                     writeHash(*(tmp[i]), buffer);
@@ -112,18 +112,18 @@ namespace karabo {
                 writeType(buffers.back(), Types::HASH_POINTER);
                 writeAttributes(element.getAttributes(), buffers.back());
                 writeHash(*(element.getValue<Hash::Pointer>()), buffers);
-            } else if (element.is<vector<Hash> >()) {
+            } else if (element.is<vector<Hash>>()) {
                 writeType(buffers.back(), Types::VECTOR_HASH);
                 writeAttributes(element.getAttributes(), buffers.back());
-                const vector<Hash>& tmp = element.getValue<vector<Hash> >();
+                const vector<Hash>& tmp = element.getValue<vector<Hash>>();
                 writeSize(buffers.back(), tmp.size());
                 for (size_t i = 0; i < tmp.size(); ++i) {
                     writeHash(tmp[i], buffers);
                 }
-            } else if (element.is<vector<Hash::Pointer> >()) {
+            } else if (element.is<vector<Hash::Pointer>>()) {
                 writeType(buffers.back(), Types::VECTOR_HASH_POINTER);
                 writeAttributes(element.getAttributes(), buffers.back());
-                const vector<Hash::Pointer>& tmp = element.getValue<vector<Hash::Pointer> >();
+                const vector<Hash::Pointer>& tmp = element.getValue<vector<Hash::Pointer>>();
                 writeSize(buffers.back(), tmp.size());
                 for (size_t i = 0; i < tmp.size(); ++i) {
                     writeHash(*(tmp[i]), buffers);
@@ -386,9 +386,9 @@ namespace karabo {
                 case Types::VECTOR_DOUBLE:
                     return writeSequenceBulk(buffer, boost::any_cast<const vector<double>&>(value));
                 case Types::VECTOR_COMPLEX_FLOAT:
-                    return writeSequence(buffer, boost::any_cast<const vector<std::complex<float> >&>(value));
+                    return writeSequence(buffer, boost::any_cast<const vector<std::complex<float>>&>(value));
                 case Types::VECTOR_COMPLEX_DOUBLE:
-                    return writeSequence(buffer, boost::any_cast<const vector<std::complex<double> >&>(value));
+                    return writeSequence(buffer, boost::any_cast<const vector<std::complex<double>>&>(value));
                 case Types::VECTOR_STRING:
                     return writeSequence(buffer, boost::any_cast<const vector<std::string>&>(value));
                 case Types::VECTOR_BOOL:
@@ -403,10 +403,11 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::load(karabo::util::Hash& object, const char* archive, const size_t nBytes) {
+        size_t HashBinarySerializer::load(karabo::util::Hash& object, const char* archive, const size_t nBytes) {
             std::stringstream is;
             is.rdbuf()->pubsetbuf(const_cast<char*>(archive), nBytes);
             this->readHash(object, is);
+            return size_t(is.tellg());
         }
 
         void HashBinarySerializer::load(karabo::util::Hash& object, const BufferSet& buffers) {
@@ -416,7 +417,6 @@ namespace karabo {
             this->readHash(object, is, buffers);
             buffers.rewind();
         }
-
 
         void HashBinarySerializer::readHash(Hash& hash, std::istream& is) const {
             unsigned size = readSize(is);
@@ -453,7 +453,7 @@ namespace karabo {
             } else if (type == Types::VECTOR_HASH) {
                 const size_t size = readSize(is);
                 node.setValue(std::vector<Hash>());
-                std::vector<Hash>& result = node.getValue<std::vector<Hash> >();
+                std::vector<Hash>& result = node.getValue<std::vector<Hash>>();
                 result.resize(size);
                 for (size_t i = 0; i < size; ++i) {
                     readHash(result[i], is);
@@ -461,7 +461,7 @@ namespace karabo {
             } else if (type == Types::VECTOR_HASH_POINTER) {
                 const size_t size = readSize(is);
                 node.setValue(std::vector<Hash::Pointer>());
-                std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer> >();
+                std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer>>();
                 result.resize(size, Hash::Pointer(new Hash()));
                 for (size_t i = 0; i < size; ++i) {
                     readHash(*(result[i]), is);
@@ -486,7 +486,7 @@ namespace karabo {
             } else if (type == Types::VECTOR_HASH) {
                 const size_t size = readSize(is);
                 node.setValue(std::vector<Hash>());
-                std::vector<Hash>& result = node.getValue<std::vector<Hash> >();
+                std::vector<Hash>& result = node.getValue<std::vector<Hash>>();
                 result.resize(size);
                 for (size_t i = 0; i < size; ++i) {
                     readHash(result[i], is, buffers);
@@ -494,7 +494,7 @@ namespace karabo {
             } else if (type == Types::VECTOR_HASH_POINTER) {
                 const size_t size = readSize(is);
                 node.setValue(std::vector<Hash::Pointer>());
-                std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer> >();
+                std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer>>();
                 result.resize(size, Hash::Pointer(new Hash()));
                 for (size_t i = 0; i < size; ++i) {
                     readHash(*(result[i]), is, buffers);
@@ -688,10 +688,10 @@ namespace karabo {
                     value = readSingleValue<bool>(is);
                     break;
                 case Types::COMPLEX_FLOAT:
-                    value = readSingleValue<std::complex<float> >(is);
+                    value = readSingleValue<std::complex<float>>(is);
                     break;
                 case Types::COMPLEX_DOUBLE:
-                    value = readSingleValue<std::complex<double> >(is);
+                    value = readSingleValue<std::complex<double>>(is);
                     break;
                 case Types::STRING:
                     value = readSingleValue<std::string>(is);
@@ -753,10 +753,10 @@ namespace karabo {
                     value = readSingleValue<bool>(is);
                     break;
                 case Types::COMPLEX_FLOAT:
-                    value = readSingleValue<std::complex<float> >(is);
+                    value = readSingleValue<std::complex<float>>(is);
                     break;
                 case Types::COMPLEX_DOUBLE:
-                    value = readSingleValue<std::complex<double> >(is);
+                    value = readSingleValue<std::complex<double>>(is);
                     break;
                 case Types::STRING:
                     value = readSingleValue<std::string>(is);
@@ -822,9 +822,9 @@ namespace karabo {
                 case Types::VECTOR_DOUBLE:
                     return readSequenceBulk<double>(is, result, size);
                 case Types::VECTOR_COMPLEX_FLOAT:
-                    return readSequence<std::complex<float> >(is, result, size);
+                    return readSequence<std::complex<float>>(is, result, size);
                 case Types::VECTOR_COMPLEX_DOUBLE:
-                    return readSequence<std::complex<double> >(is, result, size);
+                    return readSequence<std::complex<double>>(is, result, size);
                 case Types::VECTOR_HASH:
                     return readSequence<Hash>(is, result, size);
                 case Types::VECTOR_NONE:
@@ -863,15 +863,16 @@ namespace karabo {
         }
 
 
-        void HashBinarySerializer::load(std::vector<karabo::util::Hash>& objects, const char* archive,
-                                        const size_t nBytes) {
+        size_t HashBinarySerializer::load(std::vector<karabo::util::Hash>& objects, const char* archive,
+                                          const size_t nBytes) {
             vector<Hash> tmp(1);
-            load(tmp[0], archive, nBytes);
+            size_t bytes = load(tmp[0], archive, nBytes);
             if (tmp[0].begin()->getKey() == "KRB_Sequence") {
-                objects.swap(tmp[0].get<vector<Hash> >("KRB_Sequence"));
+                objects.swap(tmp[0].get<vector<Hash>>("KRB_Sequence"));
             } else {
                 objects.swap(tmp);
             }
+            return bytes;
         }
     } // namespace io
 } // namespace karabo

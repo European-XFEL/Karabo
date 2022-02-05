@@ -67,6 +67,14 @@ namespace karabo {
                   .defaultValue(120)
                   .unit(Unit::SECOND)
                   .commit();
+
+            BOOL_ELEMENT(expected)
+                  .key("skipFlag")
+                  .displayedName("Skip body deserialization")
+                  .description("Skip body deserialization, i.e. keep message body as a binary blob")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
         }
 
 
@@ -75,7 +83,8 @@ namespace karabo {
               m_thread(),
               m_brokerUrls(),
               m_domain(),
-              m_instanceId() {
+              m_instanceId(),
+              m_skipFlag(input.get<bool>("skipFlag")) {
             input.get("domain", m_domain);
             input.get("instanceId", m_instanceId);
             run();

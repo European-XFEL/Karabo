@@ -46,7 +46,7 @@ namespace karabo {
              */
             void save2(const karabo::util::Schema& object, std::vector<char>& archive);
 
-            void load(karabo::util::Schema& object, const char* archive, const size_t nBytes);
+            size_t load(karabo::util::Schema& object, const char* archive, const size_t nBytes);
         };
     } // namespace io
 } // namespace karabo
