@@ -466,7 +466,10 @@ namespace karabo {
             MqttNsAsyncClient::packet_id_t packetId = 0;
             if (pubopts.get_qos() != MQTT_NS::qos::at_most_once) packetId = m_client->acquire_unique_packet_id();
             auto spPayload = std::make_shared<std::vector<char>>();
-            if (msg) m_binarySerializer->save(*msg, *spPayload); // msg -> payload
+            if (msg) {
+                m_binarySerializer->save2(msg->get<Hash>("header"), *spPayload); // header -> payload
+                m_binarySerializer->save2(msg->get<Hash>("body"), *spPayload);   // body   -> payload
+            }
             auto spTopic = std::make_shared<std::string>(std::move(topic));
 
             if (packetId) {
@@ -730,7 +733,15 @@ namespace karabo {
 
         karabo::util::Hash::Pointer MqttCppClient::deserializeFrom(const MQTT_NS::buffer& archive) {
             karabo::util::Hash::Pointer result = boost::make_shared<Hash>();
-            m_binarySerializer->load(*result, archive.data(), archive.length());
+            Hash& header = result->bindReference<Hash>("header");
+            size_t bytes = m_binarySerializer->load(header, archive.data(), archive.length());
+            if (m_skipFlag) {
+                std::vector<char>& raw = result->bindReference<std::vector<char>>("raw");
+                std::copy(archive.data() + bytes, archive.data() + archive.length(), std::back_inserter(raw));
+            } else {
+                Hash& body = result->bindReference<Hash>("body");
+                m_binarySerializer->load(body, archive.data() + bytes, archive.length() - bytes);
+            }
             return result;
         }
 
