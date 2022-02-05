@@ -18,7 +18,8 @@ from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
 
-from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
+from karabo.native import (
+    Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
 from .eventloop import Broker
 from .pahomqtt import AsyncioMqttHelper, MqttError
@@ -85,8 +86,7 @@ class MqttBroker(Broker):
         header['__format'] = 'Bin'
         header['producerTimestamp'] = self.timestamp
         self.incrementOrderNumbers(topic, header, qos)
-        data = Hash('header', header, 'body', body)
-        m = encodeBinary(data)
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
         self.loop.create_task(self.publish(topic, m, qos))
 
     def incrementOrderNumbers(self, topic, header, qos):
@@ -112,16 +112,15 @@ class MqttBroker(Broker):
                  + "/signalHeartbeat")
         header = Hash("signalFunction", "signalHeartbeat")
         # Note: C++ adds
-        # header["signalInstanceId"] = self.deviceId # redundant and unused
-        # header["slotInstanceIds"] = "__none__" # unused
-        # header["slotFunctions"] = "__none__" # unused
+        header["signalInstanceId"] = self.deviceId  # redundant and unused
+        header["slotInstanceIds"] = "__none__"      # unused
+        header["slotFunctions"] = "__none__"        # unused
         header["__format"] = "Bin"
         body = Hash()
         body["a1"] = self.deviceId
         body["a2"] = interval
         body["a3"] = self.info
-        data = Hash("header", header, "body", body)
-        m = encodeBinary(data)
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
         await self.client.publish(topic, m, 0)
 
     def notify_network(self, info):
@@ -195,9 +194,9 @@ class MqttBroker(Broker):
 
     def log(self, message):
         topic = self.domain + "/log"
-        data = Hash("header", Hash("target", "log"),
-                    "body", Hash("messages", [message]))
-        m = encodeBinary(data)
+        header = Hash("target", "log")
+        body = Hash("messages", [message])
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
         self.loop.call_soon_threadsafe(self.loop.create_task,
                                        self.client.publish(topic, m, 0))
 
@@ -324,7 +323,9 @@ class MqttBroker(Broker):
         """
         try:
             topic = message.topic
-            hash = decodeBinary(message.payload)
+            header, pos = decodeBinaryPos(message.payload)
+            body = decodeBinary(message.payload[pos:])
+            hash = Hash("header", header, "body", body)
             self.checkOrder(topic, device, hash)
         except BaseException:
             self.logger.exception("Malformed message")

@@ -701,7 +701,6 @@ namespace karabo {
                 m_ios->post(token);
             }
 
-
            private:
             void run();
 
@@ -711,6 +710,7 @@ namespace karabo {
             std::vector<std::string> m_brokerUrls;
             std::string m_domain;
             std::string m_instanceId;
+            bool m_skipFlag;
         };
     } // namespace net
 } // namespace karabo
