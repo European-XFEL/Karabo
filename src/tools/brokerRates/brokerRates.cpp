@@ -17,10 +17,13 @@
 #include <iostream>
 #include <karabo/core/DeviceClient.hh>
 #include <karabo/log/Logger.hh>
+#include <karabo/net/AmqpClient.hh>
 #include <karabo/net/Broker.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
+#include <karabo/net/MqttClient.hh>
+#include <karabo/net/RedisClient.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
@@ -111,6 +114,7 @@ class BrokerStatistics : public boost::enable_shared_from_this<BrokerStatistics>
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+static bool debug = false;
 const std::string BrokerStatistics::m_delimLine(
       "===============================================================================\n");
 
@@ -431,6 +435,277 @@ void printHelp(const char* name) {
               << std::endl;
 }
 
+std::string assembleJmsSelector(const std::vector<std::string>& receivers, std::vector<std::string>& senders) {
+    std::ostringstream str;
+    bool first = true;
+    for (const auto& receiverId : receivers) {
+        if (first) first = false;
+        else str << " OR ";
+        str << "slotInstanceIds LIKE '%|" << receiverId << "|%'";
+    }
+    for (const auto& senderId : senders) {
+        if (first) first = false;
+        else str << " OR ";
+        str << "signalInstanceId = '" << senderId << "'";
+    }
+    if (!first) {
+        // Take care that broadcasts are also listed if senders/receivers are specified
+        str << " OR slotInstanceIds LIKE '%|*|%'"; // if logs are of interest: add " OR  target = 'log'"
+    }
+    return str.str();
+}
+
+void startJmsMonitor(const std::vector<std::string>& brokers, const std::string& topic,
+                     const std::vector<std::string>& receivers, std::vector<std::string>& senders,
+                     const util::TimeValue& interval) {
+    // Create connection object
+    net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>(brokers);
+    connection->connect();
+
+    // Assemble selector
+    const std::string selector = assembleJmsSelector(receivers, senders);
+
+    if (debug) std::cout << "\nSelector:\n" << selector << std::endl;
+
+    // 3rd argument true: skip serialisation (but get access to raw message size)!
+    net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
+
+    std::cout << "\nStart monitoring signal and slot rates of \n   topic         '" << topic << "'\n   on broker     '"
+              << connection->getBrokerUrl() << "',\n   ";
+    if (!receivers.empty()) {
+        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+    }
+    if (!senders.empty()) {
+        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
+    }
+    std::cout << "interval is   " << interval << " s." << std::endl;
+
+    // Register our registration message as async reader:
+    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
+    consumer->startReading(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2));
+
+    if (debug) std::cout << "\n------------------ wait on work" << std::endl;
+    // Block forever
+    net::EventLoop::work();
+}
+
+void startMqttMonitor(const std::vector<std::string>& brokers, const std::string& domain,
+                      const std::vector<std::string>& receivers, std::vector<std::string>& senders,
+                      const util::TimeValue& interval) {
+    // Create client object
+    const std::string clientName = util::Configurator<net::MqttClient>::getRegisteredClasses().at(0);
+    // Skip message body deserialization: "skipFlag"
+    const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
+    net::MqttClient::Pointer client = net::MqttClient::create(clientName, config);
+
+    // Connect and subscribe
+    auto ec = client->connect();
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Failed to connect to MQTT broker at " + util::toString(brokers));
+    }
+
+    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
+    // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
+    // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
+    auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
+    util::Hash::Pointer body(boost::make_shared<util::Hash>());
+
+    auto readHandler = [stats, binSerializer, body](const boost::system::error_code ec, const std::string& topic,
+                                                    const util::Hash::Pointer& message) {
+        if (!ec) {
+            std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
+            if (message->has("raw")) {
+                raw.swap(message->get<std::vector<char>>("raw"));
+            } else {
+                binSerializer->save(message->get<util::Hash>("body"), raw); // body -> raw
+            }
+            stats->registerMessage(boost::make_shared<util::Hash>(message->get<util::Hash>("header")), body);
+        }
+    };
+
+    net::TopicSubOptions subscriptions;
+    if (receivers.empty() && senders.empty()) {
+        // No input on commandline ...
+        subscriptions.emplace_back(domain + "/slots/+", net::SubQos::AtMostOnce, readHandler);
+        subscriptions.emplace_back(domain + "/signals/+/+", net::SubQos::AtMostOnce, readHandler);
+    } else {
+        for (const auto& rid : receivers) {
+            std::string topic = domain + "/slots/" + boost::replace_all_copy(rid, "/", "|");
+            subscriptions.emplace_back(topic, net::SubQos::AtMostOnce, readHandler);
+        }
+        for (const auto& sid : senders) {
+            std::string topic = domain + "/signals/" + boost::replace_all_copy(sid, "/", "|") + "/+";
+            subscriptions.emplace_back(topic, net::SubQos::AtMostOnce, readHandler);
+        }
+    }
+
+    std::cout << "\nStart monitoring signal and slot rates of \n   domain         '" << domain
+              << "'\n   on broker     '" << client->getBrokerUrl() << "',\n   ";
+    if (!receivers.empty()) {
+        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+    }
+    if (!senders.empty()) {
+        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
+    }
+    std::cout << "interval is   " << interval << " s." << std::endl;
+
+    // subscribing means 'start reading'...
+    ec = client->subscribe(subscriptions);
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to MQTT broker");
+    }
+
+    if (debug) std::cout << "\n------------------ wait on work" << std::endl;
+    // Block forever
+    net::EventLoop::work();
+}
+
+void startRedisMonitor(const std::vector<std::string>& brokers, const std::string& domain,
+                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
+                       const util::TimeValue& interval) {
+    // Skip message body deserialization: "skipFlag"
+    const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
+    net::RedisClient::Pointer client = util::Configurator<net::RedisClient>::create("RedisClient", config);
+
+    // Connect and subscribe
+    auto ec = client->connect();
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Failed to connect to Redis broker at " + util::toString(brokers));
+    }
+
+    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
+    // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
+    // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
+    auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
+    util::Hash::Pointer body(boost::make_shared<util::Hash>());
+
+    auto readHandler = [stats, binSerializer, body](const boost::system::error_code ec, const std::string& topic,
+                                                    const util::Hash::Pointer& message) {
+        if (!ec) {
+            std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
+            if (message->has("raw")) {
+                raw.swap(message->get<std::vector<char>>("raw"));
+            } else {
+                binSerializer->save(message->get<util::Hash>("body"), raw); // body -> raw
+            }
+            stats->registerMessage(boost::make_shared<util::Hash>(message->get<util::Hash>("header")), body);
+        }
+    };
+
+    net::RedisTopicSubOptions subscriptions;
+    if (receivers.empty() && senders.empty()) {
+        // No input on commandline
+        subscriptions.emplace_back(domain + "/slots/*", readHandler);
+        subscriptions.emplace_back(domain + "/signals/*/*", readHandler);
+    } else {
+        for (const auto& rid : receivers) {
+            std::string topic = domain + "/slots/" + boost::replace_all_copy(rid, "/", "|");
+            subscriptions.emplace_back(topic, readHandler);
+        }
+        for (const auto& sid : senders) {
+            std::string topic = domain + "/signals/" + boost::replace_all_copy(sid, "/", "|") + "/*";
+            subscriptions.emplace_back(topic, readHandler);
+        }
+    }
+
+    std::cout << "\nStart monitoring signal and slot rates of \n   domain         '" << domain
+              << "'\n   on broker     '" << client->getBrokerUrl() << "',\n   ";
+    if (!receivers.empty()) {
+        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+    }
+    if (!senders.empty()) {
+        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
+    }
+    std::cout << "interval is   " << interval << " s." << std::endl;
+
+    // subscribing means 'start reading'...
+    ec = client->subscribe(subscriptions);
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to REDIS broker");
+    }
+
+    if (debug) std::cout << "\n------------------ wait on work" << std::endl;
+    // Block forever
+    net::EventLoop::work();
+}
+
+void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
+                      const std::vector<std::string>& receivers, std::vector<std::string>& senders,
+                      const util::TimeValue& interval) {
+    // Skip message body deserialization: "skipFlag"
+    const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
+    net::AmqpClient::Pointer client = util::Configurator<net::AmqpClient>::create("AmqpClient", config);
+
+    // Connect and subscribe
+    auto ec = client->connect();
+    if (ec) {
+        throw KARABO_NETWORK_EXCEPTION("Failed to connect to AMQP (RabbitMQ) broker at " + util::toString(brokers));
+    }
+
+    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
+    // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
+    // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
+    auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
+    util::Hash::Pointer body(boost::make_shared<util::Hash>());
+
+    auto readHandler = [stats, binSerializer, body](const boost::system::error_code& ec, const std::string& exchange,
+                                                    const std::string& routingkey, const util::Hash::Pointer& msg) {
+        if (!ec) {
+            std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
+            if (msg->has("raw")) {
+                raw.swap(msg->get<std::vector<char>>("raw"));
+            } else {
+                binSerializer->save(msg->get<util::Hash>("body"), raw); // body -> raw
+            }
+            stats->registerMessage(boost::make_shared<util::Hash>(msg->get<util::Hash>("header")), body);
+        }
+    };
+
+    client->registerConsumerHandler(readHandler);
+
+    std::cout << "\nStart monitoring signal and slot rates of \n   domain         '" << domain
+              << "'\n   on broker     '" << client->getBrokerUrl() << "',\n   ";
+    if (!receivers.empty()) {
+        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+    }
+    if (!senders.empty()) {
+        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
+    }
+    std::cout << "interval is   " << interval << " s." << std::endl;
+
+    const std::string slotsExchange = domain + ".slots";
+    const std::string signalsExchange = domain + ".signals";
+
+    if (receivers.empty() && senders.empty()) {
+        // No input on commandline
+        ec = client->subscribe(slotsExchange, "#");
+        if (ec) {
+            throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
+        }
+        ec = client->subscribe(signalsExchange, "*.*");
+        if (ec) {
+            throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
+        }
+    } else {
+        for (const auto& rid : receivers) {
+            ec = client->subscribe(slotsExchange, rid);
+            if (ec) {
+                throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
+            }
+        }
+        for (const auto& sid : senders) {
+            ec = client->subscribe(signalsExchange, sid + ".*");
+            if (ec) {
+                throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to AMQP broker");
+            }
+        }
+    }
+
+    // Block forever
+    net::EventLoop::work();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -459,7 +734,7 @@ int main(int argc, const char** argv) {
         }
     }
     // fromString<bool>(..) understands y, yes, Yes, true, True, 1, n, no, No, false, False, 0 and maybe more...
-    const bool debug = (options.has("--debug") ? util::fromString<bool>(options.get<std::string>("--debug")) : false);
+    debug = (options.has("--debug") ? util::fromString<bool>(options.get<std::string>("--debug")) : false);
 
     const std::string topic(karabo::net::Broker::brokerDomainFromEnv());
     const util::TimeValue interval = options.get<util::TimeValue>("period");
@@ -476,56 +751,25 @@ int main(int argc, const char** argv) {
     receivers.insert(receivers.end(), recAndSendFromServers.first.begin(), recAndSendFromServers.first.end());
     senders.insert(senders.end(), recAndSendFromServers.second.begin(), recAndSendFromServers.second.end());
 
-    // Assemble selector
-    std::ostringstream str;
-    bool first = true;
-    for (const auto& receiverId : receivers) {
-        if (first) first = false;
-        else str << " OR ";
-        str << "slotInstanceIds LIKE '%|" << receiverId << "|%'";
-    }
-    for (const auto& senderId : senders) {
-        if (first) first = false;
-        else str << " OR ";
-        str << "signalInstanceId = '" << senderId << "'";
-    }
-    if (!first) {
-        // Take care that broadcasts are also listed if senders/receivers are specified
-        str << " OR slotInstanceIds LIKE '%|*|%'"; // if logs are of interest: add " OR  target = 'log'"
-    }
-    const std::string selector(str.str());
-
-    if (debug) std::cout << "\nSelector:\n" << selector << std::endl;
-
     // Start Logger, but suppress INFO and DEBUG
     log::Logger::configure(util::Hash("priority", "WARN"));
     log::Logger::useOstream();
 
+    const std::vector<std::string> brokers(net::Broker::brokersFromEnv());
+    const std::string brkType = net::Broker::brokerTypeFrom(brokers);
+
     try {
-        // Create connection object
-        const std::vector<std::string> brokers(net::Broker::brokersFromEnv());
-        net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>(brokers);
-        connection->connect();
-
-        // 3rd argument true: skip serialisation (but get access to raw message size)!
-        net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
-
-        std::cout << "\nStart monitoring signal and slot rates of \n   topic         '" << topic
-                  << "'\n   on broker     '" << connection->getBrokerUrl() << "',\n   ";
-        if (!receivers.empty()) {
-            std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+        if (brkType == "jms") {
+            startJmsMonitor(brokers, topic, receivers, senders, interval);
+        } else if (brkType == "mqtt") {
+            startMqttMonitor(brokers, topic, receivers, senders, interval);
+        } else if (brkType == "amqp") {
+            startAmqpMonitor(brokers, topic, receivers, senders, interval);
+        } else if (brkType == "redis") {
+            startRedisMonitor(brokers, topic, receivers, senders, interval);
+        } else {
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION(brkType + " not supported!");
         }
-        if (!senders.empty()) {
-            std::cout << "messages from '" << util::toString(senders) << "',\n   ";
-        }
-        std::cout << "interval is   " << interval << " s." << std::endl;
-
-        // Register our registration message as async reader:
-        boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
-        consumer->startReading(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2));
-
-        // Block forever
-        net::EventLoop::work();
 
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
