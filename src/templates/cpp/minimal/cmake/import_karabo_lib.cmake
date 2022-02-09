@@ -1,1 +1,1 @@
-/home/costar/work/Framework/src/cmake/import_karabo_lib.cmake
+../../../../cmake/import_karabo_lib.cmake
