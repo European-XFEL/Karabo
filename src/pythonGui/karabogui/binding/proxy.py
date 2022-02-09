@@ -252,22 +252,29 @@ class ProjectDeviceProxy(DeviceClassProxy):
 
 class PropertyProxy(HasStrictTraits):
     """A proxy for a single device property
+
+    :param path: Full path of the property
+    :param key: Full 'key' of the property: <device ID>.<path>
+    :param binding: The binding for the property
+    :param value: The value for the property (from the binding instance)
+
+    :param edit_value: A user-entered value
+    :param root_proxy: Parent device proxy
+    :param pipeline_parent_path: Potential parent path if `binding` is a
+                                 child of a Pipeline Output
+
     """
-    # Full path of the property
     path = String
-    # Full 'key' of the property: <device ID>.<path>
     key = Property(String)
-    # The binding for the property
     binding = Instance(BaseBinding)
-    # The value for the property (from the binding instance)
     value = Property(depends_on='binding.value')
-    # A user-entered value
     edit_value = Any
-    # Parent device or class proxy
     root_proxy = Instance(BaseDeviceProxy, allow_none=False)
-    # Potential parent path if `binding` is a child of a Pipeline Output
     pipeline_parent_path = String
-    # Whether or not this property is currently visible in a scene
+
+    # More private members
+    # ---------------------
+
     visible = Bool(False)
     # Check whether we are existing or not
     existing = Bool(True)
