@@ -17,6 +17,7 @@ from karabogui.binding.api import (
     convert_string, get_binding_array_value, get_binding_value,
     get_default_value, get_editor_value, get_min_max, get_min_max_size,
     get_native_min_max, has_min_max_attributes)
+from karabogui.binding.proxy import PropertyProxy
 from karabogui.controllers.api import (
     DIMENSIONS, BaseBindingController, BindingValidator, ListValidator,
     SimpleValidator, add_unit_label, axis_label, get_array_data,
