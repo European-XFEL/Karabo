@@ -46,9 +46,8 @@ void exportPyCoreDeviceClient() {
           .def("getSystemTopology", &DeviceClientWrap::getSystemTopologyPy)
           .def("getServers", &DeviceClientWrap::getServersPy)
           .def("getClasses", &DeviceClientWrap::getClassesPy, (bp::arg("instanceId")))
-          .def("getDevices", (bp::object(DeviceClientWrap::*)())(&DeviceClientWrap::getDevicesPy))
-          .def("getDevices", (bp::object(DeviceClientWrap::*)(const string&))(&DeviceClientWrap::getDevicesPy),
-               (bp::arg("serverId")))
+          .def("getDevices", (&DeviceClientWrap::getDevicesPy))
+          .def("getDevices", (&DeviceClientWrap::getDevicesByServerPy), (bp::arg("serverId")))
           .def("getDeviceSchema",
                (karabo::util::Schema(DeviceClientWrap::*)(const string&))(&DeviceClientWrap::getDeviceSchema),
                (bp::arg("instanceId")))
@@ -89,7 +88,7 @@ void exportPyCoreDeviceClient() {
                bp::arg("serverId"))
           .def("get", &DeviceClientWrap::getPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("keySep") = "."))
           .def("get", &DeviceClientWrap::getConfigurationPy, (bp::arg("instanceId")))
-          .def("getFromPast", &DeviceClientWrap::getFromPastPy,
+          .def("getFromPast", &DeviceClientWrap::getPropertyHistoryPy,
                (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
           .def("getPropertyHistory", &DeviceClientWrap::getPropertyHistoryPy,
                (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
