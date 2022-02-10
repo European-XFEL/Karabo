@@ -11,7 +11,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "TcpAdapter_4.hh"
+#include "TcpAdapter.hh"
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/karabo.hpp"
