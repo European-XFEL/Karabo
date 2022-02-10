@@ -26,22 +26,47 @@ class BaseBinding(HasStrictTraits):
     """The base class for all bindings. It represents a single node in an
     object created from a schema. It has a dictionary of attributes and a
     `value` trait which contains the value of the node. The value is validated
-    using normal Traits validation.
+    using normal ``Traits`` validation.
+
+    :param attributes: The dictionary of the attributes belonging to the
+                       `BaseBinding`.
+    :param config_update: ``Traits.Event`` which fires when the value is
+                          updated externally
+    :param historic_data: ``Traits.Event`` which fires when historic data
+                          arrives for this object node. The data is contained
+                          in the new value passed to notification handlers
+    :param value: The value contained in this node. Derived classes should
+                  redefine this. The default is ``Traits.Undefined``.
+    :param timestamp: The timestamp when the value was last set on the device.
+                      Instance of `karabo.native.Timestamp`.
+
+
+    Attribute shortcuts for often used properties
+    ---------------------------------------------
+
+    :param displayed_name: The displayed name of the property
+    :param display_type: The display type of the property. This might provide
+                         more options later on.
+    :param access_mode: The access mode specification of the binding taking an
+                        enum of `karabo.native.AccessMode`.
+    :param assignment: The assignment setting with an enum of
+                       `karabo.native.Assignment`.
+    :param options: The list of options for this base binding.
+    :param required_access_level: The required access level with enums of
+                                  `karabo.native.AccessLevel`.
+    :param unit_label: The unit label string combining the unit and metric
+                       prefix.
     """
     # Attributes property copied from the object schema, we control the
     # setter of the attributes so their shortcuts can be updated in time
     # but avoid hammering the configurator
+
     attributes = Property
     _attributes = Dict
     # When the value was last set on the device
     timestamp = Instance(Timestamp)
-    # The value contained in this node. Derived classes should redefine this.
     value = Undefined
-
-    # An event which fires when the value is updated externally
     config_update = Event
-    # A event which fires when historic data arrives for this object node
-    # The data is contained in the new value passed to notification handlers
     historic_data = Event
 
     # Attribute shortcuts
@@ -56,6 +81,9 @@ class BaseBinding(HasStrictTraits):
     def is_allowed(self, state):
         """Return True if the given `state` is an allowed state for this
         binding.
+
+        :param state: Ideally an instance of `karabo.native.State` otherwise
+                      a string that can be casted to a ``State`` enum.
         """
         if isinstance(state, State):
             state = state.value
@@ -465,6 +493,11 @@ class VectorFloatBinding(VectorNumberBinding):
 
 
 class VectorHashBinding(VectorBinding):
+    """The VectorHash Binding for Table elements of devices
+
+    :param row_schema: Instance of Hash containing the row schema
+    :param bindings: A dictionary of bindings associated to the column keys
+    """
     value = Either((Instance(HashList), List))
     row_schema = Instance(Hash)
     bindings = Property(depends_on="row_schema")
