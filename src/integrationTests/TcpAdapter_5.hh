@@ -1,1 +1,0 @@
-TcpAdapter.hh
