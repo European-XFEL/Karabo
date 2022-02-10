@@ -49,29 +49,49 @@ namespace karathon {
 
         bp::tuple instantiatePy(const std::string& serverId, const karabo::util::Hash& configuration,
                                 int timeoutInSeconds) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, configuration, timeoutInSeconds));
+            std::pair<bool, std::string> instantiateReply;
+            {
+                ScopedGILRelease nogil;
+                instantiateReply = this->instantiate(serverId, configuration, timeoutInSeconds);
+            }
+            return Wrapper::fromStdPairToPyTuple(instantiateReply);
         }
 
         bp::tuple instantiatePy(const std::string& serverId, const std::string& classId,
                                 const karabo::util::Hash& configuration, int timeoutInSeconds) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, classId, configuration, timeoutInSeconds));
+            std::pair<bool, std::string> instantiateReply;
+            {
+                ScopedGILRelease nogil;
+                instantiateReply = this->instantiate(serverId, classId, configuration, timeoutInSeconds);
+            }
+            return Wrapper::fromStdPairToPyTuple(instantiateReply);
         }
 
         bp::tuple killDevicePy(const std::string& deviceId, int timeoutInSeconds = -1) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdPairToPyTuple(this->killDevice(deviceId, timeoutInSeconds));
+            std::pair<bool, std::string> killReply;
+            {
+                ScopedGILRelease nogil;
+                killReply = this->killDevice(deviceId, timeoutInSeconds);
+            }
+            return Wrapper::fromStdPairToPyTuple(killReply);
         }
 
         bp::tuple killServerPy(const std::string& serverId, int timeoutInSeconds = -1) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdPairToPyTuple(this->killServer(serverId, timeoutInSeconds));
+            std::pair<bool, std::string> killReply;
+            {
+                ScopedGILRelease nogil;
+                killReply = this->killServer(serverId, timeoutInSeconds);
+            }
+            return Wrapper::fromStdPairToPyTuple(killReply);
         }
 
         bp::tuple existsPy(const std::string& instanceId) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
+            std::pair<bool, std::string> existsReply;
+            {
+                ScopedGILRelease nogil;
+                existsReply = this->exists(instanceId);
+            }
+            return Wrapper::fromStdPairToPyTuple(existsReply);
         }
 
         void enableInstanceTrackingPy() {
@@ -79,58 +99,86 @@ namespace karathon {
             enableInstanceTracking();
         }
 
-        bp::object getSystemInformationPy() {
+        karabo::util::Hash getSystemInformationPy() {
             ScopedGILRelease nogil;
-            return bp::object(getSystemInformation());
+            return getSystemInformation();
         }
 
-        bp::object getSystemTopologyPy() {
+        karabo::util::Hash getSystemTopologyPy() {
             ScopedGILRelease nogil;
-            return bp::object(getSystemTopology());
+            return getSystemTopology();
         }
 
-        bp::object getServersPy() {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getServers());
+        bp::list getServersPy() {
+            std::vector<std::string> servers;
+            {
+                ScopedGILRelease nogil;
+                servers = this->getServers();
+            }
+            return Wrapper::fromStdVectorToPyList(servers);
         }
 
-        bp::object getClassesPy(const std::string& deviceServer) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getClasses(deviceServer));
+        bp::list getClassesPy(const std::string& deviceServer) {
+            std::vector<std::string> devClasses;
+            {
+                ScopedGILRelease nogil;
+                devClasses = this->getClasses(deviceServer);
+            }
+            return Wrapper::fromStdVectorToPyList(devClasses);
         }
 
-        //            bp::object getDevicesPy(const std::string& deviceServer) {
-        //                return Wrapper::fromStdVectorToPyList(this->getDevices(deviceServer));
-        //            }
-
-        bp::object getDevicesPy() {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getDevices());
+        bp::list getDevicesPy() {
+            std::vector<std::string> devices;
+            {
+                ScopedGILRelease nogil;
+                devices = this->getDevices();
+            }
+            return Wrapper::fromStdVectorToPyList(devices);
         }
 
-        bp::object getDevicesPy(const std::string& serverId) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getDevices(serverId));
+        bp::list getDevicesByServerPy(const std::string& serverId) {
+            std::vector<std::string> devices;
+            {
+                ScopedGILRelease nogil;
+                devices = this->getDevices(serverId);
+            }
+            return Wrapper::fromStdVectorToPyList(devices);
         }
 
-        bp::object getPropertiesPy(const std::string& deviceId) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getProperties(deviceId));
+        bp::list getPropertiesPy(const std::string& deviceId) {
+            std::vector<std::string> props;
+            {
+                ScopedGILRelease nogil;
+                props = this->getProperties(deviceId);
+            }
+            return Wrapper::fromStdVectorToPyList(props);
         }
 
-        bp::object getClassPropertiesPy(const std::string& serverId, const std::string& classId) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getClassProperties(serverId, classId));
+        bp::list getClassPropertiesPy(const std::string& serverId, const std::string& classId) {
+            std::vector<std::string> classProps;
+            {
+                ScopedGILRelease nogil;
+                classProps = this->getClassProperties(serverId, classId);
+            }
+            return Wrapper::fromStdVectorToPyList(classProps);
         }
 
-        bp::object getCurrentlySettablePropertiesPy(const std::string& instanceId) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getCurrentlySettableProperties(instanceId));
+        bp::list getCurrentlySettablePropertiesPy(const std::string& instanceId) {
+            std::vector<std::string> props;
+            {
+                ScopedGILRelease nogil;
+                props = this->getCurrentlySettableProperties(instanceId);
+            }
+            return Wrapper::fromStdVectorToPyList(props);
         }
 
-        bp::object getCurrentlyExecutableCommandsPy(const std::string& instanceId) {
-            ScopedGILRelease nogil;
-            return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
+        bp::list getCurrentlyExecutableCommandsPy(const std::string& instanceId) {
+            std::vector<std::string> cmds;
+            {
+                ScopedGILRelease nogil;
+                cmds = this->getCurrentlyExecutableCommands(instanceId);
+            }
+            return Wrapper::fromStdVectorToPyList(cmds);
         }
 
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
@@ -145,9 +193,9 @@ namespace karathon {
             return Wrapper::toObject(value, HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
         }
 
-        bp::object getConfigurationPy(const std::string& instanceId) {
+        karabo::util::Hash getConfigurationPy(const std::string& instanceId) {
             ScopedGILRelease nogil;
-            return bp::object(this->DeviceClient::get(instanceId));
+            return this->DeviceClient::get(instanceId);
         }
 
         karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
@@ -323,14 +371,14 @@ namespace karathon {
             execute(instanceId, functionName, timeout);
         }
 
-        bp::object getFromPastPy(const std::string& deviceId, const std::string& key, const std::string& from,
-                                 std::string to = "", unsigned int maxNumData = 0) {
-            return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
-        }
-
         bp::object getPropertyHistoryPy(const std::string& deviceId, const std::string& key, const std::string& from,
                                         std::string to = "", unsigned int maxNumData = 0) {
-            return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
+            std::vector<karabo::util::Hash> propHist;
+            {
+                ScopedGILRelease nogil;
+                propHist = this->getPropertyHistory(deviceId, key, from, to, maxNumData);
+            }
+            return Wrapper::fromStdVectorToPyHashList(propHist);
         }
 
         karabo::util::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart) {
