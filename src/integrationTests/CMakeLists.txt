@@ -69,58 +69,58 @@ set(alarmServiceIntegrTestRunner_FILES
 set(dataLoggingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseLogging_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/DataLogging_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_11.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(deviceIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/Device_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_9.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(deviceLockingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/LockTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/LockTest_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_5.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(guiServerIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/GuiServer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter_5.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_10.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(pipelinedProcessingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/P2PSenderDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/PipeReceiverDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelinedProcessing_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_4.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(propertyTestIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/PropertyTest_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_2.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(runtimeSchemaAttrsIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/AlarmTesterDevice_3.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/AlarmTesterDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/RunTimeSchemaAttributes_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter_3.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_3.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(sceneProviderIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/NonSceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProvider_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter_4.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_7.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 set(timingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/SimulatedTimeServerDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/TimingTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/Timing_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner_8.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
 )
 
 foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
