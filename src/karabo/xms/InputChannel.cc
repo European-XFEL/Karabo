@@ -61,7 +61,7 @@ namespace karabo {
                   .key("dataDistribution")
                   .displayedName("Data Distribution")
                   .description("The way data is fetched from the connected output channels (shared/copy)")
-                  .options("copy,shared")
+                  .options(std::vector<std::string>({"copy", "shared"}))
                   .assignmentOptional()
                   .defaultValue("copy")
                   .init()
@@ -73,7 +73,7 @@ namespace karabo {
                   .description(
                         "Policy for what to do if this input is too slow for the fed data rate (only used in copy "
                         "mode)")
-                  .options("drop,wait,queue,queueDrop")
+                  .options({"drop", "wait", "queue", "queueDrop"})
                   .assignmentOptional()
                   .defaultValue("drop")
                   .init()

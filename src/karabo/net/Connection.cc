@@ -26,7 +26,7 @@ namespace karabo {
                   .key("serializationType")
                   .displayedName("Serialization Type")
                   .description("Decides whether the serialization type for objects will be binary or text")
-                  .options("text binary")
+                  .options(std::vector<std::string>({"text", "binary"}))
                   .assignmentOptional()
                   .defaultValue("binary")
                   .init()
