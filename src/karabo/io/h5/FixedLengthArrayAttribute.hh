@@ -107,8 +107,8 @@ namespace karabo {
 
                         auto& content = (node.getValue<std::vector<T> >());
 
-                        if(not content.empty()){
-                          KARABO_CHECK_HDF5_STATUS( H5Awrite(m_attribute, tid, content.data()));
+                        if (not content.empty()) {
+                            KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, content.data()));
                         }
 
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
@@ -188,7 +188,7 @@ namespace karabo {
                                 converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
                             }
                             const unsigned char* ptr = &converted[0];
-                            KARABO_CHECK_HDF5_STATUS( H5Awrite(m_attribute, tid, ptr));
+                            KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, ptr));
                         }
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
@@ -265,7 +265,7 @@ namespace karabo {
                             for (size_t i = 0; i < value.size(); ++i) {
                                 value_copy[i] = value[i].c_str();
                             }
-                            KARABO_CHECK_HDF5_STATUS( H5Awrite(m_attribute, tid, &value_copy[0]));
+                            KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &value_copy[0]));
                         }
 
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
