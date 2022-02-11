@@ -512,7 +512,7 @@ namespace karabo {
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
-                m_log = &(karabo::log::Logger::getCategory(m_deviceId)); // TODO use later: "device." + instanceId
+                m_log = &(karabo::log::Logger::getCategory(m_deviceId));
             }
 
             /**
