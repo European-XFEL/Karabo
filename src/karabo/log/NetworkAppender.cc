@@ -62,7 +62,7 @@ namespace karabo {
             UINT32_ELEMENT(s)
                   .key("maxNumMessages")
                   .displayedName("Max. Num. Messages")
-                  .description("Maximum number of messages - if mor per interval arrive, they are dropped")
+                  .description("Maximum number of messages - if more per interval arrive, they are dropped")
                   .assignmentOptional()
                   .defaultValue(1000u)
                   .commit();

@@ -85,12 +85,12 @@ namespace karabo {
             unsigned int m_interval;
             unsigned int m_maxMessages;
 
-            /// layouts for each component
+            // layouts for each component
             krb_log4cpp::PatternLayout m_timeLayout;
             krb_log4cpp::PatternLayout m_priorityLayout;
             krb_log4cpp::PatternLayout m_categoryLayout;
             krb_log4cpp::PatternLayout m_messageLayout;
-            /// cash for messages
+            // cache for messages
             boost::mutex m_mutex;
             std::vector<karabo::util::Hash> m_logCache;
             boost::asio::deadline_timer m_timer;
