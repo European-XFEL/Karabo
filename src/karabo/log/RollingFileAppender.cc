@@ -68,7 +68,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
+                  .defaultValue("%d{%Y-%m-%d %H:%M:%S.%l} %p  %c  : %m%n")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -77,7 +77,7 @@ namespace karabo {
                         "The Appender will not appended log events with a priority lower than the threshold.\
                                   Use Priority::NOTSET to disable threshold checking.")
                   .displayedName("Threshold")
-                  .options("NOTSET DEBUG INFO WARN ERROR")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
                   .defaultValue("NOTSET")
                   .commit();
