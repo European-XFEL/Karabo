@@ -23,4 +23,3 @@ KARABO_REGISTER_FOR_CONFIGURATION(Attribute, BoolArrayAttribute)
 KARABO_REGISTER_FOR_CONFIGURATION(Attribute, StringArrayAttribute)
 KARABO_REGISTER_FOR_CONFIGURATION(Attribute, FloatArrayAttribute)
 KARABO_REGISTER_FOR_CONFIGURATION(Attribute, DoubleArrayAttribute)
-
