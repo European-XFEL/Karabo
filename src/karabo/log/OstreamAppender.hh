@@ -23,7 +23,7 @@ namespace karabo {
 
         /**
          * Helper class to configure an underlying log4cpp appender.
-         * NOTE: Do NOT use this class directly. It is indirectly involved in the static functions
+         * NOTE: Do NOT use this class directly. It is indirectly involved by the static functions
          * of the Logger!!
          */
         class OstreamAppender {
