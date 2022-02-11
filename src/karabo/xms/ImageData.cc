@@ -102,7 +102,7 @@ namespace karabo {
                   .key("rotation")
                   .displayedName("Rotation")
                   .description("The image counterclockwise rotation.")
-                  .options("0,90,180,270")
+                  .options(std::vector<int>({0, 90, 180, 270}))
                   .unit(Unit::DEGREE)
                   .readOnly()
                   .commit();
