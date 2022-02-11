@@ -25,7 +25,7 @@ namespace karabo {
                   .key("output")
                   .description("Output Stream")
                   .displayedName("OutputStream")
-                  .options("STDERR,STDOUT")
+                  .options(std::vector<std::string>({"STDERR", "STDOUT"}))
                   .assignmentOptional()
                   .defaultValue("STDERR")
                   .commit();
@@ -35,7 +35,7 @@ namespace karabo {
                   .description("Formatting pattern for the logstream")
                   .displayedName("Pattern")
                   .assignmentOptional()
-                  .defaultValue("%p  %c  : %m%n")
+                  .defaultValue("%d{%Y-%m-%dT%H:%M:%S.%l} %p  %c  : %m%n")
                   .commit();
 
             STRING_ELEMENT(s)
@@ -44,7 +44,7 @@ namespace karabo {
                         "The Appender will not appended log events with a priority lower than the threshold.\
                                   Use Priority::NOTSET to disable threshold checking.")
                   .displayedName("Threshold")
-                  .options("NOTSET DEBUG INFO WARN ERROR")
+                  .options({"NOTSET", "DEBUG", "INFO", "WARN", "ERROR"})
                   .assignmentOptional()
                   .defaultValue("NOTSET")
                   .commit();
