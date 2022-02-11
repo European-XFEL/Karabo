@@ -7,14 +7,15 @@ import re
 import sys
 import weakref
 from asyncio import (
-    CancelledError, TimeoutError, coroutine, ensure_future, gather,
-    get_event_loop, iscoroutinefunction, wait_for)
+    CancelledError, TimeoutError, ensure_future, gather, get_event_loop,
+    wait_for)
 from collections import defaultdict
 
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Descriptor,
     Hash, Int32, KaraboError, Node, Slot, String, TypeHash, Weak)
 
+from .eventloop import ensure_coroutine
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
 from .synchronization import FutureDict, firstCompleted
@@ -50,9 +51,7 @@ def slot(f):
 
 
 def coslot(f, passMessage=False):
-    # We keep backward compatibilty
-    if not iscoroutinefunction(f):
-        f = coroutine(f)
+    f = ensure_coroutine(f)
 
     def outer(func, device, name, message, args):
         broker = device._ss
