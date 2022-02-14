@@ -19,5 +19,5 @@ C++ Service Devices
 Python Bound Service Devices
 ============================
 
-.. autoclass:: karabo.bound_devices.project_manager.ProjectManager
+.. autoclass:: karabo.middlelayer_devices.project_manager.ProjectManager
    :members:
