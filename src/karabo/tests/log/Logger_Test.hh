@@ -51,6 +51,7 @@ class Logger_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(test1);
     CPPUNIT_TEST(test2);
     CPPUNIT_TEST(testInClassLogging);
+    CPPUNIT_TEST(testLastMessages);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -64,6 +65,7 @@ class Logger_Test : public CPPUNIT_NS::TestFixture {
     void test1();
     void test2();
     void testInClassLogging();
+    void testLastMessages();
 };
 
 #endif /* LOGGER_TEST_HH */

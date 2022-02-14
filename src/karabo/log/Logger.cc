@@ -8,6 +8,7 @@
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/SimpleElement.hh>
 
+#include "CacheAppender.hh"
 #include "NetworkAppender.hh"
 #include "OstreamAppender.hh"
 #include "RollingFileAppender.hh"
@@ -50,6 +51,8 @@ namespace karabo {
             NODE_ELEMENT(s).key("file").appendParametersOf<RollingFileAppender>().commit();
 
             NODE_ELEMENT(s).key("network").appendParametersOf<NetworkAppender>().commit();
+
+            NODE_ELEMENT(s).key("cache").appendParametersOf<CacheAppender>().commit();
         }
 
 
@@ -66,6 +69,12 @@ namespace karabo {
             } else {
                 throw KARABO_PARAMETER_EXCEPTION("Logger configuration failed. \n" + ret.second);
             }
+        }
+
+
+        void Logger::useCache(const std::string& category, bool inheritAppenders) {
+            auto p = Configurator<CacheAppender>::createNode("cache", m_config);
+            useAppender(category, inheritAppenders, p->getAppender());
         }
 
 
@@ -104,6 +113,9 @@ namespace karabo {
             return krb_log4cpp::Priority::getPriorityName(getCategory(category).getPriority());
         }
 
+        std::vector<Hash> Logger::getCachedContent(unsigned int nMessages) {
+            return CacheAppender::getCachedContent(nMessages);
+        }
 
         void Logger::reset() {
             krb_log4cpp::Category::getRoot().removeAllAppenders();
