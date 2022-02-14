@@ -104,3 +104,58 @@ void Logger_Test::testInClassLogging() {
     auto p = Configurator<LogSomething>::create("LogSomething", config);
     p->doSomeLogging();
 }
+
+
+void Logger_Test::testLastMessages() {
+    Logger::reset();
+
+    // calling Logger::getCachedContent before calling Logger::useCache is legal
+    // but an empty vector is returned.
+    std::vector<Hash> content = Logger::getCachedContent(10);
+    CPPUNIT_ASSERT_EQUAL(0ul, content.size());
+
+    // set up the Logger
+    const unsigned int maxMsgs = 20;
+    Hash config("priority", "INFO", "cache.maxNumMessages", maxMsgs);
+    Logger::configure(config);
+    Logger::useCache();
+
+    // calling Logger::getCachedContent before logging will get an empty vector
+    content = Logger::getCachedContent(10);
+    CPPUNIT_ASSERT_EQUAL(0ul, content.size());
+
+    // log something
+    for (int i = 0; i < 100; i++) {
+        Logger::logDebug("VERBOSE_STUFF") << "This should not be logged - " << i;
+        Logger::logInfo("INFORMATIVE_STUFF") << "line - " << i;
+    }
+
+    // get the last 10 entries
+    content = Logger::getCachedContent(10u);
+
+    CPPUNIT_ASSERT_EQUAL(10ul, content.size());
+    int index = 90;
+    for (const Hash& entry : content) {
+        // check that the timestamp is in, but do not check
+        CPPUNIT_ASSERT(entry.has("timestamp"));
+        CPPUNIT_ASSERT_EQUAL(std::string("INFORMATIVE_STUFF"), entry.get<std::string>("category"));
+        CPPUNIT_ASSERT_EQUAL(std::string("INFO"), entry.get<std::string>("type"));
+        std::ostringstream expected;
+        expected << "line - " << index++;
+        CPPUNIT_ASSERT_EQUAL(expected.str(), entry.get<std::string>("message"));
+    }
+
+    // One can request more than the max config["cache.maxNumMessages"] but will not get more than that
+    content = Logger::getCachedContent(200);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(maxMsgs), content.size());
+    index = 100 - maxMsgs;
+    for (const Hash& entry : content) {
+        // check that the timestamp is in, but do not check
+        CPPUNIT_ASSERT(entry.has("timestamp"));
+        CPPUNIT_ASSERT_EQUAL(std::string("INFORMATIVE_STUFF"), entry.get<std::string>("category"));
+        CPPUNIT_ASSERT_EQUAL(std::string("INFO"), entry.get<std::string>("type"));
+        std::ostringstream expected;
+        expected << "line - " << index++;
+        CPPUNIT_ASSERT_EQUAL(expected.str(), entry.get<std::string>("message"));
+    }
+}
