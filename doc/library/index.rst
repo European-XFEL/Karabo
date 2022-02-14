@@ -20,6 +20,7 @@ bindings, the native Python package and the pyQt-based GUI.
    guiServer
    alarmService
    gui_widget_development
+   gui_api
    gui_scene_development
    gui_scene_files_v1
    device_version
