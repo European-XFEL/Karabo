@@ -39,9 +39,19 @@ namespace karabo {
             static void configure(const karabo::util::Hash& config);
 
             /**
-             * Enables the ostream appender on the specified catetory.
+             * Enables the cache appender on the specified category.
              *
-             * By default any appenders defined on parent categories will inherited. A boolean flag
+             * By default any appenders defined on parent categories will be inherited. A boolean flag
+             * allows to disable this behavior
+             * @param category The category on which the appender should work (empty string reflects root category)
+             * @param inheritAppenders If true will inherit appenders defined in parent categories
+             */
+            static void useCache(const std::string& category = "", bool inheritAppenders = true);
+
+            /**
+             * Enables the ostream appender on the specified category.
+             *
+             * By default any appenders defined on parent categories will be inherited. A boolean flag
              * allows to disable this behavior
              * @param category The category on which the appender should work (empty string reflects root category)
              * @param inheritAppenders If true will inherit appenders defined in parent categories
@@ -49,9 +59,9 @@ namespace karabo {
             static void useOstream(const std::string& category = "", bool inheritAppenders = true);
 
             /**
-             * Enables the rolling file appender on the specified catetory.
+             * Enables the rolling file appender on the specified category.
              *
-             * By default any appenders defined on parent categories will inherited. A boolean flag
+             * By default any appenders defined on parent categories will be inherited. A boolean flag
              * allows to disable this behavior
              * @param category The category on which the appender should work (empty string reflects root category)
              * @param inheritAppenders If true will inherit appenders defined in parent categories
@@ -59,9 +69,9 @@ namespace karabo {
             static void useFile(const std::string& category = "", bool inheritAppenders = true);
 
             /**
-             * Enables the network appender on the specified catetory.
+             * Enables the network appender on the specified category.
              *
-             * By default any appenders defined on parent categories will inherited. A boolean flag
+             * By default any appenders defined on parent categories will be inherited. A boolean flag
              * allows to disable this behavior
              * @param category The category on which the appender should work (empty string reflects root category)
              * @param inheritAppenders If true will inherit appenders defined in parent categories
@@ -147,6 +157,13 @@ namespace karabo {
              */
             static bool isInCategoryNameSet(const std::string& category);
 
+            /**
+             * gets the last messages from the CacheAppender
+             * @param nMessages
+             * @return a std::vector<std::string>
+             */
+            static std::vector<karabo::util::Hash> getCachedContent(unsigned int nMessages);
+
            private:
             static void useAppender(const std::string& category, bool inheritAppenders, krb_log4cpp::Appender*);
 
@@ -158,7 +175,6 @@ namespace karabo {
             // Declare FRAMEWORK category name set
             typedef std::unordered_set<std::string> CategorySet;
             static CategorySet m_frameworkCategories;
-
             static boost::shared_mutex m_logMutex;
             static boost::shared_mutex m_frameworkLogMutex;
 
