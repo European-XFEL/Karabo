@@ -54,7 +54,6 @@ namespace karabo {
         using namespace karabo::xms;
         using namespace krb_log4cpp;
 
-
         void DeviceServer::expectedParameters(Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("serverId")
@@ -78,13 +77,22 @@ namespace karabo {
                   .init()
                   .commit();
 
+            // clang-format off
+            std::vector<int> visibilityOptions = {
+                Schema::AccessLevel::OBSERVER,
+                Schema::AccessLevel::USER,
+                Schema::AccessLevel::OPERATOR,
+                Schema::AccessLevel::EXPERT,
+                Schema::AccessLevel::ADMIN};
+            // clang-format on
+
             INT32_ELEMENT(expected)
                   .key("visibility")
                   .displayedName("Visibility")
                   .description("Configures who is allowed to see this server at all")
                   .assignmentOptional()
-                  .defaultValue(karabo::util::Schema::OBSERVER)
-                  .options("0 1 2 3 4")
+                  .defaultValue(Schema::AccessLevel::OBSERVER)
+                  .options(visibilityOptions)
                   .adminAccess()
                   .init()
                   .commit();
