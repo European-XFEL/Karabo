@@ -267,6 +267,7 @@ namespace karabo {
             Logger::useOstream();
             Logger::useFile();
             Logger::useNetwork();
+            Logger::useCache();
 
             // Initialize category
             m_log = &(karabo::log::Logger::getCategory(m_serverId));
@@ -344,6 +345,7 @@ namespace karabo {
             KARABO_SLOT(slotLoggerPriority, string /*priority*/)
             KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */,
                         unsigned long long /* frac */, unsigned long long /* period */);
+            KARABO_SLOT(slotLoggerContent, Hash);
         }
 
 
@@ -457,6 +459,20 @@ namespace karabo {
 
         krb_log4cpp::Category& DeviceServer::log() {
             return (*m_log);
+        }
+
+
+        void DeviceServer::slotLoggerContent(const karabo::util::Hash& input) {
+            unsigned int numberOfLogs = 10u;
+            if (input.has("logs")) {
+                auto& element = input.getNode("logs");
+                // extract the value of the number of lines in a type permissive way
+                numberOfLogs = element.getValue<decltype(numberOfLogs), long long, unsigned long long, int, short,
+                                                unsigned short>();
+            }
+            Hash reply_("serverId", getInstanceId());
+            reply_.set("content", Logger::getCachedContent(numberOfLogs));
+            reply(reply_);
         }
 
 
