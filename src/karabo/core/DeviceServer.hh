@@ -192,6 +192,8 @@ namespace karabo {
 
             void slotKillServer();
 
+            void slotLoggerContent(const karabo::util::Hash& input);
+
             void stopDeviceServer();
 
             krb_log4cpp::Category& log();
