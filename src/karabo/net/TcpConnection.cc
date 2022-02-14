@@ -38,9 +38,9 @@ namespace karabo {
                   .key("type")
                   .displayedName("Connection Type")
                   .description("Decide whether the connection is used to implement a TCP Server or TCP Client")
+                  .options(std::vector<std::string>({"server", "client"}))
                   .assignmentOptional()
                   .defaultValue("client")
-                  .options("server,client")
                   .commit();
 
             STRING_ELEMENT(expected)
