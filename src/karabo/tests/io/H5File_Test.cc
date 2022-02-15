@@ -8,6 +8,8 @@
 
 #include "H5File_Test.hh"
 
+#include <cppunit/TestAssert.h>
+
 #include <karabo/io/h5/Element.hh>
 #include <karabo/io/h5/File.hh>
 #include <karabo/io/h5/Scalar.hh>
@@ -23,6 +25,7 @@
 #include "karabo/io/h5/Group.hh"
 #include "karabo/tests/util/Dims_Test.hh"
 #include "karabo/util/ArrayTools.hh"
+#include "karabo/util/Exception.hh"
 
 // for memcopy
 #include <cstring>
@@ -2122,4 +2125,39 @@ void H5File_Test::testExternalHdf5() {
         KARABO_LOG_FRAMEWORK_DEBUG << ex;
         CPPUNIT_FAIL("Error");
     }
+}
+
+
+void H5File_Test::testWriteEmptyArrayAttributes() {
+    File file(resourcePath("testArrayAttributes.h5"));
+    file.open(File::TRUNCATE);
+
+    try {
+        // all supported vector types
+        Hash::Attributes attributes;
+        attributes.set("CharArrayAttribute", std::vector<char>{});
+        attributes.set("Int8ArrayAttribute", std::vector<signed char>{});
+        attributes.set("Int16ArrayAttribute", std::vector<short>{});
+        attributes.set("Int32ArrayAttribute", std::vector<int>{});
+        attributes.set("Int64ArrayAttribute", std::vector<long long>{});
+        attributes.set("UInt8ArrayAttribute", std::vector<unsigned char>{});
+        attributes.set("UInt16ArrayAttribute", std::vector<unsigned short>{});
+        attributes.set("UInt32ArrayAttribute", std::vector<unsigned int>{});
+        attributes.set("UInt64ArrayAttribute", std::vector<unsigned long long>{});
+        attributes.set("DoubleArrayAttribute", std::vector<double>{});
+        attributes.set("FloatArrayAttribute", std::vector<float>{});
+        attributes.set("StringArrayAttribute", std::vector<std::string>{});
+        attributes.set("BoolArrayAttribute", std::vector<bool>{});
+
+        Hash h{"test", 0};
+        h.setAttributes("test", attributes);
+
+        auto dataFormat = Format::discover(h);
+        auto t = file.createTable("/placeholder", dataFormat);
+        CPPUNIT_ASSERT_NO_THROW_MESSAGE("Failed to write empty array attributes to hdf5 file.", t->writeAttributes(h));
+    } catch (Exception& ex) {
+        CPPUNIT_FAIL(ex.detailedMsg());
+    }
+
+    file.close();
 }
