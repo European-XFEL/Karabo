@@ -7,6 +7,8 @@
 
 #include "H5Format_Test.hh"
 
+#include <cppunit/TestAssert.h>
+
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <karabo/io/TextSerializer.hh>
@@ -25,6 +27,8 @@ using std::vector;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(H5Format_Test);
 
+// merges attribures into hash h
+static void mergeAttributes(Hash& h, Hash::Attributes& attributes);
 
 H5Format_Test::H5Format_Test() {}
 
@@ -32,7 +36,35 @@ H5Format_Test::H5Format_Test() {}
 H5Format_Test::~H5Format_Test() {}
 
 
-void H5Format_Test::setUp() {}
+void H5Format_Test::setUp() {
+    m_attributeList.set("CharArrayAttribute", std::vector<char>(2));
+    m_attributeList.set("Int8ArrayAttribute", std::vector<signed char>(2));
+    m_attributeList.set("Int16ArrayAttribute", std::vector<short>(2));
+    m_attributeList.set("Int32ArrayAttribute", std::vector<int>(2));
+    m_attributeList.set("Int64ArrayAttribute", std::vector<long long>(2));
+    m_attributeList.set("UInt8ArrayAttribute", std::vector<unsigned char>(2));
+    m_attributeList.set("UInt16ArrayAttribute", std::vector<unsigned short>(2));
+    m_attributeList.set("UInt32ArrayAttribute", std::vector<unsigned int>(2));
+    m_attributeList.set("UInt64ArrayAttribute", std::vector<unsigned long long>(2));
+    m_attributeList.set("DoubleArrayAttribute", std::vector<double>(2));
+    m_attributeList.set("FloatArrayAttribute", std::vector<float>(2));
+    m_attributeList.set("StringArrayAttribute", std::vector<std::string>(2));
+    m_attributeList.set("BoolArrayAttribute", std::vector<bool>(2));
+
+    m_attributeList.set("CharAttribute", char{});
+    m_attributeList.set("Int8Attribute", (signed char){});
+    m_attributeList.set("Int16Attribute", short{});
+    m_attributeList.set("Int32Attribute", int{});
+    m_attributeList.set("Int64Attribute", (long long){});
+    m_attributeList.set("UInt8Attribute", (unsigned char){});
+    m_attributeList.set("UInt16Attribute", (unsigned short){});
+    m_attributeList.set("UInt32Attribute", (unsigned int){});
+    m_attributeList.set("UInt64Attribute", (unsigned long long){});
+    m_attributeList.set("DoubleAttribute", double{});
+    m_attributeList.set("FloatAttribute", float{});
+    m_attributeList.set("StringAttribute", std::string{});
+    m_attributeList.set("BoolAttribute", bool{});
+}
 
 
 void H5Format_Test::tearDown() {}
@@ -186,46 +218,53 @@ void H5Format_Test::testManualFormat() {
 
 
 void H5Format_Test::testDiscoverFromHash() {
-    {
-        try {
-            Hash data;
+    Hash data;
 
-            vector<int> vecInt(100, 2);
-            data.set("a.b.x", vecInt);
-            addPointerToHash(data, "a.b.y", &vecInt[0], Dims(2, 5, 10));
-            data.set("b.b1", 123);
-            data.set("b.b2", 123u);
-            data.set("b.b3", 123LL);
-            data.set("b.b4", std::complex<float>(2, 6));
-            data.set("b.b5", true);
-            data.set("c.c1", Hash());
-            data.set("c.c2", vector<Hash>(4, Hash()));
+    vector<int> vecInt(100, 2);
+    data.set("a.b.x", vecInt);
+    addPointerToHash(data, "a.b.y", &vecInt[0], Dims(2, 5, 10));
+    data.set("b.b1", 123);
+    data.set("b.b2", 123u);
+    data.set("b.b3", 123LL);
+    data.set("b.b4", std::complex<float>(2, 6));
+    data.set("b.b5", true);
+    data.set("c.c1", Hash());
+    data.set("c.c2", vector<Hash>(4, Hash()));
+
+    // before test, attach list of all supported attributes to all nodes in our
+    // hash
+    mergeAttributes(data, m_attributeList);
+
+    Format::Pointer dataFormat;
+    CPPUNIT_ASSERT_NO_THROW(dataFormat = Format::discover(data));
 
 
-            Format::Pointer dataFormat = Format::discover(data);
+    // FIXME: Does it make sense to remove code below this comment? (All I see is
+    // values being logged; don't seem to be testing anything in particular)
+    //
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "config\n" << dataFormat->getConfig();
 
+    Hash pers;
+    dataFormat->getPersistentConfig(pers);
 
-            KARABO_LOG_FRAMEWORK_TRACE_CF << "config\n" << dataFormat->getConfig();
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "persistent config\n" << pers;
 
-            Hash pers;
-            dataFormat->getPersistentConfig(pers);
+    vector<std::string> names;
+    dataFormat->getElementsNames(names);
+    for (size_t i = 0; i < names.size(); ++i) {
+        //  clog << "names[" << i << "] = " << names[i] << endl;
+        h5::Element::Pointer el = dataFormat->getElement(names[i]);
+        //  clog << "Memory type: " << Types::to<ToLiteral>(el->getMemoryType() ) << endl;
+        // clog << "Element type: " << el->getElementType()  << endl;
+        Dims dims = el->getDims();
+        //  clog << ":size " << dims.size()  << endl;
+    }
+}
 
-            KARABO_LOG_FRAMEWORK_TRACE_CF << "persistent config\n" << pers;
-
-            vector<std::string> names;
-            dataFormat->getElementsNames(names);
-            for (size_t i = 0; i < names.size(); ++i) {
-                //  clog << "names[" << i << "] = " << names[i] << endl;
-                h5::Element::Pointer el = dataFormat->getElement(names[i]);
-                //  clog << "Memory type: " << Types::to<ToLiteral>(el->getMemoryType() ) << endl;
-                // clog << "Element type: " << el->getElementType()  << endl;
-                Dims dims = el->getDims();
-                //  clog << ":size " << dims.size()  << endl;
-            }
-
-        } catch (const Exception& e) {
-            std::clog << e.detailedMsg() << std::endl;
-            KARABO_RETHROW
+void mergeAttributes(Hash& h, Hash::Attributes& attributes) {
+    for (auto& node : h) {
+        for (auto& a : attributes) {
+            node.setAttribute(a.getKey(), a.getValueAsAny());
         }
     }
 }
