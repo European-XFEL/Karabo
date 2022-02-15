@@ -34,6 +34,7 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     //        CPPUNIT_TEST(testVLWrite);
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
+    CPPUNIT_TEST(testWriteEmptyArrayAttributes);
     // CPPUNIT_TEST(testArray);
 
     //    CPPUNIT_TEST(testExternalHdf5);
@@ -92,6 +93,7 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     void testReadTable();
 
     void testClose();
+    void testWriteEmptyArrayAttributes();
     void testVectorOfHashes();
 
     // void testArray();
