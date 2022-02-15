@@ -156,6 +156,15 @@ stages:
   except:
     - schedules
 
+.except_main: &except-main
+  except:
+    refs:
+      - /^(master)$/ # the changes check will default to true
+      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
+      - schedules
+    changes:
+      - "extern/**/*"
+
 .integration_tests: &integration-tests
   <<: *test
   only:
@@ -168,27 +177,48 @@ stages:
       - "src/integrationTests/**/*"
       - "src/pythonKarabo/karabo/integration_tests/**/*"
       - "src/pythonKarabo/karabo/bound_devices/**/*"
+      - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
+      - "src/pythonKarabo/karabo/influxdb/**/*"
   except:
     - schedules
 
-.unit_tests: &unit-tests
+.cpp_unit_tests: &cpp-unit-tests
   <<: *test
   only:
     refs:
       - merge_requests
     changes:
-      - "build/netbeans/**/*"
       - "src/karabo/**/*"
-      - "src/pythonKarabo/**/*"
-      - "src/karathon/**/*"
-      - "conda-recipes/karabo-cpp/**/*"
-  except:
+  <<: *except-main
+
+.python_unit_tests: &python-unit-tests
+  <<: *test
+  only:
     refs:
-      - /^(master)$/ # the changes check will default to true
-      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-      - schedules
+      - merge_requests
     changes:
-      - "extern/**/*"
+      - "src/karathon/**/*" # bound api depends on the c++ build
+      - "src/karabo/**/*"   # bound api depends on the c++ build
+      - "src/pythonKarabo/**/*"
+  <<: *except-main
+
+.gui_unit_tests: &gui-unit-tests
+  script:
+    - >
+      python ci/miniconda pack karabogui
+      -D conda-recipes
+      --ci --clean --test
+      --skip-build
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - "src/pythonGui/**/*"
+      - "src/pythonKarabo/karabo/native/**/*"
+      - "src/pythonKarabo/karabo/common/**/*"
+      - "conda-recipes/karabo-native/**/*"
+      - "conda-recipes/karabogui/**/*"
+  <<: *artifacts-spec
 
 .build_tests: &build-tests
   <<: *build
@@ -210,24 +240,8 @@ stages:
     changes:
       - "extern/**/*"
 
-# .unit_tests_miniconda_cmake: &unit-tests-miniconda-cmake
-#   <<: *test-miniconda-cmake
-#   only:
-#     refs:
-#       - merge_requests
-#     changes:
-#       - "src/karabo/**/*"
-#       - "src/karathon/**/*"
-#       - "conda-recipes/karabo-cpp/**/*"
-#   except:
-#     refs:
-#       - /^(master)$/  # the changes check will default to true
-#       - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-#       - schedules
-#     changes:
-#       - "extern/**/*"
-
-.unit_tests_conda: &unit-tests-conda
+# GUI tests to be executed in a Conda environment
+.gui_unit_tests: &gui-unit-tests
   script:
     - >
       python ci/miniconda pack karabogui
@@ -424,57 +438,53 @@ deps tests ubuntu18:
 
 python_unit tests almalinux8:
   <<: *image_almalinux8
-  <<: *unit-tests
+  <<: *python-unit-tests
 
 python_unit tests centos7:
   <<: *image_centos7
-  <<: *unit-tests
+  <<: *python-unit-tests
 
 python_unit tests ubuntu20:
   <<: *image_ubuntu20
-  <<: *unit-tests
+  <<: *python-unit-tests
 
 python_unit tests ubuntu18:
   <<: *image_ubuntu18
-  <<: *unit-tests
+  <<: *python-unit-tests
 
 cpp_unit tests almalinux8:
   <<: *image_almalinux8
-  <<: *unit-tests
+  <<: *cpp-unit-tests
 
 cpp_unit tests centos7:
   <<: *image_centos7
-  <<: *unit-tests
+  <<: *cpp-unit-tests
 
 cpp_unit tests ubuntu20:
   <<: *image_ubuntu20
-  <<: *unit-tests
+  <<: *cpp-unit-tests
 
 cpp_unit tests ubuntu18:
   <<: *image_ubuntu18
-  <<: *unit-tests
+  <<: *cpp-unit-tests
 
-unit tests miniconda:
+gui_unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  <<: *unit-tests-conda
+  <<: *gui-unit-tests
 
-unit tests miniconda-osx64:
+gui_unit tests miniconda-osx64:
   before_script:
     - ci/miniconda/cleanup.sh
   tags:
     - macos
-  <<: *unit-tests-conda
+  <<: *gui-unit-tests
 
-unit tests miniconda-win64:
+gui_unit tests miniconda-win64:
   before_script:
     - ci/miniconda/cleanup.cmd
   tags:
     - Win10
-  <<: *unit-tests-conda
-
-# unit tests miniconda-cmake:
-#   image: europeanxfel/karabo-ci:miniconda-3
-#   <<: *unit-tests
+  <<: *gui-unit-tests
 
 # Post-merge integration test builds
 
