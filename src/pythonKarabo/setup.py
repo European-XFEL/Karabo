@@ -101,6 +101,7 @@ else:
             'karabo-webserver=karabo.interactive.webserver:run_webserver',
             'karabo-webaggregatorserver=karabo.interactive.webaggregatorserver:run_webserver',
             'migrate-karabo-history=karabo.influxdb.dl_migrator:main',
+            'karabo-check-container=karabo.interactive.container_monitor:main',
         ],
         'karabo.bound_device': [
             'PropertyTest=karabo.bound_devices.property_test:PropertyTest',
