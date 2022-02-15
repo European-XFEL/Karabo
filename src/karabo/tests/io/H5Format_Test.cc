@@ -234,32 +234,9 @@ void H5Format_Test::testDiscoverFromHash() {
     // before test, attach list of all supported attributes to all nodes in our
     // hash
     mergeAttributes(data, m_attributeList);
-
-    Format::Pointer dataFormat;
-    CPPUNIT_ASSERT_NO_THROW(dataFormat = Format::discover(data));
-
-
-    // FIXME: Does it make sense to remove code below this comment? (All I see is
-    // values being logged; don't seem to be testing anything in particular)
-    //
-    KARABO_LOG_FRAMEWORK_TRACE_CF << "config\n" << dataFormat->getConfig();
-
-    Hash pers;
-    dataFormat->getPersistentConfig(pers);
-
-    KARABO_LOG_FRAMEWORK_TRACE_CF << "persistent config\n" << pers;
-
-    vector<std::string> names;
-    dataFormat->getElementsNames(names);
-    for (size_t i = 0; i < names.size(); ++i) {
-        //  clog << "names[" << i << "] = " << names[i] << endl;
-        h5::Element::Pointer el = dataFormat->getElement(names[i]);
-        //  clog << "Memory type: " << Types::to<ToLiteral>(el->getMemoryType() ) << endl;
-        // clog << "Element type: " << el->getElementType()  << endl;
-        Dims dims = el->getDims();
-        //  clog << ":size " << dims.size()  << endl;
-    }
+    CPPUNIT_ASSERT_NO_THROW(Format::discover(data));
 }
+
 
 void mergeAttributes(Hash& h, Hash::Attributes& attributes) {
     for (auto& node : h) {
