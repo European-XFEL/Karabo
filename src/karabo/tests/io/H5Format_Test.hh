@@ -35,6 +35,10 @@ class H5Format_Test : public CPPUNIT_NS::TestFixture {
     void testDiscoverFromHash();
     void testEmptyFormat();
     void testManualFormat();
+
+    //
+    // list of attribute types supported (by karabo::io::h5::Format)
+    karabo::util::Hash::Attributes m_attributeList;
 };
 
 #endif /* H5FORMAT_TEST_HH */
