@@ -107,7 +107,7 @@ namespace karabo {
 
                         auto& content = (node.getValue<std::vector<T> >());
 
-                        if (not content.empty()) {
+                        if (!content.empty()) {
                             KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, content.data()));
                         }
 
@@ -260,7 +260,7 @@ namespace karabo {
                     try {
                         hid_t tid = getNativeTypeId();
                         const std::vector<std::string>& value = node.getValue<std::vector<std::string> >();
-                        if (not value.empty()) {
+                        if (!value.empty()) {
                             std::vector<const char*> value_copy(value.size(), NULL);
                             for (size_t i = 0; i < value.size(); ++i) {
                                 value_copy[i] = value[i].c_str();
