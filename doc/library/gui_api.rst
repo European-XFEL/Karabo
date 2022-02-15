@@ -1,5 +1,6 @@
+**************
 Karabo GUI API
-==============
+**************
 
 .. automodule:: karabogui.api
 
@@ -15,7 +16,7 @@ There are several util functions for bindings available.
 
 
 Binding functions
-~~~~~~~~~~~~~~~~~
+-----------------
 
 .. autofunction:: karabogui.api.has_options
 
@@ -37,7 +38,7 @@ Binding functions
 
 
 The atomic bindings
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 .. autoclass:: karabogui.api.BoolBinding()
 
@@ -105,7 +106,7 @@ The atomic bindings
 
 
 Category Bindings
-~~~~~~~~~~~~~~~~~
+-----------------
 
 .. autoclass:: karabogui.api.VectorBinding()
 
@@ -121,7 +122,7 @@ Category Bindings
 
 
 Available Node Bindings
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 .. autoclass:: karabogui.api.NDArrayBinding()
 
@@ -141,7 +142,7 @@ to the controller's methods.
 
 
 Util functions for Property Proxies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 .. autofunction:: karabogui.api.get_editor_value
 
@@ -178,7 +179,7 @@ A `BaseBindingController` must be registered in the scene model factory
 
 
 Util functions for controllers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 .. autofunction:: karabogui.api.with_display_type
 
@@ -186,7 +187,7 @@ Util functions for controllers
 
 
 Util functions to work with arrays and images
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 
 .. autofunction:: karabogui.api.get_array_data
 
