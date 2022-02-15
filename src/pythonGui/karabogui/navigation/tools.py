@@ -14,7 +14,7 @@ from karabogui.itemtypes import NavigationItemTypes
 from karabogui.request import (
     get_scene_from_server, onConfigurationUpdate, onSchemaUpdate)
 from karabogui.singletons.api import get_topology
-from karabogui.util import version_compatible
+from karabogui.util import move_to_cursor, version_compatible
 
 
 class NavigationHandler(ABCHasStrictTraits):
@@ -23,7 +23,7 @@ class NavigationHandler(ABCHasStrictTraits):
         """Check whether the click event can be handled."""
 
     @abstractmethod
-    def handle(self, info):
+    def handle(self, info, parent=None):
         """Handle the click event."""
 
 
@@ -37,7 +37,7 @@ class DeviceSceneHandler(NavigationHandler):
             return True
         return False
 
-    def handle(self, info):
+    def handle(self, info, parent=None):
         device_id = info.get("deviceId")
         capabilities = info.get("capabilities")
 
@@ -103,7 +103,10 @@ class ServerLogHandler(NavigationHandler):
             return True
         return False
 
-    def handle(self, info):
+    def handle(self, info, parent=None):
         server_id = info.get("serverId")
-        dialog = LogDialog(server_id)
-        dialog.exec()
+        widget = LogDialog(server_id, parent=parent)
+        move_to_cursor(widget)
+        widget.show()
+        widget.raise_()
+        widget.activateWindow()
