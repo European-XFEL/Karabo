@@ -12,6 +12,7 @@ from .device_scenelink_dialog import DeviceSceneLinkDialog
 from .font_dialog import FontDialog
 from .format_label import FormatLabelDialog
 from .listedit import ListEditDialog
+from .log_dialog import LogDialog
 from .logindialog import LoginDialog
 from .messagebox import KaraboMessageBox
 from .pen_dialogs import PenDialog
