@@ -304,6 +304,7 @@ namespace karabo {
             };
 
             // typedefs
+            typedef FixedLengthArrayAttribute<char> CharArrayAttribute;
             typedef FixedLengthArrayAttribute<signed char> Int8ArrayAttribute;
             typedef FixedLengthArrayAttribute<short> Int16ArrayAttribute;
             typedef FixedLengthArrayAttribute<int> Int32ArrayAttribute;
