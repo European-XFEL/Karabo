@@ -13,7 +13,8 @@ import traceback
 
 from karabo import __version__ as karaboVersion
 from karabo.common.api import (
-    AlarmCondition, Capabilities, Interfaces, State, karabo_deprecated)
+    KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
+    State, karabo_deprecated)
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
     NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
@@ -534,6 +535,7 @@ class PythonDevice(NoFsm):
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
+        Logger.useCache()
 
     def __del__(self):
         """ PythonDevice destructor """
@@ -835,6 +837,18 @@ class PythonDevice(NoFsm):
                 toAdd.set(cKey, prop)
 
         return Hash("toClear", toClear, "toAdd", toAdd)
+
+    def slotLoggerContent(self, info):
+        """Slot call to receive logger content from the print logger
+
+        This slot is similar to `slotLoggerContent` for servers except that
+        the `serverId` key is substituted with key `deviceId`.
+
+        look in the device_server module for detailed informations
+        """
+        nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
+        content = Logger.getCachedContent(nMessages)
+        self._ss.reply(Hash("deviceId", self.deviceid, "content", content))
 
     def slotReSubmitAlarms(self, existingAlarms):
         """
@@ -1425,6 +1439,7 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotGetTime)
 
         self._ss.registerSlot(self.slotLoggerPriority)
+        self._ss.registerSlot(self.slotLoggerContent)
         self._ss.registerSlot(self.slotClearLock)
 
     def initChannels(self, topLevel="", schema=None):

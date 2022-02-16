@@ -82,7 +82,7 @@ else
     case "$JOB_SCOPE" in
         python_unit) __python_unit_tests ;;
         cpp_unit) __cpp_unit_tests ;;
-        python_integration_tests) __python_integration_tests ;;
+        python_integration) __python_integration_tests ;;
         cpp_integration) __cpp_integration_tests ;;
         python_deps) __python_deps_build_tests ;;
         cpp_deps) __cpp_deps_build_tests ;;
