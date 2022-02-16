@@ -350,7 +350,7 @@ class Network(QObject):
 
     def onExecuteGeneric(self, instanceId, slot_name, params, token=None):
         logger.info(f"Executing slot <b>{slot_name}</b> "
-                    f"of device <b>{instanceId}</b>")
+                    f"of instance <b>{instanceId}</b>")
         h = Hash("type", "requestGeneric")
         if token is not None:
             h["token"] = token
