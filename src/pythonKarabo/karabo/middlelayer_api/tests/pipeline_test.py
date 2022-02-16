@@ -1,3 +1,4 @@
+import socket
 from asyncio import (
     Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,
     get_event_loop, sleep)
@@ -5,6 +6,8 @@ from struct import pack
 from unittest import main
 from unittest.mock import Mock
 from zlib import adler32
+
+from psutil import net_if_addrs
 
 from karabo.middlelayer import (
     Hash, Int32, NetworkInput, NetworkOutput, Proxy, background, encodeBinary)
@@ -428,6 +431,29 @@ class TestChannel(DeviceTest):
         self.reader.feed_eof()
         await task
         self.assertTrue(self.writer.transport.closed)
+
+    @async_tst
+    async def test_get_information(self):
+        net_segment = None
+        ip_address = None
+        for interface in net_if_addrs().values():
+            for nic in interface:
+                if nic.family != socket.AF_INET:
+                    continue
+                ip_address = nic.address
+                addrs = ip_address.split(".")
+                net_root = '.'.join(addrs[:-1])
+                net_segment = f"{net_root}.0/24"
+
+        self.assertIsNotNone(net_segment)
+        self.assertIsNotNone(ip_address)
+        output = NetworkOutput({"hostname": net_segment})
+        await output._run()
+        response = await output.getInformation('channelName')
+        self.assertIn("connectionType", response)
+        self.assertIn("port", response)
+        self.assertEqual(response["hostname"], ip_address)
+        self.assertEqual(output.address, ip_address)
 
 
 if __name__ == "__main__":

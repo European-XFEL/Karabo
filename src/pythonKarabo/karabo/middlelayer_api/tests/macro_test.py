@@ -181,7 +181,7 @@ class Tests(DeviceTest):
         """test the archive setting of a macro"""
         with getDevice("remote") as d:
             with self.assertRaises(AttributeError):
-                arch = d.archive
+                _ = d.archive
         info = getInstanceInfo("local")
         self.assertFalse(info["archive"])
 
