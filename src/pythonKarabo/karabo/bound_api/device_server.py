@@ -11,9 +11,10 @@ import socket
 import sys
 import threading
 import time
+from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
-from karabo.common.states import State
+from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, State
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
@@ -292,6 +293,7 @@ class DeviceServer(object):
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
+        Logger.useCache()
 
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSlot(self.slotStartDevice)
@@ -300,6 +302,7 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotDeviceGone)
         self.ss.registerSlot(self.slotGetClassSchema)
         self.ss.registerSlot(self.slotLoggerPriority)
+        self.ss.registerSlot(self.slotLoggerContent)
 
     def onStateUpdate(self, currentState):
         """This function is DEPRECATED and will be removed."""
@@ -631,6 +634,71 @@ class DeviceServer(object):
             "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
         # Also devices started in future get the new priority by default:
         self.loggerParameters["priority"] = newprio
+
+    def slotLoggerContent(self, info):
+        """Slot call to receive logger content from the CacheLogger
+
+        replies with a Hash containing a key, `serverId`
+        and a `content` containing a vector of hashes formatted in the
+        same way the broker based logging uses. For details:
+        ``src/karabo/log/CacheLogger.cc``
+
+        :param info: input Hash containing an optional `logs` integer
+                     defining the maximum number of lines returned
+        """
+        # create a map where to store the devices' logs
+        with self.deviceInstanceMapLock:
+            log_map = dict.fromkeys(self.deviceInstanceMap)
+
+        replyLock = threading.Lock()
+
+        areply = self.ss.createAsyncReply()
+        # copy because the info object will be cleaned up after
+        # this function has returned
+        info = copy.copy(info)
+
+        class Handler:
+            def __init__(s, deviceId):
+                s.deviceId = deviceId
+
+            def on_reply(s, reply):
+                # copy because the reply object will be
+                # cleaned up after the handler has returned
+                _copy = [copy.copy(entry) for entry in reply['content']]
+                log_map[s.deviceId] = _copy
+                s.done()
+
+            def on_error(s, msg, details):
+                msg = (f"Missing Logger Content from '{s.deviceId}' : "
+                       f"{msg} - DETAILS {details}")
+                self.log.WARN(msg)
+                log_map.pop(s.deviceId, None)
+                s.done()
+
+            def done(s):
+                # make sure that only one handler will call
+                # `_replySlotLoggerContent`.
+                with replyLock:
+                    if all(log_map.values()):
+                        self._replySlotLoggerContent(info, log_map, areply)
+
+        for deviceId in log_map.keys():
+            # request the content from the devices in the server.
+            req = self.ss.request(deviceId, "slotLoggerContent", info)
+            h = Handler(deviceId)
+            req.receiveAsync(h.on_reply, h.on_error, timeoutMs=5000)
+
+    def _replySlotLoggerContent(self, info, log_map, areply):
+        nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
+        content = list(log_map.values())
+        # add the latest server logs.
+        content.append(Logger.getCachedContent(nMessages))
+        content = chain.from_iterable(content)
+        # sort by timestamp and get the last "nMessages" entries
+        content = sorted(content, key=lambda entry: entry['timestamp'])
+        # reply
+        areply(Hash("serverId", self.serverid,
+                    "content", content[-1 * nMessages:]))
 
     def processEvent(self, event):
         with self.processEventLock:
