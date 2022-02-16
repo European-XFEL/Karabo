@@ -1,7 +1,10 @@
+from unittest import main
+
 from qtpy.QtWidgets import QSlider, QSpinBox
 
 from karabogui.testing import GuiTestCase
-from karabogui.util import SignalBlocker, _get_invalid_chars
+from karabogui.util import (
+    SignalBlocker, _get_invalid_chars, version_compatible)
 
 
 class TestUtilsGUI(GuiTestCase):
@@ -65,3 +68,21 @@ class TestUtilsGUI(GuiTestCase):
         with blocker:
             spinbox.setValue(10000)
         self.assertEqual(count, 0)
+
+    def test_version_compatible(self):
+        """Test that we can verify versions"""
+        self.assertTrue(version_compatible("2.14.0a2", 2, 14))
+        self.assertTrue(version_compatible("2.14.0a2", 2, 13))
+        self.assertTrue(version_compatible("2.14.0rc1", 2, 14))
+        self.assertFalse(version_compatible("2.14.0a2", 2, 15))
+        self.assertTrue(version_compatible("asdeaeddevelopmode", 2, 14))
+        self.assertTrue(version_compatible("asdeaeddevelopmode", 12, 33333))
+        # minor smaller
+        self.assertTrue(version_compatible("3.1.0a2", 2, 15))
+
+        # Test garbage
+        self.assertFalse(version_compatible("2.&7as7.13", 2, 0))
+
+
+if __name__ == "__main__":
+    main()
