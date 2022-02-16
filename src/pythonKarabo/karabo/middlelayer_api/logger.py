@@ -9,8 +9,8 @@ from karabo.native import (
     AccessLevel, AccessMode, Configurable, Hash, String, VectorString)
 
 
-class PrintLog:
-    """The PrintLog is an internal singleton collecting the print logs"""
+class CacheLog:
+    """The CacheLog is an internal singleton collecting the print logs"""
     events = deque(maxlen=100)
 
     @classmethod
@@ -27,13 +27,18 @@ class PrintLog:
 
 class NetworkHandler(logging.Handler):
     def emit(self, record):
+
+        level = ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+                 )[bisect([20, 30, 40, 50], record.levelno)]
+        timestamp = datetime.fromtimestamp(record.created).isoformat()
+        message = record.getMessage()
+        deviceId = self.parent.broker.deviceId
+
         hash = Hash(
-            "timestamp", datetime.fromtimestamp(record.created).isoformat(),
-            # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
-            "type", ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
-                     )[bisect([20, 30, 40, 50], record.levelno)],
-            "category", self.parent.broker.deviceId,
-            "message", record.getMessage(),
+            "timestamp", timestamp,
+            "type", level,
+            "category", deviceId,
+            "message", message,
             "msg", record.msg,
             "lineno", record.lineno,
             "module", record.module,
@@ -42,9 +47,15 @@ class NetworkHandler(logging.Handler):
         for i, arg in enumerate(record.args):
             args["{}{}".format(type(arg).__name__, i)] = arg
         hash["args"] = args
+        trace = ""
         if record.exc_info is not None:
             trace = "".join(traceback.format_exception(*record.exc_info))
             hash["traceback"] = trace
+
+        CacheLog.add_event(
+            Hash("type", level, "message", message,
+                 "timestamp", timestamp, "category", deviceId,
+                 "traceback", trace))
 
         self.parent.broker.log(hash)
 
@@ -61,9 +72,6 @@ class PrintHandler(logging.Handler):
         print(timestamp, level, deviceId)
         print(message)
         print("---------- Logger end -----------")
-        PrintLog.add_event(
-            Hash("type", level, "message", message,
-                 "timestamp", record.created, "category", deviceId))
 
 
 _LOGGER_HANDLER = {
