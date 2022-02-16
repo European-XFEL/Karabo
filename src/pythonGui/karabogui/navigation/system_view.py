@@ -57,6 +57,7 @@ class SystemTreeView(QTreeView):
         self.setDragEnabled(True)
 
         self.handler_list = [DeviceSceneHandler(), ServerLogHandler()]
+
         self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
@@ -194,7 +195,7 @@ class SystemTreeView(QTreeView):
         info = node.info()
         for handler in self.handler_list:
             if handler.can_handle(info):
-                handler.handle(info)
+                handler.handle(info, parent=self)
                 event.accept()
                 return
 

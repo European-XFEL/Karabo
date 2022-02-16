@@ -36,6 +36,8 @@ class LogDialog(QDialog):
         super().__init__(parent)
         uic.loadUi(get_dialog_ui("log_dialog.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setModal(False)
+
         self.server_id = server_id
 
         flags = Qt.WindowCloseButtonHint
