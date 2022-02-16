@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
 
-__deps_build_tests() {
-    export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
-    bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --runIntegrationTests --quiet
-}
-
-__cmake_tests() {
-    source build_conda_env.sh clean install karabo-cpp
-}
-
 __cpp_unit_tests() {
     bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --skipPythonTests
 }
@@ -17,8 +8,22 @@ __python_unit_tests() {
     bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --skipCppTests
 }
 
-__integration_tests() {
-    bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runIntegrationTests --quiet
+__cpp_integration_tests() {
+    bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runIntegrationTests --skipPythonTests
+}
+
+__python_integration_tests() {
+    bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runIntegrationTests --skipCppTests
+}
+
+__cpp_deps_build_tests() {
+    export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
+    bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --runIntegrationTests --skipPythonTests
+}
+
+__python_deps_build_tests() {
+    export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
+    bash ./auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --runIntegrationTests --skipCppTests
 }
 
 __long_tests() {
@@ -75,10 +80,12 @@ if [ "$TARGET_OS" = "miniconda-cmake" ]; then
     __cmake_tests
 else
     case "$JOB_SCOPE" in
-        deps) __deps_build_tests ;;
         python_unit) __python_unit_tests ;;
         cpp_unit) __cpp_unit_tests ;;
-        integration) __integration_tests ;;
+        python_integration_tests) __python_integration_tests ;;
+        cpp_integration) __cpp_integration_tests ;;
+        python_deps) __python_deps_build_tests ;;
+        cpp_deps) __cpp_deps_build_tests ;;
         long) __long_tests ;;
         coverage) __coverage_tests ;;
         *)

@@ -202,44 +202,6 @@ stages:
       - "src/pythonKarabo/**/*"
   <<: *except-main
 
-.gui_unit_tests: &gui-unit-tests
-  script:
-    - >
-      python ci/miniconda pack karabogui
-      -D conda-recipes
-      --ci --clean --test
-      --skip-build
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "src/pythonGui/**/*"
-      - "src/pythonKarabo/karabo/native/**/*"
-      - "src/pythonKarabo/karabo/common/**/*"
-      - "conda-recipes/karabo-native/**/*"
-      - "conda-recipes/karabogui/**/*"
-  <<: *artifacts-spec
-
-.build_tests: &build-tests
-  <<: *build
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "build/netbeans/**/*"
-      - "src/integrationTests/**/*"
-      - "src/karabo/**/*"
-      - "src/pythonKarabo/**/*"
-      - "src/karathon/**/*"
-      - "conda-recipes/karabo-cpp/**/*"
-  except:
-    refs:
-      - /^(master)$/ # the changes check will default to true
-      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-      - schedules
-    changes:
-      - "extern/**/*"
-
 # GUI tests to be executed in a Conda environment
 .gui_unit_tests: &gui-unit-tests
   script:
@@ -418,20 +380,36 @@ deps build ubuntu18:
 
 # Dependencies build tests
 
-deps tests almalinux8:
+cpp_deps tests almalinux8:
   <<: *image_almalinux8
   <<: *deps-tests
 
-deps tests centos7:
+cpp_deps tests centos7:
   <<: *image_centos7
   <<: *deps-tests
 
-deps tests ubuntu20:
+cpp_deps tests ubuntu18:
+  <<: *image_ubuntu18
+  <<: *deps-tests
+
+cpp_deps tests ubuntu20:
   <<: *image_ubuntu20
   <<: *deps-tests
 
-deps tests ubuntu18:
+python_deps tests almalinux8:
+  <<: *image_almalinux8
+  <<: *deps-tests
+
+python_deps tests centos7:
+  <<: *image_centos7
+  <<: *deps-tests
+
+python_deps tests ubuntu18:
   <<: *image_ubuntu18
+  <<: *deps-tests
+
+python_deps tests ubuntu20:
+  <<: *image_ubuntu20
   <<: *deps-tests
 
 # MR test builds
@@ -488,19 +466,35 @@ gui_unit tests miniconda-win64:
 
 # Post-merge integration test builds
 
-integration tests almalinux8:
+python_integration tests almalinux8:
   <<: *image_almalinux8
   <<: *integration-tests
 
-integration tests centos7:
+python_integration tests centos7:
   <<: *image_centos7
   <<: *integration-tests
 
-integration tests ubuntu20:
+python_integration tests ubuntu20:
   <<: *image_ubuntu20
   <<: *integration-tests
 
-integration tests ubuntu18:
+python_integration tests ubuntu18:
+  <<: *image_ubuntu18
+  <<: *integration-tests
+
+cpp_integration tests almalinux8:
+  <<: *image_almalinux8
+  <<: *integration-tests
+
+cpp_integration tests centos7:
+  <<: *image_centos7
+  <<: *integration-tests
+
+cpp_integration tests ubuntu20:
+  <<: *image_ubuntu20
+  <<: *integration-tests
+
+cpp_integration tests ubuntu18:
   <<: *image_ubuntu18
   <<: *integration-tests
 
