@@ -42,6 +42,47 @@ class TestDeviceServer(BoundDeviceTestCase):
         self.assertFalse(ok, msg)
         self.assertEqual(msg, f"{deviceId} already instantiated and alive")
 
+        with self.subTest(msg="test logger content"):
+            serverId = "testLogServer"
+            class_ids = ["SceneProvidingDevice", "StuckLoggerDevice"]
+            self.start_server("bound", serverId, class_ids,
+                              namespace="karabo.bound_device_test",
+                              logLevel="INFO")
+            cfg = Hash("classId", "SceneProvidingDevice",
+                       "deviceId", "ProperlyLoggingDevice",
+                       "configuration", Hash())
+            ok, msg = sigSlot.request(serverId, "slotStartDevice",
+                                      cfg).waitForReply(self._max_timeoutMs)
+            self.assertTrue(ok, msg)
+            cfg["deviceId"] = "NotRespondingDevice"
+            cfg["classId"] = "StuckLoggerDevice"
+            ok, msg = sigSlot.request(serverId, "slotStartDevice",
+                                      cfg).waitForReply(self._max_timeoutMs)
+
+            self.assertTrue(ok, msg)
+            info = Hash("logs", 100)
+            req = sigSlot.request(serverId, "slotLoggerContent", info)
+            (reply, ) = req.waitForReply(8000)
+
+            self.assertEqual(serverId, reply["serverId"])
+            content = reply["content"]
+            self.assertTrue(len(content) <= 100)
+            self.assertTrue(len(content) > 0)
+
+            categories = set()
+            missing_msg = "Missing Logger Content from 'NotRespondingDevice'"
+            missing_msg_found = False
+            for entry in content:
+                cat = entry['category']
+                categories.add(cat)
+                if serverId == cat and missing_msg in entry["message"]:
+                    missing_msg_found = True
+
+            self.assertIn("ProperlyLoggingDevice", categories)
+            self.assertNotIn("NotRespondingDevice", categories)
+            self.assertIn(serverId, categories)
+            self.assertTrue(missing_msg_found)
+
         with self.subTest(msg="test slow init"):
             serverId = "testServerSlow"
             deviceId = "slowDevice"
