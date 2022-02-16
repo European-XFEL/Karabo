@@ -3,7 +3,6 @@ import uuid
 from asyncio import get_event_loop, set_event_loop, sleep, wait
 from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main, skipIf
-from unittest.mock import Mock
 
 from karabo.middlelayer_api.compat import amqp
 from karabo.middlelayer_api.device_client import call, getInstanceInfo
