@@ -1285,7 +1285,7 @@ class Tests(DeviceTest):
             if not jms:
                 await updateDevice(d)
             with self.assertRaises(AttributeError):
-                archive = d.archive.value
+                _ = d.archive.value
         info = await getInstanceInfo("remote")
         self.assertEqual(info["archive"], True)
 
