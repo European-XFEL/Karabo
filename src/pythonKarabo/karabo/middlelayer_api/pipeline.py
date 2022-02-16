@@ -5,10 +5,12 @@ from asyncio import (
     get_event_loop, open_connection, shield, start_server)
 from collections import deque
 from contextlib import closing
+from ipaddress import ip_address, ip_network
 from struct import calcsize, pack, unpack
 from weakref import WeakSet
 
 import numpy
+from psutil import net_if_addrs
 
 from karabo.middlelayer_api.synchronization import sleep
 from karabo.native import (
@@ -20,6 +22,26 @@ from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
+
+
+def get_hostname_from_interface(address_range):
+    """returns the ip address of the local interfaces
+
+    in case of bad input, it will return the result of
+    `socket.gethostname()`
+    """
+    try:
+        network = ip_network(address_range)
+        for interface in net_if_addrs().values():
+            for nic in interface:
+                if nic.family != socket.AF_INET:
+                    continue
+                addr = ip_address(nic.address)
+                if addr in network:
+                    return nic.address
+    except ValueError:
+        pass
+    return socket.gethostname()
 
 
 class CancelQueue(Queue):
@@ -690,12 +712,16 @@ class NetworkOutput(Configurable):
 
     @String(
         displayedName="Hostname",
-        description="The hostname which connecting clients will be routed to",
+        description="The hostname which connecting clients will be routed to. "
+                    "Network ranges in the CIDR notation are accepted, "
+                    "e.g. 0.0.0.0/24",
         assignment=Assignment.OPTIONAL, defaultValue="default",
         accessMode=AccessMode.INITONLY)
     async def hostname(self, value):
         if value == "default":
             hostname = socket.gethostname()
+        elif "/" in value:
+            hostname = get_hostname_from_interface(value)
         else:
             hostname = value
 
@@ -715,6 +741,12 @@ class NetworkOutput(Configurable):
         self.server = await start_server(serve, host=hostname,
                                          port=port)
         self.hostname = value
+        self.address = hostname
+
+    address = String(
+        displayedName="Address",
+        description="The address resolved from the hostname",
+        accessMode=AccessMode.READONLY)
 
     connections = VectorHash(
         rows=ConnectionTable,
