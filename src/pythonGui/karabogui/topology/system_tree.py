@@ -58,7 +58,9 @@ class SystemTreeNode(HasStrictTraits):
         elif level == SERVER_LEVEL:
             return {'type': NavigationItemTypes.SERVER,
                     'serverId': self.node_id,
-                    'log': self.attributes.get("log", "INFO")}
+                    'log': self.attributes.get("log", "INFO"),
+                    'karaboVersion': self.attributes.get('karaboVersion',
+                                                         "0.0.0")}
         elif level == CLASS_LEVEL:
             return {'type': NavigationItemTypes.CLASS,
                     'serverId': self.parent.node_id,

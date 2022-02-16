@@ -29,7 +29,7 @@ from karabogui.util import (
 from karabogui.widgets.popup import PopupWidget
 
 from .system_model import SystemTreeModel
-from .tools import DeviceSceneHandler
+from .tools import DeviceSceneHandler, ServerLogHandler
 
 
 class SystemTreeView(QTreeView):
@@ -56,7 +56,7 @@ class SystemTreeView(QTreeView):
             self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
-        self.handler_list = [DeviceSceneHandler()]
+        self.handler_list = [DeviceSceneHandler(), ServerLogHandler()]
         self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
