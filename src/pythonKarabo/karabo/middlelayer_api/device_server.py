@@ -12,6 +12,7 @@ from subprocess import PIPE
 
 import numpy
 
+from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, Int32,
     KaraboError, Node, String, TimeMixin, VectorString, decodeBinary,
@@ -409,7 +410,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
         :param info: input Hash
         """
-        logs = int(info.get("logs", 10))
+        logs = int(info.get("logs", KARABO_LOGGER_CONTENT_DEFAULT))
         content = CacheLog.summary(logs)
 
         return Hash("serverId", self.serverId, "content", content)

@@ -7,7 +7,8 @@ def test_schema_attributes_def():
     tuple_symbol = 'KARABO_SCHEMA_ATTRIBUTES'
     ignored_symbols = ('KARABO_EDITABLE_ATTRIBUTES',
                        'KARABO_RUNTIME_ATTRIBUTES_MDL',
-                       'KARABO_SCHEMA_DEFAULT_SCENE')
+                       'KARABO_SCHEMA_DEFAULT_SCENE',
+                       'KARABO_LOGGER_CONTENT_DEFAULT')
 
     all_symbols = dir(constmod)
     all_symbols = [s for s in all_symbols if not s.startswith('__')
