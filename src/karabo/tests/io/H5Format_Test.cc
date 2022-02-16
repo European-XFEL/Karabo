@@ -28,7 +28,7 @@ using std::vector;
 CPPUNIT_TEST_SUITE_REGISTRATION(H5Format_Test);
 
 // merges attribures into hash h
-static void mergeAttributes(Hash& h, Hash::Attributes& attributes);
+static void mergeAttributes(Hash& h, const Hash::Attributes& attributes);
 
 H5Format_Test::H5Format_Test() {}
 
@@ -238,7 +238,7 @@ void H5Format_Test::testDiscoverFromHash() {
 }
 
 
-void mergeAttributes(Hash& h, Hash::Attributes& attributes) {
+void mergeAttributes(Hash& h, const Hash::Attributes& attributes) {
     for (auto& node : h) {
         for (auto& a : attributes) {
             node.setAttribute(a.getKey(), a.getValueAsAny());
