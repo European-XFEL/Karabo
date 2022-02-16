@@ -20,7 +20,7 @@ from karabo.native import (
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
-from .logger import Logger, PrintLog
+from .logger import CacheLog, Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, coslot, slot
@@ -410,7 +410,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         :param info: input Hash
         """
         logs = int(info.get("logs", 10))
-        content = PrintLog.summary(logs)
+        content = CacheLog.summary(logs)
 
         return Hash("serverId", self.serverId, "content", content)
 
