@@ -45,15 +45,13 @@ class TableModel(QAbstractTableModel):
             binding = self._bindings[key]
             if isinstance(binding, BoolBinding):
                 return Qt.Checked if value else Qt.Unchecked
-
-        if role in (Qt.DisplayRole, Qt.EditRole):
+        elif role in (Qt.DisplayRole, Qt.EditRole):
             key = self._header[column]
             value = self._data[row][key]
             binding = self._bindings[key]
             if isinstance(binding, VectorBinding):
                 value = list2string(value)
             return str(value)
-
         elif role == Qt.BackgroundRole:
             key = self._header[column]
             if is_state_display_type(self._bindings[key]):
@@ -61,13 +59,15 @@ class TableModel(QAbstractTableModel):
                 try:
                     color = get_state_color(value)
                 except ValueError:
-                    color = None
-                if color is not None:
-                    return QBrush(QColor(*color))
+                    return None
+                return QBrush(QColor(*color))
         elif role == Qt.ToolTipRole:
             key = self._header[column]
-            attrs = self._bindings[key].attributes
-            return self._build_tooltip(attrs)
+            value = self._data[row][key]
+            binding = self._bindings[key]
+            if isinstance(binding, VectorBinding):
+                value = list2string(value)
+            return str(value)
 
         return None
 
@@ -90,20 +90,22 @@ class TableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractTableModel"""
-        if role != Qt.DisplayRole:
-            return None
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Vertical:
+                return str(section)
+            elif orientation == Qt.Horizontal:
+                key = self._header[section]
+                binding = self._bindings[key]
+                units = binding.unit_label
+                # Make sure to always show a header!
+                displayed = binding.displayed_name or key
 
-        if orientation == Qt.Vertical:
-            return str(section)
+                return f"{displayed} [{units}]" if units else displayed
 
-        if orientation == Qt.Horizontal:
+        elif role == Qt.ToolTipRole and orientation == Qt.Horizontal:
             key = self._header[section]
-            binding = self._bindings[key]
-            units = binding.unit_label
-            # Make sure to always show a header!
-            displayed = binding.displayed_name or key
-
-            return f"{displayed} [{units}]" if units else displayed
+            attrs = self._bindings[key].attributes
+            return self._build_tooltip(attrs)
 
         return None
 
