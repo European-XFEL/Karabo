@@ -11,6 +11,7 @@ from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.dialogs.api import LogDialog
 from karabogui.itemtypes import NavigationItemTypes
+from karabogui.logger import get_logger
 from karabogui.request import (
     get_scene_from_server, onConfigurationUpdate, onSchemaUpdate)
 from karabogui.singletons.api import get_topology
@@ -30,7 +31,6 @@ class NavigationHandler(ABCHasStrictTraits):
 class DeviceSceneHandler(NavigationHandler):
     """Device DoubleClick for the navigation view
     """
-
     def can_handle(self, info):
         navigation_type = info.get('type')
         if navigation_type is NavigationItemTypes.DEVICE:
@@ -40,14 +40,11 @@ class DeviceSceneHandler(NavigationHandler):
     def handle(self, info, parent=None):
         device_id = info.get("deviceId")
         capabilities = info.get("capabilities")
+        bit = Capabilities.PROVIDES_SCENES
 
-        def _test_mask(mask, bit):
-            return (mask & bit) == bit
-
-        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
-        if not has_scene:
-            messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id))
+        if (capabilities & bit) != bit:
+            msg = f"The device <b>{device_id}</b> does not provide a scene."
+            get_logger().info(msg)
             return
 
         def _config_handler():
@@ -98,13 +95,21 @@ class ServerLogHandler(NavigationHandler):
 
     def can_handle(self, info):
         navigation_type = info.get("type")
-        if (navigation_type is NavigationItemTypes.SERVER and
-                version_compatible(info.get("karaboVersion"), 2, 14)):
+        if navigation_type is NavigationItemTypes.SERVER:
             return True
         return False
 
     def handle(self, info, parent=None):
         server_id = info.get("serverId")
+        karabo_version = info.get("karaboVersion")
+
+        if not version_compatible(karabo_version, 2, 14):
+            get_logger().info(
+                f"The server <b>{server_id}</b> cannot provide logs "
+                f"since its framework version ({karabo_version}) is "
+                "lower than 2.14.")
+            return
+
         widget = LogDialog(server_id, parent=parent)
         move_to_cursor(widget)
         widget.show()
