@@ -390,3 +390,26 @@ def process_qt_events(app=None, timeout=100):  # ms
 
     flags = QEventLoop.AllEvents | QEventLoop.WaitForMoreEvents
     app.processEvents(flags, timeout)
+
+
+def version_compatible(version: str, major: int, minor: int):
+    """Check if a karaboVersion string `version` fullfills the requirement
+
+    The `major` and `minor` are the minimum requirements.
+    """
+    try:
+        version_split = version.split(".")
+        if len(version_split) == 1:
+            # Note: this does not happen on the field, we set to `True`!
+            return True
+        if len(version_split) > 1:
+            actual_major = int(version_split[0])
+            actual_minor = int(version_split[1])
+            if actual_major > major:
+                return True
+            elif actual_major == major:
+                return actual_minor >= minor
+        return False
+    except Exception as e:
+        print(f"Parsing karaboVersion string failed: {e}")
+        return False
