@@ -1,12 +1,15 @@
-from qtpy.QtCore import QRectF
+from unittest import main
+
+from qtpy.QtCore import QPoint, QRectF
 from qtpy.QtWidgets import QBoxLayout
 
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DisplayLabelModel, LabelModel)
+    BoxLayoutModel, DisplayLabelModel, LabelModel, SceneModel)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
+from karabogui.sceneview.api import SceneView
+from karabogui.sceneview.tools.clipboard import (
+    SceneMoveAction, _add_models_to_clipboard, _read_models_from_clipboard)
 from karabogui.testing import GuiTestCase
-
-from ..clipboard import _add_models_to_clipboard, _read_models_from_clipboard
 
 
 class TestClipboard(GuiTestCase):
@@ -28,6 +31,39 @@ class TestClipboard(GuiTestCase):
         # Test multiple layouts selection
         another_layout = self._get_layout_model(another_label, x=10, y=10)
         self._assert_copy_paste(layout_model, another_layout)
+
+    def test_move_action(self):
+        label = LabelModel(x=10, y=10, text="bar")
+        labels = [label]
+        model = SceneModel(children=labels)
+        scene_view = SceneView(model=model)
+        selection_model = scene_view.selection_model
+        widget = scene_view.widget_at_position(QPoint(10, 10))
+        selection_model.select_object(widget)
+
+        # Left
+        action = SceneMoveAction(text="Left")
+        action.perform(scene_view)
+        assert label.x == 0
+        assert label.y == 10
+
+        # Right
+        action = SceneMoveAction(text="Right")
+        action.perform(scene_view)
+        assert label.x == 10
+        assert label.y == 10
+
+        # Up
+        action = SceneMoveAction(text="Up")
+        action.perform(scene_view)
+        assert label.x == 10
+        assert label.y == 0
+
+        # Down
+        action = SceneMoveAction(text="Down")
+        action.perform(scene_view)
+        assert label.x == 10
+        assert label.y == 10
 
     def _assert_copy_paste(self, *models):
         # Do a single round trip for each models to verify their integrity
@@ -87,3 +123,7 @@ class TestClipboard(GuiTestCase):
         hbox_model.height = height
         hbox_model.width = sum([child.width for child in children_model])
         return hbox_model
+
+
+if __name__ == "__main__":
+    main()
