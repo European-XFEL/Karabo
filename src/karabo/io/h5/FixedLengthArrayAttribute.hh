@@ -104,7 +104,13 @@ namespace karabo {
                 void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) {
                     try {
                         hid_t tid = getNativeTypeId();
-                        KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &(node.getValue<std::vector<T> >())[0]));
+
+                        auto& content = (node.getValue<std::vector<T> >());
+
+                        if (!content.empty()) {
+                            KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, content.data()));
+                        }
+
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
@@ -176,12 +182,14 @@ namespace karabo {
                         hid_t tid = getNativeTypeId();
                         const std::vector<bool>& vec = node.getValue<std::vector<bool> >();
                         hsize_t len = vec.size();
-                        std::vector<unsigned char> converted(len, 0);
-                        for (size_t i = 0; i < len; ++i) {
-                            converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
+                        if (len > 0) {
+                            std::vector<unsigned char> converted(len, 0);
+                            for (size_t i = 0; i < len; ++i) {
+                                converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
+                            }
+                            const unsigned char* ptr = &converted[0];
+                            KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, ptr));
                         }
-                        const unsigned char* ptr = &converted[0];
-                        KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, ptr));
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
@@ -252,11 +260,14 @@ namespace karabo {
                     try {
                         hid_t tid = getNativeTypeId();
                         const std::vector<std::string>& value = node.getValue<std::vector<std::string> >();
-                        std::vector<const char*> value_copy(value.size(), NULL);
-                        for (size_t i = 0; i < value.size(); ++i) {
-                            value_copy[i] = value[i].c_str();
+                        if (!value.empty()) {
+                            std::vector<const char*> value_copy(value.size(), NULL);
+                            for (size_t i = 0; i < value.size(); ++i) {
+                                value_copy[i] = value[i].c_str();
+                            }
+                            KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &value_copy[0]));
                         }
-                        KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, tid, &value_copy[0]));
+
                         KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " +
@@ -293,6 +304,7 @@ namespace karabo {
             };
 
             // typedefs
+            typedef FixedLengthArrayAttribute<char> CharArrayAttribute;
             typedef FixedLengthArrayAttribute<signed char> Int8ArrayAttribute;
             typedef FixedLengthArrayAttribute<short> Int16ArrayAttribute;
             typedef FixedLengthArrayAttribute<int> Int32ArrayAttribute;
