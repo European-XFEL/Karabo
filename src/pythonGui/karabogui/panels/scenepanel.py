@@ -248,10 +248,14 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions.append(self._build_separator())
 
-        self.qactions.extend(self._build_qaction(a)
-                             for a in self.create_move_actions())
-
-        self.qactions.append(self._build_separator())
+        menu = QMenu()
+        move_actions = self.create_move_actions()
+        for action in move_actions:
+            q_action = self._build_qaction(action)
+            menu.addAction(q_action)
+        move_action = QAction(icons.move, "Move", self)
+        move_action.setMenu(menu)
+        self.qactions.extend([move_action, self._build_separator()])
 
         self.qactions.extend(self._build_qaction(a)
                              for a in self.create_order_actions())
