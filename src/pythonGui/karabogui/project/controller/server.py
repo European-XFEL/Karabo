@@ -13,16 +13,18 @@ import karabogui.icons as icons
 from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.dialogs.api import LogDialog
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.indicators import get_project_server_status_icon
 from karabogui.itemtypes import ProjectItemTypes
+from karabogui.logger import get_logger
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.project.utils import add_device_to_server
 from karabogui.singletons.api import get_manager, get_topology
-from karabogui.util import move_to_cursor
+from karabogui.util import move_to_cursor, version_compatible
 
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
@@ -155,6 +157,31 @@ class DeviceServerController(BaseProjectGroupController):
     def delete_press(self, project_controller, parent=None):
         """Reimplemented function on `BaseProjectController`"""
         self._delete_server(project_controller, parent)
+
+    def double_click(self, project_controller, parent=None):
+        """Reimplemented function on `BaseProjectController`"""
+        server_id = self.model.server_id
+        if not self.online:
+            get_logger().info(
+                f"Cannot retrieve logs for device server <b>{server_id}</b>, "
+                "it is <b>offline</b>.")
+            return
+
+        attrs = get_topology().get_attributes(f"server.{server_id}")
+        assert attrs is not None
+
+        version = attrs.get("karaboVersion", "0.0.0")
+        if not version_compatible(version, 2, 14):
+            get_logger().info(
+                f"Cannot retrieve logs for device server <b>{server_id}</b>. "
+                f"Retrieval of logs is available from version 2.14.0.")
+            return
+
+        widget = LogDialog(server_id, parent=parent)
+        move_to_cursor(widget)
+        widget.show()
+        widget.raise_()
+        widget.activateWindow()
 
     # ----------------------------------------------------------------------
     # traits handlers
