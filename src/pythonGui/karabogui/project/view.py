@@ -27,7 +27,7 @@ from .controller.device import DeviceInstanceController
 from .controller.macro import get_project_macros
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
-from .controller.server import get_project_servers
+from .controller.server import DeviceServerController, get_project_servers
 from .controller.subproject import SubprojectController
 
 EXPAND_DEPTH = 2
@@ -102,8 +102,9 @@ class ProjectView(QTreeView):
             project_controller = self._project_controller(selected_controller)
             selected_controller.double_click(project_controller, parent=self)
 
-            if isinstance(selected_controller, DeviceInstanceController):
-                # Don't expand or fold devices, as this is annoying!
+            ignored = (DeviceInstanceController, DeviceServerController)
+            if isinstance(selected_controller, ignored):
+                # Don't expand or fold servers and devices!
                 event.ignore()
                 return
 
