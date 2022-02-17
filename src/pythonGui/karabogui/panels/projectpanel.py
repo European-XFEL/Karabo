@@ -21,7 +21,7 @@ from karabogui.project.utils import (
     reload_project, save_object, show_modified_project_message)
 from karabogui.project.view import ProjectView
 from karabogui.singletons.api import get_db_conn, get_topology
-from karabogui.util import get_spin_widget
+from karabogui.util import get_spin_widget, version_compatible
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
@@ -173,20 +173,11 @@ class ProjectPanel(BasePanelWidget):
            Manager device in the topology is version 2.12 or newer.
         """
         visible = False
-        path = f'device.{KARABO_PROJECT_MANAGER}'
+        path = f"device.{KARABO_PROJECT_MANAGER}"
         attributes = get_topology().get_attributes(path)
-
         if attributes is not None:
-            version = attributes.get('karaboVersion', '0.0.0')
-            version_parts = version.split('.')
-            if len(version_parts) > 1:
-                try:
-                    major = int(version_parts[0])
-                    minor = int(version_parts[1])
-                    if major > 2 or (major == 2 and minor > 11):
-                        visible = True
-                except ValueError:
-                    pass
+            version = attributes.get("karaboVersion", "0.0.0")
+            visible = version_compatible(version, 2, 12)
         self._manager_version = visible
         self.load_with_device_action.setVisible(visible)
 
