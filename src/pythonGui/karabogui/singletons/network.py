@@ -128,9 +128,13 @@ class Network(QObject):
         self._tcp_socket.disconnectFromHost()
         if (self._tcp_socket.state() == QAbstractSocket.UnconnectedState or
                 self._tcp_socket.waitForDisconnected(5000)):
+            get_logger().info(
+                "Disconnected from the gui server "
+                f"<b>{self.hostname}:{self.port}</b>")
             return
 
-        print("Disconnect failed:", self._tcp_socket.errorString())
+        get_logger.error(
+            f"Disconnect failed: {self._tcp_socket.errorString()}")
 
     def togglePerformanceMonitor(self):
         """External method to toggle the performance monitor"""
