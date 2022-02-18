@@ -9,6 +9,7 @@ def test_array_equal():
 
 
 def test_has_changes():
+    assert not has_changes(None, None)
     assert has_changes(None, 1)
 
     assert has_changes("", "a")
