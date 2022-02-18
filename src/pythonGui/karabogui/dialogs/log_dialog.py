@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (
 from karabogui import icons, messagebox
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.request import call_device_slot
-from karabogui.util import WeakMethodRef, get_spin_widget
+from karabogui.util import WeakMethodRef, get_spin_widget, process_qt_events
 
 from .utils import get_dialog_ui
 
@@ -54,6 +54,7 @@ class LogDialog(QDialog):
 
         self.model = LogDataModel()
 
+        self.ui_request.clicked.connect(self.request_logger_data)
         self.ui_server_id.setText(server_id)
         self.ui_table_view.setModel(self.model)
         self.ui_table_view.setWordWrap(True)
@@ -97,6 +98,10 @@ class LogDialog(QDialog):
 
         self.model.initialize(new)
         self.resize_contents()
+        # Tell the widget to update the new sizes and scroll
+        process_qt_events(timeout=0)
+        bar = self.table.verticalScrollBar()
+        bar.setValue(bar.maximum())
 
     def keyPressEvent(self, event):
         if (event.key() in (Qt.Key_Enter, Qt.Key_Return) and
