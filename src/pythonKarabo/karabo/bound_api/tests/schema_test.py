@@ -727,6 +727,8 @@ class Schema_TestCase(unittest.TestCase):
                          "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
         self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "oct")
         self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "hex")
+        self.assertEqual(schema.getDisplayType("exampleKey5"),
+                         "Int64DisplayType")
         self.assertEqual(schema.getDisplayType("exampleKey8"), "Curve")
         self.assertEqual(schema.getDisplayType("exampleKey9"),
                          "TestDisplayType")
