@@ -166,16 +166,6 @@ namespace karabo {
                 return *this;
             }
 
-            /**
-             * Enable modification of the displayType of the element.
-             * @param displayType
-             * @return reference to the Element (to allow method's chaining)
-             */
-            ListElement& setSpecialDisplayType(const std::string& displayType) {
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, displayType);
-                return *this;
-            }
-
            protected:
             void beforeAddition() {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);

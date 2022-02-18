@@ -404,6 +404,8 @@ class CommonWrap {
           .def("metricPrefix", &T::metricPrefix, bp::return_internal_reference<>())                               \
           .def("init", &T::init, bp::return_internal_reference<>())                                               \
           .def("key", &T::key, bp::return_internal_reference<>())                                                 \
+          .def("setSpecialDisplayType", (T & (T::*)(std::string const &))(&T::setSpecialDisplayType),             \
+               bp::arg("displayType"), bp::return_internal_reference<>())                                         \
           .def("readOnly", &T::readOnly, bp::return_internal_reference<>())                                       \
           .def("reconfigurable", &T::reconfigurable, bp::return_internal_reference<>())                           \
           .def("tags", (T & (T::*)(std::string const &, std::string const &))(&T::tags),                          \
@@ -452,9 +454,7 @@ class CommonWrap {
                                           bp::init<karabo::util::Schema &>((bp::arg("expected"))))              \
               KARABO_PYTHON_COMMON_ATTRIBUTES(T)                                                                \
                     .def("maxSize", (T & (T::*)(int const &))(&T::maxSize), bp::return_internal_reference<>())  \
-                    .def("minSize", (T & (T::*)(int const &))(&T::minSize), bp::return_internal_reference<>())  \
-                    .def("setSpecialDisplayType", (T & (T::*)(std::string const &))(&T::setSpecialDisplayType), \
-                         bp::return_internal_reference<>());                                                    \
+                    .def("minSize", (T & (T::*)(int const &))(&T::minSize), bp::return_internal_reference<>()); \
     }
 
 
