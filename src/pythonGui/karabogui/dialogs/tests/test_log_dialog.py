@@ -64,6 +64,11 @@ class TestLoginDialog(GuiTestCase):
             self.assertIn(actual_instanceId, text)
             self.assertIn("INFO", text)
 
+            path = "karabogui.dialogs.log_dialog.call_device_slot"
+            with mock.patch(path) as call:
+                self.click(dialog.ui_request)
+                call.assert_called_once()
+
 
 if __name__ == "__main__":
     main()
