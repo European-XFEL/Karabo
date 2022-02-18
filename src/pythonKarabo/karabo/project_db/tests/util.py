@@ -122,9 +122,12 @@ def create_hierarchy(db):
                                                    atype='scene',
                                                    name=sub_uuid)
 
-        scene_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                     ' simple_name="{name}" >中文</xml>'
-                     .format(uuid=sub_uuid, atype='scene', name=sub_uuid))
+        scene_xml = (f'<xml item_type="scene" uuid="{sub_uuid}"'
+                     f' simple_name="{sub_uuid}" >'
+                     f'<svg:svg xmlns:svg="http://www.w3.org/2000/svg" '
+                     f'xmlns:krb="http://karabo.eu/scene" height="768" '
+                     f'width="1024" krb:uuid="{sub_uuid}" krb:version="2">'
+                     '</svg:svg></xml>')
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
