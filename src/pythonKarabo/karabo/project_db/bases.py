@@ -131,8 +131,9 @@ class DatabaseBase(ContextDecorator):
         if isinstance(xml_rep, str):
             try:
                 return etree.fromstring(xml_rep)
-            except etree.XMLSyntaxError:
-                raise ValueError("XML syntax error encountered while parsing!")
+            except etree.XMLSyntaxError as e:
+                raise ValueError(
+                    f"XML syntax error encountered while parsing!: {e}")
 
         raise ValueError(f"Cannot handle type {type(xml_rep)}: {xml_rep}")
 
