@@ -73,9 +73,6 @@ runPythonUnitTests() {
     echo
 
     if [ $CODECOVERAGE = "y" ]; then
-        # Collect code coverage.
-        # Could force completion despite of test failures by not using
-        # safeRunCommand and adding option --force.
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runUnitTests \
             --collectCoverage \
@@ -96,9 +93,6 @@ runPythonIntegrationTests() {
     echo
 
     if [ $CODECOVERAGE = "y" ]; then
-        # Collect code coverage.
-        # Could force completion despite of test failures by not using
-        # safeRunCommand and adding option --force.
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
             --collectCoverage \
@@ -119,7 +113,6 @@ runPythonLongTests() {
     echo
 
     if [ $CODECOVERAGE = "y" ]; then
-       # Collect code coverage.
        safeRunCommand $scriptDir/run_python_tests.sh \
            --runLongTests \
            --collectCoverage \
