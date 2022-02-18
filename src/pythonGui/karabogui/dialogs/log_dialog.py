@@ -18,6 +18,8 @@ LogData = namedtuple("LogData", "timestamp priority instanceId "
                                 "description traceback")
 
 INSTANCE_ID_COLUMN = 2
+MAX_COLUMN_SIZE = 500
+
 ICONS = {
     "DEBUG": icons.logDebug,
     "INFO": icons.logInfo,
@@ -37,10 +39,12 @@ class LogDialog(QDialog):
         uic.loadUi(get_dialog_ui("log_dialog.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
+        self.setSizeGripEnabled(True)
+        self.setWindowTitle(f"Server log for serverId: {server_id}")
 
         self.server_id = server_id
 
-        flags = Qt.WindowCloseButtonHint
+        flags = Qt.WindowCloseButtonHint | Qt.WindowTitleHint
         self.setWindowFlags(self.windowFlags() | flags)
 
         self.spin_widget = get_spin_widget(icon="wait-black",
@@ -87,8 +91,8 @@ class LogDialog(QDialog):
                        instanceId=log["category"],
                        description=log["message"],
                        traceback=log.get("traceback", ""),
-                       timestamp=QDateTime.fromString(log["timestamp"],
-                                                      Qt.ISODate))
+                       timestamp=QDateTime.fromString(
+                           log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
                for log in data]
 
         self.model.initialize(new)
@@ -104,10 +108,18 @@ class LogDialog(QDialog):
 
     @Slot()
     def resize_contents(self):
-        columns = self.model.columnCount() - 1
-        header = self.ui_table_view.horizontalHeader()
-        header.resizeSections(QHeaderView.ResizeToContents)
-        header.resizeSection(columns, QHeaderView.Stretch)
+        last_column = self.model.columnCount() - 1
+        hor_header = self.ui_table_view.horizontalHeader()
+        width = hor_header.defaultSectionSize()
+        hor_header.setMinimumSectionSize(width)
+        hor_header.setMaximumSectionSize(MAX_COLUMN_SIZE)
+        hor_header.resizeSections(QHeaderView.ResizeToContents)
+        hor_header.resizeSection(last_column, QHeaderView.Stretch)
+
+        ver_header = self.ui_table_view.verticalHeader()
+        height = ver_header.defaultSectionSize()
+        ver_header.setMinimumSectionSize(height)
+        ver_header.resizeSections(QHeaderView.ResizeToContents)
 
     @Slot(QModelIndex)
     def onItemDoubleClicked(self, index):
@@ -142,7 +154,6 @@ class LogDialog(QDialog):
             model = index.model()
             time = model.data(index.sibling(index.row(), 0),
                               Qt.DisplayRole)
-            time = time.toString("dd.MM.yyyy hh:mm:ss.z")
             logtype = model.data(index.sibling(index.row(), 1),
                                  Qt.DisplayRole)
             instance_id = model.data(index.sibling(index.row(), 2),
@@ -184,6 +195,10 @@ class LogDataModel(QAbstractTableModel):
             return TEXT_COLOR.get(log.priority)
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
             return log[index.column()]
+        elif (role == Qt.TextAlignmentRole
+                and index.column() <= INSTANCE_ID_COLUMN):
+            return Qt.AlignCenter
+
         return None
 
     def initialize(self, data):
