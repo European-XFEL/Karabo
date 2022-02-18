@@ -268,6 +268,37 @@ async def compareDeviceWithPast(device, timepoint):
 
 
 @synchronize
+async def compareConfigurationsFromPast(device, first_timepoint,
+                                        second_timepoint):
+    """Compare device configuration (key, values) between two timepoints
+
+    The changes are provided in a list for comparison::
+
+    changes = [FIRST | SECOND]
+
+    -> h = compareConfigurationsFromPast(device, daysAgo(7), daysAgo(14))
+    -> h
+    -> <disableEpsilonFeedback{}: [True, False]>
+
+    :param first_timepoint: The first timepoint to compare
+    :param second_timepoint: The second timepoint to compare
+
+    :returns: changes Hash
+    """
+    # Get the config and schema first!
+    a_conf, a_schema = await _get_configuration_from_past(
+        device, first_timepoint)
+    b_conf, b_schema = await _get_configuration_from_past(
+        device, second_timepoint)
+    # Take into account only reconfigurable and init parameters!
+    a_san = sanitize_init_configuration(a_schema, a_conf)
+    b_san = sanitize_init_configuration(b_schema, b_conf)
+    changes = config_changes(a_san, b_san)
+
+    return changes
+
+
+@synchronize
 async def _getLogReaderId(deviceId):
     # this method contains a lot of hard-coded strings. It follows
     # GuiServerDevice::onGetPropertyHistory. One day we should

@@ -42,13 +42,13 @@ from .middlelayer_api.configuration import (
 from .middlelayer_api.device import Device
 # Middlelayer api
 from .middlelayer_api.device_client import (
-    DeviceClientBase, Queue, call, callNoWait, compareDeviceConfiguration,
-    compareDeviceWithPast, connectDevice, disconnectDevice, execute,
-    executeNoWait, filterByTags, findDevices, findServers, getClasses,
-    getClients, getConfiguration, getConfigurationFromName,
-    getConfigurationFromPast, getDescriptors, getDevice, getDevices,
-    getHistory, getInstanceInfo, getLastConfiguration, getSchema,
-    getSchemaFromPast, getServers, getTopology, instantiate,
+    DeviceClientBase, Queue, call, callNoWait, compareConfigurationsFromPast,
+    compareDeviceConfiguration, compareDeviceWithPast, connectDevice,
+    disconnectDevice, execute, executeNoWait, filterByTags, findDevices,
+    findServers, getClasses, getClients, getConfiguration,
+    getConfigurationFromName, getConfigurationFromPast, getDescriptors,
+    getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
+    getSchema, getSchemaFromPast, getServers, getTopology, instantiate,
     instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
     listDevicesWithConfiguration, lock, saveConfigurationFromName, setNoWait,
     setWait, shutdown, shutdownNoWait, updateDevice, waitUntil, waitUntilNew,
@@ -82,16 +82,16 @@ def _create_cli_submodule():
 
     # NOTE: This is the middlelayer part of the ikarabo namespace
     symbols = (
-        call, callNoWait, connectDevice, compareDeviceConfiguration,
-        compareDeviceWithPast, daysAgo, disconnectDevice, execute, has_changes,
-        executeNoWait, findDevices, findServers, getClasses, getClients,
-        getConfiguration, getConfigurationFromPast, getSchemaFromPast,
-        getConfigurationFromName, getLastConfiguration, getDevice,
-        listConfigurationFromName, listDevicesWithConfiguration, getDevices,
-        getHistory, getInstanceInfo, getSchema, getServers, getTopology,
-        get_timestamp, Hash, hoursAgo, instantiate, instantiateFromName,
-        instantiateNoWait, isSet, karabo, minutesAgo,
-        saveConfigurationFromName, setWait, setNoWait, shutdown,
+        call, callNoWait, connectDevice, compareConfigurationsFromPast,
+        compareDeviceConfiguration, compareDeviceWithPast, daysAgo,
+        disconnectDevice, execute, has_changes, executeNoWait, findDevices,
+        findServers, getClasses, getClients, getConfiguration,
+        getConfigurationFromPast, getSchemaFromPast, getConfigurationFromName,
+        getLastConfiguration, getDevice, listConfigurationFromName,
+        listDevicesWithConfiguration, getDevices, getHistory, getInstanceInfo,
+        getSchema, getServers, getTopology, get_timestamp, Hash, hoursAgo,
+        instantiate, instantiateFromName, instantiateNoWait, isSet, karabo,
+        minutesAgo, saveConfigurationFromName, setWait, setNoWait, shutdown,
         shutdownNoWait, sleep, State, Timestamp, waitUntil, waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)
