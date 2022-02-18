@@ -543,6 +543,7 @@ void Schema_Test::testPerKeyFunctionality() {
 
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
+            CPPUNIT_ASSERT_EQUAL(std::string("Int64DisplayType"), m_schema.getDisplayType(keys[i]));
         }
 
         if (keys[i] == "exampleKey6") {
