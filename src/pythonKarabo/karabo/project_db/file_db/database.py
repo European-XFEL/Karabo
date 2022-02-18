@@ -1,7 +1,8 @@
 import os
-import xml.etree.ElementTree as ET
 from os import path as op
 from time import strptime
+
+from lxml import etree
 
 from karabo.project_db.bases import DatabaseBase, HandleABC
 from karabo.project_db.const import ROOT_COLLECTION, ROOT_COLLECTION_TEST
@@ -110,7 +111,7 @@ class ProjectDatabase(DatabaseBase):
         modified = False
         reason = ""
         if op.exists(path):
-            tree = ET.parse(path)
+            tree = etree.parse(path)
             current_date = tree.getroot().attrib['date']
         else:
             # Item not yet existing
@@ -144,12 +145,13 @@ class ProjectDatabase(DatabaseBase):
                 _date = None
                 result = None
                 for path in paths:
-                    r = ET.parse(path).getroot()
+                    r = etree.parse(path).getroot()
                     current_date = r.attrib['date']
                     if not _date or _date < current_date:
                         _date = current_date
+                        xml = DatabaseBase._make_str_if_needed(r)
                         result = {'uuid': r.attrib['uuid'],
-                                  'xml': ET.tostring(r).decode()}
+                                  'xml': xml}
                 if result:
                     results.append(result)
             except ValueError:
@@ -174,7 +176,7 @@ class ProjectDatabase(DatabaseBase):
                 path = op.join(self.root, domain, fname)
                 if not op.isfile(path):
                     continue
-                r = ET.parse(path).getroot()
+                r = etree.parse(path).getroot()
                 if (item_types is None
                         or r.attrib.get('item_type') in item_types):
                     results.append(
@@ -208,7 +210,7 @@ class ProjectDatabase(DatabaseBase):
                 path = op.join(self.root, domain, fname)
                 if not op.isfile(path):
                     continue
-                r = ET.parse(path).getroot()
+                r = etree.parse(path).getroot()
                 if (r.attrib.get('simple_name') == simple_name and
                         r.attrib.get('item_type') == item_type):
                     results.append(
@@ -250,7 +252,7 @@ class ProjectDatabase(DatabaseBase):
             path = op.join(self.root, domain, fname)
             if not op.isfile(path):
                 continue
-            r = ET.parse(path).getroot()
+            r = etree.parse(path).getroot()
             if (r.attrib.get('item_type') != 'device_instance'):
                 continue
             match = f"device_instance[@instance_id='{instance_id}']"
@@ -277,7 +279,7 @@ class ProjectDatabase(DatabaseBase):
             path = op.join(self.root, domain, fname)
             if not op.isfile(path):
                 continue
-            r = ET.parse(path).getroot()
+            r = etree.parse(path).getroot()
             if (r.attrib.get('item_type') != 'device_server'):
                 continue
             match = f'.//device_instance[@uuid="{uuid}"]'
@@ -296,7 +298,7 @@ class ProjectDatabase(DatabaseBase):
             path = op.join(self.root, domain, fname)
             if not op.isfile(path):
                 continue
-            r = ET.parse(path).getroot()
+            r = etree.parse(path).getroot()
             if (r.attrib.get('item_type') != 'project'):
                 continue
             add_server(r)
@@ -327,10 +329,10 @@ class ProjectDatabase(DatabaseBase):
             attr_name = it.get('attr_name')
             attr_value = it.get('attr_value')
             path = self.path(domain, uuid)
-            r = ET.parse(path).getroot()
+            r = etree.parse(path).getroot()
             if (r.attrib.get('item_type') != item_type):
                 continue
             r.attrib[attr_name] = str(attr_value)
-            if self.dbhandle.load(ET.tostring(r), path):
+            if self.dbhandle.load(etree.tostring(r), path):
                 res_items.append(it)
         return res_items
