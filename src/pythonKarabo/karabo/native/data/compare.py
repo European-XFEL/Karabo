@@ -17,7 +17,7 @@ def has_changes(old_value, new_value):
     """
     try:
         if old_value is None:
-            changes = True
+            changes = new_value is not None
         elif _is_nonintegral_number(old_value):
             changes = _has_floating_changes(old_value, new_value)
         elif isinstance(old_value, np.ndarray):
