@@ -378,6 +378,7 @@ namespace configurationTest {
                   .tags("h/w; d.m.y", ";")
                   .displayedName("Example key 5")
                   .description("Example key 5 description")
+                  .setSpecialDisplayType("Int64DisplayType")
                   .readOnly()
                   .initialValue(1442244)
                   .warnLow(-10)
