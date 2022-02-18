@@ -329,24 +329,31 @@ class ScenePanel(BasePanelWidget):
 
     def create_group_tool_actions(self):
         actions = []
-        actions.append(GroupSceneAction(icon=icons.group,
-                                        text="Group in Fixed Layout",
-                                        tooltip="Group selected items"))
-        actions.append(BoxVSceneAction(icon=icons.groupVertical,
-                                       text="Group Vertically",
-                                       tooltip="Group selected items in "
-                                               "vertical layout"))
-        actions.append(BoxHSceneAction(icon=icons.groupHorizontal,
-                                       text="Group Horizontally",
-                                       tooltip="Group selected items in "
-                                               "horizontal layout"))
-        actions.append(UngroupSceneAction(icon=icons.ungroup,
-                                          text="Ungroup",
-                                          tooltip="Ungroup selected items"))
-        actions.append(GroupEntireSceneAction(icon=icons.entireWindow,
-                                              text="Group Entire Window",
-                                              tooltip="Group all items in "
-                                                      "entire window"))
+        actions.append(GroupSceneAction(
+            icon=icons.group,
+            text="Group in Fixed Layout",
+            shortcut=QKeySequence(Qt.CTRL + Qt.Key_G),
+            tooltip="Group selected items"))
+        actions.append(BoxVSceneAction(
+            icon=icons.groupVertical,
+            text="Group Vertically",
+            tooltip="Group selected items in "
+                    "vertical layout"))
+        actions.append(BoxHSceneAction(
+            icon=icons.groupHorizontal,
+            text="Group Horizontally",
+            tooltip="Group selected items in "
+                    "horizontal layout"))
+        actions.append(UngroupSceneAction(
+            icon=icons.ungroup,
+            shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_G),
+            text="Ungroup",
+            tooltip="Ungroup selected items"))
+        actions.append(GroupEntireSceneAction(
+            icon=icons.entireWindow,
+            text="Group Entire Window",
+            tooltip="Group all items in "
+                    "entire window"))
         return actions
 
     def create_clipboard_actions(self):
@@ -426,7 +433,11 @@ class ScenePanel(BasePanelWidget):
         q_action.setCheckable(sv_action.checkable)
         q_action.triggered.connect(partial(sv_action.perform, self.scene_view))
         if sv_action.shortcut != QKeySequence.UnknownKey:
-            q_action.setShortcuts(QKeySequence.keyBindings(sv_action.shortcut))
+            if isinstance(sv_action.shortcut, QKeySequence):
+                q_action.setShortcut(sv_action.shortcut)
+            else:
+                q_action.setShortcuts(
+                    QKeySequence.keyBindings(sv_action.shortcut))
         return q_action
 
     def _build_qaction_group(self, actions):
@@ -453,6 +464,7 @@ class ResizableScrollArea(QScrollArea):
     """A QScrollArea which enables resizing of its child widget via mouse
     interaction
     """
+
     def __init__(self, child_widget, parent=None):
         super(ResizableScrollArea, self).__init__(parent=parent)
 

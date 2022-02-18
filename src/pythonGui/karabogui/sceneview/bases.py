@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from qtpy.QtGui import QIcon, QKeySequence
-from traits.api import ABCHasStrictTraits, Bool, Instance, Int, String
+from traits.api import ABCHasStrictTraits, Bool, Either, Instance, Int, String
 
 
 class BaseSceneAction(ABCHasStrictTraits):
@@ -14,7 +14,8 @@ class BaseSceneAction(ABCHasStrictTraits):
     # The tooltip text shown when hovering over the action
     tooltip = String
     # A keyboard shortcut for the action (QKeySequence::StandardKey value)
-    shortcut = Int(QKeySequence.UnknownKey)
+    # or a QKeySequence
+    shortcut = Either(Int, Instance(QKeySequence))
     # Whether or not this action is checkable
     checkable = Bool(False)
 
@@ -22,6 +23,10 @@ class BaseSceneAction(ABCHasStrictTraits):
     def perform(self, scene_view):
         """Perform the action on a SceneView instance.
         """
+
+    def _shortcut_default(self):
+        """The default value for the shortcut"""
+        return QKeySequence.UnknownKey
 
 
 class BaseSceneTool(ABCHasStrictTraits):
