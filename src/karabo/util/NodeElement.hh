@@ -118,14 +118,6 @@ namespace karabo {
             }
 
             /**
-             * Set a special display type string on the node.
-             */
-            NodeElement& setSpecialDisplayType(const std::string& displaytype) {
-                this->m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, displaytype);
-                return *this;
-            }
-
-            /**
              * Specify one or more actions that are allowed on this node.
              *
              * If a Karabo device specifies allowed actions for a node, that means that it offers a specific slot
