@@ -205,6 +205,20 @@ namespace karabo {
             }
 
             /**
+             * The <b>setSpecialDisplayType</b> allows for setting modification of the displayType of the element
+             *
+             * This attribute is a string and contains a hint to graphical user interfaces that a display
+             * mode is possible.
+             *
+             * @param displayType
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& setSpecialDisplayType(const std::string& displaytype) {
+                this->m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, displaytype);
+                return *(static_cast<Derived*>(this));
+            }
+
+            /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
              * the element is not usable. This must be called after the element is fully defined.
              */
