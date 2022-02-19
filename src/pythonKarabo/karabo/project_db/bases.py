@@ -4,7 +4,7 @@ from time import gmtime, strftime
 
 from lxml import etree
 
-from .util import ProjectDBError
+from .util import ProjectDBError, to_string
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -151,10 +151,7 @@ class DatabaseBase(ContextDecorator):
         if isinstance(xml_rep, str):
             return xml_rep
         if isinstance(xml_rep, etree._Element):
-            xml_bytes = etree.tostring(xml_rep, pretty_print=True,
-                                       encoding="unicode",
-                                       xml_declaration=False)
-            return xml_bytes
+            return to_string(xml_rep)
 
         raise ValueError("Cannot handle type {}".format(type(xml_rep)))
 
