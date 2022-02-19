@@ -6,7 +6,7 @@ from lxml import etree
 
 from karabo.project_db.bases import DatabaseBase, HandleABC
 from karabo.project_db.const import ROOT_COLLECTION, ROOT_COLLECTION_TEST
-from karabo.project_db.util import ProjectDBError
+from karabo.project_db.util import ProjectDBError, to_string
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -149,7 +149,7 @@ class ProjectDatabase(DatabaseBase):
                     current_date = r.attrib['date']
                     if not _date or _date < current_date:
                         _date = current_date
-                        xml = DatabaseBase._make_str_if_needed(r)
+                        xml = to_string(r)
                         result = {'uuid': r.attrib['uuid'],
                                   'xml': xml}
                 if result:
@@ -333,6 +333,6 @@ class ProjectDatabase(DatabaseBase):
             if (r.attrib.get('item_type') != item_type):
                 continue
             r.attrib[attr_name] = str(attr_value)
-            if self.dbhandle.load(etree.tostring(r), path):
+            if self.dbhandle.load(to_string(r), path):
                 res_items.append(it)
         return res_items

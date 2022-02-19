@@ -1,6 +1,7 @@
 from abc import abstractmethod
 
 import pkg_resources
+from lxml import etree
 
 from karabo.native import (
     AccessLevel, AccessMode, Bool, Configurable, Node, String)
@@ -66,3 +67,14 @@ def get_project(node, init_db=False):
     protocol = node.protocol.value
     ep_node = getattr(node, protocol)
     return ep_node.get_db(test_mode=node.testMode.value, init_db=init_db)
+
+
+def to_string(xml_rep):
+    """returns a string serialization of an xml element
+
+    the output is listed on multiple lines and unicode encoded"""
+    return etree.tostring(
+        xml_rep,
+        pretty_print=True,
+        encoding="unicode",
+        xml_declaration=False)
