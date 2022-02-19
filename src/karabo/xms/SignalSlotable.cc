@@ -346,7 +346,7 @@ namespace karabo {
                                        bind_weak(&SignalSlotable::consumerErrorNotifier, this, std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up in topic '" << getTopic() << "' as '" << m_instanceId
-                                      << "'";
+                                      << "' - Karabo " << karabo::util::Version::getVersion();
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
             registerForShortcutMessaging();
             startPerformanceMonitor();
