@@ -60,6 +60,20 @@ namespace karabo {
 
         std::string urlencode(const std::string& value);
 
+        /**
+         * Returns an IP string from a Classless Inter-Domain Routing specification
+         *
+         * e.g. the string 192.168.0.0/24 represents the IP range between 192.168.0.0 and 192.168.0.255.
+         *
+         * The function will ignore loopback interface and interfaces that are down.
+         * Only IP4 specifications are implemented.
+         *
+         * @return an IP address matching the input range or the input string
+         *         if the input string does not specify a network range or
+         *         if it does not match any external active interface
+         */
+        std::string getIpFromCIDRNotation(const std::string& addressRange);
+
         enum class AsyncStatus {
 
             PENDING = 0,
