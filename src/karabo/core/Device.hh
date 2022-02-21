@@ -1961,6 +1961,9 @@ namespace karabo {
                                       self->set(h);
                                   }
                               });
+                        karabo::util::Hash update(path, channel->getInitialConfiguration());
+                        // do not lock since this method is called under m_objectStateChangeMutex
+                        setNoLock(update, getActualTimestamp());
                     }
                 } catch (const karabo::util::NetworkException& e) {
                     KARABO_LOG_ERROR << e.detailedMsg();
