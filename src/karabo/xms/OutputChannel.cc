@@ -67,9 +67,20 @@ namespace karabo {
             STRING_ELEMENT(expected)
                   .key("hostname")
                   .displayedName("Hostname")
-                  .description("The hostname to which connecting clients will be routed to")
+                  .description(
+                        "The requested hostname to which connecting clients will be "
+                        "routed to. Classless Inter-Domain Routing specification and "
+                        "a default string are accepted as well.")
                   .assignmentOptional()
                   .defaultValue("default")
+                  .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("address")
+                  .displayedName("Address")
+                  .description("The hostname to which connecting clients will be routed to.")
+                  .readOnly()
+                  .initialValue(std::string())
                   .commit();
 
             UINT32_ELEMENT(expected)
@@ -195,10 +206,17 @@ namespace karabo {
               m_updateDeadline(karabo::net::EventLoop::getIOService()) {
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
-            config.get("hostname", m_hostname);
             config.get("port", m_port);
-            if (m_hostname == "default") m_hostname = boost::asio::ip::host_name();
             config.get("updatePeriod", m_period);
+
+            const std::string& hostname = config.get<std::string>("hostname");
+            // resolve the hostname if needed
+            if (hostname == "default") {
+                m_hostname = boost::asio::ip::host_name();
+            } else {
+                m_hostname = getIpFromCIDRNotation(hostname);
+            }
+
 
             KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
 
@@ -299,6 +317,9 @@ namespace karabo {
             return m_instanceId;
         }
 
+        karabo::util::Hash OutputChannel::getInitialConfiguration() const {
+            return Hash("address", m_hostname);
+        }
 
         std::string OutputChannel::getInstanceIdName() const {
             return (m_instanceId + ":") += m_channelName;
@@ -781,7 +802,6 @@ namespace karabo {
             sendOne(chunkId, channelInfo);
         }
 
-
         void OutputChannel::pushShareNext(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
             if (std::find(m_shareNext.begin(), m_shareNext.end(), instanceId) == m_shareNext.end()) {
@@ -1041,7 +1061,6 @@ namespace karabo {
                 m_showStatisticsHandler = handler;
             }
         }
-
 
         void OutputChannel::registerWritersOnChunk(unsigned int chunkId) {
             {
