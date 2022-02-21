@@ -193,6 +193,8 @@ class SimpleProperties(Configurable):
     node = Node(Simple)
     i1 = ChoiceOfNodes(Multi, accessMode=AccessMode.READONLY)
     j1 = ListOfNodes(Multi)
+    internal = Bool(defaultValue=True,
+                    assignment=Assignment.INTERNAL)
 
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def anySlot(self):
