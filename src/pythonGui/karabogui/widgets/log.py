@@ -6,12 +6,12 @@
 from collections import namedtuple
 
 from qtpy.QtCore import (
-    QAbstractTableModel, QDate, QDateTime, QModelIndex, QPoint, Qt, Slot)
+    QAbstractTableModel, QDateTime, QModelIndex, QPoint, Qt, Slot)
 from qtpy.QtGui import QClipboard, QColor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QApplication, QDateTimeEdit, QFormLayout, QFrame,
-    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMenu, QPushButton, QTableView,
-    QToolButton, QVBoxLayout, QWidget)
+    QAbstractItemView, QApplication, QFrame, QGroupBox, QHBoxLayout, QLabel,
+    QLineEdit, QMenu, QPushButton, QTableView, QToolButton, QVBoxLayout,
+    QWidget)
 
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
@@ -130,35 +130,6 @@ class LogWidget(QWidget):
 
         hUpperLayout.addWidget(self.gbSearch)
 
-        # Date filter
-        self.gbDate = QGroupBox("Date filter  ")
-        self.gbDate.setFlat(True)
-        self.gbDate.setCheckable(True)
-        self.gbDate.setChecked(False)
-        self.gbDate.clicked.connect(self.onFilterChanged)
-
-        dateLayout = QFormLayout()
-        self.dtStartDate = QDateTimeEdit()
-        self.dtStartDate.setDisplayFormat("yyyy-MM-dd hh:mm")
-        self.dtStartDate.setCalendarPopup(True)
-        self.dtStartDate.setDate(QDate.currentDate().addMonths(-1))
-        self.dtStartDate.dateTimeChanged.connect(self.onFilterChanged)
-        dateLayout.addRow("Start date: ", self.dtStartDate)
-
-        self.dtEndDate = QDateTimeEdit()
-        self.dtEndDate.setDisplayFormat("yyyy-MM-dd hh:mm")
-        self.dtEndDate.setCalendarPopup(True)
-        self.dtEndDate.setDateTime(QDateTime.currentDateTime())
-        self.dtEndDate.dateTimeChanged.connect(self.onFilterChanged)
-        dateLayout.addRow("End date: ", self.dtEndDate)
-
-        hDateLayout = QHBoxLayout(self.gbDate)
-        hDateLayout.setContentsMargins(5, 5, 5, 5)
-        hDateLayout.addLayout(dateLayout)
-        hDateLayout.addStretch()
-
-        hUpperLayout.addWidget(self.gbDate)
-
         vFilterLayout.addLayout(hUpperLayout)
 
         hDateLine = QFrame(self)
@@ -242,7 +213,6 @@ class LogWidget(QWidget):
             model = self.table.model()
             time = model.data(index.sibling(index.row(), 1),
                               Qt.DisplayRole)
-            time = time.toString("dd.MM.yyyy hh:mm:ss.z")
             logtype = model.data(index.sibling(index.row(), 2),
                                  Qt.DisplayRole)
             instance_id = model.data(index.sibling(index.row(), 3),
@@ -261,7 +231,8 @@ class LogWidget(QWidget):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
                    description=log["message"],
                    additionalDescription=log.get("traceback", ""),
-                   dateTime=QDateTime.fromString(log["timestamp"], Qt.ISODate))
+                   dateTime=QDateTime.fromString(
+                       log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
                for i, log in enumerate(logData, start=self.tailindex + 1)]
         self.tailindex += len(logData)
         self.logs.extend(new)
@@ -306,24 +277,6 @@ class LogWidget(QWidget):
         types = {k for k, v in buttons.items() if v.isChecked()}
         if types:
             g = (log for log in g if (log.messageType in types))
-            if self.gbDate.isChecked():
-                startDateTime = self.dtStartDate.dateTime()
-                startTime = startDateTime.time()
-                startTime.setHMS(startTime.hour(), startTime.minute(), 0)
-                startDateTime.setTime(startTime)
-                endDateTime = self.dtEndDate.dateTime()
-                endTime = endDateTime.time()
-                endTime.setHMS(endTime.hour(), endTime.minute(), 59)
-                endDateTime.setTime(endTime)
-
-                # Check start and end range
-                if endDateTime < startDateTime:
-                    self.dtStartDate.setDateTime(endDateTime)
-                    self.dtEndDate.setDateTime(startDateTime)
-
-                g = (log for log in g
-                     if startDateTime < log.dateTime < endDateTime)
-
             text = self.leSearch.text()
             if text:
                 ins = self.pbSearchInsId.isChecked()
