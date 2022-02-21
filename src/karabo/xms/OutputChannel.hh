@@ -215,6 +215,15 @@ namespace karabo {
             const std::string& getInstanceId() const;
 
             /**
+             *  returns the initial readonly configuration parameters
+             *
+             * Returns a Hash containing the initial information that should
+             * not be updated via `ShowConnectionHandler` and `ShowStatisticsHandler`.
+             * Currently only the `address` key is included.
+             */
+            karabo::util::Hash getInitialConfiguration() const;
+
+            /**
              *  Concatenation of instance id and name
              */
             std::string getInstanceIdName() const;

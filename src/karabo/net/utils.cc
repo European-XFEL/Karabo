@@ -10,7 +10,12 @@
 
 #include "karabo/net/utils.hh"
 
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+
 #include <boost/asio.hpp>
+#include <boost/asio/ip/address_v4.hpp>
+#include <boost/asio/ip/network_v4.hpp>
 #include <boost/regex.hpp>
 #include <iostream>
 
@@ -20,10 +25,10 @@
 
 using namespace std;
 using namespace boost;
-
+namespace ip = boost::asio::ip;
 
 std::string karabo::net::bareHostName() {
-    std::string hostName = boost::asio::ip::host_name();
+    std::string hostName = ip::host_name();
 
     // Find first dot and erase everything after it:
     const std::string::size_type dotPos = hostName.find('.');
@@ -126,4 +131,43 @@ string karabo::net::urlencode(const std::string& value) {
     }
 
     return escaped.str();
+}
+
+std::string karabo::net::getIpFromCIDRNotation(const std::string& input) {
+    boost::system::error_code ec;
+    ip::network_v4 subnet = ip::make_network_v4(input, ec);
+    std::string res = input;
+    if (ec) {
+        return res;
+    }
+    ip::address_v4_range range = subnet.hosts();
+
+    // adapted from https://stackoverflow.com/a/62303963 by tstenner CC BY-SA 4.0
+    ifaddrs* ifs;
+    if (getifaddrs(&ifs)) {
+        return res;
+    }
+    for (auto ifaddr = ifs; ifaddr != nullptr; ifaddr = ifaddr->ifa_next) {
+        // No address? Skip.
+        if (ifaddr->ifa_addr == nullptr) continue;
+
+        // Interface isn't active? Skip.
+        if (!(ifaddr->ifa_flags & IFF_UP)) continue;
+
+        if (ifaddr->ifa_addr->sa_family == AF_INET) {
+            ip::address_v4 addr =
+                  ip::address_v4(htonl(reinterpret_cast<sockaddr_in*>(ifaddr->ifa_addr)->sin_addr.s_addr));
+            // not a valid address
+            if (addr.is_unspecified() || addr.is_loopback()) {
+                continue;
+            }
+            // found the address
+            if (range.find(addr) != range.end()) {
+                res = addr.to_string();
+                break;
+            }
+        }
+    }
+    freeifaddrs(ifs);
+    return res;
 }
