@@ -336,7 +336,8 @@ def test_extract_reconfigurable_configuration():
         "table", [],
         "node.charlie", 27,  # Readonly integer
         "node.foo", False,
-        "node.bar", "default"  # Same as default
+        "node.bar", "default",  # Same as default
+        "internal", False,  # Other value as default, but Assignment.INTERNAL
     )
     config["floatProperty", ...].update({"alarmLow": 2})
 
@@ -361,3 +362,5 @@ def test_extract_reconfigurable_configuration():
     assert "node.bar" not in extracted
     assert "floatProperty" in extracted
     assert extracted["floatProperty", "alarmLow"] == 2
+    # Assignment.INTERNAL property not considered!
+    assert "internal" not in extracted
