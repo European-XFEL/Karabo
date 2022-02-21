@@ -52,6 +52,7 @@ class TestDisplayCommand(GuiTestCase):
         assert controller.widget is not None
         assert isinstance(controller._button, QToolButton)
         assert controller._actions[0].action.text() == 'Call ME'
+        assert controller._actions[0].action.toolTip() == 'dev.callme'
 
         controller.destroy()
         assert controller.widget is None
