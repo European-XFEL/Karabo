@@ -39,6 +39,15 @@ class BaseBindingController(HasStrictTraits):
         """
         raise NotImplementedError
 
+    def remove_proxy(self, proxy):
+        """Implemented by subclasses to remove `PropertyProxy` instances.
+        Returns `True` if the controller can make use of the removed proxy
+        instance.
+
+        OPTIONAL: Not all widgets allow removal of properties
+        """
+        raise NotImplementedError
+
     def binding_update(self, proxy):
         """Implemented by subclasses to receive notifications that the
         `binding` trait of a proxy attached to the controller has been updated.
@@ -187,6 +196,27 @@ class BaseBindingController(HasStrictTraits):
                 proxy.start_monitoring()
             self._proxy_update(proxy)
             return True  # The only successful exit from this method!
+        except NotImplementedError:
+            # Forget about it!
+            return False
+
+    def remove_additional_property_path(self, key):
+        """Remove an additional property proxy identified by `key`"""
+        try:
+            proxy = [p for p in self._additional_proxies if p.key == key][0]
+        except IndexError:
+            return False
+        try:
+            if not self.remove_proxy(proxy):
+                return False
+            if self._showing:
+                # Stop monitoring if necessary
+                proxy.stop_monitoring()
+
+            # And finally stop tracking of this proxy
+            self._additional_proxies.remove(proxy)
+            self.model.keys.remove(key)
+            return True
         except NotImplementedError:
             # Forget about it!
             return False
