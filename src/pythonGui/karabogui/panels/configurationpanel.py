@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (
     QTreeView, QVBoxLayout, QWidget)
 
 import karabogui.access as krb_access
-from karabo.native import AccessMode, Hash, has_changes
+from karabo.native import AccessMode, Assignment, Hash, has_changes
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import (
@@ -447,7 +447,8 @@ class ConfigurationPanel(BasePanelWidget):
         for path, value, attrs in Hash.flat_iterall(configuration):
             binding = proxy.get_property_binding(path)
             writable = (binding is not None and
-                        binding.access_mode != AccessMode.READONLY)
+                        binding.access_mode != AccessMode.READONLY and
+                        binding.assignment != Assignment.INTERNAL)
             if not writable:
                 continue
             if isinstance(binding, VectorHashBinding):

@@ -5,8 +5,8 @@ from traits.api import Undefined
 
 from karabo.common.api import ProxyStatus, State
 from karabo.native import (
-    AccessMode, Configurable, Float, Hash, HashList, String, UInt32,
-    VectorBool, VectorHash, VectorUInt32)
+    AccessMode, Assignment, Bool, Configurable, Float, Hash, HashList, String,
+    UInt32, VectorBool, VectorHash, VectorUInt32)
 from karabogui.binding.api import (
     DeviceProxy, ProjectDeviceProxy, VectorHashBinding, apply_configuration,
     build_binding, validate_table_value, validate_value)
@@ -67,6 +67,10 @@ class Object(Configurable):
 
     uintReadOnly = UInt32(accessMode=AccessMode.READONLY)
     uintInitOnly = UInt32(accessMode=AccessMode.INITONLY)
+
+    internal = Bool(
+        defaultValue=True,
+        assignment=Assignment.INTERNAL)
 
     # -----------------------------------------------------------------------
     # Disable the MDL sanitization for tables in tests
@@ -317,6 +321,14 @@ class TestSetProxyConfiguration(GuiTestCase):
             uintInitOnly={"value": 22, "valid": True, "changed": False})
         self._assert_offline_config(
             uintInitOnly={"value": 22, "valid": True, "changed": True})
+
+        # Check assignment internal with bool
+        # -> changed when online and reconfigurable
+        # -> not changed when offline and reconfigurable
+        self._assert_online_config(
+            internal={"value": False, "valid": True, "changed": True})
+        self._assert_offline_config(
+            internal={"value": False, "valid": True, "changed": False})
 
         # Check with an init-only table element. Shouldn't trigger changes on
         # online device but should trigger change on offline device.
