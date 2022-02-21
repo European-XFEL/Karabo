@@ -7,9 +7,11 @@
 
 #include "InputOutputChannel_Test.hh"
 
+#include <boost/regex.hpp>
 #include <future>
 
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/utils.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
@@ -410,7 +412,6 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     }
 }
 
-
 void InputOutputChannel_Test::testConcurrentConnect() {
     // To switch on logging output for debugging, do e.g. the following:
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
@@ -495,5 +496,53 @@ void InputOutputChannel_Test::testConcurrentConnect() {
               "1: " + karabo::util::toString(ec1) += ", 2: " + karabo::util::toString(ec2),
               (ec1 == bse::make_error_code(bse::operation_canceled) && ec2 == karabo::net::ErrorCode()) ||
                     (ec1 == karabo::net::ErrorCode() && ec2 == karabo::net::ErrorCode()));
+    }
+}
+
+void InputOutputChannel_Test::testOutputPreparation() {
+    // test an OutputChannel with defaults
+    {
+        OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
+        output->setInstanceIdAndName("outputChannel", "outputWithDefault");
+        output->initialize();
+        const std::string address = output->getInitialConfiguration().get<std::string>("address");
+        CPPUNIT_ASSERT_MESSAGE(std::string("unexpected channel address: ") + address,
+                               address != std::string("default"));
+    }
+    // test an OutputChannel with an unclear hostname. We keep allowing the users to be creative.
+    std::vector<std::string> addresses = {
+          "exampledomain.com", // we are not serving this address
+          " ",                 // bad input
+          "127.0.0.1",         // loopback ip
+          "127.0.0.0/24"       // loopback network will not be resolved by `karabo::net::getIpFromCIDRNotation`
+    };
+    for (const std::string& inputAddress : addresses) {
+        OutputChannel::Pointer output =
+              Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", inputAddress), 0);
+        output->setInstanceIdAndName("outputChannel", "oddAddress");
+        output->initialize();
+        const std::string address = output->getInitialConfiguration().get<std::string>("address");
+        CPPUNIT_ASSERT_EQUAL(address, inputAddress);
+    }
+
+    {
+        // get the first valid address
+        // "0.0.0.0/0" contains all addresses from 0.0.0.0 to 255.255.255.255
+        const std::string expectedAddress = karabo::net::getIpFromCIDRNotation("0.0.0.0/0");
+        // split the ip found in 4 parts and reformat it as a network segment
+        // A.B.C.D -> A.B.C.0/24
+        boost::regex re("(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)");
+        boost::smatch what;
+        bool result = boost::regex_search(expectedAddress, what, re);
+        CPPUNIT_ASSERT_MESSAGE(std::string("Could not parse address: ") + expectedAddress, result);
+        std::ostringstream oss;
+        oss << what.str(1) << "." << what.str(2) << "." << what.str(3) << ".0/24";
+        const std::string inputAddress = oss.str();
+        OutputChannel::Pointer output =
+              Configurator<OutputChannel>::create("OutputChannel", Hash("hostname", inputAddress), 0);
+        output->setInstanceIdAndName("outputChannel", "networkSegment");
+        output->initialize();
+        const std::string address = output->getInitialConfiguration().get<std::string>("address");
+        CPPUNIT_ASSERT_EQUAL(address, expectedAddress);
     }
 }
