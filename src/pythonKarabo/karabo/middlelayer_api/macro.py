@@ -64,14 +64,12 @@ class EventThread(threading.Thread):
         self.loop.call_later(1, self.loop._default_executor.shutdown)
 
     def start_device(self, device):
-        lock = threading.Lock()
-        lock.acquire()
 
         async def run_device():
             await device.startInstance(broadcast=False)
-            lock.release()
-        self.loop.call_soon_threadsafe(ensure_future, run_device())
-        lock.acquire()
+
+        future = self.loop.run_coroutine_threadsafe(run_device())
+        self.loop.run_until_complete(future)
 
 
 async def suppress_exception(coro):
