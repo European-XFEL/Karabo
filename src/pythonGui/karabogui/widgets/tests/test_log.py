@@ -107,21 +107,6 @@ class TestLogWidget(GuiTestCase):
         # Must be 4, as two times defaults stacked up
         self.assertEqual(widget.queryModel.rowCount(None), 4)
 
-        # Time dependent filtering! Careful!
-        start = widget.dtStartDate.dateTimeFromText('2021-05-04 14:19')
-        widget.dtStartDate.setDateTime(start)
-        end = widget.dtStartDate.dateTimeFromText('2021-08-07 14:19')
-        widget.dtEndDate.setDateTime(end)
-        widget.gbDate.setChecked(True)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 4)
-
-        # Faulty end time before start
-        end = widget.dtStartDate.dateTimeFromText('2021-05-03 14:19')
-        widget.dtEndDate.setDateTime(end)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 0)
-
         # Change filter option back
         widget.onFilterOptionVisible(False)
         self.assertEqual(widget.pbFilterOptions.text(),
