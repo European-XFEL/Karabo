@@ -492,13 +492,13 @@ s    """
             # We only want reconfigurable properties, but in Karabo 2.11
             # read only parameter can still have attributes.
             read_only = node.access_mode is AccessMode.READONLY
+            is_internal = node.assignment is Assignment.INTERNAL
             run_attr = attr_fast_deepcopy(attrs, {})
             # Unspecified daqPolicy can be removed as well!
             if run_attr.get("daqPolicy") == DaqPolicy.UNSPECIFIED:
                 run_attr.pop("daqPolicy")
-            if read_only and not run_attr:
+            if (read_only or is_internal) and not run_attr:
                 continue
-
             default = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
             if is_equal(default, value) and not run_attr:
                 continue
