@@ -231,3 +231,36 @@ class SceneMoveAction(BaseSceneAction):
         for c in scene_view.selection_model:
             c.translate(offset)
         scene_view.update()
+
+
+class SceneAlignAction(BaseSceneAction):
+    """Align selected objects inside the scene view.
+    """
+    def perform(self, scene_view):
+        selection_model = scene_view.selection_model
+        if len(selection_model) == 0:
+            return
+
+        align_coord = {
+            "Left": min([c.model.x for c in selection_model]),
+            "Right": max(
+                [c.model.x + c.model.width for c in selection_model]),
+            "Top": min([c.model.y for c in selection_model]),
+            "Bottom": max(
+                [c.model.y + c.model.height for c in selection_model])
+
+        }
+        for c in selection_model:
+            if self.text == "Left":
+                offset = QPoint(align_coord["Left"] - c.model.x, 0)
+            elif self.text == "Right":
+                offset = QPoint(
+                    align_coord["Right"] - c.model.x - c.model.width, 0)
+            elif self.text == "Top":
+                offset = QPoint(0, align_coord["Top"] - c.model.y)
+            elif self.text == "Bottom":
+                offset = QPoint(
+                    0, align_coord["Bottom"] - c.model.y - c.model.height)
+            c.translate(offset)
+
+        scene_view.update()
