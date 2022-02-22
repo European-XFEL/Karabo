@@ -19,11 +19,11 @@ from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
     ArrowSceneTool, BoxHSceneAction, BoxVSceneAction, CreateToolAction,
     GroupEntireSceneAction, GroupSceneAction, ImageRendererTool, LineSceneTool,
-    RectangleSceneTool, SceneBringToFrontAction, SceneCopyAction,
-    SceneCutAction, SceneDeleteAction, SceneLinkTool, SceneMoveAction,
-    ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction,
-    SceneSelectionTool, SceneSendToBackAction, StickerTool, TextSceneTool,
-    UngroupSceneAction, WebLinkTool)
+    RectangleSceneTool, SceneAlignAction, SceneBringToFrontAction,
+    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
+    SceneMoveAction, ScenePasteAction, ScenePasteReplaceAction,
+    SceneSelectAllAction, SceneSelectionTool, SceneSendToBackAction,
+    StickerTool, TextSceneTool, UngroupSceneAction, WebLinkTool)
 from karabogui.util import move_to_cursor
 from karabogui.widgets.toolbar import ToolBar
 
@@ -257,6 +257,15 @@ class ScenePanel(BasePanelWidget):
         move_action.setMenu(menu)
         self.qactions.extend([move_action, self._build_separator()])
 
+        menu = QMenu()
+        align_actions = self.create_align_actions()
+        for action in align_actions:
+            q_action = self._build_qaction(action)
+            menu.addAction(q_action)
+        align_action = QAction(icons.alignLeft, "Align", self)
+        align_action.setMenu(menu)
+        self.qactions.extend([align_action, self._build_separator()])
+
         self.qactions.extend(self._build_qaction(a)
                              for a in self.create_order_actions())
 
@@ -325,6 +334,7 @@ class ScenePanel(BasePanelWidget):
                                         text="Add an image to the scene",
                                         tooltip="Add image to scene",
                                         checkable=True))
+
         return actions
 
     def create_group_tool_actions(self):
@@ -411,6 +421,28 @@ class ScenePanel(BasePanelWidget):
             shortcut=QKeySequence.MoveToNextLine,
             text="Down",
             tooltip="Move item down"))
+
+        return actions
+
+    def create_align_actions(self):
+        actions = []
+
+        actions.append(SceneAlignAction(
+            icon=icons.alignLeft,
+            text="Left",
+            tooltip="Align items to left"))
+        actions.append(SceneAlignAction(
+            icon=icons.alignRight,
+            text="Right",
+            tooltip="Align items to right"))
+        actions.append(SceneAlignAction(
+            icon=icons.alignTop,
+            text="Top",
+            tooltip="Align items to top"))
+        actions.append(SceneAlignAction(
+            icon=icons.alignBottom,
+            text="Bottom",
+            tooltip="Align items to bottom"))
 
         return actions
 
