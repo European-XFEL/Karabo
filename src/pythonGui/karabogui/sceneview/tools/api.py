@@ -5,8 +5,9 @@ from .actions import (
     SceneSendToBackAction, UngroupSceneAction, send_to_back, send_to_front,
     ungroup)
 from .clipboard import (
-    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
-    ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction)
+    SceneAlignAction, SceneCopyAction, SceneCutAction, SceneDeleteAction,
+    SceneMoveAction, ScenePasteAction, ScenePasteReplaceAction,
+    SceneSelectAllAction)
 from .drawing import (
     ArrowSceneTool, ImageRendererTool, LineSceneTool, RectangleSceneTool,
     SceneLinkTool, StickerTool, TextSceneTool, WebLinkTool)
