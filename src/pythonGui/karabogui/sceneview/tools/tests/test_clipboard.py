@@ -8,7 +8,8 @@ from karabo.common.scenemodel.api import (
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.tools.clipboard import (
-    SceneMoveAction, _add_models_to_clipboard, _read_models_from_clipboard)
+    SceneAlignAction, SceneMoveAction, _add_models_to_clipboard,
+    _read_models_from_clipboard)
 from karabogui.testing import GuiTestCase
 
 
@@ -64,6 +65,33 @@ class TestClipboard(GuiTestCase):
         action.perform(scene_view)
         assert label.x == 10
         assert label.y == 10
+
+    def test_align_action(self):
+        for action in ("Left", "Right", "Top", "Bottom"):
+            self._assert_align_action(action)
+
+    def _assert_align_action(self, action):
+        labels = [
+            LabelModel(x=i*10, y=i*10, text="bar") for i in range(4)
+        ]
+        model = SceneModel(children=labels)
+        scene_view = SceneView(model=model)
+        scene_view.select_all()
+
+        max_right = max(label.x + label.width for label in labels)
+        max_down = max(label.x + label.width for label in labels)
+
+        action = SceneAlignAction(text=action)
+        action.perform(scene_view)
+        for label in labels:
+            if action == "Left":
+                self.assertEqual(label.x, 0)
+            elif action == "Right":
+                self.assertEqual(label.x + label.width, max_right)
+            if action == "Top":
+                self.assertEqual(label.y, 0)
+            elif action == "Bottom":
+                self.assertEqual(label.y + label.height, max_down)
 
     def _assert_copy_paste(self, *models):
         # Do a single round trip for each models to verify their integrity
