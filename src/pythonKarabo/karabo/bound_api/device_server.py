@@ -229,9 +229,9 @@ class DeviceServer(object):
         info["host"] = self.hostname
         info["visibility"] = self.visibility
         info["lang"] = "bound"
+        info["log"] = config.get("Logger.priority")
         devicesInfo, scanLogs = self.scanPlugins(self.pluginNamespace)
         info.merge(devicesInfo)
-
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
 
@@ -634,6 +634,8 @@ class DeviceServer(object):
             "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
         # Also devices started in future get the new priority by default:
         self.loggerParameters["priority"] = newprio
+        # Merge the new log priority into the instanceInfo
+        self.ss.updateInstanceInfo(Hash("log", newprio))
 
     def slotLoggerContent(self, info):
         """Slot call to receive logger content from the CacheLogger
