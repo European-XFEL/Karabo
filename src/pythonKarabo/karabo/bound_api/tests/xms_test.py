@@ -536,7 +536,7 @@ class Xms_TestCase(unittest.TestCase):
             # errorMsg has the main message,
             # detailsMsg contains C++ and Python traces.
             msgWhoFailed = "Remote Exception from bob"
-            msgSlotFailure = 'An exception was thrown in slot "slotError"'
+            msgSlotFailure = 'Error in slot "slotError"'
             msgRuntimeError = "What's the universe and the rest?"
             self.assertIn(msgWhoFailed, errorMsg)
             self.assertIn(msgSlotFailure, errorMsg)
@@ -566,7 +566,7 @@ class Xms_TestCase(unittest.TestCase):
             wait_for_handled()
             self.assertEqual(43, self.called)
             # msgWhoFailed = "Remote Exception from bob" as before
-            msgSlotFailure = 'An exception was thrown in slot "slotErrorCpp"'
+            msgSlotFailure = 'Error in slot "slotErrorCpp"'
             msgKeyFailure = "Key 'non_existing_key' does not exist"
             self.assertIn(msgWhoFailed, errorMsg)
             self.assertIn(msgSlotFailure, errorMsg)
@@ -716,7 +716,7 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(2, len(exceptStrs), exceptStrs)
             (friendlyMsg, details) = exceptStrs
             msgWhoFailed = "Remote Exception from bob"
-            msgSlotFailure = 'An exception was thrown in slot "slotError"'
+            msgSlotFailure = 'Error in slot "slotError"'
             msgRuntimeError = ("RuntimeError: "
                                "What's the universe and the rest?")
             self.assertIn(msgWhoFailed, friendlyMsg)
@@ -745,7 +745,7 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(2, len(exceptStrs), exceptStrs)
             (friendlyMsg, details) = exceptStrs
             msgWhoFailed = "Remote Exception from bob"
-            msgSlotFailure = ('An exception was thrown in slot "slotErrorCpp"')
+            msgSlotFailure = 'Error in slot "slotErrorCpp"'
             msgKeyFailure = "Key 'non_existing_key' does not exist"
             self.assertIn(msgWhoFailed, friendlyMsg)
             self.assertIn(msgSlotFailure, friendlyMsg)
