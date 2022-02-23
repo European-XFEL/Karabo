@@ -83,6 +83,21 @@ class TestDeviceServer(BoundDeviceTestCase):
             self.assertIn(serverId, categories)
             self.assertTrue(missing_msg_found)
 
+        with self.subTest(msg="test logger priority roundtrip"):
+            (h,) = sigSlot.request(serverId, "slotPing", serverId,
+                                    1, True).waitForReply(self._max_timeoutMs)
+            self.assertEqual(h["log"], "INFO")
+            sigSlot.request(serverId, "slotLoggerPriority",
+                            "ERROR").waitForReply(self._max_timeoutMs)
+            (h,) = sigSlot.request(serverId, "slotPing", serverId,
+                                    1, True).waitForReply(self._max_timeoutMs)
+            self.assertEqual(h["log"], "ERROR")
+            sigSlot.request(serverId, "slotLoggerPriority",
+                            "INFO").waitForReply(self._max_timeoutMs)
+            (h,) = sigSlot.request(serverId, "slotPing", serverId,
+                                   1, True).waitForReply(self._max_timeoutMs)
+            self.assertEqual(h["log"], "INFO")
+
         with self.subTest(msg="test slow init"):
             serverId = "testServerSlow"
             deviceId = "slowDevice"
