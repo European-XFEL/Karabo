@@ -849,10 +849,15 @@ namespace karathon {
             }
             const std::string funcName(Wrapper::hasattr(handler, "__name__")
                                              ? std::string(bp::extract<std::string>(handler.attr("__name__")))
-                                             : "unknown"); // e.g. 'partial' does not provide __name__
+                                             : std::string()); // e.g. 'partial' does not provide __name__
             std::ostringstream oss;
-            oss << "Python " << (where ? where : "undefined") << " handler '" << funcName
-                << "' has thrown an exception: " << errStr;
+            oss << "Error in ";
+            if (funcName.empty()) {
+                oss << " python handler for '" << (where ? where : "undefined") << "'";
+            } else {
+                oss << "'" << funcName << "'";
+            }
+            oss << ": " << errStr;
             errStr = oss.str();
             std::cerr << '\n' << errStr << '\n' << errDetails << std::endl;
             throw KARABO_PYTHON_EXCEPTION2(errStr, errDetails);
