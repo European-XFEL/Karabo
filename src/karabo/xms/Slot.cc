@@ -79,17 +79,11 @@ namespace karabo {
                 invalidateSenderInformation();
             } catch (const karabo::util::CastException& e) {
                 invalidateSenderInformation();
-                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" +
-                                                              m_slotFunction + "\". Check your connection!"));
-            } catch (const karabo::util::Exception& e) {
-                invalidateSenderInformation();
-                KARABO_RETHROW_AS(
-                      KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument(s) for slot \"" +
+                                                              m_slotFunction + "\"."));
             } catch (const std::exception& e) {
                 invalidateSenderInformation();
-                std::string msg(e.what());
-                KARABO_RETHROW_AS(
-                      KARABO_SIGNALSLOT_EXCEPTION(((msg += " was thrown in slot \"") += m_slotFunction) += "\""));
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error in slot \"" + m_slotFunction + "\""));
             } catch (...) {
                 invalidateSenderInformation();
                 KARABO_RETHROW;
