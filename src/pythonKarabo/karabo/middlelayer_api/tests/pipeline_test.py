@@ -150,7 +150,7 @@ class TestChannel(DeviceTest):
             self.reader.feed_data(encoded)
 
     @async_tst
-    async def test_readChunk(self):
+    async def test_processChunk(self):
         network = NetworkInput({})
         network.handler = self.handler
         network.raw = False
@@ -159,7 +159,7 @@ class TestChannel(DeviceTest):
         class Test(Proxy):
             a = Int32()
 
-        task = background(network.readChunk(self.channel, Test))
+        task = background(network.processChunk(self.channel, Test))
         self.feedTestData()
         self.data = []
         self.meta = []
@@ -171,12 +171,12 @@ class TestChannel(DeviceTest):
         self.assertFalse(self.meta[0].timestamp)
 
     @async_tst
-    async def test_readChunk_raw(self):
+    async def test_processChunk_raw(self):
         network = NetworkInput({})
         network.raw = True
         network.handler = self.handler
         await network._run()
-        task = background(network.readChunk(self.channel, None))
+        task = background(network.processChunk(self.channel, None))
         self.feedTestData()
         self.data = []
         self.meta = []
@@ -188,14 +188,14 @@ class TestChannel(DeviceTest):
         self.assertFalse(self.meta[0].timestamp)
 
     @async_tst
-    async def test_readChunk_eos(self):
+    async def test_processChunk_eos(self):
         network = NetworkInput({})
         network.raw = True
         network.handler = self.handler
         network.end_of_stream_handler = self.eos_handler
         await network._run()
         self.assertEqual(self.eos_channel, "")
-        task = background(network.readChunk(self.channel, None))
+        task = background(network.processChunk(self.channel, None))
         self.feedHash(Hash("endOfStream", True))
         self.reader.feed_data(b"\0\0\0\0")
         self.data = []
@@ -206,12 +206,12 @@ class TestChannel(DeviceTest):
         self.assertEqual(len(self.meta), 0)
 
     @async_tst
-    async def test_readChunk_eof(self):
+    async def test_processChunk_eof(self):
         network = NetworkInput({})
         network.parent = Mock()
         await network._run()
         self.reader.feed_eof()
-        self.assertFalse((await network.readChunk(self.channel, None)))
+        self.assertFalse((await network.processChunk(self.channel, None)))
 
     async def write_something(self, output, number=10):
         output.channelName = "channelname"
