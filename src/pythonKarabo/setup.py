@@ -149,28 +149,31 @@ else:
     except ImportError:
         pass
 
-    from jupyter_client.kernelspec import install_kernel_spec
-    from setuptools.command.develop import develop
-    from setuptools.command.install import install
+    try:
+        from jupyter_client.kernelspec import install_kernel_spec
+        from setuptools.command.develop import develop
+        from setuptools.command.install import install
 
-    class WithJupyter():
-        def run(self):
-            super().run()
-            install_kernel_spec(
-                op.join(op.dirname(__file__), "karabo",
-                        "interactive", "jupyter_spec"),
-                kernel_name="Karabo", prefix=sys.prefix)
+        class WithJupyter():
+            def run(self):
+                super().run()
+                install_kernel_spec(
+                    op.join(op.dirname(__file__), "karabo",
+                            "interactive", "jupyter_spec"),
+                    kernel_name="Karabo", prefix=sys.prefix)
 
-    class InstallWithJupyter(WithJupyter, install):
+        class InstallWithJupyter(WithJupyter, install):
+            pass
+
+        class DevelopWithJupyter(WithJupyter, develop):
+            pass
+
+        install_args['cmdclass'] = {
+            'install': InstallWithJupyter,
+            'develop': DevelopWithJupyter
+        }
+    except ImportError:
         pass
-
-    class DevelopWithJupyter(WithJupyter, develop):
-        pass
-
-    install_args['cmdclass'] = {
-        'install': InstallWithJupyter,
-        'develop': DevelopWithJupyter
-    }
 
 
 if __name__ == '__main__':
