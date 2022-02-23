@@ -1,5 +1,6 @@
 import os
 import socket
+import warnings
 from asyncio import (
     CancelledError, Future, IncompleteReadError, Lock, Queue, gather,
     get_event_loop, open_connection, shield, start_server)
@@ -338,11 +339,8 @@ class NetworkInput(Configurable):
                            "onSlowness", self.onSlowness,
                            "maxQueueLength", self.maxQueueLength.value)
                 channel.writeHash(cmd)
-                cmd = Hash("reason", "update",
-                           "instanceId", instance_id)
-                while (await self.readChunk(channel, cls)):
+                while (await self.processChunk(channel, cls, instance_id)):
                     await sleep(self.delayOnInput)
-                    channel.writeHash(cmd)
                 else:
                     # We still inform when the connection has been closed!
                     await shield(self.call_handler(self.close_handler, output))
@@ -368,7 +366,7 @@ class NetworkInput(Configurable):
                 self.connected.pop(output)
                 self.connectedOutputChannels = list(self.connected)
 
-    async def readChunk(self, channel, cls):
+    async def processChunk(self, channel, cls, output_id=""):
         try:
             header = await channel.readHash()
         except IncompleteReadError as e:
@@ -379,6 +377,11 @@ class NetworkInput(Configurable):
                                         channel.channelName)
                 return False
         data = await channel.readBytes()
+        # `readHash` must happen first, but then we can already
+        # request for more updates before processing!
+        cmd = Hash("reason", "update",
+                   "instanceId", output_id)
+        channel.writeHash(cmd)
         if "endOfStream" in header:
             await shield(self.call_handler(
                 self.end_of_stream_handler, channel.channelName))
@@ -397,6 +400,12 @@ class NetworkInput(Configurable):
                 await shield(self.call_handler(self.handler, proxy, meta))
             pos += length
         return True
+
+    async def readChunk(self, channel, cls):
+        """Deprecated function for channel readChunk"""
+        warnings.warn("`Channel.readChunk` is deprecated, please use "
+                      "`Channel.processChunk` instead")
+        await self.processChunk(channel, cls)
 
     def setChildValue(self, key, value, descriptor):
         """Set the child values on the Configurable
