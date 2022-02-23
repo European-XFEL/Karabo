@@ -192,8 +192,6 @@ class DaemonManager(Device):
                 servers = reply['servers']
                 self.numHosts = len(servers)
 
-                # XXX: the webservers exposes the services using the the
-                # service directory name. slashes and dots are mangled
                 num_services = 0
                 table_value = []
                 self.service_links = Hash()
@@ -202,47 +200,51 @@ class DaemonManager(Device):
                     num_services += len(info['services'])
                     link = info['link']
                     for service in info['services']:
+                        name = service['karabo_name'].strip()
+                        daemon_name = service['name']
+                        since = service['since']
+                        status = service['status']
+                        duration = service['duration']
                         table_value.append(
-                            (service['name'], service['status'],
-                             service['since'], service['duration'],
+                            (name, status,
+                             since, duration,
                              host_name))
                         # Store the web link in a separate hash
-                        key = "{}.{}".format(host_name, service['name'])
-                        self.service_links[key] = link
+                        key = f"{host_name}.{name}"
+                        self.service_links[key] = [link, daemon_name]
                 # Set the number of seen services in the ecosystem!
                 self.numServices = num_services
                 self.services = table_value
-
             await sleep(self.updateTime)
 
     async def _action_service(self, service_name, host, command):
         self.logger.info(
-            "Action executed by daemon device: Action: {}, service_name: {}, "
-            "host: {}".format(service_name, host, command))
+            f"Action executed by daemon device: Action: {service_name}, "
+            f"service_name: {host}, host: {command}")
 
         try:
-            link = self.service_links["{}.{}".format(host, service_name)]
-            cmd = "{}/api/servers/{}.json".format(link, service_name)
-            my_json = {
+            link, daemon_name = self.service_links[f"{host}.{service_name}"]
+            cmd = f"{link}/api/servers/{daemon_name}.json"
+            request = {
                 "server":
                     {
-                        "name": service_name,
+                        "name": daemon_name,
                         "command": command,
                     },
             }
             fut = self.client.fetch(
-                cmd, body=json.dumps(my_json), method="PUT")
+                cmd, body=json.dumps(request), method="PUT")
             await to_asyncio_future(fut)
-            return True, ("Command {} executed succesfully for "
-                          "service {}".format(command, service_name))
+            return True, (f"Command {command} executed succesfully for "
+                          f"service {service_name}")
         except CancelledError:
             # NOTE: Do nothing, we only got cancelled by the server
-            return False, ("Command {} was CANCELLED for service {}".format(
-                command, service_name))
+            return False, (f"Command {command} was CANCELLED "
+                           f"for service {service_name}")
         except Exception as e:
-            self.status = "Error: {}".format(e)
-            return False, ("Command {} was NOT executed succesfully for "
-                           "service {}".format(command, service_name))
+            self.status = f"Error: {e}"
+            return False, (f"Command {command} was NOT executed "
+                           f"succesfully for service {service_name}")
 
 
 def get_scene(deviceId):
