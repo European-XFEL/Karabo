@@ -10,7 +10,7 @@ on the deviceId, without going through the hazzle of creating a device
 proxy. """
 import asyncio
 from asyncio import gather, get_event_loop, sleep
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from copy import deepcopy
 from time import time
 from weakref import ref
@@ -731,10 +731,10 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
         # is why we sneak the proxy into method using a closure.
         closure_proxy = proxy
 
-        @contextmanager
-        def connectSchemaUpdated():
+        @asynccontextmanager
+        async def connectSchemaUpdated():
             nonlocal closure_proxy
-            closure_proxy._device._ss.connect(
+            await closure_proxy._device._ss.async_connect(
                 closure_proxy._deviceId, "signalSchemaUpdated",
                 closure_proxy._device.slotSchemaUpdated)
             closure_proxy._schemaUpdateConnected = True
@@ -744,9 +744,9 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
             finally:
                 closure_proxy = closure_proxy()
                 if closure_proxy is not None:
-                    closure_proxy._disconnectSchemaUpdated()
+                    await closure_proxy._async_disconnectSchemaUpdated()
 
-        instance._ss.enter_context(connectSchemaUpdated())
+        await instance._ss.enter_async_context(connectSchemaUpdated())
         if not lazy:
             await updateDevice(proxy)
         return proxy
