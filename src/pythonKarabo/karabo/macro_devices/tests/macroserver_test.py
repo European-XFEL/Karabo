@@ -1,15 +1,17 @@
 import uuid
-from contextlib import closing
+from asyncio import get_event_loop, set_event_loop
+from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main
 
-from karabo.middlelayer import call, getDevice, sleep, updateDevice
+from karabo.middlelayer import getDevice, updateDevice
 from karabo.middlelayer_api.compat import jms
-from karabo.middlelayer_api.tests.eventloop import setEventLoop
+from karabo.middlelayer_api.signalslot import SignalSlotable
+from karabo.middlelayer_api.tests.eventloop import EventLoop
 from karabo.native import Hash
 
 from ..macro_server import MacroServer
 
-TEST_MACROSERVER="Karabo_TestMacroServer"
+TEST_MACROSERVER = "Karabo_TestMacroServer"
 
 SYNC_CODE = """from karabo.middlelayer import *
 
@@ -43,7 +45,42 @@ class TestMacro(Macro):
         self.s = "coro"
 """
 
+
 class Tests(TestCase):
+
+    @classmethod
+    @contextmanager
+    def createComm(cls):
+
+        loop = cls.loop
+        sigslot = SignalSlotable(
+            {"_deviceId_": "test-mdlserver-{}".format(uuid.uuid4())})
+        sigslot.startInstance(loop=loop)
+        cls.lead = sigslot
+
+        loop.instance = lambda: sigslot
+        yield
+        loop.run_until_complete(sigslot.slotKillDevice())
+
+    @classmethod
+    def setUpClass(cls):
+        with ExitStack() as cls.exit_stack:
+            cls.loop = EventLoop()
+            cls.old_event_loop = get_event_loop()
+            cls.exit_stack.enter_context(cls.createComm())
+            set_event_loop(cls.loop)
+            cls.exit_stack = cls.exit_stack.pop_all()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            with cls.exit_stack:
+                pass
+        finally:
+            del cls.lead
+            cls.loop.stop()
+            cls.loop.close()
+            set_event_loop(cls.old_event_loop)
 
     async def init_macro(self, code, expected, server):
         # allow the server to start
@@ -62,22 +99,21 @@ class Tests(TestCase):
         await server.call(proxy.deviceId, "slotKillDevice")
 
     def test_macroserver(self):
-        loop = setEventLoop()
-        with closing(loop):
-            server = MacroServer(dict(serverId=TEST_MACROSERVER))
-            loop.run_until_complete(server.startInstance())
+        loop = get_event_loop()
+        server = MacroServer(dict(serverId=TEST_MACROSERVER))
+        loop.run_until_complete(server.startInstance())
 
-            task = loop.create_task(
-                self.init_macro(SYNC_CODE, "sync", server), server)
-            loop.run_until_complete(task)
+        task = loop.create_task(
+            self.init_macro(SYNC_CODE, "sync", server), server)
+        loop.run_until_complete(task)
 
-            task = loop.create_task(
-                self.init_macro(ASYNC_CODE, "async", server), server)
-            loop.run_until_complete(task)
+        task = loop.create_task(
+            self.init_macro(ASYNC_CODE, "async", server), server)
+        loop.run_until_complete(task)
 
-            task = loop.create_task(
-                self.init_macro(CORO_CODE, "coro", server), server)
-            loop.run_until_complete(task)
+        task = loop.create_task(
+            self.init_macro(CORO_CODE, "coro", server), server)
+        loop.run_until_complete(task)
 
 
 if __name__ == "__main__":
