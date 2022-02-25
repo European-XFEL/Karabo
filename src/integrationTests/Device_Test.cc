@@ -413,6 +413,7 @@ void Device_Test::appTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Now all possible individual tests.
+    testInstanceInfoLog();
     testGetTimestamp();
     testSchemaInjection();
     testSchemaWithAttrUpdate();
@@ -437,6 +438,32 @@ void Device_Test::appTestRunner() {
     testBadInit();
 }
 
+void Device_Test::testInstanceInfoLog() {
+    std::clog << "Testing instanceInfoLog round trip for deviceServer" << std::flush;
+
+    auto sigSlotA = m_deviceServer;
+    const int timeOutInMs = 250;
+    karabo::util::Hash h;
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
+                                  .timeout(timeOutInMs)
+                                  .receive(h));
+    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
+    CPPUNIT_ASSERT_NO_THROW(
+          sigSlotA->request("testServerDevice", "slotLoggerPriority", "INFO").timeout(timeOutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
+                                  .timeout(timeOutInMs)
+                                  .receive(h));
+    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("INFO"));
+    CPPUNIT_ASSERT_NO_THROW(
+          sigSlotA->request("testServerDevice", "slotLoggerPriority", "FATAL").timeout(timeOutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
+                                  .timeout(timeOutInMs)
+                                  .receive(h));
+    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
+
+    std::clog << "OK." << std::endl;
+}
 
 void Device_Test::testGetTimestamp() {
     // This tests the extrapolations done in Device::getTimestamp(Epochstamp& epoch)
