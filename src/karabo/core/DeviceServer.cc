@@ -232,6 +232,7 @@ namespace karabo {
             instanceInfo.set("host", m_hostname);
             instanceInfo.set("lang", "cpp");
             instanceInfo.set("visibility", m_visibility);
+            instanceInfo.set("log", config.get<std::string>("Logger.priority"));
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo);
@@ -804,6 +805,7 @@ namespace karabo {
             string oldprio = Logger::getPriority();
             Logger::setPriority(newprio);
             KARABO_LOG_INFO << "Logger Priority changed : " << oldprio << " ==> " << newprio;
+            this->updateInstanceInfo(Hash("log", newprio));
         }
     } // namespace core
 } // namespace karabo
