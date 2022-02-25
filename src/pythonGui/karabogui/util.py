@@ -1,3 +1,4 @@
+import html
 import os
 import os.path as op
 import re
@@ -21,6 +22,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_config, get_db_conn
+from karabogui.singletons.util import get_error_message
 
 
 class MouseWheelEventBlocker(QObject):
@@ -413,3 +415,31 @@ def version_compatible(version: str, major: int, minor: int):
     except Exception as e:
         print(f"Parsing karaboVersion string failed: {e}")
         return False
+
+
+ERROR_DETAILS_DELIM = "\nDetails:\n"  # == GuiServerDevice::m_errorDetailsDelim
+
+
+def get_reason_parts(failure_reason):
+    """
+    Try to split the 'failure_reason' into a (short) message and details like
+    an exception trace by looking for the ERROR_DETAILS_DELIM.
+    If found, return a tuple with
+      - the text before the delimiter
+      - the text after it (sanitized via html.escape)
+    If 'failure_reason' does not contain the delimiter, fall back to use
+    'singletons.util.get_error_message(failure_reason)', i.e.
+    if that returns its input:
+      return (failure_reason, None),
+    otherwise
+      return (get_error_message(failure_reason), failure_reason)
+    """
+    both = failure_reason.split(ERROR_DETAILS_DELIM, 1)
+    if len(both) == 2:
+        return html.escape(both[0]), both[1]
+    else:
+        msg = get_error_message(failure_reason)
+        if msg == failure_reason:
+            return msg, None
+        else:
+            return msg, failure_reason

@@ -311,7 +311,7 @@ class TestManager(GuiTestCase):
             handler = make_project_db_handler(False)
             handler('placeholder', bad_result)
             # error shown in case of bad result
-            msg_box.show_error.assert_called_with('error_msg')
+            msg_box.show_error.assert_called_with('error_msg', details=None)
 
             handled_result = handler('placeholder', good_result)
             assert handled_result.get('value') == 1
@@ -453,7 +453,7 @@ class TestManager(GuiTestCase):
                               "priority", "DEBUG")
             manager.handle_setLogPriorityReply(**h)
             mb.assert_not_called()
-            h = Hash("success", False)
+            h = Hash("success", False, "reason", "")
             h["input"] = Hash("instanceId", "swerver",
                               "priority", "DEBUG")
             manager.handle_setLogPriorityReply(**h)
@@ -503,9 +503,9 @@ class TestManager(GuiTestCase):
                 manager.handle_initReply(**info)
                 mbox.show_error.assert_called_with(
                     'The instance <b>bob</b> could not be instantiated.. '
-                    '<br><br>The reason is probably: <br><i>mandatory key '
+                    '<br><br>The reason is:<br><i>mandatory key '
                     'missing</i><br><br>Click "Show Details..." '
-                    'for more information.', details='mandatory key missing')
+                    'for more information.', details=None)
 
     def test_handle_log_messages(self):
         target = 'karabogui.singletons.manager.broadcast_event'
@@ -594,10 +594,10 @@ class TestManager(GuiTestCase):
             manager.handle_executeReply(**info)
             mbox.show_error.assert_called_with(
                 'Execute slot <b>move</b> of device <b>XFEL/MOTOR/2</b> has '
-                'encountered an error!<br><br>The reason is probably: '
+                'encountered an error!<br><br>The reason is:'
                 '<br><i>timeout in gui server</i><br><br>Click '
                 '"Show Details..." for more information.',
-                details='timeout in gui server')
+                details=None)
 
     def test_handle_deviceConfigurations(self):
         topology = Mock()
@@ -645,9 +645,10 @@ class TestManager(GuiTestCase):
             info["reason"] = reason
             manager.handle_configurationFromPast(**info)
             mbox.show_error.assert_called_with(
-                'The configuration of `XFEL/MOTOR/2` requested at time point '
-                f'`{timepoint.toLocal()}` was not retrieved!',
-                details=reason)
+                "The configuration of `XFEL/MOTOR/2` requested at time point "
+                f"`{timepoint.toLocal()}` was not retrieved!<br><br>"
+                f"The reason is:<br><i>{reason}</i>",
+                details=None)
 
     def test_handle_listConfigurationFromName(self):
         target = 'karabogui.singletons.manager.broadcast_event'

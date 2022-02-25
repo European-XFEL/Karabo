@@ -22,9 +22,9 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
 from karabogui.singletons.api import (
     get_alarm_model, get_config, get_network, get_topology)
-from karabogui.util import move_to_cursor, show_wait_cursor
+from karabogui.util import get_reason_parts, move_to_cursor, show_wait_cursor
 
-from .util import get_error_message, realign_topo_hash
+from .util import realign_topo_hash
 
 
 def project_db_handler(fall_through=False):
@@ -35,7 +35,8 @@ def project_db_handler(fall_through=False):
         def wrapped(self, reply):
             success = reply.get('success', True)
             if not success:
-                messagebox.show_error(reply['reason'])
+                reason, details = get_reason_parts(reply["reason"])
+                messagebox.show_error(reason, details=details)
             # If needed, call the handler even when there was a failure
             if fall_through or success:
                 return handler(self, reply)
@@ -253,6 +254,7 @@ class Manager(QObject):
     def handle_subscribeLogsReply(self, **info):
         """Handle the subscribe logs reply of the gui server"""
         if not info.get('success', True):
+            # Ignoring any "reason" supplied by gui server
             text = "Could not reconfigure the logs for the gui server"
             messagebox.show_error(text)
 
@@ -260,13 +262,15 @@ class Manager(QObject):
         """Handle the log priority reconfiguration reply of the server"""
         if not info.get("success", True):
             reason = info.get("reason")
+            error, details = get_reason_parts(reason)
             input_info = info["input"]
             instanceId = input_info["instanceId"]
             priority = input_info["priority"]
             log_text = (f"Log level reconfiguration of <b>{instanceId}</b>"
-                        f" with priority <b>{priority}</b> failed.")
+                        f" with priority <b>{priority}</b> failed.<br>"
+                        f"The reason is:<br><i>{error}</i>")
             get_logger().error(log_text)
-            messagebox.show_error(log_text, details=reason)
+            messagebox.show_error(log_text, details=details)
 
     def handle_reconfigureReply(self, **info):
         """Handle the reconfigure reply of the gui server"""
@@ -275,6 +279,7 @@ class Manager(QObject):
         deviceId = input_info['deviceId']
         if not success:
             reason = info.get('failureReason') or info.get('reason')
+            reason, details = get_reason_parts(reason)
             # clear the waiting queue
             device = self._waiting_devices.pop(deviceId, None)
             if device is None:
@@ -287,15 +292,15 @@ class Manager(QObject):
                 # in case multiple updates are sent and only few failed
                 self.expect_properties(device, pending)
             text = (f'Device reconfiguration of <b>{deviceId}</b> encountered '
-                    'an error. <br><br>The reason is probably: <br>'
-                    f'<i>{get_error_message(reason)}</i><br><br>'
+                    'an error. <br><br>The reason is:<br>'
+                    f'<i>{reason}</i><br><br>'
                     'Click "Show Details..." for more information.')
 
             # Provide a text for the logger!
             log_text = (f"Device reconfiguration of <b>{deviceId}</b> with "
                         f"properties <b>{', '.join(paths)}</b> failed")
             get_logger().error(log_text)
-            messagebox.show_error(text, details=reason)
+            messagebox.show_error(text, details=details)
         else:
             device_proxy = self._waiting_devices.pop(deviceId, None)
             if device_proxy is None:
@@ -349,9 +354,12 @@ class Manager(QObject):
         deviceId = info['deviceId']
         if not success:
             reason = info['reason']
-            msg = ("The configuration of `{}` requested at time point `{}` "
-                   "was not retrieved!".format(deviceId, time))
-            messagebox.show_error(msg, details=reason)
+            reason, details = get_reason_parts(reason)
+            msg = (f"The configuration of `{deviceId}` requested at time point"
+                   f" `{time}` was not retrieved!<br><br>"
+                   "The reason is:<br>"
+                   f"<i>{reason}</i>")
+            messagebox.show_error(msg, details=details)
             return
 
         config = info['config']
@@ -474,17 +482,18 @@ class Manager(QObject):
         success = info['success']
         if not success:
             reason = info.get('failureReason') or info.get('reason')
+            reason, details = get_reason_parts(reason)
             input_info = info['input']
             deviceId = input_info['deviceId']
             command = input_info['command']
             text = (f'Execute slot <b>{command}</b> of device '
                     f'<b>{deviceId}</b> has encountered an error!'
-                    f'<br><br>'
-                    f'The reason is probably: <br>'
-                    f'<i>{get_error_message(reason)}</i>'
-                    f'<br><br>'
-                    f'Click "Show Details..." for more information.')
-            messagebox.show_error(text, details=reason)
+                    '<br><br>'
+                    'The reason is:<br>'
+                    f'<i>{reason}</i>'
+                    '<br><br>'
+                    'Click "Show Details..." for more information.')
+            messagebox.show_error(text, details=details)
 
     def handle_propertyHistory(self, **info):
         """The handler of the property history.
@@ -512,7 +521,7 @@ class Manager(QObject):
             # Provide a logger message on failure for developers
             deviceId = info["deviceId"]
             key = info["property"]
-            text = (f"Historic data request for property <b>{key}</b> and "
+            text = (f"Historic data request for property <b>{key}</b> "
                     f"of device <b>{deviceId}</b> failed.")
             get_logger().debug(text)
 
@@ -590,6 +599,7 @@ class Manager(QObject):
         error_details = None
         if not success:
             # An error occurred at the GUI Server level
+            # (or exception in Project Manager)
             error_details = reason
         elif not reply['success']:
             # An error occurred at the Project Manager level
@@ -602,8 +612,7 @@ class Manager(QObject):
             broadcast_event(
                 KaraboEvent.ProjectFindWithDevice, {
                     'projects': reply.get('projects', []),
-                    'error': None}
-            )
+                    'error': None})
 
     def handle_projectListProjectManagers(self, reply):
         # ``reply`` is a list of strings
@@ -696,11 +705,12 @@ class Manager(QObject):
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboEvent.DeviceInitReply, data)
             if not success:
+                reason, details = get_reason_parts(message)
                 text = (f'The instance <b>{deviceId}</b> could not be '
-                        f'instantiated.. <br><br>The reason is probably: <br>'
-                        f'<i>{get_error_message(message)}</i><br><br>'
+                        'instantiated.. <br><br>The reason is:<br>'
+                        f'<i>{reason}</i><br><br>'
                         'Click "Show Details..." for more information.')
-                messagebox.show_error(text, details=message)
+                messagebox.show_error(text, details=details)
 
     def handle_alarmInit(self, instanceId, rows):
         """Show initial update for ``AlarmService`` with given ``instanceId``
