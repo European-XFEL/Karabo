@@ -4,7 +4,6 @@ import logging
 import numbers
 import re
 import sys
-import warnings
 from asyncio import get_event_loop, iscoroutinefunction
 from enum import Enum
 from functools import partial, wraps
@@ -451,10 +450,7 @@ class Descriptor(object):
                     'requiredAccessLevel must be of type AccessLevel,'
                     ' got {} instead'.format(requiredAccessLevel))
             self.requiredAccessLevel = AccessLevel(requiredAccessLevel)
-        if archivePolicy is not None:
-            warnings.warn("ArchivePolicy has been deprecated treating this "
-                          "as `ArchivePolicy.EVERY_EVENT`, i.e. not added to "
-                          "the schema", stacklevel=2)
+
         self.__doc__ = self.description
 
     @property
