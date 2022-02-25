@@ -21,7 +21,7 @@ from karabogui.controllers.validators import (
 from karabogui.logger import get_logger
 from karabogui.request import call_device_slot
 from karabogui.topology.api import is_device_online
-from karabogui.util import SignalBlocker
+from karabogui.util import SignalBlocker, get_reason_parts
 
 from .button_delegate import TableButtonDelegate
 from .utils import create_brushes
@@ -108,8 +108,11 @@ class BoolButtonDelegate(TableButtonDelegate):
 
         def request_handler(success, reply):
             if not success:
+                reason, details = get_reason_parts(reply)
                 messagebox.show_error("Request for table action for device "
-                                      f"<b>{self.deviceId}</b> timed out.")
+                                      f"<b>{self.deviceId}</b> failed."
+                                      "The reason is:<br>"
+                                      f"<i>{reason}</i>", details=details)
             elif not reply.get("payload.success", True):
                 reason = reply.get("payload.reason", "")
                 messagebox.show_error(
