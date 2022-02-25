@@ -327,10 +327,8 @@ void GuiVersion_Test::testExecute() {
                                h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_EQUAL(
-              std::string("Failure on request to execute 'does.not.matter' on device 'not_there'. Request "
-                          "not answered within 1 seconds."),
-              replyMessage.get<std::string>("reason"));
+        CPPUNIT_ASSERT_EQUAL(std::string("Request not answered within 1 seconds."),
+                             replyMessage.get<std::string>("reason"));
     }
 
 
@@ -349,13 +347,13 @@ void GuiVersion_Test::testExecute() {
                                h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        // First part of fail message is fixed, details contain 'Remote Exception':
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              replyMessage.get<std::string>("reason"), 0ul,
-              replyMessage.get<std::string>("reason").find(
-                    "Failure on request to execute 'not.existing' on device 'testGuiServerDevice', details:\n"));
-        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("reason"),
-                               replyMessage.get<std::string>("reason").find("Remote Exception") != std::string::npos);
+        // Failure reason has two parts for this, separated by "\nDetails:\n".
+        // First part of fail message is fixed, followed by details that contain the
+        // remote exception trace. Details of the trace do not matter here.
+        const std::string& reason = replyMessage.get<std::string>("reason");
+        const char* part1Delim = "'testGuiServerDevice' has no slot 'not.existing'\nDetails:\n";
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(reason, 0ul, reason.find(part1Delim));
+        CPPUNIT_ASSERT_MESSAGE(reason, reason.find("1. Exception =====>", strlen(part1Delim)) != std::string::npos);
     }
 
     //
@@ -490,9 +488,8 @@ void GuiVersion_Test::testRequestGeneric() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(h.fullyEquals(replyMessage.get<Hash>("request")));
-        CPPUNIT_ASSERT_EQUAL(
-              std::string("Failure on request to isnotonline.slotDumpDebugInfo, not answered within 1 seconds."),
-              replyMessage.get<std::string>("reason"));
+        CPPUNIT_ASSERT_EQUAL(std::string("Request not answered within 1 seconds."),
+                             replyMessage.get<std::string>("reason"));
         CPPUNIT_ASSERT_EQUAL(std::string("requestSuperScene"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(std::string("noname"), replyMessage.get<std::string>("request.args.name"));
 
@@ -675,8 +672,7 @@ void GuiVersion_Test::testReconfigure() {
                                h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to reconfigure 'whatever' of device 'not_there'. Request "
-                                         "not answered within 1 seconds."),
+        CPPUNIT_ASSERT_EQUAL(std::string("Request not answered within 1 seconds."),
                              replyMessage.get<std::string>("reason"));
     }
 
@@ -695,13 +691,16 @@ void GuiVersion_Test::testReconfigure() {
                                h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        // Start of fail message is well defined, details contain 'Remote Exception':
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(
-              replyMessage.get<std::string>("reason"), 0ul,
-              replyMessage.get<std::string>("reason").find(
-                    "Failure on request to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
-        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("reason"),
-                               replyMessage.get<std::string>("reason").find("Remote Exception") != std::string::npos);
+        // Failure reason has two parts for this, separated by "\nDetails:\n".
+        // First part of fail message is fixed, followed by details that contain the
+        // remote exception trace. Details of the trace do not matter here.
+        const std::string& reason = replyMessage.get<std::string>("reason");
+        const char* part1Delim =
+              "Error in slot \"slotReconfigure\"\n"
+              "  because: Encountered unexpected configuration parameter: \"whatever\"\n"
+              "Details:\n";
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(reason, 0ul, reason.find(part1Delim));
+        CPPUNIT_ASSERT_MESSAGE(reason, reason.find("1. Exception =====>", strlen(part1Delim)) != std::string::npos);
     }
 
     //
