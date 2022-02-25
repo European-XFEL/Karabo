@@ -4,10 +4,12 @@
 from traits.api import Instance
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
-from karabo.common.scenemodel.api import TableElementModel
+from karabo.common.scenemodel.api import (
+    FilterTableElementModel, TableElementModel)
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import register_binding_controller
-from karabogui.controllers.table.api import BaseTableController
+from karabogui.controllers.table.api import (
+    BaseFilterTableController, BaseTableController)
 
 
 def _is_compatible(binding):
@@ -30,3 +32,23 @@ class EditableTableElement(BaseTableController):
 class DisplayTableElement(BaseTableController):
     """The display version of the table element"""
     model = Instance(TableElementModel, args=())
+
+
+@register_binding_controller(ui_name="Editable Filter Table Element",
+                             klassname="EditableFilterTableElement",
+                             can_edit=True,
+                             binding_type=VectorHashBinding, priority=80,
+                             is_compatible=_is_compatible)
+class EditableFilterTableElement(BaseFilterTableController):
+    """The editable version of the filter table element"""
+    model = Instance(FilterTableElementModel, args=())
+
+
+@register_binding_controller(ui_name="Display Filter Table Element",
+                             klassname="DisplayFilterTableElement",
+                             priority=80,
+                             binding_type=VectorHashBinding,
+                             is_compatible=_is_compatible)
+class DisplayFilterTableElement(BaseFilterTableController):
+    """The display version of the filter table element"""
+    model = Instance(FilterTableElementModel, args=())

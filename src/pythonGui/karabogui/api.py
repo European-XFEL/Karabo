@@ -24,8 +24,9 @@ from karabogui.controllers.api import (
     get_dimensions_and_encoding, get_image_data, has_options, is_proxy_allowed,
     register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import (
-    BaseTableController, KaraboTableView, TableButtonDelegate, TableModel,
-    is_state_display_type, list2string, string2list)
+    BaseFilterTableController, BaseTableController, KaraboTableView,
+    TableButtonDelegate, TableModel, is_state_display_type, list2string,
+    string2list)
 from karabogui.debug import profiler
 from karabogui.dialogs.api import FormatLabelDialog, ListEditDialog, TextDialog
 from karabogui.fonts import get_font_metrics, get_font_size_from_dpi, get_qfont
