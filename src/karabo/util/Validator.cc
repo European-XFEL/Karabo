@@ -8,6 +8,8 @@
 
 #include "Validator.hh"
 
+#include <boost/algorithm/string/trim.hpp>
+
 #include "AlarmConditions.hh"
 #include "Epochstamp.hh"
 #include "FromLiteral.hh"
@@ -114,9 +116,12 @@ namespace karabo {
                 this->r_validate(schema.getParameterHash(), unvalidatedInput, validatedOutput, validationFailedReport,
                                  "");
                 if (validationFailedReport.str().empty()) {
-                    return std::make_pair<bool, string>(true, "");
+                    return std::make_pair(true, std::string());
                 } else {
-                    return std::make_pair<bool, string>(false, validationFailedReport.str());
+                    // Return with report, but trim any trailing newline:
+                    std::string report(validationFailedReport.str());
+                    boost::algorithm::trim_right(report);
+                    return std::make_pair(false, report);
                 }
             }
         }
