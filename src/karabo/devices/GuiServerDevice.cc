@@ -43,6 +43,8 @@ namespace karabo {
               {"projectUpdateAttribute", Version("2.10.0")},
         };
 
+        const std::string GuiServerDevice::m_errorDetailsDelim("\nDetails:\n");
+
         void GuiServerDevice::expectedParameters(Schema& expected) {
             OVERWRITE_ELEMENT(expected)
                   .key("state")
@@ -900,11 +902,8 @@ namespace karabo {
                 // Failure, so can get access to exception causing it:
                 std::set<std::string> paths;
                 input.get<Hash>("configuration").getPaths(paths);
-                std::string& failTxt = h.set("reason", "Failure on request to reconfigure '" + toString(paths) +=
-                                                       "' of "
-                                                       "device '" +
-                                                       input.get<std::string>("deviceId") + "'")
-                                             .getValue<std::string>();
+                std::string failTxt;
+                std::string details;
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
@@ -915,7 +914,7 @@ namespace karabo {
                     if (ignoreTimeout) {
                         h.set("success", true);
                     }
-                    failTxt += ". Request not answered within ";
+                    failTxt = "Request not answered within ";
                     if (ignoreTimeout) {
                         // default timeout is in ms. Convert to minutes
                         (failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout /
@@ -926,11 +925,22 @@ namespace karabo {
                         (failTxt += toString(timeout)) += " seconds.";
                     }
                     karabo::util::Exception::clearTrace();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                } catch (const RemoteException& e) {
+                    failTxt = e.userFriendlyMsg(true);
+                    details = e.details();
+                } catch (const Exception& e) {
+                    failTxt = e.userFriendlyMsg(false);
+                    details = e.detailedMsg();
                 } catch (const std::exception& e) {
-                    (failTxt += ", details:\n") += e.what();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                    failTxt = e.what();
                 }
+                KARABO_LOG_FRAMEWORK_WARN << "Failure on request to reconfigure '" << toString(paths) << "' of device '"
+                                          << input.get<std::string>("deviceId") << "': " << failTxt
+                                          << (details.empty() ? std::string() : ".\nFailure details:\n" + details);
+                if (!details.empty()) {
+                    (failTxt += m_errorDetailsDelim) += details;
+                }
+                h.set("reason", std::move(failTxt));
             }
             safeClientWrite(channel, h);
         }
@@ -961,13 +971,11 @@ namespace karabo {
             Hash h("type", "executeReply", "success", success, "input", input);
             if (!success) {
                 // Failure, so can get access to exception causing it:
-                std::string& failTxt =
-                      h.set("reason", "Failure on request to execute '" + input.get<std::string>("command") +
-                                            "' on device '" + input.get<std::string>("deviceId") + "'")
-                            .getValue<std::string>();
+                std::string failTxt;
+                std::string details;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException& te) {
+                } catch (const karabo::util::TimeoutException&) {
                     // TODO: currently ignoring also naughty classes. Remove this once this is enforced.
                     const bool ignoreTimeout =
                           !input.has("timeout") || skipExecutionTimeout(input.get<std::string>("deviceId"));
@@ -975,7 +983,7 @@ namespace karabo {
                     if (ignoreTimeout) {
                         h.set("success", true);
                     }
-                    failTxt += ". Request not answered within ";
+                    failTxt = "Request not answered within ";
                     if (ignoreTimeout) {
                         // default timeout is in ms. Convert to minutes
                         (failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout /
@@ -986,11 +994,23 @@ namespace karabo {
                         (failTxt += toString(timeout)) += " seconds.";
                     }
                     karabo::util::Exception::clearTrace();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                } catch (const RemoteException& e) {
+                    failTxt = e.userFriendlyMsg(true);
+                    details = e.details();
+                } catch (const Exception& e) {
+                    failTxt = e.userFriendlyMsg(false);
+                    details = e.detailedMsg();
                 } catch (const std::exception& e) {
-                    (failTxt += ", details:\n") += e.what();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                    failTxt = e.what();
                 }
+                KARABO_LOG_FRAMEWORK_WARN << "Failure on request to execute '" << input.get<std::string>("command")
+                                          << "' on device '" << input.get<std::string>("deviceId") << "':" << failTxt
+                                          << (details.empty() ? std::string() : ".\n Failure details:\n" + details)
+                                          << ".";
+                if (!details.empty()) {
+                    (failTxt += m_errorDetailsDelim) += details;
+                }
+                h.set("reason", std::move(failTxt));
             }
             safeClientWrite(channel, h);
         }
@@ -1071,16 +1091,30 @@ namespace karabo {
 
                 Hash h("type", "initReply", "deviceId", givenDeviceId, "success", success, "message", message);
                 if (isFailureHandler) {
+                    std::string& msg = h.get<std::string>("message");
+                    if (!msg.empty()) { // as failure handler, initReply is called with empty 'message'
+                        msg += ": ";
+                    }
+                    std::string details;
                     // Called as a failure handler, so can re-throw
                     try {
                         throw;
+                    } catch (const RemoteException& e) {
+                        msg += e.userFriendlyMsg(true);
+                        details = e.details();
+                    } catch (const Exception& e) { // includes/usually should be TimeoutException
+                        msg += e.userFriendlyMsg(false);
+                        details = e.detailedMsg();
                     } catch (const std::exception& e) {
-                        // Set or extend failure message
-                        std::string& msg = h.get<std::string>("message");
-                        if (!msg.empty())
-                            msg += ": "; // as failure handler, msg should be empty, but adding does not harm
                         msg += e.what();
                     }
+                    if (!details.empty()) {
+                        (msg += m_errorDetailsDelim) += details;
+                    }
+                }
+                if (isFailureHandler || !success) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Instantiating device '" << givenDeviceId
+                                              << "' failed: " << h.get<std::string>("message");
                 }
                 safeClientWrite(channel, h);
 
@@ -1327,13 +1361,26 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: " << deviceId << "." << property << " "
                                                << data.size();
                 } else {
-                    // Failure handler - figure out what went wrong:
+                    std::string details;
+                    // TODO: Failure handler - figure out what went wrong:
+                    // In principle, 'reason' should be properly filled using m_errorDetailsDelim, RemoteException etc.
+                    // But currently (2.14.0), GUI ignores 'reason' anyway.
                     try {
                         throw;
+                    } catch (const RemoteException& e) {
+                        reason = e.userFriendlyMsg(true);
+                        details = e.details();
+                    } catch (const Exception& e) { // includes/usually should be TimeoutException
+                        reason = e.userFriendlyMsg(false);
+                        details = e.detailedMsg();
                     } catch (const std::exception& e) {
                         reason = e.what();
-                        KARABO_LOG_FRAMEWORK_INFO << "Property history request to " << deviceId << "." << property
-                                                  << " failed: " << reason;
+                    }
+                    KARABO_LOG_FRAMEWORK_INFO << "Property history request to " << deviceId << "." << property
+                                              << " failed: " << reason
+                                              << (details.empty() ? "" : "\nFailure details:\n") << details;
+                    if (!details.empty()) {
+                        (reason += m_errorDetailsDelim) += details;
                     }
                 }
 
@@ -1358,7 +1405,7 @@ namespace karabo {
                                          deviceId, time, preview, _1, _2, _3, _4);
                 auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
                                                 channel, deviceId, time);
-                // Two minutes timeout since current implementation of slotGetConfigurationFromPast:
+                // Two minutes timeout due to current implementation of slotGetConfigurationFromPast in FileLogReader:
                 // The amount of data it has to read depends on the time when the device (more precisely: its
                 // datalogger) was started the last time before the point in time that you requested and all the
                 // parameter updates in between these two time points.
@@ -1419,12 +1466,21 @@ namespace karabo {
                 throw; // Error handlers are called within a try block, so we can rethrow the caught exception
             } catch (const karabo::util::TimeoutException&) {
                 failureReason = "Request timed out:\nProbably the data logging infrastructure is not available.";
+            } catch (const RemoteException& e) {
+                failureReason = e.userFriendlyMsg(true);
+                details = e.details();
+            } catch (const Exception& e) {
+                failureReason = e.userFriendlyMsg(false);
+                details = e.detailedMsg();
             } catch (const std::exception& e) {
-                failureReason = "Request to configuration from past failed.";
-                details = e.what(); // Only for log, hide from GUI client
+                failureReason = e.what();
             }
             KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past failed: " << deviceId << " @ " << time
-                                       << " : " << failureReason << " " << details;
+                                       << " : " << failureReason << "\nFailure details:\n"
+                                       << details;
+            if (!details.empty()) {
+                (failureReason += m_errorDetailsDelim) += details;
+            }
 
             try {
                 const Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time, "success", false,
@@ -1535,6 +1591,8 @@ namespace karabo {
                     }
                 }
             } catch (const std::exception& e) {
+                // TODO: As of 2.14.0, the GUI ignores the failure reason, so no need to provide details separated from
+                //       main message by 'm_errorDetailsDelim' using karabo::util::Exception.
                 std::string& failTxt = h.set("reason", std::string("Problem in onSubscribeLogs(): ") += e.what())
                                              .getValue<std::string>();
                 KARABO_LOG_FRAMEWORK_ERROR << failTxt;
@@ -1563,15 +1621,27 @@ namespace karabo {
             Hash h("type", "setLogPriorityReply", "success", success, "input", input);
             if (!success) {
                 // Failure, so can get access to exception causing it:
+                std::string reason;
+                std::string details;
                 try {
                     throw;
+                } catch (const RemoteException& e) {
+                    reason = e.userFriendlyMsg(true);
+                    details = e.details();
+                } catch (const Exception& e) { // includes/usually should be TimeoutException
+                    reason = e.userFriendlyMsg(false);
+                    details = e.detailedMsg();
                 } catch (const std::exception& e) {
-                    std::string& failTxt = h.set("reason", "Failure on setLogPriority on server '" +
-                                                                 input.get<std::string>("instanceId") + "'")
-                                                 .getValue<std::string>();
-                    (failTxt += ", details:\n") += e.what();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                    reason = e.what();
                 }
+                KARABO_LOG_FRAMEWORK_WARN << "Failure on setLogPriority on server '"
+                                          << input.get<std::string>("instanceId") << "': " << reason
+                                          << (details.empty() ? std::string() : ".\nFailure details:\n" + details)
+                                          << ".";
+                if (!details.empty()) {
+                    (reason += m_errorDetailsDelim) += details;
+                }
+                h.set("reason", std::move(reason));
             }
             safeClientWrite(channel, h);
         }
@@ -2049,7 +2119,8 @@ namespace karabo {
 
         void GuiServerDevice::monitorConnectionQueues(const boost::system::error_code& err,
                                                       const Hash& lastCheckSuspects) {
-            KARABO_LOG_FRAMEWORK_INFO << "monitorConnectionQueues - last suspects: " << lastCheckSuspects;
+            (lastCheckSuspects.empty() ? KARABO_LOG_FRAMEWORK_DEBUG : KARABO_LOG_FRAMEWORK_INFO)
+                  << "monitorConnectionQueues - last suspects: " << lastCheckSuspects;
 
             // Get queue infos from mutex protected list of channels
             Hash queueInfos;
@@ -2282,7 +2353,8 @@ namespace karabo {
                                               const bool replyToAllClients) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestAlarms : info ...\n" << info;
-
+                // TODO: Add error handling for receiveAsync!
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 const std::string& requestedInstance = info.get<std::string>("alarmInstanceId");
                 request(requestedInstance, "slotRequestAlarmDump")
                       .receiveAsync<karabo::util::Hash>(
@@ -2321,6 +2393,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onUpdateAttributes : info ...\n" << info;
                 const std::string& instanceId = info.get<std::string>("instanceId");
                 const std::vector<Hash>& updates = info.get<std::vector<Hash>>("updates");
+                // TODO: Add error handling for receiveAsync!
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(instanceId, "slotUpdateSchemaAttributes", updates)
                       .receiveAsync<Hash>(bind_weak(&GuiServerDevice::onRequestedAttributeUpdate, this, channel, _1));
             } catch (const std::exception& e) {
@@ -2432,15 +2506,12 @@ namespace karabo {
             Hash h("type", replyType, "success", success, "request", request, "reply", reply, "reason", "");
 
             if (!success) {
-                std::ostringstream oss;
-                oss << "Failure on request to " << info.get<std::string>("instanceId") << "."
-                    << info.get<std::string>("slot");
-                std::string& failTxt = h.get<std::string>("reason"); // modify via reference!
-                failTxt = oss.str();
+                std::string failTxt;
+                std::string details;
                 try {
                     throw;
-                } catch (const karabo::util::TimeoutException& te) {
-                    failTxt += ", not answered within ";
+                } catch (const karabo::util::TimeoutException&) {
+                    failTxt = "Request not answered within ";
                     if (info.has("timeout")) {
                         // Not 100% precise if "timeout" got reconfigured after request was sent...
                         const int timeout =
@@ -2451,11 +2522,23 @@ namespace karabo {
                     }
                     failTxt += " seconds.";
                     karabo::util::Exception::clearTrace();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                } catch (const karabo::util::RemoteException& e) {
+                    failTxt = e.userFriendlyMsg(true);
+                    details = e.details();
+                } catch (const karabo::util::Exception& e) {
+                    failTxt = e.userFriendlyMsg(false);
+                    details = e.detailedMsg();
                 } catch (const std::exception& e) {
-                    (failTxt += "... details: ") += e.what();
-                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                    failTxt = e.what();
                 }
+                KARABO_LOG_FRAMEWORK_WARN << "Failure on request to " << info.get<std::string>("instanceId") << "."
+                                          << info.get<std::string>("slot") << ": " << failTxt
+                                          << (details.empty() ? std::string() : ".\nFailure details:\n" + details)
+                                          << ".";
+                if (!details.empty()) {
+                    (failTxt += m_errorDetailsDelim) += details;
+                }
+                h.set("reason", std::move(failTxt));
             }
             safeClientWrite(channel, h);
         }
@@ -2469,6 +2552,8 @@ namespace karabo {
                                            "Project manager does not exist: Begin User Session failed."))
                     return;
                 const std::string& token = info.get<std::string>("token");
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotBeginUserSession", token)
                       .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel,
                                                           "projectBeginUserSession", _1));
@@ -2486,6 +2571,8 @@ namespace karabo {
                                            "Project manager does not exist: End User Session failed."))
                     return;
                 const std::string& token = info.get<std::string>("token");
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotEndUserSession", token)
                       .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel,
                                                           "projectEndUserSession", _1));
@@ -2505,6 +2592,8 @@ namespace karabo {
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
                 const std::string& client = (info.has("client") ? info.get<std::string>("client") : std::string());
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotSaveItems", token, items, client)
                       .receiveAsync<Hash>(
                             util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectSaveItems", _1));
@@ -2524,6 +2613,8 @@ namespace karabo {
                     return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotLoadItems", token, items)
                       .receiveAsync<Hash>(
                             util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItems", _1));
@@ -2553,6 +2644,8 @@ namespace karabo {
                 const std::string& token = info.get<std::string>("token");
                 const std::string& domain = info.get<std::string>("domain");
                 const std::vector<std::string>& item_types = info.get<std::vector<std::string>>("item_types");
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotListItems", token, domain, item_types)
                       .receiveAsync<Hash>(
                             util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListItems", _1));
@@ -2570,6 +2663,8 @@ namespace karabo {
                                            "Project manager does not exist: Domain list cannot be retrieved."))
                     return;
                 const std::string& token = info.get<std::string>("token");
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotListDomains", token)
                       .receiveAsync<Hash>(
                             util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
@@ -2588,6 +2683,8 @@ namespace karabo {
                     return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash>>("items");
+                // TODO: Add failure handling for receiveAsync?
+                //       (But protocol does anyway not foresee to forwared failure to GUI client as of 2.14.0.)
                 request(projectManager, "slotUpdateAttribute", token, items)
                       .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel,
                                                           "projectUpdateAttribute", _1));
@@ -2650,6 +2747,7 @@ namespace karabo {
                                       token));
             } catch (const Exception& e) {
                 // TODO: Less details to GUI, more on log
+                // ADDENDUM: No need to touch code here - requestFromSlot API is to be phased out.
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequest() with args: " << hash << ": "
                                            << e.userFriendlyMsg(false);
                 failureInfo.set("replied_error", e.what());
@@ -2662,25 +2760,29 @@ namespace karabo {
 
         void GuiServerDevice::onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info,
                                                             const std::string& token) {
+            std::string msg;
+            std::string details;
             try {
                 throw;
-            } catch (const TimeoutException& te) {
-                // act on timeout, e.g.
-                const std::string msg = te.detailedMsg();
-                KARABO_LOG_FRAMEWORK_ERROR << msg;
-                Hash failureInfo(info);
-                failureInfo.set("replied_error", msg);
-                Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
-                safeClientWrite(channel, reply, LOSSLESS);
             } catch (const RemoteException& re) {
-                // act on remote error, e.g.
-                const std::string msg = re.detailedMsg();
-                KARABO_LOG_FRAMEWORK_ERROR << msg;
-                Hash failureInfo(info);
-                failureInfo.set("replied_error", msg);
-                Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
-                safeClientWrite(channel, reply, LOSSLESS);
+                msg = re.userFriendlyMsg(true);
+                details = re.details();
+            } catch (const Exception& te) {
+                // e.g. TimeoutException
+                msg = te.userFriendlyMsg(false);
+                details = te.detailedMsg();
+            } catch (const std::exception& se) {
+                msg = se.what();
             }
+            KARABO_LOG_FRAMEWORK_ERROR << "Slot request failed: " << msg
+                                       << (details.empty() ? std::string() : "\nFailure details\n" + details);
+            if (!details.empty()) {
+                (msg += m_errorDetailsDelim) += details;
+            }
+            Hash failureInfo(info);
+            failureInfo.set("replied_error", msg);
+            Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
+            safeClientWrite(channel, reply, LOSSLESS);
         }
 
 
