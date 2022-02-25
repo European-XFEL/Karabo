@@ -394,23 +394,6 @@ FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACH
 
 pushd $FRAMEWORK_BUILD_DIR
 
-if [ -d $FRAMEWORK_INSTALL_DIR ]; then
-    # Preserve any installed device, plugin and all contents under var dir.
-    PRESERV_DIR=`mktemp -d -p $scriptDir`
-    if [ -d $FRAMEWORK_INSTALL_DIR/devices ]; then
-        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/devices $PRESERV_DIR/devices
-    fi
-    if [ -d $FRAMEWORK_INSTALL_DIR/installed ]; then
-        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/installed $PRESERV_DIR/installed
-    fi
-    if [ -d $FRAMEWORK_INSTALL_DIR/plugins ]; then
-        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/plugins $PRESERV_DIR/plugins
-    fi
-    if [ -d $FRAMEWORK_INSTALL_DIR/var ]; then
-        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/var $PRESERV_DIR/var
-    fi
-fi
-
 # Use the cmake from the EXTERN_DEPS_DIR - cmake is an external dependency
 # of Karabo as it is used to compile some other dependencies, like the
 # MQTT client lib.
@@ -424,34 +407,25 @@ safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
       $scriptDir/src/.
 
 if [ $? -ne 0 ]; then
-    # Have to restore any preserved directory that might have been moved before
-    # exiting the script.
-    if [[  -n $PRESERV_DIR && -d $PRESERV_DIR ]]; then
-        mv $PRESERV_DIR/* $FRAMEWORK_INSTALL_DIR
-        if [ $? -ne 0 ]; then
-            echo "WARNING: Failed to restore content from \"$PRESERVE_DIR\" into \"$FRAMEWORK_INSTALL_DIR\"."
-            echo "         Please try to restore it manually."
-        else
-            rmdir $PRESERV_DIR
-        fi
-    fi
     echo
     echo "#### Error on cmake project configuration phase. Exiting. ####"
     exit 1
 fi
 
-# Cleans-up the installation dir, restoring any previously existing device,
-# plugin and all contents under var.
-rm -rf $FRAMEWORK_INSTALL_DIR
-mkdir -p $FRAMEWORK_INSTALL_DIR
-if [[  -n $PRESERV_DIR && -d $PRESERV_DIR ]]; then
-    mv $PRESERV_DIR/* $FRAMEWORK_INSTALL_DIR
-    if [ $? -ne 0 ]; then
-        echo "WARNING: Failed to restore content from \"$PRESERVE_DIR\" into \"$FRAMEWORK_INSTALL_DIR\"."
-        echo "         Please try to restore it manually."
-    else
-        rmdir $PRESERV_DIR
-    fi
+# Cleans-up the installation dir, skipping some specific directories that
+# should be preserved.
+if [ -d $FRAMEWORK_INSTALL_DIR ]; then
+    for dir in $FRAMEWORK_INSTALL_DIR/*
+    do
+       if [[  "$dir" = "$FRAMEWORK_INSTALL_DIR/devices" ||
+              "$dir" = "$FRAMEWORK_INSTALL_DIR/installed" ||
+              "$dir" = "$FRAMEWORK_INSTALL_DIR/plugins" ||
+              "$dir" = "$FRAMEWORK_INSTALL_DIR/var" ]]; then
+           : # Skip removal of directory
+       else
+           rm -rf $dir
+       fi
+    done
 fi
 
 # Builds libkarabo, libkarathon, karabo-* utilities and install them
