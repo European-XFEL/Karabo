@@ -17,6 +17,7 @@ from karabogui.binding.api import DeviceProxy, extract_sparse_configurations
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import substitute_font
 from karabogui.singletons.api import get_manager, get_network, get_topology
+from karabogui.util import get_reason_parts
 
 
 def call_device_slot(handler, instance_id, slot_name, **kwargs):
@@ -143,10 +144,19 @@ def get_scene_from_server(device_id, scene_name, project=None,
 
     def scene_handler(dev_id, name, project, target_window, success, reply):
         """Callback handler for a request to a device"""
-        if not success or not reply.get('payload.success', False):
-            msg = 'Scene "{}" from device "{}" was not retrieved!'
-            messagebox.show_warning(msg.format(name, dev_id),
-                                    title='Load Scene from Device Failed')
+        if not success:
+            reason, details = get_reason_parts(reply)
+            msg = (f"Scene '{name}' from device '{dev_id}' was not retrieved."
+                   "<br><br>The reason is:<br>"
+                   f"<i>{reason}</i><br><br>")
+            messagebox.show_warning(msg, title='Load Scene from Device Failed',
+                                    details=details)
+            return
+        elif not reply.get('payload.success', False):
+            reason = reply.get("payload.reason", "No reason specified")
+            msg = (f"Retrieval of scene '{name}' from device '{dev_id}' "
+                   f"reported an error: {reason}.")
+            messagebox.show_warning(msg, title='Load Scene from Device Failed')
             return
 
         data = reply.get('payload.data', '')
