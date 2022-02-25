@@ -5,7 +5,7 @@
 
 from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
 from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
+    QAbstractItemView, QAction, QHBoxLayout, QHeaderView, QInputDialog,
     QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
 from traits.api import Bool, Dict, Instance, Type, Undefined, WeakRef
 
@@ -365,7 +365,6 @@ class SortFilterModel(QSortFilterProxyModel):
 
 
 class BaseFilterTableController(BaseTableController):
-    columnLabel = Instance(QLabel)
     searchLabel = Instance(QLineEdit)
 
     def create_widget(self, parent):
@@ -381,14 +380,13 @@ class BaseFilterTableController(BaseTableController):
         hor_layout.setContentsMargins(0, 0, 0, 0)
         hor_layout.setSizeConstraint(QLayout.SetNoConstraint)
 
-        self.columnLabel = QLabel(parent=widget)
-        self.columnLabel.setStyleSheet("font-weight: bold")
-        self.columnLabel.setText(f"Column: {self.model.filterKeyColumn}")
         self.searchLabel = QLineEdit(widget)
+        self.searchLabel.setToolTip(
+            f"Search column: {self.model.filterKeyColumn}")
+
         clear_button = QPushButton("Clear", parent=widget)
         clear_button.clicked.connect(self.searchLabel.clear)
 
-        hor_layout.addWidget(self.columnLabel)
         hor_layout.addWidget(self.searchLabel)
         hor_layout.addWidget(clear_button)
 
@@ -426,4 +424,4 @@ class BaseFilterTableController(BaseTableController):
             self.model.filterKeyColumn = column
             filter_model = self.tableWidget().model()
             filter_model.setFilterKeyColumn(column)
-            self.columnLabel.setText(f"Column: {column}")
+            self.searchLabel.setToolTip(f"Search column: {column}")
