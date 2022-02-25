@@ -8,13 +8,34 @@ currently not supported by pint. Please have a look in the breaking changes.
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
-Several important python packages have been updated.
+- Several important python packages have been updated.
 
-- numpy 1.15.4 -> 1.21.4
-- pint 0.7.1 -> 0.17
-- scipy 1.5.4 -> 1.6.3
-- pyzmq 18.1.0 -> 22.3.0
-- cython 0.29.21 -> 0.29.24
+    - numpy 1.15.4 -> 1.21.4
+    - pint 0.7.1 -> 0.17
+    - scipy 1.5.4 -> 1.6.3
+    - pyzmq 18.1.0 -> 22.3.0
+    - cython 0.29.21 -> 0.29.24
+
+- It is possible to view device server logs via the karaboGui by double-clicking
+  on a device server in the topology or project. For this the slot *slotLoggerContent*
+  was added to all api device servers.
+- It is possible to reconfigure the logging level (priority) via the karaboGui with a context
+  menu action on a device server.
+- MDL: Pipeline peformance increased of up to 25%.
+- MDL: `has_changes(old, new)` function added to the `karabo.native`
+- MDL: `Configurable.set` now gets a keyword argument: `only_changes` to only set changed properties.
+- MDL: The `TableValue` gets a new method: `TableValue.to_hashlist()` for conversion.
+- GUI: Table offers more options to show colors with `TableColor` displaytype, progressbars with
+  `TableProgressBar` display type, etc. Please check the *HowToMiddlelayer* documentation for details.
+- GUI: As new controller filter table elements are now available. The column can be configured in the
+  controller properties.
+- GUI: It is possible to import an image directly on the scene with a new scene tool. This image
+  can be freely moved and viewed as well in `Inkscape`.
+- GUI: Inkscape like key events added to the scene for grouping and ungrouping of elements.
+- GUI: New scene tool for alignments of widgets added to the toolbar.
+- GUI: The karaboGui offers now the Online to Offline configuration feature. Right click on
+  the device in the project will show this option.
+
 
 Breaking Changes
 ++++++++++++++++
@@ -24,6 +45,8 @@ Breaking Changes
   ``numpy.left_shift``, ``numpy.right_shift``, ``numpy.logical_and``, ``numpy.logical_or``, ``numpy.logical_xor``,
   ``numpy.logical_not``, ``numpy.spacing``
 - ``numpy.mean`` and ``numpy.std`` do not work anymore with ``QuantityValues`` that have a number (see examples).
+- GUI: The graphical user interface only remembers a single last used directory now. Before
+       it was separating for scenes, configs, etc.
 
 Change of behaviour
 +++++++++++++++++++
@@ -35,6 +58,8 @@ Change of behaviour
   value of this boolean.
 
 - The ``archivePolicy`` attribute is removed from the middlelayer API.
+
+- MDL: `onInitialization` method is executed now in a background task. All device nodes are initialized before.
 
 
 Detailed Merge-Log
