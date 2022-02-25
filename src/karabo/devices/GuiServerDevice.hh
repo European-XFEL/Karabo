@@ -130,12 +130,15 @@ namespace karabo {
             bool m_isReadOnly;
             static const std::unordered_set<std::string> m_writeCommands;
             static const std::unordered_map<std::string, karabo::util::Version> m_minVersionRestrictions;
+            /// In reported failure reasons, this delimiter comes between short message and details like a trace
+            static const std::string m_errorDetailsDelim; //
 
             // TODO: remove this once "fast slot reply policy" is enforced
             // list of devices that do not respect fast slot reply policy
             std::unordered_set<std::string> m_timingOutDevices;
 
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
+
            public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
 
