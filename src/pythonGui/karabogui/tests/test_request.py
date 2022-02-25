@@ -182,7 +182,7 @@ class TestRequestModule(GuiTestCase):
                 # A new scene has been added
                 self.assertEqual(len(project.scenes), 1)
 
-                # 2. False case
+                # 2. False case - from scene protocol
                 token = get_scene_from_server("scene_device",
                                               "new_scene", project)
                 network.onExecuteGeneric.assert_called_with(
@@ -194,6 +194,23 @@ class TestRequestModule(GuiTestCase):
                 path = "karabogui.request.messagebox"
                 with mock.patch(path) as mbox:
                     manager.handle_requestGeneric(True, request, reply=reply)
+                    mbox.show_warning.assert_called_once()
+
+                # No further scene added
+                self.assertEqual(len(project.scenes), 1)
+
+                # 3. False case - from failing slot call
+                token = get_scene_from_server("scene_device",
+                                              "new_scene", project)
+                network.onExecuteGeneric.assert_called_with(
+                    "scene_device", "requestScene", Hash("name", "new_scene"),
+                    token=token)
+                payload = Hash("success", False, "data", "")
+                reply = "failure reason"
+                request = Hash("token", token)
+                path = "karabogui.request.messagebox"
+                with mock.patch(path) as mbox:
+                    manager.handle_requestGeneric(False, request, reply=reply)
                     mbox.show_warning.assert_called_once()
 
                 # No further scene added
