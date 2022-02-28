@@ -190,7 +190,7 @@ class DeviceServerBase(SignalSlotable):
         should start a device if it can, or otherwise call super(). This is
         the failback that just raises an error.
         """
-        raise RuntimeError('Unknown class')
+        raise RuntimeError(f"Unknown class '{classId}'")
 
     def parse(self, hash):
         classId = hash['classId']
