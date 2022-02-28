@@ -11,6 +11,7 @@ import socket
 import sys
 import threading
 import time
+import traceback
 from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
@@ -457,10 +458,11 @@ class DeviceServer(object):
         try:
             self._launchDevice(config, classid, reply)
         except Exception as e:
-            msg = f"Device '{classid}' could not be started because: {e}"
-            self.log.WARN(msg)
+            msg = f"Device of class '{classid}' could not be started: {e}"
+            details = traceback.format_exc()
+            self.log.WARN(f"{msg}:\nFailure details:\n{details}")
             # Cannot call AsyncReply object directly in slot, so post:
-            EventLoop.post(lambda: reply(False, msg))
+            EventLoop.post(lambda: reply.error(msg, details))
 
     def _launchDevice(self, config, classid, reply):
 
