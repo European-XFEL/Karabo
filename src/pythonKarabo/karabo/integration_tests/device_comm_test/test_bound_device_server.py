@@ -103,7 +103,7 @@ class TestDeviceServer(BoundDeviceTestCase):
             deviceId = "slowDevice"
             classId = "SlowStartDevice"
             timeout = 2
-            # A server that waits only 3 seconds for the device to come up
+            # A server that waits only 2 seconds for the device to come up
             self.start_server("bound", serverId, [classId],
                               namespace="karabo.bound_device_test",
                               instantiationTimeout=timeout)
