@@ -675,6 +675,8 @@ namespace karabo {
             // device->finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
             EventLoop::addThread();
             bool putInMap = false;
+            std::string errorMsg;
+            std::string errorDetails;
             try {
                 BaseDevice::Pointer device = BaseDevice::create(classId, config);
 
@@ -702,10 +704,18 @@ namespace karabo {
                     m_deviceInstanceMap[deviceId].second = boost::make_shared<Strand>(EventLoop::getIOService());
                 }
 
+            } catch (const karabo::util::Exception& e) {
+                errorMsg = e.userFriendlyMsg(false);
+                if (errorMsg.empty()) errorMsg = "Unknown failure"; // Should not happen, but better protect
+                errorDetails = e.detailedMsg();
+            } catch (const std::exception& e) {
+                errorMsg = e.what();
+            }
+            if (errorMsg.empty()) {
                 // Answer initiation of device (KARABO_LOG_* is done by device)
                 asyncReply(true, deviceId);
-
-            } catch (const std::exception& se) {
+            } else {
+                // Instantiation failed
                 if (putInMap) { // Otherwise the device is not from this request.
                     // To be precise, the following unlikely case is not excluded: The device was put in map above, but
                     // killed itself during its initialization phase and slotStartDevice has been called once more for
@@ -715,9 +725,10 @@ namespace karabo {
                     m_deviceInstanceMap.erase(deviceId);
                 }
                 const std::string message("Device '" + deviceId + "' of class '" + classId +
-                                          "' could not be started: ");
-                KARABO_LOG_ERROR << message << se.what();
-                asyncReply(false, message + se.what());
+                                          "' could not be started: " + errorMsg);
+                KARABO_LOG_ERROR << message
+                                 << (errorDetails.empty() ? std::string() : "\nFailure details:\n" + errorDetails);
+                asyncReply.error(message, errorDetails);
             }
             EventLoop::removeThread();
         }
