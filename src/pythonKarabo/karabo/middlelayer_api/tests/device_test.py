@@ -45,6 +45,13 @@ class ChannelNode(Configurable):
     output = OutputChannel()
 
 
+class NodeWithSlot(Configurable):
+    """A slot in a node"""
+    @Slot()
+    async def pressMe(self):
+        return 6
+
+
 class MyDevice(Device):
     __version__ = "1.2.3"
 
@@ -122,6 +129,8 @@ class MyDevice(Device):
 
     async def setState(self, state):
         self.state = state
+
+    nodeWithSlot = Node(NodeWithSlot)
 
 
 class Tests(DeviceTest):
@@ -211,6 +220,8 @@ class Tests(DeviceTest):
         with (await getDevice("MyDevice")) as d:
             if not jms:
                 await updateDevice(d)
+            await d.nodeWithSlot.pressMe()
+            self.assertEqual(self.myDevice.lastCommand, "nodeWithSlot.pressMe")
             await d.start()
         self.assertEqual(self.myDevice.lastCommand, "start")
         await getSchema("MyDevice")
