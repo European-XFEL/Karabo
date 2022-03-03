@@ -125,6 +125,9 @@ def update_cmake_settings(settings: Dict[str, str]) -> int:
     print(f"File '{settings_path}' {file_operation} with the settings:")
     print(json.dumps(settings, indent=4))
     print("")
+    print("Please choose to 'Clean Reconfigure All Projects' before building "
+          "from inside\n'Visual Studio Code'!")
+    print("")
 
     return os.EX_OK
 
