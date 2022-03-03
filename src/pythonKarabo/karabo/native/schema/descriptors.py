@@ -662,7 +662,7 @@ class Slot(Descriptor):
                     return
 
                 coro = get_event_loop().run_coroutine_or_thread(func)
-                device.lastCommand = self.method.__name__
+                device.lastCommand = name
                 ret = await coro
                 device.update()
                 device._ss.reply(message, ret)
