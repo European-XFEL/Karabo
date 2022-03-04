@@ -2,12 +2,27 @@
 What's New in Karabo 2.14.0
 ***************************
 
-This major Karabo release has an important dependency update: ``numpy`` and ``pint``. The new ``ufunc`` protocol is utilized and a few functions are
-currently not supported by pint. Please have a look in the breaking changes.
+This section shows the new features in Karabo 2.14.0, compared to 2.13.0.
+
+This Karabo release has an important Python dependency update: ``numpy`` and ``pint``. The new ``ufunc`` protocol
+is utilized and a few functions are currently not supported by pint. Please have a look in the breaking changes.
+
+The use of this version of the GUI is encouraged without the need of upgrading the Karabo Servers.
+This release is backwards compatible until version 2.11.
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
+- It is possible to view device server logs via the karaboGui by double-clicking
+  on a device server in the topology or project. For this the slot *slotLoggerContent*
+  was added to all api device servers.
+- GUI: The karaboGui offers now the Online to Offline configuration feature. Right click on
+  the device in the project will show this option.
+  Note: This does only apply for properties that are present in the static schema of a device.
+- CMake is now the build system of the karabo C++ API.
+- The Python Bound API has an `AsyncReply` feature.
+- AlmaLinux8 is added to the supported operating systems.
+- The pipeline data tranfer for middlelayer is >20% faster then the previous releases.
 - Several important python packages have been updated.
 
     - numpy 1.15.4 -> 1.21.4
@@ -16,12 +31,8 @@ Summary – Release highlights
     - pyzmq 18.1.0 -> 22.3.0
     - cython 0.29.21 -> 0.29.24
 
-- It is possible to view device server logs via the karaboGui by double-clicking
-  on a device server in the topology or project. For this the slot *slotLoggerContent*
-  was added to all api device servers.
 - It is possible to reconfigure the logging level (priority) via the karaboGui with a context
   menu action on a device server.
-- MDL: Pipeline peformance increased of up to 25%.
 - MDL: `has_changes(old, new)` function added to the `karabo.native`
 - MDL: `Configurable.set` now gets a keyword argument: `only_changes` to only set changed properties.
 - MDL: The `TableValue` gets a new method: `TableValue.to_hashlist()` for conversion.
@@ -33,8 +44,6 @@ Summary – Release highlights
   can be freely moved and viewed as well in `Inkscape`.
 - GUI: Inkscape like key events added to the scene for grouping and ungrouping of elements.
 - GUI: New scene tool for alignments of widgets added to the toolbar.
-- GUI: The karaboGui offers now the Online to Offline configuration feature. Right click on
-  the device in the project will show this option.
 
 
 Breaking Changes
@@ -44,7 +53,7 @@ Breaking Changes
   ``numpy.gcd``, ``numpy.lcm``, ``numpy.bitwise_and``, ``numpy.bitwise_xor``, ``numpy.bitwise_or``, ``numpy.invert``,
   ``numpy.left_shift``, ``numpy.right_shift``, ``numpy.logical_and``, ``numpy.logical_or``, ``numpy.logical_xor``,
   ``numpy.logical_not``, ``numpy.spacing``
-- ``numpy.mean`` and ``numpy.std`` do not work anymore with ``QuantityValues`` that have a number (see examples).
+- ``numpy.mean`` and ``numpy.std`` do not work anymore with ``QuantityValues`` that have a number (see examples below).
 - GUI: The graphical user interface only remembers a single last used directory now. Before
        it was separating for scenes, configs, etc.
 
@@ -57,44 +66,247 @@ Change of behaviour
 - The DataLoggers will ignore the ``archive`` flag and always archive a devices' conditions regardless of the
   value of this boolean.
 
-- The ``archivePolicy`` attribute is removed from the middlelayer API.
-
-- MDL: `onInitialization` method is executed now in a background task. All device nodes are initialized before.
-
 
 Detailed Merge-Log
 ++++++++++++++++++
 
-Bound/cpp core
-==============
+This is a temporary dump of the 234 Merge Requests summaries in since 2.13.0.
 
-- TBD
-
-MDL/Native core
-===============
-
-- TBD
-
-Dependencies and deployment
-===========================
-
-- TBD
-
-Documentation
-=============
-
-- TBD
-
-
-Tests
-=====
-
-- TBD
-
-Graphical User Interface
-========================
-
-- TBD
+- C++: Remove higher gui server heartbeat frequency
+- DOC: document 2.13.0
+- DOC: format bullet points correctly for 2.13 release notes
+- DOC: add release notes template
+- C++: Fix that argument of slotReconfigure can specify timestamp
+- Bound API: Remove deprecated functions in device
+- DataLogger Manager: State ON
+- Bound: Fix that slotReconfigure could erroneously specify timestamp
+- Bound: Protect Python handler destruction with GIL for receiveAsync
+- BUILD: Configure the number of cores for build
+- INFLUX: python client handles errors
+- Bound: Add AsyncReply for delayed slot replys
+- MDL: Provide TableValue converter for HashList
+- Native: Prepare pint upgrade
+- CI: run python tests on configured brokers
+- CI: Split Build and test jobs
+- Deps mr pint numpy
+- MDL: Remove pint compatibility module
+- MDL: Remove array interface hack
+- DOC: Correct Copyright statement
+- Merge branch 'deps-mr-scipy-numpy-pint-pyzmq' into 'master'
+- MDL: postpone init for DeviceNode to a separate step
+- MDL: Provide online knowledge and make tests backward compatible
+- MDL: Rename and document publicly is_initialized
+- DOC: make a small paragraph on licensing
+- Document more dependency changes
+- GUI: Show tooltip with keys for unknown widget
+- C++: Minor fix for slotGetOutputChannelInformationFromHash
+- MDL: Deprecate build karabo value
+- GUI Server: Set timeout on instantiation
+- DOC: list steps for the public release
+- MDL: Provide information about device server log level in instanceInfo
+- MDL: Initialization replies after validation
+- C++: SignalSlotable disables removed output channels and their tcp remnants
+- Fix flushing in MDL device servers
+- Karathon: Make operator const
+- MDL: Only wait for a limited time on preInitialization
+- GUI: Add a range slider to the repertoire
+- Influx: Mangle timestamp that date back to before logging started
+- Bound: event loop post
+- MDL: Release device test in init procedure after a period
+- GUI: Add range slider to levels dialog
+- C++ long tests: Fix compilation that was broken after merging !5953
+- MDL: Fix DeviceNodes in Nodes and add a timeout to DeviceNode for backward compat
+- C++: Smoother and (slightly) faster OrderedMap::set, used in Hash::set
+- MDL: Remove exception in instance handling of eventloop
+- GUI: handle tag-like errors in dialogs
+- GUI: Add tooltip on project load dialog for devices
+- FW: Document more functions
+- MDL: Remove unnecessary eventloop sheduling
+- Native: Add an additional test for is_equal
+- MDL: Fix property test device uint vector defautl value
+- Native: Fix some documentation formatting
+- Fix more documentation formatting
+- C++: Data logger manager init failure causes error state
+- GUI: Online to offline configuration
+- Bound: proper reply for slotStartDevice
+- Fix for data logging integration tests getting stuck on tearDown.
+- GUI: Extend Signalblocker for multiple widgets
+- MDL: Test specials np inf and nan for descriptor min and max
+- GUI: Little clean in range slider and state sunken
+- GUI: Dynamic levels setting of dialog
+- GUI: Add toolbar test
+- Native: Provide only changes wrapper
+- Bound integration tests: Do not wait forever on event loop thread joining
+- GUI: Fix resize scene test with robust mediator
+- Native: Provide compare module
+- GUI: Provide public api
+- MDL: Add a set_property to the framework
+- Document more library functions
+- Merge branch 'eventLoopTuning' into 'master'
+- C++ integration test: Softer time stamp limit
+- MDL: Use 25 seconds as wait time for device instantiation
+- Bound: Device stays up if initialisation fails (and instantiation does not block)
+- GUI: More in karabogui.api
+- Setup C++ source code formatting based on clang tools (MR 1 of 3)
+- Bound: Enable error handling for asynchronous requests to slot
+- GUI: Fix blocked MacOS client
+- CI: split c++ and python unit tests jobs
+- C++ tests: Make extra proof that either success- or errorHandler get called
+- GUI: Enable to subclass table model
+- GUI: Extend base table controller
+- Common: Code quality test
+- MDL: Profiler for async funcs and doc
+- GUI: Cleaning has_changes
+- GUI: Enable dynamic table width for table dialog of Configurator
+- GUI: Use log level info to set the default in setLoggerPriority
+- FW: Clean conf.py
+- GUI: Fix some mediator clashes in tests
+- GUI: Move compare function to utils and cleanup
+- MDL: Better exception message
+- GUI: Clean and delete compare module
+- GUI: Clean topology utils and add is_device_online
+- MDL: Revert MR 6011
+- MDL: fix topology test fragility
+- MDL: better comment in topology tests
+- CI: process and upload C++ tests report
+- GUI: Clean imports and stirng format ipython widget
+- Fine-tuning and simplification of clang-format configuration.
+- Native: Use has_changes in configurable instead of is equal
+- C++: Refactor exception messages
+- GUI: Clean const file
+- FW: Update known issues
+- Fix for some header includes that were order-dependent.
+- Upgrade brokerMessageLogger to support more brokers
+- MDL: Document more functions and the Hash
+- FEAT: better dependency build logs
+- FEAT: dependency build log follow up
+- Clang-format the C++ source files of the Framework in one bulk.
+- MDL: Enhance profiler
+- GUI: Enhance profiling decorator
+- C++ integration tests: Avoid compiler warnings
+- GUI: Test the label widget
+- FW: Deprecate editable attribute daqPolicy
+- C++: Remove tautological short error message prefix
+- DEPS: build dependencies for AlmaLinux
+- TOOLS: add prerelease job for AlmaLinux
+- MDL: Use iscoroutinefunction in utils
+- GUI: Add action to resize to contents to the table
+- Lint format of C++ source files and corresponding git pre-commit hook.
+- MDL: Fix device server uniqueness and server kill
+- MDL: Enhance removeQuantity decorator
+- GUI: Allow to resize header with clicking
+- GUI: Provide ui folder for controllers and fix time graph actions
+- C++: Fix formatting errors
+- GUI: Directly offer Image import for scenes
+- Script to Lint modified C++ and Python files.
+- Merge branch 'fix/removeStrandInAmqpClient' into 'master'
+- MDL: Device instances have a weakref to their server
+- GUI: Provide data dir and use for images
+- TOOLS: add package target to C++ device template
+- TOOLS: actually build for almalinux
+- Fix minor clang-format divergences.
+- MDL: Fix the server weakref
+- Requirement for minimal clang-format version in lint scripts.
+- Common: Change font in scene2py
+- Fix name of karabo lib import target generated by cmake install.
+- GUI: Little performance tweak table
+- GUI: Add development mode for the GUI
+- Fix for non relocatable Karabo import lib.
+- C++: Fix missing quote in lock exception message
+- Add net::parseGenericUrl function
+- MDL: make a macro provide its own code
+- C++: Enable exceptions to provide details separated from main message.
+- Bound: Enhance conversion of Karabo C++ to Python exceptions
+- Move 'cmake_auto_build_all' to 'auto_build_all.sh'. Fix CodeCoverage broken build.
+- MDL: No empty table schema allowed
+- Merge branch 'remove_netbeans' into 'master'
+- All API: Error reply with details
+- MDL: Remove archive from the schema
+- C++/BOUND: Remove archive from the schema
+- Bound: Full use of slot failure API extended to provide details
+- C++ test: Increase timeout for slot calls
+- Bound: Unify exception trace extraction for SlotWrap and HandlerWrap
+- TEST: remove remote_console test
+- GUI: Only send subscribeToLogs after login
+- GUI: Show proper tooltip for buttons (deviceId.key)
+- MDL: Deprecate archivePolicy for descriptors
+- C++: Fix exception message order in userFriendlyMsg()
+- GUI: Table without resizeToContents stretches last column
+- GUI: Fix legacy table behavior for subclassing own models
+- MDL: Provide a slot call to get last logged events
+- GUI: Remember dir in data saving of our plots
+- Fix for C++ code coverage builds.
+- GUI: Provide correct access level setting for controllers
+- DOC: document 2.13 path releases
+- GUI: Fix race between widget destroy and scene destroy
+- GUI: Add a filter table controller
+- GUI: Fix refreshing class schema for project devices in configurator after reinstallation
+- REDIS: Fix device shutdown process
+- GUI: Deprecate dir storage for a single one
+- GUI: Don't disable readOnly booleans anymore in the table
+- GUI: BoolButton, NumberColor and StringColor Delegate for Tables
+- Merge branch 'kluyvert-doc-install-gui-code-blocks' into 'master'
+- Add partial deserialization support
+- Extend brokerRates app to work with all supported brokers
+- TOOLS: fix relative link in C++ device template
+- GUI: Document a bit the internals of the GUI
+- C++: remove symbolic links
+- BOUND: Fix segfault when DeviceClient overlaps getDevices calls and device monitor callbacks.
+- C++: Logger clean up and format adjustment
+- C++: refactor all options to be vectors
+- MDL: Remove coroutine decorator in sigslot
+- C++: add a CacheAppender to the loggers
+- Add GUI API documentation
+- Fix document formatting for gui api
+- CI: Optimize the builds and remove netbeans
+- TOOLS: add a docker monitor for karabo
+- Merge branch 'h5_vec_char_as_attribute' into 'h5_empty_default_value_for_array_types'
+- DEPS: add pytest-cov
+- GUI: Table, provide tooltip for header and value for cell
+- GUI: Allow log retrieval from topology
+- GUI: Enhance to non modal log dialogs
+- MDL: Move cache log to network
+- MDL: Allow specification of subnet in output channels
+- GUI: skip scene retrieval for devices without scenes
+- BOUND: Implement slotLoggerContent
+- GUI: Correct network message for requestGeneric
+- DOC: document 2.14
+- GUI: Use common versioning
+- Merge branch 'h5_empty_default_value_for_array_types' into 'master'
+- GUI: Add log dialog for project servers
+- GUI: Group the move actions
+- NATIVE: has_changes works for both None values
+- Add compareConfigurationsFromPast
+- GUI: Log disconnect from gui server
+- C++/bound: Enable setSpecialDisplayType for all types
+- GUI: Enhance log-dialog sizing of rows and columns
+- GUI: Allow inkscape like keyevents for grouping and ungrouping
+- GUI: Scroll to bottom (newest) log on update and utilize request button
+- MDL: Fix file_db project scenes
+- C++/bound: Dump Karabo version to log file
+- MDL: file_db use base class serialisation method
+- GUI: Take into account assignment internal when saniziting configurations
+- MDL: Run coro threadsafe in start device of eventloop
+- C++: Allow specification of subnet in output channels
+- C++: remove temporary change
+- GUI: Account for Assignment.INTERNAL on configuration loading
+- GUI: Make sure global log panel shows ISO string
+- GUI: Offer to remove proxies from a basebinding controller
+- Merge branch 'align-objects' into 'master'
+- Bound: Error message states name of wrapped Python function
+- C++: Improve handling of exceptions thrown within a slot
+- MDL: request new chunk before processing
+- Bound: Update instanceInfo with log priority
+- MDL: Fix macro server test
+- MDL: Async context disconnect
+- MDL: DaemonManager uses Karabo Server Ids
+- auto_build_all: clean-up the install tree skipping some directories of interest.
+- C++: View the log level in the instanceInfo for a device server
+- MDL: Remove deprecation warning for archivePolicy
+- GUI: Provide Filter Table Controller
+- C++: Use delimiter to separate short error from details for GUI client
+- GUI: Make use of explicit failure details
+- A bit more documentation
 
 
 Examples (Numpy - KaraboValues)
