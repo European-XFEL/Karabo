@@ -14,8 +14,6 @@ def get_python_files():
     common_dir = op.abspath(op.dirname(__PACKAGE_NAME__.__file__))
     flake_check = []
     for dirpath, _, filenames in os.walk(common_dir):
-        if dirpath.endswith('tests'):
-            continue
         for fn in filenames:
             if op.splitext(fn)[-1].lower() == '.py' and fn not in BLACKLIST:
                 path = op.join(dirpath, fn)
