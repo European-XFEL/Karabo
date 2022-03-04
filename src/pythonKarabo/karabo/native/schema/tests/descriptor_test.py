@@ -11,8 +11,8 @@ from karabo.native import (
     ComplexFloat, Configurable, Double, Float, Hash, HashList, Image,
     ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
     NDArray, NoneValue, NumpyVector, QuantityValue, RegexString, Schema, Slot,
-    String, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8, UInt16,
-    UInt32, UInt64, Unit, VectorBool, VectorChar, VectorComplexFloat,
+    String, TableValue, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
+    UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt8, VectorInt16,
     VectorInt32, VectorInt64, VectorRegexString, VectorString, VectorUInt8,
     VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary, encodeBinary,
@@ -713,6 +713,27 @@ class Tests(TestCase):
         self.assertEqual(v.dtype.names,
                          ("int", "string", "vector"))
         d.toKaraboValue(v)
+
+        class A(Configurable):
+            d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
+
+        a = A()
+        a.d = [(3, "hallo", np.arange(5, dtype=float)),
+               (2.5, "bla", np.array([], dtype=float))]
+        self.assertEqual(v[0]["int"], 3 * unit.millimeter)
+        self.assertEqual(v[0]["string"], "hallo")
+
+        a.d[0] = Hash("int", 23, "string", "karabo", "vector",
+                      np.arange(23, dtype=float))
+        v = a.d
+        self.assertIsInstance(v, TableValue)
+        self.assertEqual(v[0]["int"], 23 * unit.millimeter)
+        self.assertEqual(v[0]["string"], "karabo")
+        self.assertEqual(len(v[0]["vector"]), 23)
+
+        # Check row index
+        index = v.columnIndex("string")
+        self.assertEqual(index, 1)
 
     def test_general(self):
         d = UInt64(accessMode=AccessMode.READONLY)
