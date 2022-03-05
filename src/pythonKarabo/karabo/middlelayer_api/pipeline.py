@@ -119,7 +119,7 @@ class Channel(object):
         self.writer.write(pack(self.sizeCode, size))
 
     async def drain(self):
-        with (await self.drain_lock):
+        async with self.drain_lock:
             await self.writer.drain()
 
     def close(self):
