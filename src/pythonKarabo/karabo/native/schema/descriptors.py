@@ -21,10 +21,10 @@ from .basetypes import (
     BoolValue, EnumValue, KaraboValue, NoneValue, QuantityValue, StringValue,
     TableValue, VectorCharValue, VectorStringValue, isSet)
 from .registry import Registry
-from .utils import sanitize_table_schema
+from .utils import get_default_value, sanitize_table_schema
 
 __all__ = [
-    'Attribute', 'Bool', 'ByteArray', 'Char',  'ComplexFloat',
+    'Attribute', 'Bool', 'ByteArray', 'Char', 'ComplexFloat',
     'ComplexDouble', 'Descriptor', 'Double', 'Enumable', 'Float',
     'get_descriptor_from_data', 'get_instance_parent', 'Integer', 'Int8',
     'Int16', 'Int32', 'Int64', 'NumpyVector', 'Number', 'RegexString',
@@ -952,7 +952,6 @@ class VectorInt8(NumpyVector):
 def _create_numpy_integer(name, number, numpy):
 
     class NumpyInteger(Integer, Type):
-
         defaultValue = Attribute(dtype=numpy)
 
         minExc = Attribute(dtype=numpy)
@@ -1246,13 +1245,19 @@ class VectorHash(Vector):
             readonly = self.accessMode is AccessMode.READONLY
             self.rowSchema = sanitize_table_schema(self.rowSchema, readonly)
 
-        self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
-                               for k, v, a in self.rowSchema.hash.iterall()])
-        self.bindings = {k: Type.fromname[a["valueType"]](strict=False, **a)
-                         for k, v, a in self.rowSchema.hash.iterall()}
-        self.units = {k: (a.get("unitSymbol", None),
-                          a.get("metricPrefixSymbol", MetricPrefix.NONE))
-                      for k, _, a in self.rowSchema.hash.iterall()}
+        dtype = []
+        self.bindings = {}
+        self.units = {}
+        self.default_row = Hash()
+        for k, v, a in self.rowSchema.hash.iterall():
+            desc = Type.fromname[a["valueType"]](strict=False, **a)
+            dtype.append((k, desc.numpy))
+            self.bindings.update({k: desc})
+            self.units.update({k: (a.get("unitSymbol", None),
+                                   a.get("metricPrefixSymbol",
+                                         MetricPrefix.NONE))})
+            self.default_row.update({k: get_default_value(desc, force=True)})
+        self.dtype = np.dtype(dtype)
 
     def cast(self, other):
         ht = TypeHash()
