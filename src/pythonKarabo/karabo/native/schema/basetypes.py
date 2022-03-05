@@ -580,6 +580,10 @@ class TableValue(KaraboValue):
                               zip(data.dtype.names, row)})
                         for row in data)
 
+    def default_row(self):
+        """Return the row Hash with default values of the `TableValue`"""
+        return self.descriptor.default_row
+
     def clear(self):
         """Clear the table element with a single message"""
         self.value = numpy.array([], dtype=self.value.dtype)

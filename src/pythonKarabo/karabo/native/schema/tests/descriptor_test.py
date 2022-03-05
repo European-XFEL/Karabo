@@ -590,6 +590,7 @@ class Tests(TestCase):
         rowSchema = Hash("int", None, "string", None)
         rowSchema["int", "valueType"] = "INT32"
         rowSchema["int", "unitSymbol"] = "m"
+        rowSchema["int", "defaultValue"] = 27
         rowSchema["int", "metricPrefixSymbol"] = "m"
         rowSchema["int", "accessMode"] = 4
         rowSchema["string", "valueType"] = "STRING"
@@ -654,6 +655,12 @@ class Tests(TestCase):
                              Hash("string", "hallo", "int", 20)])
         data, _ = d.toDataAndAttrs(v)
         self.assertIsInstance(data, HashList)
+
+        # Test the default hash
+        default = d.default_row
+        self.assertIsInstance(default, Hash)
+        self.assertEqual(default["int"], 27)
+        self.assertEqual(default["string"], "")
 
         with self.assertRaises(ValueError):
             v = d.toKaraboValue([])
