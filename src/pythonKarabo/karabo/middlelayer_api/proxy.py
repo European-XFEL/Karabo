@@ -456,13 +456,13 @@ class DeviceClientProxyFactory(ProxyFactory):
             # connections that we think we have
             if self._schemaUpdateConnected:
                 await self._device._ss.async_connect(
-                        self._deviceId, "signalSchemaUpdated",
-                        self._device.slotSchemaUpdated)
+                    self._deviceId, "signalSchemaUpdated",
+                    self._device.slotSchemaUpdated)
             if self._used > 0:
                 signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_connect(
-                        self._deviceId, signals,
-                        self._device.slotChanged)
+                    self._deviceId, signals,
+                    self._device.slotChanged)
             schema, _ = await self._device.call(
                 self._deviceId, "slotGetSchema", False)
             DeviceClientProxyFactory.updateSchema(self, schema)
@@ -519,7 +519,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             if self._used == 1:
                 signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_connect(
-                        self._deviceId, signals, self._device.slotChanged)
+                    self._deviceId, signals, self._device.slotChanged)
                 conf, _ = await self._device.call(self._deviceId,
                                                   "slotGetConfiguration")
                 self._onChanged(conf)
@@ -532,7 +532,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             if self._used == 0:
                 signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_disconnect(
-                        self._deviceId, signals, self._device.slotChanged)
+                    self._deviceId, signals, self._device.slotChanged)
 
         def _disconnectSchemaUpdated(self):
             if self._schemaUpdateConnected:
@@ -548,20 +548,33 @@ class DeviceClientProxyFactory(ProxyFactory):
                     self._device.slotSchemaUpdated)
             self._schemaUpdateConnected = False
 
-        def __del__(self):
+        def _disconnect_outputs(self):
+            """Disconnect all remote output channels"""
             # Note: In rare cases, e.g. command line, the broker connection
             # is already gone when we are collected, hence we do not throw
             # exceptions from here!
             outputs = list(self._remote_output_channel)
             for channel in outputs:
                 channel.disconnect()
+
+        def __del__(self):
+            self._disconnect_outputs()
             with suppress(OMQError):
                 self._disconnectSchemaUpdated()
             if self._used > 0:
-                # set the used variable to 1 for a clean disconnect in exit
                 self._used = 1
                 with suppress(OMQError):
                     self.__exit__(None, None, None)
+
+        async def delete_proxy(self):
+            """Delete the proxy, disconnect all channels and signals"""
+            self._disconnect_outputs()
+            with suppress(OMQError):
+                await self._async_disconnectSchemaUpdated()
+            if self._used > 0:
+                self._used = 1
+                with suppress(OMQError):
+                    await self.__aexit__(None, None, None)
 
         async def update_proxy(self):
             """Send out cached changes and get current configuration
