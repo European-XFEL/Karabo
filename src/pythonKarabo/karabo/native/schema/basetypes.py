@@ -508,6 +508,8 @@ class TableValue(KaraboValue):
     def __setitem__(self, item, value):
         if not isinstance(item, slice):
             item = slice(item, item + 1)
+        if isinstance(value, Hash):
+            value = [tuple(value[key] for key in self.value.dtype.names)]
         converted = numpy.array(value, dtype=self.value.dtype)
         if converted.shape == ():
             converted.shape = (1,)
@@ -544,6 +546,9 @@ class TableValue(KaraboValue):
         self.value = numpy.delete(self.value, index)
         self.descriptor.__set__(self._parent, self.value)
         return v
+
+    def columnIndex(self, field):
+        return self.value.dtype.names.index(field)
 
     def clear(self):
         """Clear the table element with a single message"""
