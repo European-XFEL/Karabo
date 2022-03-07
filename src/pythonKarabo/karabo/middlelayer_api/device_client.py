@@ -701,8 +701,8 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
             instance._proxies[deviceId] = proxy
             weakproxy = ref(proxy)
 
-            @contextmanager
-            def killer():
+            @asynccontextmanager
+            async def killer():
                 """kill the proxy once the owning device dies
 
                 In an ideal world, we would let proxies only be used in with
@@ -717,9 +717,9 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
                 finally:
                     proxy = weakproxy()
                     if proxy is not None:
-                        proxy.__del__()
+                        await proxy.delete_proxy()
 
-            instance._ss.enter_context(killer())
+            await instance._ss.enter_async_context(killer())
         finally:
             del futures[deviceId]
 
