@@ -6,6 +6,10 @@ from karabo.bound import (
     AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp)
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
+# With 30 seconds timeout, the re-instantiation of the 'UnstoppedThreadDevice'
+# with deviceId 'deviceNotGoingDownCleanly' timed out on quite a few CI runs:
+instTimeout = 60
+
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
@@ -23,7 +27,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
                    "configuration", Hash())
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
         self.assertTrue(ok, msg)
 
         with self.subTest(msg="Test base device properties"):
@@ -58,7 +62,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(len(tbl), 1)  # tableReadOnly now has 1 row.
             self.assertEqual(tbl[0]["e3"], 14)
 
-        ok, msg = self.dc.killDevice(deviceId, 30)
+        ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
 
@@ -73,12 +77,12 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
                    "configuration", Hash())
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, serverLogLevel)
 
-        ok, msg = self.dc.killDevice(deviceId, 30)
+        ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
 
@@ -86,11 +90,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
                    "configuration", Hash("Logger.priority", "WARN"))
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, "WARN")
-        ok, msg = self.dc.killDevice(deviceId, 30)
+        ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
 
@@ -106,7 +110,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                            "deviceId", "testStateInfo",
                            "configuration", config)
 
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, instTimeout)
         self.assertTrue(ok, msg)
 
         sigSlotInfo = SignalSlotable("sigSlotInfo")
@@ -168,7 +172,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                            "deviceId", "testComm1",
                            "configuration", config)
 
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, instTimeout)
         self.assertTrue(ok, msg)
 
         config2 = Hash("remote", "testComm1")
@@ -177,7 +181,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                             "deviceId", "testComm2",
                             "configuration", config2)
 
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, instTimeout)
         self.assertTrue(ok, msg)
 
         config3 = Hash()
@@ -186,7 +190,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                             "deviceId", "deviceNotGoingDownCleanly",
                             "configuration", config3)
 
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
         self.assertTrue(ok, msg)
 
         # Some sub-tests need a helper to call slots with arguments:
@@ -389,11 +393,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertTrue(ok, msg)
 
             # Start again
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
             self.assertTrue(ok, msg)
 
             # Cannot instantiate another one:
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
             self.assertTrue(not ok, msg)
 
             # Now let the device fall into coma, i.e. it does not react anymore
@@ -410,7 +414,9 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             #    that is triggered by test class tearDown. If killing would not
             #    work, the server shutdown would time out and that would
             #    produce an error
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            # With 30 seconds timeout, this repeatedly failed, e.g. in
+            # https://git.xfel.eu/Karabo/Framework/-/jobs/283456
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
             self.assertTrue(ok, msg)
 
         with self.subTest(msg="Test exception in initialisation()"):
@@ -418,13 +424,13 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             classConfig = Hash("classId", "RaiseInitializationDevice",
                                "deviceId", devId, "configuration", Hash())
             # Device with failing initialisation() could be started:
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig, instTimeout)
             self.assertTrue(ok, msg)
 
             # Problem is tracked in "status" field
             status = ("RuntimeError('Stupidly failed in initialise') "
                       "in initialisation")
-            self.waitUntilEqual(devId, "status", status, 30)
+            self.waitUntilEqual(devId, "status", status, instTimeout)
             self.assertEqual(self.dc.get(devId, "status"), status)
 
         with self.subTest(msg="Test slotGetTime"):
