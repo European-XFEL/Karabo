@@ -99,5 +99,25 @@ def _create_cli_submodule():
     return module
 
 
+def _create_test_module():
+    """Create the middlelayer testing namespace """
+    from karabo.common.api import create_module
+
+    from .middlelayer_api.tests.eventloop import (
+        AsyncDeviceContext, DeviceTest, async_tst, create_device_server,
+        event_loop, setEventLoop, sync_tst)
+
+    symbols = (
+        AsyncDeviceContext, DeviceTest, async_tst, create_device_server,
+        event_loop, setEventLoop, sync_tst
+    )
+    module = create_module('karabo.middlelayer.testing', *symbols)
+    module.__file__ = __file__
+    return module
+
+
 cli = _create_cli_submodule()
+testing = _create_test_module()
+
 del _create_cli_submodule
+del _create_test_module
