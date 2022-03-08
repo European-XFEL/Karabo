@@ -5,7 +5,11 @@ from functools import partial, wraps
 from unittest import TestCase
 from unittest.mock import Mock
 
+import pytest
+
+from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
+from karabo.middlelayer_api.signalslot import SignalSlotable
 
 
 def async_tst(f=None, *, timeout=None):
@@ -103,3 +107,91 @@ def setEventLoop():
     loop = EventLoop()
     set_event_loop(loop)
     return loop
+
+
+@pytest.fixture(scope="module")
+def event_loop():
+    """This is the eventloop fixture for pytest asyncio"""
+    loop = EventLoop()
+    yield loop
+    loop.close()
+
+
+def create_device_server(serverId, plugins=[]):
+    """Create a device server instance with `plugins`
+
+    :param serverId: the serverId of the server
+    :param plugins: the plugins list of device classes
+    """
+    server = MiddleLayerDeviceServer({"serverId": serverId,
+                                      "heartbeatInterval": 20})
+
+    async def scanPluginsOnce():
+        return False
+
+    server.scanPluginsOnce = scanPluginsOnce
+    server.plugins = {klass.__name__: klass for klass in plugins}
+    return server
+
+
+class AsyncDeviceContext:
+    """This class is responsible to instantiate and shutdown device classes"""
+
+    def __init__(self, sigslot=True, **instances):
+        self.servers = {k: v for k, v in instances.items()
+                        if isinstance(v, MiddleLayerDeviceServer)}
+        self.devices = {k: v for k, v in instances.items()
+                        if not isinstance(v, MiddleLayerDeviceServer)}
+        self.sigslot = sigslot
+        self.instance = None
+
+    async def wait_online(self, instances):
+        # Make sure that we definitely release here with a total
+        # sleep time. All times in seconds
+        sleep_time = 0.1
+        total_time = 20
+        while total_time >= 0:
+            onlines = [d.is_initialized for d in instances.values()]
+            if all(onlines):
+                break
+            total_time -= sleep_time
+            await sleep(sleep_time)
+
+    async def __aenter__(self):
+        loop = get_event_loop()
+        if self.sigslot:
+            instance = SignalSlotable(
+                {"_deviceId_": f"test-context-mdl-{uuid.uuid4()}"})
+            await instance.startInstance()
+            loop.instance = lambda: instance
+            self.instance = instance
+        if self.servers:
+            await gather(*(d.startInstance() for d in self.servers.values()))
+            await self.wait_online(self.servers)
+        if self.devices:
+            await gather(*(d.startInstance() for d in self.devices.values()))
+            await self.wait_online(self.devices)
+        return self
+
+    async def __aexit__(self, exc_type, exc, exc_tb):
+        if self.devices:
+            await gather(*(d.slotKillDevice() for d in self.devices.values()))
+        if self.servers:
+            await gather(*(d.slotKillDevice() for d in self.servers.values()))
+        if self.instance is not None:
+            await self.instance.slotKillDevice()
+            del self.instance
+
+    async def device_context(self, **instances):
+        """Relay control of device `instances`
+
+        The instances are added to the device dictionary of the class
+        and shutdown in the finish.
+        """
+        devices = {}
+        for k, v in instances.items():
+            assert k not in self.devices
+            devices.update({k: v})
+        self.devices.update(devices)
+        await gather(*(d.startInstance() for d in devices.values()))
+        await self.wait_online(devices)
