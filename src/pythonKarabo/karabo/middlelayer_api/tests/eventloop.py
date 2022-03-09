@@ -12,6 +12,10 @@ from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
 from karabo.middlelayer_api.signalslot import SignalSlotable
 
 
+def create_instanceId():
+    return f"test-mdl-{uuid.uuid4()}"
+
+
 def async_tst(f=None, *, timeout=None):
     if f is None:
         assert timeout is not None, 'timeout must be given!'
@@ -34,10 +38,12 @@ def sync_tst(f=None, *, timeout=None):
         task = self.loop.create_task(
             self.loop.run_coroutine_or_thread(f, self), self.lead)
         self.loop.run_until_complete(wait_for(task, timeout))
+
     return wrapper
 
 
 class DeviceTest(TestCase):
+    timeout = 20
 
     @classmethod
     def setUpClass(cls):
@@ -90,7 +96,7 @@ class DeviceTest(TestCase):
         # Make sure that we definately release here with a total
         # sleep time. All times in seconds
         sleep_time = 0.1
-        total_time = 20
+        total_time = cls.timeout
         while total_time >= 0:
             onlines = [d.is_initialized for d in devices]
             if all(onlines):
@@ -135,21 +141,26 @@ def create_device_server(serverId, plugins=[]):
 
 
 class AsyncDeviceContext:
-    """This class is responsible to instantiate and shutdown device classes"""
+    """This class is responsible to instantiate and shutdown device classes
 
-    def __init__(self, sigslot=True, **instances):
-        self.servers = {k: v for k, v in instances.items()
-                        if isinstance(v, MiddleLayerDeviceServer)}
-        self.devices = {k: v for k, v in instances.items()
-                        if not isinstance(v, MiddleLayerDeviceServer)}
+    :param sigslot: Boolean to set if a signal slotable should be created
+                    The signalslotable will take the eventloop instance.
+                    The default setting is `True`.
+    :param timeout: The timeout in seconds to wait for instantiation of an
+                    instance.
+    """
+
+    def __init__(self, sigslot=True, timeout=20, **instances):
+        self.instances = instances
         self.sigslot = sigslot
         self.instance = None
+        self.timeout = timeout
 
     async def wait_online(self, instances):
         # Make sure that we definitely release here with a total
         # sleep time. All times in seconds
         sleep_time = 0.1
-        total_time = 20
+        total_time = self.timeout
         while total_time >= 0:
             onlines = [d.is_initialized for d in instances.values()]
             if all(onlines):
@@ -161,23 +172,25 @@ class AsyncDeviceContext:
         loop = get_event_loop()
         if self.sigslot:
             instance = SignalSlotable(
-                {"_deviceId_": f"test-context-mdl-{uuid.uuid4()}"})
+                {"_deviceId_": create_instanceId()})
             await instance.startInstance()
             loop.instance = lambda: instance
             self.instance = instance
-        if self.servers:
-            await gather(*(d.startInstance() for d in self.servers.values()))
-            await self.wait_online(self.servers)
-        if self.devices:
-            await gather(*(d.startInstance() for d in self.devices.values()))
-            await self.wait_online(self.devices)
+        if self.instances:
+            await gather(*(d.startInstance() for d in self.instances.values()))
+            await self.wait_online(self.instances)
         return self
 
     async def __aexit__(self, exc_type, exc, exc_tb):
-        if self.devices:
-            await gather(*(d.slotKillDevice() for d in self.devices.values()))
-        if self.servers:
-            await gather(*(d.slotKillDevice() for d in self.servers.values()))
+        devices = [d for d in self.instances.values()
+                   if not isinstance(d, MiddleLayerDeviceServer)]
+        if devices:
+            await gather(*(d.slotKillDevice() for d in devices))
+
+        servers = [s for s in self.instances.values()
+                   if isinstance(s, MiddleLayerDeviceServer)]
+        if servers:
+            await gather(*(s.slotKillDevice() for s in servers))
         if self.instance is not None:
             await self.instance.slotKillDevice()
             del self.instance
@@ -190,8 +203,8 @@ class AsyncDeviceContext:
         """
         devices = {}
         for k, v in instances.items():
-            assert k not in self.devices
+            assert k not in self.instances
             devices.update({k: v})
-        self.devices.update(devices)
+        self.instances.update(devices)
         await gather(*(d.startInstance() for d in devices.values()))
         await self.wait_online(devices)
