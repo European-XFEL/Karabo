@@ -6,9 +6,6 @@ from karabo.middlelayer import Device, Slot, String, connectDevice, isSet
 from karabo.middlelayer_api.tests.eventloop import (
     AsyncDeviceContext, create_device_server, event_loop)
 
-# XXX: This is to remove a flake complaint only
-event_loop = event_loop
-
 
 class WW(Device):
     name = String()
@@ -26,13 +23,13 @@ class WW(Device):
 
 
 @pytest.mark.asyncio
-async def test_device_context():
+async def test_device_context(event_loop: event_loop):
     deviceId = f"test-mdl-{uuid.uuid4()}"
     device = WW({"_deviceId_": deviceId})
     ctx_deviceId = f"test-mdl-{uuid.uuid4()}"
     ctx_device = WW({"_deviceId_": ctx_deviceId})
     async with AsyncDeviceContext(device=device) as ctx:
-        devices = ctx.devices
+        devices = ctx.instances
         assert not isSet(device.name)
         assert not isSet(devices["device"].name)
         proxy = await connectDevice(deviceId)
@@ -52,10 +49,10 @@ async def test_device_context():
 
 
 @pytest.mark.asyncio
-async def test_server_context():
+async def test_server_context(event_loop: event_loop):
     serverId = f"testserver-mdl-{uuid.uuid4()}"
     server = create_device_server(serverId, [WW])
     async with AsyncDeviceContext(server=server) as ctx:
-        server_instance = ctx.servers["server"]
+        server_instance = ctx.instances["server"]
         assert server_instance.serverId == serverId
         assert "WW" in server_instance.plugins
