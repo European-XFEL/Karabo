@@ -50,6 +50,9 @@ class DeviceClientBase(Device):
     async def _run(self, **kwargs):
         await super()._run(**kwargs)
         self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
+        # We are collecting all the instanceInfo's and wait for their arrival
+        # before the device comes online.
+        await sleep(3)
 
     @coslot
     async def slotInstanceNew(self, instanceId, info):
