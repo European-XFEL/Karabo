@@ -1,3 +1,4 @@
+import operator
 from enum import Enum
 from itertools import product
 from unittest import TestCase, main
@@ -293,6 +294,30 @@ class Tests(TestCase):
         numpy.testing.assert_array_equal(
             h["object"], numpy.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
         self.assertIsInstance(hl, HashList)
+
+        # filter rows
+        indexes = t.where("integer", 2)
+        self.assertEqual(indexes, [1])
+
+        row_hl = t.where_value("integer", 2)
+        self.assertEqual(len(row_hl), 1)
+
+        # Now with operator
+        row_hl = t.where_value("integer", 2, operator.lt)
+        self.assertEqual(len(row_hl), 0)
+
+        row_hl = t.where_value("integer", 3, operator.gt)
+        self.assertEqual(len(row_hl), 2)
+        self.assertEqual(row_hl[0]["integer"], 4)
+        self.assertEqual(row_hl[1]["integer"], 5)
+        self.assertEqual(row_hl[1]["object"], bytearray())
+
+        def cond(a, b):
+            return a - 1 == b
+
+        row_hl = t.where_value("integer", 3, cond)
+        self.assertEqual(len(row_hl), 1)
+        self.assertEqual(row_hl[0]["integer"], 4)
 
         # Empty table
         t = TableValue(numpy.array([], dtype=dtype), units)
