@@ -4,6 +4,7 @@ Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
 import inspect
 import numbers
+import operator
 import re
 from enum import Enum
 from functools import wraps
@@ -549,6 +550,35 @@ class TableValue(KaraboValue):
 
     def columnIndex(self, field):
         return self.value.dtype.names.index(field)
+
+    def where(self, field, value, op=operator.eq):
+        """Return indexes of the table where a condition for a column is met
+
+        :param field: The field of the row schema, e.g. string key
+        :param value: The value for the condition
+        :param op: Operator condition
+
+        :returns: list of indexes
+        """
+        if field not in self.value.dtype.names:
+            raise AttributeError(f"Specified field attribute {field} not"
+                                 " present in column schema.")
+        return numpy.where(op(self.value[field], value))[0]
+
+    def where_value(self, field, value, op=operator.eq):
+        """Filter the table with a condition for a column
+
+        :param field: The field of the row schema, e.g. string key
+        :param value: The value for the condition
+        :param op: Instance of operator condition
+
+        :returns: Filtered HashList (this is a copy)
+        """
+        indexes = self.where(field, value, op)
+        data = self.value[indexes]
+        return HashList(Hash({key: value for key, value in
+                              zip(data.dtype.names, row)})
+                        for row in data)
 
     def clear(self):
         """Clear the table element with a single message"""
