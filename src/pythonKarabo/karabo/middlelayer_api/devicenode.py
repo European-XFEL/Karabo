@@ -4,7 +4,7 @@ from karabo.native import (
     AccessMode, Assignment, Attribute, KaraboError, String, StringValue,
     get_timestamp, isSet)
 
-from .device_client import getDevice, updateDevice
+from .device_client import getDevice
 
 
 class MetaProxy:
@@ -74,12 +74,11 @@ class DeviceNode(String):
         assert meta_proxy.proxy is None, "proxy already initialized"
 
         value = meta_proxy.deviceId
-        proxy = await getDevice(value)
-        proxy.__meta_deviceId = meta_proxy.deviceId
-        meta_proxy.proxy = proxy
-
         root = instance.get_root()
-        root._ss.exitStack.enter_context((await updateDevice(proxy)))
+        proxy = await root._ss.exitStack.enter_async_context(
+                     getDevice(value))
+        proxy.__meta_deviceId = value
+        meta_proxy.proxy = proxy
 
     def _initialize(self, instance, value):
         # This should not happen as we are mandatory, but we never know
