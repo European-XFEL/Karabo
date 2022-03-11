@@ -48,11 +48,11 @@ from .middlelayer_api.device_client import (
     findServers, getClasses, getClients, getConfiguration,
     getConfigurationFromName, getConfigurationFromPast, getDescriptors,
     getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
-    getSchema, getSchemaFromPast, getServers, getTopology, instantiate,
-    instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
-    listDevicesWithConfiguration, lock, saveConfigurationFromName, setNoWait,
-    setWait, shutdown, shutdownNoWait, updateDevice, waitUntil, waitUntilNew,
-    waitWhile)
+    getSchema, getSchemaFromPast, getServers, getTimeInfo, getTopology,
+    instantiate, instantiateFromName, instantiateNoWait, isAlive,
+    listConfigurationFromName, listDevicesWithConfiguration, lock,
+    saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
+    updateDevice, waitUntil, waitUntilNew, waitWhile)
 from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.injectable import Injectable
@@ -85,14 +85,15 @@ def _create_cli_submodule():
         call, callNoWait, connectDevice, compareConfigurationsFromPast,
         compareDeviceConfiguration, compareDeviceWithPast, daysAgo,
         disconnectDevice, execute, has_changes, executeNoWait, findDevices,
-        findServers, getClasses, getClients, getConfiguration,
+        findServers, getClasses, getClients, getConfiguration, getTimeInfo,
         getConfigurationFromPast, getSchemaFromPast, getConfigurationFromName,
         getLastConfiguration, getDevice, listConfigurationFromName,
         listDevicesWithConfiguration, getDevices, getHistory, getInstanceInfo,
         getSchema, getServers, getTopology, get_timestamp, Hash, hoursAgo,
         instantiate, instantiateFromName, instantiateNoWait, isSet, karabo,
-        minutesAgo, saveConfigurationFromName, setWait, setNoWait, shutdown,
-        shutdownNoWait, sleep, State, Timestamp, waitUntil, waitUntilNew
+        minutesAgo, saveConfigurationFromName, setWait,
+        setNoWait, shutdown, shutdownNoWait, sleep, State, Timestamp,
+        waitUntil, waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)
     module.__file__ = __file__  # looks nicer when repr(cli) is used
