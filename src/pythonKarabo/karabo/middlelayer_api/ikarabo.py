@@ -103,7 +103,7 @@ def start_ikarabo():
                        "getConfiguration(FromPast)?|"
                        "getLastConfiguration|getSchema(FromPast)?|"
                        "compareDeviceWithPast|compareDeviceConfiguration|"
-                       "compareConfigurationsFromPast)")
+                       "compareConfigurationsFromPast|getTimeInfo)")
 
     ip.set_hook("complete_command", class_completer,
                 re_key=r".*instantiate(NoWait)?\(")
