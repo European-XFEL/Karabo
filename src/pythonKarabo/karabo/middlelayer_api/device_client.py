@@ -1111,6 +1111,27 @@ async def updateDevice(device):
     return device
 
 
+@synchronize
+async def getTimeInfo(device):
+    """Retrieve the time information of a device `device`
+
+    :param device: deviceId or proxy
+    :returns: Hash with timing information
+
+    Note: This also adds the `latency` (response time in seconds) to the
+          return Hash
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    before = time()
+    ret = await get_instance().call(device, "slotGetTime", Hash())
+    after = time()
+    latency = float(after - before)
+    ret["latency"] = latency
+
+    return ret
+
+
 def isAlive(proxy):
     """Check whether a device represented by a proxy is still running"""
     assert isinstance(proxy, ProxyBase)

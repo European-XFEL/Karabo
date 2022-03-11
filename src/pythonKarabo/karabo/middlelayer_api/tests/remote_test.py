@@ -15,8 +15,9 @@ from karabo.middlelayer import (
     KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
     Timestamp, Unit, VectorChar, VectorFloat, VectorInt16, VectorString,
     background, call, connectDevice, coslot, decodeBinary, execute,
-    filterByTags, getDevice, getInstanceInfo, isAlive, isSet, lock, setNoWait,
-    setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
+    filterByTags, getDevice, getInstanceInfo, getTimeInfo, isAlive, isSet,
+    lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
+    waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
@@ -1288,6 +1289,13 @@ class Tests(DeviceTest):
                 _ = d.archive.value
         info = await getInstanceInfo("remote")
         self.assertEqual(info["archive"], True)
+
+    @async_tst
+    async def test_timeinfo_device(self):
+        info = await getTimeInfo("remote")
+        self.assertIsNotNone(info["time"])
+        self.assertGreater(info["latency"], 0)
+        self.assertIsNotNone(info["reference"])
 
     @async_tst
     async def test_config_handler(self):
