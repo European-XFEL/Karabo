@@ -38,7 +38,7 @@ class SystemTopology(HasStrictTraits):
     # Mapping of (server id, class id) -> DeviceClassProxy
     _class_proxies = Dict
 
-    # Mapping of (server id, class id) -> Schema
+    # Mapping of server_id-> {class_id: Schema}
     _class_schemas = Dict
 
     # Tracking of requested Class Schemas for (server id, class id)
@@ -203,8 +203,8 @@ class SystemTopology(HasStrictTraits):
     def get_schema(self, server_id, class_id):
         """Return the schema for a given device class on a server.
         """
-        key = (server_id, class_id)
-        return self._class_schemas.get(key)
+        classes = self._class_schemas.setdefault(server_id, {})
+        return classes.get(class_id)
 
     def ensure_proxy_class_schema(self, device_id, server_id, class_id):
         """Ensure the class schema of a project device proxy if necessary"""
@@ -212,10 +212,7 @@ class SystemTopology(HasStrictTraits):
         mapping = self._project_device_proxies.setdefault(key, {})
         proxy = mapping.get(device_id)
         if proxy is not None and not len(proxy.binding.value) > 0:
-            server_id = proxy.server_id
-            class_id = proxy.binding.class_id
-            key = (server_id, class_id)
-            schema = self._class_schemas.get(key)
+            schema = self.get_schema(server_id, class_id)
             if schema is None:
                 # We only request if it was not previously requested!
                 if proxy.status not in NO_CLASS_STATUSES:
@@ -287,13 +284,12 @@ class SystemTopology(HasStrictTraits):
     def class_schema_updated(self, server_id, class_id, schema):
         """Called when a `classSchema` message is received from the server.
         """
-        key = (server_id, class_id)
-
         if len(schema.hash) > 0:
             # if it's a valid schema we cache it even if it is not requested,
             # may be useful in future
-            self._class_schemas[key] = schema
+            self._class_schemas.setdefault(server_id, {})[class_id] = schema
 
+        key = (server_id, class_id)
         if (key not in self._class_proxies.keys() and
                 key not in self._project_device_proxies.keys()):
             # This schema has nothing to do with us whatsoever
@@ -509,6 +505,8 @@ class SystemTopology(HasStrictTraits):
                     # server goes offline
                     proxy = self._class_proxies[key]
                     proxy.binding.value.clear_namespace()
+
+            self._class_schemas.setdefault(instance_id, {}).clear()
             # Update status of all offline project device proxies
             self._project_device_proxies_server_update(instance_id)
 
