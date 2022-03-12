@@ -401,11 +401,83 @@ class HashMergePolicy:
     REPLACE_ATTRIBUTES = "replace"
 
 
+class HashListFormat:
+    Unknown = 0
+    Table = 1
+    ListOfNodes = 2
+
+
 class HashList(list):
     _hashType = HashType.VectorHash
 
+    @staticmethod
+    def hashlist_format(hash_list) -> HashListFormat:
+        """Check the format of a HashList
+
+        The known formats in Karabo that use a `HashList` are::
+
+          - Tables: A Table has a header and each Hash contains a value for
+                    each header key
+
+          - ListOfNodes: Must have a single key for each Hash and the value
+                         is a Hash
+        """
+        if not hash_list:
+            return HashListFormat.Unknown
+
+        hsh = hash_list[0]
+        if hsh.empty():
+            # Hash is empty that must never happen!
+            return HashListFormat.Unknown
+
+        def equal(iterator):
+            iterator = iter(iterator)
+            try:
+                first = next(iterator)
+            except StopIteration:
+                return True
+            return all(first == x for x in iterator)
+
+        equal_sizes = equal([len(hsh.keys()) for hsh in hash_list])
+        if not equal_sizes:
+            return HashListFormat.Unknown
+
+        value = hsh[next(iter(hsh))]
+        hash_value = isinstance(value, Hash)
+        from_lon = hash_value and len(hsh) == 1
+        if from_lon:
+            return HashListFormat.ListOfNodes
+
+        equal_keys = equal([hsh.keys() for hsh in hash_list])
+        from_table = not hash_value and equal_keys
+        if from_table:
+            return HashListFormat.Table
+
+        return HashListFormat.Unknown
+
     def __repr__(self):
-        return "HashList(" + super(HashList, self).__repr__() + ")"
+        fmt = self.hashlist_format(self)
+        if fmt is HashListFormat.Table:
+            h = self[0]
+            header = h.keys()
+
+            def _pretty_table():
+                yield "<HashList(\n"
+                for name in header:
+                    yield "{:10} ".format(name)
+                yield "\n"
+                for _ in header:
+                    yield "---------- "
+                yield "\n"
+                for hsh in self:
+                    for value in hsh.values():
+                        yield "{!r:10} ".format(value.data)
+                    yield "\n"
+                yield ")>"
+
+            return "".join(_pretty_table())
+        else:
+            return "<HashList(" + super(HashList, self).__repr__() + ")>"
 
 
 class HashByte(str):
