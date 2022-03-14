@@ -3,12 +3,16 @@ from unittest.mock import Mock
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import ProxyStatus
-from karabo.native import Hash
+from karabo.native import Configurable, Hash, String
 from karabogui.testing import (
     GuiTestCase, get_device_schema, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology
 from karabogui.topology.util import (
     get_macro_servers, is_device_online, is_server_online)
+
+
+class FooClass(Configurable):
+    val = String()
 
 
 def setUp():
@@ -141,6 +145,10 @@ class TestSystemTopology(GuiTestCase):
             assert topology.get_attributes("macro.macdonald") is None
 
             # 4. instance gone server
+            schema = FooClass.getClassSchema()
+            topology.class_schema_updated("swerver", "FooClass", schema)
+            schema = topology.get_schema("swerver", "FooClass")
+            assert schema is not None
             assert topology.get_attributes("server.swerver") is not None
             gone_hash = Hash("server", Hash("swerver", None))
             changes = Hash("new", Hash(), "update", Hash(), "gone", gone_hash)
@@ -149,6 +157,10 @@ class TestSystemTopology(GuiTestCase):
             # 3.1 A second time to be sure
             topology.topology_update(changes)
             assert topology.get_attributes("server.swerver") is None
+            assert "swerver" in topology._class_schemas
+            # All class schemas are erased
+            classes = topology._class_schemas["swerver"]
+            assert not len(classes)
 
             # 5. Instance gone client
             assert topology.get_attributes("client.charlie") is not None
