@@ -5,7 +5,7 @@ import numpy as np
 from ..hash import Hash, HashList
 from ..utils import (
     HashListFormat, create_html_hash, dictToHash, dtype_from_number,
-    get_array_data, get_image_data, hashlist_format, hashToDict)
+    get_array_data, get_image_data, hashToDict)
 
 
 class HashHtmlParser(HTMLParser):
@@ -220,19 +220,23 @@ def test_dict_hash():
 
 
 def test_hashlist_format():
+    h = HashList()
+    f = HashList.hashlist_format(h)
+    assert f is HashListFormat.Unknown
+
     h = HashList([Hash()])
-    f = hashlist_format(h)
+    f = HashList.hashlist_format(h)
     assert f is HashListFormat.Unknown
 
     h = HashList([Hash("float", 5.2, "int", 6)])
-    f = hashlist_format(h)
+    f = HashList.hashlist_format(h)
     assert f is HashListFormat.Table
 
     h = HashList([Hash("float", 5.2),
                   Hash("int", 6, "hash", Hash("hidden", -1))])
-    f = hashlist_format(h)
+    f = HashList.hashlist_format(h)
     assert f is HashListFormat.Unknown
 
     h = HashList([Hash("NetworkHandler", Hash())])
-    f = hashlist_format(h)
+    f = HashList.hashlist_format(h)
     assert f is HashListFormat.ListOfNodes
