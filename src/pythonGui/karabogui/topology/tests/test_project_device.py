@@ -34,7 +34,7 @@ def test_project_device():
         assert len(device._offline_proxy.binding.value) == 0
 
         # Now remove the schema for test purposes
-        topology._class_schemas.pop(('swerver', 'FooClass'))
+        topology._class_schemas.clear()
         # Refresh schema!
         topology.ensure_proxy_class_schema('divvy', 'swerver', 'FooClass')
         # The request is sent out but no schema is available
