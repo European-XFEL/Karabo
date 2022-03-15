@@ -47,6 +47,7 @@ class DeviceClient_Test : public CPPUNIT_NS::TestFixture {
     void testGetSchemaNoWait();
     void testMonitorChannel();
     void testCurrentlyExecutableCommands();
+    void testSlotsWithArgs();
     void testConnectionHandling();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;

@@ -7,6 +7,7 @@
 
 #include "DeviceClient_Test.hh"
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/thread.hpp>
 #include <future>
 #include <karabo/core/DeviceClient.hh>
@@ -18,6 +19,7 @@
 #include "karabo/util/Schema.hh"
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/InputChannel.hh"
+#include "karabo/xms/SignalSlotable.hh"
 
 #define KRB_TEST_MAX_TIMEOUT 5
 
@@ -27,6 +29,7 @@ using namespace karabo::core;
 using namespace karabo::util;
 using karabo::xms::ImageData;
 using karabo::xms::InputChannel;
+using karabo::xms::SignalSlotable;
 
 
 const int maxIterWait = 1000;
@@ -79,6 +82,7 @@ void DeviceClient_Test::testAll() {
     testGetSchemaNoWait();
     testConnectionHandling();
     testCurrentlyExecutableCommands();
+    testSlotsWithArgs();
 }
 
 
@@ -398,6 +402,99 @@ void DeviceClient_Test::testCurrentlyExecutableCommands() {
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice3_5", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+
+void DeviceClient_Test::testSlotsWithArgs() {
+    const std::string deviceId{"ArgSlotPropTest"};
+
+    // Register slots with args dynamically in a SignalSlotable instance used
+    // only by this test case.
+    SignalSlotable::Pointer ss = boost::make_shared<SignalSlotable>(deviceId);
+    auto weakSs = SignalSlotable::WeakPointer(ss);
+
+    boost::function<void(int, int)> argSlotMultiply = [weakSs](int num1, int num2) {
+        auto shrSs = weakSs.lock();
+        if (shrSs != nullptr) {
+            shrSs->reply(num1 * num2);
+        }
+    };
+    ss->registerSlot<int, int>(argSlotMultiply, "argSlotMultiply");
+
+    boost::function<void(int, int)> argSlotDivide = [weakSs](int dividend, int divisor) {
+        auto shrSs = weakSs.lock();
+        if (shrSs != nullptr) {
+            if (divisor == 0) {
+                throw KARABO_PARAMETER_EXCEPTION("Integer division by 0 is undefined.");
+            }
+            shrSs->reply(dividend / divisor, dividend % divisor);
+        }
+    };
+    ss->registerSlot<int, int>(argSlotDivide, "argSlotDivide");
+
+    boost::function<void(std::string)> argSlotThreeCases = [weakSs](std::string str) {
+        auto shrSs = weakSs.lock();
+        if (shrSs != nullptr) {
+            std::string strUpp = boost::to_upper_copy(str);
+            std::string stdLow = boost::to_lower_copy(str);
+            shrSs->reply(strUpp, stdLow, str);
+        }
+    };
+    ss->registerSlot<std::string>(argSlotThreeCases, "argSlotThreeCases");
+
+    boost::function<void(short)> argSlotZahlen = [weakSs](short digit) {
+        auto shrSs = weakSs.lock();
+        if (shrSs != nullptr) {
+            using VDigit = std::vector<std::string>;
+            VDigit ptBR{"Zero", "Um", "Dois", "Três", "Quatro", "Cinco", "Seis", "Sete", "Oito", "Nove"};
+            VDigit enUS{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"};
+            VDigit deDE{"Null", "Eins", "Zwei", "Drei", "Vier", "Fünf", "Sechs", "Sieben", "Acht", "Neun"};
+            VDigit roman{"? (Romans didn't have zero)", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
+            int i = digit % 10;
+            shrSs->reply(ptBR[i], enUS[i], deDE[i], roman[i]);
+        }
+    };
+    ss->registerSlot<short>(argSlotZahlen, "argSlotZahlen");
+
+    int productCaptMult = 0;
+    boost::function<void(int, int)> argSlotCaptMultiply = [&productCaptMult](int num1, int num2) {
+        productCaptMult = num1 * num2;
+    };
+    ss->registerSlot<int, int>(argSlotCaptMultiply, "argSlotCaptMultiply");
+
+    ss->start();
+
+    // Calls a slot with two int args and no return value - it modifies a local variable.
+    m_deviceClient->execute(deviceId, "argSlotCaptMultiply", KRB_TEST_MAX_TIMEOUT, 12, 4);
+    CPPUNIT_ASSERT_EQUAL(48, productCaptMult);
+
+    // Calls a slot with two int args and one int return value.
+    int product = m_deviceClient->execute1<int, int, int>(deviceId, "argSlotMultiply", KRB_TEST_MAX_TIMEOUT, 4, 5);
+    CPPUNIT_ASSERT_EQUAL(20, product);
+
+    // Calls a slot with two int args and a return value consisting of a tuple of two int values.
+    std::tuple<int, int> divRes =
+          m_deviceClient->execute2<int, int, int, int>(deviceId, "argSlotDivide", KRB_TEST_MAX_TIMEOUT, 5, 2);
+    CPPUNIT_ASSERT_EQUAL(2, std::get<0>(divRes)); // quotient
+    CPPUNIT_ASSERT_EQUAL(1, std::get<1>(divRes)); // remainder
+
+    // Calls a slot with a string arg and a return value consisting of a tuple with that string in three
+    // variants regarding casing.
+    std::tuple<std::string, std::string, std::string> strRes =
+          m_deviceClient->execute3<std::string, std::string, std::string, std::string>(
+                deviceId, "argSlotThreeCases", KRB_TEST_MAX_TIMEOUT, "a StRING!");
+    CPPUNIT_ASSERT_EQUAL(std::string{"A STRING!"}, std::get<0>(strRes));
+    CPPUNIT_ASSERT_EQUAL(std::string{"a string!"}, std::get<1>(strRes));
+    CPPUNIT_ASSERT_EQUAL(std::string{"a StRING!"}, std::get<2>(strRes));
+
+    // Calls a slot with an int arg and a return value consisting of a tuple with 4 elements.
+    std::tuple<std::string, std::string, std::string, std::string> locRes =
+          m_deviceClient->execute4<std::string, std::string, std::string, std::string, short>(
+                deviceId, "argSlotZahlen", KRB_TEST_MAX_TIMEOUT, short(4));
+    CPPUNIT_ASSERT_EQUAL(std::string{"Quatro"}, std::get<0>(locRes));
+    CPPUNIT_ASSERT_EQUAL(std::string{"Four"}, std::get<1>(locRes));
+    CPPUNIT_ASSERT_EQUAL(std::string{"Vier"}, std::get<2>(locRes));
+    CPPUNIT_ASSERT_EQUAL(std::string{"IV"}, std::get<3>(locRes));
 }
 
 
