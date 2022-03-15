@@ -1119,7 +1119,6 @@ namespace karabo {
             reply(Hash("success", true));
         }
 
-
         void PropertyTest::orderTest_slotStart() {
             updateState(State::STARTING);
 
