@@ -1258,15 +1258,123 @@ s             *
             }
 
             /**
-             * Executed a function on a device synchronously (waits until the function finished)
+             * @brief Executes a function on a device synchronously (waits until the function finished)
+             * @tparam Args Variadic template for the slot args (no arg is a particular case).
              * @param deviceId The devideId
              * @param command The command
              * @param timeoutInSeconds Timeout
              */
-            void execute(const std::string& deviceId, const std::string& command, int timeoutInSeconds = -1) {
+            template <typename... Args>
+            void execute(const std::string& deviceId, const std::string& command, int timeoutInSeconds = 3,
+                         const Args&... slotArgs) {
                 KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
-                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
-                sp->request(deviceId, command).timeout(timeoutInSeconds * 1000).receive();
+                sp->request(deviceId, command, slotArgs...).timeout(timeoutInSeconds * 1000).receive();
+            }
+
+            /**
+             * @brief Synchronously executes a slot that returns a single element response.
+             *
+             * @tparam R1 Type of the response.
+             * @tparam Args Variadic template for the slot arguments.
+             * @param deviceId Id of the device whose slot should be executed.
+             * @param slotName Name of the slot to execute.
+             * @param timeoutInSeconds Timeout for the slot execution.
+             * @param slotArgs Slot arguments.
+             * @return A value of R1 type
+             */
+            template <typename R1, typename... Args>
+            R1 execute1(const std::string& deviceId, const std::string& slotName, int timeoutInSeconds = 3,
+                        const Args&... slotArgs) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+                // Note: karabo::util::unpack is the workhorse that performs the transformation of the hash body
+                //       of the request's response into the variadic list of arguments passed to receive.
+                R1 resp;
+                sp->request(deviceId, slotName, slotArgs...).timeout(timeoutInSeconds * 1000).receive(resp);
+                return resp;
+            }
+
+            /**
+             * @brief Synchronously executes a slot that returns a two element
+             *        tuple as a response.
+             *
+             * @note a tuple, instead of a pair, is used as the return value
+             *       for uniformity with the other executeN methods.
+             *
+             * @tparam R1 Type of first element of the resulting pair.
+             * @tparam R2 Type of second element of the resulting pair.
+             * @tparam Args Variadic template for the slot arguments.
+             * @param deviceId Id of the device whose slot should be executed.
+             * @param slotName Name of the slot to execute.
+             * @param timeoutInSeconds Timeout for the slot execution.
+             * @param slotArgs Slot arguments.
+             * @return std::tuple<R1, R2> with the results of the slot execution.
+             */
+            template <typename R1, typename R2, typename... Args>
+            std::tuple<R1, R2> execute2(const std::string& deviceId, const std::string& slotName,
+                                        int timeoutInSeconds = 3, const Args&... slotArgs) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+                R1 st;
+                R2 nd;
+                sp->request(deviceId, slotName, slotArgs...).timeout(timeoutInSeconds * 1000).receive(st, nd);
+                auto res = std::make_tuple<R1, R2>(std::move(st), std::move(nd));
+                return res;
+            }
+
+            /**
+             * @brief Synchronously executes a slot that returns a three element tuple as a
+             *        response.
+             *
+             * @tparam R1 Type of first element of the resulting tuple.
+             * @tparam R2 Type of second element of the resulting tuple.
+             * @tparam R3 Type of third element of the resulting tuple.
+             * @tparam Args Variadic template for the slot arguments.
+             * @param deviceId Id of the device whose slot should be executed.
+             * @param slotName Name of the slot to execute.
+             * @param timeoutInSeconds Timeout for the slot execution.
+             * @param slotArgs Slot arguments.
+             * @return std::tuple<R1, R2, R3> Tuple with the results of the
+             * slot execution.
+             */
+            template <typename R1, typename R2, typename R3, typename... Args>
+            std::tuple<R1, R2, R3> execute3(const std::string& deviceId, const std::string& slotName,
+                                            int timeoutInSeconds = 3, const Args&... slotArgs) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+                R1 st;
+                R2 nd;
+                R3 rd;
+                sp->request(deviceId, slotName, slotArgs...).timeout(timeoutInSeconds * 1000).receive(st, nd, rd);
+                auto res = std::make_tuple<R1, R2, R3>(std::move(st), std::move(nd), std::move(rd));
+                return res;
+            }
+
+
+            /**
+             * @brief Synchronously executes a slot that returns a four element tuple as a
+             *        response.
+             *
+             * @tparam R1 Type of first element of the resulting tuple.
+             * @tparam R2 Type of second element of the resulting tuple.
+             * @tparam R3 Type of third element of the resulting tuple.
+             * @tparam R4 Type of fourth element of the resulting tuple.
+             * @tparam Args Variadic template for the slot arguments.
+             * @param deviceId Id of the device whose slot should be executed.
+             * @param slotName Name of the slot to execute.
+             * @param timeoutInSeconds Timeout for the slot execution.
+             * @param slotArgs Slot arguments.
+             * @return std::tuple<R1, R2, R3, R4> Tuple with the results of the
+             * slot execution.
+             */
+            template <typename R1, typename R2, typename R3, typename R4, typename... Args>
+            std::tuple<R1, R2, R3, R4> execute4(const std::string& deviceId, const std::string& slotName,
+                                                int timeoutInSeconds = 3, const Args&... slotArgs) {
+                KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+                R1 st;
+                R2 nd;
+                R3 rd;
+                R4 th;
+                sp->request(deviceId, slotName, slotArgs...).timeout(timeoutInSeconds * 1000).receive(st, nd, rd, th);
+                auto res = std::make_tuple<R1, R2, R3, R4>(std::move(st), std::move(nd), std::move(rd), std::move(th));
+                return res;
             }
 
             /**
