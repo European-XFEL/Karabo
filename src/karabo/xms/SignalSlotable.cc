@@ -981,8 +981,10 @@ namespace karabo {
             Signal::Pointer heartbeatSignal = boost::make_shared<Signal>(
                   this, m_connection, m_instanceId, "signalHeartbeat", KARABO_PUB_PRIO, KARABO_SYS_TTL);
             heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
-            storeSignal("signalHeartbeat", heartbeatSignal);
-
+            {
+                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+                m_signalInstances["signalHeartbeat"] = heartbeatSignal;
+            }
 
             // Listener for heartbeats
             KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
@@ -2154,11 +2156,6 @@ namespace karabo {
             std::string instanceId = signalOrSlotId.substr(0, pos);
             std::string functionName = signalOrSlotId.substr(pos);
             return std::make_pair(instanceId, functionName);
-        }
-
-
-        void SignalSlotable::storeSignal(const std::string& signalFunction, SignalInstancePointer signalInstance) {
-            m_signalInstances[signalFunction] = signalInstance;
         }
 
 
