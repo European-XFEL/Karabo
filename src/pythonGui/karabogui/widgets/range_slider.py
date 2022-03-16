@@ -12,6 +12,9 @@ from qtpy.QtWidgets import QAbstractSlider, QSlider, QStyle, QStyleOptionSlider
 
 CLICK_TOLERANCE = 0.10  # In percent when moving bars by click
 
+INT32_MAX = 2147483647
+INT32_MIN = -2147483648
+
 
 class SliderHandle(IntEnum):
     """Enum to indicate the active handle of a RangeSlider"""
@@ -50,6 +53,13 @@ class RangeSlider(QSlider):
         """Initialize the Slider with a low and high position and a new range
         """
         assert high > low, "Maximum range must be larger than minimum range!"
+        # Signed 32 bit integer protection as Qt cannot handle. Segfault ...
+        if (low <= INT32_MIN // 2
+                or high >= INT32_MAX // 2):
+            self.setEnabled(False)
+            self.setVisible(False)
+            return
+
         self._low_position = low
         self._high_position = high
         self.setRange(low, high)
@@ -79,6 +89,10 @@ class RangeSlider(QSlider):
         # Basic level order validation
         low_position = min(low, high)
         high_position = max(low, high)
+        # Protect against Qt Overflow ...
+        if (low <= INT32_MIN // 2
+                or high >= INT32_MAX // 2):
+            return
         if low_position < self.minimum():
             low_position = self.minimum()
         if high_position > self.maximum():
