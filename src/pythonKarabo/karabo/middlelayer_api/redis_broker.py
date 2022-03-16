@@ -48,6 +48,7 @@ class RedisBroker(Broker):
         self.mpsc = None        # Multi-producer single consumer queue
         # Client birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
+        self.logproc = None
         # Every RedisBroker instance has the following 4 dictionaries...
         self.conMap = {}        # consumer order number's map
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
@@ -325,6 +326,11 @@ class RedisBroker(Broker):
         try:
             topic = message.topic
             header, pos = decodeBinaryPos(message.payload)
+            islog = header.get('target', '')
+            if islog == 'log':
+                if self.logproc is not None:
+                    self.logproc(message.payload[pos:])
+                return
             body = decodeBinary(message.payload[pos:])
             hash = Hash("header", header, "body", body)
             self.checkOrder(topic, device, hash)
@@ -462,14 +468,6 @@ class RedisBroker(Broker):
             self.slots[name] = slot
 
     async def consume(self, device):
-        pass
-
-    async def main(self, device):
-        """This is the main loop of a device (SignalSlotable instance)
-
-        A device is running if this coroutine is still running.
-        Use `stop_tasks` to stop this main loop."""
-        device = weakref.ref(device)
         mpsc = aioredis.pubsub.Receiver()
 
         async def reader(mpsc):
@@ -488,6 +486,17 @@ class RedisBroker(Broker):
         self.loop.create_task(reader(mpsc), instance=device)
         self.mpsc = mpsc
         await self.subscribe_default()
+        while self.mpsc is not None:
+            await sleep(1)
+
+    async def main(self, device):
+        """This is the main loop of a device (SignalSlotable instance)
+
+        A device is running if this coroutine is still running.
+        Use `stop_tasks` to stop this main loop."""
+        async with self.exitStack:
+            device = weakref.ref(device)
+            await self.consume(device)
 
     async def stop_tasks(self):
         """Stop all currently running task
@@ -497,8 +506,10 @@ class RedisBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
+        await sleep(0.5)
         self.mpsc.stop()
-        await sleep(0.2)    # Give a chance to finish unsubscribe tasks
+        self.mpsc = None
+        await sleep(0.5)    # Give a chance to finish unsubscribe tasks
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
