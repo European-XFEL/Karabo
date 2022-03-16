@@ -45,7 +45,7 @@ from .middlelayer_api.device_client import (
     DeviceClientBase, Queue, call, callNoWait, compareConfigurationsFromPast,
     compareDeviceConfiguration, compareDeviceWithPast, connectDevice,
     disconnectDevice, execute, executeNoWait, filterByTags, findDevices,
-    findServers, getClasses, getClients, getConfiguration,
+    findServers, getClasses, getClassSchema, getClients, getConfiguration,
     getConfigurationFromName, getConfigurationFromPast, getDescriptors,
     getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
     getSchema, getSchemaFromPast, getServers, getTimeInfo, getTopology,

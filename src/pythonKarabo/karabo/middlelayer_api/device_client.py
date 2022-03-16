@@ -197,6 +197,20 @@ async def getSchema(device):
 
 
 @synchronize
+async def getClassSchema(serverId, classId):
+    """Get the class schema for `classId` from server with `serverId`
+
+    :param serverId: the serverId of the server
+    :param classId: the classId of the device class
+
+    :returns: Full Schema object
+    """
+    schema, _, _ = await get_instance().call(serverId, "slotGetClassSchema",
+                                             classId)
+    return schema
+
+
+@synchronize
 async def getConfiguration(device):
     """Get a configuration from a target device
 

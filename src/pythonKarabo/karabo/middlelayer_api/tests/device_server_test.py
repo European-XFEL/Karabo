@@ -5,7 +5,8 @@ from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main, skipIf
 
 from karabo.middlelayer_api.compat import amqp
-from karabo.middlelayer_api.device_client import call, getInstanceInfo
+from karabo.middlelayer_api.device_client import (
+    call, getClassSchema, getInstanceInfo)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop
 from karabo.middlelayer_api.signalslot import SignalSlotable
@@ -134,6 +135,10 @@ class ServerTest(TestCase):
             self.assertIsInstance(logs["content"], list)
             logs = await call(serverId, "slotLoggerContent", Hash("logs", 20))
             self.assertIsInstance(logs["content"], list)
+
+            schema = await getClassSchema(serverId, "PropertyTestMDL")
+            self.assertIsNotNone(schema)
+            self.assertIsInstance(schema, Schema)
         finally:
             await self._shutdown_server(server)
 
