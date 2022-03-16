@@ -307,8 +307,14 @@ class RangeSlider(QSlider):
 
         elif self.pressedHandle is SliderHandle.LOW:
             self._low_position = position
+            # Low slider passed the high slider, align!
+            if position > self._high_position:
+                self._high_position = position
         else:
             self._high_position = position
+            # High slider passed the low slider, align!
+            if position < self._low_position:
+                self._low_position = position
 
         event.accept()
         self.clickOffset = position
