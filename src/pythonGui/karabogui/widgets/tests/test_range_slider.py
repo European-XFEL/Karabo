@@ -78,17 +78,22 @@ class TestConst(GuiTestCase):
             Qt.LeftButton,
             Qt.NoModifier)
 
-        # Move slightly towards the click with padding
+        # Move slightly towards the click with padding, we cannot overflow
         widget.mouseMoveEvent(move_event)
         self.process_qt_events()
-        self.assertEqual(widget.sliderPosition(), (40, 33))
+        self.assertEqual(widget.sliderPosition(), (33, 33))
         self.assertEqual(widget.pressedHandle, SliderHandle.HIGH)
-        self.assertEqual(low, 40)
+        self.assertEqual(low, 33)
         self.assertEqual(high, 33)
 
+        # Spawn a groove
+        widget.setValue((30, 50))
+        widget.update()
+
+        # Click low handle
         press_event = QMouseEvent(
             QEvent.MouseButtonPress,
-            QPoint(60, 0),  # In pixel coordinates
+            QPoint(30, 0),  # In pixel coordinates
             Qt.LeftButton,
             Qt.LeftButton,
             Qt.NoModifier)
@@ -99,31 +104,41 @@ class TestConst(GuiTestCase):
         # Move lower bar
         move_event = QMouseEvent(
             QEvent.MouseMove,
-            QPoint(35, 35),
+            QPoint(30, 35),
             Qt.LeftButton,
             Qt.LeftButton,
             Qt.NoModifier)
         widget.mouseMoveEvent(move_event)
 
         self.process_qt_events()
-        self.assertEqual(widget.sliderPosition(), (33, 33))
-        self.assertEqual(low, 33)
-        self.assertEqual(high, 33)
+        self.assertEqual(widget.sliderPosition(), (31, 50))
+        self.assertEqual(low, 31)
+        self.assertEqual(high, 50)
 
-        # Deactivate with RightButton main
+        # Release event triggers unclicked
+        release_event = QMouseEvent(
+            QEvent.MouseButtonRelease,
+            QPoint(80, 0),
+            Qt.LeftButton,
+            Qt.LeftButton,
+            Qt.NoModifier)
+        widget.mouseReleaseEvent(release_event)
+        self.assertEqual(widget.pressedControl, QStyle.SC_None)
+        self.assertEqual(widget.pressedHandle, None)
+
         press_event = QMouseEvent(
             QEvent.MouseButtonPress,
-            QPoint(80, 0),
-            Qt.RightButton,
+            QPoint(30, 0),
+            Qt.LeftButton,
             Qt.LeftButton,
             Qt.NoModifier)
         widget.mousePressEvent(press_event)
         self.assertEqual(widget.pressedControl, QStyle.SC_SliderHandle)
 
-        # Activate again on press, click bar
+        # Miss handle, groove!
         press_event = QMouseEvent(
             QEvent.MouseButtonPress,
-            QPoint(80, 0),
+            QPoint(20, 0),
             Qt.LeftButton,
             Qt.LeftButton,
             Qt.NoModifier)
