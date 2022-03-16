@@ -60,11 +60,13 @@ namespace karabo {
 
 
         void Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+            boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
             m_registeredSlots[slotInstanceId].insert(slotFunction);
         }
 
 
         bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+            boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
             auto it = m_registeredSlots.find(slotInstanceId);
             bool didErase = false;
             if (it != m_registeredSlots.end()) {
@@ -84,13 +86,18 @@ namespace karabo {
             using namespace karabo::util;
             try {
                 // prepareHeader should be called once per 'emit'!
-                Hash::Pointer header = prepareHeader(m_registeredSlots);
+                SlotMap registeredSlots;
+                {
+                    boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
+                    registeredSlots = m_registeredSlots;
+                }
+                Hash::Pointer header = prepareHeader(registeredSlots);
 
                 // Two ways to emit: 1) In-process 2) Broker
                 // TODO Improve the code here, to be a bit more disentangled and speedy
 
                 // Not connected to any slot
-                if (m_registeredSlots.empty()) {
+                if (registeredSlots.empty()) {
                     // Heartbeats are an exception, must always be sent
                     if (m_signalFunction == "signalHeartbeat") {
                         m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
@@ -101,10 +108,8 @@ namespace karabo {
                     }
                 }
 
-                // Copy the registered slots
-                SlotMap registeredSlots = m_registeredSlots;
-
                 // Try all registered slots whether we could send in-process
+                const size_t fullNumRegisteredSlots = registeredSlots.size();
                 for (auto it = registeredSlots.cbegin(); it != registeredSlots.cend();) {
                     if (m_signalSlotable->tryToCallDirectly(it->first, header, message)) {
                         registeredSlots.erase(it++);
@@ -115,7 +120,7 @@ namespace karabo {
 
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
-                    if (registeredSlots.size() != m_registeredSlots.size()) {
+                    if (registeredSlots.size() != fullNumRegisteredSlots) {
                         // overwrite destinations to erase those that received locally, to avoid duplicates
                         setSlotStrings(registeredSlots, *header);
                     }

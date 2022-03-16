@@ -765,8 +765,6 @@ namespace karabo {
             ReceivedRepliesBMC m_receivedRepliesBMC;
             mutable boost::mutex m_receivedRepliesBMCMutex;
 
-            karabo::util::Hash m_emitFunctions;
-
             karabo::util::Hash m_trackedInstances;
             bool m_trackAllInstances;
             int m_heartbeatInterval;
@@ -825,28 +823,6 @@ namespace karabo {
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId,
                                                                                    const char sep = ':') const;
 
-            template <class TFunc>
-            void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance,
-                             const TFunc& emitFunction) {
-                storeSignal(signalFunction, signalInstance);
-                m_emitFunctions.set(signalFunction, emitFunction);
-            }
-
-            template <class TFunc>
-            void retrieveEmitFunction(const std::string& signalFunction, TFunc& emitFunction) const {
-                try {
-                    emitFunction = m_emitFunctions.get<TFunc>(signalFunction);
-                } catch (const karabo::util::CastException& e) {
-                    throw KARABO_SIGNALSLOT_EXCEPTION("Argument mismatch: The requested signal \"" + signalFunction +
-                                                      "\" was registered with a different number of arguments before.");
-                } catch (const karabo::util::ParameterException& e) {
-                    throw KARABO_SIGNALSLOT_EXCEPTION(
-                          "The requested signal \"" + signalFunction +
-                          "\" could not be found. Ensure proper registration of the signal before you call emit.");
-                }
-            }
-
-
             void registerReply(const karabo::util::Hash::Pointer& reply);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
@@ -887,11 +863,6 @@ namespace karabo {
             template <typename... Args>
             SignalInstancePointer addSignalIfNew(const std::string& signalFunction, int priority = KARABO_SYS_PRIO,
                                                  int messageTimeToLive = KARABO_SYS_TTL);
-
-            /**
-             * Helper to store signalInstance in container with signalFunction as key.
-             */
-            void storeSignal(const std::string& signalFunction, SignalInstancePointer signalInstance);
 
             /**
              * If instanceId not valid (i.e. not unique in system), throws SignalSlotException.
@@ -1396,18 +1367,16 @@ namespace karabo {
         template <typename... Args>
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction,
                                                                              int priority, int messageTimeToLive) {
+            SignalInstancePointer s;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-                if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
-                    SignalInstancePointer s;
-                    return s;
+                if (m_signalInstances.find(signalFunction) == m_signalInstances.end()) {
+                    s = boost::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
+                                                   messageTimeToLive);
+                    s->setSignature<Args...>();
+                    m_signalInstances[signalFunction] = s;
                 }
             }
-            // TODO Check mutex here
-            auto s = boost::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
-                                                messageTimeToLive);
-            s->setSignature<Args...>();
-            storeSignal(signalFunction, s);
             return s;
         }
 
