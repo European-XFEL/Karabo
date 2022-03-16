@@ -11,7 +11,8 @@ import socket
 import time
 import traceback
 import weakref
-from asyncio import Future, ensure_future, gather, sleep, wait_for
+from asyncio import (
+    CancelledError, Future, ensure_future, gather, sleep, wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -47,6 +48,8 @@ class AmqpBroker(Broker):
         self.consumer_tag = None    # tag returned by consume method
         # Connection birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
+        self.logproc = None
+        self.future = None
 
     async def subscribe_default(self):
         """Subscribe to 'default' exchanges to allow a communication
@@ -94,7 +97,10 @@ class AmqpBroker(Broker):
             exch = await self.channel.declare_exchange(
                     exchange, aio_pika.ExchangeType.TOPIC)
             self.exchanges[exchange] = exch
-        await exch.publish(message, routing_key)
+        try:
+            await exch.publish(message, routing_key)
+        except CancelledError:
+            await self.channel.close()
 
     def send(self, exchange, routing_key, header, args):
         if self.loop.is_closed() or not self.loop.is_running():
@@ -356,6 +362,11 @@ class AmqpBroker(Broker):
         """
         try:
             header, pos = decodeBinaryPos(message)
+            islog = header.get('target', '')
+            if islog == 'log':
+                if self.logproc is not None:
+                    self.logproc(message[pos:])
+                return
             body = decodeBinary(message[pos:])
             decoded = Hash("header", header, "body", body)
         except BaseException:
@@ -412,7 +423,11 @@ class AmqpBroker(Broker):
             self.slots[name] = slot
 
     async def consume(self, device):
-        pass
+        self.consumer_tag = await self.queue.consume(
+            partial(self.on_message, device))
+        # Be under exitStack scope as soon as queue is alive
+        self.future = Future()
+        await self.future
 
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
@@ -421,8 +436,7 @@ class AmqpBroker(Broker):
         Use `stop_tasks` to stop this main loop."""
         async with self.exitStack:
             device = weakref.ref(device)
-            self.consumer_tag = await self.queue.consume(
-                    partial(self.on_message, device))
+            await self.consume(device)
 
     async def stop_tasks(self):
         """Stop all currently running task
@@ -432,9 +446,16 @@ class AmqpBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
-        await asyncio.sleep(0.1)
+        self.future.set_result(None)
+        if self.logproc is not None:
+            self.logproc = None
+        # Suspend... to finish unsubscription ... before cancelling ...
+        await sleep(0.1)
         if self.consumer_tag is not None:
             await self.queue.cancel(self.consumer_tag)
+            self.consumer_tag = None
+        await asyncio.sleep(0.1)
+
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
