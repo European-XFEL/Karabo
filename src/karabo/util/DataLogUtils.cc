@@ -96,7 +96,14 @@ namespace karabo {
         // helper function for `jsonResultsToInfluxResultSet`
         void parseSingleJsonResult(const nl::json &respObj, InfluxResultSet &influxResult,
                                    const std::string &columnPrefixToRemove) {
-            const auto &columns = respObj["results"][0]["series"][0]["columns"];
+            const auto &result0 = respObj["results"][0];
+            if (result0.find("series") == result0.end()) {
+                // No data in requested period - can happen with jsonResultsToInfluxResultSet
+                // in InfluxLogReader::onGetBadData
+                influxResult.first.clear();
+                return;
+            }
+            const auto &columns = result0["series"][0]["columns"];
             std::vector<std::string> columnTitles;
             for (const auto &column : columns) {
                 const std::string columnStr = column.get<std::string>();
@@ -116,7 +123,7 @@ namespace karabo {
                 }
             }
 
-            const auto &rows = respObj["results"][0]["series"][0]["values"];
+            const auto &rows = result0["series"][0]["values"];
             for (const auto &row : rows) {
                 std::vector<boost::optional<std::string>> rowValues;
                 rowValues.reserve(row.size());
