@@ -45,6 +45,7 @@ class MqttBroker(Broker):
                 self.loop, client_id=self.clientId, logger=self.logger)
         # Client birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
+        self.logproc = None
         # Every MqttBroker instance has the following 4 dictionaries...
         self.conMap = {}        # consumer order number's map
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
@@ -324,6 +325,11 @@ class MqttBroker(Broker):
         try:
             topic = message.topic
             header, pos = decodeBinaryPos(message.payload)
+            islog = header.get('target', '')
+            if islog == 'log':
+                if self.logproc is not None:
+                    self.logproc(message.payload[pos:])
+                return
             body = decodeBinary(message.payload[pos:])
             hash = Hash("header", header, "body", body)
             self.checkOrder(topic, device, hash)
@@ -493,6 +499,7 @@ class MqttBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
+        await sleep(0.1)
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
