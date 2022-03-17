@@ -72,7 +72,7 @@ class NDArray(Type):
         """
         if node is not None:
             dtype = numpy_from_number(node["type", "defaultValue"],
-                                      default=numpy.float)
+                                      default=numpy.float64)
             shape = node["shape", "defaultValue"]
             kwargs['unitSymbol'] = node["data", "unitSymbol"]
             kwargs['metricPrefixSymbol'] = node["data", "metricPrefixSymbol"]
