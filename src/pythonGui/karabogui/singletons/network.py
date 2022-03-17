@@ -133,7 +133,7 @@ class Network(QObject):
                 f"<b>{self.hostname}:{self.port}</b>")
             return
 
-        get_logger.error(
+        get_logger().error(
             f"Disconnect failed: {self._tcp_socket.errorString()}")
 
     def togglePerformanceMonitor(self):
