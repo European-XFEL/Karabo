@@ -45,6 +45,8 @@ int BaseLogging_Test::WAIT_WRITES = 4000;
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
 
+const unsigned int maxVectorSize = 2000u; // smaller than default to test that setting it works
+
 class DataLogTestDevice : public karabo::core::Device<> {
 
 public:
@@ -65,6 +67,11 @@ public:
         INT32_ELEMENT(expected).key("value")
                 .readOnly()
                 .initialValue(0)
+                .commit();
+
+        VECTOR_INT32_ELEMENT(expected).key("vector")
+                .readOnly()
+                .initialValue({})
                 .commit();
 
         INT32_ELEMENT(expected).key("int32Property")
@@ -383,6 +390,8 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std:
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
         manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
+        manager_conf.set("logger.InfluxDataLogger.maxVectorSize", maxVectorSize);
+
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
@@ -587,8 +596,8 @@ void BaseLogging_Test::testMaxNumDataHistory() {
     std::clog << "... OK" << std::endl;
 }
 
-void BaseLogging_Test::testDropFutureData() {
-    std::clog << "Testing that the logger drops future data ... " << std::flush;
+void BaseLogging_Test::testDropBadData() {
+    std::clog << "Testing that the logger drops bad data ... " << std::flush;
 
     const std::string deviceId(getDeviceIdPrefix() + "deviceWithFutureStamp");
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
@@ -605,9 +614,9 @@ void BaseLogging_Test::testDropFutureData() {
 
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     unsigned int numCycles = 5;
-    const Epochstamp inAlmostAFortnite = Epochstamp() + TimeDuration(13,0,0,0,0);
+    Epochstamp before;
+    const Epochstamp inAlmostAFortnite = before + TimeDuration(13,0,0,0,0);
     const Epochstamp inAFortnite = inAlmostAFortnite + TimeDuration(1,0,0,0,0);
-    const Trainstamp noTrainId;
 
     // Getting original timestamp of 'value' to compare with later
     // We first change the property once - otherwise, what we get back from influx is the start of logging time
@@ -622,23 +631,22 @@ void BaseLogging_Test::testDropFutureData() {
     for (unsigned int i = 0; i < numCycles; ++i) {
         Hash update("value", 10000 + i);
         const Timestamp muchLater(inAlmostAFortnite, Trainstamp());
-        inAlmostAFortnite.toHashAttributes(update.getAttributes("value"));
-        // trainId must be set. Epochstamp information alone will not be kept in `Device::set(Hash)`.
-        noTrainId.toHashAttributes(update.getAttributes("value"));
-        CPPUNIT_ASSERT_NO_THROW(
-            m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", update)
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+        muchLater.toHashAttributes(update.getAttributes("value"));
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", update)
+                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                      .receive());
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
         CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
-        CPPUNIT_ASSERT_EQUAL(static_cast<int> (i) + 10000, cfg.get<int>("value"));
+        CPPUNIT_ASSERT_MESSAGE("'vector' is missing from the configuration", cfg.has("vector"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(i) + 10000, cfg.get<int>("value"));
+        CPPUNIT_ASSERT_EQUAL(std::vector<int>(), cfg.get<vector<int>>("vector"));
         const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
         // thi
         CPPUNIT_ASSERT_MESSAGE("'value' has wrong time stamp: " + stamp.toIso8601() + " instead of " + inAlmostAFortnite.toIso8601(), stamp == inAlmostAFortnite);
 
         // Flush Data
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
         // small sleep to make sure the data is on the DB
         boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
@@ -662,6 +670,137 @@ void BaseLogging_Test::testDropFutureData() {
                                dt < 1e-6);
         CPPUNIT_ASSERT_EQUAL(cfg.get<int>("value"), originalValue);
     }
+
+    // Now check that we can get back info about bad data - but first add other bad data items,
+    // first a too long vector and then a mixture of too long vector, far future, and decent data
+    const unsigned int vectorSize = maxVectorSize + 1u;
+    Hash updates("vector", std::vector<int>(vectorSize, 42)); // one longer than logger tolerates
+    Timestamp vectorUpdateTime1;
+    vectorUpdateTime1.toHashAttributes(updates.getAttributes("vector")); // Add stamp to test full cycle
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
+                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                  .receive());
+    // second (i.e. mixed) update
+    Timestamp vectorUpdateTime2;
+    vectorUpdateTime2.toHashAttributes(updates.getAttributes("vector")); // Overwrite with new stamp
+    Hash::Node& valueNode = updates.set("value", 42);
+    Timestamp(inAlmostAFortnite, Trainstamp()).toHashAttributes(valueNode.getAttributes());
+    updates.set("oldValue", -42); // no timestamp from here, will get injected automatically in device
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", updates)
+                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                  .receive());
+
+    // Take care that all data arrives at influx - sleeping 250 ms proofed not to be enough even locally
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1250));
+
+    // Get back bad data
+    // vectorUpdateTime2 is to early, future data gets timestamp after it, using inAFortnite might create intereference
+    // between different test runs, so create a new stamp:
+    const Epochstamp whenFlushed;
+    Hash badDataAllDevices;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot
+                ->request(dlreader0, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
+                //(inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size()); // Just our test device is a bad guy...
+    CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
+    const std::vector<Hash>& badData = badDataAllDevices.get<std::vector<Hash>>(deviceId);
+    // numCycles plus 3: 1st vector and then "2nd vector and future value" split into two due to different timestamps
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(badDataAllDevices), numCycles + 3ul, badData.size());
+
+    // Test the bad data from far future
+    Epochstamp last = before;
+    for (size_t i = 0; i < numCycles; ++i) {
+        const Hash& futureHash = badData[i];
+        CPPUNIT_ASSERT(futureHash.has("info"));
+        const std::string& info = futureHash.get<std::string>("info");
+        CPPUNIT_ASSERT_MESSAGE(info, info.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(info, info.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
+                                           std::string::npos);
+        CPPUNIT_ASSERT(futureHash.has("time"));
+        const std::string& timeStr = futureHash.get<std::string>("time");
+        const Epochstamp timeEpoch = Epochstamp::fromHashAttributes(futureHash.getAttributes("time"));
+        CPPUNIT_ASSERT_EQUAL(timeStr, timeEpoch.toIso8601Ext());
+        // Timestamp is defined inside logger (since not 'believing' the far future one),
+        // so we cannot be exactly sure for when this is logged (but in order)
+        CPPUNIT_ASSERT(last < timeEpoch);
+        CPPUNIT_ASSERT(Epochstamp() > timeEpoch);
+        last = timeEpoch;
+    }
+    // Test the bad data from 1st too long vector
+    const Hash& vectorHash = badData[badData.size() - 3];
+    CPPUNIT_ASSERT(vectorHash.has("info"));
+    const std::string& info = vectorHash.get<std::string>("info");
+    CPPUNIT_ASSERT_MESSAGE(info, info.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(info,
+                           info.find("'vector' (vector length " + toString(vectorSize) += ")") != std::string::npos);
+    CPPUNIT_ASSERT(vectorHash.has("time"));
+    const std::string& timeStr = vectorHash.get<std::string>("time");
+    const Epochstamp timeEpoch = Epochstamp::fromHashAttributes(vectorHash.getAttributes("time"));
+    CPPUNIT_ASSERT_EQUAL(timeStr, timeEpoch.toIso8601Ext());
+    const double dt2 = timeEpoch - vectorUpdateTime1.getEpochstamp();
+    CPPUNIT_ASSERT_LESSEQUAL(1.e-6, dt2); // we store only microsecond precision in DB
+
+    // Test the bad data from mixture of too long vector, future data and OK data
+    // First of these comes vector
+    const Hash& mixtureHash1 = badData[badData.size() - 2];
+    CPPUNIT_ASSERT(mixtureHash1.has("info"));
+    const std::string& info2 = mixtureHash1.get<std::string>("info");
+    CPPUNIT_ASSERT_MESSAGE(info2, info2.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(info2,
+                           info2.find("'vector' (vector length " + toString(vectorSize) += ")") != std::string::npos);
+    CPPUNIT_ASSERT(mixtureHash1.has("time"));
+    const std::string& timeStr2 = mixtureHash1.get<std::string>("time");
+    const Epochstamp timeEpoch2 = Epochstamp::fromHashAttributes(mixtureHash1.getAttributes("time"));
+    CPPUNIT_ASSERT_EQUAL(timeStr2, timeEpoch2.toIso8601Ext());
+    const double dt3 = timeEpoch2 - vectorUpdateTime2.getEpochstamp();
+    CPPUNIT_ASSERT_LESSEQUAL(1.e-6, dt3); // only microsecond precision in DB
+
+    // Finally future data from mixture
+    const Hash& mixtureHash2 = badData[badData.size() - 1];
+    CPPUNIT_ASSERT(mixtureHash2.has("info"));
+    const std::string& info3 = mixtureHash2.get<std::string>("info");
+    CPPUNIT_ASSERT_MESSAGE(info3, info3.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(info3, info3.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
+                                        std::string::npos);
+    CPPUNIT_ASSERT(mixtureHash2.has("time"));
+    const std::string& timeStr3 = mixtureHash2.get<std::string>("time");
+    const Epochstamp timeEpoch3 = Epochstamp::fromHashAttributes(mixtureHash2.getAttributes("time"));
+    CPPUNIT_ASSERT_EQUAL(timeStr3, timeEpoch3.toIso8601Ext());
+    // Timestamp is defined in logger since future stamp seen as unreliable:
+    // between "before setting the data mixture" and "now"
+    CPPUNIT_ASSERT(vectorUpdateTime2.getEpochstamp() < timeEpoch3);
+    CPPUNIT_ASSERT(Epochstamp() > timeEpoch3);
+
+    // Check that the "decent" data from same "signalChanged" as long vector and future value is properly logged
+    bool configAtTimepoint = false;
+    cfg.clear();
+    Schema dummySchema;
+    std::string dummyConfigTimepoint;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, Timestamp().toIso8601())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(cfg, dummySchema, configAtTimepoint, dummyConfigTimepoint));
+    CPPUNIT_ASSERT(configAtTimepoint);
+    CPPUNIT_ASSERT(cfg.has("oldValue"));
+    CPPUNIT_ASSERT_EQUAL(-42, cfg.get<int>("oldValue"));
+    const Epochstamp oldValueStamp(Epochstamp::fromHashAttributes(cfg.getAttributes("oldValue")));
+    // This timestamp is defined by device when setting it,
+    // but again this is between "before setting the data mixture" and "now"
+    CPPUNIT_ASSERT(vectorUpdateTime2.getEpochstamp() < oldValueStamp);
+    CPPUNIT_ASSERT(Epochstamp() > oldValueStamp);
+
+    // Now test that slotGetBadData correctly returns nothing for a decent period (here: future)
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
+                                  ->request(dlreader0, "slotGetBadData", inAFortnite.toIso8601Ext(),
+                                            (inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
+                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                  .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_MESSAGE(toString(badDataAllDevices), badDataAllDevices.empty());
+
     std::clog << "... OK" << std::endl;
 }
 
