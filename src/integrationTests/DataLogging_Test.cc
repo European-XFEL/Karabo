@@ -174,7 +174,7 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     }
 
     testMaxNumDataHistory();
-    testDropFutureData();
+    testDropBadData();
     testInt(true);
     testUInt64(false);
     testFloat(false);
