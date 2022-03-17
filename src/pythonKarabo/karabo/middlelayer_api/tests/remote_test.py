@@ -1,4 +1,5 @@
 import time
+import traceback
 import weakref
 from asyncio import (
     Future, TimeoutError, coroutine, ensure_future, gather, get_event_loop,
@@ -150,14 +151,14 @@ class Local(Device):
 
     @Slot()
     async def error(self):
-        raise RuntimeError
+        raise RuntimeError("On purpose")
 
     @Slot()
     async def error_in_error(self):
-        raise RuntimeError
+        raise RuntimeError("On purpose")
 
     async def error_log_message(self):
-        raise RuntimeError
+        raise RuntimeError("On purpose")
 
     @Slot()
     async def task_background_error_coro(self):
@@ -175,6 +176,7 @@ class Local(Device):
         self.exc_slot = slot
         self.exception = exc
         self.traceback = tb
+        self.traceback_str = "".join(traceback.format_tb(tb))
         if slot is Local.error_in_error:
             raise RuntimeError
         else:
@@ -836,6 +838,7 @@ class Tests(DeviceTest):
         del self.local.exc_slot
         del self.local.exception
         del self.local.traceback
+        del self.local.traceback_str
 
     @async_tst
     async def test_error_in_error(self):
@@ -850,11 +853,13 @@ class Tests(DeviceTest):
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertFalse(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error_in_error)
+        self.assertIn("On purpose", self.local.traceback_str)
         self.assertIsInstance(self.local.exception, RuntimeError)
         self.local.traceback.tb_lasti  # check whether that is a traceback
         del self.local.exc_slot
         del self.local.exception
         del self.local.traceback
+        del self.local.traceback_str
 
     @async_tst
     async def test_task_error(self):
@@ -870,9 +875,11 @@ class Tests(DeviceTest):
 
         self.assertIsNone(self.local.exc_slot)
         self.assertIsInstance(self.local.exception, RuntimeError)
+        self.assertIn("On purpose", self.local.traceback_str)
         del self.local.exc_slot
         del self.local.exception
         del self.local.traceback
+        del self.local.traceback_str
 
     @skipIf(not jms, "supported only by JMS client")
     @async_tst
@@ -892,10 +899,12 @@ class Tests(DeviceTest):
             self.assertIn("Error in background task ...", message)
             self.assertEqual(hash["type"], "ERROR")
             self.assertEqual(hash["category"], "local")
+            self.assertIn("On purpose", hash["traceback"])
 
         del self.local.exc_slot
         del self.local.exception
         del self.local.traceback
+        del self.local.traceback_str
 
     @skipIf(not jms, "supported only by JMS client")
     @async_tst
@@ -915,10 +924,12 @@ class Tests(DeviceTest):
             self.assertIn("Error in background task ...", message)
             self.assertEqual(hash["type"], "ERROR")
             self.assertEqual(hash["category"], "local")
+            self.assertIn("On purpose", hash["traceback"])
 
         del self.local.exc_slot
         del self.local.exception
         del self.local.traceback
+        del self.local.traceback_str
 
     @async_tst
     async def test_connectDevice(self):
