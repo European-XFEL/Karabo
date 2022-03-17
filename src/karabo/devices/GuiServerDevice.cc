@@ -233,7 +233,7 @@ namespace karabo {
                         "If this variable does not respect the N.N.N(.N) convention,"
                         " the Server will not enforce a version check")
                   .assignmentOptional()
-                  .defaultValue("2.10.4")
+                  .defaultValue("2.11.3")
                   .reconfigurable()
                   .adminAccess()
                   .commit();
