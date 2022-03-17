@@ -199,10 +199,19 @@ namespace karabo {
                     .description("Maximum time advance allowed for data. "
                                  "Data too far ahead in the future will be dropped. "
                                  "Negative values or 0 means no limit.")
-                    .assignmentOptional().defaultValue(7200)
+                    .assignmentOptional().defaultValue(7200) // 2 hours
                     .unit(Unit::SECOND)
                     .init()
                     .commit();
+ 
+            UINT32_ELEMENT(expected)
+                   .key("logger.InfluxDataLogger.maxVectorSize")
+                   .displayedName("Max Vector Size")
+                   .description("Vector properties longer than this are skipped and not written to the database.")
+                   .assignmentOptional()
+                   .defaultValue(4 * 2700) // four times number of bunches per EuXFEL train
+                   .init()
+                   .commit();
 
             VECTOR_STRING_ELEMENT(expected).key("serverList")
                     .displayedName("Server list")
@@ -973,16 +982,7 @@ namespace karabo {
 
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
-            Hash config;
-            if (m_logger == "FileDataLogger") {
-                config.set("directory", get<std::string>("logger.FileDataLogger.directory"));
-                config.set("maximumFileSize", get<int>("logger.FileDataLogger.maximumFileSize"));
-            } else if (m_logger == "InfluxDataLogger") {
-                config.set("urlWrite", get<std::string>("logger.InfluxDataLogger.urlWrite"));
-                config.set("urlQuery", get<std::string>("logger.InfluxDataLogger.urlRead"));
-                config.set("dbname", get<std::string>("logger.InfluxDataLogger.dbname"));
-                config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
-            }
+            Hash config(get<Hash>("logger." + m_logger));
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
 

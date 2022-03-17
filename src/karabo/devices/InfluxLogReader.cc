@@ -136,6 +136,8 @@ namespace karabo {
                     Types::to<ToLiteral>(Types::FLOAT),
                     Types::to<ToLiteral>(Types::DOUBLE)})
         {
+            KARABO_SLOT(slotGetBadData, std::string /*from*/, std::string /*to*/);
+
             std::string dbUser;
             if (getenv("KARABO_INFLUXDB_QUERY_USER")) {
                 dbUser = getenv("KARABO_INFLUXDB_QUERY_USER");
@@ -1102,6 +1104,76 @@ namespace karabo {
             }
             Hash::Attributes &attrs = node->getAttributes();
             Timestamp(epoch, trainId).toHashAttributes(attrs);
+        }
+
+
+        void InfluxLogReader::slotGetBadData(const std::string &fromStr, const std::string &toStr) {
+            const Epochstamp from(fromStr);
+            const Epochstamp to(toStr);
+
+            SignalSlotable::AsyncReply aReply(this);
+
+            std::ostringstream query;
+            query << "SELECT * FROM \"__BAD__DATA__\""
+                  << " WHERE time >= " << epochAsMicrosecString(from) << m_durationUnit
+                  << " AND time <= " << epochAsMicrosecString(to) << m_durationUnit;
+            const std::string queryStr = query.str();
+            try {
+                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onGetBadData, this, _1, aReply));
+            } catch (const std::exception &e) {
+                std::string details(e.what());
+                std::string errMsg("Error querying for bad data");
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg << ": " << details;
+                // In the thread where AsyncReply was created we must not use it, so post:
+                boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
+                EventLoop::getIOService().post([weakThis, errMsg, details, aReply]() {
+                    boost::shared_ptr<karabo::xms::SignalSlotable> ptr(weakThis.lock());
+                    if (ptr) { // Cannot use AsyncReply if its SignalSlotable is dying/dead
+                        aReply.error(errMsg + ": " + details); // master > 2.14.0: aReply.error(errMsg, details);
+                    }
+                });
+            }
+        }
+
+
+        void InfluxLogReader::onGetBadData(const HttpResponse &response, SignalSlotable::AsyncReply aReply) {
+            if (handleHttpResponseError(response, aReply)) {
+                // Nothing left to do, failure is already replied.
+                return;
+            }
+
+            try {
+                InfluxResultSet influxResult;
+                jsonResultsToInfluxResultSet(response.payload, influxResult, "");
+                Hash result;
+
+                const std::vector<std::string> &deviceIds = influxResult.first;
+                for (size_t i = 1; i < deviceIds.size(); ++i) { // but index 0 is "time"
+                    result.set(deviceIds[i], std::vector<Hash>());
+                }
+
+                // Converts each row of values into a Hash.
+                for (const std::vector<boost::optional<std::string>> &valuesRow : influxResult.second) {
+                    const unsigned long long time =
+                          std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
+                    const Epochstamp epoch(toEpoch(time));
+                    const std::string epochStr(epoch.toIso8601Ext());
+                    for (size_t i = 1; i < valuesRow.size(); ++i) {
+                        if (valuesRow[i]) {
+                            Hash h("info", std::move(*(valuesRow[i])));
+                            Hash::Node &node = h.set("time", epochStr);
+                            epoch.toHashAttributes(node.getAttributes());
+                            result.get<std::vector<Hash>>(deviceIds[i]).push_back(std::move(h));
+                        }
+                    }
+                }
+                aReply(result);
+            } catch (const std::exception &e) {
+                std::string details(e.what());
+                std::string errMsg("Error unpacking retrieved bad data info");
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg << ": " << details;
+                aReply.error(errMsg + ": " + details); // master > 2.14.0: aReply.error(errMsg, details); // 2.13.X:
+            }
         }
 
 

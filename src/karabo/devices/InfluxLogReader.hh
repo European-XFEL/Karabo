@@ -214,6 +214,10 @@ namespace karabo {
                                        const karabo::net::HttpResponse &propValueResp,
                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
+            void slotGetBadData(const std::string &fromStr, const std::string &toStr);
+            void onGetBadData(const karabo::net::HttpResponse &response,
+                              karabo::xms::SignalSlotable::AsyncReply aReply);
+
             std::string toInfluxDurationUnit(const karabo::util::TIME_UNITS &karaboDurationUnit);
 
             std::string epochAsMicrosecString(const karabo::util::Epochstamp &ep) const;

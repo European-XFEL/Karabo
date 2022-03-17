@@ -43,7 +43,8 @@ namespace karabo {
              */
             void login(const karabo::util::Hash& configuration, const std::vector<std::string>& sortedPaths);
 
-            void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
+            void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
+                                std::vector<std::pair<std::string, std::string>>& rejectedPathReasons);
 
             void checkSchemaInDb(const karabo::util::Timestamp& stamp,
                                  const std::string& schDigest,
@@ -60,7 +61,8 @@ namespace karabo {
 
             std::vector<char> m_archive;
             int m_maxTimeAdvance;
-            bool m_hasRejectedData;
+            size_t m_maxVectorSize;
+            unsigned long long m_secsOfLogOfRejectedData; // epoch seconds of last logging of rejected data
 
             karabo::util::Timestamp m_loggingStartStamp;
         };
@@ -111,7 +113,6 @@ namespace karabo {
             const std::string m_dbName;
             std::string m_urlWrite;
             std::string m_urlQuery;
-            int m_maxTimeAdvance;
             static const unsigned int k_httpResponseTimeoutMs;
 
         };
