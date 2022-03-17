@@ -26,15 +26,15 @@ namespace karabo {
         const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
-            : DeviceData(input)
-            , m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer"))
-            , m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer"))
-            , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
-            , m_archive()
-            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance"))
-            , m_hasRejectedData(false)
-            , m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {
-        }
+            : DeviceData(input),
+              m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
+              m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
+              m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
+              m_archive(),
+              m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
+              m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
+              m_secsOfLogOfRejectedData(0ull),
+              m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {}
 
 
         InfluxDeviceData::~InfluxDeviceData() {
@@ -78,7 +78,7 @@ namespace karabo {
 
             // store the local unix timestamp to compare the time difference w.r.t. incoming data.
             Epochstamp nowish;
-            std::vector<std::string> rejectedPaths;
+            std::vector<std::pair<std::string, std::string>> rejectedPaths; // path and reason
             // To write log I need schema - but that has arrived before connecting signal[State]Changed to slotChanged
             // and thus before any data can arrive here in handleChanged.
             std::vector<std::string> paths;
@@ -134,25 +134,29 @@ namespace karabo {
                 if (m_maxTimeAdvance > 0 && t.getEpochstamp() > nowish) {
                     // substract the 2 Epochstamp to get a TimeDuration.
                     const double dt = t.getEpochstamp() - nowish;
-                    if ( dt > m_maxTimeAdvance) {
-                        rejectedPaths.push_back(path);
+                    if (dt > m_maxTimeAdvance) {
+                        rejectedPaths.push_back(std::make_pair(path, "from far future " + t.toIso8601Ext()));
+                        // timestamp seems unreliable, so we bail out before
                         continue;
                     }
                 }
                 std::string value; // "value" should be a string, so convert depending on type ...
                 bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
                 Types::ReferenceType type = leafNode.getType();
+                size_t vectorSize = 0;
                 if (type == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as Base64 string
                     std::vector<char> archive;
-                    m_serializer->save(leafNode.getValue<std::vector < Hash >> (), archive);
-                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (archive.data());
+                    vectorSize = leafNode.getValue<std::vector<Hash>>().size() * 10u; // scale up vector hash size!
+                    m_serializer->save(leafNode.getValue<std::vector<Hash>>(), archive);
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(archive.data());
                     value = base64Encode(uarchive, archive.size());
                 } else if (leafNode.getType() == Types::CHAR) {
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (&leafNode.getValue<char>());
                     value = base64Encode(uarchive, 1ul);
                 } else if (leafNode.getType() == Types::VECTOR_CHAR) {
                     const std::vector<char> & v = leafNode.getValue<std::vector<char>>();
+                    vectorSize = v.size();
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
                     value = base64Encode(uarchive, v.size());
                 } else if (type == Types::VECTOR_UINT8) {
@@ -161,6 +165,7 @@ namespace karabo {
                     // We do not dare to fix that now, but workaround it here to have a human readable string
                     // in the DB to ease the use of the data outside Karabo:
                     const std::vector<unsigned char>& vec = leafNode.getValue<std::vector<unsigned char>>();
+                    vectorSize = vec.size();
                     if (!vec.empty()) {
                         std::ostringstream s;
                         s << static_cast<unsigned int> (vec[0]);
@@ -172,6 +177,7 @@ namespace karabo {
                 } else if (type == Types::VECTOR_STRING) {
                     // Special case: convert to JSON and then base64 ...
                     const std::vector<std::string>& vecstr = leafNode.getValue<std::vector<std::string> >();
+                    vectorSize = vecstr.size();       // or use overall base64 encoded length below?
                     nl::json j(vecstr);                     // convert to JSON
                     const std::string str = j.dump();       // JSON as a string
                     const unsigned char* encoded = reinterpret_cast<const unsigned char*>(str.c_str());
@@ -179,7 +185,9 @@ namespace karabo {
                     value = base64Encode(encoded, length);  // encode to base64
                 } else if (Types::isVector(type)) {
                     // ... and treat  any other vectors as a comma separated text string of vector elements
-                    value = toString(leafNode.getValueAs<std::string, std::vector>());
+                    const std::vector<std::string>& asVecStr = leafNode.getValueAs<std::string, std::vector>();
+                    vectorSize = asVecStr.size();
+                    value = toString(asVecStr);
                 } else if (type == Types::DOUBLE) {
                     const double v = leafNode.getValue<double>();
                     isFinite = std::isfinite(v);
@@ -208,22 +216,20 @@ namespace karabo {
                     lineTimestamp = t;
                 } else if (t.getEpochstamp() != lineTimestamp.getEpochstamp()) {
                     // new timestamp! flush the previous query
-                    terminateQuery(query, lineTimestamp);
+                    terminateQuery(query, lineTimestamp, rejectedPaths);
                     lineTimestamp = t;
                 }
 
-                // isFinite matters only for FLOAT/DOUBLE
-                logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
+                if (vectorSize > m_maxVectorSize) {
+                    rejectedPaths.push_back(std::make_pair(path, "vector length " + toString(vectorSize)));
+                    // All stamp manipulations done, we just skip logValue
+                } else {
+                    // isFinite matters only for FLOAT/DOUBLE
+                    logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
+                }
             }
 
-            if (!m_hasRejectedData && rejectedPaths.size() != 0ul) {
-                KARABO_LOG_FRAMEWORK_WARN << "Skip properties '" << toString(rejectedPaths) << "' of '" << deviceId
-                    << "' - Since they are too far in the future.";
-            }
-            m_hasRejectedData = rejectedPaths.size() != 0ul;
-
-            terminateQuery(query, lineTimestamp);
-
+            terminateQuery(query, lineTimestamp, rejectedPaths);
         }
 
 
@@ -353,8 +359,9 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::terminateQuery(std::stringstream& query,
-                                              const karabo::util::Timestamp& stamp) {
+        void InfluxDeviceData::terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
+                                              std::vector<std::pair<std::string, std::string>>& rejectedPathReasons) {
+            unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             if (!query.str().empty()) {
                 // There's data to be output to Influx.
 
@@ -365,13 +372,46 @@ namespace karabo {
                     tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
                         query << ",_tid=" << tid << "i";
                 }
-                const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
                 if (ts > 0) {
                     query << " " << ts;
                 }
                 query << "\n";
                 m_dbClientWrite->enqueueQuery(query.str());
                 query.str("");
+            }
+
+            if (!rejectedPathReasons.empty()) {
+                std::stringstream textSs;
+                textSs << "Skip properties of '" << m_deviceToBeLogged << "':";
+                for (const std::pair<std::string, std::string>& pathReason : rejectedPathReasons) {
+                    textSs << "\n'" << pathReason.first << "' (" << pathReason.second << ")";
+                }
+                std::string text(textSs.str());
+                const Epochstamp now;
+                if (now.getSeconds() > 30ull + m_secsOfLogOfRejectedData) {
+                    // Blame device only every 30 seconds to avoid log file spamming
+                    KARABO_LOG_FRAMEWORK_WARN << text;
+                    m_secsOfLogOfRejectedData = now.getSeconds();
+                }
+                boost::algorithm::replace_all(text, "\n", " "); // better no line breaks
+                std::stringstream badDataQuery;
+                if (ts == 0.) {
+                    // Far future data without any "decent" data in same update Hash: setting 'stamp' was skipped and it
+                    // stays at the start of unix epoch. The best realistic stamp is in fact 'now':
+                    ts = now.toTimestamp() * PRECISION_FACTOR;
+                }
+                // Bad data is logged in a device independent measurement to simplify retrieval of all bad data.
+                // DeviceId is the field name.
+                // NOTE: There is a potential name clash of this measurement and a potential device with
+                //       deviceId = "__BAD__DATA__".
+                //       But even if such a weird deviceId exists, it should more or less work since all properties of
+                //       it will have '-<Karabo-type>' appended to their field names. Then we would only clash between
+                //       properties of that device and other devices whose id ends with '-<Karabo-type>' and that
+                //       produce bad data stored here.
+                badDataQuery << "__BAD__DATA__  " << m_deviceToBeLogged << "=\"" << text << "\" " << ts << "\n";
+                m_dbClientWrite->enqueueQuery(badDataQuery.str());
+                // m_dbClientWrite->flushBatch(); // Should not be needed
+                rejectedPathReasons.clear();
             }
         }
 
@@ -452,8 +492,8 @@ namespace karabo {
                     .init()
                     .commit();
 
-            STRING_ELEMENT(expected).key("urlQuery")
-                    .displayedName("Influxdb URL (query)")
+            STRING_ELEMENT(expected).key("urlRead")
+                    .displayedName("Influxdb URL (read)")
                     .description("URL should be given in form: tcp://host:port. 'Query' interface")
                     .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .init()
@@ -482,14 +522,21 @@ namespace karabo {
                     .init()
                     .commit();
 
+            UINT32_ELEMENT(expected)
+                  .key("maxVectorSize")
+                  .displayedName("Max Vector Size")
+                  .description(
+                        "Vector properties longer than this are skipped and not written to the database. "
+                        "(For tables, i.e. vector<Hash>, the limit is maxVectorSize / 10.)")
+                  .assignmentOptional()
+                  .defaultValue(4 * 2700) // four times number of bunches per EuXFEL train
+                  .init()
+                  .commit();
         }
 
 
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
-            : DataLogger(input)
-            , m_dbName(input.get<std::string>("dbname"))
-            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance")) {
-
+            : DataLogger(input), m_dbName(input.get<std::string>("dbname")) {
             // We have to work in cluster environment where we have 2 nodes and proxy
             // that runs 'telegraf' working as a proxy and load balancer
             // All write requests should go to the load balancer
@@ -501,7 +548,7 @@ namespace karabo {
             // the database name registered already in cluster DB
 
             m_urlWrite = input.get<std::string>("urlWrite");
-            m_urlQuery = input.get<std::string>("urlQuery");
+            m_urlQuery = input.get<std::string>("urlRead");
 
             std::string dbUserWrite;
             if (getenv("KARABO_INFLUXDB_WRITE_USER")) {
@@ -581,7 +628,8 @@ namespace karabo {
             Hash config = cfg;
             config.set("dbClientReadPointer", m_clientRead);
             config.set("dbClientWritePointer", m_clientWrite);
-            config.set("maxTimeAdvance", m_maxTimeAdvance);
+            config.set("maxTimeAdvance", get<int>("maxTimeAdvance"));
+            config.set("maxVectorSize", get<unsigned int>("maxVectorSize"));
             DeviceData::Pointer deviceData =
                     Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;

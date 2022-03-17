@@ -93,7 +93,7 @@ protected:
      * Checks that the InfluxLogger is properly dropping values
      * too far ahead in the future.
      */
-    void testDropFutureData();
+    void testDropBadData();
 
     /**
      * Sets PropertyTestDevice Schema
