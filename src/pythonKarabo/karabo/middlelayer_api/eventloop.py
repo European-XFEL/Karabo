@@ -351,8 +351,11 @@ class EventLoop(SelectorEventLoop):
     def exceptionHandler(self, context):
         try:
             instance = context["future"].instance()
-            instance._onException(None, context["exception"],
-                                  context.get("source_traceback"))
+            exception = context["exception"]
+            trace = None
+            if exception is not None:
+                trace = exception.__traceback__
+            instance._onException(None, exception, trace)
         except BaseException:
             self.default_exception_handler(context)
 
