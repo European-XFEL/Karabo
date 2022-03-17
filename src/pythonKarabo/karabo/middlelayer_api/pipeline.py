@@ -779,6 +779,7 @@ class NetworkOutput(Configurable):
         self.copy_futures = []
         self.active_channels = WeakSet()
         self.has_shared = 0
+        self.channelName = ""
         self.shared_queue = CancelQueue(0 if self.noInputShared
                                         in ["queue", "queueDrop"] else 1)
 
