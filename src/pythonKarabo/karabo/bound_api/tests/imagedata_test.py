@@ -101,6 +101,38 @@ def test_ndarry_refcounting():
     assert img_data_weak() is None
 
 
+def test_ndarry_in_hash():
+    arr = np.arange(200, dtype='uint8').reshape(10, 20)
+    assert arr.shape == (10, 20)
+    h = Hash("arr", arr)
+    arr2 = h["arr"]
+    # still the same
+    assert compare_ndarray_data_ptrs(arr, arr2)
+    assert "arr.data" in h
+    assert h["arr.type"] == Types.UINT8
+    assert h["arr.shape"] == [10, 20]
+
+    # Fake NDArray with wrong size of underlying BYTE_ARRAY
+    # Do not try to mimic NDArrays like that in real life, this is just
+    # to check that an inconsistently created NDArray in the Hash will fail
+    array_node = Hash()
+    # BYTE_ARRAY is on purpose not exposed to bound API via Types...
+    array_node.setAs("data", b'12345', "BYTE_ARRAY")  # 5 bytes only
+    array_node.setAs("type", int(Types.UINT16), Types.INT32)
+    array_node.setAs("shape", [2, 3], Types.VECTOR_UINT64)
+    array_node.setAs("isBigEndian", False, Types.BOOL)
+    outer_hash = Hash("badArray", array_node)
+    outer_hash.setAttribute("badArray", "__classId", "NDArray")
+    try:
+        outer_hash["badArray"]
+    except RuntimeError as e:
+        msg = ("Inconsistent NDArray: 5 are too few bytes for shape [2,3] "
+               "of UINT16")
+        assert msg in str(e)
+    else:
+        assert False
+
+
 # This is the original test...
 def test_imagedata_set_and_get():
     a = np.arange(20000, dtype='uint8').reshape(100, 200)

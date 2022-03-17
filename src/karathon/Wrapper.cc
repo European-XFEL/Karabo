@@ -519,7 +519,10 @@ namespace karathon {
     }
 
     bp::object Wrapper::fromNDArrayToPyArray(const karabo::util::NDArray& ndarray) {
-        const int typenum = karabo::util::Types::to<ToNumpy>(ndarray.getType());
+        using namespace karabo::util;
+        const Types::ReferenceType karaboType = ndarray.getType();
+        const int typenum = Types::to<ToNumpy>(karaboType);
+        const size_t bytesPerItem = Types::to<ToSize>(karaboType);
         const karabo::util::Dims shape = ndarray.getShape();
         const int nd = shape.rank();
         std::vector<npy_intp> dims(nd, 0);
@@ -527,7 +530,14 @@ namespace karathon {
             dims[i] = shape.extentIn(i);
         }
 
-        karabo::util::NDArray::DataPointer dataPtr(ndarray.getDataPtr());
+        const ByteArray& byteArray = ndarray.getByteArray();
+        if (shape.size() * bytesPerItem > byteArray.second) {
+            throw KARABO_PARAMETER_EXCEPTION("Inconsistent NDArray: " + toString(byteArray.second) +=
+                                             " are too few bytes for shape [" + toString(shape.toVector()) +=
+                                             "] of " + Types::to<ToLiteral>(karaboType));
+        }
+
+        karabo::util::NDArray::DataPointer dataPtr(byteArray.first);
         const boost::shared_ptr<CppArrayRefHandler> refHandler(new CppArrayRefHandler(dataPtr));
         bp::object pyRefHandler(refHandler); // Python reference count starts at 1
         void* data = reinterpret_cast<void*>(dataPtr.get());
