@@ -1,9 +1,8 @@
-import os.path as op
 import os
+import os.path as op
 import subprocess
 
 import __PACKAGE_NAME__
-
 
 BLACKLIST = ['setup.py', '__init__.py']
 
