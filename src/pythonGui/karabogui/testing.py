@@ -5,7 +5,6 @@ import unittest
 from collections import OrderedDict
 from platform import system
 
-import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication
@@ -56,23 +55,6 @@ class GuiTestCase(unittest.TestCase):
 
     def click(self, button_widget, button=Qt.LeftButton):
         QTest.mouseClick(button_widget, button)
-
-
-@pytest.fixture()
-def gui_app():
-    os.environ["KARABO_TEST_GUI"] = "1"
-    if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
-        os.environ['QT_MAC_WANTS_LAYER'] = '1'
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication(sys.argv)
-    create_background_timer()
-    import karabogui.access as krb_access
-    krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
-    from karabogui import icons
-    icons.init()
-    populate_controller_registry()
-    return app
 
 
 def click_button(button_widget, button=Qt.LeftButton):
