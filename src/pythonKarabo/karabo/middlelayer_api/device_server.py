@@ -157,10 +157,10 @@ class DeviceServerBase(SignalSlotable):
     async def scanPluginsLoop(self):
         """every 3 s, check whether there are new entry points"""
         while True:
+            await sleep(3)
             await self.pluginLoader.update()
             if (await self.scanPluginsOnce()):
                 self.updateInstanceInfo(self.deviceClassesHash())
-            await sleep(3)
 
     async def scanPluginsOnce(self):
         """load all available entry points, return whether new plugin found
