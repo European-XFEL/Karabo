@@ -5,11 +5,10 @@ from qtpy.QtWidgets import QDialog
 from karabo.common.scenemodel.api import StickerModel
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.api import StickerDialog
-from karabogui.testing import click_button, gui_app
+from karabogui.testing import click_button
 
 
-def test_sticker_dialog(gui_app: gui_app, mocker):
-
+def test_sticker_dialog(gui_app, mocker):
     """Test the sticker dialog"""
     model = StickerModel(
         text="XFEL",
