@@ -145,6 +145,17 @@ class TestConst(GuiTestCase):
         # Limits
         self.assertEqual(widget.value(), (20, 90))
 
+        # Test goofy values
+        widget.initialize(-999999999999999999999999999999999, 0)
+        self.assertFalse(widget.isEnabled())
+        self.assertFalse(widget.isVisible())
+
+        widget.setEnabled(True)
+        widget.setVisible(True)
+        widget.initialize(0, 9999999999999999999999999999999999999999)
+        self.assertFalse(widget.isEnabled())
+        self.assertFalse(widget.isVisible())
+
         widget.close()
         widget.destroy()
 
