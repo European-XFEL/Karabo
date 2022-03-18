@@ -1267,6 +1267,8 @@ s             *
             template <typename... Args>
             void execute(const std::string& deviceId, const std::string& command, int timeoutInSeconds = 3,
                          const Args&... slotArgs) {
+                // For supporting legacy code that uses -1 as the default timeout value.
+                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
                 KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
                 sp->request(deviceId, command, slotArgs...).timeout(timeoutInSeconds * 1000).receive();
             }
