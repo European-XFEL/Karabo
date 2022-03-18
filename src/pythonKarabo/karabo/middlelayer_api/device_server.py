@@ -38,6 +38,7 @@ For example:
             }
         }.
 """
+SCAN_PLUGINS_TIME = 3
 
 
 class DeviceServerBase(SignalSlotable):
@@ -79,19 +80,13 @@ class DeviceServerBase(SignalSlotable):
     scanPluginsTask = None
     _device_initializer = {}
 
-    @Bool(
+    scanPlugins = Bool(
         displayedName="Scan plug-ins?",
         description="Decides whether the server will scan the content of \n"
                     "the plug-in folder and dynamically load found devices",
         assignment=Assignment.OPTIONAL, defaultValue=True,
+        accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
-    def scanPlugins(self, value):
-        if value and self.scanPluginsTask is None:
-            self.scanPluginsTask = ensure_future(self.scanPluginsLoop())
-        elif not value and self.scanPluginsTask is not None:
-            self.scanPluginsTask.cancel()
-            self.scanPluginsTask = None
-        self.scanPlugins = self.scanPluginsTask is not None
 
     log = Node(Logger,
                description="Logging settings",
@@ -137,19 +132,20 @@ class DeviceServerBase(SignalSlotable):
         return info
 
     async def _run(self, **kwargs):
+        # Scan the plugins very early to send the full instanceInfo
+        # before coming online.
+        await self.pluginLoader.update()
+        await self.scanPluginsOnce()
         await super(DeviceServerBase, self)._run(**kwargs)
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
-
-        await self.pluginLoader.update()
-        await self.scanPluginsOnce()
-        self.updateInstanceInfo(self.deviceClassesHash())
-
         self.logger.info("Starting Karabo DeviceServer on host "
                          f"{self.hostName}, topic {get_event_loop().topic}")
 
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
+        if self.scanPlugins:
+            self.scanPluginsTask = ensure_future(self.scanPluginsLoop())
 
     def _generateDefaultServerId(self):
         return self.hostName + "_Server_" + str(os.getpid())
@@ -157,7 +153,7 @@ class DeviceServerBase(SignalSlotable):
     async def scanPluginsLoop(self):
         """every 3 s, check whether there are new entry points"""
         while True:
-            await sleep(3)
+            await sleep(SCAN_PLUGINS_TIME)
             await self.pluginLoader.update()
             if (await self.scanPluginsOnce()):
                 self.updateInstanceInfo(self.deviceClassesHash())
