@@ -54,7 +54,11 @@ class ProfilePlot(BasePlot):
         # Adjust the y range to the data range to not show the pedestal.
         y_range = ("yRange" if self.orientation in ["top", "bottom"]
                    else "xRange")
-        self.plotItem.setRange(**{y_range: (y_data.min(), y_data.max())})
+
+        data_range = (y_data.min(), y_data.max())
+        # Both need to be finite!
+        if all(np.isfinite(data_range)):
+            self.plotItem.setRange(**{y_range: data_range})
 
     def set_fit(self, x_data, y_data):
         self._fit_item.setData(x_data, y_data, pen=self._fit_pen)
