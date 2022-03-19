@@ -1,4 +1,5 @@
 import uuid
+import weakref
 from asyncio import gather, get_event_loop, set_event_loop, sleep, wait_for
 from contextlib import ExitStack, contextmanager
 from functools import partial, wraps
@@ -174,7 +175,7 @@ class AsyncDeviceContext:
             instance = SignalSlotable(
                 {"_deviceId_": create_instanceId()})
             await instance.startInstance()
-            loop.instance = lambda: instance
+            loop.instance = weakref.ref(instance)
             self.instance = instance
         if self.instances:
             await gather(*(d.startInstance() for d in self.instances.values()))
