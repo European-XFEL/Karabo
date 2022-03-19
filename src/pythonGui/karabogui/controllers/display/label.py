@@ -64,12 +64,10 @@ class DisplayLabel(BaseBindingController):
         self._internal_widget.clear()
 
     def binding_update(self, proxy):
-        binding = proxy.binding
-        self._fmt = get_dtype_format(binding)
+        self._fmt = get_dtype_format(proxy.binding)
+        self.widget.update_unit_label(proxy)
 
     def value_update(self, proxy):
-        self.widget.update_label(proxy)
-
         binding = proxy.binding
         value = get_binding_value(proxy, "")
         if value == "" or isinstance(binding, StringBinding):

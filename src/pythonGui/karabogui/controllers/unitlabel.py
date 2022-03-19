@@ -26,6 +26,15 @@ class UnitLabelWrapper(QFrame):
         layout.addWidget(widget)
         layout.addWidget(label)
 
+    def update_unit_label(self, proxy):
+        """Update the label according to the unit_label of the `proxy`"""
+        if proxy.binding is None:
+            return
+
+        unit_label = proxy.binding.unit_label
+        self.label.setVisible(unit_label != "")
+        self.label.setText(unit_label)
+
     def update_label(self, proxy):
         # Add an `update_label` "method" for keeping things synced
         if proxy.binding is None:
