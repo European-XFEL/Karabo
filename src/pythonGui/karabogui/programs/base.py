@@ -1,7 +1,7 @@
 import os
-import os.path as op
 import sys
 import warnings
+from pathlib import Path
 from platform import system
 from traceback import format_exception, print_exception
 
@@ -87,15 +87,18 @@ def create_gui_app(args):
     # Add fonts
     for font_file in FONT_FILENAMES:
         QFontDatabase.addApplicationFont(font_file)
+
     # Set default application font
     font_size = get_font_size_from_dpi(SCENE_FONT_SIZE)
     font = QFont()
     font.setFamily(SCENE_FONT_FAMILY)
     font.setPointSize(font_size)
-    font.insertSubstitution("Ubuntu", SCENE_FONT_FAMILY)
-    font.insertSubstitution("Sans Serif", SCENE_FONT_FAMILY)
+    families = QFontDatabase().families()
+    if "Ubuntu" in families:
+        font.insertSubstitution("Ubuntu", SCENE_FONT_FAMILY)
+    if "Sans Serif" in families:
+        font.insertSubstitution("Sans Serif", SCENE_FONT_FAMILY)
     app.setFont(font)
-
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
     app.setStyleSheet("QToolBar { border: 0px }")
     # Also set the font of the QTreeView and QTableView as it defaults to
@@ -108,7 +111,7 @@ def create_gui_app(args):
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo
-    logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
+    logo_path = str(Path(__file__).parent / '..' / "icons" / "app_logo.png")
     app.setWindowIcon(QIcon(logo_path))
 
     QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
@@ -131,8 +134,8 @@ def init_gui(app, use_splash=True):
     process_qt_events(app)
 
     if use_splash:
-        splash_path = op.join(op.dirname(__file__), '..', "icons",
-                              "splash.png")
+        splash_path = str(Path(__file__).parent / '..' / "icons"
+                          / "splash.png")
         splash_img = QPixmap(splash_path)
         splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
         splash.setMask(splash_img.mask())
