@@ -572,13 +572,11 @@ class TableValue(KaraboValue):
         :param value: The value for the condition
         :param op: Instance of operator condition
 
-        :returns: Filtered HashList (this is a copy)
+        :returns: Filtered TableValue
         """
         indexes = self.where(field, value, op)
-        data = self.value[indexes]
-        return HashList(Hash({key: value for key, value in
-                              zip(data.dtype.names, row)})
-                        for row in data)
+        value = self.value[indexes]
+        return TableValue(value, self.units, timestamp=self.timestamp)
 
     def clear(self):
         """Clear the table element with a single message"""
