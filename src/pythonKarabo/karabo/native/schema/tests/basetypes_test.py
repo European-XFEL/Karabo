@@ -299,14 +299,16 @@ class Tests(TestCase):
         indexes = t.where("integer", 2)
         self.assertEqual(indexes, [1])
 
-        row_hl = t.where_value("integer", 2)
+        rows = t.where_value("integer", 2)
+        self.assertIsInstance(rows, TableValue)
+        row_hl = rows.to_hashlist()
         self.assertEqual(len(row_hl), 1)
 
         # Now with operator
-        row_hl = t.where_value("integer", 2, operator.lt)
+        row_hl = t.where_value("integer", 2, operator.lt).to_hashlist()
         self.assertEqual(len(row_hl), 0)
 
-        row_hl = t.where_value("integer", 3, operator.gt)
+        row_hl = t.where_value("integer", 3, operator.gt).to_hashlist()
         self.assertEqual(len(row_hl), 2)
         self.assertEqual(row_hl[0]["integer"], 4)
         self.assertEqual(row_hl[1]["integer"], 5)
@@ -315,7 +317,7 @@ class Tests(TestCase):
         def cond(a, b):
             return a - 1 == b
 
-        row_hl = t.where_value("integer", 3, cond)
+        row_hl = t.where_value("integer", 3, cond).to_hashlist()
         self.assertEqual(len(row_hl), 1)
         self.assertEqual(row_hl[0]["integer"], 4)
 
