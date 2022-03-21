@@ -11,7 +11,6 @@ FWHM_COEFF = 2 * np.sqrt(2 * np.log(2))
 
 
 class ProfileAnalyzer(BaseAnalyzer):
-
     # The stats depends on the fit parameters
     stats = Property(Dict, depends_on='_fit_params')
 
@@ -144,9 +143,12 @@ def gaussian_fit(x_data, y_data, offset=0):
     """
     Centre-of-mass and width. Lifted from image_processing.imageCentreofMass()
     """
-
-    x0 = np.average(x_data, weights=y_data)
-    sx = np.sqrt(np.average((x_data - x0) ** 2, weights=y_data))
+    try:
+        x0 = np.average(x_data, weights=y_data)
+        sx = np.sqrt(np.average((x_data - x0) ** 2, weights=y_data))
+    except ZeroDivisionError:
+        # Weighting might fail with zero's
+        return None
 
     # Gaussian fit
     p_0 = (y_data.max(), x0 + offset, sx, y_data[0])
