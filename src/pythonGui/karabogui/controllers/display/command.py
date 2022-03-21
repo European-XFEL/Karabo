@@ -101,7 +101,10 @@ class DisplayCommand(BaseBindingController):
         for item in self._actions:
             item_dev = item.proxy.root_proxy
             item_binding = item.proxy.binding
-            if item_dev is updated_dev:
+            if item_binding is None:
+                # XXX: Deprecated slot on device side, but still included...
+                item.action.setEnabled(False)
+            elif item_dev is updated_dev:
                 is_allowed = item_binding.is_allowed(state)
                 is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
                                  item_binding.required_access_level)
