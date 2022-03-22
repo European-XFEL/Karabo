@@ -106,11 +106,11 @@ def _create_test_module():
 
     from .middlelayer_api.tests.eventloop import (
         AsyncDeviceContext, DeviceTest, async_tst, create_device_server,
-        event_loop, setEventLoop, sync_tst)
+        create_instanceId, event_loop, setEventLoop, sync_tst)
 
     symbols = (
         AsyncDeviceContext, DeviceTest, async_tst, create_device_server,
-        event_loop, setEventLoop, sync_tst
+        create_instanceId, event_loop, setEventLoop, sync_tst
     )
     module = create_module('karabo.middlelayer.testing', *symbols)
     module.__file__ = __file__
