@@ -3,32 +3,25 @@
 # Created on __DATE__
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
+import pytest
 
-from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
+from karabo.middlelayer.testing import AsyncDeviceContext, event_loop
 
 from ..__CLASS_NAME__ import __CLASS_NAME__
 
-
-conf = {
-    "classId": "__CLASS_NAME__",
+_DEVICE_CONFIG = {
     "_deviceId_": "Test__CLASS_NAME__",
     "greeting": "buongiorno"
 }
 
 
-class Test__CLASS_NAME__(DeviceTest):
-    @classmethod
-    @contextmanager
-    def lifetimeManager(cls):
-        cls.dev = __CLASS_NAME__(conf)
-        with cls.deviceManager(lead=cls.dev):
-            yield
-
-    @async_tst
-    async def test_greet(self):
+@pytest.mark.asyncio
+async def test_greeting(event_loop: event_loop):
+    device = __CLASS_NAME__(_DEVICE_CONFIG)
+    async with AsyncDeviceContext(device=device) as ctx:
+        assert ctx.instances["device"] is device
         for greet in ("Buongiorno", "Guten Tag", "Moin Moin"):
-            self.dev.greeting = greet
-            self.assertEqual(self.dev.greeting.value, greet)
-            await self.dev.hello()
-            self.assertEqual(self.dev.greeting.value, "Hello world!")
+            device.greeting = greet
+            assert device.greeting.value == greet
+            await device.hello()
+            assert device.greeting.value == "Hello world!"
