@@ -545,9 +545,9 @@ class Tests(DeviceTest):
     async def test_waituntil(self):
         """test the waitUntil coroutine"""
         with (await getDevice("remote")) as d:
+            d.counter = 0
             if not jms:
                 await updateDevice(d)
-            d.counter = 0
             await waitUntil(lambda: d.counter == 0)
             self.assertEqual(d.counter, 0)
             task = ensure_future(d.count())
