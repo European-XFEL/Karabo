@@ -11,8 +11,7 @@ import socket
 import time
 import traceback
 import weakref
-from asyncio import (
-    CancelledError, Future, ensure_future, gather, sleep, wait_for)
+from asyncio import Future, Lock, ensure_future, gather, sleep, wait_for
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -50,6 +49,8 @@ class AmqpBroker(Broker):
         self.timestamp = time.time() * 1000000 // 1000      # float
         self.logproc = None
         self.future = None
+        self.heartbeatTask = None
+        self.subscrLock = Lock()
 
     async def subscribe_default(self):
         """Subscribe to 'default' exchanges to allow a communication
@@ -72,7 +73,8 @@ class AmqpBroker(Broker):
         self.exchanges[exchange] = exch   # aio_pika.exchange.Exchange instance
         # bind to the queue
         await self.queue.bind(exch, routing_key=binding_key)
-        self.subscriptions.add((exch, binding_key))
+        async with self.subscrLock:
+            self.subscriptions.add((exch, binding_key))
 
         if self.broadcast:
             # declare exchange
@@ -82,7 +84,8 @@ class AmqpBroker(Broker):
                     exchange, aio_pika.ExchangeType.TOPIC)
             self.exchanges[exchange] = exch
             await self.queue.bind(exch, routing_key=binding_key)
-            self.subscriptions.add((exch, binding_key))
+            async with self.subscrLock:
+                self.subscriptions.add((exch, binding_key))
 
         exchange = self.domain + ".signals"
         self.exchanges[exchange] = await self.channel.declare_exchange(
@@ -97,10 +100,7 @@ class AmqpBroker(Broker):
             exch = await self.channel.declare_exchange(
                     exchange, aio_pika.ExchangeType.TOPIC)
             self.exchanges[exchange] = exch
-        try:
-            await exch.publish(message, routing_key)
-        except CancelledError:
-            await self.channel.close()
+        await exch.publish(message, routing_key)
 
     def send(self, exchange, routing_key, header, args):
         if self.loop.is_closed() or not self.loop.is_running():
@@ -167,7 +167,7 @@ class AmqpBroker(Broker):
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        ensure_future(heartbeat())
+        self.heartbeatTask = ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -292,9 +292,10 @@ class AmqpBroker(Broker):
         for s in signals:
             binding_key = deviceId + "." + s
             t = (exch, binding_key)
-            if t not in self.subscriptions:
-                await self.queue.bind(exch, routing_key=binding_key)
-                self.subscriptions.add(t)
+            async with self.subscrLock:
+                if t not in self.subscriptions:
+                    await self.queue.bind(exch, routing_key=binding_key)
+                    self.subscriptions.add(t)
 
             self.emit("call", {deviceId: ["slotConnectToSignal"]},
                       s, slot.__self__.deviceId, slot.__name__)
@@ -328,9 +329,10 @@ class AmqpBroker(Broker):
             for s in signals:
                 binding_key = deviceId + "." + s
                 t = (exch, binding_key)
-                if t in self.subscriptions:
-                    self.subscriptions.remove(t)
-                    await self.queue.unbind(exch, routing_key=binding_key)
+                async with self.subscrLock:
+                    if t in self.subscriptions:
+                        self.subscriptions.remove(t)
+                        await self.queue.unbind(exch, routing_key=binding_key)
 
                 self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
                           s, slot.__self__.deviceId, slot.__name__)
@@ -339,14 +341,29 @@ class AmqpBroker(Broker):
                 f'Fail to disconnect from signals: {signals}')
 
     async def async_unsubscribe_all(self):
-        for exch, binding_key in self.subscriptions:
-            await self.queue.unbind(exch, routing_key=binding_key)
-        self.subscriptions = set()
-        await self.queue.delete()
+        async with self.subscrLock:
+            for exch, binding_key in self.subscriptions:
+                await self.queue.unbind(exch, routing_key=binding_key)
+            self.subscriptions = set()
+
+    async def stopHeartbeat(self):
+        if self.heartbeatTask is not None:
+            self.heartbeatTask.cancel()
+            self.heartbeatTask = None
 
     async def ensure_disconnect(self):
         """Close broker connection"""
         await self.connection.close()
+
+    async def _cleanup(self):
+        await self.stopHeartbeat()
+        self.future.set_result(None)
+        if self.logproc is not None:
+            self.logproc = None
+        if self.consumer_tag is not None:
+            await self.queue.cancel(self.consumer_tag)
+            self.consumer_tag = None
+        await self.async_unsubscribe_all()
 
     async def on_message(self, device, message: aio_pika.IncomingMessage):
         async with message.process():
@@ -438,6 +455,14 @@ class AmqpBroker(Broker):
             device = weakref.ref(device)
             await self.consume(device)
 
+    async def _stop_tasks(self):
+        me = asyncio.current_task(loop=None)
+        tasks = [t for t in self.tasks if t is not me]
+        for t in tasks:
+            t.cancel()
+        await wait_for(gather(*tasks, return_exceptions=True),
+                       timeout=5)
+
     async def stop_tasks(self):
         """Stop all currently running task
 
@@ -446,22 +471,9 @@ class AmqpBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
-        self.future.set_result(None)
-        if self.logproc is not None:
-            self.logproc = None
-        # Suspend... to finish unsubscription ... before cancelling ...
-        await sleep(0.1)
-        if self.consumer_tag is not None:
-            await self.queue.cancel(self.consumer_tag)
-            self.consumer_tag = None
-        await asyncio.sleep(0.1)
-
-        me = asyncio.current_task(loop=None)
-        tasks = [t for t in self.tasks if t is not me]
-        for t in tasks:
-            t.cancel()
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
+        await self._cleanup()
+        await sleep(0.2)
+        await self._stop_tasks()
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)

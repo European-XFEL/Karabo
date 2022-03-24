@@ -7,7 +7,7 @@ from contextlib import closing
 from itertools import count
 from unittest import TestCase, main, skip
 
-from karabo.middlelayer_api.compat import amqp
+from karabo.middlelayer_api.compat import amqp, jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     findDevices, getClients, getDevice, getDevices, shutdown)
@@ -74,9 +74,15 @@ class Tests(TestCase):
             r = weakref.ref(remote)
             Remote.destructed = False
             del remote
-            time.sleep(0.02)
+            if jms:
+                time.sleep(0.02)
+            else:
+                time.sleep(0.2)
             gc.collect()
-            time.sleep(0.02)
+            if jms:
+                time.sleep(0.02)
+            else:
+                time.sleep(0.2)
             self.assertIsNone(r())
             self.assertTrue(Remote.destructed)
         finally:
@@ -165,7 +171,6 @@ class Tests(TestCase):
         await shutdown("other")
         self.assertNotIn("other", getDevices())
 
-    # @skipIf(amqp, "fails for amqp")
     def test_topology(self):
         loop = setEventLoop()
         with closing(loop):
