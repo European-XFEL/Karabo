@@ -1,6 +1,6 @@
 from asyncio import TimeoutError, sleep
 from contextlib import contextmanager
-from unittest import main, skipIf
+from unittest import main
 
 import numpy as np
 
@@ -9,7 +9,7 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
     waitUntil, waitWhile)
-from karabo.middlelayer_api.compat import jms, mqtt, redis
+from karabo.middlelayer_api.compat import jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema, updateDevice
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
@@ -340,7 +340,6 @@ class Tests(DeviceTest):
         with self.assertRaises(KeyError):
             await device.slotGetOutputChannelInformationFromHash(info)
 
-    @skipIf(redis or mqtt, "not supported")
     @async_tst
     async def test_applyRunTimeUpdates(self):
         with (await getDevice("MyDevice")) as d:

@@ -2,9 +2,8 @@ import json
 import uuid
 from asyncio import get_event_loop, set_event_loop, sleep, wait
 from contextlib import ExitStack, contextmanager
-from unittest import TestCase, main, skipIf
+from unittest import TestCase, main
 
-from karabo.middlelayer_api.compat import amqp
 from karabo.middlelayer_api.device_client import (
     call, getClassSchema, getInstanceInfo)
 from karabo.middlelayer_api.device_server import DeviceServer
@@ -86,7 +85,6 @@ class ServerTest(TestCase):
         finally:
             await self._shutdown_server(server)
 
-    @skipIf(amqp, "fails for amqp")
     @async_tst
     async def test_device_server_plugin_device_logs(self):
         """Test to instantiate a server with plugins and instantiate"""

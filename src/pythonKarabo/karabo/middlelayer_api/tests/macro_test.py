@@ -3,10 +3,10 @@ import time
 import weakref
 from asyncio import Future, TimeoutError, ensure_future
 from contextlib import contextmanager
-from unittest import main, skipIf
+from unittest import main
 
 from karabo.common.states import State
-from karabo.middlelayer_api.compat import amqp, jms, mqtt
+from karabo.middlelayer_api.compat import amqp, jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
@@ -498,7 +498,6 @@ class Tests(DeviceTest):
         del self.local.exception
         del self.local.traceback
 
-    @skipIf(mqtt, "not supported")
     @async_tst
     async def test_cancel(self):
         """test proper cancellation of slots
