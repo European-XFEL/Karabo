@@ -13,7 +13,7 @@ import traceback
 import uuid
 import weakref
 from asyncio import (
-    Future, ensure_future, gather, get_event_loop, sleep, wait_for)
+    Future, Lock, ensure_future, gather, get_event_loop, sleep, wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -51,6 +51,8 @@ class MqttBroker(Broker):
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
         self.proMap = {}        # producer order number's map
         self.store = {}         # store for pending messages (re-ordering)
+        self.heartbeatTask = None
+        self.subscrLock = Lock()
 
     async def subscribe_default(self):
         """Subscribe to 'default' topics to allow a communication
@@ -61,15 +63,17 @@ class MqttBroker(Broker):
         topics = None
         # subscribe to all slots of instance
         topic = self.domain + "/slots/" + self.deviceId.replace('/', '|')
-        if topic not in self.subscriptions:
-            self.subscriptions.add(topic)
-            topics = [(topic, 1)]
+        async with self.subscrLock:
+            if topic not in self.subscriptions:
+                self.subscriptions.add(topic)
+                topics = [(topic, 1)]
         # subscribe to all global slots
         if self.broadcast:
             topic_broadcast = self.domain + "/global_slots"
-            if topic_broadcast not in self.subscriptions:
-                self.subscriptions.add(topic_broadcast)
-                topics.append((topic_broadcast, 1))
+            async with self.subscrLock:
+                if topic_broadcast not in self.subscriptions:
+                    self.subscriptions.add(topic_broadcast)
+                    topics.append((topic_broadcast, 1))
         if topics is None:
             return
         await self.client.subscribe(topics)
@@ -155,7 +159,7 @@ class MqttBroker(Broker):
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        ensure_future(heartbeat())
+        self.heartbeatTask = ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -263,9 +267,10 @@ class MqttBroker(Broker):
         for s in signals:
             topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
                      + "/" + s)
-            if topic not in self.subscriptions:
-                self.subscriptions.add(topic)
-                topics.append((topic, 1))
+            async with self.subscrLock:
+                if topic not in self.subscriptions:
+                    self.subscriptions.add(topic)
+                    topics.append((topic, 1))
         if topics:
             await self.client.subscribe(topics)
 
@@ -296,9 +301,10 @@ class MqttBroker(Broker):
         for s in signals:
             topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
                      + "/" + s)
-            if topic in self.subscriptions:
-                self.subscriptions.remove(topic)
-                topics.append(topic)
+            async with self.subscrLock:
+                if topic in self.subscriptions:
+                    self.subscriptions.remove(topic)
+                    topics.append(topic)
         try:
             if topics:
                 await self.client.unsubscribe(topics)
@@ -310,12 +316,23 @@ class MqttBroker(Broker):
                 f'Fail to disconnect from signals: {signals}')
 
     async def async_unsubscribe_all(self):
-        await self.client.unsubscribe([t for t in self.subscriptions])
-        self.subscriptions = set()
+        async with self.subscrLock:
+            await self.client.unsubscribe([t for t in self.subscriptions])
+            self.subscriptions = set()
+
+    async def stopHeartbeat(self):
+        if self.heartbeatTask is not None:
+            self.heartbeatTask.cancel()
+            self.heartbeatTask = None
 
     async def ensure_disconnect(self):
         """Close broker connection"""
         await self.client.disconnect()
+
+    async def _cleanup(self):
+        await self.stopHeartbeat()
+        self.client.loop_stop()
+        await self.async_unsubscribe_all()
 
     async def handleMessage(self, message, device):
         """Check message order first if the header
@@ -491,6 +508,14 @@ class MqttBroker(Broker):
             device = weakref.ref(device)
             await self.consume(device)
 
+    async def _stop_tasks(self):
+        me = asyncio.current_task(loop=None)
+        tasks = [t for t in self.tasks if t is not me]
+        for t in tasks:
+            t.cancel()
+        await wait_for(gather(*tasks, return_exceptions=True),
+                       timeout=5)
+
     async def stop_tasks(self):
         """Stop all currently running task
 
@@ -499,13 +524,8 @@ class MqttBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
-        await sleep(0.1)
-        me = asyncio.current_task(loop=None)
-        tasks = [t for t in self.tasks if t is not me]
-        for t in tasks:
-            t.cancel()
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
+        await self._cleanup()
+        await self._stop_tasks()
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
