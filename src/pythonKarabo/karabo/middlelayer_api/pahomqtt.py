@@ -50,6 +50,10 @@ class AsyncioMqttHelper:
                 self.client.on_message = None
                 raise
 
+    def loop_stop(self):
+        self.misc.cancel()
+        self.client.loop_stop()
+
     def on_connect(self, client, userdata, flags, rc, properties=None):
         if self.connected.done():
             return
@@ -184,7 +188,7 @@ class AsyncioMqttHelper:
 
     async def misc_loop(self):
         while self.client.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.75)
 
     async def _wait_for(self, *args, **kwargs):
         try:
