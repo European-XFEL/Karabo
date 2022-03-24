@@ -48,6 +48,8 @@ class JmsBroker(Broker):
         self.info = None
         self.slots = {}
         self.exitStack = AsyncExitStack()
+        self.heartbeatTask = None
+        self.receiverTask = None
 
     def send(self, p, args):
         hash = Hash()
@@ -108,7 +110,7 @@ class JmsBroker(Broker):
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        ensure_future(heartbeat())
+        self.heartbeatTask = ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -250,12 +252,12 @@ class JmsBroker(Broker):
                         loop.create_task, self.handleMessage(message, d), d)
                     d = None
 
-        task = loop.run_in_executor(None, receiver)
+        self.receiverTask = loop.run_in_executor(None, receiver)
         try:
-            await shield(task)
+            await shield(self.receiverTask)
         except CancelledError:
             running = False
-            await task
+            await self.receiverTask
             raise
 
     async def handleMessage(self, message, device):
@@ -317,14 +319,17 @@ class JmsBroker(Broker):
             device = weakref.ref(device)
             await self.consume(device())
 
-    async def stop_tasks(self):
-        """Stop all currently running task
+    async def stopHeartbeat(self):
+        if self.heartbeatTask is not None:
+            self.heartbeatTask.cancel()
+            self.heartbeatTask = None
 
-        This marks the end of life of a device.
+    async def _cleanup(self):
+        await self.stopHeartbeat()
+        self.receiverTask.cancel()
+        await sleep(0.5)
 
-        Note that the task this coroutine is called from, as an exception,
-        is not cancelled. That's the chicken-egg-problem.
-        """
+    async def _stop_tasks(self):
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
@@ -340,6 +345,17 @@ class JmsBroker(Broker):
         # can shutdown by closing the eventloop.
         await wait_for(gather(*tasks, return_exceptions=True),
                        timeout=5)
+
+    async def stop_tasks(self):
+        """Stop all currently running task
+
+        This marks the end of life of a device.
+
+        Note that the task this coroutine is called from, as an exception,
+        is not cancelled. That's the chicken-egg-problem.
+        """
+        await self._cleanup()
+        await self._stop_tasks()
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
