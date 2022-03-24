@@ -235,7 +235,8 @@ class DeviceServerBase(SignalSlotable):
     @coslot
     async def slotKillServer(self):
         await self.slotKillDevice()
-        self.stopEventLoop()
+        # Stop event loop on the next cycle ...
+        get_event_loop().call_soon(self.stopEventLoop)
 
     @slot
     def slotGetClassSchema(self, classId):
