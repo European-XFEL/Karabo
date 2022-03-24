@@ -10,7 +10,7 @@ import traceback
 import uuid
 import weakref
 from asyncio import (
-    Future, ensure_future, gather, get_event_loop, sleep, wait_for)
+    Future, Lock, ensure_future, gather, get_event_loop, sleep, wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -54,6 +54,10 @@ class RedisBroker(Broker):
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
         self.proMap = {}        # producer order number's map
         self.store = {}         # store for pending messages (re-ordering)
+        self.future = None
+        self.heartbeatTask = None
+        self.subscrLock = Lock()
+        self.readerTask = None
 
     async def subscribe_default(self):
         """Subscribe to 'default' topics to allow a communication
@@ -63,14 +67,16 @@ class RedisBroker(Broker):
         """
         # subscribe to all slots of instance
         topic = self.domain + "/slots/" + self.deviceId.replace('/', '|')
-        self.subscriptions.add(topic)
-        topics = [self.mpsc.channel(topic)]
+        async with self.subscrLock:
+            self.subscriptions.add(topic)
+            topics = [self.mpsc.channel(topic)]
         # subscribe to all global slots
         if self.broadcast:
             topic_broadcast = self.domain + "/global_slots"
-            if topic_broadcast not in self.subscriptions:
-                self.subscriptions.add(topic_broadcast)
-                topics.append(self.mpsc.channel(topic_broadcast))
+            async with self.subscrLock:
+                if topic_broadcast not in self.subscriptions:
+                    self.subscriptions.add(topic_broadcast)
+                    topics.append(self.mpsc.channel(topic_broadcast))
         await self.redis.subscribe(*topics)
 
     async def publish(self, topic, message):
@@ -155,7 +161,7 @@ class RedisBroker(Broker):
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        ensure_future(heartbeat())
+        self.heartbeatTask = ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -264,9 +270,10 @@ class RedisBroker(Broker):
         for s in signals:
             topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
                      + "/" + s)
-            if topic not in self.subscriptions:
-                self.subscriptions.add(topic)
-                topics.append(self.mpsc.channel(topic))
+            async with self.subscrLock:
+                if topic not in self.subscriptions:
+                    self.subscriptions.add(topic)
+                    topics.append(self.mpsc.channel(topic))
         if topics:
             await self.redis.subscribe(*topics)
         for s in signals:
@@ -296,9 +303,10 @@ class RedisBroker(Broker):
         for s in signals:
             topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
                      + "/" + s)
-            if topic in self.subscriptions:
-                self.subscriptions.remove(topic)
-                topics.append(topic)
+            async with self.subscrLock:
+                if topic in self.subscriptions:
+                    self.subscriptions.remove(topic)
+                    topics.append(topic)
         try:
             if topics:
                 await self.redis.unsubscribe(*topics)
@@ -310,13 +318,31 @@ class RedisBroker(Broker):
                 f'Fail to disconnect from signals: {signals}')
 
     async def async_unsubscribe_all(self):
-        await self.redis.unsubscribe(*[t for t in self.subscriptions])
-        self.subscriptions = set()
+        async with self.subscrLock:
+            await self.redis.unsubscribe(*[t for t in self.subscriptions])
+            self.subscriptions = set()
+
+    async def stopHeartbeat(self):
+        if self.heartbeatTask is not None:
+            self.heartbeatTask.cancel()
+            self.heartbeatTask = None
 
     async def ensure_disconnect(self):
         """Close broker connection"""
         self.redis.close()
         await self.redis.wait_closed()
+
+    async def _cleanup(self):
+        await self.stopHeartbeat()
+        await self.async_unsubscribe_all()
+        self.future.set_result(None)
+        if self.logproc is not None:
+            self.logproc = None
+        if self.readerTask is not None:
+            self.mpsc.stop()
+            # self.mpsc = None
+            self.readerTask.cancel()
+            self.readerTask = None
 
     async def handleMessage(self, message, device):
         """Check message order first if the header
@@ -483,11 +509,11 @@ class RedisBroker(Broker):
                         d)
                 d = None
 
-        self.loop.create_task(reader(mpsc), instance=device)
+        self.readerTask = self.loop.create_task(reader(mpsc), instance=device)
         self.mpsc = mpsc
         await self.subscribe_default()
-        while self.mpsc is not None:
-            await sleep(1)
+        self.future = Future()
+        await self.future
 
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
@@ -498,6 +524,14 @@ class RedisBroker(Broker):
             device = weakref.ref(device)
             await self.consume(device)
 
+    async def _stop_tasks(self):
+        me = asyncio.current_task(loop=None)
+        tasks = [t for t in self.tasks if t is not me]
+        for t in tasks:
+            t.cancel()
+        await wait_for(gather(*tasks, return_exceptions=True),
+                       timeout=5)
+
     async def stop_tasks(self):
         """Stop all currently running task
 
@@ -506,16 +540,11 @@ class RedisBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
-        await sleep(0.5)
-        self.mpsc.stop()
-        self.mpsc = None
-        await sleep(0.5)    # Give a chance to finish unsubscribe tasks
-        me = asyncio.current_task(loop=None)
-        tasks = [t for t in self.tasks if t is not me]
-        for t in tasks:
-            t.cancel()
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
+        await self._cleanup()
+        await sleep(0.2)
+        await self._stop_tasks()
+        self.redis.close()
+        await self.redis.wait_closed()
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
