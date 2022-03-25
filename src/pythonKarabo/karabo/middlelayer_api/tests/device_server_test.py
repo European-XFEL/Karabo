@@ -5,7 +5,7 @@ from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main
 
 from karabo.middlelayer_api.device_client import (
-    call, getClassSchema, getInstanceInfo)
+    call, getClassSchema, getInstanceInfo, waitUntil)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop
 from karabo.middlelayer_api.signalslot import SignalSlotable
@@ -141,12 +141,14 @@ class ServerTest(TestCase):
             await self._shutdown_server(server)
 
     @async_tst
-    async def test_device_server_autostart(self):
+    async def test_device_server_autostart_with_shortcut(self):
         """Test that we can autostart a server"""
-        deviceId = "test-prop-{}".format(uuid.uuid4())
+        deviceId_1 = "test-prop-{}".format(uuid.uuid4())
+        deviceId_2 = "test-prop-{}".format(uuid.uuid4())
         serverId = f"testMDLServer-{uuid.uuid4()}"
 
-        init = {deviceId: {"classId": "PropertyTestMDL"}}
+        init = {deviceId_1: {"classId": "PropertyTestMDL"},
+                deviceId_2: {"classId": "PropertyTestMDL"}}
         init = json.dumps(init)
 
         configuration = {"serverId": serverId,
@@ -158,20 +160,21 @@ class ServerTest(TestCase):
             server.is_server = True
             server._device_initializer = json.loads(init)
             await server.startInstance(broadcast=True)
-
             # Wait until a device has been registered in this server
-            for _ in range(20):
-                if len(server.deviceInstanceMap.keys()):
-                    break
-                await sleep(0.2)
+            await waitUntil(lambda: len(server.deviceInstanceMap) == 2)
             self.assertEqual(server.deviceClasses, ["PropertyTestMDL"])
-            self.assertEqual(len(server.deviceInstanceMap.keys()), 1)
-            self.assertIn(deviceId, server.deviceInstanceMap)
+            self.assertEqual(len(server.deviceInstanceMap.keys()), 2)
+            self.assertIn(deviceId_1, server.deviceInstanceMap)
+            self.assertIn(deviceId_2, server.deviceInstanceMap)
             vis = server.getVisibilities()
             self.assertEqual(vis, {"PropertyTestMDL": 4})
-
-            device = server.deviceInstanceMap[deviceId]
+            device = server.deviceInstanceMap[deviceId_1]
             self.assertEqual(server, device.device_server)
+            local = device.getLocalDevice(deviceId_2)
+            self.assertIsNotNone(local)
+            self.assertEqual(local.classId, "PropertyTestMDL")
+            local = device.getLocalDevice("Notthere")
+            self.assertIsNone(local)
         finally:
             await self._shutdown_server(server)
 
