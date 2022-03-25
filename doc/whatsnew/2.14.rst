@@ -1,4 +1,42 @@
 ***************************
+What's New in Karabo 2.14.1
+***************************
+
+The hotfix release provides direct fixes for the plotting library in the KaraboGui.
+Before non-infinite (or close) data could cause segmentations faults
+in the level setting of the image widgets.
+Furthermore, the analysis (profiling) for images is further protected from infinite ranges, causing
+problems (graph viewbox range and weighting fit).
+The Command Button receives a protection against schema evolution, otherwise a scene with an
+outdated device command could not be opened anymore.
+
+Important for developers, the device class schemas are now tracked and properly
+erased for the first time. Otherwise it can be that after a restart, still the wrong class schema is cached.
+
+In case of the middlelayer api, the background tasks ALWAYS provide a proper stacktrace now.
+
+The bound api receives a fix to throw an exception if the opened NDArray is inconsistent with the specified shape.
+In C++ the signal connection with proctected now. This fix is a candidate to fix the lost signal connection
+in the framework.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- GUI: Fix the log message of bad disconnect !6284
+- GUI: Remove class schemas on server !6278
+- GUI: Protect levels dialog from segfaulting, slider protection !6276
+- GUI: Protect range slider from handle movement to a threshold !6310
+- GUI: Prevent viewbox exceptions in profiling !6296
+- GUI: Ensure class schema for project devices when shown in configurator !6290
+- GUI: Fix image profiling when weighted with zeros !6311
+- GUI: Protect against schema evolution on the command controller !6309
+- Bound: Raise on inconsistent NDArray in Hash !6288
+- MDL: Always provide the correct stack trace if available !6293
+- C++: Protected signal container handling (and deprecate dead code) !6289
+
+
+***************************
 What's New in Karabo 2.14.0
 ***************************
 
