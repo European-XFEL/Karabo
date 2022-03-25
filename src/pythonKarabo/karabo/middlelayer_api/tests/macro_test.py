@@ -5,6 +5,8 @@ from asyncio import Future, TimeoutError, ensure_future
 from contextlib import contextmanager
 from unittest import main
 
+from flaky import flaky
+
 from karabo.common.states import State
 from karabo.middlelayer_api.compat import amqp, jms
 from karabo.middlelayer_api.device import Device
@@ -20,6 +22,9 @@ from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sync_tst)
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32 as Int, KaraboError, Node, Slot)
+
+FLAKY_MAX_RUNS = 5
+FLAKY_MIN_PASSES = 3
 
 
 class Superslot(Slot):
@@ -641,6 +646,7 @@ class Tests(DeviceTest):
             self.assertEqual(d.lockedBy, "")
 
     @sync_tst
+    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_lock_nowait(self):
         with getDevice("remote") as d:
             if not jms:
