@@ -200,8 +200,11 @@ namespace karabo {
             /**
              * Try to take the next request from internal queue and execute it.
              * Set internal state to be "active" if it was not.  Helper function.
+             *
+             * @param requestQueueLock must be locked scoped_lock of m_requestQueueMutex, will be unlocked
+             * afterwards
              */
-            void tryNextRequest();
+            void tryNextRequest(boost::mutex::scoped_lock& requestQueueLock);
 
             /**
              * Send HTTP request to InfluxDb.  Helper function.
