@@ -543,8 +543,9 @@ class RedisBroker(Broker):
         await self._cleanup()
         await sleep(0.2)
         await self._stop_tasks()
-        self.redis.close()
-        await self.redis.wait_closed()
+        self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.ensure_disconnect())
+        await sleep(0.1)
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
