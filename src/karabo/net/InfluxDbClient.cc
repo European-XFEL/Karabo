@@ -163,11 +163,16 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::tryNextRequest() {
+        void InfluxDbClient::tryNextRequest(boost::mutex::scoped_lock& requestQueueLock) {
             if (!m_active) { // activate processing
                 m_active = true;
-                m_requestQueue.front()();
+                boost::function<void()> nextRequest;
+                nextRequest.swap(m_requestQueue.front());
                 m_requestQueue.pop();
+                requestQueueLock.unlock();
+                nextRequest();
+            } else {
+                requestQueueLock.unlock();
             }
         }
 
@@ -183,7 +188,8 @@ namespace karabo {
             if (m_requestQueue.empty()) {
                 m_active = false;
             } else {
-                const auto nextRequest = m_requestQueue.front();
+                boost::function<void()> nextRequest;
+                nextRequest.swap(m_requestQueue.front());
                 m_requestQueue.pop();
                 lock.unlock();
                 try {
@@ -211,7 +217,7 @@ namespace karabo {
         void InfluxDbClient::postQueryDb(const std::string& sel, const InfluxResponseHandler& action) {
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::postQueryDbTask, this, sel, action));
-            tryNextRequest();
+            tryNextRequest(lock);
         }
 
 
@@ -231,7 +237,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Will call action with response:\n" << resp;
                     action(resp);
                 }
-                // Resets m_active to allow the m_requestQueue consumption to keep going.
+                // Resets m_active to allow the m_requestQueue consumption to start going again
+                // with next call to tryNextRequest - but this task is lost!
                 m_active = false;
                 return;
             }
@@ -259,7 +266,7 @@ namespace karabo {
         void InfluxDbClient::getPingDb(const InfluxResponseHandler& action) {
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::getPingDbTask, this, action));
-            tryNextRequest();
+            tryNextRequest(lock);
         }
 
 
@@ -552,7 +559,7 @@ namespace karabo {
         void InfluxDbClient::postWriteDb(const std::string& batch, const InfluxResponseHandler& action) {
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::postWriteDbTask, this, batch, action));
-            tryNextRequest();
+            tryNextRequest(lock);
         }
 
 
@@ -571,7 +578,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Will call action with response:\n" << resp;
                     action(resp);
                 }
-                // Resets m_active to allow the m_requestQueue consumption to keep going.
+                // Resets m_active to allow the m_requestQueue consumption to start going again
+                // with next call to tryNextRequest - but this task is lost!
                 m_active = false;
                 return;
             }
@@ -591,7 +599,6 @@ namespace karabo {
             }
 
             oss << "Content-Length: " << batch.size() << "\r\n\r\n" << batch;
-            std::string req = oss.str().substr(0,1024);
             sendToInfluxDb(oss.str(), action, requestId);
         }
 
@@ -600,7 +607,7 @@ namespace karabo {
                                      const InfluxResponseHandler& action) {
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::queryDbTask, this, sel, action));
-            tryNextRequest();
+            tryNextRequest(lock);
         }
 
 
@@ -620,7 +627,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Will call action with response:\n" << resp;
                     action(resp);
                 }
-                // Resets m_active to allow the m_requestQueue consumption to keep going.
+                // Resets m_active to allow the m_requestQueue consumption to start going again
+                // with next call to tryNextRequest - but this task is lost!
                 m_active = false;
                 return;
             }
