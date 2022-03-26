@@ -3,19 +3,16 @@
 # Created on July 30, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from numbers import Number
 
-from numpy import log10, number
 from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
-from traits.api import Instance, Str, Tuple
+from traits.api import Instance, String, Tuple
 
 from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_SCHEMA_ABSOLUTE_ERROR,
-    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_WARN_HIGH, KARABO_WARN_LOW)
+    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import DisplayLabelModel
 from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
-    get_binding_value)
+    get_binding_value, get_dtype_format)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.dialogs.format_label import FormatLabelDialog
@@ -29,8 +26,8 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
 
 
-@register_binding_controller(ui_name='Value Field',
-                             klassname='DisplayLabel',
+@register_binding_controller(ui_name="Value Field",
+                             klassname="DisplayLabel",
                              binding_type=BINDING_TYPES, priority=20)
 class DisplayLabel(BaseBindingController):
     # The scene data model class for this controller
@@ -38,7 +35,8 @@ class DisplayLabel(BaseBindingController):
     # Internal traits
     _bg_color = Tuple(ALL_OK_COLOR)
     _internal_widget = Instance(QLabel, allow_none=True)
-    _style_sheet = Str
+    _style_sheet = String
+    _fmt = String
 
     def create_widget(self, parent):
         self._internal_widget = Label(parent)
@@ -65,55 +63,28 @@ class DisplayLabel(BaseBindingController):
         """Clear the internal widget when the device goes offline"""
         self._internal_widget.clear()
 
+    def binding_update(self, proxy):
+        binding = proxy.binding
+        self._fmt = get_dtype_format(binding)
+
     def value_update(self, proxy):
         self.widget.update_label(proxy)
 
         binding = proxy.binding
-        value = get_binding_value(proxy, '')
-        if value == '' or isinstance(binding, StringBinding):
+        value = get_binding_value(proxy, "")
+        if value == "" or isinstance(binding, StringBinding):
             # Early bail out for Long binary data (e.g. image) or
             # if the property is not set (Undefined)
             self._internal_widget.setText(value[:255])
             return
 
         self._check_alarms(binding, value)
+        if isinstance(binding, FloatBinding):
+            # Yes, we dance with numpy types, hence, we have to do a str
+            # conversion first before we go for float casting!
+            value = float(str(value))
 
-        disp_type = binding.display_type
-        try:
-            fmt = {
-                'bin': 'b{:b}',
-                'oct': 'o{:o}',
-                'hex': '0x{:X}'
-            }[disp_type[:3]]
-        except (TypeError, KeyError):
-            abserr = binding.attributes.get(KARABO_SCHEMA_ABSOLUTE_ERROR)
-            relerr = binding.attributes.get(KARABO_SCHEMA_RELATIVE_ERROR)
-            if (relerr is not None and
-                    (abserr is None or
-                     not isinstance(value, (Number, number)) or
-                     relerr * value > abserr)):
-                fmt = "{{:.{}g}}".format(-int(log10(relerr)))
-            elif abserr is not None:
-                if abserr <= 0:
-                    # Note: to be removed in future ...
-                    fmt = "{}"
-                elif abserr < 1:
-                    fmt = "{{:.{}f}}".format(-int(log10(abserr)))
-                elif (isinstance(value, (Number, number)) and
-                        abs(value) > abserr):
-                    fmt = "{{:.{}e}}".format(int(log10(abs(value))) -
-                                             int(log10(abserr)))
-                else:
-                    fmt = "{:.0f}"
-            elif isinstance(binding, FloatBinding):
-                # Yes, we dance with numpy types, hence, we have to do a str
-                # conversion first before we got for float casting!
-                value = float(str(value))
-                fmt = "{:.8g}"
-            else:
-                fmt = "{}"
-
-        ret = fmt.format(value)
+        ret = self._fmt.format(value)
         self._internal_widget.setText(ret)
 
     def _check_alarms(self, binding, value):
@@ -126,7 +97,7 @@ class DisplayLabel(BaseBindingController):
                 (alarm_high is not None and value > alarm_high)):
             self._bg_color = PROPERTY_ALARM_COLOR
         elif ((warn_low is not None and value < warn_low) or
-                (warn_high is not None and value > warn_high)):
+              (warn_high is not None and value > warn_high)):
             self._bg_color = PROPERTY_WARN_COLOR
         else:
             self._bg_color = ALL_OK_COLOR
