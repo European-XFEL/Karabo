@@ -3,9 +3,9 @@ import sys
 import numpy as np
 
 from karabo.common.api import (
-    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_SIZE,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
-    KARABO_SCHEMA_VALUE_TYPE)
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC,
+    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_VALUE_TYPE)
 from karabo.common.const import KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_LOW
 from karabo.native import Hash, Schema
 from karabogui.binding.api import (
@@ -14,8 +14,8 @@ from karabogui.binding.api import (
     VectorBoolBinding, VectorFloatBinding, VectorInt8Binding,
     VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding, attr_fast_deepcopy, get_min_max, get_min_max_size,
-    get_native_min_max, has_min_max_attributes, realign_hash)
+    VectorUint64Binding, attr_fast_deepcopy, get_dtype_format, get_min_max,
+    get_min_max_size, get_native_min_max, has_min_max_attributes, realign_hash)
 
 
 def test_simple_int_min_max():
@@ -201,3 +201,25 @@ def test_realign_hash():
     copy_hash = Hash(foo_hash)
     copy_hash["uintProperty"] = None
     assert reordered_hash == copy_hash
+
+
+def test_display_format():
+    assert get_dtype_format(None) == "{}"
+
+    binding = FloatBinding()
+    assert get_dtype_format(binding) == "{:.8g}"
+
+    binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "bin"})
+    assert get_dtype_format(binding) == "b{:b}"
+
+    binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "hex"})
+    assert get_dtype_format(binding) == "0x{:X}"
+
+    binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "oct"})
+    assert get_dtype_format(binding) == "o{:o}"
+
+    binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "oct|||"})
+    assert get_dtype_format(binding) == "o{:o}"
+
+    binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "moct"})
+    assert get_dtype_format(binding) == "{}"

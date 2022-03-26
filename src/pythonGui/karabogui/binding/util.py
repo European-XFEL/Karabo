@@ -241,3 +241,25 @@ def realign_hash(hsh, reference):
         ret.setElement(key, simple_deepcopy(value), simple_deepcopy(attrs))
 
     return ret
+
+
+def get_dtype_format(binding):
+    """Get a display type formatter for the binding
+
+    :param binding: `binding` type instance with display type
+    """
+    fmt = "{}"
+    if binding is not None:
+        dt = binding.display_type.split("|")
+        prefix = dt[0]
+        _fmt = {
+            "bin": "b{:b}",
+            "oct": "o{:o}",
+            "hex": "0x{:X}"}
+        try:
+            fmt = _fmt[prefix]
+        except (TypeError, KeyError):
+            if isinstance(binding, types.FloatBinding):
+                fmt = "{:.8g}"
+
+    return fmt
