@@ -236,6 +236,7 @@ class DeviceServerBase(SignalSlotable):
     async def slotKillServer(self):
         await self.slotKillDevice()
         # Stop event loop on the next cycle ...
+        await sleep(0.1)
         get_event_loop().call_soon(self.stopEventLoop)
 
     @slot
