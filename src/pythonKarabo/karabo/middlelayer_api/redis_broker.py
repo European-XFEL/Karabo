@@ -10,7 +10,8 @@ import traceback
 import uuid
 import weakref
 from asyncio import (
-    Future, Lock, ensure_future, gather, get_event_loop, sleep, wait_for)
+    CancelledError, Future, Lock, ensure_future, gather, get_event_loop, sleep,
+    wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -324,8 +325,13 @@ class RedisBroker(Broker):
 
     async def stopHeartbeat(self):
         if self.heartbeatTask is not None:
-            self.heartbeatTask.cancel()
-            self.heartbeatTask = None
+            try:
+                self.heartbeatTask.cancel()
+                await self.heartbeatTask
+            except CancelledError:
+                pass
+            finally:
+                self.heartbeatTask = None
 
     async def ensure_disconnect(self):
         """Close broker connection"""
@@ -341,8 +347,13 @@ class RedisBroker(Broker):
         if self.readerTask is not None:
             self.mpsc.stop()
             # self.mpsc = None
-            self.readerTask.cancel()
-            self.readerTask = None
+            try:
+                self.readerTask.cancel()
+                await self.readerTask
+            except CancelledError:
+                pass
+            finally:
+                self.readerTask = None
 
     async def handleMessage(self, message, device):
         """Check message order first if the header
@@ -543,9 +554,10 @@ class RedisBroker(Broker):
         await self._cleanup()
         await sleep(0.2)
         await self._stop_tasks()
+        # if we do directly ...
+        # await self.ensure_disconnect()   # hangs in test_topology
         self.loop.call_soon_threadsafe(
                 self.loop.create_task, self.ensure_disconnect())
-        await sleep(0.1)
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
