@@ -27,11 +27,14 @@ from karabogui.dialogs.api import (
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.itemtypes import ProjectItemTypes
+from karabogui.logger import get_logger
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
-from karabogui.request import get_macro_from_server, get_scene_from_server
+from karabogui.request import (
+    get_macro_from_server, get_scene_from_server, onConfigurationUpdate,
+    onSchemaUpdate)
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor, open_documentation_link
@@ -222,20 +225,18 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         if not has_scene:
-            messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id), parent=parent)
+            msg = f"The device <b>{device_id}</b> does not provide a scene."
+            get_logger().info(msg)
             return
 
         def _config_handler():
             """Act on the arrival of the configuration
             """
-            proxy.on_trait_change(_config_handler, 'config_update',
-                                  remove=True)
-            scenes = proxy.binding.value.availableScenes.value
+            scenes = proxy["availableScenes"].value
             if scenes is Undefined or not len(scenes):
-                messagebox.show_warning(
-                    "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), parent=parent)
+                msg = (f"The device <b>{device_id}</b> does not provide a "
+                       "scene.")
+                get_logger().info(msg)
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
@@ -243,15 +244,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         def _schema_handler():
             """Act on the arrival of the schema
             """
-            proxy.on_trait_change(_schema_handler, 'schema_update',
-                                  remove=True)
-            scenes = proxy.binding.value.availableScenes.value
+            scenes = proxy["availableScenes"].value
             if scenes is Undefined:
-                proxy.on_trait_change(_config_handler, 'config_update')
+                onConfigurationUpdate(proxy, _config_handler)
             elif not len(scenes):
-                messagebox.show_warning(
-                    "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), parent=parent)
+                msg = (f"The device <b>{device_id}</b> does not provide "
+                       "a scene.")
+                get_logger().info(msg)
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
@@ -259,19 +258,19 @@ class DeviceInstanceController(BaseProjectGroupController):
         proxy = project_device.proxy
         if not len(proxy.binding.value):
             # We completely miss our schema and wait for it.
-            proxy.on_trait_change(_schema_handler, 'schema_update')
-        elif proxy.binding.value.availableScenes.value is Undefined:
+            onSchemaUpdate(proxy, _schema_handler)
+        elif proxy["availableScenes"].value is Undefined:
             # The configuration did not yet arrive and we cannot get
             # a scene name from the availableScenes. We wait for the
             # configuration to arrive and install a handler.
-            proxy.on_trait_change(_config_handler, 'config_update')
+            onConfigurationUpdate(proxy, _config_handler)
         else:
-            scenes = proxy.binding.value.availableScenes.value
+            scenes = proxy["availableScenes"].value
             if not len(scenes):
                 # The device might not have a scene name in property
-                messagebox.show_warning(
-                    "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), parent=parent)
+                msg = (f"The device <b>{device_id}</b> does not provide a "
+                       "scene.")
+                get_logger().info(msg)
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
