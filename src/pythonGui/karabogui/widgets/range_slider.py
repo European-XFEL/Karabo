@@ -8,9 +8,7 @@ from enum import IntEnum
 
 from qtpy.QtCore import QPoint, QRect, Qt, Signal
 from qtpy.QtGui import QBrush, QPainter, QPalette, QPen
-from qtpy.QtWidgets import QAbstractSlider, QSlider, QStyle, QStyleOptionSlider
-
-CLICK_TOLERANCE = 0.10  # In percent when moving bars by click
+from qtpy.QtWidgets import QSlider, QStyle, QStyleOptionSlider
 
 INT32_MAX = 2147483647
 INT32_MIN = -2147483648
@@ -36,8 +34,8 @@ class RangeSlider(QSlider):
     def __init__(self, orientation=Qt.Horizontal, parent=None):
         super().__init__(orientation, parent=parent)
 
-        self._low_position = self.minimum()
-        self._high_position = self.maximum()
+        self.low_handle_pos = self.minimum()
+        self.high_handle_pos = self.maximum()
 
         self.pressedControl = QStyle.SC_None
         self.clickOffset = 0
@@ -60,22 +58,22 @@ class RangeSlider(QSlider):
             self.setVisible(False)
             return
 
-        self._low_position = low
-        self._high_position = high
+        self.low_handle_pos = low
+        self.high_handle_pos = high
         self.setRange(low, high)
 
     def setMinimum(self, value):
         """Reimplemented method of QSlider"""
         super().setMinimum(value)
-        if self._low_position < value:
-            self._low_position = value
+        if self.low_handle_pos < value:
+            self.low_handle_pos = value
             self.update()
 
     def setMaximum(self, value):
         """Reimplemented method of QSlider"""
         super().setMaximum(value)
-        if self._high_position > value:
-            self._high_position = value
+        if self.high_handle_pos > value:
+            self.high_handle_pos = value
             self.update()
 
     def setValue(self, *value):
@@ -99,13 +97,13 @@ class RangeSlider(QSlider):
             high_position = self.maximum()
 
         # Set values and update!
-        self._low_position = low_position
-        self._high_position = high_position
+        self.low_handle_pos = low_position
+        self.high_handle_pos = high_position
         self.update()
 
     def value(self):
         """Reimplemented method of QSlider"""
-        return self._low_position, self._high_position
+        return self.low_handle_pos, self.high_handle_pos
 
     setSliderPosition = setValue
     sliderPosition = value
@@ -172,11 +170,11 @@ class RangeSlider(QSlider):
             style.drawComplexControl(QStyle.CC_Slider, style_option,
                                      painter, self)
 
-            style_option.sliderPosition = self._low_position
+            style_option.sliderPosition = self.low_handle_pos
             low_rect = style.subControlRect(QStyle.CC_Slider, style_option,
                                             QStyle.SC_SliderHandle)
 
-            style_option.sliderPosition = self._high_position
+            style_option.sliderPosition = self.high_handle_pos
             high_rect = style.subControlRect(QStyle.CC_Slider, style_option,
                                              QStyle.SC_SliderHandle)
 
@@ -209,8 +207,8 @@ class RangeSlider(QSlider):
             painter.setPen(QPen(color, 0))
             painter.drawRect(span_rect.intersected(groove))
 
-            for index, value in enumerate([self._low_position,
-                                           self._high_position]):
+            for index, value in enumerate([self.low_handle_pos,
+                                           self.high_handle_pos]):
                 handle = SliderHandle(index)
                 style_option.subControls = QStyle.SC_SliderHandle
                 style_option.sliderPosition = value
@@ -235,7 +233,7 @@ class RangeSlider(QSlider):
             style = self.style()
             event_pos = event.pos()
             for index, value in enumerate(
-                    [self._low_position, self._high_position]):
+                    [self.low_handle_pos, self.high_handle_pos]):
                 style_option.sliderPosition = value
                 hit = style.hitTestComplexControl(
                     style.CC_Slider, style_option, event_pos, self)
@@ -247,9 +245,6 @@ class RangeSlider(QSlider):
                         self)
                     new_pos = self.pick(event_pos - sr.topLeft())
                     self.clickOffset = self.pixelPosToRangeValue(new_pos)
-                    self.setSliderDown(True)
-                    self.triggerAction(self.SliderNoAction)
-                    self.setRepeatAction(self.SliderNoAction)
                     break
             else:
                 # SCROLL_BAR handles, we move the bar or a single handle!
@@ -257,8 +252,6 @@ class RangeSlider(QSlider):
                 self.pressedControl = QStyle.SC_SliderGroove
                 self.clickOffset = self.pixelPosToRangeValue(
                     self.pick(event_pos))
-                self.triggerAction(self.SliderMove)
-                self.setRepeatAction(self.SliderNoAction)
         else:
             event.ignore()
 
@@ -267,9 +260,6 @@ class RangeSlider(QSlider):
         if self.pressedControl == QStyle.SC_None:
             event.ignore()
             return
-
-        if self.pressedHandle in (SliderHandle.LOW, SliderHandle.HIGH):
-            self.setSliderDown(False)
 
         self.pressedHandle = None
         self.pressedControl = QStyle.SC_None
@@ -288,54 +278,35 @@ class RangeSlider(QSlider):
         # We are moving the full bar
         if self.pressedControl == QStyle.SC_SliderGroove:
             offset = position - self.clickOffset
-            self._high_position += offset
-            self._low_position += offset
+            self.high_handle_pos += offset
+            self.low_handle_pos += offset
             # Note: Check if we exceed a value of the range slider. This can
             # happen when the SCROLL_BAR is moved and the mouse cursor exceeds
             # the slider
             minimum = self.minimum()
-            if self._low_position < minimum:
-                difference = minimum - self._low_position
-                self._low_position += difference
-                self._high_position += difference
+            if self.low_handle_pos < minimum:
+                difference = minimum - self.low_handle_pos
+                self.low_handle_pos += difference
+                self.high_handle_pos += difference
 
             maximum = self.maximum()
-            if self._high_position > maximum:
-                difference = maximum - self._high_position
-                self._low_position += difference
-                self._high_position += difference
+            if self.high_handle_pos > maximum:
+                difference = maximum - self.high_handle_pos
+                self.low_handle_pos += difference
+                self.high_handle_pos += difference
 
         elif self.pressedHandle is SliderHandle.LOW:
-            self._low_position = position
+            self.low_handle_pos = position
             # Low slider passed the high slider, align!
-            if position > self._high_position:
-                self._high_position = position
+            if position > self.high_handle_pos:
+                self.high_handle_pos = position
         else:
-            self._high_position = position
+            self.high_handle_pos = position
             # High slider passed the low slider, align!
-            if position < self._low_position:
-                self._low_position = position
+            if position < self.low_handle_pos:
+                self.low_handle_pos = position
 
         event.accept()
         self.clickOffset = position
         self.update()
-        self.sliderMoved.emit(self._low_position, self._high_position)
-
-    # -----------------------------------------------------------------------
-    # Actions
-
-    def triggerAction(self, action):
-        """Reimplemented method of QSlider"""
-        if action is QAbstractSlider.SliderMove:
-            slider_range = self.maximum() - self.minimum()
-            tolerance = slider_range * CLICK_TOLERANCE
-            if abs(self.clickOffset - self._high_position) <= tolerance:
-                value = min(self.clickOffset, self.maximum() - 1)
-                self._high_position = value
-                self.update()
-            elif abs(self.clickOffset - self._low_position) <= tolerance:
-                value = max(self.clickOffset, self.minimum() + 1)
-                self._low_position = value
-                self.update()
-        else:
-            super().triggerAction(action)
+        self.sliderMoved.emit(self.low_handle_pos, self.high_handle_pos)
