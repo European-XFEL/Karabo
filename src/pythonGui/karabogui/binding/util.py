@@ -1,10 +1,11 @@
 import numpy as np
+from numpy import log10
 from traits.api import Undefined
 
 from karabo.common import const
 from karabo.common.api import (
-    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
-    KARABO_SCHEMA_MIN_INC)
+    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC)
 from karabo.native import Hash, Timestamp, is_equal, simple_deepcopy
 
 from . import types
@@ -249,7 +250,7 @@ def get_dtype_format(binding):
     :param binding: `binding` type instance with display type
     """
     fmt = "{}"
-    if binding is not None:
+    if isinstance(binding, types.IntBinding):
         dt = binding.display_type.split("|")
         prefix = dt[0]
         _fmt = {
@@ -259,7 +260,15 @@ def get_dtype_format(binding):
         try:
             fmt = _fmt[prefix]
         except (TypeError, KeyError):
-            if isinstance(binding, types.FloatBinding):
-                fmt = "{:.8g}"
+            pass
+    elif isinstance(binding, types.FloatBinding):
+        fmt = "{:.8g}"
+        abs_err = binding.attributes.get(KARABO_SCHEMA_ABSOLUTE_ERROR)
+        if abs_err is not None:
+            # Yes, abs error below 0 can happen
+            if 0 < abs_err < 1:
+                fmt = "{{:.{}f}}".format(-int(log10(abs_err)))
+            else:
+                fmt = "{:.1f}"
 
     return fmt
