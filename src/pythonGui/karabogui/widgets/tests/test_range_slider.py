@@ -78,7 +78,7 @@ class TestConst(GuiTestCase):
             Qt.LeftButton,
             Qt.NoModifier)
 
-        # Move slightly towards the click with padding, we cannot overflow
+        # Protection, moving from high to low
         widget.mouseMoveEvent(move_event)
         self.process_qt_events()
         self.assertEqual(widget.sliderPosition(), (33, 33))
@@ -89,31 +89,6 @@ class TestConst(GuiTestCase):
         # Spawn a groove
         widget.setValue((30, 50))
         widget.update()
-
-        # Click low handle
-        press_event = QMouseEvent(
-            QEvent.MouseButtonPress,
-            QPoint(30, 0),  # In pixel coordinates
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
-        widget.mousePressEvent(press_event)
-        self.process_qt_events()
-        self.assertEqual(widget.pressedHandle, SliderHandle.LOW)
-
-        # Move lower bar
-        move_event = QMouseEvent(
-            QEvent.MouseMove,
-            QPoint(30, 35),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
-        widget.mouseMoveEvent(move_event)
-
-        self.process_qt_events()
-        self.assertEqual(widget.sliderPosition(), (31, 50))
-        self.assertEqual(low, 31)
-        self.assertEqual(high, 50)
 
         # Release event triggers unclicked
         release_event = QMouseEvent(
@@ -134,16 +109,22 @@ class TestConst(GuiTestCase):
             Qt.NoModifier)
         widget.mousePressEvent(press_event)
         self.assertEqual(widget.pressedControl, QStyle.SC_SliderHandle)
+        self.assertEqual(widget.pressedHandle, SliderHandle.LOW)
 
-        # Miss handle, groove!
-        press_event = QMouseEvent(
-            QEvent.MouseButtonPress,
-            QPoint(20, 0),
+        move_event = QMouseEvent(
+            QEvent.MouseMove,
+            QPoint(35, 45),
             Qt.LeftButton,
             Qt.LeftButton,
             Qt.NoModifier)
-        widget.mousePressEvent(press_event)
-        self.assertEqual(widget.pressedControl, QStyle.SC_SliderGroove)
+
+        # Protection, moving from low to high
+        widget.mouseMoveEvent(move_event)
+        self.process_qt_events()
+        self.assertEqual(widget.sliderPosition(), (33, 50))
+        self.assertEqual(widget.pressedHandle, SliderHandle.LOW)
+        self.assertEqual(low, 33)
+        self.assertEqual(high, 50)
 
         # Release event triggers unclicked
         release_event = QMouseEvent(
