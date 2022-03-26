@@ -13,7 +13,8 @@ import traceback
 import uuid
 import weakref
 from asyncio import (
-    Future, Lock, ensure_future, gather, get_event_loop, sleep, wait_for)
+    CancelledError, Future, Lock, ensure_future, gather, get_event_loop, sleep,
+    wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -322,8 +323,13 @@ class MqttBroker(Broker):
 
     async def stopHeartbeat(self):
         if self.heartbeatTask is not None:
-            self.heartbeatTask.cancel()
-            self.heartbeatTask = None
+            try:
+                self.heartbeatTask.cancel()
+                await self.heartbeatTask
+            except CancelledError:
+                pass
+            finally:
+                self.heartbeatTask = None
 
     async def ensure_disconnect(self):
         """Close broker connection"""
