@@ -11,7 +11,8 @@ import socket
 import time
 import traceback
 import weakref
-from asyncio import Future, Lock, ensure_future, gather, sleep, wait_for
+from asyncio import (
+    CancelledError, Future, Lock, ensure_future, gather, sleep, wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -348,8 +349,13 @@ class AmqpBroker(Broker):
 
     async def stopHeartbeat(self):
         if self.heartbeatTask is not None:
-            self.heartbeatTask.cancel()
-            self.heartbeatTask = None
+            try:
+                self.heartbeatTask.cancel()
+                await self.heartbeatTask
+            except CancelledError:
+                pass
+            finally:
+                self.heartbeatTask = None
 
     async def ensure_disconnect(self):
         """Close broker connection"""
