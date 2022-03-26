@@ -181,18 +181,23 @@ def callNoWait(device, target_slot, *args):
 
 
 @synchronize
-async def getSchema(device):
+async def getSchema(device, onlyCurrentState=False):
     """Get a schema from a target device
 
     :param device: deviceId or proxy
+    :param onlyCurrentState: Boolean for the state dependent schema
+                             The default is `False`.
 
     :returns: Full Schema object
     """
     if isinstance(device, ProxyBase):
-        return Schema(name=device.classId, hash=device._schema_hash)
+        if not onlyCurrentState:
+            return Schema(name=device.classId, hash=device._schema_hash)
+        else:
+            device = device._deviceId
 
     schema, _ = await get_instance().call(device, "slotGetSchema",
-                                          False)
+                                          onlyCurrentState)
     return schema
 
 
