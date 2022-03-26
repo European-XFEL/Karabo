@@ -80,6 +80,9 @@ class Evaluator(BaseBindingController):
         """Clear the internal widget when the device goes offline"""
         self._internal_widget.clear()
 
+    def binding_update(self, proxy):
+        self.widget.update_unit_label(proxy)
+
     def value_update(self, proxy):
         value = get_binding_value(proxy)
         if value is None:
@@ -88,8 +91,6 @@ class Evaluator(BaseBindingController):
         binding = proxy.binding
         self._check_alarms(binding, value)
 
-        # update unit label
-        self.widget.update_label(proxy)
         try:
             disp_value = "{}".format(self.function(value))
         except Exception as e:
