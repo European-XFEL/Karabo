@@ -752,12 +752,24 @@ def _extract_topology_devices(topo_hash):
 
     if 'device' in topo_hash:
         for device_id, _, attrs in topo_hash['device'].iterall():
+            # XXX: remove this check after #122877 is fixed on the GUI server
+            if not attrs:
+                msg = ("skipping malformed topology entry "
+                       f"for <b>{device_id}</b>")
+                get_logger().error(msg)
+                continue
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
             devices.append((device_id, class_id, ProxyStatus(status)))
 
     if 'macro' in topo_hash:
         for device_id, _, attrs in topo_hash['macro'].iterall():
+            # XXX: remove this check after #122877 is fixed on the GUI server
+            if not attrs:
+                msg = ("skipping malformed topology entry "
+                       f"for <b>{device_id}</b>")
+                get_logger().error(msg)
+                continue
             class_id = attrs.get('classId', 'unknown-class')
             devices.append((device_id, class_id, ProxyStatus.OK))
 
