@@ -110,6 +110,9 @@ class MyDevice(Device):
         await sleep(0.2)
         self.state = State.ON
 
+    async def set_state(self, state):
+        self.state = state
+
     @Slot(displayedName="start")
     async def start(self):
         return 5
@@ -180,6 +183,32 @@ class Tests(DeviceTest):
     @sync_tst
     def test_classId_input(self):
         self.assertEqual(self.myDevice.input.classId, 'InputChannel')
+
+    @async_tst
+    async def test_state_dependent_schema(self):
+        schema_before = await getSchema("MyDevice", onlyCurrentState=False)
+        # The notation `before` refers to the device in state ON.
+        with (await getDevice("MyDevice")) as d:
+            if not jms:
+                await updateDevice(d)
+            # Set a transient state
+            await self.myDevice.set_state(State.ACQUIRING)
+            proxy_before_schema = await getSchema(d, onlyCurrentState=False)
+            self.assertEqual(schema_before.hash.paths(),
+                             proxy_before_schema.hash.paths())
+            schema_after = await getSchema("MyDevice", onlyCurrentState=True)
+            proxy_after_schema = await getSchema(d, onlyCurrentState=True)
+            # Back to State.ON
+            await self.myDevice.set_state(State.ON)
+            self.assertNotEqual(proxy_before_schema.hash.paths(),
+                                proxy_after_schema.hash.paths())
+            self.assertNotEqual(schema_before.hash.paths(),
+                                schema_after.hash.paths())
+            # Check slot in schemas before (ON) and after (ACQUIRING)
+            self.assertIn("increaseCounter", schema_before.hash)
+            self.assertNotIn("increaseCounter", schema_after.hash)
+            self.assertIn("increaseCounter", proxy_before_schema.hash)
+            self.assertNotIn("increaseCounter", proxy_after_schema.hash)
 
     @async_tst
     async def test_classId_slot(self):
