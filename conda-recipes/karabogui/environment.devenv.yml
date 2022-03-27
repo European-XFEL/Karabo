@@ -38,6 +38,7 @@ dependencies:
   - natsort=6.2.0
   # Other
   - cycler=0.10.0
+  - tabulate=0.8.9
   - traits=6.0.0
   - lxml=4.4.1
   - requests=2.25.1
