@@ -11,6 +11,7 @@ from types import MethodType
 from uuid import uuid4
 
 from dateutil.tz import tzlocal, tzutc
+from qtpy import QtCore
 from qtpy.QtCore import QEvent, QEventLoop, QObject, QSize, Qt
 from qtpy.QtGui import QCursor, QMovie, QValidator
 from qtpy.QtWidgets import (
@@ -415,6 +416,12 @@ def version_compatible(version: str, major: int, minor: int):
     except Exception as e:
         print(f"Parsing karaboVersion string failed: {e}")
         return False
+
+
+def qtversion_compatible(major: int, minor: int):
+    """Return if we are compatible to a qt version with `major` and `minor`"""
+    qt_version = tuple(map(int, QtCore.__version__.split(".")))
+    return (major, minor) >= qt_version
 
 
 ERROR_DETAILS_DELIM = "\nDetails:\n"  # == GuiServerDevice::m_errorDetailsDelim
