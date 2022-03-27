@@ -17,7 +17,7 @@ from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
     get_config, get_manager, get_network, get_panel_wrangler)
-from karabogui.util import process_qt_events
+from karabogui.util import process_qt_events, qtversion_compatible
 
 
 def excepthook(exc_type, value, traceback):
@@ -67,8 +67,13 @@ def create_gui_app(args):
         # the default DPI (96). This is usually observed on scaled desktops
         # (e.g., 150% scaling on Windows)
         if dpi > SCENE_DEFAULT_DPI:
-            QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-            QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+            if qtversion_compatible(5, 15):
+                os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+                QApplication.setHighDpiScaleFactorRoundingPolicy(
+                    Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+            else:
+                QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+                QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
         app = QApplication(args)
         # Again set the QSettings environment
