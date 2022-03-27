@@ -520,3 +520,21 @@ def test_hash_element():
     value, attrs = h
     assert value == 5
     assert attrs == {"minInc": 2}
+
+
+hlrep = "\
++-------+-------+----------+\n\
+| foo   | bar   | animal   |\n\
++=======+=======+==========+\n\
+| egg   | True  | dog      |\n\
++-------+-------+----------+\n\
+| ham   | False | cat      |\n\
++-------+-------+----------+"
+
+
+def test_hashlist():
+    h1 = Hash("foo", "egg", "bar", True, "animal", "dog")
+    h2 = Hash("foo", "ham", "bar", False, "animal", "cat")
+    hl = HashList([h1, h2])
+
+    assert repr(hl) == hlrep

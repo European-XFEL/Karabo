@@ -5,6 +5,7 @@ from copy import deepcopy
 from enum import Enum
 
 import numpy as np
+import tabulate
 
 from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
 
@@ -456,27 +457,15 @@ class HashList(list):
         return HashListFormat.Unknown
 
     def __repr__(self):
+        """Return the pretty represenation of a HashList"""
+        if not len(self):
+            return "<HashList([])>"
+
         fmt = self.hashlist_format(self)
         if fmt is HashListFormat.Table:
-            h = self[0]
-            header = h.keys()
-
-            def _pretty_table():
-                yield "<HashList(\n"
-                for name in header:
-                    yield "{:10} ".format(name)
-                yield "\n"
-                for _ in header:
-                    yield "---------- "
-                yield "\n"
-                for hsh in self:
-                    for value in hsh.values():
-                        yield "{!r:10} ".format(value.data)
-                    yield "\n"
-                yield ")>"
-
-            return "".join(_pretty_table())
+            return tabulate.tabulate(self, headers="keys", tablefmt="grid")
         else:
+            # XXX: More support for other HashLists
             return "<HashList(" + super(HashList, self).__repr__() + ")>"
 
 
