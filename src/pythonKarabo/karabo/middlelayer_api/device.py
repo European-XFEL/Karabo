@@ -139,6 +139,18 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         """Check if the device is online and has passed onInitialization"""
         return super().is_initialized
 
+    def getLocalDevice(self, instanceId):
+        """Returns the instance of a device if present in the local server
+
+        This device instance can be used to shortcut broker communication.
+
+        :returns: Device instance or `None` if not found.
+
+        Note: Added in Karabo 2.15.
+        """
+        server = super().device_server
+        return server.deviceInstanceMap.get(instanceId)
+
     def __init__(self, configuration):
         self.__timeServerId = configuration.pop("__timeServerId", "None")
         super(Device, self).__init__(configuration)
