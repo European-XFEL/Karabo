@@ -369,6 +369,105 @@ class Tests(TestCase):
         self.assertFalse(b.dimensionality)
         self.assertEqual(b.timestamp, 10)
 
+    def test_i_operators(self):
+        """Using i operator with constants erases the timestamp"""
+        d = Float()
+
+        a = QuantityValue(3.5, descriptor=d, timestamp=10)
+        self.assertEqual(a.magnitude, 3.5)
+        self.assertEqual(a.timestamp, 10)
+
+        b = QuantityValue(a, descriptor=d)
+        self.assertEqual(b.magnitude, 3.5)
+        self.assertEqual(b.timestamp, 10)
+
+        # 1.1 None timestamp on __iadd__ with constant
+        b += 20.0
+        self.assertEqual(b.magnitude, 23.5)
+        self.assertIsNone(b.timestamp)
+
+        # 1.2 take newest timestamp with both quantity values
+        b.timestamp = 20
+        a += b
+        self.assertEqual(a.magnitude, 27.0)
+        self.assertEqual(a.timestamp, 20)
+
+        # 2.1 None timestamp on __isub__ with constant
+        b = QuantityValue(27.0, descriptor=d)
+        b.timestamp = 20
+        b -= 17.0
+        self.assertEqual(b.magnitude, 10.0)
+        self.assertIsNone(b.timestamp)
+
+        # 2.2 take newest timestamp with both quantity values
+        b.timestamp = 100
+        a = QuantityValue(3.5, descriptor=d, timestamp=10)
+        b -= a
+        self.assertEqual(b.magnitude, 6.5)
+        self.assertEqual(b.timestamp, 100)
+
+        # 3.1 None timestamp on __imul__ with constant
+        b = QuantityValue(10.0, descriptor=d)
+        b.timestamp = 100
+        b *= 2
+        self.assertEqual(b.magnitude, 20.0)
+        self.assertIsNone(b.timestamp)
+
+        # 3.2 take newest timestamp with both quantity values
+        a = QuantityValue(5, descriptor=d, timestamp=10)
+        b.timestamp = 20
+        b *= a
+        self.assertEqual(b.magnitude, 100.0)
+        self.assertEqual(b.timestamp, 20)
+
+        # 4.1 None timestamp on __itruediv__ with constant
+        b = QuantityValue(20, descriptor=d)
+        b.timestamp = 20
+        b /= 2
+        self.assertEqual(b.magnitude, 10.0)
+        self.assertIsNone(b.timestamp)
+
+        # 4.2 take newest timestamp with both quantity values
+        a = QuantityValue(5, descriptor=d, timestamp=10)
+        b.timestamp = 20
+        b /= a
+        self.assertEqual(b.magnitude, 2.0)
+        self.assertEqual(b.timestamp, 20)
+
+        # 5.1 None timestamp on __ifloordiv__ with constant
+        b = QuantityValue(20, descriptor=d)
+        b.timestamp = 20
+        b //= 2
+        self.assertEqual(b.magnitude, 10)
+        self.assertIsNone(b.timestamp)
+
+        # 5.2 take newest timestamp with both quantity values
+        a = QuantityValue(5, descriptor=d, timestamp=10)
+        b.timestamp = 20
+        b //= a
+        self.assertEqual(b.magnitude, 2)
+        self.assertEqual(b.timestamp, 20)
+
+        # 6.1 the stacking case
+        a = QuantityValue(10, descriptor=d)
+        a.timestamp = 3
+        b = QuantityValue(20, descriptor=d)
+        b.timestamp = 1
+
+        b += 5 + a
+        self.assertEqual(b.magnitude, 35)
+        self.assertEqual(b.timestamp, 3)
+
+        # 6.2
+        a = QuantityValue(10, descriptor=d)
+        a.timestamp = 3
+        b = QuantityValue(20, descriptor=d)
+        b.timestamp = 1
+
+        b += (5 + a) * 2
+        self.assertEqual(b.magnitude, 50)
+        self.assertEqual(b.timestamp, 3)
+
     def test_int(self):
         a = QuantityValue(3)
         # range calls a.__index__
