@@ -40,7 +40,7 @@ MOCK_MODULES = [
     "pyqtgraph", "pyqtgraph.exporters", "pyqtgraph.graphicsItems",
     "pyqtgraph.graphicsItems.LegendItem", "scipy", "scipy.optimize",
     "scipy.ndimage", "lttbc", "karabogui.sceneview.api", "qtpy.QtSvg",
-    "karabogui.controllers.table.api"]
+    "tabulate", "karabogui.controllers.table.api"]
 
 sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
 
