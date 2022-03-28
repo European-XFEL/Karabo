@@ -3,15 +3,16 @@ import sys
 import numpy as np
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC,
-    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_VALUE_TYPE)
+    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_SIZE,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
+    KARABO_SCHEMA_VALUE_TYPE)
 from karabo.common.const import KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_LOW
 from karabo.native import Hash, Schema
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
-    Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorFloatBinding, VectorInt8Binding,
+    Int64Binding, StringBinding, Uint8Binding, Uint16Binding, Uint32Binding,
+    Uint64Binding, VectorBoolBinding, VectorFloatBinding, VectorInt8Binding,
     VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding, attr_fast_deepcopy, get_dtype_format, get_min_max,
@@ -223,3 +224,13 @@ def test_display_format():
 
     binding = Int8Binding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "moct"})
     assert get_dtype_format(binding) == "{}"
+
+    # Only accounted for IntegerBindings
+    binding = StringBinding(attributes={KARABO_SCHEMA_DISPLAY_TYPE: "oct"})
+    assert get_dtype_format(binding) == "{}"
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 0.001})
+    assert get_dtype_format(binding) == "{:.3f}"
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 20.000})
+    assert get_dtype_format(binding) == "{:.1f}"
