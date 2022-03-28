@@ -737,6 +737,31 @@ class QuantityValue(KaraboValue, Quantity):
         ret.timestamp = newest_timestamp(objs)
         return ret
 
+    def __iadd__(self, other):
+        if not isinstance(other, QuantityValue):
+            self.timestamp = None
+        return super().__iadd__(other)
+
+    def __isub__(self, other):
+        if not isinstance(other, QuantityValue):
+            self.timestamp = None
+        return super().__isub__(other)
+
+    def __imul__(self, other):
+        if not isinstance(other, QuantityValue):
+            self.timestamp = None
+        return super().__imul__(other)
+
+    def __itruediv__(self, other):
+        if not isinstance(other, QuantityValue):
+            self.timestamp = None
+        return super().__itruediv__(other)
+
+    def __ifloordiv__(self, other):
+        if not isinstance(other, QuantityValue):
+            self.timestamp = None
+        return super().__ifloordiv__(other)
+
     def _format(self, value, fmt=""):
         absolute = getattr(self.descriptor, "absoluteError", None)
         relative = getattr(self.descriptor, "relativeError", None)
