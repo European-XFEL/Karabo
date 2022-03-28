@@ -6,6 +6,9 @@ breathe==4.7.3
 numpy
 matplotlib
 typing
+natsort
+psutil
+Jinja2<=3.0.3
 traits==4.6.0
 pytz>=2015.6
 #lxml==3.6.4 # does not build on https://rtd.xfel.eu/
