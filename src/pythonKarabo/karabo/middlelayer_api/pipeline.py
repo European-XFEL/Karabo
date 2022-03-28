@@ -236,7 +236,7 @@ class NetworkInput(Configurable):
         # Make sure to always set the instance correctly!
         loop = get_event_loop()
         task = loop.create_task(self.start_channel(channel),
-                                instance=self.parent)
+                                instance=self.parent.get_root())
         self.connected[channel] = task
         self.connectedOutputChannels = list(self.connected)
 
@@ -307,7 +307,8 @@ class NetworkInput(Configurable):
         try:
             instance, name = output.split(":")
             # success, configuration
-            ok, info = await self.parent._call_once_alive(
+            root = self.parent.get_root()
+            ok, info = await root._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             if not ok:
                 return
@@ -318,7 +319,7 @@ class NetworkInput(Configurable):
                 # schema from output channel we are talking with
                 schema = info.get("schema", None)
                 if schema is None:
-                    schema, _ = await self.parent.call(
+                    schema, _ = await root.call(
                         instance, "slotGetSchema", False)
                 cls = ProxyFactory.createProxy(
                     Schema(name=name, hash=schema.hash[name]["schema"]))
@@ -330,8 +331,7 @@ class NetworkInput(Configurable):
                 # Tell the world we are connected before we start
                 # requesting data
                 await shield(self.call_handler(self.connect_handler, output))
-                instance_id = "{}:{}".format(self.parent.deviceId,
-                                             self._name)
+                instance_id = "{}:{}".format(root.deviceId, self._name)
                 cmd = Hash("reason", "hello",
                            "instanceId", instance_id,
                            "memoryLocation", "remote",
@@ -373,8 +373,8 @@ class NetworkInput(Configurable):
             if e.partial:
                 raise
             else:
-                self.parent.logger.info("stream %s finished",
-                                        channel.channelName)
+                root = self.parent.get_root()
+                root.logger.info("stream %s finished", channel.channelName)
                 return False
         data = await channel.readBytes()
         # `readHash` must happen first, but then we can already
