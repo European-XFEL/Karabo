@@ -4,8 +4,9 @@ from unittest import main
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
-    InputChannel, Int32, OutputChannel, Overwrite, Slot, State, Timestamp,
-    UInt32, call, coslot, getDevice, isAlive, setWait, updateDevice, waitUntil)
+    InputChannel, Int32, Node, OutputChannel, Overwrite, Slot, State,
+    Timestamp, UInt32, call, coslot, getDevice, isAlive, setWait, updateDevice,
+    waitUntil)
 from karabo.middlelayer_api.compat import jms
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -63,7 +64,8 @@ class Sender(Device):
         super().__init__(configuration)
 
 
-class Receiver(Device):
+class InputSchema(Configurable):
+
     received = UInt32(
         defaultValue=0,
         displayedName="Received Packets")
@@ -76,14 +78,6 @@ class Receiver(Device):
 
     eosReceived = Bool(
         defaultValue=False)
-
-    def __init__(self, configuration):
-        super().__init__(configuration)
-
-    @coslot
-    async def connectInputChannel(self, output="alice"):
-        await self.input.connectChannel(f"{output}:output")
-        return True
 
     @Slot()
     async def resetCounter(self):
@@ -105,6 +99,21 @@ class Receiver(Device):
     @input.endOfStream
     async def input(self, name):
         self.eosReceived = True
+
+
+class Receiver(InputSchema, Device):
+
+    node = Node(InputSchema)
+
+    def __init__(self, configuration):
+        super().__init__(configuration)
+
+    @coslot
+    async def connectInputChannel(self, output="alice", node=False):
+        await self.input.connectChannel(f"{output}:output")
+        if node:
+            await self.node.input.connectChannel(f"{output}:output")
+        return True
 
     async def onInitialization(self):
         self.state = State.ON
@@ -135,15 +144,17 @@ class RemotePipelineTest(DeviceTest):
                             "input": {"dataDistribution": "shared"}})
 
         await charlie.startInstance()
-        ret = await call("bob", "connectInputChannel")
+        ret = await call("bob", "connectInputChannel", "alice", True)
         self.assertTrue(ret)
-        ret = await call("charlie", "connectInputChannel")
+        ret = await call("charlie", "connectInputChannel", "alice", True)
         self.assertTrue(ret)
         await sleep(1)
-        channels = self.bob.input.connectedOutputChannels.value
-        self.assertIn("alice:output", channels)
-        channels = charlie.input.connectedOutputChannels.value
-        self.assertIn("alice:output", channels)
+        for channels in [self.bob.input.connectedOutputChannels.value,
+                         self.bob.node.input.connectedOutputChannels.value,
+                         charlie.input.connectedOutputChannels.value,
+                         charlie.node.input.connectedOutputChannels.value]:
+            self.assertIn("alice:output", channels)
+
         # Charlie is new and we check the handler
         self.assertEqual(charlie.connected.value, True)
 
@@ -155,21 +166,37 @@ class RemotePipelineTest(DeviceTest):
         with proxy:
             self.assertEqual(self.bob.received, 0)
             self.assertEqual(charlie.received, 0)
+            self.assertEqual(self.bob.node.received, 0)
+            self.assertEqual(charlie.node.received, 0)
+
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 1)
             await waitUntil(lambda: charlie.received == 1)
+            await waitUntil(lambda: self.bob.node.received == 1)
+            await waitUntil(lambda: charlie.node.received == 1)
             self.assertEqual(charlie.received, 1)
             self.assertEqual(self.bob.received, 1)
+            self.assertEqual(self.bob.node.received, 1)
+            self.assertEqual(charlie.node.received, 1)
             await proxy.sendEndOfStream()
             await waitUntil(lambda: self.bob.eosReceived.value is True)
             await waitUntil(lambda: charlie.eosReceived.value is True)
+            await waitUntil(lambda: self.bob.node.eosReceived.value is True)
+            await waitUntil(lambda: charlie.node.eosReceived.value is True)
             self.assertEqual(self.bob.eosReceived.value, True)
             self.assertEqual(charlie.eosReceived.value, True)
+            self.assertEqual(self.bob.node.eosReceived.value, True)
+            self.assertEqual(charlie.node.eosReceived.value, True)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 2)
             await waitUntil(lambda: charlie.received == 2)
+            await waitUntil(lambda: self.bob.node.received == 2)
+            await waitUntil(lambda: charlie.node.received == 2)
             self.assertEqual(self.bob.received, 2)
             self.assertEqual(charlie.received, 2)
+            self.assertEqual(self.bob.node.received, 2)
+            self.assertEqual(charlie.node.received, 2)
+
             # Shutdown the shared channel. The queue gets removed and
             # we test that we are not blocked.
             await charlie.slotKillDevice()
@@ -177,6 +204,8 @@ class RemotePipelineTest(DeviceTest):
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 3)
             self.assertEqual(self.bob.received, 3)
+            await waitUntil(lambda: self.bob.node.received == 3)
+            self.assertEqual(self.bob.node.received, 3)
 
     @async_tst
     async def test_output_reconnect(self):
@@ -266,7 +295,7 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
         receiver = Receiver({"_deviceId_": "receiverdevice"})
         await receiver.startInstance()
-        await receiver.connectInputChannel("outputdevice")
+        await receiver.connectInputChannel("outputdevice", True)
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
@@ -274,9 +303,11 @@ class RemotePipelineTest(DeviceTest):
                 await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
+            self.assertEqual(receiver.node.received, 0)
             for data in range(NUM_DATA):
                 await proxy.sendData()
             self.assertGreater(receiver.received, 0)
+            self.assertGreater(receiver.node.received, 0)
             # We received data and now kill the device
             await output_device.slotKillDevice()
             await waitUntil(lambda: not isAlive(proxy))  # noqa
@@ -289,7 +320,9 @@ class RemotePipelineTest(DeviceTest):
 
             # We set the counter to zero!
             await receiver.resetCounter()
+            await receiver.node.resetCounter()
             self.assertEqual(receiver.received, 0)
+            self.assertEqual(receiver.node.received, 0)
             # Wait a few seconds because the reconnect will wait seconds
             # as well before attempt
             await sleep(2)
@@ -298,10 +331,16 @@ class RemotePipelineTest(DeviceTest):
             # Our reconnect was successful, we are receiving data via the
             # output channel
             self.assertGreater(receiver.received, 0)
+            self.assertGreater(receiver.node.received, 0)
+            connections = output_device.output.connections
+            self.assertEqual(len(connections.value), 2)
+
+            await receiver.slotKillDevice()
+            connections = output_device.output.connections
+            self.assertEqual(len(connections.value), 0)
 
         del proxy
         await output_device.slotKillDevice()
-        await receiver.slotKillDevice()
 
     @async_tst
     async def test_output_change_schema(self):
