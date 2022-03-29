@@ -44,7 +44,6 @@ from karathon import (
 
 from .bound_api.base_fsm import BaseFsm
 from .bound_api.camera_fsm import CameraFsm
-from .bound_api.camera_interface import CameraInterface
 from .bound_api.configurator import Configurator
 from .bound_api.decorators import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
@@ -65,7 +64,6 @@ from .bound_api.fsm import (
     KARABO_FSM_STATE_AE, KARABO_FSM_STATE_AEE, KARABO_FSM_STATE_E,
     KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE, KARABO_FSM_STATE_MACHINE_E,
     KARABO_FSM_STATE_MACHINE_EE)
-from .bound_api.motor_interface import MotorInterface
 from .bound_api.no_fsm import NoFsm
 from .bound_api.ok_error_fsm import OkErrorFsm
 from .bound_api.plugin_loader import PluginLoader
