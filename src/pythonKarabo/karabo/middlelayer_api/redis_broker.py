@@ -55,8 +55,8 @@ class RedisBroker(Broker):
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
         self.proMap = {}        # producer order number's map
         self.store = {}         # store for pending messages (re-ordering)
-        self.future = None
         self.heartbeatTask = None
+        self.lastPublishTask = None
         self.subscrLock = Lock()
         self.readerTask = None
 
@@ -96,8 +96,7 @@ class RedisBroker(Broker):
         header['producerTimestamp'] = self.timestamp
         self.incrementOrderNumbers(topic, header)
         m = b''.join([encodeBinary(header), encodeBinary(body)])
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(topic, m))
+        self.lastPublishTask = self.loop.create_task(self.publish(topic, m))
 
     def incrementOrderNumbers(self, topic, header):
         if "orderNumbers" in header:
@@ -158,6 +157,8 @@ class RedisBroker(Broker):
                         first = False
                     await sleep(sleepInterval)
                     await self.heartbeat(interval)
+            except CancelledError:
+                pass
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
@@ -325,13 +326,14 @@ class RedisBroker(Broker):
 
     async def stopHeartbeat(self):
         if self.heartbeatTask is not None:
-            try:
+            if not self.heartbeatTask.done():
                 self.heartbeatTask.cancel()
                 await self.heartbeatTask
-            except CancelledError:
-                pass
-            finally:
-                self.heartbeatTask = None
+            self.heartbeatTask = None
+        task = self.lastPublishTask
+        self.lastPublishTask = None
+        if task is not None and not task.done():
+            await wait_for(task, timeout=5)
 
     async def ensure_disconnect(self):
         """Close broker connection"""
@@ -339,21 +341,15 @@ class RedisBroker(Broker):
         await self.redis.wait_closed()
 
     async def _cleanup(self):
-        await self.stopHeartbeat()
         await self.async_unsubscribe_all()
-        self.future.set_result(None)
+        await self.stopHeartbeat()
         if self.logproc is not None:
             self.logproc = None
         if self.readerTask is not None:
-            self.mpsc.stop()
-            # self.mpsc = None
-            try:
-                self.readerTask.cancel()
-                await self.readerTask
-            except CancelledError:
-                pass
-            finally:
-                self.readerTask = None
+            if not self.readerTask.done():
+                self.mpsc.stop()
+                await wait_for(self.readerTask, timeout=5)
+            self.readerTask = None
 
     async def handleMessage(self, message, device):
         """Check message order first if the header
@@ -506,25 +502,32 @@ class RedisBroker(Broker):
 
     async def consume(self, device):
         mpsc = aioredis.pubsub.Receiver()
+        fut = Future()
 
         async def reader(mpsc):
-            async for channel, msg in mpsc.iter():
-                d = device()
-                if d is None:
-                    continue
-                message = RedisMessage()
-                message.topic = channel
-                message.payload = msg
-                self.loop.call_soon_threadsafe(
-                        self.loop.create_task, self.handleMessage(message, d),
-                        d)
-                d = None
+            try:
+                async for channel, msg in mpsc.iter():
+                    d = device()
+                    if d is None:
+                        continue
+                    message = RedisMessage()
+                    message.topic = channel
+                    message.payload = msg
+                    self.loop.call_soon_threadsafe(
+                            self.loop.create_task,
+                            self.handleMessage(message, d),
+                            d)
+                    d = None
+            except CancelledError:
+                pass
+            finally:
+                fut.set_result(None)
 
         self.readerTask = self.loop.create_task(reader(mpsc), instance=device)
         self.mpsc = mpsc
         await self.subscribe_default()
-        self.future = Future()
-        await self.future
+        # Block here until 'self.mpsc' will not be stopped
+        await fut
 
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
@@ -552,10 +555,7 @@ class RedisBroker(Broker):
         is not cancelled. That's the chicken-egg-problem.
         """
         await self._cleanup()
-        await sleep(0.2)
         await self._stop_tasks()
-        # if we do directly ...
-        # await self.ensure_disconnect()   # hangs in test_topology
         self.loop.call_soon_threadsafe(
                 self.loop.create_task, self.ensure_disconnect())
 
