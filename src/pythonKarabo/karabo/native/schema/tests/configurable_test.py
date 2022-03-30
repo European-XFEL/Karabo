@@ -916,7 +916,7 @@ class Tests(TestCase):
         self.assertEqual(a.table[2]["vectorString"], ["Itchy", "Burns"])
         self.assertEqual(len(a.table), 11)
 
-        self.assertEqual(adler32(str(a.table).encode("ascii")), 3585240932)
+        self.assertEqual(adler32(str(a.table).encode("ascii")), 4066904189)
 
         # Test the comparison of table element with Hash
         h = a.configurationAsHash()
