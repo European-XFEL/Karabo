@@ -530,7 +530,10 @@ class Tests(DeviceTest):
         setNoWait(d, value=200, counter=300 * unit.mm)
         self.assertEqual(self.remote.value, 0)
         self.assertEqual(self.remote.counter, 0)
-        await sleep(0.1)
+        if mqtt:
+            await sleep(0.2)
+        else:
+            await sleep(0.1)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
 
@@ -769,7 +772,7 @@ class Tests(DeviceTest):
                 self.local.logger.exception("expected exception")
             await t
         if not jms:
-            await sleep(0.1)
+            await sleep(0.2)
         hash = decodeBinary(self.remote.logmessage)
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "expected exception")

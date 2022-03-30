@@ -51,6 +51,7 @@ class AmqpBroker(Broker):
         self.logproc = None
         self.future = None
         self.heartbeatTask = None
+        self.lastPublishTask = None
         self.subscrLock = Lock()
 
     async def subscribe_default(self):
@@ -115,8 +116,8 @@ class AmqpBroker(Broker):
         bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
         # publish is awaitable
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(exchange, routing_key, m))
+        self.lastPublishTask = self.loop.create_task(
+                self.publish(exchange, routing_key, m))
 
     def heartbeat(self, interval):
         exchange = self.domain + ".signals"
@@ -164,6 +165,8 @@ class AmqpBroker(Broker):
                         first = False
                     await sleep(sleepInterval)
                     self.heartbeat(interval)
+            except CancelledError:
+                pass
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
@@ -349,13 +352,14 @@ class AmqpBroker(Broker):
 
     async def stopHeartbeat(self):
         if self.heartbeatTask is not None:
-            try:
+            if not self.heartbeatTask.done():
                 self.heartbeatTask.cancel()
                 await self.heartbeatTask
-            except CancelledError:
-                pass
-            finally:
-                self.heartbeatTask = None
+            self.heartbeatTask = None
+        task = self.lastPublishTask
+        self.lastPublishTask = None
+        if task is not None and not task.done():
+            await wait_for(task, timeout=1)
 
     async def ensure_disconnect(self):
         """Close broker connection"""
@@ -478,8 +482,9 @@ class AmqpBroker(Broker):
         is not cancelled. That's the chicken-egg-problem.
         """
         await self._cleanup()
-        await sleep(0.2)
         await self._stop_tasks()
+        self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.ensure_disconnect())
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)

@@ -53,6 +53,7 @@ class MqttBroker(Broker):
         self.proMap = {}        # producer order number's map
         self.store = {}         # store for pending messages (re-ordering)
         self.heartbeatTask = None
+        self.lastPublishTask = None
         self.subscrLock = Lock()
 
     async def subscribe_default(self):
@@ -93,7 +94,8 @@ class MqttBroker(Broker):
         header['producerTimestamp'] = self.timestamp
         self.incrementOrderNumbers(topic, header, qos)
         m = b''.join([encodeBinary(header), encodeBinary(body)])
-        self.loop.create_task(self.publish(topic, m, qos))
+        self.lastPublishTask = self.loop.create_task(
+                self.publish(topic, m, qos))
 
     def incrementOrderNumbers(self, topic, header, qos):
         if qos == 0:
@@ -156,6 +158,8 @@ class MqttBroker(Broker):
                         first = False
                     await sleep(sleepInterval)
                     await self.heartbeat(interval)
+            except CancelledError:
+                pass
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
@@ -323,22 +327,23 @@ class MqttBroker(Broker):
 
     async def stopHeartbeat(self):
         if self.heartbeatTask is not None:
-            try:
+            if not self.heartbeatTask.done():
                 self.heartbeatTask.cancel()
                 await self.heartbeatTask
-            except CancelledError:
-                pass
-            finally:
-                self.heartbeatTask = None
+            self.heartbeatTask = None
+        task = self.lastPublishTask
+        self.lastPublishTask = None
+        if task is not None and not task.done():
+            await wait_for(task, timeout=5)
 
     async def ensure_disconnect(self):
         """Close broker connection"""
         await self.client.disconnect()
+        self.client.loop_stop()
 
     async def _cleanup(self):
-        await self.stopHeartbeat()
-        self.client.loop_stop()
         await self.async_unsubscribe_all()
+        await self.stopHeartbeat()
 
     async def handleMessage(self, message, device):
         """Check message order first if the header
@@ -532,6 +537,8 @@ class MqttBroker(Broker):
         """
         await self._cleanup()
         await self._stop_tasks()
+        self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.ensure_disconnect())
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
