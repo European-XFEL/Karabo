@@ -13,6 +13,7 @@ from xml.sax.saxutils import escape
 
 import numpy
 import pint
+import tabulate
 
 from karabo.native.data import EncodingType, Hash, HashList, MetricPrefix, Unit
 
@@ -604,21 +605,11 @@ class TableValue(KaraboValue):
         for row in self.value:
             yield TableValue(row, self.units, timestamp=self.timestamp)
 
-    def __str__(self):
-        def inner():
-            for name in self.value.dtype.names:
-                yield "{:10} ".format(name)
-            yield "\n"
-            for _ in self.value.dtype.names:
-                yield "---------- "
-            yield "\n"
-            for row in self.value:
-                for val in row:
-                    # NOTE: str casting is for numpy vectors and lists
-                    yield "{:10} ".format(str(val))
-                yield "\n"
-
-        return "".join(inner())
+    def __repr__(self):
+        table = [{key: value for key, value in
+                 zip(self.value.dtype.names, row)}
+                 for row in self.value]
+        return tabulate.tabulate(table, headers="keys", tablefmt="grid")
 
     def _repr_html_generator_(self):
         yield "<table><tr>"
