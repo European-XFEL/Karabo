@@ -911,11 +911,17 @@ class Tests(DeviceTest):
         """test that errors of background tasks are properly reported"""
         with (await getDevice("local")) as local, \
                 (await getDevice("remote")) as remote:
+            if not jms:
+                await updateDevice(remote)
             t = ensure_future(remote.read_log())
             await sleep(0.1)
+            if not jms:
+                await updateDevice(local)
             await local.task_background_error_coro()
             await t
 
+            if not jms:
+                await sleep(0.2)
             # Read out the log message
             hash = decodeBinary(self.remote.logmessage)
             hash = hash["messages"][0]
