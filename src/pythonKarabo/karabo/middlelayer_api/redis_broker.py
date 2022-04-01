@@ -520,6 +520,8 @@ class RedisBroker(Broker):
                     d = None
             except CancelledError:
                 pass
+            except BaseException as e:
+                self.logger.exception(f'Exception in reader: {e}')
             finally:
                 fut.set_result(None)
 
