@@ -12,6 +12,19 @@ from karabo.native import (
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
     VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
 
+TEST_REPR_HL = "\
++-----------+-----------------------+\n\
+|   integer | object                |\n\
++===========+=======================+\n\
+|         3 | asdf                  |\n\
++-----------+-----------------------+\n\
+|         2 | [0 1 2 3 4 5 6 7 8 9] |\n\
++-----------+-----------------------+\n\
+|         4 | b'fdas'               |\n\
++-----------+-----------------------+\n\
+|         5 | bytearray(b'')        |\n\
++-----------+-----------------------+"
+
 
 class Tests(TestCase):
     t1 = Timestamp("2009-09-01")
@@ -283,6 +296,7 @@ class Tests(TestCase):
         self.assertEqual(next(iter(t)).timestamp, self.t2)
 
         hl = t.to_hashlist()
+        self.assertEqual(repr(hl), TEST_REPR_HL)
 
         h = hl[0]
         self.assertEqual(len(h), 2)
