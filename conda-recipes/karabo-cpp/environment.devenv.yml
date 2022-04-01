@@ -33,4 +33,4 @@ dependencies:
   - cppunit
   - mqtt_cpp
   - redisclient=1.0.3=xfel
-  - amqp-cpp=4.3.12=xfel
+  - amqp-cpp=4.3.16=xfel
