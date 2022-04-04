@@ -91,10 +91,39 @@ class Hash(OrderedDict):
 
         return OrderedDict.__getitem__(*self._path(path, auto))
 
-    def __repr__(self):
+    def __str__(self):
         r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
                       for k in self)
         return '<' + r + '>'
+
+    def __repr__(self):
+        """Return the printable representation of the `Hash`"""
+        if self.empty():
+            return "<>"
+        tabular = "  "
+
+        def _is_table(value):
+            """Check if the value belong to a table value"""
+            if (isinstance(value,  list) and len(value)
+                    and isinstance(value[0], Hash)):
+                return HashList.hashlist_format(value) is HashListFormat.Table
+            return False
+
+        def _pretty_generator(h, n=0):
+            for key, value, attrs in h.iterall():
+                if isinstance(value, Hash):
+                    yield tabular * n + f"{key}{attrs!r}\n"
+                    yield from _pretty_generator(value, n + 2)
+                elif _is_table(value):
+                    yield tabular * n + f"{key}{attrs!r}\n"
+                    for row in value.__repr__().split("\n"):
+                        yield tabular * n + row + "\n"
+                else:
+                    hash_type = get_hash_type_from_data(value).name
+                    yield (tabular * n + f"{key}{attrs!r}: "
+                           f"{value!r} => {hash_type}\n")
+
+        return f"<\n{''.join(_pretty_generator(self))}>"
 
     def _setelement(self, key, value):
         # NOTE: This is a fast path for __setitem__ to be use by the binary
