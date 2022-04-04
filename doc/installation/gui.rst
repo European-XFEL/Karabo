@@ -56,9 +56,9 @@ from a network outside the DESY internal network, some SSH tunneling is needed.
 Two options exist (but should not be mixed):
 
 The first option is to create the tunnel to ``exflserv05``
-(e.g. via ``ssh user@bastion.desy.de -L 8081:exflserv05.desy.de:80``),
+(e.g. via ``ssh <user>@bastion.desy.de -L 8081:exflserv05.desy.de:80``),
 and then configure
-the following channel definitions::
+the following channel definitions on your local machine (may be from a new terminal)::
 
     conda config --add channels http://localhost:8081/karabo/channel
     conda config --add channels http://localhost:8081/karabo/channel/mirror/conda-forge
@@ -71,9 +71,9 @@ are not reachable with the command::
 The second option is to use a proxy and dynamic port forwarding, i.e.
 setup connection::
 
-    ssh user@bastion.desy.de -D 9090
+    ssh <user>@bastion.desy.de -D 9090
 
-and tell ``conda`` to use a proxy server::
+and tell ``conda`` to use a proxy server from your local machine (may be from a new terminal)::
 
     conda config --set proxy_servers.http socks5://localhost:9090
 
