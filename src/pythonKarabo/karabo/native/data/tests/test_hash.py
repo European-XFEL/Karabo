@@ -538,3 +538,28 @@ def test_hashlist():
     hl = HashList([h1, h2])
 
     assert repr(hl) == hlrep
+
+
+def test_hash_repr():
+    h = Hash()
+    assert repr(h) == "<>"
+    h["a"] = 1
+    h["b"] = True
+    h["c"] = [1.2, 3.4]
+    h["c", ...].update({"maxSize": 3})
+    h["d"] = Hash("d", 2)
+    h["e"] = "XFEL"
+    h["f"] = Hash()
+    h["g"] = [Hash(), Hash()]
+    hrep = """<
+a{}: 1 => Int32
+b{}: True => Bool
+c{'maxSize': 3}: [1.2, 3.4] => VectorDouble
+d{}
+    d{}: 2 => Int32
+e{}: 'XFEL' => String
+f{}
+g{}: [<>, <>] => VectorHash
+>"""
+
+    assert repr(h) == hrep
