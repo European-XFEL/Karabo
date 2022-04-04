@@ -12,6 +12,7 @@ from subprocess import PIPE
 
 import numpy
 
+from karabo import __version__ as karaboVersion
 from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, Int32,
@@ -139,8 +140,9 @@ class DeviceServerBase(SignalSlotable):
         await super(DeviceServerBase, self)._run(**kwargs)
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
-        self.logger.info("Starting Karabo DeviceServer on host "
-                         f"{self.hostName}, topic {get_event_loop().topic}")
+        self.logger.info(f"Starting Karabo {karaboVersion} DeviceServer on "
+                         f"host {self.hostName}, topic "
+                         f"{get_event_loop().topic}")
 
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
