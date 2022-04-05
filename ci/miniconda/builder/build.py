@@ -406,6 +406,10 @@ class Builder:
         # Collect the commands to be run
         cmds = []
         cmds.append("source ~/miniconda3/bin/activate")
+        # TEMPORARY WORKAROUND: Skip after exflserv05 is decommissioned
+        if os.environ.get('MIRROR_HOSTNAME', None) == "exflctrl01":
+            cmds.append(f"rsync -va xkarabo@exflserv05:/var/www/html/karabo/channel /data/karabo")
+        # end workaround
         dirs = [
             self.args.remote_channel_dir,
             f'{self.args.remote_mirror_dir}/anaconda',
@@ -425,6 +429,10 @@ class Builder:
                     f"rm -f {plat_dir}/current_repodata.json*")
             cmds.append(
                 f"conda index {dir_} --check-md5 --no-progress")
+        # TODO: Skip after exflserv05 is decommissioned
+        if os.environ.get('MIRROR_HOSTNAME', None) == "exflctrl01":
+            cmds.append(f"rsync -va /data/karabo/channel xkarabo@exflserv05:/var/www/html/karabo/.")
+        # end workaround
         command = "; ".join(cmds)
 
         # Execute the command
@@ -451,8 +459,8 @@ def append_build_args(parser):
         help='Run CI specific configurations')
 
     parser.add_argument(
-        '-c', '--channel', type=str, default='exflserv05.desy.de',
-        help='Internal conda channel')
+        '-c', '--channel', type=str,
+        help='host of the conda channel mirror')
 
     parser.add_argument(
         '-s', '--skip-build', action='store_true',
@@ -480,18 +488,18 @@ def append_build_args(parser):
 
     parser.add_argument(
         '-P', '--remote-channel-dir', type=str,
-        default='/var/html/www/karabo/channel',
+        default='/data/karabo/channel',
         help='Directory of the Packages channel on remote host. '
         'Define this when uploading or repopulating the index')
 
     parser.add_argument(
         '-C', '--remote-mirror-dir', type=str,
-        default='/var/html/www/karabo/channel/mirror',
+        default='/data/karabo/channel/mirror',
         help='Directory of the mirror channels on remote host. '
         'Define this when uploading or repopulating the index')
 
     parser.add_argument(
-        '-D', '--recipes-dir', type=str, default='recipes',
+        '-D', '--recipes-dir', type=str, default='conda-recipes',
         help='Base folder for recipes relative to the top level '
         'directory of the git repository')
 
