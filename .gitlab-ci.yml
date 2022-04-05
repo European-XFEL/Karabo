@@ -93,12 +93,12 @@ stages:
   script:
     - >
       python ci/miniconda pack karabogui
-      -D conda-recipes
       --ci --clean --upload-env
       -E karaboEnvironments
       --upload-to-mirror
-      -P $CONDA_CHANNEL_PATH
-      -C $CONDA_CHANNEL_PATH/mirror
+      -c $KARABO_CONDA_CHANNEL
+      -P $KARABO_CONDA_CHANNEL_PATH
+      -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
   only:
     - /^(\d+\.)(\d+\.)(\d+)$/
@@ -111,12 +111,12 @@ stages:
   script:
     - >
       python ci/miniconda pack karabogui
-      -D conda-recipes
       --ci --clean --upload-env
       -E karaboEnvironments
       --upload-to-mirror
-      -P $CONDA_CHANNEL_PATH/nightly
-      -C $CONDA_CHANNEL_PATH/mirror
+      -c $KARABO_CONDA_CHANNEL
+      -P $KARABO_CONDA_CHANNEL_PATH/nightly
+      -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
   only:
     - /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/
@@ -129,13 +129,13 @@ stages:
   script:
     - >
       python ci/miniconda pack karabogui
-      -D conda-recipes
       --ci --clean --upload-env
       -E karaboEnvironments
       --upload-to-mirror
       --nightly
-      -P $CONDA_CHANNEL_PATH/nightly
-      -C $CONDA_CHANNEL_PATH/mirror
+      -c $KARABO_CONDA_CHANNEL
+      -P $KARABO_CONDA_CHANNEL_PATH/nightly
+      -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
   only:
     - schedules
@@ -207,7 +207,7 @@ stages:
   script:
     - >
       python ci/miniconda pack karabogui
-      -D conda-recipes
+      -c $KARABO_CONDA_CHANNEL
       --ci --clean --test
       --skip-build
   only:
