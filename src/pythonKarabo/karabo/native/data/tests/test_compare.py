@@ -38,6 +38,10 @@ def test_has_changes():
     assert has_changes(np.array([1, 2, 7]), np.array([1, 2, 3]))
     assert not has_changes(np.array([1, 2, 3]), np.array([1, 2, 3]))
 
+    # Only value comparison is performed, not dtype
+    assert not has_changes(np.array([1, 2, 3], dtype=np.uint8), np.array(
+        [1, 2, 3], dtype=np.int32))
+
     # List of Hashes
     assert has_changes([Hash("float", 2.0)], [Hash("float", 2.0 + 3e-7)])
     assert not has_changes([Hash("float", 2.0)], [Hash("float", 2.0 + 3e-8)])
