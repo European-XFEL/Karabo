@@ -56,16 +56,19 @@ def _has_floating_changes(old, new):
     return changes
 
 
-def _has_array_changes(old, new, dtype=False):
+def _has_array_changes(old, new):
     """Compare if arrays are equal with a floating point tolerance (IEEE 754)
     """
     if len(old) != len(new):
         return True
-
-    if dtype and old.dtype != new.dtype:
+    if not isinstance(new, np.ndarray):
         return True
+    if (np.issubdtype(old.dtype, np.floating)
+            or np.issubdtype(new.dtype, np.floating)):
+        return not np.allclose(old, new, atol=FLOAT_TOLERANCE)
 
-    return not np.allclose(old, new, atol=FLOAT_TOLERANCE)
+    # In case of non-floating arrays, we use `array_equal`
+    return not np.array_equal(old, new)
 
 
 def _has_hash_changes(old, new):
