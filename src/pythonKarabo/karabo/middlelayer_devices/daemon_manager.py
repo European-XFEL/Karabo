@@ -226,8 +226,7 @@ class DaemonManager(Device):
             # Set the number of seen services in the ecosystem!
             table_value.sort()
             table_value = self.services.descriptor.toKaraboValue(table_value)
-            if has_changes(self.services.to_hashlist(),
-                           table_value.to_hashlist()):
+            if has_changes(self.services.value, table_value.value):
                 self.numServices = len(table_value)
                 self.services = table_value
 
@@ -333,7 +332,7 @@ class DaemonManager(Device):
 def get_scene(deviceId):
     scene0 = FilterTableElementModel(
         height=533.0, keys=[f"{deviceId}.services"],
-        parent_component="DisplayComponent", resizeToContents=True,
+        parent_component="DisplayComponent", resizeToContents=False,
         width=960.0, x=11.0, y=158.0)
     scene1 = LabelModel(
         font="Source Sans Pro,12,-1,5,75,0,0,0,0,0,Bold", height=42.0,
