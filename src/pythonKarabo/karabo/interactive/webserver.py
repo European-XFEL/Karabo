@@ -92,8 +92,9 @@ def getdata(name, allowed_services):
     except Exception as e:
         print('{}: Exception {} when fetching service status {}'
               ''.format(datetime.now(), str(e), name))
-        return {'name': name, 'karabo_name': name,  'status': 'error',
-                'since': '', 'duration': -1, 'control_allowed': False}
+        return {'name': name, 'karabo_name': karabo_name,
+                'status': 'error', 'since': '',
+                'duration': -1, 'control_allowed': False}
 
 
 def get_log_row(text):
