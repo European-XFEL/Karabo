@@ -34,7 +34,7 @@ class MainHandler(web.RequestHandler):
         table = [server
                  for server in h['servers']
                  if server.get('control_allowed')]
-        table.sort(key=lambda x: x['name'])
+        table.sort(key=lambda x: x['karabo_name'])
         server['services'] = table
 
     async def post(self):
