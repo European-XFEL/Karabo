@@ -1698,9 +1698,9 @@ namespace karabo {
                         }
                     }
                     if (!configs.empty()) {
-                        Hash h("type", "deviceConfigurations");
-                        h.bindReference<Hash>("configurations") = std::move(configs);
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Sending configuration updates to GUI client:\n" << h;
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Sending " << configs.size()
+                                                   << " configuration updates to GUI client";
+                        Hash h("type", "deviceConfigurations", "configurations", std::move(configs));
                         it->first->writeAsync(h);
                     }
                 }
@@ -1928,7 +1928,34 @@ namespace karabo {
                         }
                     }
                 }
-
+                if (info.empty() || info.has("pipelines")) {
+                    // The input channels created via remote().registerChannelMonitor(..):
+                    const SignalSlotable::InputChannels inputs(getInputChannels());
+                    Hash& channelsInfo = data.bindReference<Hash>("inputChannels");
+                    for (const auto& keyAndChannel : inputs) {
+                        Hash& oneChannelInfo = channelsInfo.bindReference<Hash>(keyAndChannel.first); // key is 'local' id
+                        const InputChannel::Pointer& inputChannel = keyAndChannel.second;
+                        for (const std::pair<std::string, net::ConnectionStatus>& oneConnection :
+                             inputChannel->getConnectionStatus()) {
+                            oneChannelInfo.set("id", inputChannel->getInstanceId()); // instanceId is unique in system
+                            std::string& status = oneChannelInfo.bindReference<std::string>("status");
+                            switch (oneConnection.second) {
+                                case ConnectionStatus::CONNECTED:
+                                    status = "CONNECTED";
+                                    break;
+                                case ConnectionStatus::DISCONNECTED:
+                                    status = "DISCONNECTED";
+                                    break;
+                                case ConnectionStatus::CONNECTING:
+                                    status = "CONNECTING";
+                                    break;
+                                case ConnectionStatus::DISCONNECTING:
+                                    status = "DICONNECTING";
+                                    // no default: - compiler complains about missing ConnectionStatus values
+                            }
+                        }
+                    }
+                }
                 if (info.empty() || info.has("devices")) {
                     // monitored devices
                     Hash& monitoredDevices = data.bindReference<Hash>("monitoredDeviceConfigs");
