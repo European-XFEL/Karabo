@@ -24,12 +24,11 @@ class TestLogPanel(GuiTestCase):
             panel = LoggingPanel()
             broadcast_event(KaraboEvent.LogMessages, info)
             self.process_qt_events()
-            self.assertEqual(panel._log_widget.queryModel.rowCount(None), 1)
-
+            self.assertEqual(panel._log_widget.table_model.rowCount(None), 1)
             info = {'status': False}
             broadcast_event(KaraboEvent.NetworkConnectStatus, info)
             self.process_qt_events()
-            self.assertEqual(panel._log_widget.queryModel.rowCount(None), 0)
+            self.assertEqual(panel._log_widget.table_model.rowCount(None), 0)
 
 
 if __name__ == '__main__':
