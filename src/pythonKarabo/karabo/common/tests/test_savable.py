@@ -36,12 +36,14 @@ def test_savable_children():
     l_child = Simple(simple_child=1, initialized=True)
     ns_child = Plain(plain_child=2)
     child = Simple(simple_child=3, initialized=True)
-    complicated = Complex(children_dict={'foo': d_child},
-                          children_list=[l_child],
-                          children_non_savable=[ns_child],
-                          children_pod=['a string'],
-                          sav_child=child,
-                          initialized=True)
+    complicated = Complex(
+        children_dict={"foo": d_child},
+        children_list=[l_child],
+        children_non_savable=[ns_child],
+        children_pod=["a string"],
+        sav_child=child,
+        initialized=True,
+    )
     parent = MoreComplex(nested=[complicated], initialized=True)
 
     assert not complicated.modified
@@ -50,7 +52,7 @@ def test_savable_children():
     complicated.children_non_savable[0].plain_child = 42
     assert not complicated.modified
 
-    complicated.children_dict['foo'].simple_child = 42
+    complicated.children_dict["foo"].simple_child = 42
     assert complicated.modified
     set_modified_flag(parent)
 
@@ -78,8 +80,9 @@ def test_savable_children():
     assert parent.modified and complicated.modified
     set_modified_flag(parent)
 
-    parent.nested[0].children_list[0] = Simple(simple_child=0,
-                                               initialized=True)
+    parent.nested[0].children_list[0] = Simple(
+        simple_child=0, initialized=True
+    )
     assert parent.modified and complicated.modified
     set_modified_flag(parent)
 
@@ -106,14 +109,14 @@ def test_notification_management():
     child.simple_child = 0
     assert not parent.modified
 
-    parent.children_dict['key'] = child
+    parent.children_dict["key"] = child
     set_modified_flag(parent)
     child.simple_child = 42
     assert parent.modified
 
     # After removing a child, it should not affect the old parent
     set_modified_flag(parent)
-    del parent.children_dict['key']
+    del parent.children_dict["key"]
     set_modified_flag(parent)
     child.simple_child = 0
     assert child.modified and not parent.modified

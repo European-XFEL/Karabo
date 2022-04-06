@@ -15,8 +15,11 @@ class AlarmCondition_TestCase(unittest.TestCase):
         self.assertRaises(ValueError, AlarmCondition, "SOME_NEW_NAME")
 
     def test_alarm_condition_significance_evaluation(self):
-        condition_list = [AlarmCondition.ALARM_LOW, AlarmCondition.WARN,
-                          AlarmCondition.INTERLOCK]
+        condition_list = [
+            AlarmCondition.ALARM_LOW,
+            AlarmCondition.WARN,
+            AlarmCondition.INTERLOCK,
+        ]
         most_significant = AlarmCondition.returnMostSignificant(condition_list)
         self.assertEqual(most_significant, AlarmCondition.INTERLOCK)
         condition_list = condition_list[:-1]
@@ -30,5 +33,5 @@ class AlarmCondition_TestCase(unittest.TestCase):
         self.assertFalse(condition.isSameCriticality(AlarmCondition.WARN))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

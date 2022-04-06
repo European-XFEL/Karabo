@@ -8,20 +8,19 @@ from .const import DISPLAY_COMPONENT, EDITABLE_COMPONENT
 
 
 class BaseLayoutData(BaseSavableModel):
-    """ An empty base class to simplify holding layout data in other objects.
-    """
+    """An empty base class to simplify holding layout data in other objects."""
 
 
 class BaseSceneObjectData(BaseSavableModel):
-    """ A base class for all object which can appear in a scene.
-    """
+    """A base class for all object which can appear in a scene."""
+
     # The data needed by the layout which is the parent for this object
     layout_data = Instance(BaseLayoutData)
 
 
 class BaseLayoutModel(BaseSceneObjectData):
-    """ A common base class for all layouts
-    """
+    """A common base class for all layouts"""
+
     # The X-coordinate of the layout
     x = Float
     # The Y-coordinate of the layout
@@ -35,14 +34,14 @@ class BaseLayoutModel(BaseSceneObjectData):
 
 
 class BaseShapeObjectData(BaseSceneObjectData):
-    """ Base class for "shape" objects which contains drawing style attributes
-    """
+    """Base class for shape objects which contains drawing style attributes"""
+
     # An HTML color #hex value, or "none"
-    stroke = String('none')
+    stroke = String("none")
     # A floating point number between 0 and 1. Default 1
     stroke_opacity = Range(low=0.0, high=1.0, value=1.0)
     # butt, square, or round. Default butt
-    stroke_linecap = Enum('butt', 'square', 'round')
+    stroke_linecap = Enum("butt", "square", "round")
     # A floating point number. Default 0
     stroke_dashoffset = Float(0.0)
     # A floating point number. Default 1
@@ -52,18 +51,18 @@ class BaseShapeObjectData(BaseSceneObjectData):
     # An integer which maps to a QPen style. Default Qt.SolidLine (ie: 1)
     stroke_style = Int(1)
     # miter, round, or bevel. Default miter
-    stroke_linejoin = Enum('miter', 'round', 'bevel')
+    stroke_linejoin = Enum("miter", "round", "bevel")
     # A floating point number. Default 4
     stroke_miterlimit = Float(4.0)
     # An HTML color #hex value, or "none"
-    fill = String('none')
+    fill = String("none")
     # A floating point number between 0 and 1. Default 1
     fill_opacity = Range(low=0.0, high=1.0, value=1.0)
 
 
 class BaseWidgetObjectData(BaseSceneObjectData):
-    """ A base class for all controllers
-    """
+    """A base class for all controllers"""
+
     # The property names viewed by the controller
     keys = List(String)
     # The possible component type for a parent of the controller
@@ -85,8 +84,8 @@ class BaseWidgetObjectData(BaseSceneObjectData):
 
 
 class BaseEditWidget(BaseWidgetObjectData):
-    """ The base class for all controllers which can edit
-    """
+    """The base class for all controllers which can edit"""
+
     def _parent_component_default(self):
         return EDITABLE_COMPONENT
 
@@ -95,8 +94,9 @@ class BaseDisplayEditableWidget(BaseWidgetObjectData):
     """Handle the value of the `parent_component` trait for models which
     represent both display and editable controllers.
     """
+
     def _parent_component_default(self):
-        if self.klass.startswith('Editable'):
+        if self.klass.startswith("Editable"):
             return EDITABLE_COMPONENT
         return DISPLAY_COMPONENT
 
@@ -115,7 +115,7 @@ class XMLElementModel(BaseSceneObjectData):
 
     def generate_id(self):
         """Generate a random ID specified on the subclass"""
-        return ''
+        return ""
 
     def randomize(self, text):
         return f"{text}{randint(0, 1e6)}"

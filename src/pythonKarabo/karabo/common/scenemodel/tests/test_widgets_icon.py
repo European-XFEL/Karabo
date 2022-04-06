@@ -46,33 +46,36 @@ VERSION_1_DISPLAY_ICONSET_SVG = """
 
 def _check_icon_widget(klass):
     traits = base_widget_traits()
-    icon = api.IconData(data=b'karabo')
+    icon = api.IconData(data=b"karabo")
     if klass is api.DigitIconsModel:
         icon.equal = True
-        icon.value = '14'
-    traits['values'] = [icon]
+        icon.value = "14"
+    traits["values"] = [icon]
     model = klass(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert len(read_model.values) == 1
-    assert read_model.values[0].data == b'karabo'
+    assert read_model.values[0].data == b"karabo"
     if klass is api.DigitIconsModel:
         assert read_model.values[0].equal is True
-        assert read_model.values[0].value == '14'
+        assert read_model.values[0].value == "14"
 
 
 def test_display_iconset_widget():
     traits = base_widget_traits()
-    traits['data'] = b'karabo'
+    traits["data"] = b"karabo"
     model = api.DisplayIconsetModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
-    assert read_model.data == b'karabo'
+    assert read_model.data == b"karabo"
 
 
 def test_icon_widgets():
-    model_classes = (api.DigitIconsModel, api.SelectionIconsModel,
-                     api.TextIconsModel)
+    model_classes = (
+        api.DigitIconsModel,
+        api.SelectionIconsModel,
+        api.TextIconsModel,
+    )
     for klass in model_classes:
         _check_icon_widget(klass)
 
@@ -80,20 +83,20 @@ def test_icon_widgets():
 def test_display_iconset_widget_version_1():
     read_model = single_model_from_data(VERSION_1_DISPLAY_ICONSET_SVG)
     assert_base_traits(read_model)
-    assert read_model.image == 'blah.svg'
+    assert read_model.image == "blah.svg"
 
 
 def test_icon_widget_version_1():
     read_model = single_model_from_data(VERSION_1_DIGIT_ICONS_SVG)
     assert_base_traits(read_model)
     assert len(read_model.values) == 1
-    assert read_model.values[0].image == 'blah.svg'
+    assert read_model.values[0].image == "blah.svg"
     assert isinstance(read_model, api.DigitIconsModel)
 
 
 def test_write_exceptions():
     traits = base_widget_traits()
-    traits['values'] = [api.IconData()]
+    traits["values"] = [api.IconData()]
     model = api.TextIconsModel(**traits)
     assert_raises(api.SceneWriterException, single_model_round_trip, model)
 

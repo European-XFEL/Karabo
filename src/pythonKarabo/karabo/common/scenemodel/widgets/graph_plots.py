@@ -41,9 +41,10 @@ def read_base_plot(element):
 
 
 class BasePlotModel(BaseWidgetObjectData):
-    """ A base model for the plot graphs"""
+    """A base model for the plot graphs"""
+
     title = String
-    background = String('transparent')
+    background = String("transparent")
     x_label = String
     y_label = String
     x_units = String
@@ -63,13 +64,14 @@ class BasePlotModel(BaseWidgetObjectData):
 
 
 class ScatterGraphModel(BasePlotModel):
-    """ A model for the Scatter Graph"""
+    """A model for the Scatter Graph"""
+
     maxlen = Int(100)
     psize = Float(7.0)
 
 
 class XYPlotModel(ScatterGraphModel):
-    """ a legacy model """
+    """a legacy model"""
 
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -78,11 +80,11 @@ class XYPlotModel(ScatterGraphModel):
 
 
 class MultiCurveGraphModel(BasePlotModel):
-    """ A model for the MultiCurve Graph"""
+    """A model for the MultiCurve Graph"""
 
 
 class MultiCurvePlotModel(MultiCurveGraphModel):
-    """ a legacy model """
+    """a legacy model"""
 
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -91,18 +93,20 @@ class MultiCurvePlotModel(MultiCurveGraphModel):
 
 
 class VectorScatterGraphModel(BasePlotModel):
-    """ A model for the VectorScatter Graph"""
+    """A model for the VectorScatter Graph"""
+
     psize = Float(7.0)
 
 
 class VectorXYGraphModel(BasePlotModel):
-    """ A model for the VectorXYGraph"""
+    """A model for the VectorXYGraph"""
+
     x_grid = Bool(True)
     y_grid = Bool(True)
 
 
 class XYVectorModel(VectorXYGraphModel):
-    """ a legacy model """
+    """a legacy model"""
 
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -111,12 +115,14 @@ class XYVectorModel(VectorXYGraphModel):
 
 
 class VectorBarGraphModel(BasePlotModel):
-    """ A model for the Vector Bar Graph"""
+    """A model for the Vector Bar Graph"""
+
     bar_width = Float(0.1)
 
 
 class NDArrayGraphModel(BasePlotModel):
-    """ A model for the NDArray Graph"""
+    """A model for the NDArray Graph"""
+
     half_samples = Int(6000)
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
@@ -127,7 +133,8 @@ class NDArrayGraphModel(BasePlotModel):
 
 
 class VectorHistGraphModel(BasePlotModel):
-    """ A base model for histograms"""
+    """A base model for histograms"""
+
     bins = Int(10)
     auto = Bool(True)
     start = Float(0.0)
@@ -135,11 +142,12 @@ class VectorHistGraphModel(BasePlotModel):
 
 
 class VectorFillGraphModel(BasePlotModel):
-    """ A model for the Vector Fill Graph"""
+    """A model for the Vector Fill Graph"""
 
 
 class VectorGraphModel(BasePlotModel):
-    """ A model for the Vector Graph"""
+    """A model for the Vector Graph"""
+
     half_samples = Int(6000)
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
@@ -150,7 +158,7 @@ class VectorGraphModel(BasePlotModel):
 
 
 class DisplayPlotModel(VectorGraphModel):
-    """ a legacy model """
+    """a legacy model"""
 
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -160,12 +168,13 @@ class DisplayPlotModel(VectorGraphModel):
 
 class TrendGraphModel(BasePlotModel):
     """Trendline graph model"""
+
     x_grid = Bool(True)
     y_grid = Bool(True)
 
 
 class DisplayTrendlineModel(TrendGraphModel):
-    """ a legacy model """
+    """a legacy model"""
 
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -174,8 +183,8 @@ class DisplayTrendlineModel(TrendGraphModel):
 
 
 class LinePlotModel(DisplayTrendlineModel):
-    """ A legacy model for line plot objects
-    """
+    """A legacy model for line plot objects"""
+
     # Note: LinePlotModel is a class model but was never serialized
     # under its own name. It was the ghost writer of DisplayTrendline.
     # The original model had a trait `boxes`. and other functions.
@@ -187,22 +196,24 @@ class LinePlotModel(DisplayTrendlineModel):
 
 class StateGraphModel(BasePlotModel):
     """State graph model"""
+
     x_grid = Bool(True)
     y_grid = Bool(True)
 
 
 class AlarmGraphModel(BasePlotModel):
     """Alarm graph model"""
+
     x_grid = Bool(True)
     y_grid = Bool(True)
 
 
-@register_scene_reader('XYPlot')  # deprecated matplotlib model
-@register_scene_reader('ScatterGraph')
+@register_scene_reader("XYPlot")  # deprecated matplotlib model
+@register_scene_reader("ScatterGraph")
 def _scatter_graph_reader(element):
     traits = read_base_plot(element)
-    traits['maxlen'] = int(element.get(NS_KARABO + 'maxlen', 100))
-    traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
+    traits["maxlen"] = int(element.get(NS_KARABO + "maxlen", 100))
+    traits["psize"] = float(element.get(NS_KARABO + "psize", 7))
 
     return ScatterGraphModel(**traits)
 
@@ -211,17 +222,17 @@ def _scatter_graph_reader(element):
 @register_scene_writer(ScatterGraphModel)
 def _scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'ScatterGraph')
-    element.set(NS_KARABO + 'maxlen', str(model.maxlen))
-    element.set(NS_KARABO + 'psize', str(model.psize))
+    write_base_plot(model, element, "ScatterGraph")
+    element.set(NS_KARABO + "maxlen", str(model.maxlen))
+    element.set(NS_KARABO + "psize", str(model.psize))
 
     return element
 
 
-@register_scene_reader('VectorScatterGraph')
+@register_scene_reader("VectorScatterGraph")
 def _vector_scatter_graph_reader(element):
     traits = read_base_plot(element)
-    traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
+    traits["psize"] = float(element.get(NS_KARABO + "psize", 7))
 
     return VectorScatterGraphModel(**traits)
 
@@ -229,14 +240,14 @@ def _vector_scatter_graph_reader(element):
 @register_scene_writer(VectorScatterGraphModel)
 def _vector_scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'VectorScatterGraph')
-    element.set(NS_KARABO + 'psize', str(model.psize))
+    write_base_plot(model, element, "VectorScatterGraph")
+    element.set(NS_KARABO + "psize", str(model.psize))
 
     return element
 
 
-@register_scene_reader('XYVector')  # deprecated Qwt model
-@register_scene_reader('VectorXYGraph')
+@register_scene_reader("XYVector")  # deprecated Qwt model
+@register_scene_reader("VectorXYGraph")
 def _vector_xy_graph_reader(element):
     traits = read_base_plot(element)
 
@@ -247,15 +258,15 @@ def _vector_xy_graph_reader(element):
 @register_scene_writer(VectorXYGraphModel)
 def _vector_xy_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'VectorXYGraph')
+    write_base_plot(model, element, "VectorXYGraph")
 
     return element
 
 
-@register_scene_reader('VectorBarGraph')
+@register_scene_reader("VectorBarGraph")
 def _vector_bar_graph_reader(element):
     traits = read_base_plot(element)
-    traits['bar_width'] = float(element.get(NS_KARABO + 'bar_width', 0.1))
+    traits["bar_width"] = float(element.get(NS_KARABO + "bar_width", 0.1))
 
     return VectorBarGraphModel(**traits)
 
@@ -263,13 +274,13 @@ def _vector_bar_graph_reader(element):
 @register_scene_writer(VectorBarGraphModel)
 def _vector_bar_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'VectorBarGraph')
-    element.set(NS_KARABO + 'bar_width', str(model.bar_width))
+    write_base_plot(model, element, "VectorBarGraph")
+    element.set(NS_KARABO + "bar_width", str(model.bar_width))
 
     return element
 
 
-@register_scene_reader('VectorHistGraph')
+@register_scene_reader("VectorHistGraph")
 def _vector_hist_graph_reader(element):
     traits = read_base_widget_data(element)
     traits.update(read_histogram_model(element))
@@ -279,19 +290,19 @@ def _vector_hist_graph_reader(element):
 @register_scene_writer(VectorHistGraphModel)
 def _vector_hist_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorHistGraph')
+    write_base_widget_data(model, element, "VectorHistGraph")
     write_histogram_model(model, element)
 
     return element
 
 
-@register_scene_reader('NDArrayGraph')
+@register_scene_reader("NDArrayGraph")
 def _ndarray_graph_reader(element):
     traits = read_base_plot(element)
     traits.update(read_baseline(element))
-    traits['roi_items'] = read_roi_info(element)
-    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
-    traits['half_samples'] = int(element.get(NS_KARABO + 'half_samples', 6000))
+    traits["roi_items"] = read_roi_info(element)
+    traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
+    traits["half_samples"] = int(element.get(NS_KARABO + "half_samples", 6000))
 
     return NDArrayGraphModel(**traits)
 
@@ -299,16 +310,16 @@ def _ndarray_graph_reader(element):
 @register_scene_writer(NDArrayGraphModel)
 def _ndarray_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'NDArrayGraph')
+    write_base_plot(model, element, "NDArrayGraph")
     write_roi_info(model, element)
     write_baseline(model, element)
-    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
-    element.set(NS_KARABO + 'half_samples', str(model.half_samples))
+    element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
+    element.set(NS_KARABO + "half_samples", str(model.half_samples))
 
     return element
 
 
-@register_scene_reader('VectorFillGraph')
+@register_scene_reader("VectorFillGraph")
 def _vector_fill_graph_reader(element):
     traits = read_base_plot(element)
 
@@ -318,19 +329,19 @@ def _vector_fill_graph_reader(element):
 @register_scene_writer(VectorFillGraphModel)
 def _vector_fill_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'VectorFillGraph')
+    write_base_plot(model, element, "VectorFillGraph")
 
     return element
 
 
-@register_scene_reader('DisplayPlot')  # deprecated Qwt model
-@register_scene_reader('VectorGraph')
+@register_scene_reader("DisplayPlot")  # deprecated Qwt model
+@register_scene_reader("VectorGraph")
 def _vector_graph_reader(element):
     traits = read_base_plot(element)
     traits.update(read_baseline(element))
-    traits['roi_items'] = read_roi_info(element)
-    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
-    traits['half_samples'] = int(element.get(NS_KARABO + 'half_samples', 6000))
+    traits["roi_items"] = read_roi_info(element)
+    traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
+    traits["half_samples"] = int(element.get(NS_KARABO + "half_samples", 6000))
 
     return VectorGraphModel(**traits)
 
@@ -339,17 +350,17 @@ def _vector_graph_reader(element):
 @register_scene_writer(VectorGraphModel)
 def _vector_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'VectorGraph')
+    write_base_plot(model, element, "VectorGraph")
     write_roi_info(model, element)
     write_baseline(model, element)
-    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
-    element.set(NS_KARABO + 'half_samples', str(model.half_samples))
+    element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
+    element.set(NS_KARABO + "half_samples", str(model.half_samples))
 
     return element
 
 
-@register_scene_reader('DisplayTrendline')  # deprecated Qwt model
-@register_scene_reader('DisplayTrendGraph')
+@register_scene_reader("DisplayTrendline")  # deprecated Qwt model
+@register_scene_reader("DisplayTrendGraph")
 def _trend_graph_reader(element):
     traits = read_base_plot(element)
 
@@ -360,7 +371,7 @@ def _trend_graph_reader(element):
 @register_scene_writer(TrendGraphModel)
 def _trend_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'DisplayTrendGraph')
+    write_base_plot(model, element, "DisplayTrendGraph")
 
     return element
 
@@ -369,15 +380,16 @@ def _trend_graph_writer(model, parent):
 def _line_plot_writer(model, parent):
     # Delegate the co writer to the respective new models
     WRITER_MAP = {
-        'DisplayTrendline': _trend_graph_writer,
-        'XYVector': _vector_xy_graph_writer}
+        "DisplayTrendline": _trend_graph_writer,
+        "XYVector": _vector_xy_graph_writer,
+    }
 
     # The model will always have a `klass` due to its Enum traits
     writer = WRITER_MAP.get(model.klass)
     return writer(model, parent)
 
 
-@register_scene_reader('DisplayStateGraph')
+@register_scene_reader("DisplayStateGraph")
 def _state_graph_reader(element):
     traits = read_base_plot(element)
 
@@ -387,12 +399,12 @@ def _state_graph_reader(element):
 @register_scene_writer(StateGraphModel)
 def _state_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'DisplayStateGraph')
+    write_base_plot(model, element, "DisplayStateGraph")
 
     return element
 
 
-@register_scene_reader('DisplayAlarmGraph')
+@register_scene_reader("DisplayAlarmGraph")
 def _alarm_graph_reader(element):
     traits = read_base_plot(element)
 
@@ -402,13 +414,13 @@ def _alarm_graph_reader(element):
 @register_scene_writer(AlarmGraphModel)
 def _alarm_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'DisplayAlarmGraph')
+    write_base_plot(model, element, "DisplayAlarmGraph")
 
     return element
 
 
-@register_scene_reader('MultiCurvePlot')  # deprecated matplotlib model
-@register_scene_reader('MultiCurveGraph')
+@register_scene_reader("MultiCurvePlot")  # deprecated matplotlib model
+@register_scene_reader("MultiCurveGraph")
 def _multi_graph_reader(element):
     traits = read_base_plot(element)
 
@@ -419,6 +431,6 @@ def _multi_graph_reader(element):
 @register_scene_writer(MultiCurveGraphModel)
 def _multi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_plot(model, element, 'MultiCurveGraph')
+    write_base_plot(model, element, "MultiCurveGraph")
 
     return element

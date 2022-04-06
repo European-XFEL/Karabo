@@ -111,8 +111,10 @@ def device_config_exists(project, instance_id, config_names):
 
     def visitor(obj):
         nonlocal found
-        if (isinstance(obj, DeviceInstanceModel)
-                and obj.instance_id == instance_id):
+        if (
+            isinstance(obj, DeviceInstanceModel)
+            and obj.instance_id == instance_id
+        ):
             existing = set(conf.simple_name for conf in obj.configs)
             if not existing.isdisjoint(config_names):
                 found = True
@@ -140,8 +142,11 @@ def recursive_save_object(root, storage, domain):
         return True
 
     def _find_iterables(obj):
-        return [name for name in obj.copyable_trait_names()
-                if _is_list_of_has_traits(obj.trait(name))]
+        return [
+            name
+            for name in obj.copyable_trait_names()
+            if _is_list_of_has_traits(obj.trait(name))
+        ]
 
     def _tree_iter(obj):
         # Iteratively yield the children
