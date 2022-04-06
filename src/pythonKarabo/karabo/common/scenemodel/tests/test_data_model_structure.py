@@ -6,7 +6,9 @@ from traits.api import Enum, Instance
 from karabo.common.api import BaseSavableModel
 
 # Hey Code Reviewers! Be sure to ask questions when this value changes!
-EXPECTED_HASH = "5464f21f02dcc3e5d826b41fbb993ac05e18864f70faa303ead840e97f3ac6f6"  # noqa
+EXPECTED_HASH = (
+    "5464f21f02dcc3e5d826b41fbb993ac05e18864f70faa303ead840e97f3ac6f6"  # noqa
+)
 FAILURE_MSG = """
 ##############################################################################
                             !!! WARNING !!!
@@ -20,8 +22,7 @@ Once the changes are complete, update the expected hash value here.
 
 
 def _get_classes():
-    """ Get an alphabetized dictionary of scene model classes.
-    """
+    """Get an alphabetized dictionary of scene model classes."""
     import karabo.common.scenemodel.api as model_api
 
     classes = []
@@ -35,7 +36,7 @@ def _get_classes():
 
 
 def _hash_model_structure():
-    """ Compute a sha256 hash of the structure of the scene data model.
+    """Compute a sha256 hash of the structure of the scene data model.
 
     This is done by getting a sorted list of scene model classes and adding
     their names and child trait names to the hashlib.sha256 hash function.
@@ -51,15 +52,14 @@ def _hash_model_structure():
         trait_names = list(sorted(instance.copyable_trait_names()))
         traits = [_trait_sig(instance.trait(n)) for n in trait_names]
         klass_contents = [n + t for n, t in zip(trait_names, traits)]
-        hsh.update(name.encode('utf-8'))
-        hsh.update(''.join(klass_contents).encode('utf-8'))
+        hsh.update(name.encode("utf-8"))
+        hsh.update("".join(klass_contents).encode("utf-8"))
 
     return hsh.hexdigest()
 
 
 def _trait_sig(trait):
-    """ Recursively stringify an object trait
-    """
+    """Recursively stringify an object trait"""
     trait_type = trait.trait_type
     sig = type(trait_type).__name__
     if isinstance(trait_type, Instance):
@@ -69,9 +69,9 @@ def _trait_sig(trait):
             # klass is a string
             sig += trait_type.klass
     elif isinstance(trait_type, Enum):
-        values = ','.join([str(v) for v in trait_type.values])
-        sig += '({})'.format(values)
-    sig += ''.join([_trait_sig(sub) for sub in trait_type.inner_traits()])
+        values = ",".join([str(v) for v in trait_type.values])
+        sig += "({})".format(values)
+    sig += "".join([_trait_sig(sub) for sub in trait_type.inner_traits()])
     return sig
 
 
