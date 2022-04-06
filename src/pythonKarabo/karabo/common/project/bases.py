@@ -11,9 +11,10 @@ from karabo.common.api import BaseSavableModel
 
 
 class BaseProjectObjectModel(BaseSavableModel):
-    """ A base class for all things which can be serialized and sent to
+    """A base class for all things which can be serialized and sent to
     a Project server.
     """
+
     # A simple, human-readable name. Doesn't need to be unique
     simple_name = String
 
@@ -30,8 +31,7 @@ class BaseProjectObjectModel(BaseSavableModel):
     conflict = Bool(False, transient=True)
 
     def _uuid_default(self):
-        """If a uuid isn't supplied, generate one
-        """
+        """If a uuid isn't supplied, generate one"""
         return str(uuid.uuid4())
 
     def _uuid_changed(self, old, new):
@@ -48,6 +48,5 @@ class BaseProjectObjectModel(BaseSavableModel):
             raise
 
     def reset_uuid(self):
-        """Reset the ``uuid``
-        """
+        """Reset the ``uuid``"""
         self.uuid = str(uuid.uuid4())

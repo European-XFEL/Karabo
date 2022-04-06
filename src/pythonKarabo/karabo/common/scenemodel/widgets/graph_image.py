@@ -18,6 +18,7 @@ from .graph_utils import (
 
 class KaraboImageModel(BaseWidgetObjectData):
     """The KaraboImageModel Base"""
+
     aux_plots = Int(0)
     colormap = String("none")
 
@@ -44,6 +45,7 @@ class ImageGraphModel(KaraboImageModel):
 
 class DisplayImageModel(ImageGraphModel):
     """A legacy model"""
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use ImageGraphModel"
@@ -56,6 +58,7 @@ class DetectorGraphModel(KaraboImageModel):
 
 class DisplayAlignedImageModel(DetectorGraphModel):
     """A legacy model"""
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use DetectorGraphModel"
@@ -64,6 +67,7 @@ class DisplayAlignedImageModel(DetectorGraphModel):
 
 class VectorRollGraphModel(BaseWidgetObjectData):
     """A model of the VectorRoll Graph"""
+
     # Image trait base
     aux_plots = Int(0)
     colormap = String("none")
@@ -79,6 +83,7 @@ class VectorRollGraphModel(BaseWidgetObjectData):
 
 class WebCamGraphModel(BaseWidgetObjectData):
     """A model of the WebCam Graph"""
+
     colormap = String("none")
 
 
@@ -105,8 +110,8 @@ class ScientificImageModel(DeprecatedBaseWebCamModel):
     """A legacy model"""
 
 
-@register_scene_reader('DisplayImage')  # deprecated Qwt model
-@register_scene_reader('ImageGraph')
+@register_scene_reader("DisplayImage")  # deprecated Qwt model
+@register_scene_reader("ImageGraph")
 def _image_graph_reader(element):
     traits = read_base_karabo_image_model(element)
 
@@ -117,14 +122,14 @@ def _image_graph_reader(element):
 @register_scene_writer(ImageGraphModel)
 def _image_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'ImageGraph')
+    write_base_widget_data(model, element, "ImageGraph")
     write_base_karabo_image_model(model, element)
 
     return element
 
 
-@register_scene_reader('DisplayAlignedImage')  # deprecated Qwt model
-@register_scene_reader('DetectorGraph')
+@register_scene_reader("DisplayAlignedImage")  # deprecated Qwt model
+@register_scene_reader("DetectorGraph")
 def _detector_graph_reader(element):
     traits = read_base_karabo_image_model(element)
 
@@ -135,21 +140,21 @@ def _detector_graph_reader(element):
 @register_scene_writer(DetectorGraphModel)
 def _detector_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DetectorGraph')
+    write_base_widget_data(model, element, "DetectorGraph")
     write_base_karabo_image_model(model, element)
 
     return element
 
 
-@register_scene_reader('VectorRollGraph')
+@register_scene_reader("VectorRollGraph")
 def _vector_roll_graph_reader(element):
     traits = read_base_widget_data(element)
-    traits['aux_plots'] = int(element.get(NS_KARABO + 'aux_plots', '0'))
-    traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
-    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
-    traits['roi_items'] = read_roi_info(element)
+    traits["aux_plots"] = int(element.get(NS_KARABO + "aux_plots", "0"))
+    traits["colormap"] = element.get(NS_KARABO + "colormap", "viridis")
+    traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
+    traits["roi_items"] = read_roi_info(element)
     traits.update(read_basic_label(element))
-    traits['maxlen'] = int(element.get(NS_KARABO + 'maxlen', 100))
+    traits["maxlen"] = int(element.get(NS_KARABO + "maxlen", 100))
 
     return VectorRollGraphModel(**traits)
 
@@ -157,25 +162,25 @@ def _vector_roll_graph_reader(element):
 @register_scene_writer(VectorRollGraphModel)
 def _vector_roll_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorRollGraph')
-    element.set(NS_KARABO + 'colormap', model.colormap)
-    element.set(NS_KARABO + 'aux_plots', str(model.aux_plots))
-    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+    write_base_widget_data(model, element, "VectorRollGraph")
+    element.set(NS_KARABO + "colormap", model.colormap)
+    element.set(NS_KARABO + "aux_plots", str(model.aux_plots))
+    element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
     # Save ROI configuration
     write_basic_label(model, element)
     write_roi_info(model, element)
-    element.set(NS_KARABO + 'maxlen', str(model.maxlen))
+    element.set(NS_KARABO + "maxlen", str(model.maxlen))
 
     return element
 
 
-@register_scene_reader('DisplayImageElement')  # deprecated Qwt model
-@register_scene_reader('WebcamImage')  # deprecated Qwt model
-@register_scene_reader('ScientificImage')  # deprecated Qwt model
-@register_scene_reader('WebCamGraph')
+@register_scene_reader("DisplayImageElement")  # deprecated Qwt model
+@register_scene_reader("WebcamImage")  # deprecated Qwt model
+@register_scene_reader("ScientificImage")  # deprecated Qwt model
+@register_scene_reader("WebCamGraph")
 def _webcam_graph_reader(element):
     traits = read_base_widget_data(element)
-    traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
+    traits["colormap"] = element.get(NS_KARABO + "colormap", "viridis")
 
     return WebCamGraphModel(**traits)
 
@@ -186,7 +191,7 @@ def _webcam_graph_reader(element):
 @register_scene_writer(WebCamGraphModel)
 def _webcam_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'WebCamGraph')
-    element.set(NS_KARABO + 'colormap', model.colormap)
+    write_base_widget_data(model, element, "WebCamGraph")
+    element.set(NS_KARABO + "colormap", model.colormap)
 
     return element

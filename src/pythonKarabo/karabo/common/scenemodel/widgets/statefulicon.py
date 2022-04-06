@@ -17,20 +17,21 @@ from karabo.common.scenemodel.registry import (
 
 
 class StatefulIconWidgetModel(BaseWidgetObjectData):
-    """ A model for StatefulIconWidgetModel objects"""
+    """A model for StatefulIconWidgetModel objects"""
+
     icon_name = String()
 
 
 @register_scene_writer(StatefulIconWidgetModel)
 def _statefulwidget_widget_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'StatefulIconWidget')
-    element.set(NS_KARABO + 'icon_name', model.icon_name)
+    write_base_widget_data(model, element, "StatefulIconWidget")
+    element.set(NS_KARABO + "icon_name", model.icon_name)
     return element
 
 
-@register_scene_reader('StatefulIconWidget', version=2)
+@register_scene_reader("StatefulIconWidget", version=2)
 def _statefulwidget_widget_reader(element):
     traits = read_base_widget_data(element)
-    traits['icon_name'] = element.get(NS_KARABO + 'icon_name', '')
+    traits["icon_name"] = element.get(NS_KARABO + "icon_name", "")
     return StatefulIconWidgetModel(**traits)
