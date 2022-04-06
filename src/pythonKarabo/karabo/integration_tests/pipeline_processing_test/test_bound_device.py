@@ -51,6 +51,17 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                                       self.KRB_TEST_MAX_TIMEOUT)
         self.assertTrue(ok, msg)
 
+        # Wait until all inputs from pipeTestReceiver have connected, without
+        # it can fail as in https://git.xfel.eu/Karabo/Framework/-/jobs/283455
+        def condition():
+            cfg = self.dc.get("p2pTestSender")
+            return (len(cfg["output1.connections"]) == 1 and
+                    len(cfg["output2.connections"]) == 1 and
+                    len(cfg["node.output3.connections"]) == 1)
+
+        self.assertTrue(self.waitUntilTrue(condition,
+                                           self.KRB_TEST_MAX_TIMEOUT))
+
         ctable1 = self.dc.get("p2pTestSender", "output1.connections")
         ctable2 = self.dc.get("p2pTestSender", "output2.connections")
         ctable3 = self.dc.get("p2pTestSender", "node.output3.connections")

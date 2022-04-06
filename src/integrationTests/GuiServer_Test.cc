@@ -932,6 +932,7 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
 
 void GuiVersion_Test::testDisconnect() {
     std::clog << "testDisconnect: " << std::flush;
+    const int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
 
     resetClientConnection();
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -944,7 +945,7 @@ void GuiVersion_Test::testDisconnect() {
     //
     bool disconnected = true;
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", "BLAnoPORT")
-                                  .timeout(1000)
+                                  .timeout(timeoutMs)
                                   .receive(disconnected));
     CPPUNIT_ASSERT(!disconnected);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -954,7 +955,7 @@ void GuiVersion_Test::testDisconnect() {
     //
     Hash result;
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", 0))
-                                  .timeout(1000)
+                                  .timeout(timeoutMs)
                                   .receive(result));
     std::vector<std::string> keys;
     result.getKeys(keys);
@@ -962,7 +963,7 @@ void GuiVersion_Test::testDisconnect() {
                                  result.size()); // Just a single client
     std::string clientIdentifier = result.begin()->getKey();
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", clientIdentifier)
-                                  .timeout(1000)
+                                  .timeout(timeoutMs)
                                   .receive(disconnected));
     CPPUNIT_ASSERT_MESSAGE("Failed to disconnect '" + clientIdentifier + "'", disconnected);
     // Wait until disconnected (disconnection delayed by one second in GUI server)
@@ -1070,16 +1071,17 @@ void GuiVersion_Test::testLogMute() {
 
 void GuiVersion_Test::testSlotNotify() {
     std::clog << "testSlotNotify: " << std::flush;
+    const int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
     const std::string messageToSend("Banner for everyone!");
     const Hash arg("message", messageToSend, "contentType", "banner", "foreground", "red");
     const std::vector<string> expectedMessageData = {messageToSend, "", "red"};
     Hash reply;
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
           "notification", 1,
-          [&reply, &arg, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(1000).receive(reply);
+          [&reply, &arg, timeoutMs, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(timeoutMs).receive(reply);
           },
-          1000);
+          timeoutMs);
     CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
 
     // Test that client received the notification
@@ -1099,7 +1101,7 @@ void GuiVersion_Test::testSlotNotify() {
           [this, &messageToSend]() {
               return 3ul == m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size();
           },
-          KRB_TEST_MAX_TIMEOUT * 1000);
+          timeoutMs);
     const std::vector<std::string> messageData(
           m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData"));
     CPPUNIT_ASSERT_EQUAL(expectedMessageData.size(), messageData.size());
@@ -1131,10 +1133,10 @@ void GuiVersion_Test::testSlotNotify() {
     const Hash clear_arg("message", "", "contentType", "banner");
     messageQ = m_tcpAdapter->getNextMessages(
           "notification", 1,
-          [&reply, &clear_arg, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotNotify", clear_arg).timeout(1000).receive(reply);
+          [&reply, &clear_arg, timeoutMs, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotNotify", clear_arg).timeout(timeoutMs).receive(reply);
           },
-          1000);
+          timeoutMs);
     CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
     // Banner data is cleared
     CPPUNIT_ASSERT_EQUAL(0ul,
@@ -1165,15 +1167,18 @@ void GuiVersion_Test::testSlotNotify() {
 
 void GuiVersion_Test::testSlotBroadcast() {
     std::clog << "testSlotBroadcast: " << std::flush;
+
+    const int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
+
     const Hash message("isSkookum", true, "type", "unimplementedDangerousCall");
     const Hash arg("message", message, "clientAddress", "");
     Hash reply;
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
           "unimplementedDangerousCall", 1,
-          [&reply, &arg, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", arg).timeout(1000).receive(reply);
+          [&reply, &arg, timeoutMs, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", arg).timeout(timeoutMs).receive(reply);
           },
-          1000);
+          timeoutMs);
     CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
     CPPUNIT_ASSERT_EQUAL(1ul, reply.size());
 
@@ -1186,14 +1191,14 @@ void GuiVersion_Test::testSlotBroadcast() {
     // A message should have a type
     const Hash bad_arg("isSkookum", false);
     CPPUNIT_ASSERT_THROW(
-          m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_arg).timeout(1000).receive(reply),
+          m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_arg).timeout(timeoutMs).receive(reply),
           std::exception);
     std::clog << "." << std::flush;
 
     const Hash bad_msg("isSkookum", false, "type", "unimplementedDangerousCall");
     const Hash bad_client_arg("message", bad_msg, "clientAddress", "pinneberg");
 
-    m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_client_arg).timeout(1000).receive(reply);
+    m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_client_arg).timeout(timeoutMs).receive(reply);
 
     // success is false since we did not send the message to anybody
     CPPUNIT_ASSERT_EQUAL(false, reply.get<bool>("success"));
@@ -1205,8 +1210,9 @@ void GuiVersion_Test::testSlotBroadcast() {
     std::string clientAddress;
     Hash debugInfo;
     m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", true))
-          .timeout(1000)
+          .timeout(timeoutMs)
           .receive(debugInfo);
+    // Failed with timeout(1000) for above request in https://git.xfel.eu/Karabo/Framework/-/jobs/290411
     CPPUNIT_ASSERT_EQUAL(1ul, debugInfo.size());
     clientAddress = debugInfo.begin()->getKey();
 
@@ -1216,10 +1222,12 @@ void GuiVersion_Test::testSlotBroadcast() {
     // Test that client received the notification
     messageQ = m_tcpAdapter->getNextMessages(
           "unimplementedDangerousCall", 1,
-          [&reply, &client_arg, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", client_arg).timeout(1000).receive(reply);
+          [&reply, &client_arg, timeoutMs, this] {
+              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", client_arg)
+                    .timeout(timeoutMs)
+                    .receive(reply);
           },
-          1000);
+          timeoutMs);
 
     CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
     CPPUNIT_ASSERT_EQUAL(1ul, reply.size());
