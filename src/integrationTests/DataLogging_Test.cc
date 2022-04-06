@@ -219,6 +219,191 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 }
 
 
+void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
+    std::clog << "Testing enforcing of max per device property logging rate limit for Influx ..." << std::endl;
+
+    // CAVEAT - to avoid long sleeps between its parts, this test sets the timestamp properties as part of the
+    // property updates calls. If the difference between the properties timestamps and the local system time becomes
+    // greater than a given interval (currently 120 seconds), the Influx logger will stop using the property timestamps
+    // as the reference to calculate the rates and will start using the local system time.
+    // For this test to work, the whole time spam of its execution, using property timestamps as the time reference,
+    // must be less than the clock difference tolerated by the Influx logger (currently 120 seconds).
+
+    const unsigned int rateWinSecs = 2u; // Size, in seconds, of the rating window to be used during the test. Limited
+                                         // by the current maximum allowed value for the property "propLogRatePeriod" of
+                                         // the InfluxDataLogger and by the test specific caveat above. Values above 10
+                                         // are not recommended for this test the size of the property histories
+                                         // retrieved can become large and drain resources on the CI machines.
+
+    const int maxPropHistSize = rateWinSecs * 8; // 8 is the maximum number of times a property is written per iteration
+                                                 // during the write bursts of the tests.
+
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    const std::string str32Kb(32768ul, 'A');
+    const std::string str8Kb(8192ul, 'B');
+
+    const TimeValue millisecInAtto = 1'000'000'000'000'000ull; // Resolution of fractional seconds is AttoSec (10^-18).
+
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          m_server, "DataLogTestDevice", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Starts the logger and readers with a lower max rate threshold - 32 kb/s - over a rateWinSecs seconds rating
+    // window.
+    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated();
+
+    // Checks that writing 32Kb of data is within the log rate tolerance.
+    Epochstamp before32KbWrite;
+    for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
+        Hash updateProp = Hash("stringProperty", str8Kb);
+        Epochstamp updateEpoch(before32KbWrite + TimeDuration(0, (i + 1) * millisecInAtto));
+        Timestamp updateTime(updateEpoch, Trainstamp());
+        updateTime.toHashAttributes(updateProp.getAttributes("stringProperty"));
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProp)
+                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                      .receive());
+    }
+    // after32KbWrite is set to be the timestamp of the last write performed in the
+    // previous loop plus a safety margin.
+    Epochstamp after32KbWrite(before32KbWrite + TimeDuration(0, 5 * rateWinSecs * millisecInAtto));
+    // Make sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+
+    // Checks that the 32Kb strings have not been flagged as bad data.
+    Hash badDataAllDevices;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetBadData", before32KbWrite.toIso8601Ext(), after32KbWrite.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+    // Checks that the 8Kb strings have been successfully logged.
+    std::vector<Hash> history;
+    Hash historyParams{
+          "from", before32KbWrite.toIso8601Ext(), "to", after32KbWrite.toIso8601Ext(), "maxNumData", maxPropHistSize};
+    std::string replyDevice;
+    std::string replyProperty;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, "stringProperty", historyParams)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(replyDevice, replyProperty, history));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 4ul * rateWinSecs,
+                                 history.size());
+    for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
+        std::string &historyStr8Kb = history[i].get<std::string>("v");
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 8192ul, historyStr8Kb.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str8Kb.at(0ul),
+                                     historyStr8Kb.at(0ul));
+    }
+
+    // Checks that updating a string property constantly above the rate will cause data to be rejected.
+    // Use ratesWinSecs seconds after the time of the most recent write plus a safety margin of 4 milliseconds
+    // as the starting time to guarantee that we have a complete independent rating window for the upcoming
+    // burst.
+    Epochstamp before64KbWrite(after32KbWrite + TimeDuration(rateWinSecs, 4 * millisecInAtto));
+    for (unsigned int i = 0; i < 8 * rateWinSecs; i++) {
+        Hash updateProps = Hash("stringProperty", str8Kb, "int32Property", 10);
+        Epochstamp updateEpoch(before64KbWrite + TimeDuration(0, (i + 1) * millisecInAtto));
+        Timestamp updateTime(updateEpoch, Trainstamp());
+        updateTime.toHashAttributes(updateProps.getAttributes("stringProperty"));
+        updateTime.toHashAttributes(updateProps.getAttributes("int32Property"));
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateProps)
+                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                      .receive());
+    }
+    Epochstamp after64KbWrite(before64KbWrite + TimeDuration(0, 9 * rateWinSecs * millisecInAtto));
+    // Make sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+
+    // Checks that the half of the stringProperty updates has exceeded the max log rate and has been rated as bad data.
+    badDataAllDevices.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetBadData", before64KbWrite.toIso8601Ext(), after64KbWrite.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(1ul,
+                         badDataAllDevices.size()); // 1 is because the bad data is grouped under a single deviceId.
+    CPPUNIT_ASSERT_EQUAL(4ul * rateWinSecs, badDataAllDevices.get<std::vector<karabo::util::Hash>>(m_deviceId).size());
+    // Checks that half of the 8Kb strings written have been successfully set as property values.
+    history.clear();
+    historyParams.set<std::string>("from", before64KbWrite.toIso8601Ext());
+    historyParams.set<std::string>("to", after64KbWrite.toIso8601Ext());
+    historyParams.set<int>("maxNumData", maxPropHistSize);
+    replyDevice.clear();
+    replyProperty.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, "stringProperty", historyParams)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(replyDevice, replyProperty, history));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 4ul * rateWinSecs,
+                                 history.size());
+    for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
+        const std::string historyStr8Kb = history[i].get<std::string>("v");
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 8192ul, historyStr8Kb.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str8Kb.at(0ul),
+                                     historyStr8Kb.at(0ul));
+    }
+
+    // Checks that the int32Property updates were successfully logged even though the stringProperty was blocked.
+    history.clear();
+    historyParams.set<std::string>("from", before64KbWrite.toIso8601Ext());
+    historyParams.set<std::string>("to", after64KbWrite.toIso8601Ext());
+    historyParams.set<int>("maxNumData", maxPropHistSize);
+    replyDevice.clear();
+    replyProperty.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, "int32Property", historyParams)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(replyDevice, replyProperty, history));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("int32Property history size different from expected.", 8ul * rateWinSecs,
+                                 history.size());
+    for (unsigned int i = 0; i < 8 * rateWinSecs; i++) {
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("int32Property value differs from expected.", 10, history[i].get<int>("v"));
+    }
+
+    // Updating a string property with a 32 Kb string should be accepted again after enough
+    // time has passed since the previous max rate threshold reached condition.
+    Epochstamp beforeSingle32KbWrite(after64KbWrite + TimeDuration(1 * rateWinSecs, 4 * millisecInAtto));
+    Hash updateStr32Kb("stringProperty", str32Kb);
+    Epochstamp updateEpoch(beforeSingle32KbWrite + TimeDuration(0, 6 * millisecInAtto));
+    Timestamp updateTime(updateEpoch, Trainstamp());
+    updateTime.toHashAttributes(updateStr32Kb.getAttributes("stringProperty"));
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(m_deviceId, "slotUpdateConfigGeneric", updateStr32Kb)
+                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                  .receive());
+    Epochstamp afterSingle32KbWrite(beforeSingle32KbWrite + TimeDuration(0, 8 * millisecInAtto));
+    // Make sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+
+    // Checks that the 32 Kb string has been successfully set as property values.
+    history.clear();
+    historyParams.set<std::string>("from", beforeSingle32KbWrite.toIso8601Ext());
+    historyParams.set<std::string>("to", afterSingle32KbWrite.toIso8601Ext());
+    historyParams.set<int>("maxNumData", maxPropHistSize);
+    replyDevice.clear();
+    replyProperty.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, "stringProperty", historyParams)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(replyDevice, replyProperty, history));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 1ul, history.size());
+    const std::string historySingleStr32kb = history[0].get<std::string>("v");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 32768ul,
+                                 historySingleStr32kb.size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str32Kb.at(0ul),
+                                 historySingleStr32kb.at(0ul));
+
+    std::clog << "OK" << std::endl;
+}
+
+
 void DataLogging_Test::testNoInfluxServerHandling() {
     std::clog << "Testing handling of no Influx Server available scenarios ..." << std::endl;
 
