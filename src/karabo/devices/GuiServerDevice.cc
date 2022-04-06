@@ -1084,7 +1084,6 @@ namespace karabo {
 
         void GuiServerDevice::onStartMonitoringDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
-                bool registerFlag = false;
                 const string& deviceId = info.get<string > ("deviceId");
 
                 {
@@ -1100,12 +1099,13 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
                     // Increase count of device in visible devices map
                     const int newCount = ++m_monitoredDevices[deviceId];
-                    if (newCount == 1) registerFlag = true;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " (" << newCount << ")";
-                }
+                    if (newCount == 1) {
+                        // Despite mutexes inside registerDeviceForMonitoring, call with m_monitoredDevicesMutex
+                        // locked to ensure that registration is in sync with m_monitoredDevices.
+                        remote().registerDeviceForMonitoring(deviceId);
+                    }
 
-                if (registerFlag) { // Fresh device on the shelf
-                    remote().registerDeviceForMonitoring(deviceId);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " (" << newCount << ")";
                 }
 
                 // Send back fresh information about device
@@ -1121,7 +1121,6 @@ namespace karabo {
         void GuiServerDevice::onStopMonitoringDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
 
             try {
-                bool unregisterFlag = false;
                 const string& deviceId = info.get<string > ("deviceId");
 
                 {
@@ -1136,15 +1135,12 @@ namespace karabo {
                     const int newCount = --m_monitoredDevices[deviceId]; // prefix decrement!
                     if (newCount <= 0){
                         // Erase instance from the monitored list
-                        unregisterFlag = true;
                         m_monitoredDevices.erase(deviceId);
+                        // Despite mutexes inside unregisterDeviceFromMonitoring, call with m_monitoredDevicesMutex
+                        // locked to ensure that registration is in sync with m_monitoredDevices.
+                        remote().unregisterDeviceFromMonitoring(deviceId);
                     }
                     KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << newCount << ")";
-                }
-
-                if (unregisterFlag) {
-                    // Disconnect signal/slot from broker
-                    remote().unregisterDeviceFromMonitoring(deviceId);
                 }
 
             } catch (const std::exception& e) {
@@ -1563,15 +1559,17 @@ namespace karabo {
                     const Hash& deviceHash = topologyEntry.get<Hash>(type);
                     const std::string& instanceId = deviceHash.begin()->getKey();
                     // Check whether someone already noted interest in it
-                    bool registerMonitor = false;
                     {
                         boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                        registerMonitor = (m_monitoredDevices.find(instanceId) != m_monitoredDevices.end());
+                        if (m_monitoredDevices.find(instanceId) != m_monitoredDevices.end()) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId
+                                                       << " which is going to be visible in a GUI client";
+                            // Register with m_monitoredDevicesMutex locked to ensure that registration is in sync with
+                            // m_monitoredDevices
+                            remote().registerDeviceForMonitoring(instanceId);
+                        }
                     }
-                    if (registerMonitor) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId << " which is going to be visible in a GUI client";
-                        remote().registerDeviceForMonitoring(instanceId);
-                    }
+
                     if (instanceId == get<std::string>("dataLogManagerId")) {
                         // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                         // Even this request might not be needed since the logger manager emits the corresponding signal.
@@ -1827,7 +1825,7 @@ namespace karabo {
                         if (numLeft <= 0) {
                             //  erase the monitor entry to avoid unnecessary monitoring
                             m_monitoredDevices.erase(deviceId);
-                            remote().unregisterDeviceMonitor(deviceId);
+                            remote().unregisterDeviceFromMonitoring(deviceId);
                         }
                     }
                 }
