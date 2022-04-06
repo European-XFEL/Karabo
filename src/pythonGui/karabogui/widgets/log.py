@@ -6,195 +6,72 @@
 from collections import namedtuple
 
 from qtpy.QtCore import (
-    QAbstractTableModel, QDateTime, QModelIndex, QPoint, Qt, Slot)
+    QAbstractTableModel, QDateTime, QModelIndex, QPoint, QSortFilterProxyModel,
+    Qt, Slot)
 from qtpy.QtGui import QClipboard, QColor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QApplication, QFrame, QGroupBox, QHBoxLayout, QLabel,
-    QLineEdit, QMenu, QPushButton, QTableView, QToolButton, QVBoxLayout,
-    QWidget)
+    QAbstractItemView, QApplication, QHBoxLayout, QLineEdit, QMenu,
+    QPushButton, QTableView, QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.singletons.api import get_config
 from karabogui.util import getSaveFileName
 
-DEVICE_COLUMN = 3
+TYPE_COLUMN = 1
+INSTANCE_COLUMN = 2
+MAX_LOG_ENTRIES = 300
 
 
 class LogWidget(QWidget):
     def __init__(self, parent=None):
-        # parent - parent widget
-        super(LogWidget, self).__init__(parent)
+        super().__init__(parent)
 
         # Main layout
-        vLayout = QVBoxLayout(self)
-        vLayout.setContentsMargins(0, 0, 0, 0)
+        vertical_layout = QVBoxLayout(self)
+        vertical_layout.setContentsMargins(0, 0, 0, 0)
+        vertical_layout.setSpacing(2)
 
-        # Add button to collapse/expand filter options
-        text = "Show filter options"
-        self.pbFilterOptions = QPushButton("+ {}".format(text))
-        self.pbFilterOptions.setStatusTip(text)
-        self.pbFilterOptions.setToolTip(text)
-        self.pbFilterOptions.setCheckable(True)
-        self.pbFilterOptions.setChecked(False)
+        filter_layout = QHBoxLayout()
+        filter_layout.setContentsMargins(2, 2, 2, 2)
+        vertical_layout.addLayout(filter_layout)
 
-        font = self.pbFilterOptions.font()
-        font.setBold(True)
-        self.pbFilterOptions.setFont(font)
-        self.pbFilterOptions.clicked.connect(self.onFilterOptionVisible)
-        vLayout.addWidget(self.pbFilterOptions)
+        text = "Search"
+        filter_text = QLineEdit()
+        filter_text.setStatusTip(text)
+        filter_text.setToolTip(text)
+        filter_layout.addWidget(filter_text)
 
-        # Create widget with filter options
-        self.filterWidget = self._setupFilterWidget()
-        vLayout.addWidget(self.filterWidget)
+        clear_button = QPushButton("Clear Filter")
+        filter_layout.addWidget(clear_button)
 
-        self.logs = []
-        self.tailindex = 0
-        self.queryModel = LogQueryModel()
-        twLogTable = QTableView(self)
-        vLayout.addWidget(twLogTable)
+        self.table_model = TableLogModel()
+        self.filter_model = QSortFilterProxyModel()
+        self.filter_model.setFilterCaseSensitivity(False)
+        self.filter_model.setFilterRole(Qt.DisplayRole)
+        self.filter_model.setFilterKeyColumn(INSTANCE_COLUMN)
 
-        twLogTable.setModel(self.queryModel)
-        twLogTable.setWordWrap(True)
-        twLogTable.setAlternatingRowColors(True)
-        twLogTable.horizontalHeader().setStretchLastSection(True)
-        twLogTable.verticalHeader().setVisible(False)
+        self.filter_model.setSourceModel(self.table_model)
 
-        twLogTable.setSelectionBehavior(QAbstractItemView.SelectRows)
-        twLogTable.setSelectionMode(QAbstractItemView.SingleSelection)
+        clear_button.clicked.connect(filter_text.clear)
+        filter_text.textChanged.connect(self.filter_model.setFilterFixedString)
 
-        twLogTable.setSortingEnabled(True)
-        twLogTable.sortByColumn(0, Qt.DescendingOrder)
-
-        twLogTable.doubleClicked.connect(self.onItemDoubleClicked)
-
-        twLogTable.setContextMenuPolicy(Qt.CustomContextMenu)
-        twLogTable.customContextMenuRequested.connect(self._context_menu)
-
-        self.table = twLogTable
-
-    def _setupFilterWidget(self):
-        """The filter widget and its components is created and returned.
-        """
-        # Filter options
-        filterWidget = QWidget()
-        filterWidget.setVisible(False)
-        vFilterLayout = QVBoxLayout(filterWidget)
-        vFilterLayout.setContentsMargins(0, 0, 0, 0)
-
-        hUpperLayout = QHBoxLayout()
-        hUpperLayout.setContentsMargins(0, 0, 0, 0)
-
-        # Search filter
-        self.gbSearch = QGroupBox("Search  ")
-        self.gbSearch.setFlat(True)
-
-        # Layout for search field
-        text = "Search for"
-        self.leSearch = QLineEdit()
-        self.leSearch.setStatusTip(text)
-        self.leSearch.setToolTip(text)
-        self.leSearch.textChanged.connect(self.onFilterChanged)
-        self.pbSearchInsId = QPushButton("Instance ID")
-
-        hSearchLayout = QHBoxLayout()
-        text = "Search instance ID"
-        self.pbSearchInsId.setStatusTip(text)
-        self.pbSearchInsId.setToolTip(text)
-        self.pbSearchInsId.setCheckable(True)
-        self.pbSearchInsId.setChecked(False)
-        self.pbSearchInsId.clicked.connect(self.onFilterChanged)
-        self.pbSearchDescr = QPushButton("Description")
-        text = "Search description"
-        self.pbSearchDescr.setStatusTip(text)
-        self.pbSearchDescr.setToolTip(text)
-        self.pbSearchDescr.setCheckable(True)
-        self.pbSearchDescr.setChecked(True)
-        self.pbSearchDescr.clicked.connect(self.onFilterChanged)
-        self.pbSearchAddDescr = QPushButton("Additional description")
-        text = "Search additional description"
-        self.pbSearchAddDescr.setStatusTip(text)
-        self.pbSearchAddDescr.setToolTip(text)
-        self.pbSearchAddDescr.setCheckable(True)
-        self.pbSearchAddDescr.setChecked(False)
-        self.pbSearchAddDescr.clicked.connect(self.onFilterChanged)
-
-        hSearchLayout.addWidget(self.pbSearchInsId)
-        hSearchLayout.addWidget(self.pbSearchDescr)
-        hSearchLayout.addWidget(self.pbSearchAddDescr)
-        hSearchLayout.addStretch()
-
-        vSearchLayout = QVBoxLayout(self.gbSearch)
-        vSearchLayout.setContentsMargins(5, 5, 5, 5)
-        vSearchLayout.addWidget(self.leSearch)
-        vSearchLayout.addLayout(hSearchLayout)
-
-        hUpperLayout.addWidget(self.gbSearch)
-
-        vFilterLayout.addLayout(hUpperLayout)
-
-        hDateLine = QFrame(self)
-        hDateLine.setFrameShape(QFrame.HLine)
-        hDateLine.setFrameShadow(QFrame.Sunken)
-        vFilterLayout.addWidget(hDateLine)
-
-        # Filter buttons
-        hFilterLayout = QHBoxLayout()
-        vFilterLayout.addLayout(hFilterLayout)
-        hFilterLayout.setSpacing(25)
-        self.laFilter = QLabel("Filter message type: ")
-        font = self.laFilter.font()
-        font.setBold(True)
-        self.laFilter.setFont(font)
-
-        text = "Show debug messages"
-        self.pbFilterDebug = QToolButton()
-        self.pbFilterDebug.setIcon(icons.logDebug)
-        self.pbFilterDebug.setMinimumSize(32, 32)
-        self.pbFilterDebug.setStatusTip(text)
-        self.pbFilterDebug.setToolTip(text)
-        self.pbFilterDebug.setCheckable(True)
-        self.pbFilterDebug.setChecked(True)
-        self.pbFilterDebug.clicked.connect(self.onFilterChanged)
-
-        text = "Show information messages"
-        self.pbFilterInfo = QToolButton()
-        self.pbFilterInfo.setIcon(icons.logInfo)
-        self.pbFilterInfo.setMinimumSize(32, 32)
-        self.pbFilterInfo.setStatusTip(text)
-        self.pbFilterInfo.setToolTip(text)
-        self.pbFilterInfo.setCheckable(True)
-        self.pbFilterInfo.setChecked(True)
-        self.pbFilterInfo.clicked.connect(self.onFilterChanged)
-
-        text = "Show warn messages"
-        self.pbFilterWarn = QToolButton()
-        self.pbFilterWarn.setIcon(icons.logWarning)
-        self.pbFilterWarn.setMinimumSize(32, 32)
-        self.pbFilterWarn.setStatusTip(text)
-        self.pbFilterWarn.setToolTip(text)
-        self.pbFilterWarn.setCheckable(True)
-        self.pbFilterWarn.setChecked(True)
-        self.pbFilterWarn.clicked.connect(self.onFilterChanged)
-
-        text = "Show error messages"
-        self.pbFilterError = QToolButton()
-        self.pbFilterError.setIcon(icons.logError)
-        self.pbFilterError.setMinimumSize(32, 32)
-        self.pbFilterError.setStatusTip(text)
-        self.pbFilterError.setToolTip(text)
-        self.pbFilterError.setCheckable(True)
-        self.pbFilterError.setChecked(True)
-        self.pbFilterError.clicked.connect(self.onFilterChanged)
-
-        hFilterLayout.setContentsMargins(5, 5, 5, 5)
-        hFilterLayout.addWidget(self.laFilter)
-        hFilterLayout.addWidget(self.pbFilterDebug)
-        hFilterLayout.addWidget(self.pbFilterInfo)
-        hFilterLayout.addWidget(self.pbFilterWarn)
-        hFilterLayout.addWidget(self.pbFilterError)
-        hFilterLayout.addStretch()
-
-        return filterWidget
+        table_view = QTableView(parent=self)
+        vertical_layout.addWidget(table_view)
+        table_view.setModel(self.filter_model)
+        table_view.setWordWrap(True)
+        table_view.setAlternatingRowColors(True)
+        table_view.horizontalHeader().setStretchLastSection(True)
+        table_view.verticalHeader().setVisible(False)
+        table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
+        table_view.setSelectionMode(QAbstractItemView.SingleSelection)
+        table_view.setSortingEnabled(True)
+        table_view.sortByColumn(0, Qt.DescendingOrder)
+        table_view.doubleClicked.connect(self.onItemDoubleClicked)
+        table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        table_view.customContextMenuRequested.connect(self._context_menu)
+        self.table = table_view
+        self.setLayout(vertical_layout)
 
     @Slot(QPoint)
     def _context_menu(self, pos):
@@ -210,7 +87,8 @@ class LogWidget(QWidget):
     def _copy_clipboard(self):
         index = self.table.selectionModel().currentIndex()
         if index.isValid():
-            model = self.table.model()
+            index = self.filter_model.mapToSource(index)
+            model = self.table_model
             time = model.data(index.sibling(index.row(), 1),
                               Qt.DisplayRole)
             logtype = model.data(index.sibling(index.row(), 2),
@@ -228,77 +106,34 @@ class LogWidget(QWidget):
             clipboard.setText(log, mode=QClipboard.Clipboard)
 
     def onLogDataAvailable(self, logData):
-        new = [Log(i, messageType=log["type"], instanceId=log["category"],
+        new = [Log(messageType=log["type"], instanceId=log["category"],
                    description=log["message"],
-                   additionalDescription=log.get("traceback", ""),
+                   traceback=log.get("traceback", ""),
                    dateTime=QDateTime.fromString(
                        log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
-               for i, log in enumerate(logData, start=self.tailindex + 1)]
-        self.tailindex += len(logData)
-        self.logs.extend(new)
+               for log in logData]
 
-        for log in self.filter(new):
-            self.queryModel.add(log)
-        self.prune()
-
-    def prune(self):
-        """delete the oldest 1000 entries if we have more than 1000"""
-        if len(self.logs) < 1000:
-            return
-        self.logs.sort(key=lambda l: l.dateTime, reverse=True)
-        self.logs = self.logs[:-1000]
-        self.tailindex = len(self.logs)
-        self.onFilterChanged()
-
-    @Slot(bool)
-    def onFilterOptionVisible(self, checked):
-        """This slot is called from here when the filter options should be
-        visible or not.
-        """
-        if checked:
-            text = "Hide filter options"
-            self.pbFilterOptions.setText("- " + text)
-        else:
-            text = "Show filter options"
-            self.pbFilterOptions.setText("+ " + text)
-        self.pbFilterOptions.setStatusTip(text)
-        self.pbFilterOptions.setToolTip(text)
-
-        self.filterWidget.setVisible(checked)
-
-    @Slot()
-    def onFilterChanged(self):
-        self.queryModel.setList(self.filter(self.logs))
-
-    def filter(self, g):
-        """filter relevant items from generator g"""
-        buttons = dict(DEBUG=self.pbFilterDebug, INFO=self.pbFilterInfo,
-                       WARN=self.pbFilterWarn, ERROR=self.pbFilterError)
-        types = {k for k, v in buttons.items() if v.isChecked()}
-        if types:
-            g = (log for log in g if (log.messageType in types))
-            text = self.leSearch.text()
-            if text:
-                ins = self.pbSearchInsId.isChecked()
-                des = self.pbSearchDescr.isChecked()
-                add = self.pbSearchAddDescr.isChecked()
-                g = (log for log in g
-                     if (ins and text in log.instanceId) or
-                     (des and text in log.description) or
-                     (add and text in log.additionalDescription))
-
-            return list(g)
-
-        return []
+        model = self.table_model
+        for log in new:
+            model.add(log)
+        # If we are full we will remove data
+        difference = model.rowCount() - MAX_LOG_ENTRIES
+        if difference > 0:
+            self.table_model.prune(difference)
 
     @Slot(QModelIndex)
     def onItemDoubleClicked(self, index):
         value = index.data()
         if value is None:
             return
-        index = self.queryModel.index(index.row(), DEVICE_COLUMN)
-        deviceId = self.queryModel.data(index, Qt.DisplayRole)
-        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
+        source_index = self.filter_model.mapToSource(index)
+        index = self.table_model.index(source_index.row(), INSTANCE_COLUMN)
+        deviceId = self.table_model.data(index, Qt.DisplayRole)
+        broadcast_event(KaraboEvent.ShowDevice, {"deviceId": deviceId})
+
+    @Slot()
+    def onClearLog(self):
+        self.table_model.setList([])
 
     @Slot()
     def onSaveToFile(self):
@@ -307,48 +142,43 @@ class LogWidget(QWidget):
             caption="Save file as",
             filter="Log files (*.log)",
             suffix="log",
+            directory=get_config()["data_dir"],
             parent=self)
         if not filename:
             return
 
         with open(filename, "w") as out:
-            for log in self.logs:
-                out.write("{0} | {1} | {2} | {3} | {4} | {5}#\n".format(*log))
-
-    @Slot()
-    def onClearLog(self):
-        self.logs = []
-        self.tailindex = 0
-        self.onFilterChanged()
+            for log in self.table_model.getData():
+                out.write("{0} | {1} | {2} | {3} | {4} #\n".format(*log))
 
 
-Log = namedtuple('Log', ["id", "dateTime", "messageType", "instanceId",
-                         "description", "additionalDescription"])
+Log = namedtuple("Log", ["dateTime", "messageType", "instanceId",
+                         "description", "traceback"])
 
 
-class LogQueryModel(QAbstractTableModel):
+class TableLogModel(QAbstractTableModel):
     def __init__(self, parent=None):
-        super(LogQueryModel, self).__init__(parent)
-        self.filtered = []
-        self.key = lambda l: l[0]
-        self.reverse = False
+        super().__init__(parent)
+        self._data = []
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return ("ID", "Date and time", "Message type", "Instance ID",
-                    "Description", "Additional description")[section]
+            return ("Timestamp", "Type", "Instance ID",
+                    "Description", "Traceback")[section]
 
-    def setList(self, list_):
+    def setList(self, data):
         self.beginResetModel()
-        self.filtered = list_
-        self.filtered.sort(key=self.key, reverse=self.reverse)
+        self._data = data
         self.endResetModel()
 
-    def rowCount(self, _):
-        return len(self.filtered)
+    def getData(self):
+        return self._data
 
-    def columnCount(self, _):
-        return 6
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._data)
+
+    def columnCount(self, parent=QModelIndex()):
+        return 5
 
     icons = dict(DEBUG=icons.logDebug, INFO=icons.logInfo,
                  WARN=icons.logWarning, WARN_LOW=icons.logWarning,
@@ -365,33 +195,23 @@ class LogQueryModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        log = self.filtered[index.row()]
-        if role == Qt.DecorationRole and index.column() == 2:
+        log = self._data[index.row()]
+        if role == Qt.DecorationRole and index.column() == TYPE_COLUMN:
             return self.icons.get(log.messageType)
-        elif role == Qt.TextColorRole and index.column() == 2:
+        elif role == Qt.TextColorRole and index.column() == TYPE_COLUMN:
             return self.textColor.get(log.messageType)
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
             return log[index.column()]
         return None
 
     def add(self, data):
-        hi = len(self.filtered)
-        lo = 0
-        key = self.key(data)
-
-        while hi > lo:
-            mid = (hi + lo) // 2
-            if self.reverse == (self.key(self.filtered[mid]) < key):
-                hi = mid
-            else:
-                lo = mid + 1
-        self.beginInsertRows(QModelIndex(), lo, lo)
-        self.filtered.insert(lo, data)
+        INDEX = 0
+        self.beginInsertRows(QModelIndex(), INDEX, INDEX)
+        self._data.insert(INDEX, data)
         self.endInsertRows()
 
-    def sort(self, column, order):
-        self.key = lambda l: l[column]
-        self.reverse = order != Qt.AscendingOrder
+    def prune(self, index):
         self.beginResetModel()
-        self.filtered.sort(key=self.key, reverse=self.reverse)
+        # Keep the latest data until index
+        self._data = self._data[:index]
         self.endResetModel()

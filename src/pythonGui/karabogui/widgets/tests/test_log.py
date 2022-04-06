@@ -43,74 +43,16 @@ class TestLogWidget(GuiTestCase):
 
     def test_log_widget_prune(self):
         widget = LogWidget()
+        model = widget.table.model()
         data = create_log_data()
         widget.onLogDataAvailable(data)
-        self.assertEqual(widget.tailindex, 300)
-        # add 300 more step by step
+        self.assertEqual(model.rowCount(), 300)
+        # add 300 more to overshoot and prune, stays at 300
         widget.onLogDataAvailable(data)
-        self.assertEqual(widget.tailindex, 600)
-        widget.onLogDataAvailable(data)
-        self.assertEqual(widget.tailindex, 900)
-        # add 300 more and get pruned down
-        widget.onLogDataAvailable(data)
-        self.assertEqual(widget.tailindex, 200)
-
-        widget.onLogDataAvailable(data)
-        self.assertEqual(widget.tailindex, 500)
+        self.assertEqual(model.rowCount(), 300)
+        self.assertGreater(model.rowCount(), 0)
         widget.onClearLog()
-        self.assertEqual(widget.logs, [])
-        self.assertEqual(widget.tailindex, 0)
-
-    def test_log_widget_filter(self):
-        widget = LogWidget()
-        data = create_log_data()
-        widget.onLogDataAvailable(data)
-        widget.onLogDataAvailable(data)
-        self.assertEqual(widget.tailindex, 600)
-
-        self.assertEqual(widget.queryModel.rowCount(None), 600)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 600)
-
-        self.assertEqual(widget.pbFilterOptions.text(),
-                         "+ Show filter options")
-        widget.onFilterOptionVisible(True)
-        self.assertEqual(widget.pbFilterOptions.text(),
-                         "- Hide filter options")
-
-        widget.pbFilterDebug.setChecked(False)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 400)
-        widget.pbFilterError.setChecked(False)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 200)
-        widget.pbFilterInfo.setChecked(False)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 0)
-        self.assertEqual(widget.tailindex, 600)
-
-        widget.pbFilterDebug.setChecked(True)
-        widget.pbFilterError.setChecked(True)
-        widget.pbFilterInfo.setChecked(True)
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 600)
-        self.assertEqual(widget.tailindex, 600)
-
-        # default search is description
-        widget.leSearch.setText("XFEL_EG_RACK/MOTOR/95")
-        widget.onFilterChanged()
-        self.assertEqual(widget.queryModel.rowCount(None), 0)
-
-        # Must activate search before for instanceId
-        widget.pbSearchInsId.setChecked(True)
-        widget.onFilterChanged()
-        # Must be 4, as two times defaults stacked up
-        self.assertEqual(widget.queryModel.rowCount(None), 4)
-
-        # Change filter option back
-        widget.onFilterOptionVisible(False)
-        self.assertEqual(widget.pbFilterOptions.text(),
-                         "+ Show filter options")
+        self.assertEqual(model.rowCount(), 0)
 
     def test_clipboard_doubleclick(self):
         widget = LogWidget()
@@ -118,7 +60,8 @@ class TestLogWidget(GuiTestCase):
         widget.onLogDataAvailable(data)
         path = "karabogui.widgets.log.broadcast_event"
         with mock.patch(path) as broadcast:
-            index = widget.queryModel.createIndex(12, 0)
+            source_index = widget.table_model.createIndex(12, 0)
+            index = widget.filter_model.mapFromSource(source_index)
             widget.onItemDoubleClicked(index)
             broadcast.assert_called_with(KaraboEvent.ShowDevice,
                                          {"deviceId": "XFEL_EG_RACK/MOTOR/95"})
