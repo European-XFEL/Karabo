@@ -452,10 +452,12 @@ class Tests(DeviceTest):
         # Send data from middlelayer and receive from bound
         ###################################################
         with bound_proxy:
+            # Failed with timeout=5
+            # in https://git.xfel.eu/Karabo/Framework/-/jobs/289942
             try:
                 await wait_for(
                     waitUntil(lambda: bound_proxy.imageInput.missingConnections == []),
-                    timeout=5
+                    timeout=15
                 )
             except TimeoutError:
                 assert False, "bound proxy did not connect in time"
