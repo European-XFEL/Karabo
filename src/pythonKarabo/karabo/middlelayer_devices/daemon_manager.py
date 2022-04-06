@@ -251,16 +251,15 @@ class DaemonManager(Device):
                 server_id, host_id, command, post_action=True)
             payload.set("success", success)
             payload.set("reason", text)
-            hashlist = self.services.to_hashlist()
-            for _row in hashlist:
-                if _row["name"] == server_id:
-                    _row["status"] = "CHANGING"
-                    _row["start"] = False
-                    _row["restart"] = False
-                    _row["stop"] = False
-                    break
-            self.services = hashlist
-        except (KeyError, AssertionError) as e:
+            # The first entry is the found row, must be there
+            index = self.services.where("name", server_id)[0]
+            self.services[index] = Hash(
+                "name", server_id,
+                "status", "CHANGING",
+                "start", False,
+                "restart", False,
+                "stop", False)
+        except (IndexError, KeyError, AssertionError) as e:
             payload.set("success", False)
             payload.set("reason", str(e))
 
@@ -306,23 +305,27 @@ class DaemonManager(Device):
         task = self.post_action_tasks.get((service_name, host))
         if command == "down" and task is None:
             self.post_action_tasks[(service_name, host)] = background(
-                self._kill_service_if_late(service_name, host))
+                self._ensure_service_down(service_name, host))
 
-    async def _kill_service_if_late(self, service_name, host):
+    async def _ensure_service_down(self, service_name, host):
+        """This post action task ensures a services goes down
+
+        If the service is not registered down within a number of tries,
+        the daemon manager sends a kill command.
+        """
         try:
-            # fetch for 7 seconds
             calls = 7
             while calls > 0:
                 await sleep(1)
                 await self._fetch()
-                hashlist = self.services.to_hashlist()
-                for _row in hashlist:
-                    # if the server is down, we do not need further action
-                    if (_row["name"] == service_name and
-                            _row["status"] == "DOWN"):
-                        return
-            # kill if the server is not down yet
-            await self._action_service(service_name, host, "kill")
+                row = self.services.where_value(
+                    "name", service_name).value[0]
+                if row["status"] == "DOWN":
+                    break
+                calls -= 1
+            else:
+                # kill if the server is not down yet
+                await self._action_service(service_name, host, "kill")
         except CancelledError:
             pass
         finally:
@@ -332,7 +335,7 @@ class DaemonManager(Device):
 def get_scene(deviceId):
     scene0 = FilterTableElementModel(
         height=533.0, keys=[f"{deviceId}.services"],
-        parent_component="DisplayComponent", resizeToContents=False,
+        parent_component="DisplayComponent", resizeToContents=True,
         width=960.0, x=11.0, y=158.0)
     scene1 = LabelModel(
         font="Source Sans Pro,12,-1,5,75,0,0,0,0,0,Bold", height=42.0,
