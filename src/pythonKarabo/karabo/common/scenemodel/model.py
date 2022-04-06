@@ -18,8 +18,8 @@ from .registry import (
 
 
 class SceneModel(BaseProjectObjectModel):
-    """ An object representing the data for a Karabo GUI scene.
-    """
+    """An object representing the data for a Karabo GUI scene."""
+
     # The version of the file data (from the scene file)
     file_format_version = Int(SCENE_FILE_VERSION, transient=True)
     # Extra attributes from the SVG file that we want to preserve.
@@ -38,6 +38,7 @@ class UnknownWidgetDataModel(BaseWidgetObjectData):
     As new widgets are added in the future, code which has not yet been
     upgraded needs to be able to read and write them without blowing up.
     """
+
     # The value of the `krb:widget` attribute
     klass = String
     # Attributes which are not part of `BaseWidgetObjectData`
@@ -47,8 +48,8 @@ class UnknownWidgetDataModel(BaseWidgetObjectData):
 
 
 class UnknownXMLDataModel(XMLElementModel):
-    """ A model object to hold SVG data that we don't understand.
-    """
+    """A model object to hold SVG data that we don't understand."""
+
     # The xml tag
     tag = String
     # The element attributes aside from 'id'
@@ -69,9 +70,8 @@ class UnknownXMLDataModel(XMLElementModel):
 
 
 def _read_extra_attributes(element):
-    """ Read all the attributes that we don't explicitly write.
-    """
-    our_names = ('height', 'width', NS_KARABO + 'version', NS_KARABO + 'uuid')
+    """Read all the attributes that we don't explicitly write."""
+    our_names = ("height", "width", NS_KARABO + "version", NS_KARABO + "uuid")
     attributes = {}
     for name, value in element.items():
         if name not in our_names:
@@ -80,19 +80,19 @@ def _read_extra_attributes(element):
     return attributes
 
 
-@register_scene_reader('Scene', xmltag='svg', version=1)
-@register_scene_reader('Scene', xmltag=NS_SVG + 'svg', version=1)
+@register_scene_reader("Scene", xmltag="svg", version=1)
+@register_scene_reader("Scene", xmltag=NS_SVG + "svg", version=1)
 def __scene_reader(element):
     traits = {
-        'file_format_version': int(element.get(NS_KARABO + 'version', 1)),
-        'uuid': element.get(NS_KARABO + 'uuid'),
-        'width': float(element.get('width', 0)),
-        'height': float(element.get('height', 0)),
-        'extra_attributes': _read_extra_attributes(element),
+        "file_format_version": int(element.get(NS_KARABO + "version", 1)),
+        "uuid": element.get(NS_KARABO + "uuid"),
+        "width": float(element.get("width", 0)),
+        "height": float(element.get("height", 0)),
+        "extra_attributes": _read_extra_attributes(element),
     }
     # This attribute is not guaranteed to be there...
-    if traits['uuid'] is None:
-        del traits['uuid']
+    if traits["uuid"] is None:
+        del traits["uuid"]
 
     scene = SceneModel(**traits)
 
@@ -123,22 +123,22 @@ def __scene_writer(scene, root):
     for child in scene.children:
         write_element(model=child, parent=root)
 
-    root.set(NS_KARABO + 'uuid', scene.uuid)
-    set_numbers(('height', 'width'), scene, root)
+    root.set(NS_KARABO + "uuid", scene.uuid)
+    set_numbers(("height", "width"), scene, root)
     for name, value in scene.extra_attributes.items():
         root.set(name, value)
 
     return root
 
 
-@register_scene_reader('Unknown', xmltag='*')
+@register_scene_reader("Unknown", xmltag="*")
 def __unknown_xml_data_reader(element):
     return UnknownXMLDataModel(
         tag=element.tag,
-        id=element.get('id', ''),
-        attributes={k: v for k, v in element.attrib.items() if k != 'id'},
-        data=element.text or '',
-        children=[read_element(el) for el in element]
+        id=element.get("id", ""),
+        attributes={k: v for k, v in element.attrib.items() if k != "id"},
+        data=element.text or "",
+        children=[read_element(el) for el in element],
     )
 
 
@@ -148,7 +148,7 @@ def __unknown_xml_data_writer(model, parent):
     if model.data:
         element.text = model.data
     if model.id:
-        element.set('id', model.id)
+        element.set("id", model.id)
     for name, value in model.attributes.items():
         element.set(name, value)
     for child in model.children:
@@ -162,9 +162,7 @@ def __unknown_widget_data_reader(element):
     traits = read_unknown_display_editable_widget(element)
     attributes = {k: element.get(k) for k in element.attrib if k not in traits}
     return UnknownWidgetDataModel(
-        attributes=attributes,
-        data=element.text or '',
-        **traits
+        attributes=attributes, data=element.text or "", **traits
     )
 
 

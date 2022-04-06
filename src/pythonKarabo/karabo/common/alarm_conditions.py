@@ -9,6 +9,7 @@ class AlarmCondition(Enum):
     Alarms are categorized by severity, which can either be none, warn, alarm
     or interlock. Interlock is the most severe condition.
     """
+
     NONE = "none"
     WARN = "warn"
     WARN_LOW = "warnLow"
@@ -29,11 +30,15 @@ class AlarmCondition(Enum):
         severity increases from left to right
         :return: an list with alarm severities
         """
-        return [AlarmCondition.NONE, AlarmCondition.WARN,
-                AlarmCondition.ALARM, AlarmCondition.INTERLOCK]
+        return [
+            AlarmCondition.NONE,
+            AlarmCondition.WARN,
+            AlarmCondition.ALARM,
+            AlarmCondition.INTERLOCK,
+        ]
 
     def criticalityLevel(self):
-        """Return the severity level of this alarm condition """
+        """Return the severity level of this alarm condition"""
         for p in AlarmCondition.criticalityList():
             if p.value in self.value:
                 return p
@@ -61,23 +66,24 @@ class AlarmCondition(Enum):
 
         :param other: The condition to compare against
         """
-        if (self.criticalityList().index(self.criticalityLevel()) >
-                self.criticalityList().index(other.criticalityLevel())):
+        if self.criticalityList().index(
+            self.criticalityLevel()
+        ) > self.criticalityList().index(other.criticalityLevel()):
             return self
         else:
             return other
 
     @staticmethod
     def fromString(name):
-        """Return an alarm condition from its stringified representation. """
+        """Return an alarm condition from its stringified representation."""
         return AlarmCondition(name)
 
     def asString(self):
-        """Return the string representation of the alarm condition """
+        """Return the string representation of the alarm condition"""
         return self.value
 
     def asBaseString(self):
-        """Return the severity level, e.g. base of the alarmcondtions """
+        """Return the severity level, e.g. base of the alarmcondtions"""
         return self.parent().value
 
     def isSameCriticality(self, other):
@@ -87,8 +93,9 @@ class AlarmCondition(Enum):
         as *other*
         :param other: the alarm condition to compare against
         """
-        return (self.criticalityList().index(self.criticalityLevel()) ==
-                self.criticalityList().index(other.criticalityLevel()))
+        return self.criticalityList().index(
+            self.criticalityLevel()
+        ) == self.criticalityList().index(other.criticalityLevel())
 
     def __lt__(self, other):
         return self.level < other.level

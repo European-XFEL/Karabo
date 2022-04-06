@@ -15,23 +15,23 @@ def _assert_base_traits(model):
 
 def _base_shape_traits():
     return {
-        'stroke': '#ff00ff',
-        'stroke_opacity': 0.5,
-        'stroke_linecap': 'square',
-        'stroke_dashoffset': 0.5,
-        'stroke_width': 2.0,
-        'stroke_dasharray': [1.0, 2.0, 3.0],
-        'stroke_style': 1,
-        'stroke_linejoin': 'round',
-        'stroke_miterlimit': 5.0,
-        'fill': '#424242',
-        'fill_opacity': 1.0,
+        "stroke": "#ff00ff",
+        "stroke_opacity": 0.5,
+        "stroke_linecap": "square",
+        "stroke_dashoffset": 0.5,
+        "stroke_width": 2.0,
+        "stroke_dasharray": [1.0, 2.0, 3.0],
+        "stroke_style": 1,
+        "stroke_linejoin": "round",
+        "stroke_miterlimit": 5.0,
+        "fill": "#424242",
+        "fill_opacity": 1.0,
     }
 
 
 def test_line_model():
     traits = _base_shape_traits()
-    traits.update({'x1': 0, 'y1': 0, 'x2': 2, 'y2': 2})
+    traits.update({"x1": 0, "y1": 0, "x2": 2, "y2": 2})
     model = LineModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
@@ -43,16 +43,16 @@ def test_line_model():
 
 def test_path_model():
     traits = _base_shape_traits()
-    traits['svg_data'] = '<svg:line/>'
+    traits["svg_data"] = "<svg:line/>"
     model = PathModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
-    assert read_model.svg_data == '<svg:line/>'
+    assert read_model.svg_data == "<svg:line/>"
 
 
 def test_rectangle_model():
     traits = _base_shape_traits()
-    traits.update({'x': 0, 'y': 0, 'width': 10, 'height': 10})
+    traits.update({"x": 0, "y": 0, "width": 10, "height": 10})
     model = RectangleModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_base_traits(read_model)
@@ -72,7 +72,7 @@ def test_default_fill():
         scene = read_scene(fn)
     rect_model = scene.children[0]
 
-    assert rect_model.fill == 'black'
+    assert rect_model.fill == "black"
 
 
 def test_style_attributes_with_units():
@@ -97,7 +97,7 @@ def test_alternate_style_def():
     with temp_xml_file(SCENE_SVG) as fn:
         scene = read_scene(fn)
     line_model = scene.children[0]
-    assert line_model.stroke == '#000000'
+    assert line_model.stroke == "#000000"
     assert line_model.stroke_width == 1.0
     assert line_model.stroke_dashoffset == 0.1
     assert line_model.stroke_miterlimit == 2.0
@@ -108,9 +108,9 @@ def test_svg_arrow():
         """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
         """<svg:line x1="295" y1="50" x2="95" y2="75" stroke="#000" stroke-width="5" marker-end="url(#arrow)"/>"""  # noqa
         """<svg:defs>"""
-            """<svg:marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
-                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""  # noqa
-            """</svg:marker>"""
+        """<svg:marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
+        """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""  # noqa
+        """</svg:marker>"""
         """</svg:defs>"""
         """</svg>"""
     )
@@ -147,9 +147,9 @@ def test_svg_defs():
     SCENE_SVG = (
         """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
         """<svg:defs id="arrow" style="foo">"""
-            """<svg:marker markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
-                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>""" # noqa
-            """</svg:marker>"""
+        """<svg:marker markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
+        """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""  # noqa
+        """</svg:marker>"""
         """</svg:defs>"""
         """</svg>"""
     )

@@ -122,7 +122,6 @@ class Macro(Macro):
 
 
 class Tests(TestCase):
-
     def test_fromtime(self):
         fromtime = "from time import sleep\n"
         res = validate_macro(fromtime)
@@ -137,13 +136,11 @@ class Tests(TestCase):
         self.assertEqual(len(res), 1)
 
     def test_importime(self):
-        time = ("import time\n"
-                "time.sleep(1)\n")
+        time = "import time\n" "time.sleep(1)\n"
         res = validate_macro(time)
         self.assertEqual(len(res), 1)
 
-        time = ("import time\n"
-                "#time.sleep(1)\n")
+        time = "import time\n" "#time.sleep(1)\n"
         res = validate_macro(time)
         self.assertSequenceEqual([], res)
 
@@ -152,24 +149,23 @@ class Tests(TestCase):
         self.assertSequenceEqual([], res)
 
     def test_importtimeas(self):
-        timeas = ("import time as t\n"
-                  "t.sleep(5)\n")
+        timeas = "import time as t\n" "t.sleep(5)\n"
         res = validate_macro(timeas)
         self.assertEqual(len(res), 1)
 
-        timeas = ("import whatever; import time as bla; bla.sleep(5)")
+        timeas = "import whatever; import time as bla; bla.sleep(5)"
         res = validate_macro(timeas)
         self.assertEqual(len(res), 1)
 
-        timeas = ("import whatever\n"
-                  "import time as bla\n"
-                  "bla.sleep(5)")
+        timeas = "import whatever\n" "import time as bla\n" "bla.sleep(5)"
         res = validate_macro(timeas)
         self.assertEqual(len(res), 1)
 
-        timeas = ("from karabo.middlelayer import Macro, Slot, String\n"
-                  "import time as k\n"
-                  "k.time()\n")
+        timeas = (
+            "from karabo.middlelayer import Macro, Slot, String\n"
+            "import time as k\n"
+            "k.time()\n"
+        )
         res = validate_macro(timeas)
         self.assertSequenceEqual([], res)
 

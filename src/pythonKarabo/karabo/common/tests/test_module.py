@@ -10,7 +10,7 @@ def test_create_module():
     def local_func():
         pass
 
-    name = 'whoa.crazy.new.module'
+    name = "whoa.crazy.new.module"
 
     assert name not in sys.modules
 
@@ -24,4 +24,4 @@ def test_create_module():
 
 def test_create_module_overwrite():
     with assert_raises(AssertionError):
-        create_module('sys', sys.path)
+        create_module("sys", sys.path)
