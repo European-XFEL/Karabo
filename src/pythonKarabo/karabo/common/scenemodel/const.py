@@ -18,7 +18,25 @@ SCENE_FONT_FAMILY = "Source Sans Pro"
 SCENE_FONT_SIZE = 10
 SCENE_FONT_WEIGHT = "normal"
 
-SCENE_FONT_SIZES = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 21, 24, 30, 36, 48, 60, 72]  # noqa
+SCENE_FONT_SIZES = [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    16,
+    18,
+    21,
+    24,
+    30,
+    36,
+    48,
+    60,
+    72,
+]  # noqa
 SCENE_FONT_WEIGHTS = ["normal", "bold"]
 
 DISPLAY_COMPONENT = "DisplayComponent"

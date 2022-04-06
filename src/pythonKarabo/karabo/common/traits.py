@@ -6,9 +6,10 @@
 from traits.api import HasTraits, Instance, List
 
 
-def walk_traits_object(traits_obj, visitor_func, pass_parent=False,
-                       fast_exit=False):
-    """ Walk a Traits object by recursing into List(Instance(HasTraits))
+def walk_traits_object(
+    traits_obj, visitor_func, pass_parent=False, fast_exit=False
+):
+    """Walk a Traits object by recursing into List(Instance(HasTraits))
     child traits.
 
     :param traits_obj: A HasTraits instance to walk
@@ -18,6 +19,7 @@ def walk_traits_object(traits_obj, visitor_func, pass_parent=False,
                         along with the node itself.
     :param fast_exit: If True, return immediately if the visitor returns `True`
     """
+
     def _is_list_of_has_traits(trait):
         if not isinstance(trait.trait_type, List):
             return False
@@ -29,8 +31,11 @@ def walk_traits_object(traits_obj, visitor_func, pass_parent=False,
         return True
 
     def _find_iterables(obj):
-        return [name for name in obj.copyable_trait_names()
-                if _is_list_of_has_traits(obj.trait(name))]
+        return [
+            name
+            for name in obj.copyable_trait_names()
+            if _is_list_of_has_traits(obj.trait(name))
+        ]
 
     def _tree_iter(obj, parent=None):
         # Yield the root

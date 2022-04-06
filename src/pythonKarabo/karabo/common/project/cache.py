@@ -13,6 +13,7 @@ class MemCacheWrapper(object):
     """In-memory storage for project objects which forwards to another object
     on cache misses.
     """
+
     def __init__(self, data, miss_handler):
         self._data = data
         self._miss_handler = miss_handler
@@ -39,8 +40,8 @@ class MemCacheWrapper(object):
 
 
 class ProjectDBCache(object):
-    """ Local storage for project objects retrieved from the project database.
-    """
+    """Local storage for objects retrieved from the project database"""
+
     def __init__(self, dirpath):
         self.dirpath = dirpath
 
@@ -52,37 +53,34 @@ class ProjectDBCache(object):
         """
 
     def store(self, domain, uuid, data):
-        """ Add an object to the cache
-        """
+        """Add an object to the cache"""
         path = self._generate_filepath(domain, uuid)
 
         domain_dir = op.dirname(path)
         if not op.exists(domain_dir):
             os.mkdir(domain_dir)
 
-        with open(path, mode='wb') as fp:
-            fp.write(data.encode('utf-8'))
+        with open(path, mode="wb") as fp:
+            fp.write(data.encode("utf-8"))
 
     def retrieve(self, domain, uuid, existing=None):
-        """ Read an object from the cache.
-        """
+        """Read an object from the cache."""
         path = self._generate_filepath(domain, uuid)
         if not op.exists(path):
             return None
 
-        with open(path, mode='rb') as fp:
-            return fp.read().decode('utf-8')
+        with open(path, mode="rb") as fp:
+            return fp.read().decode("utf-8")
 
     def get_available_domains(self):
-        """ Return a list of strings including available domains
-        """
+        """Return a list of strings including available domains"""
         avail_domains = []
         for domain in os.listdir(self.dirpath):
             avail_domains.append(domain)
         return avail_domains
 
     def get_available_project_data(self, domain, obj_type):
-        """ Return list of Hashes including available project data of all
+        """Return list of Hashes including available project data of all
         objects of ``obj_type`` in cache
 
         :param domain: A string which describes the domain to search
@@ -100,17 +98,21 @@ class ProjectDBCache(object):
         for uuid in os.listdir(domain_dir):
             xml = self.retrieve(domain, uuid)
             root = fromstring(xml)
-            root_type = root.attrib.get('item_type')
+            root_type = root.attrib.get("item_type")
             if root_type == obj_type:
-                simple_name = root.attrib.get('simple_name')
-                is_trashed = root.attrib.get('is_trashed', False)
-                descr = root.attrib.get('description', '')
-                proj_data.append({'uuid': uuid,
-                                  'simple_name': simple_name,
-                                  'is_trashed': is_trashed,
-                                  'user': root.attrib.get('user', ''),
-                                  'date': root.attrib.get('date', ''),
-                                  'description': descr})
+                simple_name = root.attrib.get("simple_name")
+                is_trashed = root.attrib.get("is_trashed", False)
+                descr = root.attrib.get("description", "")
+                proj_data.append(
+                    {
+                        "uuid": uuid,
+                        "simple_name": simple_name,
+                        "is_trashed": is_trashed,
+                        "user": root.attrib.get("user", ""),
+                        "date": root.attrib.get("date", ""),
+                        "description": descr,
+                    }
+                )
 
         return proj_data
 
@@ -119,12 +121,11 @@ class ProjectDBCache(object):
 
 
 def get_user_cache():
-    """ Return a cache residing in the user's home directory.
-    """
-    if platform.startswith('win'):
-        karabo_dir = op.join(os.environ['APPDATA'], 'karabo')
+    """Return a cache residing in the user's home directory."""
+    if platform.startswith("win"):
+        karabo_dir = op.join(os.environ["APPDATA"], "karabo")
     else:
-        karabo_dir = op.join(os.environ['HOME'], '.karabo')
-    cache_dir = op.join(karabo_dir, 'project_db_cache')
+        karabo_dir = op.join(os.environ["HOME"], ".karabo")
+    cache_dir = op.join(karabo_dir, "project_db_cache")
     os.makedirs(cache_dir, exist_ok=True)
     return ProjectDBCache(cache_dir)

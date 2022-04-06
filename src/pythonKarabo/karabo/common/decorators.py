@@ -32,7 +32,7 @@ def karabo_deprecated(func):
             "Call to deprecated function {}.".format(func.__name__),
             category=DeprecationWarning,
             filename=func.__code__.co_filename,
-            lineno=func.__code__.co_firstlineno + 1
+            lineno=func.__code__.co_firstlineno + 1,
         )
         return func(*args, **kwargs)
 
@@ -72,8 +72,10 @@ def validate_args(func):
         argspec = inspect.getfullargspec(func).args
         for index, name in enumerate(argspec):
             if not isinstance(args[index], func.__annotations__[name]):
-                raise ValueError("Argument {} got wrong input "
-                                 "type {}".format(name, args[index]))
+                raise ValueError(
+                    "Argument {} got wrong input "
+                    "type {}".format(name, args[index])
+                )
         return func(*args)
 
     return wrapper

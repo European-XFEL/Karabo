@@ -11,9 +11,9 @@ from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
 from .. import api
 from ..io_utils import set_numbers
 
-DATA_DIR = op.join(op.abspath(op.dirname(__file__)), 'data')
-INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
-LEGACY_DIR = op.join(DATA_DIR, 'legacy')
+DATA_DIR = op.join(op.abspath(op.dirname(__file__)), "data")
+INKSCAPE_DIR = op.join(DATA_DIR, "inkscape")
+LEGACY_DIR = op.join(DATA_DIR, "legacy")
 SCENE_SVG = """
 <svg
     xmlns:krb="http://karabo.eu/scene"
@@ -95,38 +95,44 @@ UNKNOWN_WIDGET_TOOL = """
 
 
 def _get_file_data(filename):
-    with open(filename, 'r') as fp:
+    with open(filename, "r") as fp:
         return fp.read()
 
 
 def _iter_data_files(directory):
     for fn in os.listdir(directory):
-        if op.splitext(fn)[-1] == '.svg':
+        if op.splitext(fn)[-1] == ".svg":
             yield op.join(directory, fn)
 
 
 def test_set_numbers_name_mapping():
-    element = Element('rect')
+    element = Element("rect")
     model = api.RectangleModel(x=0.0, y=0, height=10, width=10)
-    names = ('x', 'y', 'height', 'width')
+    names = ("x", "y", "height", "width")
     xmlnames = (api.NS_KARABO + n for n in names[:-1])
 
     # Normal mapping is tested by the scene writers. Lets make sure the
     # parameter checking works...
-    assert_raises(api.SceneWriterException, set_numbers, names, model, element,
-                  xmlnames=xmlnames)
+    assert_raises(
+        api.SceneWriterException,
+        set_numbers,
+        names,
+        model,
+        element,
+        xmlnames=xmlnames,
+    )
 
 
 def test_set_numbers_float_conversion():
-    element = Element('rect')
+    element = Element("rect")
     model = api.RectangleModel(x=0.0, y=0.2, height=10.01, width=10.05)
 
     # Test rounding of floating point values
-    set_numbers(('x', 'y', 'height', 'width'), model, element)
-    assert element.get('x') == '0'
-    assert element.get('y') == '0.2'
-    assert element.get('height') == '10'
-    assert element.get('width') == '10.05'
+    set_numbers(("x", "y", "height", "width"), model, element)
+    assert element.get("x") == "0"
+    assert element.get("y") == "0.2"
+    assert element.get("height") == "10"
+    assert element.get("width") == "10.05"
 
 
 def test_reading():
@@ -151,34 +157,59 @@ def test_reading():
 
 
 def test_writing():
-    extra_attributes = {api.NS_KARABO + 'random': 'golly'}
-    scene = api.SceneModel(extra_attributes=extra_attributes,
-                           uuid='e24a23c7-5aa9-420c-9741-248ea6672355')
+    extra_attributes = {api.NS_KARABO + "random": "golly"}
+    scene = api.SceneModel(
+        extra_attributes=extra_attributes,
+        uuid="e24a23c7-5aa9-420c-9741-248ea6672355",
+    )
     layout = api.FixedLayoutModel(x=106, y=74, height=323, width=384)
     label = api.LabelModel(
-        x=175, y=125, height=60, width=309,
-        text='Some text', font='Ubuntu,48,-1,5,63,0,0,0,0,0',
-        foreground='#4c4c4c', frame_width=0
+        x=175,
+        y=125,
+        height=60,
+        width=309,
+        text="Some text",
+        font="Ubuntu,48,-1,5,63,0,0,0,0,0",
+        foreground="#4c4c4c",
+        frame_width=0,
     )
     rect = api.RectangleModel(
-        x=106, y=74, height=143, width=151,
-        stroke='#000000', stroke_dashoffset=0.0, stroke_linecap='square',
-        stroke_linejoin='bevel', stroke_miterlimit=2.0, stroke_opacity=1.0,
-        stroke_style=1, stroke_width=1.0
+        x=106,
+        y=74,
+        height=143,
+        width=151,
+        stroke="#000000",
+        stroke_dashoffset=0.0,
+        stroke_linecap="square",
+        stroke_linejoin="bevel",
+        stroke_miterlimit=2.0,
+        stroke_opacity=1.0,
+        stroke_style=1,
+        stroke_width=1.0,
     )
     line = api.LineModel(
-        x1=397, x2=489, y1=84, y2=396,
-        stroke="#000000", stroke_dashoffset=0.0, stroke_linecap='square',
-        stroke_linejoin='bevel', stroke_miterlimit=2.0, stroke_opacity=1.0,
-        stroke_style=1, stroke_width=1.0
+        x1=397,
+        x2=489,
+        y1=84,
+        y2=396,
+        stroke="#000000",
+        stroke_dashoffset=0.0,
+        stroke_linecap="square",
+        stroke_linejoin="bevel",
+        stroke_miterlimit=2.0,
+        stroke_opacity=1.0,
+        stroke_style=1,
+        stroke_width=1.0,
     )
     layout.children.extend([label, rect, line])
     scene.children.append(layout)
 
-    unknown_child = api.UnknownXMLDataModel(tag='foo', data='bar')
-    unknown = api.UnknownXMLDataModel(tag='metadata',
-                                      attributes={'id': 'some-extra-data'},
-                                      children=[unknown_child])
+    unknown_child = api.UnknownXMLDataModel(tag="foo", data="bar")
+    unknown = api.UnknownXMLDataModel(
+        tag="metadata",
+        attributes={"id": "some-extra-data"},
+        children=[unknown_child],
+    )
     scene.children.append(unknown)
 
     xml = api.write_scene(scene)
@@ -194,7 +225,7 @@ def test_scene_version():
 
 def test_single_model_writing():
     expected_svg = """<svg><foo>bar</foo></svg>"""
-    model = api.UnknownXMLDataModel(tag='foo', data='bar')
+    model = api.UnknownXMLDataModel(tag="foo", data="bar")
     xml = api.write_single_model(model)
     assert xml_is_equal(expected_svg, xml)
 
@@ -255,8 +286,7 @@ def test_unknown_widget_reader():
 
 
 def test_unknown_widget_reader_tool():
-    """Tool widgets don't have widget trait set
-    """
+    """Tool widgets don't have widget trait set"""
     with temp_xml_file(UNKNOWN_WIDGET_TOOL) as fn:
         scene = api.read_scene(fn)
     xml = api.write_scene(scene)
@@ -264,8 +294,9 @@ def test_unknown_widget_reader_tool():
 
 
 def test_unknown_widget_writer():
-    model = api.UnknownWidgetDataModel(klass='FutureStyles',
-                                       parent_component='DisplayWidget')
+    model = api.UnknownWidgetDataModel(
+        klass="FutureStyles", parent_component="DisplayWidget"
+    )
     xml = api.write_single_model(model)
     assert xml_is_equal(UNKNOWN_WIDGET_SVG, xml)
 
@@ -273,16 +304,16 @@ def test_unknown_widget_writer():
 def test_unknown_widget_extra_data():
     root = fromstring(UNKNOWN_WIDGET_SVG)
     widget = root[0]
-    widget.set('garbage', 'value')
-    widget.text = 'element data'
-    expected_svg = tostring(root, encoding='unicode')
+    widget.set("garbage", "value")
+    widget.text = "element data"
+    expected_svg = tostring(root, encoding="unicode")
 
     with temp_xml_file(expected_svg) as fn:
         scene = api.read_scene(fn)
 
     widget = scene.children[0]
-    assert widget.attributes['garbage'] == 'value'
-    assert widget.data == 'element data'
+    assert widget.attributes["garbage"] == "value"
+    assert widget.data == "element data"
 
     xml = api.write_single_model(widget)
     assert xml_is_equal(expected_svg, xml)
@@ -290,20 +321,22 @@ def test_unknown_widget_extra_data():
 
 def test_display_label_writer():
     # Check if default values are NOT saved
-    default_model = api.DisplayLabelModel(font_size=api.SCENE_FONT_SIZE,
-                                          font_weight=api.SCENE_FONT_WEIGHT)
+    default_model = api.DisplayLabelModel(
+        font_size=api.SCENE_FONT_SIZE, font_weight=api.SCENE_FONT_WEIGHT
+    )
     default_element = _get_xml_element_from_model(default_model)
-    assert default_element.get(api.NS_KARABO + 'font_size') is None
-    assert default_element.get(api.NS_KARABO + 'font_weight') is None
+    assert default_element.get(api.NS_KARABO + "font_size") is None
+    assert default_element.get(api.NS_KARABO + "font_weight") is None
 
     # Check if other values are NOT saved
     input_size = 7
     input_weight = "bold"
-    valid_model = api.DisplayLabelModel(font_size=input_size,
-                                        font_weight=input_weight)
+    valid_model = api.DisplayLabelModel(
+        font_size=input_size, font_weight=input_weight
+    )
     valid_element = _get_xml_element_from_model(valid_model)
-    assert valid_element.get(api.NS_KARABO + 'font_size') == str(input_size)
-    assert valid_element.get(api.NS_KARABO + 'font_weight') == input_weight
+    assert valid_element.get(api.NS_KARABO + "font_size") == str(input_size)
+    assert valid_element.get(api.NS_KARABO + "font_weight") == input_weight
 
 
 def _get_xml_element_from_model(model):
@@ -311,10 +344,11 @@ def _get_xml_element_from_model(model):
     xml = api.write_single_model(model)
     # Get the Karabo klass name from the model type
     # (by removing Model from the name)
-    name = type(model).__name__.replace("Model", '')
+    name = type(model).__name__.replace("Model", "")
 
     # Read the generated XML and extract the element
     # corresponding to the Karabo name
     tree = fromstring(xml)
-    return tree.find("*[@{ns}widget='{name}']".format(ns=api.NS_KARABO,
-                                                      name=name))
+    return tree.find(
+        "*[@{ns}widget='{name}']".format(ns=api.NS_KARABO, name=name)
+    )

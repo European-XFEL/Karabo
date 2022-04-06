@@ -5,7 +5,7 @@ from .. import api
 
 
 def _geometry_traits():
-    return {'x': 0, 'y': 0, 'height': 100, 'width': 100}
+    return {"x": 0, "y": 0, "height": 100, "width": 100}
 
 
 def _assert_geometry_traits(model):
@@ -17,33 +17,33 @@ def _assert_geometry_traits(model):
 
 def test_base_plot_model():
     traits = _geometry_traits()
-    traits['title'] = 'Graph'
-    traits['background'] = 'white'
-    traits['x_label'] = 'X'
-    traits['y_label'] = 'Y'
-    traits['x_units'] = 'XUNIT'
-    traits['y_units'] = 'YUNIT'
-    traits['x_grid'] = True
-    traits['y_grid'] = False
-    traits['x_log'] = True
-    traits['y_log'] = False
-    traits['x_min'] = 0.1
-    traits['x_max'] = 12.0
-    traits['y_min'] = 0.2
-    traits['y_max'] = 14.0
-    traits['x_invert'] = True
-    traits['y_invert'] = True
-    traits['x_autorange'] = False
-    traits['y_autorange'] = False
+    traits["title"] = "Graph"
+    traits["background"] = "white"
+    traits["x_label"] = "X"
+    traits["y_label"] = "Y"
+    traits["x_units"] = "XUNIT"
+    traits["y_units"] = "YUNIT"
+    traits["x_grid"] = True
+    traits["y_grid"] = False
+    traits["x_log"] = True
+    traits["y_log"] = False
+    traits["x_min"] = 0.1
+    traits["x_max"] = 12.0
+    traits["y_min"] = 0.2
+    traits["y_max"] = 14.0
+    traits["x_invert"] = True
+    traits["y_invert"] = True
+    traits["x_autorange"] = False
+    traits["y_autorange"] = False
     model = api.VectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
-    assert read_model.title == 'Graph'
-    assert read_model.background == 'white'
-    assert read_model.x_label == 'X'
-    assert read_model.y_label == 'Y'
-    assert read_model.x_units == 'XUNIT'
-    assert read_model.y_units == 'YUNIT'
+    assert read_model.title == "Graph"
+    assert read_model.background == "white"
+    assert read_model.x_label == "X"
+    assert read_model.y_label == "Y"
+    assert read_model.x_units == "XUNIT"
+    assert read_model.y_units == "YUNIT"
     assert read_model.x_autorange is False
     assert read_model.y_autorange is False
     assert read_model.x_grid is True
@@ -60,8 +60,8 @@ def test_base_plot_model():
 
 def test_scatter_graph_model():
     traits = _geometry_traits()
-    traits['maxlen'] = 2000
-    traits['psize'] = 4.3
+    traits["maxlen"] = 2000
+    traits["psize"] = 4.3
     model = api.ScatterGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -71,7 +71,7 @@ def test_scatter_graph_model():
 
 def test_vector_bar_graph_model():
     traits = _geometry_traits()
-    traits['bar_width'] = 5.7
+    traits["bar_width"] = 5.7
     model = api.VectorBarGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -80,10 +80,10 @@ def test_vector_bar_graph_model():
 
 def test_vector_hist_graph_model():
     traits = _geometry_traits()
-    traits['bins'] = 23
-    traits['auto'] = False
-    traits['start'] = 0.1
-    traits['stop'] = 10.0
+    traits["bins"] = 23
+    traits["auto"] = False
+    traits["start"] = 0.1
+    traits["stop"] = 10.0
     model = api.VectorHistGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -96,15 +96,14 @@ def test_vector_hist_graph_model():
 def test_vector_graph():
     traits = _geometry_traits()
     roi_data = [
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 1"}),
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 2"}),
-
+        CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 1"}),
+        CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 2"}),
     ]
-    traits['half_samples'] = 10000
-    traits['roi_items'] = roi_data
-    traits['roi_tool'] = 1
-    traits['offset'] = 15.0
-    traits['step'] = 17.0
+    traits["half_samples"] = 10000
+    traits["roi_items"] = roi_data
+    traits["roi_tool"] = 1
+    traits["offset"] = 15.0
+    traits["step"] = 17.0
 
     model = api.VectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
@@ -122,7 +121,7 @@ def test_vector_graph():
 
 def test_vector_scatter_graph():
     traits = _geometry_traits()
-    traits['psize'] = 3.2
+    traits["psize"] = 3.2
     model = api.VectorScatterGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -132,15 +131,14 @@ def test_vector_scatter_graph():
 def test_ndarray_graph():
     traits = _geometry_traits()
     roi_data = [
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 1"}),
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 2"}),
-
+        CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 1"}),
+        CrossROIData(**{"roi_type": 2, "x": 150, "y": 150, "name": "Cross 2"}),
     ]
-    traits['half_samples'] = 10000
-    traits['roi_items'] = roi_data
-    traits['roi_tool'] = 1
-    traits['offset'] = 5.0
-    traits['step'] = 7.0
+    traits["half_samples"] = 10000
+    traits["roi_items"] = roi_data
+    traits["roi_tool"] = 1
+    traits["offset"] = 5.0
+    traits["step"] = 7.0
 
     model = api.NDArrayGraphModel(**traits)
     read_model = single_model_round_trip(model)

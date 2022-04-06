@@ -17,12 +17,16 @@ DEVICE_XML = """
     <device_config uuid='{uuids[1]}' class_id='BazClass' />
     <device_config uuid='{uuids[2]}' class_id='BazClass' />
 </device_instance>
-""".format(uuids=UUIDS)
+""".format(
+    uuids=UUIDS
+)
 INCOMPLETE_XML = """
 <device_instance>
     <device_config uuid='{uuids[0]}' />
 </device_instance>
-""".format(uuids=UUIDS)
+""".format(
+    uuids=UUIDS
+)
 
 
 def setUp():
@@ -37,8 +41,8 @@ def test_reading():
     with temp_xml_file(DEVICE_XML) as fn:
         device = read_device(fn)
 
-    assert device.class_id == 'BazClass'
-    assert device.instance_id == 'fooDevice'
+    assert device.class_id == "BazClass"
+    assert device.instance_id == "fooDevice"
     assert device.active_config_ref == UUIDS[0]
     assert not device.initialized
     conf0 = device.configs[0]
@@ -60,19 +64,22 @@ def test_reading_incomplete():
     with temp_xml_file(INCOMPLETE_XML) as fn:
         device = read_device(fn)
 
-    assert device.class_id == ''
-    assert device.instance_id == ''
-    assert device.active_config_ref == ''
+    assert device.class_id == ""
+    assert device.instance_id == ""
+    assert device.active_config_ref == ""
     assert not device.initialized
 
 
 def test_writing():
-    conf0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[0])
-    conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
-    conf2 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[2])
-    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              configs=[conf0, conf1, conf2],
-                              active_config_ref=UUIDS[0])
+    conf0 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[0])
+    conf1 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[1])
+    conf2 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[2])
+    foo = DeviceInstanceModel(
+        class_id="BazClass",
+        instance_id="fooDevice",
+        configs=[conf0, conf1, conf2],
+        active_config_ref=UUIDS[0],
+    )
 
     xml = write_device(foo)
     assert xml_is_equal(DEVICE_XML, xml)
@@ -87,11 +94,14 @@ def test_simple_round_trip():
 
 
 def test_child_finding():
-    conf0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[0])
-    conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
-    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              configs=[conf0, conf1],
-                              active_config_ref=UUIDS[0])
+    conf0 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[0])
+    conf1 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[1])
+    foo = DeviceInstanceModel(
+        class_id="BazClass",
+        instance_id="fooDevice",
+        configs=[conf0, conf1],
+        active_config_ref=UUIDS[0],
+    )
     conf = foo.select_config(UUIDS[1])
     assert conf == conf1
 
@@ -107,12 +117,15 @@ def test_uuid_update():
     conf0_uuid = str(uuid4())
     conf1_uuid = str(uuid4())
     dev_uuid = str(uuid4())
-    conf0 = DeviceConfigurationModel(class_id='BarClass', uuid=conf0_uuid)
-    conf1 = DeviceConfigurationModel(class_id='BarClass', uuid=conf1_uuid)
-    dev = DeviceInstanceModel(class_id='BarClass', instance_id='fooDevice',
-                              configs=[conf0, conf1],
-                              active_config_ref=conf0_uuid,
-                              uuid=dev_uuid)
+    conf0 = DeviceConfigurationModel(class_id="BarClass", uuid=conf0_uuid)
+    conf1 = DeviceConfigurationModel(class_id="BarClass", uuid=conf1_uuid)
+    dev = DeviceInstanceModel(
+        class_id="BarClass",
+        instance_id="fooDevice",
+        configs=[conf0, conf1],
+        active_config_ref=conf0_uuid,
+        uuid=dev_uuid,
+    )
 
     selected_conf = dev.select_config(conf0_uuid)
     assert selected_conf is conf0

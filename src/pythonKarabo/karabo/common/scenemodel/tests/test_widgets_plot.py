@@ -24,15 +24,17 @@ OLD_SPARKY = """
 
 
 def test_line_plot_widget():
-    _check_line_plot_widget(klass_name="DisplayTrendline",
-                            new_klass=TrendGraphModel)
-    _check_line_plot_widget(klass_name="XYVector",
-                            new_klass=VectorXYGraphModel)
+    _check_line_plot_widget(
+        klass_name="DisplayTrendline", new_klass=TrendGraphModel
+    )
+    _check_line_plot_widget(
+        klass_name="XYVector", new_klass=VectorXYGraphModel
+    )
 
 
 def _check_line_plot_widget(klass_name, new_klass):
     traits = base_widget_traits()
-    traits['klass'] = klass_name
+    traits["klass"] = klass_name
     model = LinePlotModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
@@ -41,15 +43,15 @@ def _check_line_plot_widget(klass_name, new_klass):
 
 def test_sparkline_basics():
     traits = base_widget_traits()
-    traits['time_base'] = 42
-    traits['show_value'] = True
-    traits['show_format'] = 'whatever'
+    traits["time_base"] = 42
+    traits["show_value"] = True
+    traits["show_format"] = "whatever"
     model = SparklineModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert model.time_base == 42
     assert model.show_value
-    assert model.show_format == 'whatever'
+    assert model.show_format == "whatever"
 
 
 def test_old_sparkline_data():
@@ -59,7 +61,7 @@ def test_old_sparkline_data():
 
     model = scene.children[0]
     assert isinstance(model, SparklineModel)
-    assert model.keys == ['thePast.sparkProp']
+    assert model.keys == ["thePast.sparkProp"]
     assert model.time_base == default.time_base
     assert model.show_value == default.show_value
     assert model.show_format == default.show_format

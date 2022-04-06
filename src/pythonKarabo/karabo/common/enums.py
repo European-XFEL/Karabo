@@ -26,56 +26,65 @@ class Interfaces(IntEnum):
 
 class ProxyStatus(Enum):
     # device could, but is not started
-    OFFLINE = 'offline'
+    OFFLINE = "offline"
     # the device is online, but no detailed information retrieved yet
-    OK = 'ok'
+    OK = "ok"
     # the device is online but doesn't have a schema yet
-    ONLINE = 'online'
+    ONLINE = "online"
     # online device waiting for its schema
-    ONLINEREQUESTED = 'onlinerequested'
+    ONLINEREQUESTED = "onlinerequested"
     # everything is up-and-running
-    ALIVE = 'alive'
+    ALIVE = "alive"
     # we are registered to monitor this device
-    MONITORING = 'monitoring'
+    MONITORING = "monitoring"
     # a schema is requested, but didnt arrive yet
-    REQUESTED = 'requested'
+    REQUESTED = "requested"
     # the device has a schema, but no value yet
-    SCHEMA = 'schema'
+    SCHEMA = "schema"
     # the device is dead
-    DEAD = 'dead'
+    DEAD = "dead"
     # device server not available
-    NOSERVER = 'noserver'
+    NOSERVER = "noserver"
     # class plugin not available
-    NOPLUGIN = 'noplugin'
+    NOPLUGIN = "noplugin"
     # device running, but of different type
-    INCOMPATIBLE = 'incompatible'
-    MISSING = 'missing'
-    ERROR = 'error'
-    UNKNOWN = 'unknown'
+    INCOMPATIBLE = "incompatible"
+    MISSING = "missing"
+    ERROR = "error"
+    UNKNOWN = "unknown"
 
 
 # The device is online in these statuses
 ONLINE_STATUSES = (
-    ProxyStatus.OK, ProxyStatus.ONLINE, ProxyStatus.ALIVE,
-    ProxyStatus.ONLINEREQUESTED, ProxyStatus.MONITORING,
-    ProxyStatus.SCHEMA, ProxyStatus.ERROR, ProxyStatus.UNKNOWN
+    ProxyStatus.OK,
+    ProxyStatus.ONLINE,
+    ProxyStatus.ALIVE,
+    ProxyStatus.ONLINEREQUESTED,
+    ProxyStatus.MONITORING,
+    ProxyStatus.SCHEMA,
+    ProxyStatus.ERROR,
+    ProxyStatus.UNKNOWN,
 )
 
 SCHEMA_STATUSES = (
-    ProxyStatus.ALIVE, ProxyStatus.MONITORING, ProxyStatus.SCHEMA,
+    ProxyStatus.ALIVE,
+    ProxyStatus.MONITORING,
+    ProxyStatus.SCHEMA,
 )
 
 # The device is not able to receive configuration
 NO_CONFIG_STATUSES = (
-    ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER, ProxyStatus.REQUESTED
+    ProxyStatus.NOPLUGIN,
+    ProxyStatus.NOSERVER,
+    ProxyStatus.REQUESTED,
 )
 
-NO_CLASS_STATUSES = (
-    ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER
-)
+NO_CLASS_STATUSES = (ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER)
 
 # The device can perform an online to offline configuration
 ONLINE_CONFIG_STATUSES = (
-    ProxyStatus.MONITORING, ProxyStatus.ALIVE, ProxyStatus.ERROR,
-    ProxyStatus.UNKNOWN
+    ProxyStatus.MONITORING,
+    ProxyStatus.ALIVE,
+    ProxyStatus.ERROR,
+    ProxyStatus.UNKNOWN,
 )

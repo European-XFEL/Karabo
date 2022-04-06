@@ -7,11 +7,11 @@ from karabo.common.project.api import (
 
 
 def test_find_parent_object():
-    dev0 = DeviceInstanceModel(instance_id='dev0')
-    dev1 = DeviceInstanceModel(instance_id='dev1')
-    serv0 = DeviceServerModel(server_id='serv0', devices=[dev0, dev1])
-    dev2 = DeviceInstanceModel(instance_id='dev2')
-    serv1 = DeviceServerModel(server_id='serv1', devices=[dev2])
+    dev0 = DeviceInstanceModel(instance_id="dev0")
+    dev1 = DeviceInstanceModel(instance_id="dev1")
+    serv0 = DeviceServerModel(server_id="serv0", devices=[dev0, dev1])
+    dev2 = DeviceInstanceModel(instance_id="dev2")
+    serv1 = DeviceServerModel(server_id="serv1", devices=[dev2])
     macro = MacroModel(code="print('hello world')")
     inner_proj = ProjectModel(macros=[macro], servers=[serv0])
     proj = ProjectModel(subprojects=[inner_proj], servers=[serv1])
@@ -29,8 +29,8 @@ def test_find_parent_object():
 def test_find_parent_project():
     mac0 = MacroModel()
     mac1 = MacroModel()
-    dev0 = DeviceInstanceModel(instance_id='dev0')
-    serv0 = DeviceServerModel(server_id='serv0', devices=[dev0])
+    dev0 = DeviceInstanceModel(instance_id="dev0")
+    serv0 = DeviceServerModel(server_id="serv0", devices=[dev0])
     sub_proj0 = ProjectModel(macros=[mac0])
     sub_proj1 = ProjectModel(macros=[mac1], servers=[serv0])
     proj = ProjectModel(subprojects=[sub_proj0, sub_proj1])
@@ -78,81 +78,101 @@ def test_find_subproject_parent():
 
 
 def test_device_instance_exists():
-    dev0 = DeviceConfigurationModel(class_id='BazClass')
-    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              configs=[dev0])
-    serv0 = DeviceServerModel(server_id='fooServer', host='serverserverFoo',
-                              devices=[foo])
-    dev1 = DeviceConfigurationModel(class_id='QuxClass')
-    bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                              configs=[dev1])
-    serv1 = DeviceServerModel(server_id='barServer', host='serverserverFoo',
-                              devices=[bar])
+    dev0 = DeviceConfigurationModel(class_id="BazClass")
+    foo = DeviceInstanceModel(
+        class_id="BazClass", instance_id="fooDevice", configs=[dev0]
+    )
+    serv0 = DeviceServerModel(
+        server_id="fooServer", host="serverserverFoo", devices=[foo]
+    )
+    dev1 = DeviceConfigurationModel(class_id="QuxClass")
+    bar = DeviceInstanceModel(
+        class_id="QuxClass", instance_id="barDevice", configs=[dev1]
+    )
+    serv1 = DeviceServerModel(
+        server_id="barServer", host="serverserverFoo", devices=[bar]
+    )
 
     proj = ProjectModel(servers=[serv0])
-    assert device_instance_exists(proj, 'fooDevice')
-    assert not device_instance_exists(proj, 'barDevice')
+    assert device_instance_exists(proj, "fooDevice")
+    assert not device_instance_exists(proj, "barDevice")
     proj.servers.append(serv1)
-    assert device_instance_exists(proj, 'barDevice')
-    assert not device_instance_exists(proj, 'blahDevice')
-    assert device_instance_exists(proj, ('barDevice', 'blahDevice'))
+    assert device_instance_exists(proj, "barDevice")
+    assert not device_instance_exists(proj, "blahDevice")
+    assert device_instance_exists(proj, ("barDevice", "blahDevice"))
 
-    dev0 = DeviceConfigurationModel(class_id='BazClass')
-    blah = DeviceInstanceModel(class_id='BazClass', instance_id='blahDevice',
-                               configs=[dev0])
-    serv0 = DeviceServerModel(server_id='blahServer', host='serverserverBlah',
-                              devices=[blah])
+    dev0 = DeviceConfigurationModel(class_id="BazClass")
+    blah = DeviceInstanceModel(
+        class_id="BazClass", instance_id="blahDevice", configs=[dev0]
+    )
+    serv0 = DeviceServerModel(
+        server_id="blahServer", host="serverserverBlah", devices=[blah]
+    )
     sub_proj = ProjectModel(servers=[serv0])
     proj.subprojects.append(sub_proj)
-    assert device_instance_exists(sub_proj, 'blahDevice')
-    assert device_instance_exists(proj, 'blahDevice')
+    assert device_instance_exists(sub_proj, "blahDevice")
+    assert device_instance_exists(proj, "blahDevice")
 
 
 def test_device_config_exists():
-    dev0 = DeviceConfigurationModel(class_id='BazClass')
-    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              configs=[dev0])
-    serv0 = DeviceServerModel(server_id='fooServer', host='serverserverFoo',
-                              devices=[foo])
-    dev1 = DeviceConfigurationModel(class_id='QuxClass',
-                                    simple_name='new-conf1')
-    bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                              configs=[dev1])
-    serv1 = DeviceServerModel(server_id='barServer', host='serverserverFoo',
-                              devices=[bar])
+    dev0 = DeviceConfigurationModel(class_id="BazClass")
+    foo = DeviceInstanceModel(
+        class_id="BazClass", instance_id="fooDevice", configs=[dev0]
+    )
+    serv0 = DeviceServerModel(
+        server_id="fooServer", host="serverserverFoo", devices=[foo]
+    )
+    dev1 = DeviceConfigurationModel(
+        class_id="QuxClass", simple_name="new-conf1"
+    )
+    bar = DeviceInstanceModel(
+        class_id="QuxClass", instance_id="barDevice", configs=[dev1]
+    )
+    serv1 = DeviceServerModel(
+        server_id="barServer", host="serverserverFoo", devices=[bar]
+    )
 
     proj = ProjectModel(servers=[serv0])
-    assert device_config_exists(proj, foo.instance_id, 'default')
-    assert not device_config_exists(proj, foo.instance_id, 'new-conf1')
+    assert device_config_exists(proj, foo.instance_id, "default")
+    assert not device_config_exists(proj, foo.instance_id, "new-conf1")
     proj.servers.append(serv1)
-    assert not device_config_exists(proj, bar.instance_id, 'new-conf2')
-    assert device_config_exists(proj, foo.instance_id,
-                                ('default', 'new-conf1'))
+    assert not device_config_exists(proj, bar.instance_id, "new-conf2")
+    assert device_config_exists(
+        proj, foo.instance_id, ("default", "new-conf1")
+    )
 
-    dev0 = DeviceConfigurationModel(class_id='BazClass',
-                                    simple_name='new-conf2')
-    blah = DeviceInstanceModel(class_id='BazClass', instance_id='blahDevice',
-                               configs=[dev0])
-    serv0 = DeviceServerModel(server_id='blahServer', host='serverserverBlah',
-                              devices=[blah])
+    dev0 = DeviceConfigurationModel(
+        class_id="BazClass", simple_name="new-conf2"
+    )
+    blah = DeviceInstanceModel(
+        class_id="BazClass", instance_id="blahDevice", configs=[dev0]
+    )
+    serv0 = DeviceServerModel(
+        server_id="blahServer", host="serverserverBlah", devices=[blah]
+    )
     sub_proj = ProjectModel(servers=[serv0])
     proj.subprojects.append(sub_proj)
-    assert device_config_exists(sub_proj, blah.instance_id, 'new-conf2')
-    assert device_config_exists(proj, blah.instance_id, 'new-conf2')
+    assert device_config_exists(sub_proj, blah.instance_id, "new-conf2")
+    assert device_config_exists(proj, blah.instance_id, "new-conf2")
 
 
 def test_device_server_exists():
-    dev0 = DeviceConfigurationModel(class_id='BazClass')
-    foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              configs=[dev0])
-    serv0 = DeviceServerModel(server_id='fooServer', host='serverserverFoo',
-                              devices=[foo])
-    dev1 = DeviceConfigurationModel(class_id='QuxClass',
-                                    simple_name='new-conf1')
-    bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                              configs=[dev1])
-    serv1 = DeviceServerModel(server_id='barServer', host='serverserverFoo',
-                              devices=[bar])
+    dev0 = DeviceConfigurationModel(class_id="BazClass")
+    foo = DeviceInstanceModel(
+        class_id="BazClass", instance_id="fooDevice", configs=[dev0]
+    )
+    serv0 = DeviceServerModel(
+        server_id="fooServer", host="serverserverFoo", devices=[foo]
+    )
+    dev1 = DeviceConfigurationModel(
+        class_id="QuxClass", simple_name="new-conf1"
+    )
+    bar = DeviceInstanceModel(
+        class_id="QuxClass", instance_id="barDevice", configs=[dev1]
+    )
+    serv1 = DeviceServerModel(
+        server_id="barServer", host="serverserverFoo", devices=[bar]
+    )
 
     proj = ProjectModel(servers=[serv0])
     assert device_server_exists(proj, foo.server_id)
@@ -162,8 +182,8 @@ def test_device_server_exists():
 
 
 def test_macro_exists():
-    foo = MacroModel(simple_name='fooMacro')
-    bar = MacroModel(simple_name='barMacro')
+    foo = MacroModel(simple_name="fooMacro")
+    bar = MacroModel(simple_name="barMacro")
     proj = ProjectModel(macros=[foo])
     assert macro_exists(proj, foo.simple_name)
     assert not macro_exists(proj, bar.simple_name)

@@ -2,7 +2,7 @@ import sys
 import types
 
 
-def create_module(name, *symbols, docstring=''):
+def create_module(name, *symbols, docstring=""):
     """Create a module, fill it with symbols, and "import" it into the system
     module namespace.
 
@@ -15,7 +15,7 @@ def create_module(name, *symbols, docstring=''):
         sym_name = sym.__name__
         if isinstance(sym, types.ModuleType):
             # watch out for module objects!
-            sym_name = sym_name.split('.')[-1]
+            sym_name = sym_name.split(".")[-1]
         setattr(mod, sym_name, sym)
 
     sys.modules[name] = mod
