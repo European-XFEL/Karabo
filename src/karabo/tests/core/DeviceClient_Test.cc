@@ -21,7 +21,7 @@
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
-#define KRB_TEST_MAX_TIMEOUT 5
+#define KRB_TEST_MAX_TIMEOUT 10 // not aware of a failure with 5 here, but in other tests
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DeviceClient_Test);
 
@@ -32,7 +32,7 @@ using karabo::xms::InputChannel;
 using karabo::xms::SignalSlotable;
 
 
-const int maxIterWait = 1000;
+const int maxIterWait = 2000;
 const int sleepPerIter = 5;
 
 template <class Container>
@@ -345,6 +345,7 @@ void DeviceClient_Test::testMonitorChannel() {
         if (dataCounter == 3) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
+    // Failed in https://git.xfel.eu/Karabo/Framework/-/jobs/289683 with maxIterWait = 1000 and sleepPerIter = 5
     CPPUNIT_ASSERT_EQUAL(3, dataCounter);
     CPPUNIT_ASSERT_EQUAL(1, sizeMsg);
 
