@@ -114,8 +114,7 @@ class LogWidget(QWidget):
                for log in logData]
 
         model = self.table_model
-        for log in new:
-            model.add(log)
+        model.add(new)
         # If we are full we will remove data
         difference = model.rowCount() - MAX_LOG_ENTRIES
         if difference > 0:
@@ -205,10 +204,12 @@ class TableLogModel(QAbstractTableModel):
         return None
 
     def add(self, data):
-        INDEX = 0
-        self.beginInsertRows(QModelIndex(), INDEX, INDEX)
-        self._data.insert(INDEX, data)
-        self.endInsertRows()
+        self.beginInsertRows(QModelIndex(), 0, len(data) - 1)
+        try:
+            for log in data:
+                self._data.insert(0, log)
+        finally:
+            self.endInsertRows()
 
     def prune(self, index):
         self.beginResetModel()
