@@ -63,7 +63,9 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
     void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
     std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType, bool useInvalidInfluxUrl = false,
-                                                        bool useInvalidDbName = false);
+                                                        bool useInvalidDbName = false,
+                                                        unsigned int maxPerDevicePropLogRate = 5 * 1024,
+                                                        unsigned int propLogRatePeriod = 5);
 
     /**
      * Checks that slotGetPropertyHistory logging works when a
