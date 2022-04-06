@@ -58,7 +58,8 @@ def getdata(name, allowed_services):
         path = absolute("var", "service", name, "name")
         try:
             with open(path, "r") as fin:
-                karabo_name = fin.read()
+                # Remove possible trailing characters
+                karabo_name = fin.read().strip()
         except FileNotFoundError:
             # in case a `name` file is not generated, default to dir. name
             karabo_name = name
@@ -109,6 +110,7 @@ def server_up(server):
 
 class DaemonHandler(web.RequestHandler):
     """Rest interface to handle the control of the services via json"""
+
     def initialize(self, service_list=None, service_id=None, subscriber=None):
         self.subscriber = subscriber
         self.allowed = filter_services(service_id, service_list)
@@ -264,7 +266,7 @@ class Subscriber():
              })
         futs = [to_asyncio_future(
             self.client.fetch(uri, method="POST", body=body))
-                for uri in self.uris]
+            for uri in self.uris]
         await gather(*futs, return_exceptions=True)
 
 
