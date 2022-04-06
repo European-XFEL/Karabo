@@ -7,7 +7,7 @@ from traits.api import (
     Bool, Dict, HasStrictTraits, Instance, List, TraitDictEvent,
     TraitListEvent)
 
-_CONTAINER_EVENT_SUFFIX = '_items'
+_CONTAINER_EVENT_SUFFIX = "_items"
 _CONTAINER_EVENT_TYPES = (TraitDictEvent, TraitListEvent)
 _CONTAINER_TYPES = (Dict, List)
 
@@ -59,7 +59,7 @@ def set_initialized_flag(model, value=False):
 
 
 class BaseSavableModel(HasStrictTraits):
-    """ A base class for all things which can be serialized.
+    """A base class for all things which can be serialized.
 
     The key purpose of this class is to handle modification tracking in data
     models. A model is modified whenever one of its direct non-transient,
@@ -67,6 +67,7 @@ class BaseSavableModel(HasStrictTraits):
     Instance trait (or List/Dict of Instance) whose object(s) is/are also a
     BaseSavableModel and THAT object receives a modification.
     """
+
     # When True, the object contains unsaved data
     modified = Bool(False, transient=True)
 
@@ -74,7 +75,7 @@ class BaseSavableModel(HasStrictTraits):
     initialized = Bool(False, transient=True)
 
     def _anytrait_changed(self, name, old, new):
-        """ Listen for changes to all non-transient, non-property traits and
+        """Listen for changes to all non-transient, non-property traits and
         mark the object as modified accordingly.
         """
         if not self.traits_inited():
@@ -84,10 +85,11 @@ class BaseSavableModel(HasStrictTraits):
             return
 
         # Detect *_items changes
-        if (name.endswith(_CONTAINER_EVENT_SUFFIX) and
-                isinstance(new, _CONTAINER_EVENT_TYPES)):
+        if name.endswith(_CONTAINER_EVENT_SUFFIX) and isinstance(
+            new, _CONTAINER_EVENT_TYPES
+        ):
             # Change name to the actual trait name
-            name = name[:-len(_CONTAINER_EVENT_SUFFIX)]
+            name = name[: -len(_CONTAINER_EVENT_SUFFIX)]
 
         # copyable_trait_names() returns all the trait names which contain
         # data which should be persisted (or copied when making a deep copy).
@@ -96,8 +98,7 @@ class BaseSavableModel(HasStrictTraits):
             self._manage_container_item_listeners(name, old, new)
 
     def _child_modification(self, modified):
-        """Called when a child BaseSavableModel is modified
-        """
+        """Called when a child BaseSavableModel is modified"""
         # Flip self.modified to True if modified is True, but don't reset
         # self.modified if modified is False.
         self.modified = self.modified or modified
@@ -130,15 +131,15 @@ class BaseSavableModel(HasStrictTraits):
             removed = old or []
 
         for child in removed:
-            child.on_trait_change(self._child_modification, 'modified',
-                                  remove=True)
+            child.on_trait_change(
+                self._child_modification, "modified", remove=True
+            )
         for child in added:
-            child.on_trait_change(self._child_modification, 'modified')
+            child.on_trait_change(self._child_modification, "modified")
 
 
 def _is_savable_instance(trait):
-    """Is some trait object an Instance(BaseSavableModel) trait?
-    """
+    """Is some trait object an Instance(BaseSavableModel) trait?"""
     if not isinstance(trait.trait_type, Instance):
         return False
     inner_type = trait.trait_type.klass

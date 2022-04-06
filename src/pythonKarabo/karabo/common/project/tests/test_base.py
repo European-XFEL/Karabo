@@ -20,7 +20,7 @@ class TestBase(TestCase):
         uuid.UUID(model.uuid)
 
         with self.assertRaises(ValueError):
-            model.uuid = 'foo'
+            model.uuid = "foo"
 
     def test_modified_flag(self):
         model = BaseProjectObjectModel(initialized=True)

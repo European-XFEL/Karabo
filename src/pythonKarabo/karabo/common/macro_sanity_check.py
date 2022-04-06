@@ -2,8 +2,7 @@ import ast
 
 
 def validate_macro(code):
-    """Validate a macro source code several use cases
-    """
+    """Validate a macro source code several use cases"""
     # Get ast.AST object for code first
     tree = compile(code, "MacroSanityCheck", "exec", ast.PyCF_ONLY_AST)
     ret = []
@@ -16,8 +15,9 @@ def validate_macro(code):
     # - register is a function of a `Configurable` to register descriptors
     # - cancel is the native cancel function of a macro
     # - clear_namespace is the gui binding clear command
-    lines = _has_methods(tree, "update", "clear_namespace", "register",
-                         "cancel")
+    lines = _has_methods(
+        tree, "update", "clear_namespace", "register", "cancel"
+    )
     if lines:
         ret.extend(lines)
 
@@ -53,22 +53,32 @@ def _has_imports(tree, module, func):
         This function requires a valid definition of alias names in
         ``as_names``.
         """
-        if (isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
-                and isinstance(node.value.func, ast.Attribute)
-                and isinstance(node.value.func.value, ast.Name)):
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Attribute)
+            and isinstance(node.value.func.value, ast.Name)
+        ):
             for alias in as_names:
-                if (node.value.func.value.id == alias
-                        and node.value.func.attr == func):
+                if (
+                    node.value.func.value.id == alias
+                    and node.value.func.attr == func
+                ):
                     return "Found {}.{} in line {}".format(
-                        alias, func, node.lineno)
+                        alias, func, node.lineno
+                    )
 
     def _is_module_call(node, module, func):
         """Check if the module function is called within the code"""
-        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                and isinstance(node.func.value, ast.Name)):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+        ):
             if node.func.value.id == module and node.func.attr == func:
                 return "Found {}.{} in line {}".format(
-                    module, func, node.lineno)
+                    module, func, node.lineno
+                )
         return None
 
     def _is_imported(node, module, func):
@@ -78,12 +88,14 @@ def _has_imports(tree, module, func):
                 for alias in node.names:
                     if alias.name == func:
                         return "Found {}.{} in line {}".format(
-                            module, func, node.lineno)
+                            module, func, node.lineno
+                        )
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name == "{}.{}".format(module, func):
                     return "Found {}.{} in line {}".format(
-                        module, func, node.lineno)
+                        module, func, node.lineno
+                    )
         return None
 
     as_names = _retrieve_alias(tree, module)
@@ -108,8 +120,10 @@ def _has_methods(tree, *methods):
         if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
             for method in methods:
                 if node.name == method:
-                    reports.append("Found forbidden method `{}` in "
-                                   "line {}".format(method, node.lineno))
+                    reports.append(
+                        "Found forbidden method `{}` in "
+                        "line {}".format(method, node.lineno)
+                    )
     return reports
 
 
@@ -125,12 +139,16 @@ def _has_base_exceptions(tree):
                 " that cannot be stopped"
             )
             if node.type is None:
-                reports.append(f"Found `except:` clause in line {node.lineno}:"
-                               " {explanation}")
+                reports.append(
+                    f"Found `except:` clause in line {node.lineno}:"
+                    " {explanation}"
+                )
             elif node.type.id == "BaseException":
                 # catch the `except BaseException:`
                 # XXX: the CancelledError is dangerous as well,
                 # but we chose to allow it here
-                reports.append(f"Found `except {node.type.id}:`"
-                               f" clause in line {node.lineno}: {explanation}")
+                reports.append(
+                    f"Found `except {node.type.id}:`"
+                    f" clause in line {node.lineno}: {explanation}"
+                )
     return reports

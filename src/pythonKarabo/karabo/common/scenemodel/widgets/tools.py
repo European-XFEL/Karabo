@@ -20,8 +20,9 @@ def convert_from_svg_image(href):
     and returns the format and byte data.
     """
     try:
-        matches = re.search(r"^data:image/(svg|png|jpg|jpeg);base64,(.+)",
-                            href)
+        matches = re.search(
+            r"^data:image/(svg|png|jpg|jpeg);base64,(.+)", href
+        )
         if not matches or len(matches.groups()) != 2:
             return "svg", b""
         data = base64.b64decode(matches.group(2))

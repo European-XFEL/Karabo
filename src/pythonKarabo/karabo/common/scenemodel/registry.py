@@ -8,7 +8,7 @@ from traits.api import (
 from .const import NS_KARABO, SCENE_FILE_VERSION, UNKNOWN_WIDGET_CLASS
 
 _scene_writers = {}
-RegistryEntry = namedtuple("RegistryEntry", ['function', 'version'])
+RegistryEntry = namedtuple("RegistryEntry", ["function", "version"])
 
 
 class ReaderEntry(HasStrictTraits):
@@ -30,11 +30,13 @@ class ReaderEntry(HasStrictTraits):
 
     def get_function(self, version):
         """Usually there is only one function for a reader. If it's not the
-           case, we look up with the version. If no version exists, we default
-           to the latest."""
-        return (self.single_function
-                or self.functions.get(version)
-                or self.latest_function)
+        case, we look up with the version. If no version exists, we default
+        to the latest."""
+        return (
+            self.single_function
+            or self.functions.get(version)
+            or self.latest_function
+        )
 
 
 class ReaderRegistry(HasStrictTraits):
@@ -54,7 +56,7 @@ class ReaderRegistry(HasStrictTraits):
     def read(self, element):
         klass = self._fetch_klass(element)
         reader = self._fetch_reader(name=klass, version=self.version)
-        assert reader is not None, 'Reader not found for {}!'.format(element)
+        assert reader is not None, "Reader not found for {}!".format(element)
 
         sig = signature(reader)
         # XXX: Backward compatibility with GUI extensions. Old readers have
@@ -82,7 +84,7 @@ class ReaderRegistry(HasStrictTraits):
         return self.defs.get(id_)
 
     def _fetch_klass(self, element):
-        for kind in ('widget', 'class'):
+        for kind in ("widget", "class"):
             klass = element.get(NS_KARABO + kind)
             if klass is not None:
                 if klass in self.entries:
@@ -93,7 +95,7 @@ class ReaderRegistry(HasStrictTraits):
         if element.tag in self.entries:
             return element.tag
         # Allow for a default reader
-        return '*'
+        return "*"
 
     def _fetch_reader(self, name, version):
         return self.entries[name].get_function(version)
@@ -109,7 +111,7 @@ class WriterRegistry(HasStrictTraits):
     def write(self, model, parent):
         klass = model.__class__
         writer = self.entries.get(klass)
-        assert writer is not None, 'Writer not found for {}!'.format(klass)
+        assert writer is not None, "Writer not found for {}!".format(klass)
 
         sig = signature(writer)
         # XXX: Backward compatibility with GUI extensions. Old writers have
@@ -138,7 +140,7 @@ def set_reader_registry_version(version=SCENE_FILE_VERSION):
 
 def read_element(element):
     """Read an XML element with the entries from the global scene reader
-    registry. """
+    registry."""
     global _reader_registry
     return _reader_registry.read(element)
 
@@ -150,10 +152,10 @@ def write_element(model, parent):
 
 def add_temporary_defs(defs):
     """For every scene opening, the SVG defs are temporarily added in the
-       registry. These can be then used by the readers with `find_def`.
+    registry. These can be then used by the readers with `find_def`.
 
-       This is very useful for SVG elements with defs such as a
-       line with a marker def (arrow)"""
+    This is very useful for SVG elements with defs such as a
+    line with a marker def (arrow)"""
     global _reader_registry
     _reader_registry.add_defs(defs)
 
@@ -164,27 +166,29 @@ def find_def(id_):
 
 
 class register_scene_reader(object):
-    """ Decorator for reader functions.
-    """
-    def __init__(self, objname, xmltag='', version=SCENE_FILE_VERSION):
+    """Decorator for reader functions."""
+
+    def __init__(self, objname, xmltag="", version=SCENE_FILE_VERSION):
         self.objname = objname
         self.xmltag = xmltag
         self.version = version
 
     def __call__(self, func):
         global _reader_registry
-        _reader_registry.register(name=self.objname, func=func,
-                                  version=self.version)
+        _reader_registry.register(
+            name=self.objname, func=func, version=self.version
+        )
         if self.xmltag:
-            _reader_registry.register(name=self.xmltag, func=func,
-                                      version=self.version)
+            _reader_registry.register(
+                name=self.xmltag, func=func, version=self.version
+            )
 
         return func
 
 
 class register_scene_writer(object):
-    """ Decorator for writer functions
-    """
+    """Decorator for writer functions"""
+
     def __init__(self, objclass):
         self.objclass = objclass
 

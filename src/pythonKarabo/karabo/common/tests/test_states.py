@@ -6,8 +6,10 @@ from karabo.common.api import State, StateSignifier
 class States_TestCase(unittest.TestCase):
     def test_states_signifier_default(self):
         s = [State.DISABLED, State.ON, State.STOPPED]
-        signifier = StateSignifier(staticMoreSignificant=State.PASSIVE,
-                                   changingMoreSignificant=State.DECREASING)
+        signifier = StateSignifier(
+            staticMoreSignificant=State.PASSIVE,
+            changingMoreSignificant=State.DECREASING,
+        )
         self.assertIs(signifier.returnMostSignificant(s), State.STOPPED)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
@@ -36,8 +38,10 @@ class States_TestCase(unittest.TestCase):
 
     def test_states_signifier_active_decreasing(self):
         s = [State.DISABLED, State.ON, State.STOPPED]
-        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
-                                   changingMoreSignificant=State.DECREASING)
+        signifier = StateSignifier(
+            staticMoreSignificant=State.ACTIVE,
+            changingMoreSignificant=State.DECREASING,
+        )
         self.assertIs(signifier.returnMostSignificant(s), State.ON)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
@@ -66,8 +70,10 @@ class States_TestCase(unittest.TestCase):
 
     def test_states_signifier_passive_increasing(self):
         s = [State.DISABLED, State.ON, State.STOPPED]
-        signifier = StateSignifier(staticMoreSignificant=State.PASSIVE,
-                                   changingMoreSignificant=State.INCREASING)
+        signifier = StateSignifier(
+            staticMoreSignificant=State.PASSIVE,
+            changingMoreSignificant=State.INCREASING,
+        )
         self.assertIs(signifier.returnMostSignificant(s), State.STOPPED)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
@@ -96,8 +102,10 @@ class States_TestCase(unittest.TestCase):
 
     def test_states_signifier_active_increasing(self):
         s = [State.DISABLED, State.ON, State.STOPPED]
-        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
-                                   changingMoreSignificant=State.INCREASING)
+        signifier = StateSignifier(
+            staticMoreSignificant=State.ACTIVE,
+            changingMoreSignificant=State.INCREASING,
+        )
         self.assertIs(signifier.returnMostSignificant(s), State.ON)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
@@ -126,8 +134,10 @@ class States_TestCase(unittest.TestCase):
 
     def test_acquiring_changing_on_passive(self):
         s = [State.ON, State.OFF]
-        signifier = StateSignifier(staticMoreSignificant=State.PASSIVE,
-                                   changingMoreSignificant=State.DECREASING)
+        signifier = StateSignifier(
+            staticMoreSignificant=State.PASSIVE,
+            changingMoreSignificant=State.DECREASING,
+        )
         self.assertIs(signifier.returnMostSignificant(s), State.OFF)
         s.append(State.ACQUIRING)
         self.assertIs(signifier.returnMostSignificant(s), State.ACQUIRING)
@@ -136,8 +146,10 @@ class States_TestCase(unittest.TestCase):
 
     def test_acquiring_changing_on_active(self):
         s = [State.ON, State.OFF]
-        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
-                                   changingMoreSignificant=State.DECREASING)
+        signifier = StateSignifier(
+            staticMoreSignificant=State.ACTIVE,
+            changingMoreSignificant=State.DECREASING,
+        )
         self.assertIs(signifier.returnMostSignificant(s), State.ON)
         s.append(State.ACQUIRING)
         self.assertIs(signifier.returnMostSignificant(s), State.ACQUIRING)
@@ -146,8 +158,15 @@ class States_TestCase(unittest.TestCase):
 
     def test_states_signifier_non_def_list(self):
         trumpList = [State.INTERLOCKED, State.UNKNOWN, State.KNOWN]
-        s = [State.DISABLED, State.CHANGING, State.ON,
-             State.RUNNING, State.PAUSED, State.UNKNOWN, State.INTERLOCKED]
+        s = [
+            State.DISABLED,
+            State.CHANGING,
+            State.ON,
+            State.RUNNING,
+            State.PAUSED,
+            State.UNKNOWN,
+            State.INTERLOCKED,
+        ]
         signifier = StateSignifier(trumplist=trumpList)
         self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
 
@@ -201,5 +220,5 @@ class States_TestCase(unittest.TestCase):
                 self.fail("all states must reduce to None")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -12,8 +12,8 @@ from .registry import (
 
 
 class LineModel(BaseShapeObjectData):
-    """ A line which can appear in a scene
-    """
+    """A line which can appear in a scene"""
+
     # The X-coordinate of the first point
     x1 = Float
     # The Y-coordinate of the first point
@@ -45,8 +45,8 @@ class LineModel(BaseShapeObjectData):
 
 
 class PathModel(BaseShapeObjectData):
-    """ An arbitrary path object for scenes
-    """
+    """An arbitrary path object for scenes"""
+
     # A blob of SVG data...
     svg_data = String
 
@@ -71,14 +71,14 @@ class ArrowModel(LineModel):
     marker = Instance(MarkerModel)
 
     def _marker_default(self):
-        arrow_path = PathModel(svg_data=ARROW_HEAD["path"],
-                               fill=self.stroke)
+        arrow_path = PathModel(svg_data=ARROW_HEAD["path"], fill=self.stroke)
         return MarkerModel(
             markerHeight=ARROW_HEAD["height"],
             markerWidth=ARROW_HEAD["width"],
             refX=ARROW_HEAD["ref_x"],
             refY=ARROW_HEAD["ref_y"],
-            children=[arrow_path])
+            children=[arrow_path],
+        )
 
     def _stroke_changed(self, stroke):
         arrow_path = self.marker.children[0]
@@ -86,8 +86,8 @@ class ArrowModel(LineModel):
 
 
 class RectangleModel(BaseShapeObjectData):
-    """ A rectangle which can appear in a scene
-    """
+    """A rectangle which can appear in a scene"""
+
     # The X-coordinate of the rect
     x = Float
     # The Y-coordinate of the rect
@@ -100,6 +100,7 @@ class RectangleModel(BaseShapeObjectData):
 
 class XMLDefsModel(XMLElementModel):
     """<defs>"""
+
     # The element attributes aside from 'id'
     attributes = Dict
     # The element's children
@@ -107,10 +108,14 @@ class XMLDefsModel(XMLElementModel):
 
 
 def _convert_measurement(measure):
-    """ Convert a measurement value to pixels
-    """
+    """Convert a measurement value to pixels"""
     scales = {
-        "px": 1, "pt": 1.25, "pc": 15, "mm": 3.543307, "cm": 35.43307, "in": 90
+        "px": 1,
+        "pt": 1.25,
+        "pc": 15,
+        "mm": 3.543307,
+        "cm": 35.43307,
+        "in": 90,
     }
     scale = scales.get(measure[-2:])
     if scale is not None:
@@ -120,91 +125,100 @@ def _convert_measurement(measure):
 
 
 def _read_base_shape_data(element):
-    """ Read the style attributes common to all "shape" elements
-    """
+    """Read the style attributes common to all "shape" elements"""
     # Break up a style attribute if that's where the style info is at.
     d = element.attrib.copy()
-    if 'style' in d:
-        d.update(s.split(':') for s in d['style'].split(';'))
+    if "style" in d:
+        d.update(s.split(":") for s in d["style"].split(";"))
 
     # Read all the trait values
     converters = {
-        'stroke': str, 'stroke-opacity': float, 'stroke-linecap': str,
-        'stroke-dashoffset': _convert_measurement,
-        'stroke-width': _convert_measurement, 'stroke-dasharray': str,
-        'stroke-style': int, 'stroke-linejoin': str,
-        'stroke-miterlimit': float, 'fill': str, 'fill-opacity': float,
+        "stroke": str,
+        "stroke-opacity": float,
+        "stroke-linecap": str,
+        "stroke-dashoffset": _convert_measurement,
+        "stroke-width": _convert_measurement,
+        "stroke-dasharray": str,
+        "stroke-style": int,
+        "stroke-linejoin": str,
+        "stroke-miterlimit": float,
+        "fill": str,
+        "fill-opacity": float,
     }
-    traits = {name.replace('-', '_'): converters[name](d[name])
-              for name in converters if name in d}
+    traits = {
+        name.replace("-", "_"): converters[name](d[name])
+        for name in converters
+        if name in d
+    }
 
     # Replicate behavior of old (pre-1.5) scene view
-    if 'fill' not in traits:
-        traits['fill'] = 'black'
+    if "fill" not in traits:
+        traits["fill"] = "black"
 
     # Convert the dash array to a proper value
-    if 'stroke_dasharray' in traits:
-        dashes = traits.pop('stroke_dasharray')
-        if dashes.lower() != 'none':
-            dashlist = dashes.split(',') if ',' in dashes else dashes.split()
-            penwidth = traits.get('stroke_width', 1.0)
-            traits['stroke_dasharray'] = [_convert_measurement(d) / penwidth
-                                          for d in dashlist]
+    if "stroke_dasharray" in traits:
+        dashes = traits.pop("stroke_dasharray")
+        if dashes.lower() != "none":
+            dashlist = dashes.split(",") if "," in dashes else dashes.split()
+            penwidth = traits.get("stroke_width", 1.0)
+            traits["stroke_dasharray"] = [
+                _convert_measurement(d) / penwidth for d in dashlist
+            ]
 
     return traits
 
 
 def _write_base_shape_data(model, element):
-    """ Write out the style attributes common to all "shape" elements
-    """
+    """Write out the style attributes common to all "shape" elements"""
     write = element.set
 
-    write('stroke', model.stroke)
-    if model.stroke != 'none':
-        write('stroke-opacity', str(model.stroke_opacity))
-        write('stroke-linecap', model.stroke_linecap)
-        write('stroke-dashoffset', str(model.stroke_dashoffset))
-        write('stroke-width', str(model.stroke_width))
-        write('stroke-dasharray', " ".join(str(x * model.stroke_width)
-                                           for x in model.stroke_dasharray))
-        write('stroke-style', str(model.stroke_style))
-        write('stroke-linejoin', model.stroke_linejoin)
-        write('stroke-miterlimit', str(model.stroke_miterlimit))
+    write("stroke", model.stroke)
+    if model.stroke != "none":
+        write("stroke-opacity", str(model.stroke_opacity))
+        write("stroke-linecap", model.stroke_linecap)
+        write("stroke-dashoffset", str(model.stroke_dashoffset))
+        write("stroke-width", str(model.stroke_width))
+        write(
+            "stroke-dasharray",
+            " ".join(
+                str(x * model.stroke_width) for x in model.stroke_dasharray
+            ),
+        )
+        write("stroke-style", str(model.stroke_style))
+        write("stroke-linejoin", model.stroke_linejoin)
+        write("stroke-miterlimit", str(model.stroke_miterlimit))
 
-    write('fill', model.fill)
-    if model.fill != 'none':
-        write('fill-opacity', str(model.fill_opacity))
+    write("fill", model.fill)
+    if model.fill != "none":
+        write("fill-opacity", str(model.fill_opacity))
 
 
-@register_scene_reader('Line', xmltag=NS_SVG + 'line', version=1)
+@register_scene_reader("Line", xmltag=NS_SVG + "line", version=1)
 def __line_reader(element):
-    """ A reader for Line objects in Version 1 scenes
-    """
+    """A reader for Line objects in Version 1 scenes"""
     # # Check if it is an arrow:
     if "marker-end" in element.attrib:
         return __arrow_reader(element)
 
     traits = _read_base_shape_data(element)
-    traits.update(get_numbers(('x1', 'y1', 'x2', 'y2'), element))
+    traits.update(get_numbers(("x1", "y1", "x2", "y2"), element))
     return LineModel(**traits)
 
 
 @register_scene_writer(LineModel)
 def __line_writer(model, parent):
-    """ A writer for LineModel objects
-    """
-    element = SubElement(parent, NS_SVG + 'line')
+    """A writer for LineModel objects"""
+    element = SubElement(parent, NS_SVG + "line")
     _write_base_shape_data(model, element)
-    set_numbers(('x1', 'y1', 'x2', 'y2'), model, element)
+    set_numbers(("x1", "y1", "x2", "y2"), model, element)
     return element
 
 
 # Don't register because this is called from the line reader
 def __arrow_reader(element):
-    """ A reader for Line objects in Version 1 scenes
-    """
+    """A reader for Line objects in Version 1 scenes"""
     traits = _read_base_shape_data(element)
-    traits.update(get_numbers(('x1', 'y1', 'x2', 'y2'), element))
+    traits.update(get_numbers(("x1", "y1", "x2", "y2"), element))
 
     # Retrieve marker model from the registry
     id_ = get_defs_id(element.get("marker-end"))
@@ -215,15 +229,14 @@ def __arrow_reader(element):
 
 @register_scene_writer(ArrowModel)
 def __arrow_writer(model, parent):
-    """ A writer for LineModel objects
-    """
+    """A writer for LineModel objects"""
     # Write the defs model first, it's the same level as the arrow
-    defs_element = SubElement(parent, NS_SVG + 'defs')
+    defs_element = SubElement(parent, NS_SVG + "defs")
     write_defs_model(XMLDefsModel(children=[model.marker]), defs_element)
 
-    element = SubElement(parent, NS_SVG + 'line')
+    element = SubElement(parent, NS_SVG + "line")
     _write_base_shape_data(model, element)
-    set_numbers(('x1', 'y1', 'x2', 'y2'), model, element)
+    set_numbers(("x1", "y1", "x2", "y2"), model, element)
 
     # Write marker-end attribute
     element.set("marker-end", "url(#{})".format(model.marker.id))
@@ -231,39 +244,48 @@ def __arrow_writer(model, parent):
     return element
 
 
-@register_scene_reader('Marker', xmltag=NS_SVG + 'marker', version=1)
+@register_scene_reader("Marker", xmltag=NS_SVG + "marker", version=1)
 def __marker_reader(element):
-    """ A reader for Markers"""
+    """A reader for Markers"""
 
     d = element.attrib.copy()
 
     # Read all the trait values
     converters = {
-        'id': str,
-        'markerHeight': float,
-        'markerUnits': str,
-        'markerWidth': float,
-        'preserveAspectRatio': str,
-        'orient': convert_number_or_string,
-        'refX': convert_number_or_string,
-        'refY': convert_number_or_string}
+        "id": str,
+        "markerHeight": float,
+        "markerUnits": str,
+        "markerWidth": float,
+        "preserveAspectRatio": str,
+        "orient": convert_number_or_string,
+        "refX": convert_number_or_string,
+        "refY": convert_number_or_string,
+    }
 
-    traits = {name: converters[name](d[name])
-              for name in converters if name in d}
+    traits = {
+        name: converters[name](d[name]) for name in converters if name in d
+    }
 
     # Add children definitions
-    traits['children'] = [read_element(el) for el in element]
+    traits["children"] = [read_element(el) for el in element]
 
     return MarkerModel(**traits)
 
 
 @register_scene_writer(MarkerModel)
 def __marker_writer(model, parent):
-    """ A writer for PathModel objects
-    """
-    element = SubElement(parent, NS_SVG + 'marker')
-    attribs = ('id', 'markerHeight', 'markerUnits', 'markerWidth',
-               'preserveAspectRatio', 'orient', 'refX', 'refY')
+    """A writer for PathModel objects"""
+    element = SubElement(parent, NS_SVG + "marker")
+    attribs = (
+        "id",
+        "markerHeight",
+        "markerUnits",
+        "markerWidth",
+        "preserveAspectRatio",
+        "orient",
+        "refX",
+        "refY",
+    )
 
     # Write attributes
     for attr, value in model.trait_get(attribs).items():
@@ -276,50 +298,46 @@ def __marker_writer(model, parent):
     return element
 
 
-@register_scene_reader('Path', xmltag=NS_SVG + 'path', version=1)
+@register_scene_reader("Path", xmltag=NS_SVG + "path", version=1)
 def __path_reader(element):
-    """ A reader for Path objects in Version 1 scenes
-    """
+    """A reader for Path objects in Version 1 scenes"""
     traits = _read_base_shape_data(element)
-    traits['svg_data'] = element.get('d')
+    traits["svg_data"] = element.get("d")
     return PathModel(**traits)
 
 
 @register_scene_writer(PathModel)
 def __path_writer(model, parent):
-    """ A writer for PathModel objects
-    """
-    element = SubElement(parent, NS_SVG + 'path')
+    """A writer for PathModel objects"""
+    element = SubElement(parent, NS_SVG + "path")
     _write_base_shape_data(model, element)
-    element.set('d', model.svg_data)
+    element.set("d", model.svg_data)
     return element
 
 
-@register_scene_reader('Rectangle', xmltag=NS_SVG + 'rect', version=1)
+@register_scene_reader("Rectangle", xmltag=NS_SVG + "rect", version=1)
 def __rectangle_reader(element):
-    """ A reader for Rectangle objects in Version 1 scenes
-    """
+    """A reader for Rectangle objects in Version 1 scenes"""
     traits = _read_base_shape_data(element)
-    traits.update(get_numbers(('x', 'y', 'width', 'height'), element))
+    traits.update(get_numbers(("x", "y", "width", "height"), element))
     return RectangleModel(**traits)
 
 
 @register_scene_writer(RectangleModel)
 def __rectangle_writer(model, parent):
-    """ A writer for RectangleModel objects
-    """
-    element = SubElement(parent, NS_SVG + 'rect')
+    """A writer for RectangleModel objects"""
+    element = SubElement(parent, NS_SVG + "rect")
     _write_base_shape_data(model, element)
-    set_numbers(('x', 'y', 'width', 'height'), model, element)
+    set_numbers(("x", "y", "width", "height"), model, element)
     return element
 
 
-@register_scene_reader('XML Defs', xmltag=NS_SVG + 'defs')
+@register_scene_reader("XML Defs", xmltag=NS_SVG + "defs")
 def __xml_defs_reader(element):
     return XMLDefsModel(
-        id=element.get('id', ''),
-        attributes={k: v for k, v in element.attrib.items() if k != 'id'},
-        children=[read_element(el) for el in element]
+        id=element.get("id", ""),
+        attributes={k: v for k, v in element.attrib.items() if k != "id"},
+        children=[read_element(el) for el in element],
     )
 
 
@@ -327,7 +345,7 @@ def __xml_defs_reader(element):
 def write_defs_model(model, element):
     assert isinstance(model, XMLDefsModel)
     if model.id:
-        element.set('id', model.id)
+        element.set("id", model.id)
     for name, value in model.attributes.items():
         element.set(name, value)
     for child in model.children:
