@@ -16,8 +16,8 @@ from .device import DeviceInstanceModel
 
 
 class DeviceServerModel(BaseProjectObjectModel):
-    """ An object representing a device server
-    """
+    """An object representing a device server"""
+
     # The device ID of the instantiated server
     server_id = String
     # The host on which the server runs
@@ -41,8 +41,7 @@ class DeviceServerModel(BaseProjectObjectModel):
             dev.server_id = new
 
     def _update_device_server_ids(self, added):
-        """Manage the `server_id` trait of device instances as they arrive.
-        """
+        """Manage the `server_id` trait of device instances as they arrive."""
         for dev in added:
             dev.server_id = self.server_id
 
@@ -54,25 +53,27 @@ class DeviceServerModel(BaseProjectObjectModel):
 
 
 def read_device_server(io_obj):
-    """ A reader for device server models
-    """
+    """A reader for device server models"""
+
     def _read_device(element, server_id):
         traits = {
-            'uuid': element.get('uuid'),
-            'server_id': server_id,  # Actually transient!
-            'initialized': False
+            "uuid": element.get("uuid"),
+            "server_id": server_id,  # Actually transient!
+            "initialized": False,
         }
         return DeviceInstanceModel(**traits)
 
     document = parse(io_obj)
     root = document.getroot()
-    server_id = root.get('server_id', '')
-    devices = [_read_device(e, server_id)
-               for e in root.findall(PROJECT_DB_TYPE_DEVICE_INSTANCE)]
+    server_id = root.get("server_id", "")
+    devices = [
+        _read_device(e, server_id)
+        for e in root.findall(PROJECT_DB_TYPE_DEVICE_INSTANCE)
+    ]
     traits = {
-        'server_id': server_id,
-        'host': root.get('host', ''),
-        'devices': devices,
+        "server_id": server_id,
+        "host": root.get("host", ""),
+        "devices": devices,
     }
     model = DeviceServerModel(**traits)
     model.initialized = True  # Do this last to avoid triggering `modified`
@@ -80,18 +81,18 @@ def read_device_server(io_obj):
 
 
 def write_device_server(model):
-    """ A writer for device server models
-    """
+    """A writer for device server models"""
+
     def _write_device(obj, parent):
         element = SubElement(parent, PROJECT_DB_TYPE_DEVICE_INSTANCE)
-        element.set('uuid', obj.uuid)
+        element.set("uuid", obj.uuid)
         # XXX: Protect old code. Remove this when domains are implemented.
-        element.set('revision', '0')
+        element.set("revision", "0")
 
     root = Element(PROJECT_DB_TYPE_DEVICE_SERVER)
-    root.set('server_id', model.server_id)
-    root.set('host', model.host)
+    root.set("server_id", model.server_id)
+    root.set("host", model.host)
     for device in model.devices:
         _write_device(device, root)
 
-    return tostring(root, encoding='unicode')
+    return tostring(root, encoding="unicode")

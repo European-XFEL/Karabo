@@ -13,8 +13,8 @@ from .server import DeviceServerModel
 
 
 class ProjectModel(BaseProjectObjectModel):
-    """ An object representing a Karabo project.
-    """
+    """An object representing a Karabo project."""
+
     # All the things that can be part of a project...
     macros = List(Instance(MacroModel))
     scenes = List(Instance(SceneModel))
@@ -25,4 +25,4 @@ class ProjectModel(BaseProjectObjectModel):
 
 
 # This is outside the class because `ProjectModel` isn't available until here
-ProjectModel.add_class_trait('subprojects', List(Instance(ProjectModel)))
+ProjectModel.add_class_trait("subprojects", List(Instance(ProjectModel)))

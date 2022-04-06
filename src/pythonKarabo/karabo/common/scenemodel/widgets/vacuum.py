@@ -18,16 +18,26 @@ from karabo.common.scenemodel.registry import (
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 VACUUM_WIDGETS = (
-    'AgilentIonWidget', 'CryoCoolerWidget', 'HydraulicValveWidget',
-    'LampWidget', 'MaxiGaugeWidget', 'MembranePumpWidget',
-    'MotorWidget', 'PressureGaugeWidget', 'PressureSwitchWidget',
-    'RightAngleValveWidget', 'ShutOffValveWidget', 'TemperatureProbeWidget',
-    'TurboPumpWidget', 'ValveWidget'
+    "AgilentIonWidget",
+    "CryoCoolerWidget",
+    "HydraulicValveWidget",
+    "LampWidget",
+    "MaxiGaugeWidget",
+    "MembranePumpWidget",
+    "MotorWidget",
+    "PressureGaugeWidget",
+    "PressureSwitchWidget",
+    "RightAngleValveWidget",
+    "ShutOffValveWidget",
+    "TemperatureProbeWidget",
+    "TurboPumpWidget",
+    "ValveWidget",
 )
 
 
 class VacuumWidgetModel(BaseWidgetObjectData):
     """A model for VacuumWidget objects."""
+
     # The actual type of the widget
     klass = Enum(*VACUUM_WIDGETS)
 
@@ -40,8 +50,8 @@ def _vacuum_widget_writer(model, parent):
 
 
 def _build_vacuum_widget_readers():
-    """ Build readers for all the possible vacuum widgets.
-    """
+    """Build readers for all the possible vacuum widgets."""
+
     def _reader(element):
         traits = read_empty_display_editable_widget(element)
         return VacuumWidgetModel(**traits)
