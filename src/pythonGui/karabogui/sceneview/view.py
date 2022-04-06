@@ -208,7 +208,7 @@ class SceneView(QWidget):
             item = self.controller_at_position(event.pos())
             if item is not None and not item.is_editable:
                 proxy = item.widget_controller.proxy
-                model = get_generic_scene(proxy)
+                model = get_generic_scene(proxy, include_images=False)
                 if model is not None:
                     window = SceneTargetWindow.Dialog
                     broadcast_event(KaraboEvent.ShowUnattachedSceneView,
