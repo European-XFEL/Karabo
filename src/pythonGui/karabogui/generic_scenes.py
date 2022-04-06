@@ -9,10 +9,12 @@ from karabogui.binding.types import (
     NodeBinding, PipelineOutputBinding, VectorNumberBinding)
 
 
-def get_generic_scene(proxy):
+def get_generic_scene(proxy, include_images=True):
     """Return a generic scene for a proxy binding
 
     :param proxy: property proxy
+    :param include_images: If image widget are included in the retrieval.
+                           The default is `True`
     """
     binding = getattr(proxy, 'binding', None)
     if binding is None:
@@ -35,7 +37,7 @@ def get_generic_scene(proxy):
         path = proxy.path
         return get_vector_scene(instance_id, path)
 
-    elif isinstance(binding, PipelineOutputBinding):
+    elif include_images and isinstance(binding, PipelineOutputBinding):
 
         def _iter_binding(node, base=''):
             namespace = node.value
@@ -51,7 +53,7 @@ def get_generic_scene(proxy):
             if isinstance(node, ImageBinding):
                 return get_image_scene(instance_id, path)
 
-    elif isinstance(binding, ImageBinding):
+    elif include_images and isinstance(binding, ImageBinding):
         return get_image_scene(instance_id, proxy.path)
 
     return None
