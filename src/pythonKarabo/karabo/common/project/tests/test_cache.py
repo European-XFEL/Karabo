@@ -8,9 +8,9 @@ from karabo.common.project.api import get_user_cache
 def test_get_user_cache():
     cache = get_user_cache()
 
-    if sys.platform.startswith('win'):
-        expected = op.join(os.environ['APPDATA'], 'karabo', 'project_db_cache')
+    if sys.platform.startswith("win"):
+        expected = op.join(os.environ["APPDATA"], "karabo", "project_db_cache")
     else:
-        expected = op.expanduser(op.join('~', '.karabo', 'project_db_cache'))
+        expected = op.expanduser(op.join("~", ".karabo", "project_db_cache"))
 
     assert expected == cache.dirpath

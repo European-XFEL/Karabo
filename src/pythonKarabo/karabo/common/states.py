@@ -116,6 +116,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
 
     Each state knows its parent state by the attribute `parent`.
     """
+
     UNKNOWN = None
     KNOWN = None
     INIT = None
@@ -228,9 +229,12 @@ class StateSignifier:
         default) or INCREASING should be more significant.
     """
 
-    def __init__(self, trumplist=(),
-                 staticMoreSignificant=State.PASSIVE,
-                 changingMoreSignificant=State.DECREASING):
+    def __init__(
+        self,
+        trumplist=(),
+        staticMoreSignificant=State.PASSIVE,
+        changingMoreSignificant=State.DECREASING,
+    ):
         def key(state):
             while state is not None:
                 ret = trumpdict.get(state)
@@ -243,7 +247,8 @@ class StateSignifier:
             (State.PASSIVE, State.INCREASING): self.passive_increase,
             (State.ACTIVE, State.INCREASING): self.active_increase,
             (State.PASSIVE, State.DECREASING): self.passive_decrease,
-            (State.ACTIVE, State.DECREASING): self.active_decrease}
+            (State.ACTIVE, State.DECREASING): self.active_decrease,
+        }
         defaultlist = defaults[staticMoreSignificant, changingMoreSignificant]
         trumpdict = {s: i for i, s in enumerate(defaultlist)}
         states = list(State.__members__.values())
@@ -257,12 +262,34 @@ class StateSignifier:
         return min(iterable, key=self.trumpdict.get)
 
     passive_decrease = []
-    active_decrease = [State.INTERLOCKED, State.CHANGING, State.PAUSED,
-                       State.RUNNING, State.NORMAL, State.ACTIVE,
-                       State.PASSIVE, State.DISABLED]
-    passive_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
-                        State.DECREASING, State.PAUSED, State.RUNNING,
-                        State.STATIC, State.DISABLED]
-    active_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
-                       State.DECREASING, State.PAUSED, State.RUNNING,
-                       State.ACTIVE, State.PASSIVE, State.DISABLED]
+    active_decrease = [
+        State.INTERLOCKED,
+        State.CHANGING,
+        State.PAUSED,
+        State.RUNNING,
+        State.NORMAL,
+        State.ACTIVE,
+        State.PASSIVE,
+        State.DISABLED,
+    ]
+    passive_increase = [
+        State.INTERLOCKED,
+        State.INCREASING,
+        State.CHANGING,
+        State.DECREASING,
+        State.PAUSED,
+        State.RUNNING,
+        State.STATIC,
+        State.DISABLED,
+    ]
+    active_increase = [
+        State.INTERLOCKED,
+        State.INCREASING,
+        State.CHANGING,
+        State.DECREASING,
+        State.PAUSED,
+        State.RUNNING,
+        State.ACTIVE,
+        State.PASSIVE,
+        State.DISABLED,
+    ]

@@ -24,14 +24,15 @@ def read_lazy_object(domain, uuid, db_iface, reader, existing=None):
     :return: a project model object
     """
     requested_objs = set()
-    return _read_lazy_object_r(domain, uuid, db_iface, reader, existing,
-                               requested_objs)
+    return _read_lazy_object_r(
+        domain, uuid, db_iface, reader, existing, requested_objs
+    )
 
 
-def _read_lazy_object_r(domain, uuid, db_iface, reader, existing,
-                        requested_objs):
-    """Recursive version of read_lazy_object
-    """
+def _read_lazy_object_r(
+    domain, uuid, db_iface, reader, existing, requested_objs
+):
+    """Recursive version of read_lazy_object"""
     collected = []
 
     def visitor(child):
@@ -50,8 +51,9 @@ def _read_lazy_object_r(domain, uuid, db_iface, reader, existing,
         for child in collected:
             if child is obj:
                 continue
-            _read_lazy_object_r(domain, child.uuid, db_iface, reader, child,
-                                requested_objs)
+            _read_lazy_object_r(
+                domain, child.uuid, db_iface, reader, child, requested_objs
+            )
 
         return obj
     else:

@@ -6,7 +6,7 @@ from ..registry import (
 XML_DATA = "<xml><testy /></xml>"
 
 
-@register_scene_reader('Root', xmltag='xml', version=1)
+@register_scene_reader("Root", xmltag="xml", version=1)
 def _root_reader(element):
     ret = None
     for child in element:
@@ -14,25 +14,25 @@ def _root_reader(element):
     return ret
 
 
-@register_scene_reader('Test', xmltag='testy', version=3)
+@register_scene_reader("Test", xmltag="testy", version=3)
 def _version_three_testy_reader(element):
     return 3
 
 
-@register_scene_reader('Test', xmltag='testy', version=1)
+@register_scene_reader("Test", xmltag="testy", version=1)
 def _version_one_testy_reader(element):
     return 1
 
 
-@register_scene_reader('Test', xmltag='testy', version=2)
+@register_scene_reader("Test", xmltag="testy", version=2)
 def _version_two_testy_reader(element):
     return 2
 
 
-@register_scene_reader('First', xmltag='first', version=1)
-@register_scene_reader('Second', xmltag='second', version=1)
+@register_scene_reader("First", xmltag="first", version=1)
+@register_scene_reader("Second", xmltag="second", version=1)
 def _doubly_registered_reader(element):
-    return element.get('type')
+    return element.get("type")
 
 
 def test_get_reader_simple():
@@ -57,9 +57,9 @@ def test_multiple_decorators():
     root = fromstring("""<second type="Second"/>""")
     set_reader_registry_version(version=1)
     result = read_element(root)
-    assert result == 'Second'
+    assert result == "Second"
 
     root = fromstring("""<first type="First"/>""")
     set_reader_registry_version(version=1)
     result = read_element(root)
-    assert result == 'First'
+    assert result == "First"

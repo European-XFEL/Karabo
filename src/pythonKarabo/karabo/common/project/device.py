@@ -14,9 +14,10 @@ from .device_config import DeviceConfigurationModel
 
 
 class DeviceInstanceModel(BaseProjectObjectModel):
-    """ A device instance of a device class with an active configuration on a
+    """A device instance of a device class with an active configuration on a
     server
     """
+
     # The class ID of the device
     class_id = String
     # The device ID of the instantiated device
@@ -30,7 +31,7 @@ class DeviceInstanceModel(BaseProjectObjectModel):
     active_config_ref = String
 
     def select_config(self, uuid):
-        """ Find the `DeviceConfigurationModel` matching the given `uuid`
+        """Find the `DeviceConfigurationModel` matching the given `uuid`
 
         :param uuid: A UUID as a String
         :return: The `DeviceConfigurationModel` object, if found, else `None`
@@ -43,22 +44,21 @@ class DeviceInstanceModel(BaseProjectObjectModel):
         """When ``class_id`` changes, make sure the configurations are
         compatible.
         """
-        configs = [cnf for cnf in self.configs
-                   if cnf.class_id == self.class_id]
+        configs = [
+            cnf for cnf in self.configs if cnf.class_id == self.class_id
+        ]
         self.configs = configs
 
     def _configs_changed(self, name, old, new):
-        """ Traits notification handler for list assignment
-        """
+        """Traits notification handler for list assignment"""
         self._update_config_listeners(old, new)
 
     def _configs_items_changed(self, event):
-        """ Traits notification handler for list inserts/removes
-        """
+        """Traits notification handler for list inserts/removes"""
         self._update_config_listeners(event.removed, event.added)
 
     def _update_config_listeners(self, removed, added):
-        """ Whenever the List of ``configs`` is changed, the listeners need to
+        """Whenever the List of ``configs`` is changed, the listeners need to
         be updated
 
         :param removed: A list of removed ``DeviceConfigurationModel`` objects
@@ -68,10 +68,11 @@ class DeviceInstanceModel(BaseProjectObjectModel):
         for config_model in removed:
             # Handle our active configuration leaving!
             if config_model.uuid == active_ref:
-                self.active_config_ref = ''
+                self.active_config_ref = ""
             # Remove listeners for ``uuid`` change event
-            config_model.on_trait_change(self._update_active_uuid,
-                                         'uuid', remove=True)
+            config_model.on_trait_change(
+                self._update_active_uuid, "uuid", remove=True
+            )
 
         rejects = []
         for config_model in added:
@@ -79,8 +80,7 @@ class DeviceInstanceModel(BaseProjectObjectModel):
             if self.class_id and config_model.class_id != self.class_id:
                 rejects.append(config_model)
             # Add listeners for ``uuid`` change event
-            config_model.on_trait_change(self._update_active_uuid,
-                                         'uuid')
+            config_model.on_trait_change(self._update_active_uuid, "uuid")
         if rejects:
             # Remove the incompatible configurations!
             # This is recursive, but in each call `added` will be empty
@@ -91,7 +91,7 @@ class DeviceInstanceModel(BaseProjectObjectModel):
             raise ValueError("Incompatible configuration(s) added to device!")
 
     def _update_active_uuid(self, obj, name, old, new):
-        """ Whenever the UUID of a ``DeviceConfigurationModel`` is changed
+        """Whenever the UUID of a ``DeviceConfigurationModel`` is changed
         the ``active_config_ref`` might refer to it and needs to be updated
 
         :param obj: The ``DeviceInstanceModel`` object on which ``uuid`` was
@@ -105,7 +105,7 @@ class DeviceInstanceModel(BaseProjectObjectModel):
 
     @on_trait_change("configs:initialized")
     def _update_configs_initialized(self):
-        """ Make sure to set ``initialized`` flag only to ``True`` whenever all
+        """Make sure to set ``initialized`` flag only to ``True`` whenever all
         ``DeviceConfigurationModel`` items are initialized
         """
         for conf in self.configs:
@@ -116,47 +116,56 @@ class DeviceInstanceModel(BaseProjectObjectModel):
 
 
 def read_device(io_obj):
-    """ A reader for device models
-    """
+    """A reader for device models"""
+
     def _read_device_config(element):
         traits = {
-            'class_id': element.get('class_id', ''),
-            'uuid': element.get('uuid'),
-            'initialized': False
+            "class_id": element.get("class_id", ""),
+            "uuid": element.get("uuid"),
+            "initialized": False,
         }
         return DeviceConfigurationModel(**traits)
 
     document = parse(io_obj)
     root = document.getroot()
-    configs = [_read_device_config(e)
-               for e in root.findall(PROJECT_DB_TYPE_DEVICE_CONFIG)]
-    traits = {'configs': configs}
+    configs = [
+        _read_device_config(e)
+        for e in root.findall(PROJECT_DB_TYPE_DEVICE_CONFIG)
+    ]
+    traits = {"configs": configs}
     # Read traits in a way which is resilient against missing data
-    trait_names = {'class_id': 'class_id',
-                   'instance_id': 'instance_id',
-                   'active_config_ref': 'active_uuid'}
-    traits.update({key: root.get(xmlkey) for key, xmlkey in trait_names.items()
-                   if root.get(xmlkey) is not None})
+    trait_names = {
+        "class_id": "class_id",
+        "instance_id": "instance_id",
+        "active_config_ref": "active_uuid",
+    }
+    traits.update(
+        {
+            key: root.get(xmlkey)
+            for key, xmlkey in trait_names.items()
+            if root.get(xmlkey) is not None
+        }
+    )
     return DeviceInstanceModel(**traits)
 
 
 def write_device(model):
-    """ A writer for device models
-    """
+    """A writer for device models"""
+
     def _write_config(obj, parent):
         element = SubElement(parent, PROJECT_DB_TYPE_DEVICE_CONFIG)
-        element.set('class_id', obj.class_id)
-        element.set('uuid', obj.uuid)
+        element.set("class_id", obj.class_id)
+        element.set("uuid", obj.uuid)
         # XXX: Protect old code. Remove this when domains are implemented.
-        element.set('revision', '0')
+        element.set("revision", "0")
 
     root = Element(PROJECT_DB_TYPE_DEVICE_INSTANCE)
-    root.set('class_id', model.class_id)
-    root.set('instance_id', model.instance_id)
-    root.set('active_uuid', model.active_config_ref)
+    root.set("class_id", model.class_id)
+    root.set("instance_id", model.instance_id)
+    root.set("active_uuid", model.active_config_ref)
     # XXX: Protect old code. Remove this when domains are implemented.
-    root.set('active_rev', '0')
+    root.set("active_rev", "0")
     for config in model.configs:
         _write_config(config, root)
 
-    return tostring(root, encoding='unicode')
+    return tostring(root, encoding="unicode")
