@@ -36,6 +36,8 @@ namespace karabo {
               m_archive(),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
               m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
+              m_maxPropLogRateBytesSec(input.get<unsigned int>("maxPropLogRateBytesSec")),
+              m_propLogRatePeriod(input.get<unsigned int>("propLogRatePeriod")),
               m_secsOfLogOfRejectedData(0ull),
               m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {}
 
@@ -67,6 +69,37 @@ namespace karabo {
         }
 
 
+        unsigned int InfluxDeviceData::newPropLogRate(const std::string& propPath, Epochstamp currentStamp,
+                                                      std::size_t currentSize) {
+            Epochstamp now;
+            if (currentStamp - now > 120.0) { // Epochstamp "-" operator returns the interval length (always positive).
+                // This assumes that the backend can stand some seconds, the maximum interval in the test above, of a
+                // too high rate. If the difference goes beyond that maximum tolerance, the current system time is used.
+                currentStamp = now;
+            }
+
+            // Advances the log rating window using the current timestamp reference
+            std::deque<LoggingRecord>& propLogRecs = m_propLogRecs[propPath];
+            const TimeDuration ratingWinDuration{m_propLogRatePeriod, 0ull};
+            while (!propLogRecs.empty() && (currentStamp - propLogRecs.back().epoch >= ratingWinDuration)) {
+                propLogRecs.pop_back();
+            }
+
+            std::size_t bytesWritten = currentSize;
+            for (const LoggingRecord& rec : m_propLogRecs[propPath]) {
+                bytesWritten += rec.sizeChars;
+            }
+
+            unsigned int newRate = bytesWritten / m_propLogRatePeriod;
+            if (newRate <= m_maxPropLogRateBytesSec) {
+                // There's room for logging the data; keep track of the saving.
+                propLogRecs.push_front(LoggingRecord(currentSize, currentStamp));
+            }
+
+            return newRate;
+        }
+
+
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
             m_dbClientWrite->connectDbIfDisconnected();
 
@@ -86,6 +119,7 @@ namespace karabo {
             getPathsForConfiguration(configuration, m_currentSchema, paths);
             std::stringstream query;
             Timestamp lineTimestamp(Epochstamp(0ull, 0ull), Trainstamp(0ull));
+
             for (size_t i = 0; i < paths.size(); ++i) {
                 const std::string& path = paths[i];
 
@@ -225,12 +259,21 @@ namespace karabo {
                 if (vectorSize > m_maxVectorSize) {
                     rejectedPaths.push_back(std::make_pair(path, "vector length " + toString(vectorSize)));
                     // All stamp manipulations done, we just skip logValue
+                    continue;
+                }
+
+                const Epochstamp& currentStamp = lineTimestamp.getEpochstamp();
+                const unsigned int newRate = newPropLogRate(path, currentStamp, value.size());
+                if (newRate <= m_maxPropLogRateBytesSec) {
+                    logValue(query, deviceId, path, value, leafNode.getType(),
+                             isFinite); // isFinite matters only for FLOAT/DOUBLE
                 } else {
-                    // isFinite matters only for FLOAT/DOUBLE
-                    logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
+                    rejectedPaths.push_back(std::make_pair(
+                          deviceId, "Update of property '" + path + "' timestamped at '" + currentStamp.toIso8601Ext() +
+                                          "' would reach a logging rate of '" + toString(newRate / 1024) +
+                                          " Kb/sec'."));
                 }
             }
-
             terminateQuery(query, lineTimestamp, rejectedPaths);
         }
 
@@ -546,6 +589,30 @@ namespace karabo {
                   .defaultValue(4 * 2700) // four times number of bunches per EuXFEL train
                   .init()
                   .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("maxPerDevicePropLogRate")
+                  .displayedName("Max per Device Property Logging Rate (Kb/sec)")
+                  .description(
+                        "Entries for a device property that would move its logging rate above this threshold are "
+                        "skipped.")
+                  .assignmentOptional()
+                  .defaultValue(5 * 1024) // 5 Mb/s
+                  .minInc(1)              // 1 Kb/s
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("propLogRatePeriod")
+                  .displayedName("Interval for logging rate calc")
+                  .description("Interval for calculating per device property logging rate")
+                  .assignmentOptional()
+                  .defaultValue(5)
+                  .minInc(1)
+                  .maxInc(60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
         }
 
 
@@ -636,6 +703,8 @@ namespace karabo {
             config.set("dbClientWritePointer", m_clientWrite);
             config.set("maxTimeAdvance", get<int>("maxTimeAdvance"));
             config.set("maxVectorSize", get<unsigned int>("maxVectorSize"));
+            config.set("maxPropLogRateBytesSec", get<unsigned int>("maxPerDevicePropLogRate") * 1024);
+            config.set("propLogRatePeriod", get<unsigned int>("propLogRatePeriod"));
             DeviceData::Pointer deviceData =
                   Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;

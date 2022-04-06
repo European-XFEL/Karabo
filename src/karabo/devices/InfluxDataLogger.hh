@@ -5,11 +5,14 @@
 #ifndef KARABO_DEVICES_INFLUXDATALOGGER_HH
 #define KARABO_DEVICES_INFLUXDATALOGGER_HH
 
+#include <deque>
 #include <fstream>
 #include <karabo/net/HttpResponse.hh>
 #include <karabo/net/InfluxDbClient.hh>
+#include <unordered_map>
 
 #include "DataLogger.hh"
+#include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Version.hh"
 
 namespace karabo {
@@ -22,11 +25,22 @@ namespace karabo {
         typedef boost::function<void()> AsyncHandler;
         typedef boost::function<void(const karabo::net::HttpResponse&)> InfluxResponseHandler;
 
+
         struct InfluxDeviceData : public karabo::devices::DeviceData {
             KARABO_CLASSINFO(InfluxDeviceData, "InfluxDataLoggerDeviceData", "2.6")
 
-            InfluxDeviceData(const karabo::util::Hash& input);
+            /**
+             * @brief The size, in characters, and the epoch seconds of a device log entry saved to Influx.
+             *
+             * Used for calculating the logging rate of the device.
+             */
+            struct LoggingRecord {
+                std::size_t sizeChars;
+                karabo::util::Epochstamp epoch;
+                LoggingRecord(std::size_t sz, karabo::util::Epochstamp t) : sizeChars(sz), epoch(t) {}
+            };
 
+            InfluxDeviceData(const karabo::util::Hash& input);
             virtual ~InfluxDeviceData();
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
@@ -52,6 +66,20 @@ namespace karabo {
 
             void stopLogging() override;
 
+            /**
+             * @brief Calculates what the value of the property logging rate of the device will be when the logging of
+             * a value with a given size and a given timestamp is taken into account.
+             *
+             * @param prop The path of the property whose current logging rate will be evaluated.
+             * @param currentStamp The current property update timestamp.
+             * @param currentSize The size for the new data to be logged - this is used along with the other
+             * records in the current log rating window to calculate the new value for the property logging rate.
+             * @return The updated value of the property logging rate, in bytes/sec, taking the logging of the
+             * value into account.
+             */
+            unsigned int newPropLogRate(const std::string& propPath, karabo::util::Epochstamp currentStamp,
+                                        std::size_t currentSize);
+
             karabo::net::InfluxDbClient::Pointer m_dbClientRead;
             karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
@@ -60,7 +88,12 @@ namespace karabo {
             std::vector<char> m_archive;
             int m_maxTimeAdvance;
             size_t m_maxVectorSize;
+            unsigned int m_maxPropLogRateBytesSec; // in bytes/sec.
+            unsigned int m_propLogRatePeriod;
             unsigned long long m_secsOfLogOfRejectedData; // epoch seconds of last logging of rejected data
+
+            // Logging records for the device property in the current log rating window.
+            std::unordered_map<std::string, std::deque<LoggingRecord>> m_propLogRecs;
 
             karabo::util::Timestamp m_loggingStartStamp;
         };
