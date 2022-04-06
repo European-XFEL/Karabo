@@ -31,7 +31,7 @@ def fast_exit_visitor(item):
 def test_walk_traits_object():
     obj = Walkable(
         children_list=[Simple(value=10), Simple(value=10), Simple(value=10)],
-        children_non_walkable=[70, 42, 90]
+        children_non_walkable=[70, 42, 90],
     )
 
     global sum

@@ -9,19 +9,22 @@ def assert_base_traits(model):
     assert model.y == 0
     assert model.width == 100
     assert model.height == 100
-    assert model.keys == ['device_id.prop']
+    assert model.keys == ["device_id.prop"]
 
 
 def base_widget_traits():
     traits = {
-        'keys': ['device_id.prop'],
-        'x': 0, 'y': 0, 'height': 100, 'width': 100
+        "keys": ["device_id.prop"],
+        "x": 0,
+        "y": 0,
+        "height": 100,
+        "width": 100,
     }
     return traits
 
 
 def single_model_from_data(svg_data):
-    """ Given some SVG data, read a scene model from it an return the first
+    """Given some SVG data, read a scene model from it an return the first
     child.
     """
     with temp_xml_file(svg_data) as fn:
@@ -29,7 +32,7 @@ def single_model_from_data(svg_data):
 
 
 def single_model_round_trip(model):
-    """ Given a scene model object, write it to XML and read it back to examine
+    """Given a scene model object, write it to XML and read it back to examine
     the round trip reader/writer behavior.
     """
     scene = SceneModel(children=[model])

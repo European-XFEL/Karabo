@@ -14,18 +14,21 @@ SERVER_XML = """
     <device_instance uuid='{uuids[0]}' />
     <device_instance uuid='{uuids[1]}' />
 </device_server>
-""".format(uuids=UUIDS)
+""".format(
+    uuids=UUIDS
+)
 INCOMPLETE_XML = """
 <device_server uuid='{uuids[0]}'>
     <device_instance uuid='{uuids[1]}' />
 </device_server>
-""".format(uuids=UUIDS)
+""".format(
+    uuids=UUIDS
+)
 
 
 class TestServer(TestCase):
     def setUp(self):
-        push_exception_handler(
-            lambda *args: None, reraise_exceptions=True)
+        push_exception_handler(lambda *args: None, reraise_exceptions=True)
 
     def tearDown(self):
         pop_exception_handler()
@@ -34,8 +37,8 @@ class TestServer(TestCase):
         with temp_xml_file(SERVER_XML) as fn:
             server = read_device_server(fn)
 
-        assert server.server_id == 'testServer'
-        assert server.host == 'serverserverFoo'
+        assert server.server_id == "testServer"
+        assert server.host == "serverserverFoo"
         assert len(server.devices) == 2
 
         dev0 = server.devices[0]
@@ -50,8 +53,8 @@ class TestServer(TestCase):
         with temp_xml_file(INCOMPLETE_XML) as fn:
             server = read_device_server(fn)
 
-        assert server.server_id == ''
-        assert server.host == ''
+        assert server.server_id == ""
+        assert server.host == ""
         assert len(server.devices) == 1
 
         dev0 = server.devices[0]
@@ -59,20 +62,26 @@ class TestServer(TestCase):
         assert not dev0.initialized
 
     def test_writing(self):
-        dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[2])
-        dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[2])
-        dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[2])
+        dev0 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[2])
+        dev1 = DeviceConfigurationModel(class_id="QuxClass", uuid=UUIDS[2])
+        dev2 = DeviceConfigurationModel(class_id="QuxClass", uuid=UUIDS[2])
         foo = DeviceInstanceModel(
-            class_id='BazClass', instance_id='fooDevice',
+            class_id="BazClass",
+            instance_id="fooDevice",
             configs=[dev0],
-            active_config_ref=UUIDS[2], uuid=UUIDS[0])
+            active_config_ref=UUIDS[2],
+            uuid=UUIDS[0],
+        )
         bar = DeviceInstanceModel(
-            class_id='QuxClass', instance_id='barDevice',
+            class_id="QuxClass",
+            instance_id="barDevice",
             configs=[dev1, dev2],
-            active_config_ref=UUIDS[2], uuid=UUIDS[1])
+            active_config_ref=UUIDS[2],
+            uuid=UUIDS[1],
+        )
         server = DeviceServerModel(
-            server_id='testServer', host='serverserverFoo',
-            devices=[foo, bar])
+            server_id="testServer", host="serverserverFoo", devices=[foo, bar]
+        )
 
         xml = write_device_server(server)
         assert xml_is_equal(SERVER_XML, xml)
@@ -85,23 +94,37 @@ class TestServer(TestCase):
         assert xml_is_equal(SERVER_XML, xml)
 
     def test_child_modification_tracking(self):
-        dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[2],
-                                        initialized=True)
-        dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[3],
-                                        initialized=True)
-        dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[4],
-                                        initialized=True)
-        foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                                  configs=[dev0],
-                                  active_config_ref=UUIDS[2], uuid=UUIDS[0],
-                                  initialized=True)
-        bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                                  configs=[dev1, dev2],
-                                  active_config_ref=UUIDS[3], uuid=UUIDS[1],
-                                  initialized=True)
+        dev0 = DeviceConfigurationModel(
+            class_id="BazClass", uuid=UUIDS[2], initialized=True
+        )
+        dev1 = DeviceConfigurationModel(
+            class_id="QuxClass", uuid=UUIDS[3], initialized=True
+        )
+        dev2 = DeviceConfigurationModel(
+            class_id="QuxClass", uuid=UUIDS[4], initialized=True
+        )
+        foo = DeviceInstanceModel(
+            class_id="BazClass",
+            instance_id="fooDevice",
+            configs=[dev0],
+            active_config_ref=UUIDS[2],
+            uuid=UUIDS[0],
+            initialized=True,
+        )
+        bar = DeviceInstanceModel(
+            class_id="QuxClass",
+            instance_id="barDevice",
+            configs=[dev1, dev2],
+            active_config_ref=UUIDS[3],
+            uuid=UUIDS[1],
+            initialized=True,
+        )
         server = DeviceServerModel(
-            server_id='testServer', host='serverserverFoo',
-            devices=[foo], initialized=True)
+            server_id="testServer",
+            host="serverserverFoo",
+            devices=[foo],
+            initialized=True,
+        )
         server.devices.append(bar)
 
         server.modified = foo.modified = False
@@ -116,69 +139,81 @@ class TestServer(TestCase):
         assert not server.modified
 
     def test_child_configuration_rejection(self):
-        dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
-        dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[2])
+        dev0 = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[1])
+        dev1 = DeviceConfigurationModel(class_id="QuxClass", uuid=UUIDS[2])
         inst = DeviceInstanceModel(
-            class_id='BazClass', instance_id='fooDevice',
+            class_id="BazClass",
+            instance_id="fooDevice",
             configs=[dev0],
-            active_config_ref=UUIDS[1], uuid=UUIDS[0])
+            active_config_ref=UUIDS[1],
+            uuid=UUIDS[0],
+        )
 
         with self.assertRaises(ValueError):
             inst.configs.append(dev1)
         assert len(inst.configs) == 1
 
-        inst.class_id = 'QuxClass'
+        inst.class_id = "QuxClass"
         assert len(inst.configs) == 0
-        assert inst.active_config_ref == ''
+        assert inst.active_config_ref == ""
 
         inst.configs.append(dev1)
         assert len(inst.configs) == 1
 
     def test_child_finding(self):
-        conf = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[2])
+        conf = DeviceConfigurationModel(class_id="BazClass", uuid=UUIDS[2])
         foo = DeviceInstanceModel(
-            class_id='BazClass', instance_id='fooDevice',
-            configs=[conf], active_config_ref=UUIDS[2],
-            uuid=UUIDS[0])
+            class_id="BazClass",
+            instance_id="fooDevice",
+            configs=[conf],
+            active_config_ref=UUIDS[2],
+            uuid=UUIDS[0],
+        )
         bar = DeviceInstanceModel(
-            class_id='BazClass', instance_id='barDevice',
-            configs=[conf], active_config_ref=UUIDS[2],
-            uuid=UUIDS[1])
+            class_id="BazClass",
+            instance_id="barDevice",
+            configs=[conf],
+            active_config_ref=UUIDS[2],
+            uuid=UUIDS[1],
+        )
         server = DeviceServerModel(
-            server_id='testServer', host='serverserverFoo',
-            devices=[foo, bar])
+            server_id="testServer", host="serverserverFoo", devices=[foo, bar]
+        )
 
-        found = server.get_device_instance('barDevice')
+        found = server.get_device_instance("barDevice")
         assert found is bar
 
-        not_found = server.get_device_instance('banana')
+        not_found = server.get_device_instance("banana")
         assert not_found is None
 
     def test_child_server_id_minding(self):
-        dev = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                                  initialized=True)
-        server = DeviceServerModel(server_id='testServer', host='machine',
-                                   devices=[dev])
+        dev = DeviceInstanceModel(
+            class_id="BazClass", instance_id="fooDevice", initialized=True
+        )
+        server = DeviceServerModel(
+            server_id="testServer", host="machine", devices=[dev]
+        )
 
         assert not dev.modified
         assert dev.server_id == server.server_id
 
-        server.server_id = 'anotherServer'
+        server.server_id = "anotherServer"
         assert not dev.modified
         assert dev.server_id == server.server_id
 
-        second = DeviceInstanceModel(class_id='klaus', instance_id='chuck',
-                                     initialized=True)
+        second = DeviceInstanceModel(
+            class_id="klaus", instance_id="chuck", initialized=True
+        )
         server.devices.append(second)
         assert not second.modified
         assert second.server_id == server.server_id
 
         server.devices = []
-        server.server_id = 'lastOne'
+        server.server_id = "lastOne"
         assert dev.server_id != server.server_id
         assert second.server_id != server.server_id
 
-        dev.server_id = second.server_id = 'garbage'
+        dev.server_id = second.server_id = "garbage"
         server.devices = [second, dev]
         assert dev.server_id == server.server_id
         assert second.server_id == server.server_id

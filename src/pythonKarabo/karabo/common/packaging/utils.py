@@ -1,12 +1,13 @@
 import re
 
-_BASE = r'\d+\.\d+\.\d+'
-_RELEASE = r'(a|b|rc)\d+'
-_DEV = r'\.dev\d+'
+_BASE = r"\d+\.\d+\.\d+"
+_RELEASE = r"(a|b|rc)\d+"
+_DEV = r"\.dev\d+"
 
-_BASE_VERSION_REGEX = re.compile('^({})({})?'.format(_BASE, _RELEASE))
-_FULL_VERSION_REGEX = re.compile('^({})({}({})?)?'.format(
-    _BASE, _RELEASE, _DEV))
+_BASE_VERSION_REGEX = re.compile("^({})({})?".format(_BASE, _RELEASE))
+_FULL_VERSION_REGEX = re.compile(
+    "^({})({}({})?)?".format(_BASE, _RELEASE, _DEV)
+)
 
 
 def _apply_regex(regex, version):
@@ -14,7 +15,7 @@ def _apply_regex(regex, version):
     if result:
         return result.group()
     else:
-        result = ''
+        result = ""
     return result
 
 
