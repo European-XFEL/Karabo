@@ -9,10 +9,10 @@ from .bases import BaseProjectObjectModel
 
 
 class MacroModel(BaseProjectObjectModel):
-    """ An object representing the data for a Karabo Python macro.
-    """
+    """An object representing the data for a Karabo Python macro."""
+
     # The instance ID of the running macro
-    instance_id = Property(String, depends_on=['simple_name', 'uuid'])
+    instance_id = Property(String, depends_on=["simple_name", "uuid"])
     # The instance names of all active macros
     instances = List(String, transient=True)
     # The actual macro source
@@ -24,16 +24,16 @@ class MacroModel(BaseProjectObjectModel):
 
 
 def read_macro(filename_or_fileobj):
-    """ Read a macro and return it.
-        ``filename_or_fileobj`` is either a string containing a filename, or a
-        file-like object which can be read from (eg- a StringIO instance).
-        If ``filename_or_fileobj`` is None, an empty MacroModel is returned.
+    """Read a macro and return it.
+    ``filename_or_fileobj`` is either a string containing a filename, or a
+    file-like object which can be read from (eg- a StringIO instance).
+    If ``filename_or_fileobj`` is None, an empty MacroModel is returned.
     """
     if filename_or_fileobj is None:
         return MacroModel()
 
-    if not hasattr(filename_or_fileobj, 'read'):
-        with open(filename_or_fileobj, 'r') as input:
+    if not hasattr(filename_or_fileobj, "read"):
+        with open(filename_or_fileobj, "r") as input:
             macro_code = input.read()
     else:
         macro_code = filename_or_fileobj.read()
@@ -44,6 +44,5 @@ def read_macro(filename_or_fileobj):
 
 
 def write_macro(macro):
-    """ Write MacroModel object `macro` to a string.
-    """
+    """Write MacroModel object `macro` to a string."""
     return macro.code

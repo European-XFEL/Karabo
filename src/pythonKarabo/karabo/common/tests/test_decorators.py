@@ -11,7 +11,7 @@ class Tests(TestCase):
             """Function to be validated!"""
             return True
 
-        success = test_func('wuff', 0, 20.0, 5)
+        success = test_func("wuff", 0, 20.0, 5)
         self.assertTrue(success)
 
         # test p1 as int
@@ -20,14 +20,14 @@ class Tests(TestCase):
 
         # test p4 as float
         with self.assertRaises(ValueError):
-            test_func('wuff', 0, 20.0, 5.0)
+            test_func("wuff", 0, 20.0, 5.0)
 
         # test p1 as bool
         with self.assertRaises(ValueError):
             test_func(True, 0, 20.0, 5)
 
         # booleans are also integers
-        test_func('wuff', 0, 20.0, True)
+        test_func("wuff", 0, 20.0, True)
 
         # test p1 as bool
         with self.assertRaises(ValueError):

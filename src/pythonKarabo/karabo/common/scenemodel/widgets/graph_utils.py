@@ -10,27 +10,29 @@ KARABO_NoROI = 0
 KARABO_RECT = 1
 KARABO_CROSSHAIR = 2
 
-KARABO_BASE_SAVABLE = ['x', 'y', 'width', 'height', 'keys', 'parent_component']
+KARABO_BASE_SAVABLE = ["x", "y", "width", "height", "keys", "parent_component"]
 
-AXES_SET = ['x_grid', 'y_grid', 'x_log', 'y_log', 'x_invert', 'y_invert']
-LABEL_UNITS = ['x_label', 'y_label', 'x_units', 'y_units']
-BASELINE = ['offset', 'step']
-VIEW_SET = ['background', 'title']
-RANGE_SET = ['x_min', 'x_max', 'y_min', 'y_max']
-TRANSFORM_SET = ['x_scale', 'y_scale', 'x_translate', 'y_translate']
+AXES_SET = ["x_grid", "y_grid", "x_log", "y_log", "x_invert", "y_invert"]
+LABEL_UNITS = ["x_label", "y_label", "x_units", "y_units"]
+BASELINE = ["offset", "step"]
+VIEW_SET = ["background", "title"]
+RANGE_SET = ["x_min", "x_max", "y_min", "y_max"]
+TRANSFORM_SET = ["x_scale", "y_scale", "x_translate", "y_translate"]
 
-KARABO_ROI_ITEMS = 'roi_items'
-KARABO_ROI_TYPE = 'roi_type'
+KARABO_ROI_ITEMS = "roi_items"
+KARABO_ROI_TYPE = "roi_type"
 
 
 class BaseROIData(BaseSavableModel):
     """The BaseROI Data Model being ``Savable`` and conering the ``type``"""
+
     roi_type = Int()
     name = String
 
 
 class CrossROIData(BaseROIData):
     """The CrossROIData Model for CrossHair markers"""
+
     x = Float()
     y = Float()
 
@@ -41,6 +43,7 @@ class CrossROIData(BaseROIData):
 
 class RectROIData(BaseROIData):
     """The RectROIData Model for rectangular regions"""
+
     x = Float()
     y = Float()
     w = Float()
@@ -54,14 +57,14 @@ class RectROIData(BaseROIData):
 def read_base_karabo_image_model(element):
     traits = read_base_widget_data(element)
 
-    traits['aux_plots'] = int(element.get(NS_KARABO + 'aux_plots', '0'))
-    traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
-    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
-    traits['roi_items'] = read_roi_info(element)
-    traits['aspect_ratio'] = int(element.get(NS_KARABO + 'aspect_ratio', 1))
+    traits["aux_plots"] = int(element.get(NS_KARABO + "aux_plots", "0"))
+    traits["colormap"] = element.get(NS_KARABO + "colormap", "viridis")
+    traits["roi_tool"] = int(element.get(NS_KARABO + "roi_tool", 0))
+    traits["roi_items"] = read_roi_info(element)
+    traits["aspect_ratio"] = int(element.get(NS_KARABO + "aspect_ratio", 1))
 
-    show_scale = element.get(NS_KARABO + 'show_scale', '1')
-    traits['show_scale'] = bool(int(show_scale))
+    show_scale = element.get(NS_KARABO + "show_scale", "1")
+    traits["show_scale"] = bool(int(show_scale))
 
     traits.update(read_transforms(element))
     traits.update(read_basic_label(element))
@@ -70,13 +73,13 @@ def read_base_karabo_image_model(element):
 
 
 def write_base_karabo_image_model(model, element):
-    element.set(NS_KARABO + 'colormap', model.colormap)
-    element.set(NS_KARABO + 'aux_plots', str(model.aux_plots))
-    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
-    element.set(NS_KARABO + 'aspect_ratio', str(model.aspect_ratio))
+    element.set(NS_KARABO + "colormap", model.colormap)
+    element.set(NS_KARABO + "aux_plots", str(model.aux_plots))
+    element.set(NS_KARABO + "roi_tool", str(model.roi_tool))
+    element.set(NS_KARABO + "aspect_ratio", str(model.aspect_ratio))
 
     show_scale = str(int(model.show_scale))
-    element.set(NS_KARABO + 'show_scale', show_scale)
+    element.set(NS_KARABO + "show_scale", show_scale)
 
     # Save ROI configuration
     write_roi_info(model, element)
@@ -89,21 +92,21 @@ def read_roi_info(element):
     roi_data = []
 
     for child_elem in element:
-        if child_elem.tag != NS_KARABO + 'roi':
+        if child_elem.tag != NS_KARABO + "roi":
             continue
 
-        roi_type = int(child_elem.get('roi_type', 0))
-        name = child_elem.get('name', '')
-        traits = {'roi_type': roi_type, 'name': name}
+        roi_type = int(child_elem.get("roi_type", 0))
+        name = child_elem.get("name", "")
+        traits = {"roi_type": roi_type, "name": name}
         if roi_type == 1:  # Rect:
-            traits['x'] = float(child_elem.get('x'))
-            traits['y'] = float(child_elem.get('y'))
-            traits['w'] = float(child_elem.get('w'))
-            traits['h'] = float(child_elem.get('h'))
+            traits["x"] = float(child_elem.get("x"))
+            traits["y"] = float(child_elem.get("y"))
+            traits["w"] = float(child_elem.get("w"))
+            traits["h"] = float(child_elem.get("h"))
             roi_data.append(RectROIData(**traits))
         elif roi_type == 2:  # Crosshair:
-            traits['x'] = float(child_elem.get('x'))
-            traits['y'] = float(child_elem.get('y'))
+            traits["x"] = float(child_elem.get("x"))
+            traits["y"] = float(child_elem.get("y"))
             roi_data.append(CrossROIData(**traits))
 
     return roi_data
@@ -117,7 +120,7 @@ def write_roi_info(model, element):
     ROI items that were drawn.
     """
     for roi in model.roi_items:
-        roi_element = SubElement(element, NS_KARABO + 'roi')
+        roi_element = SubElement(element, NS_KARABO + "roi")
         for attribute in roi.class_visible_traits():
             roi_element.set(attribute, str(getattr(roi, attribute)))
 
@@ -138,8 +141,10 @@ def write_transforms(model, element):
 
 
 def read_axes_set(element):
-    return {name: element.get(NS_KARABO + name, 'false').lower() == 'true'
-            for name in AXES_SET}
+    return {
+        name: element.get(NS_KARABO + name, "false").lower() == "true"
+        for name in AXES_SET
+    }
 
 
 def write_axes_set(model, element):
@@ -148,7 +153,7 @@ def write_axes_set(model, element):
 
 
 def read_basic_label(element):
-    return {name: element.get(NS_KARABO + name, '') for name in LABEL_UNITS}
+    return {name: element.get(NS_KARABO + name, "") for name in LABEL_UNITS}
 
 
 def write_basic_label(model, element):
@@ -158,8 +163,8 @@ def write_basic_label(model, element):
 
 def read_baseline(element):
     traits = {}
-    traits['offset'] = float(element.get(NS_KARABO + 'offset', 0.0))
-    traits['step'] = float(element.get(NS_KARABO + 'step', 1.0))
+    traits["offset"] = float(element.get(NS_KARABO + "offset", 0.0))
+    traits["step"] = float(element.get(NS_KARABO + "step", 1.0))
     return traits
 
 
@@ -170,31 +175,34 @@ def write_baseline(model, element):
 
 def read_view_set(element):
     traits = {}
-    traits['title'] = element.get(NS_KARABO + 'title', '')
-    traits['background'] = element.get(NS_KARABO + 'background', 'transparent')
+    traits["title"] = element.get(NS_KARABO + "title", "")
+    traits["background"] = element.get(NS_KARABO + "background", "transparent")
     return traits
 
 
 def write_view_set(model, element):
-    element.set(NS_KARABO + 'title', str(model.title))
-    element.set(NS_KARABO + 'background', str(model.background))
+    element.set(NS_KARABO + "title", str(model.title))
+    element.set(NS_KARABO + "background", str(model.background))
 
 
 def read_range_set(element):
-    traits = {name: float(element.get(NS_KARABO + name, '0.0'))
-              for name in RANGE_SET}
-    traits['x_autorange'] = element.get(
-        NS_KARABO + 'x_autorange', 'true').lower() == 'true'
-    traits['y_autorange'] = element.get(
-        NS_KARABO + 'y_autorange', 'true').lower() == 'true'
+    traits = {
+        name: float(element.get(NS_KARABO + name, "0.0")) for name in RANGE_SET
+    }
+    traits["x_autorange"] = (
+        element.get(NS_KARABO + "x_autorange", "true").lower() == "true"
+    )
+    traits["y_autorange"] = (
+        element.get(NS_KARABO + "y_autorange", "true").lower() == "true"
+    )
     return traits
 
 
 def write_range_set(model, element):
     for name in RANGE_SET:
         element.set(NS_KARABO + name, str(getattr(model, name)))
-    element.set(NS_KARABO + 'x_autorange', str(model.x_autorange))
-    element.set(NS_KARABO + 'y_autorange', str(model.y_autorange))
+    element.set(NS_KARABO + "x_autorange", str(model.x_autorange))
+    element.set(NS_KARABO + "y_autorange", str(model.y_autorange))
 
 
 def build_model_config(model):
@@ -260,11 +268,11 @@ def read_histogram_model(element):
     traits.update(read_basic_label(element))
     traits.update(read_axes_set(element))
     traits.update(read_range_set(element))
-    traits['bins'] = int(element.get(NS_KARABO + 'bins', 10))
-    auto = element.get(NS_KARABO + 'auto', 'true')
-    traits['auto'] = auto.lower() == 'true'
-    traits['start'] = float(element.get(NS_KARABO + 'start', 0.0))
-    traits['stop'] = float(element.get(NS_KARABO + 'stop', 0.0))
+    traits["bins"] = int(element.get(NS_KARABO + "bins", 10))
+    auto = element.get(NS_KARABO + "auto", "true")
+    traits["auto"] = auto.lower() == "true"
+    traits["start"] = float(element.get(NS_KARABO + "start", 0.0))
+    traits["stop"] = float(element.get(NS_KARABO + "stop", 0.0))
 
     return traits
 
@@ -273,9 +281,9 @@ def write_histogram_model(model, element):
     write_basic_label(model, element)
     write_axes_set(model, element)
     write_range_set(model, element)
-    element.set(NS_KARABO + 'bins', str(model.bins))
-    element.set(NS_KARABO + 'start', str(model.start))
-    element.set(NS_KARABO + 'stop', str(model.stop))
-    element.set(NS_KARABO + 'auto', str(model.auto))
+    element.set(NS_KARABO + "bins", str(model.bins))
+    element.set(NS_KARABO + "start", str(model.start))
+    element.set(NS_KARABO + "stop", str(model.stop))
+    element.set(NS_KARABO + "auto", str(model.auto))
 
     return element
