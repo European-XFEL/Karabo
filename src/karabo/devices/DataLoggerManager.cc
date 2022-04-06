@@ -231,6 +231,30 @@ namespace karabo {
                   .init()
                   .commit();
 
+            UINT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.maxPerDevicePropLogRate")
+                  .displayedName("Max per Device Property Logging Rate (Kb/sec)")
+                  .description(
+                        "Entries for a device property that would move its logging rate above this threshold are "
+                        "skipped.")
+                  .assignmentOptional()
+                  .defaultValue(5 * 1024) // 5 Mb/s
+                  .minInc(1)              // 1 Kb/s
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.propLogRatePeriod")
+                  .displayedName("Interval for logging rate calc")
+                  .description("Interval for calculating per device property logging rate")
+                  .assignmentOptional()
+                  .defaultValue(5)
+                  .minInc(1)
+                  .maxInc(60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
             VECTOR_STRING_ELEMENT(expected)
                   .key("serverList")
                   .displayedName("Server list")
