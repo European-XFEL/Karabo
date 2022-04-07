@@ -10,7 +10,6 @@
 #include <cppunit/TestAssert.h>
 
 #include <karabo/util/Validator.hh>
-
 using namespace std;
 using namespace karabo::util;
 using namespace configurationTest;
@@ -1305,7 +1304,21 @@ void Schema_Test::testTableReadOnly() {
                                   .setColumns(rowSchema)
                                   .readOnly()
                                   .initialValue(std::vector<Hash>(1, Hash("s", "bar", "b", true)))
+                                  .archivePolicy(Schema::NO_ARCHIVING)
                                   .commit());
+    // Verify default and archive policy in schema:
+    const std::vector<Hash>& specifiedDefault = validReadOnlySchema.getDefaultValue<std::vector<Hash>>("ValidTable");
+    CPPUNIT_ASSERT_EQUAL(1ul, specifiedDefault.size());
+    CPPUNIT_ASSERT_MESSAGE(toString(specifiedDefault[0]), specifiedDefault[0].fullyEquals(Hash("s", "bar", "b", true)));
+    CPPUNIT_ASSERT(validReadOnlySchema.hasArchivePolicy("ValidTable"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(Schema::NO_ARCHIVING), validReadOnlySchema.getArchivePolicy("ValidTable"));
+
+    // Verify implicit default for readOnly (empty table) in schema:
+    CPPUNIT_ASSERT_NO_THROW(
+          TABLE_ELEMENT(validReadOnlySchema).key("ValidTable2").setColumns(rowSchema).readOnly().commit());
+    const std::vector<Hash>& specifiedDefault2 = validReadOnlySchema.getDefaultValue<std::vector<Hash>>("ValidTable2");
+    CPPUNIT_ASSERT_EQUAL(0ul, specifiedDefault2.size());
+    CPPUNIT_ASSERT(!validReadOnlySchema.hasArchivePolicy("ValidTable2"));
 
     // Verifies that a config built from a Schema with read-only TABLE_ELEMENT is valid
     // and has the specified initial value.
