@@ -532,6 +532,15 @@ class TestFilterTableModelView(GuiTestCase):
         value = self.controller.getModelData(1, 0)
         self.assertEqual(value, ("arch", "b"))
 
+    def test_sorting_enabled(self):
+        proxy = get_property_proxy(Object.getClassSchema(), "prop")
+        model = FilterTableElementModel(sortingEnabled=True)
+        controller = BaseFilterTableController(proxy=proxy,
+                                               model=model)
+        controller.create(None)
+        self.assertTrue(controller.tableWidget().isSortingEnabled())
+        controller.destroy()
+
 
 if __name__ == "__main__":
     main()
