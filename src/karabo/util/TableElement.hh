@@ -135,7 +135,7 @@ namespace karabo {
                 // Set the assignment and defaults here, as the API would look strange to assign something to a
                 // read-only
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, m_defaultValue);
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, std::vector<Hash>());
                 return m_readOnlySpecific;
             }
 
