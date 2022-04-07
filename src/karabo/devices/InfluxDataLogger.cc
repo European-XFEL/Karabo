@@ -60,7 +60,8 @@ namespace karabo {
                 //       be nice to store it somehow as well.
                 boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                 const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
-                ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
+                ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
+                   << Epochstamp().toIso8601Ext() << "\" " << ts << "\n";
             }
             m_dbClientWrite->enqueueQuery(ss.str());
             m_dbClientWrite->flushBatch();
@@ -287,9 +288,9 @@ namespace karabo {
             m_loggingStartStamp = Timestamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
             const unsigned long long ts = m_loggingStartStamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
-            ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\""
-               << ",format=1i"; // Older data (where timestamps were not ensured to be not older than 'ts') has no
-                                // format specified.
+            ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
+               << Epochstamp().toIso8601Ext() << "\",format=1i";  // Older data (where timestamps were not ensured to be
+                                                                  // not older than 'ts') has no format specified.
             auto deviceIdNode = configuration.find("_deviceId_"); // _deviceId_ as in DataLogger::slotChanged
             if (deviceIdNode) {                                   // Should always exist in case of m_pendingLogin
                 const Epochstamp devStartStamp = Epochstamp::fromHashAttributes(deviceIdNode->getAttributes());
