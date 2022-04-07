@@ -285,7 +285,40 @@ class TestSystemTopology(GuiTestCase):
             h["server.karabo/macroServer", ...] = {
                 "host": "BIG_IRON",
                 "deviceClasses": ["Macro", "MetaMacro"],
+                "lang": "macro",
                 "type": "server",
+                "serverId": "karabo/macroServer",
+                "heartbeatInterval": 20,
+                "karaboVersion": "2.13.0",
+                "visibility": 4,
+                "log": "INFO",
+                "visibilities": [4, 4],
+            }
+
+            # adding an example of a macro started by a python server
+            h["server.karabo/middlelayer"] = None
+            h["server.karabo/middlelayer", ...] = {
+                "host": "BIG_IRON",
+                "lang": "python",
+                "type": "server",
+                "serverId": "karabo/middlelayer",
+                "heartbeatInterval": 20,
+                "karaboVersion": "2.13.0",
+                "visibility": 4,
+                "log": "INFO",
+                "visibilities": [4, 4],
+            }
+            h["device.rogue_macro"] = None
+            h["device.rogue_macro", ...] = {
+                "host": "BIG_IRON",
+                "classId": "RogueClass",
+                "type": "macro",
+                "serverId": "karabo/middlelayer",
+                "heartbeatInterval": 120,
+                "karaboVersion": "2.13.0",
+                "visibility": 4,
+                "status": "ok",
+                "capabilities": 0,
             }
 
             changes = Hash("new", h, "update", Hash(), "gone", Hash())
