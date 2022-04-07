@@ -169,21 +169,21 @@ SignalSlotable_Test::SignalSlotable_Test()
         m_mqttTimeoutBackup.assign(mqttTimeout);
         setenv("KARABO_MQTT_TIMEOUT", mqttTimeout, true);
     } else {
-        setenv("KARABO_MQTT_TIMEOUT", "3", true);
+        setenv("KARABO_MQTT_TIMEOUT", "15", true);
     }
     const char* redisTimeout = getenv("KARABO_REDIS_TIMEOUT");
     if (redisTimeout) {
-        m_redisTimeoutBackup.assign(mqttTimeout);
+        m_redisTimeoutBackup.assign(redisTimeout);
         setenv("KARABO_REDIS_TIMEOUT", redisTimeout, true);
     } else {
-        setenv("KARABO_REDIS_TIMEOUT", "3", true);
+        setenv("KARABO_REDIS_TIMEOUT", "15", true);
     }
     const char* amqpTimeout = getenv("KARABO_AMQP_TIMEOUT");
     if (amqpTimeout) {
         m_amqpTimeoutBackup.assign(amqpTimeout);
         setenv("KARABO_AMQP_TIMEOUT", amqpTimeout, true);
     } else {
-        setenv("KARABO_AMQP_TIMEOUT", "3", true);
+        setenv("KARABO_AMQP_TIMEOUT", "15", true);
     }
 }
 
