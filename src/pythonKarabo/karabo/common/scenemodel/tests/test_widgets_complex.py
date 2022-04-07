@@ -201,8 +201,10 @@ def test_filter_table_element_widget():
         traits = base_widget_traits()
         traits["klass"] = klass_name
         traits["resizeToContents"] = True
+        traits["sortingEnabled"] = True
         model = api.FilterTableElementModel(**traits)
         read_model = single_model_round_trip(model)
         assert_base_traits(read_model)
         assert read_model.klass == klass_name
         assert read_model.resizeToContents
+        assert read_model.sortingEnabled
