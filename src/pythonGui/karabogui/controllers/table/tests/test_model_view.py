@@ -20,6 +20,15 @@ from karabogui.itemtypes import NavigationItemTypes
 from karabogui.testing import GuiTestCase, get_property_proxy
 
 
+class ButtonSchema(Configurable):
+    arch = String(
+        defaultValue="NoString")
+    foo = Bool(
+        displayType="TableBoolButton",
+        defaultValue=False,
+        displayedName="Foo")
+
+
 class TableSchema(Configurable):
     arch = String(
         defaultValue="NoString")
@@ -49,6 +58,10 @@ class TableSchema(Configurable):
 
 class Object(Configurable):
     prop = VectorHash(rows=TableSchema)
+
+
+class ButtonObject(Configurable):
+    prop = VectorHash(rows=ButtonSchema)
 
 
 class TestTableModelView(GuiTestCase):
@@ -532,14 +545,27 @@ class TestFilterTableModelView(GuiTestCase):
         value = self.controller.getModelData(1, 0)
         self.assertEqual(value, ("arch", "b"))
 
-    def test_sorting_enabled(self):
+    def test_table_controller_extras(self):
         proxy = get_property_proxy(Object.getClassSchema(), "prop")
         model = FilterTableElementModel(sortingEnabled=True)
         controller = BaseFilterTableController(proxy=proxy,
                                                model=model)
         controller.create(None)
+        # 1.1 We have sorting enabled
         self.assertTrue(controller.tableWidget().isSortingEnabled())
+        # 1.2 Does not have any buttons
+        self.assertFalse(controller._table_buttons)
         controller.destroy()
+
+        proxy = get_property_proxy(ButtonObject.getClassSchema(), "prop")
+        model = FilterTableElementModel(sortingEnabled=False)
+        controller = BaseFilterTableController(proxy=proxy,
+                                               model=model)
+        controller.create(None)
+        # 2.1 We have sorting enabled
+        self.assertFalse(controller.tableWidget().isSortingEnabled())
+        # 2.2 Does not have any buttons
+        self.assertTrue(controller._table_buttons)
 
 
 if __name__ == "__main__":
