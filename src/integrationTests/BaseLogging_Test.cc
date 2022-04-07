@@ -619,9 +619,9 @@ void BaseLogging_Test::testDropBadData() {
         Hash update("value", 10000 + i);
         const Timestamp muchLater(inAlmostAFortnite, Trainstamp());
         muchLater.toHashAttributes(update.getAttributes("value"));
-        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", update)
-                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                      .receive());
+        // Call slotUpdateConfigGeneric from m_deviceClient so that m_deviceClient->get is in sync for sure
+        CPPUNIT_ASSERT_NO_THROW(
+              m_deviceClient->execute(deviceId, "slotUpdateConfigGeneric", KRB_TEST_MAX_TIMEOUT, update));
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
         CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
@@ -1151,16 +1151,15 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         } else {
             // Timestamps older than start of device logging are stored as stamp "start of device logging".
             // Stamp stampsAfterRestart[i] is after we are sure that logging runs again, so that is after
-            // "start of device logging" - but the difference is not too large.
+            // "start of device logging" - but we cannot really be sure how far.
             CPPUNIT_ASSERT_MESSAGE("received '" + stampOldFromPast.toIso8601() +=
                                    "', after restart '" + stampsAfterRestart[i].toIso8601(),
                                    stampOldFromPast < stampsAfterRestart[i]);
             const double dt =
                   stampOldFromPast - stampsAfterRestart[i]; // Has no sign due to the intermediate TimeDuration object
-            CPPUNIT_ASSERT_MESSAGE(
-                  "'oldValue' has wrong time stamp: " + stampOldFromPast.toIso8601() +=
-                  " - difference is : " + toString(dt),
-                  dt < 0.9); // seen 0.681398408 in telegraf test https://git.xfel.eu/Karabo/Framework/-/jobs/262561
+            CPPUNIT_ASSERT_MESSAGE("'oldValue' has wrong time stamp: " + stampOldFromPast.toIso8601() +=
+                                   " - difference is : " + toString(dt),
+                                   dt < 10.); // seen 2.95 (!) in  https://git.xfel.eu/Karabo/Framework/-/jobs/290211
         }
     }
 
