@@ -336,6 +336,7 @@ def get_scene(deviceId):
     scene0 = FilterTableElementModel(
         height=533.0, keys=[f"{deviceId}.services"],
         parent_component="DisplayComponent", resizeToContents=True,
+        sortingEnabled=True,
         width=960.0, x=11.0, y=158.0)
     scene1 = LabelModel(
         font="Source Sans Pro,12,-1,5,75,0,0,0,0,0,Bold", height=42.0,
