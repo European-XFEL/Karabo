@@ -14,7 +14,8 @@ from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
 from karabogui.binding.api import get_default_value, get_editor_value
 from karabogui.controllers.api import BaseBindingController
 
-from .delegates import get_display_delegate, get_table_delegate
+from .delegates import (
+    TableButtonDelegate, get_display_delegate, get_table_delegate)
 from .model import TableModel
 from .view import KaraboTableView
 
@@ -38,6 +39,7 @@ class BaseTableController(BaseBindingController):
     _readonly = Bool(True)
     _item_model = WeakRef(TableModel, allow_none=True)
     _table_widget = WeakRef(KaraboTableView)
+    _table_buttons = Bool(False)
 
     _hasResize = Bool(False)
 
@@ -141,6 +143,16 @@ class BaseTableController(BaseBindingController):
             self.widget.setParent(None)
             self.widget = None
 
+    def setEnabled(self, enable):
+        """A change in access level happens is forward to the widget
+
+        If the table has table buttons, we always enable or disable
+        """
+        if self._table_buttons:
+            self.widget.setEnabled(enable)
+        else:
+            super().setEnabled(enable)
+
     # ---------------------------------------------------------------------
     # Subclass Methods
 
@@ -150,9 +162,12 @@ class BaseTableController(BaseBindingController):
         keys = bindings.keys()
         get_delegate = (get_display_delegate if self._readonly
                         else get_table_delegate)
+        self._table_buttons = False
         for column, key in enumerate(keys):
             binding = bindings[key]
             delegate = get_delegate(self.proxy, binding, self._table_widget)
+            if isinstance(delegate, TableButtonDelegate):
+                self._table_buttons = True
             self._table_widget.setItemDelegateForColumn(column, delegate)
 
     def custom_menu(self, pos):
