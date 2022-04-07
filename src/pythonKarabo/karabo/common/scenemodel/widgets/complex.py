@@ -127,6 +127,7 @@ class FilterTableElementModel(BaseDisplayEditableWidget):
     klass = Enum("DisplayFilterTableElement", "EditableFilterTableElement")
     # True if the table is resizing the columns to contents
     resizeToContents = Bool(False)
+    sortingEnabled = Bool(False)
     filterKeyColumn = Int(0)
 
 
@@ -383,6 +384,9 @@ def _filter_table_element_reader(element):
     resizeToContents = element.get(NS_KARABO + "resizeToContents", "")
     resizeToContents = resizeToContents.lower() == "true"
     traits["resizeToContents"] = resizeToContents
+    sortingEnabled = element.get(NS_KARABO + "sortingEnabled", "")
+    sortingEnabled = sortingEnabled.lower() == "true"
+    traits["sortingEnabled"] = sortingEnabled
     filterKeyColumn = int(element.get(NS_KARABO + "filterKeyColumn", 0))
     traits["filterKeyColumn"] = filterKeyColumn
     return FilterTableElementModel(**traits)
@@ -392,9 +396,10 @@ def _filter_table_element_reader(element):
 def _filter_table_element_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
-    element.set(
-        NS_KARABO + "resizeToContents", str(model.resizeToContents).lower()
-    )
+    element.set(NS_KARABO + "resizeToContents",
+                str(model.resizeToContents).lower())
+    element.set(NS_KARABO + "sortingEnabled",
+                str(model.sortingEnabled).lower())
     element.set(NS_KARABO + "filterKeyColumn", str(model.filterKeyColumn))
 
     return element
