@@ -399,6 +399,10 @@ class BaseFilterTableController(BaseTableController):
         ac_column_filter.triggered.connect(self._change_filter_column)
         widget.addAction(ac_column_filter)
 
+        if self.model.sortingEnabled:
+            table_widget.setSortingEnabled(True)
+            table_widget.sortByColumn(0, Qt.AscendingOrder)
+
         return widget
 
     def createFilterModel(self, item_model):
