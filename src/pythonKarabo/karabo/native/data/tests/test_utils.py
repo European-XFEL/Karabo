@@ -181,12 +181,17 @@ def test_create_hash_html():
 
     hashlist_key_idx = parser.cells_data.index('hashlist', int_val_idx + 1)
     assert parser.cells_data[hashlist_key_idx] == 'hashlist'
-    assert parser.cells_data[hashlist_key_idx + 1] == 'float'
-    assert parser.cells_data[hashlist_key_idx + 2] == 'int'
-    assert parser.cells_data[hashlist_key_idx + 3] == '5.2'
-    assert parser.cells_data[hashlist_key_idx + 4] == '6'
+    assert parser.cells_data[hashlist_key_idx + 1] == '\n'
+    assert parser.cells_data[hashlist_key_idx + 2] == '\n'
+    assert parser.cells_data[hashlist_key_idx + 3] == ' float '
+    assert parser.cells_data[hashlist_key_idx + 4] == ' int '
+    assert parser.cells_data[hashlist_key_idx + 5] == '\n'
+    assert parser.cells_data[hashlist_key_idx + 6] == '\n'
+    assert parser.cells_data[hashlist_key_idx + 7] == '\n'
+    assert parser.cells_data[hashlist_key_idx + 8] == '  5.2  '
+    assert parser.cells_data[hashlist_key_idx + 9] == '  6  '
 
-    goofy_idx = parser.cells_data.index('goofylist', hashlist_key_idx + 5)
+    goofy_idx = parser.cells_data.index('goofylist', hashlist_key_idx + 10)
     assert parser.cells_data[goofy_idx] == 'goofylist'
     assert parser.cells_data[goofy_idx + 1] == 'HashList[Unknown Format]'
 
