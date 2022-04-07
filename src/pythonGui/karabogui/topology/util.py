@@ -36,25 +36,22 @@ def get_macro_servers():
     # one entry per macro server set to the number of macros
     # in that macro server + 1
     macro_servers = Counter()
+    # macro_servers_set contains all server of `macro` type.
+    macro_servers_set = set()
 
     def visitor(node):
         nonlocal macro_servers
         attrs = node.attributes
         if (attrs.get('type') == 'server'
                 and attrs.get('lang', '') == 'macro'):
-            macro_servers[node.node_id] += 1
-        elif (attrs.get('type') == 'server'
-              and node.node_id == 'karabo/macroServer'):
-            # TODO: remove this elif clause after deprecation
-            #       karabo/macroServer as hardcoded identifier
-            from warnings import warn
-            msg = "Hardcoded macroserver definition is deprecated"
-            warn(msg, DeprecationWarning)
-            macro_servers[node.node_id] += 1
+            macro_servers[attrs['serverId']] += 1
+            macro_servers_set.add(node.node_id)
         elif (attrs.get('type') == 'macro'
               and attrs.get('serverId') is not None
               and attrs.get('serverId') != '__none__'):
             macro_servers[attrs['serverId']] += 1
 
     topology.visit_system_tree(visitor)
-    return sorted(macro_servers, key=macro_servers.get)
+    return [server
+            for server in sorted(macro_servers, key=macro_servers.get)
+            if server in macro_servers_set]
