@@ -1,6 +1,7 @@
 from xml.sax.saxutils import escape
 
 import numpy as np
+import tabulate
 
 from .hash import Hash, HashList, HashListFormat
 from .typenums import HashType
@@ -152,18 +153,11 @@ def create_html_hash(hsh, include_attributes=True):
                     if list_format is HashListFormat.Unknown:
                         yield "HashList[Unknown Format]"
                     elif list_format is HashListFormat.Table:
-                        yield "<table>"
-                        yield "<tr>"
-                        header_row = value[0]
-                        for k in header_row.keys():
-                            yield f"<th>{escape(str(k))}</th>"
-                        yield "</tr>"
-                        for row in value:
-                            yield "<tr>"
-                            for _, v in row.items():
-                                yield f"<td>{escape(str(v))}</td>"
-                            yield "</tr>"
-                        yield "</table>"
+                        table = tabulate.tabulate(value, headers="keys",
+                                                  stralign="center",
+                                                  numalign="center",
+                                                  tablefmt="html")
+                        yield table
                     elif list_format is HashListFormat.ListOfNodes:
                         for hsh in value:
                             yield from _html_hash_generator(hsh, nest + 1)
