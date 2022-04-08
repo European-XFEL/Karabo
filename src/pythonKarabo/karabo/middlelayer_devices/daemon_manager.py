@@ -20,18 +20,32 @@ from karabo.middlelayer import (
 
 STATUS_PAGE = "{}/status.json"
 
+STATUS_UP = "UP"
+STATUS_DOWN = "DOWN"
+STATUS_CHANGING = "CHANGING"
 
-def get_tablenew_row(entry):
+
+def get_table_row(entry):
+    """Compute the table row information for a service entry
+
+    returns: tuple of karabo name and boolean state machine information
+    """
     status = entry["status"]
     is_stop = status.startswith("up")
     is_start = status.startswith("down")
-    simple_status = "UP"
+    status_orphanage = "orphanage" in status
+    status_want = "want" in status
+
+    low_duration = entry["duration"] <= 1
+    simple_status = STATUS_UP
     if is_start:
-        simple_status = "DOWN"
-    elif "want" in status or entry["duration"] < 3:
-        simple_status = "CHANGING"
-        is_stop = entry["duration"] < 3
-    return (entry["karabo_name"], simple_status, is_start, is_stop)
+        simple_status = STATUS_DOWN
+    elif status_want or low_duration or status_orphanage:
+        simple_status = STATUS_CHANGING
+        is_stop = low_duration or status_orphanage
+
+    is_restart = is_stop
+    return (entry["karabo_name"], simple_status, is_start, is_restart, is_stop)
 
 
 COMMAND_MAP = {
@@ -39,6 +53,7 @@ COMMAND_MAP = {
     # to daemontools commands
     "start": "up",
     "stop": "down",
+    "restart": "down"
 }
 
 
@@ -64,6 +79,14 @@ class ServiceInteractiveRow(Configurable):
         accessMode=AccessMode.READONLY
     )
 
+    restart = Bool(
+        defaultValue=True,
+        displayedName="Restart",
+        displayType="TableBoolButton",
+        description="Restart the service",
+        accessMode=AccessMode.READONLY
+    )
+
     stop = Bool(
         defaultValue=True,
         displayedName="Stop",
@@ -84,7 +107,8 @@ class DaemonManager(Device):
     """
     state = Overwrite(
         defaultValue=State.INIT,
-        options=[State.INIT, State.UNKNOWN, State.ON])
+        options=[State.INIT, State.UNKNOWN, State.CHANGING,
+                 State.ON])
 
     visibility = Overwrite(
         defaultValue=AccessLevel.ADMIN,
@@ -131,7 +155,7 @@ class DaemonManager(Device):
 
     updateTime = Double(
         defaultValue=5.0,
-        minInc=5.0,
+        minInc=1.0,
         maxInc=20.0,
         description="Update time",
         unitSymbol=Unit.SECOND,
@@ -148,9 +172,9 @@ class DaemonManager(Device):
     def __init__(self, configuration):
         super(DaemonManager, self).__init__(configuration)
         self.client = None
-        self.post_action_tasks = dict()
+        self.post_action_tasks = {}
         self.aggregator_uri = ""
-        self.services_info = dict()
+        self.services_info = {}
 
     async def onInitialization(self):
         if hasattr(AsyncIOMainLoop, "initialized"):
@@ -193,9 +217,9 @@ class DaemonManager(Device):
         except Exception as e:
             if self.state != State.UNKNOWN:
                 self.state = State.UNKNOWN
-                self.status = "Error: {}".format(e)
+                self.status = f"Error in fetch: {e}"
         else:
-            if self.state != State.ON:
+            if self.state != State.ON and not len(self.post_action_tasks):
                 self.state = State.ON
             # Synchronize to error status outside of the normal polling.
             status = "Fetched server information"
@@ -208,7 +232,7 @@ class DaemonManager(Device):
 
             table_value = []
             data_keys = ("karabo_name", "name", "since", "status", "duration")
-            self.services_info = dict()
+            self.services_info = {}
             for host_name in servers:
                 info = servers[host_name]
                 link = info["link"]
@@ -219,11 +243,10 @@ class DaemonManager(Device):
                     }
                     entry["link"] = link
                     entry["host_name"] = host_name
-                    table_value.append(get_tablenew_row(entry))
+                    table_value.append(get_table_row(entry))
                     # Store the web link in a separate dict
                     key = f"{entry['host_name']}.{entry['karabo_name']}"
                     self.services_info[key] = entry
-            # Set the number of seen services in the ecosystem!
             table_value.sort()
             table_value = self.services.descriptor.toKaraboValue(table_value)
             if has_changes(self.services.value, table_value.value):
@@ -236,7 +259,7 @@ class DaemonManager(Device):
         try:
             action = params.get("action", "missing")
             # only TableButton Action is implemented
-            assert action == "TableButton", f"unexpected action '{action}'"
+            assert action == "TableButton", f"unexpected action {action}"
             path = params["path"]
             assert path == "services", f"unexpected path '{path}'"
             data = params["table"]
@@ -248,7 +271,7 @@ class DaemonManager(Device):
             header = data["header"]
             command = COMMAND_MAP[header]
             success, text = await self._action_service(
-                server_id, host_id, command, post_action=True)
+                server_id, host_id, command, post_action=header)
             payload.set("success", success)
             payload.set("reason", text)
             # The first entry is the found row, must be there
@@ -268,7 +291,7 @@ class DaemonManager(Device):
                     "payload", payload)
 
     async def _action_service(self, service_name, host, command,
-                              post_action=False):
+                              post_action=None):
         self.logger.info(
             f"Action executed by daemon device: Action: {service_name}, "
             f"service_name: {host}, host: {command}")
@@ -288,8 +311,8 @@ class DaemonManager(Device):
             fut = self.client.fetch(
                 cmd, body=json.dumps(request), method="PUT")
             await to_asyncio_future(fut)
-            if post_action:
-                self._post_action(service_name, host, command)
+            if post_action is not None:
+                self._post_action(service_name, host, post_action)
             return True, (f"Command {command} executed succesfully for "
                           f"service {service_name}")
         except CancelledError:
@@ -301,33 +324,60 @@ class DaemonManager(Device):
             return False, (f"Command {command} was NOT executed "
                            f"succesfully for service {service_name}")
 
-    def _post_action(self, service_name, host, command):
+    def _post_action(self, service_name, host, request):
+        """A post action for a service related to service request"""
         task = self.post_action_tasks.get((service_name, host))
-        if command == "down" and task is None:
+        if request == "start":
+            pass  # nothing to follow up on start
+        elif request == "stop" and task is None:
             self.post_action_tasks[(service_name, host)] = background(
                 self._ensure_service_down(service_name, host))
+        elif request == "restart" and task is None:
+            self.post_action_tasks[(service_name, host)] = background(
+                self._ensure_service_restart(service_name, host))
 
-    async def _ensure_service_down(self, service_name, host):
-        """This post action task ensures a services goes down
-
-        If the service is not registered down within a number of tries,
-        the daemon manager sends a kill command.
-        """
+    async def wait_status(self, service_name, status, calls=7):
+        """Wait for a status `status` for a `service_name`"""
         try:
-            calls = 7
             while calls > 0:
                 await sleep(1)
                 await self._fetch()
                 row = self.services.where_value(
                     "name", service_name).value[0]
-                if row["status"] == "DOWN":
-                    break
+                if row["status"] == status:
+                    return True
                 calls -= 1
-            else:
-                # kill if the server is not down yet
-                await self._action_service(service_name, host, "kill")
         except CancelledError:
             pass
+        return False
+
+    async def _ensure_service_restart(self, service_name, host):
+        """Ensure a service can restart after being stopped"""
+        self.state = State.CHANGING
+        try:
+            ok = await self.wait_status(service_name, STATUS_DOWN)
+            if not ok:
+                # Execute the action, the service is not down
+                await self._action_service(service_name, host, "kill")
+            # We wait until the server resolves
+            ok = await self.wait_status(service_name, STATUS_DOWN, calls=15)
+            if not ok:
+                self.logger.error(f"Service {service_name} does not go down")
+                return
+            await self._action_service(service_name, host, "up")
+        except Exception as e:
+            self.logger.error(f"Service task error: {e}")
+        finally:
+            self.post_action_tasks.pop((service_name, host))
+
+    async def _ensure_service_down(self, service_name, host):
+        """Ensure a service is down by killing a service"""
+        self.state = State.CHANGING
+        try:
+            ok = await self.wait_status(service_name, STATUS_DOWN)
+            if not ok:
+                # Execute the action, the status was not met
+                await self._action_service(service_name, host, "kill")
         finally:
             self.post_action_tasks.pop((service_name, host))
 
