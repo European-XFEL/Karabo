@@ -1381,8 +1381,10 @@ namespace karabo {
                 if (subscribe) {
                     const bool notYetRegistered = channelSet.empty();
                     if (!channelSet.insert(channel).second) {
-                        KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to subscribe a second time to output channel: "
-                                << channelName;
+                        // This happens when a GUI client has a scene open while the device is down and then restarts:
+                        // Client [at least until 2.14. will call this (but does not have to or maybe should not).
+                        KARABO_LOG_FRAMEWORK_INFO << "A GUI client wants to subscribe a second time to output channel: "
+                                                  << channelName;
                     }
                     // Mark as ready - no matter whether ready already before...
                     m_readyNetworkConnections[channelName][channel] = true;
@@ -1402,6 +1404,9 @@ namespace karabo {
                     }
                 } else { // i.e. un-subscribe
                     if (0 == channelSet.erase(channel)) {
+                        // Would happen if 'instanceGoneHandler' would clear m_readyNetworkConnections (as done
+                        // before 2.15.X) when a scene is closed that shows channel data, but the device is not alive
+                        // (anymore).
                         KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to un-subscribe from an output channel that it"
                                 << " is not subscribed: " << channelName;
                     }
@@ -1415,7 +1420,8 @@ namespace karabo {
                     }
                     if (channelSet.empty()) {
                         if (!remote().unregisterChannelMonitor(channelName)) {
-                            KARABO_LOG_FRAMEWORK_WARN << "Failed to unregister '" << channelName << "'"; // Did it ever work?
+                            // See comment above about channelSet.erase(..)
+                            KARABO_LOG_FRAMEWORK_WARN << "Failed to unregister '" << channelName << "'";
                         }
                         m_networkConnections.erase(channelName); // Caveat: Makes 'channelSet' a dangling reference...
                     } else {
@@ -1628,29 +1634,12 @@ namespace karabo {
                     }
                 }
 
-                {
-                    // Erase all bookmarks (InputChannel pointers) associated with instance that gone
-                    // GF: There is no real need for this: If a client is interested in an output channel of this
-                    //     device, better just rely on the automatic reconnect once the device is back.
-                    //     (Currently [before 2.3.0] the GUI assumes that it has to give an extra command for this
-                    //      channel if the device is back.)
-                    boost::mutex::scoped_lock lock(m_networkMutex);
-                    NetworkMap::const_iterator mapIter = m_networkConnections.cbegin();
-                    while (mapIter != m_networkConnections.cend()) {
-                        const std::string& channelName = mapIter->first;
-                        // If channelName lacks the ':', channelInstanceId will be the full channelName.
-                        const std::string channelInstanceId(channelName, 0, channelName.find_first_of(':'));
-                        if (channelInstanceId == instanceId) {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Remove connection to input channel: " << channelName;
-                            // Use the reference 'channelName' before invalidating it by invalidating mapIter:
-                            remote().unregisterChannelMonitor(channelName);
-                            m_readyNetworkConnections.erase(channelName);
-                            mapIter = m_networkConnections.erase(mapIter);
-                        } else {
-                           ++mapIter;
-                        }
-                    }
-                }
+                // Older versions cleaned m_networkConnections from input channels of the dead 'instanceId' here.
+                // That works since the GUI client (as of 2.14.X) gives an onSubscribeNetwork request again if it
+                // gets notified that the device is back again.
+                // But that is not needed: DeviceClient and SignalSlotable take care to reconnect for any registered
+                // channels. In fact, that will lead to a faster reconnection than waiting for the client's request.
+
                 {
                     boost::upgrade_lock<boost::shared_mutex> lk(m_projectManagerMutex);
                     auto manager = m_projectManagers.find(instanceId);
@@ -1917,10 +1906,18 @@ namespace karabo {
                                 Channel::Pointer channelPtr = channel.lock(); // promote to shared pointer
                                 if (channelPtr) {
                                     const std::string clientAddr = getChannelAddress(channelPtr);
-                                    std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
-                                    pipelineConnections.push_back(channelName);
-                                    std::vector<bool>& pipelinesReady = data.get < std::vector<bool> >(clientAddr + ".pipelineConnectionsReadiness");
-                                    pipelinesReady.push_back(m_readyNetworkConnections[channelName][channel]);
+                                    if (data.has(clientAddr)) {
+                                        std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
+                                        pipelineConnections.push_back(channelName);
+                                        std::vector<bool>& pipelinesReady = data.get < std::vector<bool> >(clientAddr + ".pipelineConnectionsReadiness");
+                                        pipelinesReady.push_back(m_readyNetworkConnections[channelName][channel]);
+                                    } else {
+                                        // Veeery unlikely, but can happen in case a new client has connected AND subscribed
+                                        // to a pipeline between creation of 'clientAddr + ".pipelineConnections"' structure
+                                        // above and this call here.
+                                        KARABO_LOG_FRAMEWORK_INFO << "Client '" << clientAddr << "' among network "
+                                                                  << "connections, but was not (yet) among channels.";
+                                    }
                                 } // else - client might have gone meanwhile...
                             }
                         }
