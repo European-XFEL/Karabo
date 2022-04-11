@@ -45,7 +45,7 @@ int BaseLogging_Test::WAIT_WRITES = 4000;
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
 
-const unsigned int maxVectorSize = 2000u; // smaller than default to test that setting it works
+const unsigned int maxVectorSize = 2000u; // smaller than default to test that setting it works.
 
 class DataLogTestDevice : public karabo::core::Device<> {
 
@@ -84,6 +84,13 @@ public:
                 .displayedName("Int32 without default")
                 .reconfigurable()
                 .assignmentOptional().noDefaultValue()
+                .commit();
+
+        STRING_ELEMENT(expected)
+                .key("stringProperty")
+                .displayedName("String property")
+                .description("A string property")
+                .readOnly()
                 .commit();
 
         SLOT_ELEMENT(expected).key("slotIncreaseValue")
@@ -344,8 +351,9 @@ void BaseLogging_Test::setPropertyTestSchema() {
 
 
 std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std::string& loggerType,
-                                                                      bool useInvalidInfluxUrl,
-                                                                      bool useInvalidDbName) {
+                                                                      bool useInvalidInfluxUrl, bool useInvalidDbName,
+                                                                      unsigned int maxPerDevicePropLogRate,
+                                                                      unsigned int propLogRatePeriod) {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
@@ -391,7 +399,8 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std:
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
         manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
         manager_conf.set("logger.InfluxDataLogger.maxVectorSize", maxVectorSize);
-
+        manager_conf.set("logger.InfluxDataLogger.maxPerDevicePropLogRate", maxPerDevicePropLogRate);
+        manager_conf.set("logger.InfluxDataLogger.propLogRatePeriod", propLogRatePeriod);
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
