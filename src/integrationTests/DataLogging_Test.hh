@@ -17,6 +17,7 @@ class DataLogging_Test : public BaseLogging_Test {
     CPPUNIT_TEST(fileAllTestRunner);
     CPPUNIT_TEST(influxAllTestRunnerWithDataMigration);
     CPPUNIT_TEST(testNoInfluxServerHandling);
+    CPPUNIT_TEST(testInfluxMaxPerDevicePropLogRate);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -38,6 +39,15 @@ private:
      * reason behind the forced invalid configuration.
      */
     void testNoInfluxServerHandling();
+
+    /**
+     * @brief Checks that the maximum per device property logging rate for Influx is being properly enforced.
+     *
+     * This test instantiates its own Influx DataLoggerManager with a much lower threshold for the maximum logging rate
+     * allowed. The smaller value is needed to make it easier to violate the threshold. It has to be run in isolation
+     * because a smaller threshold could easily interfere with the other tests.
+     */
+    void testInfluxMaxPerDevicePropLogRate();
 
     bool m_dataWasMigrated = false;
     karabo::util::Epochstamp m_fileMigratedDataEndsBefore;
