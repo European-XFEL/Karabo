@@ -1167,7 +1167,17 @@ namespace karabo {
                         }
                     }
                 }
+                // Filters out all devices that had no bad data in the requested interval.
+                // Skips first element because it is the "time" column from the InfluxSet, not
+                // a deviceId.
+                for (size_t i = 1; i < deviceIds.size(); i++) {
+                    if (result.get<std::vector<Hash>>(deviceIds[i]).empty()) {
+                        result.erase(deviceIds[i]);
+                    }
+                }
+
                 aReply(result);
+
             } catch (const std::exception &e) {
                 std::string details(e.what());
                 std::string errMsg("Error unpacking retrieved bad data info");
