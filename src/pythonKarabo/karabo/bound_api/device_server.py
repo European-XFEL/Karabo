@@ -493,30 +493,27 @@ class DeviceServer(object):
                     request = self.ss.request(deviceid, "slotPing",
                                               deviceid, 1, False)
                     try:
-                        # Blocking here: No async error handling in bound!
+                        # Too lazy to use async techniques for this corner case
                         request.waitForReply(2000)  # in milliseconds
-                    except RuntimeError as innerE:
-                        if "Reply timed out" in str(innerE):
-                            # Indeed dead Karabo-wise:
-                            self.log.WARN("Kill previous incarnation of "
-                                          f"'{deviceid}' since reply to "
-                                          "ping timed out.")
-                            prevLauncher.kill()
-                        else:
-                            self.log.ERROR("Should never come here! "
-                                           "Unexpected exception when "
-                                           "trying to communicate with "
-                                           f"'{deviceid}': {innerE}")
-                            # Let outer 'try:' treat this:
-                            raise innerE
+                    except TimeoutError:
+                        # Indeed dead Karabo-wise:
+                        self.log.WARN("Kill previous incarnation of "
+                                      f"'{deviceid}' since reply to "
+                                      "ping timed out.")
+                        prevLauncher.kill()
+                    except Exception as e:
+                        # Unexpected exception - give up
+                        raise e
                     else:
                         # Technically, it could be alive on another server,
                         # but who cares about that detail...
+                        # Just raising RuntimeError is in principle also OK
                         # Cannot call AsyncReply() directly in slot, so post:
                         EventLoop.post(lambda: reply(False,
                                                      f"{deviceid} already "
                                                      "instantiated and alive"))
                         return
+
             launcher = Launcher(params)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
