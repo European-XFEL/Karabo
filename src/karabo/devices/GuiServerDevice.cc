@@ -690,7 +690,7 @@ namespace karabo {
         void GuiServerDevice::onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel,
                                      karabo::util::Hash& info) {
             if (e) {
-                EventLoop::getIOService().post(bind_weak(&GuiServerDevice::onError, this, e, channel));
+                onError(e, channel);
                 return;
             }
 
@@ -1129,7 +1129,6 @@ namespace karabo {
 
         void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message,
                                               int prio) {
-            boost::mutex::scoped_lock lock(m_channelMutex);
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan && chan->isOpen()) {
                 // Using false for copyAllData parameter in the call below is safe: NDArrays appear only in pipeline
@@ -1814,23 +1813,22 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::devicesChangedHandler(const karabo::util::Hash& what) {
+        void GuiServerDevice::devicesChangedHandler(const karabo::util::Hash& deviceUpdates) {
+            // The keys of 'deviceUpdates' are the deciveIds with updates and the values behind the keys are
+            // Hashes with the updated properties.
             try {
-                // Gathers all devices with configuration updates in 'what'.
-                std::vector<std::string> updatedDevices;
-                updatedDevices.reserve(what.size());
-                what.getKeys(updatedDevices);
-
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Loop on all clients
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     if (!it->first || !it->first->isOpen()) continue;
 
                     Hash configs;
-                    for (const std::string& deviceId : updatedDevices) {
+                    for (auto mapIter = deviceUpdates.mbegin(); mapIter != deviceUpdates.mend(); ++mapIter) {
+                        const std::string& deviceId = mapIter->first;
                         // Optimization: send only updates for devices the client is interested in.
                         if (it->second.visibleInstances.find(deviceId) != it->second.visibleInstances.end()) {
-                            configs.set(deviceId, what.get<Hash>(deviceId));
+                            const Hash& updates = mapIter->second.getValue<Hash>();
+                            configs.set(deviceId, updates);
                         }
                     }
                     if (!configs.empty()) {
