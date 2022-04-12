@@ -6,9 +6,7 @@ from karabo.bound import (
     AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp)
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
-# With 30 seconds timeout, the re-instantiation of the 'UnstoppedThreadDevice'
-# with deviceId 'deviceNotGoingDownCleanly' timed out on quite a few CI runs:
-instTimeout = 60
+instTimeout = 30
 
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
@@ -196,6 +194,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         # Some sub-tests need a helper to call slots with arguments:
         sigSlotA = SignalSlotable("sigSlotA")
         sigSlotA.start()
+        timeOutInMs = 500
 
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
@@ -245,8 +244,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         with self.subTest(msg="Test getTimestamp"):
             # This is basically a copy of  Device_Test::testGetTimestamp
             #
-
-            timeOutInMs = 500  # more than in C++ - here it goes via broker...
             periodInMicroSec = 100000  # some tests below assume 0.1 s
             periodInAttoSec = periodInMicroSec * 1000000000000
             # Before first received time tick, always return train id 0
@@ -414,8 +411,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             #    that is triggered by test class tearDown. If killing would not
             #    work, the server shutdown would time out and that would
             #    produce an error
-            # With 30 seconds timeout, this repeatedly failed, e.g. in
-            # https://git.xfel.eu/Karabo/Framework/-/jobs/283456
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
             self.assertTrue(ok, msg)
 
