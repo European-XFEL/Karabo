@@ -203,9 +203,21 @@ void PipelinedProcessing_Test::testSenderOutputChannelConnections(
       const std::string& slowness1, const std::string& mloc1, const std::vector<std::string>& receivers2,
       const std::string& distrib2, const std::string& slowness2, const std::string& mloc2) {
     std::vector<karabo::util::Hash> output1, output2;
-    m_deviceClient->get(m_sender, "output1.connections", output1);
-    m_deviceClient->get(m_sender, "output2.connections", output2);
 
+    // It is impossible to guarantee that the connection is already established and the device properties are updated in
+    // the m_deviceClient when this function is called, see e.g. failures in testPipeMinData:
+    // https://git.xfel.eu/Karabo/Framework/-/jobs/269544 and https://git.xfel.eu/Karabo/Framework/-/jobs/269545
+    // So we wait a bit if needed.
+    int waitMs = 2500;
+    while (waitMs > 0) {
+        m_deviceClient->get(m_sender, "output1.connections", output1);
+        m_deviceClient->get(m_sender, "output2.connections", output2);
+        if (tsize == output1.size() && tsize == output2.size()) {
+            break;
+        }
+        waitMs -= 50;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+    }
     CPPUNIT_ASSERT_EQUAL(tsize, output1.size());
     CPPUNIT_ASSERT_EQUAL(tsize, output2.size());
 
