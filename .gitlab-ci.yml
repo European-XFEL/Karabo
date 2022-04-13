@@ -64,6 +64,11 @@ stages:
   tags:
     - KaraboFramework
 
+.image_debian10_: &image_debian10
+  image: europeanxfel/karabo-ci:debian-10-00
+  tags:
+    - KaraboFramework
+
 # # TODO: remove this after reporting support for ctest is working
 # .test_template_miniconda_cmake: &test-miniconda-cmake
 #   stage: test
@@ -262,6 +267,10 @@ release build centos7:
   <<: *image_centos7
   <<: *release-build
 
+release build debian10:
+  <<: *image_debian10
+  <<: *release-build
+
 release build ubuntu20:
   <<: *image_ubuntu20
   <<: *release-build
@@ -296,6 +305,10 @@ prerelease build almalinux8:
 
 prerelease build centos7:
   <<: *image_centos7
+  <<: *prerelease-build
+
+prerelease build debian10:
+  <<: *image_debian10
   <<: *prerelease-build
 
 prerelease build ubuntu20:
@@ -334,6 +347,10 @@ nightly build centos7:
   <<: *image_centos7
   <<: *nightly-build
 
+nightly build debian10:
+  <<: *image_debian10
+  <<: *nightly-build
+
 nightly build ubuntu20:
   <<: *image_ubuntu20
   <<: *nightly-build
@@ -370,6 +387,10 @@ deps build centos7:
   <<: *image_centos7
   <<: *deps-build
 
+deps build debian10:
+  <<: *image_debian10
+  <<: *deps-build
+
 deps build ubuntu20:
   <<: *image_ubuntu20
   <<: *deps-build
@@ -388,6 +409,10 @@ cpp_deps tests centos7:
   <<: *image_centos7
   <<: *deps-tests
 
+cpp_deps tests debian10:
+  <<: *image_debian10
+  <<: *deps-tests
+
 cpp_deps tests ubuntu18:
   <<: *image_ubuntu18
   <<: *deps-tests
@@ -402,6 +427,10 @@ python_deps tests almalinux8:
 
 python_deps tests centos7:
   <<: *image_centos7
+  <<: *deps-tests
+
+python_deps tests debian10:
+  <<: *image_debian10
   <<: *deps-tests
 
 python_deps tests ubuntu18:
@@ -422,6 +451,10 @@ python_unit tests centos7:
   <<: *image_centos7
   <<: *python-unit-tests
 
+python_unit tests debian10:
+  <<: *image_debian10
+  <<: *python-unit-tests
+
 python_unit tests ubuntu20:
   <<: *image_ubuntu20
   <<: *python-unit-tests
@@ -436,6 +469,10 @@ cpp_unit tests almalinux8:
 
 cpp_unit tests centos7:
   <<: *image_centos7
+  <<: *cpp-unit-tests
+
+cpp_unit tests debian10:
+  <<: *image_debian10
   <<: *cpp-unit-tests
 
 cpp_unit tests ubuntu20:
@@ -472,6 +509,10 @@ python_integration tests almalinux8:
 
 python_integration tests centos7:
   <<: *image_centos7
+  <<: *integration-tests
+
+python_integration tests debian10:
+  <<: *image_debian10
   <<: *integration-tests
 
 python_integration tests ubuntu20:
@@ -514,6 +555,10 @@ long tests almalinux8:
 
 long tests centos7:
   <<: *image_centos7
+  <<: *long-tests
+
+long tests debian10:
+  <<: *image_debian10
   <<: *long-tests
 
 long tests ubuntu20:
