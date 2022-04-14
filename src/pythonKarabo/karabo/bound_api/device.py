@@ -470,16 +470,17 @@ class PythonDevice(NoFsm):
         self._ss.connectInputChannels()
 
         # A Failing FSM start (e.g. calling the registered initialisation
-        # methods) should not stop the device, so we post it on the event
+        # methods) will not stop the device, so we post it on the event
         # loop and take care of exceptions.
+        # If an exception occurs, we will kill it
         def wrapStartFsm():
             try:
                 self.startFsm()
             except Exception as e:
                 msg = f"{repr(e)} in initialisation"
-                self.log.WARN(msg)
-                # Can't self.updateState(ERROR) - no clue which FSM we are...
+                self.log.ERROR(msg)
                 self.set("status", msg)
+                self._ss.call("", "slotKillDevice")
 
         EventLoop.post(wrapStartFsm)
 

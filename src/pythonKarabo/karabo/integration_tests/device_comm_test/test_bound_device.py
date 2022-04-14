@@ -428,6 +428,20 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.waitUntilEqual(devId, "status", status, instTimeout)
             self.assertEqual(self.dc.get(devId, "status"), status)
 
+            # But device is not anymore in the topology
+            device_down = False
+
+            def check_device():
+                nonlocal device_down
+
+                topo = self.dc.getSystemTopology()
+                devices = topo["device"]
+                device_down = devId not in devices
+                return device_down
+
+            self.waitUntil(check_device, timeout=10)
+            self.assertFalse(device_down)
+
         with self.subTest(msg="Test slotGetTime"):
             ret = sigSlotA.request("testComm1", "slotGetTime", Hash()
                                    ).waitForReply(timeOutInMs)
@@ -455,3 +469,20 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             else:
                 counter -= 1
                 sleep(.1)
+
+    def waitUntil(self, condition, timeout=10):
+        """Wait until a condition is met
+
+        A minimum sleep_time of 0.1 seconds is taken into account
+        between the condition checks.
+
+        :param timeout: The timeout in seconds
+        """
+        total_time = timeout
+        sleep_time = max(total_time // 20, 0.1)
+        while total_time > 0:
+            if condition():
+                break
+            else:
+                total_time -= sleep_time
+                sleep(timeout)
