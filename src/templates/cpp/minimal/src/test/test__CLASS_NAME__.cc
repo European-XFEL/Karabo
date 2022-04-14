@@ -73,9 +73,9 @@ protected:
     }
 
     void deinstantiateTestDevice() {
-        ASSERT_NO_THROW(
-            m_deviceCli->killDevice(TEST_DEVICE_ID, DEV_CLI_TIMEOUT_SEC))
-        << "Failed to deinstantiate device '" << TEST_DEVICE_ID << "'";
+        std::pair<bool, std::string> success = m_deviceCli->killDevice(TEST_DEVICE_ID, DEV_CLI_TIMEOUT_SEC);
+
+        ASSERT_TRUE(success.first) << "Failed to deinstantiate device '" << TEST_DEVICE_ID << "':\n" << success.second;
     }
 
     std::thread m_eventLoopThread;

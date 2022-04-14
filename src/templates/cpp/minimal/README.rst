@@ -22,7 +22,7 @@ Compiling
 
 3. Build the device:
 
-     ``cd $KARABO/devices/__PACKAGE_NAME__``
+     ``cd $KARABO/devices/__PACKAGE_NAME__/build``
      ``cmake --build . ``
 
    ``make`` can also be used as long as the Makefile generator is used by cmake.
