@@ -46,6 +46,20 @@ resolveKaraboLibTarget()
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
+add_library(INTEGRATION_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc)
+target_link_libraries(
+    INTEGRATION_RUNNER
+    ${KARABO_LIB_TARGET_NAME}
+    ${CPPUNIT}
+)
+add_library(TCP_ADAPTER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc)
+target_link_libraries(
+    TCP_ADAPTER
+    ${KARABO_LIB_TARGET_NAME}
+    ${CPPUNIT}
+)
+
+
 set(INTEGRATION_TEST_TARGETS
     alarmServiceIntegrTestRunner
     dataLoggingIntegrTestRunner
@@ -62,65 +76,65 @@ set(INTEGRATION_TEST_TARGETS
 set(alarmServiceIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/AlarmService_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/AlarmTesterDevice.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:TCP_ADAPTER>
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(dataLoggingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseLogging_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/DataLogging_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(deviceIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/Device_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(deviceLockingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/LockTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/LockTest_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(guiServerIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/GuiServer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:TCP_ADAPTER>
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(pipelinedProcessingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/P2PSenderDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/PipeReceiverDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelinedProcessing_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(propertyTestIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/PropertyTest_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(runtimeSchemaAttrsIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/AlarmTesterDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/RunTimeSchemaAttributes_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:TCP_ADAPTER>
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(sceneProviderIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/NonSceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProviderTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneProvider_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:TCP_ADAPTER>
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 set(timingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/SimulatedTimeServerDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/TimingTestDevice.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/Timing_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/integrationRunner.cc
+    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
 
 foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
