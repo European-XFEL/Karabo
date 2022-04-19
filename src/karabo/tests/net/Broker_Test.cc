@@ -14,11 +14,16 @@
 #include <stack>
 #include <tuple>
 
+// please note that these aliases might change in the future
+// or might be not reacheable to outside the European XFEL network
+// use the environment variables
+// KARABO_CI_BROKERS
+// e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
 
-#define MQTT_BROKER "mqtt://exfldl02n0:1883"
-#define JMS_BROKER "tcp://exflbkr02n0:7777"
-#define AMQP_BROKER "amqp://xfel:karabo@exflctrl01:5672"
-#define REDIS_BROKER "redis://exflctrl01:6379"
+#define MQTT_BROKER_DEFAULT "mqtt://exfldl02n0:1883"
+#define JMS_BROKER_DEFAULT "tcp://exflbkr02n0:7777"
+#define AMQP_BROKER_DEFAULT "amqp://xfel:karabo@exflctrl01:5672"
+#define REDIS_BROKER_DEFAULT "redis://exflctrl01:6379"
 #define INVALID_MQTT "mqtt://invalid.example.org:1883"
 #define INVALID_JMS "tcp://invalid.example.org:7777"
 #define INVALID_AMQP "amqp://invalid.example.org:5672"
@@ -121,7 +126,35 @@ using boost::system::error_code;
 CPPUNIT_TEST_SUITE_REGISTRATION(Broker_Test);
 
 
-Broker_Test::Broker_Test() : m_domain(Broker::brokerDomainFromEnv()), m_thread(), m_config() {}
+Broker_Test::Broker_Test() : m_domain(Broker::brokerDomainFromEnv()), m_thread(), m_config() {
+    char* brokers_env = getenv("KARABO_CI_BROKERS");
+    if (brokers_env) {
+        std::string brokers(brokers_env);
+        std::vector<std::string> brokerUrls;
+        boost::split(brokerUrls, brokers, boost::is_any_of(";"));
+        for (const std::string& brokerUrl : brokerUrls) {
+            const std::string::size_type n = brokerUrl.find(":");
+            if (n == std::string::npos) {
+                std::clog << "Unexpected Broker syntax for broker '" << brokerUrl << "'. Ignoring..." << std::endl;
+                continue;
+            }
+            const std::string protocol = brokerUrl.substr(0, n);
+            if (protocol == "tcp") {
+                m_brokersUnderTest.set("jms", brokerUrl);
+            } else if (protocol == "mqtt" || protocol == "amqp" || protocol == "redis") {
+                m_brokersUnderTest.set(protocol, brokerUrl);
+            } else {
+                std::clog << "Unexpected Broker protocol '" << protocol << "'. Ignoring..." << std::endl;
+            }
+        }
+    } else {
+        m_brokersUnderTest.set<std::string>("jms", JMS_BROKER_DEFAULT);
+        m_brokersUnderTest.set<std::string>("mqtt", MQTT_BROKER_DEFAULT);
+        m_brokersUnderTest.set<std::string>("amqp", AMQP_BROKER_DEFAULT);
+        m_brokersUnderTest.set<std::string>("redis", REDIS_BROKER_DEFAULT);
+    }
+    m_invalidBrokers = {{"jms", INVALID_JMS}, {"mqtt", INVALID_MQTT}, {"amqp", INVALID_AMQP}, {"redis", INVALID_REDIS}};
+}
 
 
 Broker_Test::~Broker_Test() {}
@@ -145,40 +178,29 @@ void Broker_Test::tearDown() {
     m_thread.reset();
 }
 
+void Broker_Test::_resetConfig(const std::string& brokerProtocol, const std::vector<std::string>& brokers) {
+    Hash content;
+    content.set("brokers", brokers);
+    content.set("domain", m_domain);
+    m_config.clear();
+    m_config.set(brokerProtocol, content);
+}
 
 void Broker_Test::testConnectDisconnect() {
-    std::clog << "\n\t" << __FUNCTION__ << " " << JMS_BROKER << std::endl;
-    std::string id = "alice";
-    std::string urls = std::string(INVALID_JMS) + "," + JMS_BROKER;
-    m_config.clear();
-    m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("jms.domain", m_domain);
-    m_config.set<std::string>("jms.instanceId", id);
-    _testConnectDisconnect();
+    const std::string id = "alice";
 
-    std::clog << "\t" << __FUNCTION__ << " " << MQTT_BROKER << std::endl;
-    urls = std::string(INVALID_MQTT) + "," + MQTT_BROKER;
-    m_config.clear();
-    m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("mqtt.domain", m_domain);
-    m_config.set("mqtt.instanceId", id);
-    _testConnectDisconnect();
-
-    std::clog << "\t" << __FUNCTION__ << " " << AMQP_BROKER << std::endl;
-    urls = /*std::string(INVALID_AMQP) + "," +*/ AMQP_BROKER;
-    m_config.clear();
-    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("amqp.domain", m_domain);
-    m_config.set("amqp.instanceId", id);
-    _testConnectDisconnect();
-
-    std::clog << "\t" << __FUNCTION__ << " " << REDIS_BROKER << std::endl;
-    urls = std::string(INVALID_REDIS) + "," + REDIS_BROKER;
-    m_config.clear();
-    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("redis.domain", m_domain);
-    m_config.set("redis.instanceId", id);
-    _testConnectDisconnect();
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        Hash content;
+        content.set("brokers", std::vector<std::string>({broker, m_invalidBrokers[protocol]}));
+        content.set("domain", m_domain);
+        content.set("instanceId", id);
+        m_config.clear();
+        m_config.set(protocol, content);
+        _testConnectDisconnect();
+    }
 }
 
 
@@ -189,8 +211,7 @@ void Broker_Test::_testConnectDisconnect() {
 
     CPPUNIT_ASSERT(broker->isConnected());
     CPPUNIT_ASSERT(broker->getBrokerType() == classId);
-    CPPUNIT_ASSERT(broker->getBrokerUrl() == JMS_BROKER || broker->getBrokerUrl() == MQTT_BROKER ||
-                   broker->getBrokerUrl() == AMQP_BROKER || broker->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(broker->getBrokerUrl() == m_brokersUnderTest.get<std::string>(classId));
     CPPUNIT_ASSERT(broker->getInstanceId() == m_config.get<std::string>(classId + ".instanceId"));
 
     // Clone configuration and create new instance
@@ -209,33 +230,13 @@ void Broker_Test::_testConnectDisconnect() {
 
 
 void Broker_Test::testPublishSubscribe() {
-    std::string urls = JMS_BROKER;
-    std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("jms.domain", m_domain);
-    _testPublishSubscribe();
-
-    urls = MQTT_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("mqtt.domain", m_domain);
-    _testPublishSubscribe();
-
-    urls = AMQP_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("amqp.domain", m_domain);
-    _testPublishSubscribe();
-
-    urls = REDIS_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("redis.domain", m_domain);
-    _testPublishSubscribe();
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        _resetConfig(protocol, {broker});
+        _testPublishSubscribe();
+    }
 }
 
 
@@ -248,8 +249,7 @@ void Broker_Test::_testPublishSubscribe() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER || alice->getBrokerUrl() == MQTT_BROKER ||
-                   alice->getBrokerUrl() == AMQP_BROKER || alice->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(alice->getBrokerUrl() == m_brokersUnderTest.get<std::string>(classId));
     CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
 
     auto prom = std::make_shared<std::promise<bool>>();
@@ -299,33 +299,13 @@ void Broker_Test::_testPublishSubscribe() {
 
 
 void Broker_Test::testPublishSubscribeAsync() {
-    std::string urls = JMS_BROKER;
-    std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("jms.domain", m_domain);
-    _testPublishSubscribeAsync();
-
-    urls = MQTT_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("mqtt.domain", m_domain);
-    _testPublishSubscribeAsync();
-
-    urls = AMQP_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("amqp.domain", m_domain);
-    _testPublishSubscribeAsync();
-
-    urls = REDIS_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("redis.domain", m_domain);
-    _testPublishSubscribeAsync();
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        _resetConfig(protocol, {broker});
+        _testPublishSubscribeAsync();
+    }
 }
 
 
@@ -338,8 +318,7 @@ void Broker_Test::_testPublishSubscribeAsync() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER || alice->getBrokerUrl() == MQTT_BROKER ||
-                   alice->getBrokerUrl() == AMQP_BROKER || alice->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(alice->getBrokerUrl() == m_brokersUnderTest.get<std::string>(classId));
     CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
 
     auto prom = std::make_shared<std::promise<bool>>();
@@ -409,33 +388,13 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
 
 void Broker_Test::testReadingHeartbeatsAndLogs() {
-    std::string urls = JMS_BROKER;
-    std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("jms.domain", m_domain);
-    _testReadingHeartbeatsAndLogs();
-
-    urls = MQTT_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("mqtt.domain", m_domain);
-    _testReadingHeartbeatsAndLogs();
-
-    urls = AMQP_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("amqp.domain", m_domain);
-    _testReadingHeartbeatsAndLogs();
-
-    urls = REDIS_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("redis.domain", m_domain);
-    _testReadingHeartbeatsAndLogs();
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        _resetConfig(protocol, {broker});
+        _testReadingHeartbeatsAndLogs();
+    }
 }
 
 
@@ -469,8 +428,7 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER || alice->getBrokerUrl() == MQTT_BROKER ||
-                   alice->getBrokerUrl() == AMQP_BROKER || alice->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(alice->getBrokerUrl() == m_brokersUnderTest.get<std::string>(classId));
     CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
 
     auto prom = std::make_shared<std::promise<bool>>();
@@ -584,17 +542,17 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
 
 
 void Broker_Test::testReadingGlobalCalls() {
-    std::clog << std::endl;
-    _testReadingGlobalCalls(JMS_BROKER);
-    _testReadingGlobalCalls(MQTT_BROKER);
-    _testReadingGlobalCalls(AMQP_BROKER);
-    _testReadingGlobalCalls(REDIS_BROKER);
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        _testReadingGlobalCalls(broker);
+    }
 }
 
 
 void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
     std::string type = Broker::brokerTypeFrom({brokerAddress});
-    std::clog << "\t" << __FUNCTION__ << " " << type << " (" << brokerAddress << "): " << std::flush;
 
     Hash cfg("brokers", std::vector<std::string>({brokerAddress}), "domain", m_domain, "instanceId", "listenGlobal");
     Broker::Pointer listenGlobal = Configurator<Broker>::create(type, cfg);
@@ -692,7 +650,12 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
 
 
 void Broker_Test::testReverseOrderedPublishSubscribe() {
-    std::vector<std::string> urls = {MQTT_BROKER};
+    if (!m_brokersUnderTest.has("mqtt")) {
+        // This test is specific for MQTT brokers. Ignoring
+        return;
+    }
+    const std::string mqtt_broker = m_brokersUnderTest.get<std::string>("mqtt");
+    std::vector<std::string> urls = {mqtt_broker};
     // NOTE: use "deadline" setting for stack size >= 4: Alice has to wait for message with order #1!!!
     Hash input("brokers", urls, "domain", m_domain, "instanceId", "alice", "deadline", 300);
 
@@ -700,7 +663,7 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT_EQUAL(std::string("mqtt"), alice->getBrokerType());
-    CPPUNIT_ASSERT_EQUAL(std::string(MQTT_BROKER), alice->getBrokerUrl());
+    CPPUNIT_ASSERT_EQUAL(std::string(mqtt_broker), alice->getBrokerUrl());
     CPPUNIT_ASSERT_EQUAL(std::string("alice"), alice->getInstanceId());
 
     constexpr unsigned int maxLoop = 20;
@@ -793,33 +756,13 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
 
 
 void Broker_Test::testProducerRestartConsumerContinues() {
-    std::string urls = JMS_BROKER;
-    std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("jms.domain", m_domain);
-    _testProducerRestartConsumerContinues();
-
-    urls = MQTT_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("mqtt.domain", m_domain);
-    _testProducerRestartConsumerContinues();
-
-    urls = AMQP_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("amqp.domain", m_domain);
-    _testProducerRestartConsumerContinues();
-
-    urls = REDIS_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("redis.domain", m_domain);
-    _testProducerRestartConsumerContinues();
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        _resetConfig(protocol, {broker});
+        _testProducerRestartConsumerContinues();
+    }
 }
 
 
@@ -935,35 +878,13 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
 
 void Broker_Test::testProducerContinuesConsumerRestart() {
-    std::string urls;
-
-    urls = JMS_BROKER;
-    std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("jms.domain", m_domain);
-    _testProducerContinuesConsumerRestart();
-
-    urls = MQTT_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("mqtt.domain", m_domain);
-    _testProducerContinuesConsumerRestart();
-
-    urls = AMQP_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("amqp.domain", m_domain);
-    _testProducerContinuesConsumerRestart();
-
-    urls = REDIS_BROKER;
-    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-    m_config.clear();
-    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-    m_config.set("redis.domain", m_domain);
-    _testProducerContinuesConsumerRestart();
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
+        _resetConfig(protocol, {broker});
+        _testProducerContinuesConsumerRestart();
+    }
 }
 
 
