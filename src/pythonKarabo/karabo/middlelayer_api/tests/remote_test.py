@@ -54,6 +54,26 @@ class Nested(Configurable):
 class ChannelNode(Configurable):
     data = Int32(defaultValue=0)
 
+class CrazyRemote(Device):
+
+    counter = 0
+
+    async def injectDirect(self):
+        await self._inject_crazy()
+
+    @Slot()
+    async def injectSlot(self):
+        background(self._inject_crazy)
+
+    async def _inject_crazy(self):
+        for i in range(10):
+            setattr(self.__class__, str(i), Int32(defaultValue=0))
+            await self.publishInjectedParameters()
+
+    def _notifyNewSchema(self):
+        self.counter += 1
+        super()._notifyNewSchema()
+
 
 class Remote(Device):
 
@@ -1412,6 +1432,24 @@ class Tests(DeviceTest):
         await task
         async with d:
             self.assertEqual(d.counter, 29)
+
+    @async_tst
+    async def test_crazy_injection(self):
+        deviceId =  "crazy-test-device"
+        d = CrazyRemote({"_deviceId_": deviceId})
+        await d.startInstance()
+        try:
+            await d.injectSlot()
+            # Wait very very long, 1 seconds
+            await sleep(1)
+            self.assertEqual(d.counter, 1)
+            d.counter = 0
+            await d.injectDirect()
+            # Wait very very long, 1 seconds
+            await sleep(1)
+            self.assertEqual(d.counter, 1)
+        finally:
+            await d.slotKillDevice()
 
     @async_tst
     @coroutine
