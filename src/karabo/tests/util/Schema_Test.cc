@@ -43,7 +43,7 @@ void Schema_Test::testBuildUp() {
 
     } catch (const karabo::util::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
-        CPPUNIT_ASSERT(false);
+        CPPUNIT_FAIL(e.detailedMsg());
     }
 }
 
