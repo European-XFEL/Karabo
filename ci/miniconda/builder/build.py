@@ -406,10 +406,6 @@ class Builder:
         # Collect the commands to be run
         cmds = []
         cmds.append("source ~/miniconda3/bin/activate")
-        # TEMPORARY WORKAROUND: Skip after exflserv05 is decommissioned
-        if os.environ.get('MIRROR_HOSTNAME', None) == "exflctrl01":
-            cmds.append(f"rsync -va xkarabo@exflserv05:/var/www/html/karabo/channel /data/karabo")
-        # end workaround
         dirs = [
             self.args.remote_channel_dir,
             f'{self.args.remote_mirror_dir}/anaconda',
@@ -431,7 +427,8 @@ class Builder:
                 f"conda index {dir_} --check-md5 --no-progress")
         # TODO: Skip after exflserv05 is decommissioned
         if os.environ.get('MIRROR_HOSTNAME', None) == "exflctrl01":
-            cmds.append(f"rsync -va /data/karabo/channel xkarabo@exflserv05:/var/www/html/karabo/.")
+            # a version of this script is available in the conda-recipes repository
+            cmds.append("python ~/rebuild_index.py")
         # end workaround
         command = "; ".join(cmds)
 
