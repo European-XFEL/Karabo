@@ -47,11 +47,15 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     void testProducerContinuesConsumerRestart();
     void _testProducerRestartConsumerContinues();
     void _testProducerContinuesConsumerRestart();
+    void _resetConfig(const std::string& brokerProtocol, const std::vector<std::string>& brokers);
 
    private:
     std::string m_domain;
     boost::shared_ptr<boost::thread> m_thread;
     karabo::util::Hash m_config;
+    // using a Karabo Hash to match the insertion order.
+    karabo::util::Hash m_brokersUnderTest;
+    std::map<std::string, std::string> m_invalidBrokers;
 };
 
 #endif /* BROKER_TEST_HH */
