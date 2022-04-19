@@ -1,8 +1,5 @@
 /*
- * File:   utilTestRunner.cc
- * Author: heisenb
- *
- * Created on Sep 18, 2012, 6:48:00 PM
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include <cppunit/BriefTestProgressListener.h>
@@ -13,11 +10,17 @@
 #include <cppunit/XmlOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 
+int run_test(int argc, char* argv[]) {
+    // USAGE:
+    // TestRunner (argv[0])
+    // # will run the tests and generate a file named TestRunner.xml in the current directory
+    // TestRunner path/to/filename.xml
+    // # will run the tests and generate a file path/to/filename.xml in the specified path
+    // TestRunner path/to/filename.xml testname
+    // # will run the tests matching the argument testname and generate a file.
 
-int main(int argc, char* argv[]) {
     // Create the event manager and test controller
     CPPUNIT_NS::TestResult controller;
-
     // Add a listener that colllects test result
     CPPUNIT_NS::TestResultCollector result;
     controller.addListener(&result);
@@ -29,10 +32,10 @@ int main(int argc, char* argv[]) {
     // Add the top suite to the test runner
     CPPUNIT_NS::TestRunner runner;
     CPPUNIT_NS::Test* test = CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest();
-    if (argc > 1) {
+    if (argc > 2) {
         // one can run a single test by passing the class name as an argumnent. e.g. States_Test
         try {
-            test = test->findTest(argv[1]);
+            test = test->findTest(argv[2]);
         } catch (const std::invalid_argument&) {
             // bad argument
             std::cerr << "Test '" << argv[1] << "' not found!" << std::endl;
@@ -46,10 +49,16 @@ int main(int argc, char* argv[]) {
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
     outputter.write();
 
-    // Output ML for Jenkins CPPunit plugin
-    std::ofstream xmlFileOut("testresults/utilTest.xml");
+    std::ostringstream filename;
+    if (argc > 1) {
+        filename << argv[1];
+    } else {
+        filename << argv[0] << ".xml";
+    }
+    std::clog << "Writing " << filename.str() << std::endl;
+    // Output XML for Jenkins CPPunit plugin
+    std::ofstream xmlFileOut(filename.str());
     CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
     xmlOut.write();
-
     return result.wasSuccessful() ? 0 : 1;
 }
