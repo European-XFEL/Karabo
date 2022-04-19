@@ -51,39 +51,122 @@ set(KARABO_ROOT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 
 # Unit tests - under current directory, which is the root of the
 # unit tests.
-file(GLOB TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/*")
+set(TEST_TARGETS
+    coreTestRunner
+    ioTestRunner
+    logTestRunner
+    netTestRunner
+    utilTestRunner
+    xmsTestRunner
+)
 
-foreach(TEST_DIR ${TEST_DIR})
-    if (NOT IS_DIRECTORY ${TEST_DIR})
-        continue()  # We're only interested in directories.
-    endif()
-    file(GLOB TEST_SRCS "${TEST_DIR}/*.cc")
-    foreach (TMP_PATH ${TEST_SRCS})
-        string (FIND ${TMP_PATH} "TestRunner" NAME_FOUND)
-        if (NOT ${NAME_FOUND} EQUAL -1)
-            get_filename_component(RUNNER_NAME ${TMP_PATH} NAME_WE)
-            break()
-        endif ()
-    endforeach()
-    add_executable(${RUNNER_NAME} ${TEST_SRCS})
-    target_include_directories(${RUNNER_NAME} PRIVATE ${KARABO_ROOT_SRC_DIR})
-    add_test(NAME ${RUNNER_NAME} COMMAND ${RUNNER_NAME})
-    message(STATUS "Added unit test executable ${RUNNER_NAME}")
+add_library(TEST_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunner.cc)
+target_link_libraries(
+    TEST_RUNNER
+    ${KARABO_LIB_TARGET_NAME}
+    ${CPPUNIT}
+)
+
+add_library(TEST_RUNNER_NOLOOP OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunnerNoLoop.cc)
+target_link_libraries(
+    TEST_RUNNER_NOLOOP
+    ${KARABO_LIB_TARGET_NAME}
+    ${CPPUNIT}
+)
+
+set(coreTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/DeviceClient_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/InstanceChangeThrottler_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/Runner_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER>
+)
+
+set(ioTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/BufferSet_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/FileInputOutput_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/H5File_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/H5Format_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/HashBinarySerializer_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/HashXmlSerializer_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/Hdf5_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/io/SchemaSerializer_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
+set(logTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/log/Logger_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
+set(netTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/Broker_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/EventLoop_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/JmsConnection_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/MQTcpNetworking.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/MqttClient_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/ParseUrl_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/ReadAsyncStringUntil_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/Strand_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/TcpNetworking_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
+set(utilTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/AlarmCondition_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Base64_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ByteSwap_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ConfigurationTestClasses.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Configurator_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/DataLogUtils_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/DateTimeString_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Dims_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Epochstamp_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Exception_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Factory_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/HashFilter_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Hash_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/MetaTools_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/NDArray_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Schema_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Serializable_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/States_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/StatisticalEvaluator_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/StringTools_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/TimeClasses_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Types_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Validator_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Version_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
+)
+
+set(xmsTestRunner_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/xms/ImageData_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/xms/InputOutputChannel_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/xms/Memory_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/xms/SignalSlotable_Test.cc
+    $<TARGET_OBJECTS:TEST_RUNNER>
+)
+
+foreach(testTarget IN LISTS TEST_TARGETS)
+    add_executable(${testTarget} ${${testTarget}_FILES})
+    add_test(NAME ${testTarget} COMMAND ${testTarget} testresults/${testTarget}.xml)
     target_compile_options(
-        "${RUNNER_NAME}"
-        PRIVATE -DKARABO_TESTPATH=\"${CMAKE_CURRENT_BINARY_DIR}/\"
+        ${testTarget}
+        PRIVATE
+            -DKARABO_TESTPATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\"
     )
 
     target_link_libraries(
-        ${RUNNER_NAME}
+        ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
         ${CPPUNIT}
     )
+    message(STATUS "Added unit test executable ${testTarget}")
 
 endforeach()
 
-# The io unit tests depend on some data files to succeed - copy them
-# to the build directory.
+# Some io unit tests depend on example data files to succeed
+# Here we copy them to the build directory.
 add_custom_command(
     TARGET ioTestRunner
     POST_BUILD

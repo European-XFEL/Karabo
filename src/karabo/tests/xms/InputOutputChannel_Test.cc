@@ -56,7 +56,7 @@ InputOutputChannel_Test::InputOutputChannel_Test() {}
 
 
 void InputOutputChannel_Test::setUp() {
-    // Event loop started in xmsTestRunner.cc's main().
+    // Event loop started in testRunner.cc's main().
 }
 
 
