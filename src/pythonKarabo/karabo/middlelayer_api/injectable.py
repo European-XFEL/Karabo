@@ -1,4 +1,4 @@
-from asyncio import gather
+from asyncio import gather, get_event_loop
 from itertools import chain
 
 from karabo.native import Configurable, Descriptor, MetaConfigurable, Overwrite
@@ -87,6 +87,8 @@ class InjectMixin(Configurable):
       `publishInjectedParameters`
     """
 
+    _needs_notify = False
+
     def __new__(cls, configuration={}, **kwargs):
         """each object gets its own personal class, that it may modify"""
         newtype = MetaInjectable(cls.__name__, (cls,), {})
@@ -150,5 +152,11 @@ class InjectMixin(Configurable):
 
         await gather(*initializers)
 
-        self._notifyNewSchema()
-        self.signalChanged(self.configurationAsHash(), self.deviceId)
+        self._needs_notify = True
+        get_event_loop().call_soon(self._notifyNewInjection)
+
+    def _notifyNewInjection(self):
+        if self._needs_notify:
+            self._notifyNewSchema()
+            self.signalChanged(self.configurationAsHash(), self.deviceId)
+            self._needs_notify = False
