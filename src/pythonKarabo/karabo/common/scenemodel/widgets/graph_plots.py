@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Enum, Float, Int, List, String
 
-from karabo.common.scenemodel.api import BaseWidgetObjectData
+from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, write_base_widget_data)
