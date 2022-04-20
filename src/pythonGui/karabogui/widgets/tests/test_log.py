@@ -53,6 +53,9 @@ class TestLogWidget(GuiTestCase):
         self.assertGreater(model.rowCount(), 0)
         widget.onClearLog()
         self.assertEqual(model.rowCount(), 0)
+        # Do a reset with new data
+        widget.initialize(data)
+        self.assertEqual(model.rowCount(), 300)
 
     def test_clipboard_doubleclick(self):
         widget = LogWidget()
