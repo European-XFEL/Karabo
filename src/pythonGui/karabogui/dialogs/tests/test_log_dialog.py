@@ -1,8 +1,6 @@
 from unittest import main, mock
 
 from qtpy.QtCore import QItemSelectionModel, Qt
-from qtpy.QtGui import QClipboard
-from qtpy.QtWidgets import QApplication
 
 from karabo.native import Hash, Timestamp
 from karabogui.dialogs.api import LogDialog
@@ -38,7 +36,7 @@ class TestLoginDialog(GuiTestCase):
 
             logs = Hash("content", data)
             dialog.request_handler(True, logs)
-            table_view = dialog.table
+            table_view = dialog.log_widget.table
             table_model = table_view.model()
             self.assertEqual(table_model.rowCount(), 2)
 
@@ -51,18 +49,11 @@ class TestLoginDialog(GuiTestCase):
             # Select that index
             table_view.selectionModel().setCurrentIndex(
                 index, QItemSelectionModel.ClearAndSelect)
-            path = "karabogui.dialogs.log_dialog.broadcast_event"
+            path = "karabogui.widgets.log.broadcast_event"
             with mock.patch(path) as broad:
-                dialog.onItemDoubleClicked(index)
+                dialog.log_widget.onItemDoubleClicked(index)
                 broad.assert_called_with(KaraboEvent.ShowDevice,
                                          {"deviceId": actual_instanceId})
-
-            # Clipboard
-            dialog._copy_clipboard()
-            clipboard = QApplication.clipboard()
-            text = clipboard.text(mode=QClipboard.Clipboard)
-            self.assertIn(actual_instanceId, text)
-            self.assertIn("INFO", text)
 
             path = "karabogui.dialogs.log_dialog.call_device_slot"
             with mock.patch(path) as call:
