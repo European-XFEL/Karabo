@@ -178,13 +178,21 @@ void Broker_Test::tearDown() {
     m_thread.reset();
 }
 
-void Broker_Test::_resetConfig(const std::string& brokerProtocol, const std::vector<std::string>& brokers) {
-    Hash content;
-    content.set("brokers", brokers);
-    content.set("domain", m_domain);
-    m_config.clear();
-    m_config.set(brokerProtocol, content);
+
+void Broker_Test::_loopFunction(const std::string& functionName, const std::function<void()>& testFunction) {
+    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
+        const std::string& broker = it->getValue<std::string>();
+        const std::string& protocol = it->getKey();
+        Hash content;
+        content.set("brokers", std::vector<std::string>({broker}));
+        content.set("domain", m_domain);
+        m_config.clear();
+        m_config.set(protocol, content);
+        std::clog << "\n\t" << functionName << " " << protocol << " : '" << broker << "'" << std::endl;
+        testFunction();
+    }
 }
+
 
 void Broker_Test::testConnectDisconnect() {
     const std::string id = "alice";
@@ -230,13 +238,7 @@ void Broker_Test::_testConnectDisconnect() {
 
 
 void Broker_Test::testPublishSubscribe() {
-    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::string& broker = it->getValue<std::string>();
-        const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
-        _resetConfig(protocol, {broker});
-        _testPublishSubscribe();
-    }
+    _loopFunction(__FUNCTION__, [this] { this->_testPublishSubscribe(); });
 }
 
 
@@ -299,13 +301,7 @@ void Broker_Test::_testPublishSubscribe() {
 
 
 void Broker_Test::testPublishSubscribeAsync() {
-    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::string& broker = it->getValue<std::string>();
-        const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
-        _resetConfig(protocol, {broker});
-        _testPublishSubscribeAsync();
-    }
+    _loopFunction(__FUNCTION__, [this] { this->_testPublishSubscribeAsync(); });
 }
 
 
@@ -388,13 +384,7 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
 
 void Broker_Test::testReadingHeartbeatsAndLogs() {
-    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::string& broker = it->getValue<std::string>();
-        const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
-        _resetConfig(protocol, {broker});
-        _testReadingHeartbeatsAndLogs();
-    }
+    _loopFunction(__FUNCTION__, [this] { this->_testReadingHeartbeatsAndLogs(); });
 }
 
 
@@ -756,13 +746,7 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
 
 
 void Broker_Test::testProducerRestartConsumerContinues() {
-    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::string& broker = it->getValue<std::string>();
-        const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
-        _resetConfig(protocol, {broker});
-        _testProducerRestartConsumerContinues();
-    }
+    _loopFunction(__FUNCTION__, [this] { this->_testProducerRestartConsumerContinues(); });
 }
 
 
@@ -878,13 +862,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
 
 
 void Broker_Test::testProducerContinuesConsumerRestart() {
-    for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::string& broker = it->getValue<std::string>();
-        const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << __FUNCTION__ << " " << protocol << " : '" << broker << "'" << std::endl;
-        _resetConfig(protocol, {broker});
-        _testProducerContinuesConsumerRestart();
-    }
+    _loopFunction(__FUNCTION__, [this] { this->_testProducerContinuesConsumerRestart(); });
 }
 
 
