@@ -112,7 +112,14 @@
     </layout>
    </item>
    <item>
-    <widget class="QTableView" name="ui_table_view"/>
+    <layout class="QVBoxLayout" name="log_layout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="sizeConstraint">
+      <enum>QLayout::SetNoConstraint</enum>
+     </property>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="bottom_layout">

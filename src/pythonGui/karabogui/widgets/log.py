@@ -105,6 +105,15 @@ class LogWidget(QWidget):
             clipboard.clear(mode=QClipboard.Clipboard)
             clipboard.setText(log, mode=QClipboard.Clipboard)
 
+    def initialize(self, logData):
+        new = [Log(messageType=log["type"], instanceId=log["category"],
+                   description=log["message"],
+                   traceback=log.get("traceback", ""),
+                   dateTime=QDateTime.fromString(
+                       log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
+               for log in logData]
+        self.table_model.initialize(new)
+
     def onLogDataAvailable(self, logData):
         new = [Log(messageType=log["type"], instanceId=log["category"],
                    description=log["message"],
@@ -202,6 +211,13 @@ class TableLogModel(QAbstractTableModel):
         elif role in (Qt.DisplayRole, Qt.ToolTipRole):
             return log[index.column()]
         return None
+
+    def initialize(self, data):
+        self.beginResetModel()
+        try:
+            self._data = data
+        finally:
+            self.endResetModel()
 
     def add(self, data):
         self.beginInsertRows(QModelIndex(), 0, len(data) - 1)
