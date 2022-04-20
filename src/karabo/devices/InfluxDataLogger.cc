@@ -515,7 +515,8 @@ namespace karabo {
                 std::string base64Schema = base64Encode(uarchive, m_archive.size());
                 // and write to SCHEMAS table ...
                 ss << m_deviceToBeLogged << "__SCHEMAS,"
-                   << "digest=\"" << schDigest << "\" schema=\"" << base64Schema << "\"\n";
+                   << "digest=\"" << schDigest << "\" digest_start=\"" << schDigest.substr(0, 8)
+                   << "\",schema_size=" << base64Schema.size() << "i,schema=\"" << base64Schema << "\"\n";
                 // Flush what was accumulated before ...
                 m_dbClientWrite->flushBatch();
             }
