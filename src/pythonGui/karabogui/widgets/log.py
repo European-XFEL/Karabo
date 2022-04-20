@@ -10,8 +10,8 @@ from qtpy.QtCore import (
     Qt, Slot)
 from qtpy.QtGui import QClipboard, QColor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QApplication, QHBoxLayout, QLineEdit, QMenu,
-    QPushButton, QTableView, QVBoxLayout, QWidget)
+    QAbstractItemView, QApplication, QHBoxLayout, QHeaderView, QLineEdit,
+    QMenu, QPushButton, QTableView, QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
@@ -21,6 +21,10 @@ from karabogui.util import getSaveFileName
 TYPE_COLUMN = 1
 INSTANCE_COLUMN = 2
 MAX_LOG_ENTRIES = 300
+MAX_COLUMN_SIZE = 500
+
+Log = namedtuple("Log", ["dateTime", "messageType", "instanceId",
+                         "description", "traceback"])
 
 
 class LogWidget(QWidget):
@@ -73,9 +77,52 @@ class LogWidget(QWidget):
         self.table = table_view
         self.setLayout(vertical_layout)
 
+    def _resize_contents(self):
+        """Resize columns to contents"""
+        last_column = self.table_model.columnCount() - 1
+        hor_header = self.table.horizontalHeader()
+        width = hor_header.defaultSectionSize()
+        hor_header.setMinimumSectionSize(width)
+        hor_header.setMaximumSectionSize(MAX_COLUMN_SIZE)
+        hor_header.resizeSections(QHeaderView.ResizeToContents)
+        hor_header.resizeSection(last_column, QHeaderView.Stretch)
+
+        ver_header = self.table.verticalHeader()
+        height = ver_header.defaultSectionSize()
+        ver_header.setMinimumSectionSize(height)
+        ver_header.resizeSections(QHeaderView.ResizeToContents)
+
+    def _convert_log_data(self, data):
+        """Convert log data coming from the network"""
+        log_data = [Log(messageType=log["type"],
+                        instanceId=log["category"],
+                        description=log["message"],
+                        traceback=log.get("traceback", ""),
+                        dateTime=QDateTime.fromString(
+                            log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
+                    for log in data]
+        return log_data
+
+    def initialize(self, data):
+        new = self._convert_log_data(data)
+        self.table_model.initialize(new)
+        self._resize_contents()
+
+    def onLogDataAvailable(self, data):
+        new = self._convert_log_data(data)
+        model = self.table_model
+        model.add(new)
+        # If we are full we will remove data
+        difference = model.rowCount() - MAX_LOG_ENTRIES
+        if difference > 0:
+            model.prune(difference)
+
+    # ---------------------------------------------------------------------
+    # Slots
+
     @Slot(QPoint)
     def _context_menu(self, pos):
-        """The custom context menu of a reconfigurable table element"""
+        """The custom context menu of the log table"""
         index = self.table.selectionModel().currentIndex()
         menu = QMenu()
         if index.isValid():
@@ -104,30 +151,6 @@ class LogWidget(QWidget):
             clipboard = QApplication.clipboard()
             clipboard.clear(mode=QClipboard.Clipboard)
             clipboard.setText(log, mode=QClipboard.Clipboard)
-
-    def initialize(self, logData):
-        new = [Log(messageType=log["type"], instanceId=log["category"],
-                   description=log["message"],
-                   traceback=log.get("traceback", ""),
-                   dateTime=QDateTime.fromString(
-                       log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
-               for log in logData]
-        self.table_model.initialize(new)
-
-    def onLogDataAvailable(self, logData):
-        new = [Log(messageType=log["type"], instanceId=log["category"],
-                   description=log["message"],
-                   traceback=log.get("traceback", ""),
-                   dateTime=QDateTime.fromString(
-                       log["timestamp"], Qt.ISODate).toString(Qt.ISODate))
-               for log in logData]
-
-        model = self.table_model
-        model.add(new)
-        # If we are full we will remove data
-        difference = model.rowCount() - MAX_LOG_ENTRIES
-        if difference > 0:
-            self.table_model.prune(difference)
 
     @Slot(QModelIndex)
     def onItemDoubleClicked(self, index):
@@ -160,10 +183,6 @@ class LogWidget(QWidget):
                 out.write("{0} | {1} | {2} | {3} | {4} #\n".format(*log))
 
 
-Log = namedtuple("Log", ["dateTime", "messageType", "instanceId",
-                         "description", "traceback"])
-
-
 class TableLogModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -189,15 +208,12 @@ class TableLogModel(QAbstractTableModel):
         return 5
 
     icons = dict(DEBUG=icons.logDebug, INFO=icons.logInfo,
-                 WARN=icons.logWarning, WARN_LOW=icons.logWarning,
-                 WARN_HIGH=icons.logWarning, ERROR=icons.logError,
-                 ALARM_LOW=icons.logAlarm, ALARM_HIGH=icons.logAlarm)
+                 WARN=icons.logWarning, FATAL=icons.logError,
+                 ERROR=icons.logError)
 
     textColor = dict(DEBUG=QColor(0, 128, 0), INFO=QColor(0, 0, 128),
-                     WARN=QColor(255, 102, 0), WARN_LOW=QColor(255, 102, 0),
-                     WARN_HIGH=QColor(255, 102, 0),
-                     ALARM_LOW=QColor(255, 204, 102),
-                     ALARM_HIGH=QColor(255, 204, 102), ERROR=QColor(128, 0, 0))
+                     WARN=QColor(255, 102, 0), FATAL=QColor(128, 0, 0),
+                     ERROR=QColor(128, 0, 0))
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
