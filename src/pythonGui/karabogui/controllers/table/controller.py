@@ -399,7 +399,7 @@ class BaseFilterTableController(BaseTableController):
         self.searchLabel.setToolTip(
             f"Search column: {self.model.filterKeyColumn}")
 
-        clear_button = QPushButton("Clear", parent=widget)
+        clear_button = QPushButton("Clear Filter", parent=widget)
         clear_button.clicked.connect(self.searchLabel.clear)
 
         hor_layout.addWidget(self.searchLabel)
