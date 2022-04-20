@@ -23,6 +23,7 @@ from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
+IPTOS_LOWDELAY = 0x10
 
 
 def get_hostname_from_interface(address_range):
@@ -104,7 +105,16 @@ class Channel(object):
     async def readBytes(self):
         buf = (await self.reader.readexactly(calcsize(self.sizeCode)))
         size, = unpack(self.sizeCode, buf)
-        return (await self.reader.readexactly(size))
+        # For large chunks avoid StreamReader.readexactly
+        ba = bytearray()
+        reader = self.reader
+        while len(ba) < size:
+            b = await reader.read(size - len(ba))
+            if not b:
+                raise IncompleteReadError(
+                    partial=bytes(ba), expected=size)
+            ba.extend(b)
+        return ba
 
     async def readHash(self):
         r = await self.readBytes()
@@ -325,7 +335,12 @@ class NetworkInput(Configurable):
                     Schema(name=name, hash=schema.hash[name]["schema"]))
 
             reader, writer = await open_connection(
-                info["hostname"], int(info["port"]))
+                info["hostname"], int(info["port"]), limit=2**22)
+
+            sock = writer.get_extra_info("socket")
+            assert sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY)
+            # Set low delay according to unix manual IPTOS_LOWDELAY 0x10
+            sock.setsockopt(socket.SOL_IP, socket.IP_TOS, IPTOS_LOWDELAY)
             channel = Channel(reader, writer, channelName=output)
             with closing(channel):
                 # Tell the world we are connected before we start
