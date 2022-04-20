@@ -268,9 +268,9 @@ void BaseLogging_Test::tearDown() {
     const Epochstamp start;
     std::clog << "Start tearDown " << start.toIso8601Ext() << std::endl;
 
+    m_sigSlot.reset();
     m_deviceClient.reset();
     m_deviceServer.reset();
-    m_sigSlot.reset();
     EventLoop::stop();
     if (m_eventLoopThread.joinable()) {
         bool joined = m_eventLoopThread.try_join_for(boost::chrono::seconds(10));
