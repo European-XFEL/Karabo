@@ -136,10 +136,14 @@ class DlSchema2Influx():
                                 )
                                 data.append(
                                     '{m}__SCHEMAS,digest="{d}" '
+                                    'digest_start="{ds}",'
+                                    'schema_size={sch_sz}i,'
                                     'schema="{sch}" {t}'
                                     .format(
                                         m=safe_m,
                                         d=digest,
+                                        ds=digest[0:8],
+                                        sch_sz=len(sch_b),
                                         sch=sch_b,
                                         t=line_fields["timestamp"]
                                     )
