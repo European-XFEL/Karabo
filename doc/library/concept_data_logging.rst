@@ -5,7 +5,7 @@ The Data Logger
 ***************
 
 Karabo offers continuous logging of all properties by usage of the *Data Logger* service.
-This service is realized as a set of Karabo devices, which archive any changes of a 
+This service is realized as a set of Karabo devices, which archive any changes of a
 property and allow for indexing by trainId (if provided) or timestamp.
 
 The logging devices are managed by a data logger manager device, which manages
@@ -51,8 +51,8 @@ performance, as closed off log files contain information on the timestamps of
 the data they contain.
 
 Data logging devices are hidden at user access levels lower than admin. The devices
-being logged by each data logger instance can be found in its *devicesToBeLogged* 
-property. 
+being logged by each data logger instance can be found in its *devicesToBeLogged*
+property.
 
 
 Retrieving Logged Information
@@ -169,14 +169,14 @@ A local instance of InfluxDB can be started by using the command **karabo-starti
 Logging Database Organization
 -----------------------------
 
-Each Karabo topic will have its own InfluxDB database. In each database, the 
+Each Karabo topic will have its own InfluxDB database. In each database, the
 data will be organized in the set of measurements described below:
 
 * **Device Properties Measurement**: Each device being logged in the topic will
   have its own measurement, with the name of the device. The device properties
   being logged will be mapped to fields with the same name as the property. The
   trainIds associated to the logging records will also be mapped to a field. The
-  name of the user responsible for the property value change will be mapped to 
+  name of the user responsible for the property value change will be mapped to
   a tag in the device measurement. The value of the **karabo_user** tag will be
   either a user name (for changes associated to a user) or "." for changes that
   have no responsible user associated.
@@ -192,21 +192,21 @@ data will be organized in the set of measurements described below:
   2019-10-24T10:56:28Z Alice         1272                            False
   2019-10-24T11:00:02Z Bob           0                                                  9
   ==================== ============= ============= ================= ================== ======================
-  
+
   As shown in the example, the number of non-null fields varies among records -
-  the data logger will group the properties by the time they changed before writing 
-  them to InfluxDB. The timestamps for **time** are explicitly specified when data is 
+  the data logger will group the properties by the time they changed before writing
+  them to InfluxDB. The timestamps for **time** are explicitly specified when data is
   sent to InfluxDB. **karabo_user** is a tag. All the other columns are fields. Field names
   are mangled in order to support schema evolution. The mangling consists of adding
   the suffix "-[KARABO_TYPE]" to the field name. Properties with
-  redundant values, like **_device_id_** and **deviceId**, shouldn't be logged. 
+  redundant values, like **_device_id_** and **deviceId**, shouldn't be logged.
 
 * **Device Events Measurement**: This measurement will store the device events - currently
-  device instantiations, shutdowns and schema updates. 
-  
-  The log reader relies on device instantiation events for being able to retrieve the last 
-  known configuration if the given time point is not in an interval during which the device 
-  was active. Similarly, **DeviceClient.getPropertyHistory** relies on instatiantion events 
+  device instantiations, shutdowns and schema updates.
+
+  The log reader relies on device instantiation events for being able to retrieve the last
+  known configuration if the given time point is not in an interval during which the device
+  was active. Similarly, **DeviceClient.getPropertyHistory** relies on instatiantion events
   to know from when it must start its properties read sweep in case there is no change for
   the given property during the requested time interval.
 
@@ -222,27 +222,34 @@ data will be organized in the set of measurements described below:
   2019-10-24T11:00:02Z -LOG                  Alice
   ==================== ====== ============== =================
 
-  The timestamps for time are explicitly specified when data is sent to InfluxDB. **type** 
+  The timestamps for time are explicitly specified when data is sent to InfluxDB. **type**
   is a tag whose value indicates the type of the event. The remaining columns are fields.
-  **schema_digest** is a digest for a serialized schema stored in the Device Schema 
+  **schema_digest** is a digest for a serialized schema stored in the Device Schema
   Measurement described in the next item. **karabo_user** is the athenticated user that either
   instantiated or shutdown the device (not active yet - for now, it will always be "**.**").
-  
+
 * **Device Schema Measurement**:
 
   ==================== =============== =====================================================
   Name: GUI_SERVER_0__SCHEMAS
   ------------------------------------------------------------------------------------------
-  time                 *digest*        schema
-  ==================== =============== =====================================================
-  2019-10-24T10:54:04Z 3fd545689a12ce  RGF0YUdlbmVyYXRvcjo8P3htbCB2ZXJRGF0YUdlyYXRvcj ...
-  ==================== =============== =====================================================
+  time                 *digest*        digest_start schema_size schema
+  ==================== =============== ============ =========== ==================================================
+  2019-10-24T10:54:04Z 3fd545689a12ce  3fd54567     5349        RGF0YUdlbmVyYXRvcjo8P3htbCB2ZXJRGF0YUdlyYXRvcj ...
+  ==================== =============== ============ =========== ==================================================
 
-  The schema saved in the database is the base64 enconding of the schema serialized
-  in text form by the Karabo Framework. The digest is the SHA-1 hash of the text serialized
-  form of the schema.
+  The **schema** saved in the database is the base64 enconding of the device's schema as serialized
+  in binary form by the Karabo Framework. The **digest** is the SHA-1 hash of the binary serialized
+  form of the schema (before it is encoded in base64).
+  The **digest_start** and **schema_size** fields exist to ease exploration of data
+  stored in the Device Schema measurement:  InfluxQL only allows tag values to be output in the
+  results of a query if there's at least one field in the query selection. If **schema** was the only
+  field in the measurement, with its usually huge string values, any attempt to list digests in query
+  results would be cumbersome as the full schema values would also have to be output. To add to that
+  limitation, InfluxQL also lacks any function that allows to return either the length or a part of
+  a string metric.
 
-For the production environment, the replication factors of the retention policies 
-described above match the number of InfluxDB servers in the cluster. The durations of 
+For the production environment, the replication factors of the retention policies
+described above match the number of InfluxDB servers in the cluster. The durations of
 the retention policies should be the same for all the measurements. The exact durations
 have yet to be defined.
