@@ -47,7 +47,7 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     void testProducerContinuesConsumerRestart();
     void _testProducerRestartConsumerContinues();
     void _testProducerContinuesConsumerRestart();
-    void _resetConfig(const std::string& brokerProtocol, const std::vector<std::string>& brokers);
+    void _loopFunction(const std::string& functionName, const std::function<void()>& testFunction);
 
    private:
     std::string m_domain;
