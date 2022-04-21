@@ -1726,16 +1726,21 @@ class PythonDevice(NoFsm):
             self.log.INFO("Device is going down as instructed by \"{}\""
                           .format(senderid))
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
-        self.preDestruction()
-        self.stopFsm()
-        # TODO:
-        # Remove this hack once we know how to get rid of the object cleanly
-        # (slotInstanceGone will be called in _ss destructor again...).
-        self._ss.call("*", "slotInstanceGone", self.deviceid,
-                      self._ss.getInstanceInfo())
+        try:
+            self.preDestruction()
+            self.stopFsm()
+        except Exception as e:
+            # 'repr(e)' to get both, exception type and text
+            self.log.WARN(f"Clean-up failed in slotKillDevice: {repr(e)}")
+        finally:
+            # TODO:
+            # Remove this hack if known how to get rid of the object cleanly
+            # (slotInstanceGone will be called in _ss destructor again...).
+            self._ss.call("*", "slotInstanceGone", self.deviceid,
+                          self._ss.getInstanceInfo())
 
-        # This will trigger the central event-loop to finish
-        os.kill(os.getpid(), signal.SIGTERM)
+            # This will trigger the central event-loop to finish
+            os.kill(os.getpid(), signal.SIGTERM)
 
     def slotUpdateSchemaAttributes(self, updates):
         success = False
