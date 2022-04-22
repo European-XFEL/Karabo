@@ -394,8 +394,11 @@ class SignalSlotable(Configurable):
     async def slotKillDevice(self):
         if self.__initialized:
             self.__initialized = False
-            await get_event_loop().run_coroutine_or_thread(
-                self.onDestruction)
+            try:
+                await get_event_loop().run_coroutine_or_thread(
+                    self.onDestruction)
+            except Exception:
+                self.logger.exception("Exception in onDestruction")
         if self._ss is not None:
             await self._ss.stop_tasks()
 
