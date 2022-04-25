@@ -17,6 +17,7 @@ class DataLogging_Test : public BaseLogging_Test {
     CPPUNIT_TEST(influxAllTestRunnerWithDataMigration);
     CPPUNIT_TEST(testNoInfluxServerHandling);
     CPPUNIT_TEST(testInfluxMaxPerDevicePropLogRate);
+    CPPUNIT_TEST(testInfluxMaxSchemaLogRate);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -48,6 +49,15 @@ class DataLogging_Test : public BaseLogging_Test {
      * because a smaller threshold could easily interfere with the other tests.
      */
     void testInfluxMaxPerDevicePropLogRate();
+
+    /**
+     * @brief Checks that the maximum per device schema logging rate for Influx is being properly enforced.
+     *
+     * This test instantiates its own Influx DataLoggerManager with a much lower threshold for the maximum schema
+     * logging rate allowed. The smaller value is needed to make it easier to violate the threshold. It has to be
+     * run in isolation because a smaller threshold could easily interfere with the other tests.
+     */
+    void testInfluxMaxSchemaLogRate();
 
     /**
      * Test that manager goes to ERROR if server list and loggermap.xml are inconsistent
