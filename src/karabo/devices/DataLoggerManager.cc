@@ -255,6 +255,30 @@ namespace karabo {
                   .init()
                   .commit();
 
+            UINT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.maxSchemaLogRate")
+                  .displayedName("Max Schema Logging Rate (Kb/sec)")
+                  .description(
+                        "Schema updates for a device that would move its schema logging rate above this threshold are "
+                        "skipped. Sizes are for the base64 encoded form of the binary serialized schema.")
+                  .assignmentOptional()
+                  .defaultValue(5 * 1024) // 5 Mb/s
+                  .minInc(1)              // 1 Kb/s
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.schemaLogRatePeriod")
+                  .displayedName("Interval for schema logging rate calc")
+                  .description("Interval for calculating per device schema logging rate")
+                  .assignmentOptional()
+                  .defaultValue(5)
+                  .minInc(1)
+                  .maxInc(60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
             VECTOR_STRING_ELEMENT(expected)
                   .key("serverList")
                   .displayedName("Server list")
