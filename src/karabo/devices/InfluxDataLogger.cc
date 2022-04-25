@@ -9,9 +9,9 @@
 #include <nlohmann/json.hpp>
 
 // Precision is microseconds
-// for nanoseconds:  DUR is "ns",  PRECISION_FACTOR is 1000000000
+// for nanoseconds:  DUR is "ns",  PRECISION_FACTOR is 1'000'000'000
 #define DUR "u"
-#define PRECISION_FACTOR 1000000
+#define PRECISION_FACTOR 1'000'000
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger,
@@ -36,11 +36,12 @@ namespace karabo {
               m_archive(),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
               m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
+              m_secsOfLogOfRejectedData(0ull),
               m_maxPropLogRateBytesSec(input.get<unsigned int>("maxPropLogRateBytesSec")),
               m_propLogRatePeriod(input.get<unsigned int>("propLogRatePeriod")),
-              m_secsOfLogOfRejectedData(0ull),
+              m_maxSchemaLogRateBytesSec(input.get<unsigned int>("maxSchemaLogRateBytesSec")),
+              m_schemaLogRatePeriod(input.get<unsigned int>("schemaLogRatePeriod")),
               m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {}
-
 
         InfluxDeviceData::~InfluxDeviceData() {}
 
@@ -100,6 +101,29 @@ namespace karabo {
         }
 
 
+        unsigned int InfluxDeviceData::newSchemaLogRate(std::size_t schemaSize) {
+            // Advances the log rating window using the current timing reference
+            Epochstamp now;
+            const TimeDuration ratingWinDuration{m_schemaLogRatePeriod, 0ull};
+            while (!m_schemaLogRecs.empty() && (now - m_schemaLogRecs.back().epoch >= ratingWinDuration)) {
+                m_schemaLogRecs.pop_back();
+            }
+
+            std::size_t bytesWritten = schemaSize;
+            for (const LoggingRecord& rec : m_schemaLogRecs) {
+                bytesWritten += rec.sizeChars;
+            }
+
+            unsigned int newRate = bytesWritten / m_schemaLogRatePeriod;
+            if (newRate <= m_maxSchemaLogRateBytesSec) {
+                // There's room for logging the data; keep track of the saving.
+                m_schemaLogRecs.push_front(LoggingRecord(schemaSize, now));
+            }
+
+            return newRate;
+        }
+
+
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
             m_dbClientWrite->connectDbIfDisconnected();
 
@@ -112,7 +136,7 @@ namespace karabo {
 
             // store the local unix timestamp to compare the time difference w.r.t. incoming data.
             Epochstamp nowish;
-            std::vector<std::pair<std::string, std::string>> rejectedPaths; // path and reason
+            std::vector<RejectedData> rejectedPaths; // path and reason
             // To write log I need schema - but that has arrived before connecting signal[State]Changed to slotChanged
             // and thus before any data can arrive here in handleChanged.
             std::vector<std::string> paths;
@@ -409,7 +433,7 @@ namespace karabo {
 
 
         void InfluxDeviceData::terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
-                                              std::vector<std::pair<std::string, std::string>>& rejectedPathReasons) {
+                                              std::vector<RejectedData>& rejectedPathReasons) {
             unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             if (!query.str().empty()) {
                 // There's data to be output to Influx.
@@ -428,39 +452,51 @@ namespace karabo {
                 query.str("");
             }
 
-            if (!rejectedPathReasons.empty()) {
-                std::stringstream textSs;
-                textSs << "Skip properties of '" << m_deviceToBeLogged << "':";
-                for (const std::pair<std::string, std::string>& pathReason : rejectedPathReasons) {
-                    textSs << "\n'" << pathReason.first << "' (" << pathReason.second << ")";
-                }
-                std::string text(textSs.str());
-                const Epochstamp now;
-                if (now.getSeconds() > 30ull + m_secsOfLogOfRejectedData) {
-                    // Blame device only every 30 seconds to avoid log file spamming
-                    KARABO_LOG_FRAMEWORK_WARN << text;
-                    m_secsOfLogOfRejectedData = now.getSeconds();
-                }
-                boost::algorithm::replace_all(text, "\n", " "); // better no line breaks
-                std::stringstream badDataQuery;
-                if (ts == 0.) {
-                    // Far future data without any "decent" data in same update Hash: setting 'stamp' was skipped and it
-                    // stays at the start of unix epoch. The best realistic stamp is in fact 'now':
-                    ts = now.toTimestamp() * PRECISION_FACTOR;
-                }
-                // Bad data is logged in a device independent measurement to simplify retrieval of all bad data.
-                // DeviceId is the field name.
-                // NOTE: There is a potential name clash of this measurement and a potential device with
-                //       deviceId = "__BAD__DATA__".
-                //       But even if such a weird deviceId exists, it should more or less work since all properties of
-                //       it will have '-<Karabo-type>' appended to their field names. Then we would only clash between
-                //       properties of that device and other devices whose id ends with '-<Karabo-type>' and that
-                //       produce bad data stored here.
-                badDataQuery << "__BAD__DATA__  " << m_deviceToBeLogged << "=\"" << text << "\" " << ts << "\n";
-                m_dbClientWrite->enqueueQuery(badDataQuery.str());
-                // m_dbClientWrite->flushBatch(); // Should not be needed
-                rejectedPathReasons.clear();
+            logRejectedData(rejectedPathReasons, ts);
+            rejectedPathReasons.clear();
+        }
+
+
+        void InfluxDeviceData::logRejectedDatum(const RejectedData& reject) {
+            unsigned long long ts = karabo::util::Timestamp().toTimestamp() * PRECISION_FACTOR;
+            const auto rejects = std::vector<RejectedData>({reject});
+            logRejectedData(rejects, ts);
+        }
+
+
+        void InfluxDeviceData::logRejectedData(const std::vector<RejectedData>& rejects, unsigned long long ts) {
+            if (rejects.empty()) return;
+
+            std::stringstream textSs;
+            textSs << "Skipping " << rejects.size() << " log metric(s) for device '" << m_deviceToBeLogged << "':";
+            for (const std::pair<std::string, std::string>& reject : rejects) {
+                textSs << "\n'" << reject.first << "' (" << reject.second << ")";
             }
+            std::string text(textSs.str());
+            const Epochstamp now;
+            if (now.getSeconds() > 30ull + m_secsOfLogOfRejectedData) {
+                // Blame device only every 30 seconds to avoid log file spamming
+                KARABO_LOG_FRAMEWORK_WARN << text;
+                m_secsOfLogOfRejectedData = now.getSeconds();
+            }
+            boost::algorithm::replace_all(text, "\n", " "); // better no line breaks
+            std::stringstream badDataQuery;
+            if (ts == 0.) {
+                // Far future data without any "decent" data in same update Hash: setting 'stamp' was skipped and it
+                // stays at the start of unix epoch. The best realistic stamp is in fact 'now':
+                ts = now.toTimestamp() * PRECISION_FACTOR;
+            }
+            // Bad data is logged in a device independent measurement to simplify retrieval of all bad data.
+            // DeviceId is the field name.
+            // NOTE: There is a potential name clash of this measurement and a potential device with
+            //       deviceId = "__BAD__DATA__".
+            //       But even if such a weird deviceId exists, it should more or less work since all properties of
+            //       it will have '-<Karabo-type>' appended to their field names. Then we would only clash between
+            //       properties of that device and other devices whose id ends with '-<Karabo-type>' and that
+            //       produce bad data stored here.
+            badDataQuery << "__BAD__DATA__  " << m_deviceToBeLogged << "=\"" << text << "\" " << ts << "\n";
+            m_dbClientWrite->enqueueQuery(badDataQuery.str());
+            // m_dbClientWrite->flushBatch(); // Should not be needed
         }
 
 
@@ -475,13 +511,12 @@ namespace karabo {
                 return;
             }
 
-            // Use Binary serializer as soon as we encode into Base64:
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
                   karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
             serializer->save(schema, m_archive);
             const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
 
-            // Calculate 'digest' on serialized schema
+            // Calculate 'digest' of serialized schema
             const std::size_t DIGEST_LENGTH = 20;
             unsigned char obuf[DIGEST_LENGTH];
             SHA1(uarchive, m_archive.size(), obuf);
@@ -501,27 +536,53 @@ namespace karabo {
                                                const HttpResponse& o) {
             // TODO: Do error handling ...
             //...
-            const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
-            std::stringstream ss;
-            ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << schDigest << "\" " << ts << "\n";
-
+            bool schemaLogged = false;
             nl::json j = nl::json::parse(o.payload);
             auto count = j["results"][0]["series"][0]["values"][0][1];
             if (count.is_null()) {
-                // digest is not found:  json is '{"results":[{"statement_id":0}]}'
-                // Encode serialized schema into Base64
-                const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
-                std::string base64Schema = base64Encode(uarchive, m_archive.size());
-                // and write to SCHEMAS table ...
-                ss << m_deviceToBeLogged << "__SCHEMAS,"
-                   << "digest=\"" << schDigest << "\" schema=\"" << base64Schema << "\"\n";
-                // Flush what was accumulated before ...
+                // digest hasn't been found:  json is '{"results":[{"statement_id":0}]}'.
+                schemaLogged = logNewSchema(schDigest);
+            } else {
+                // digest has been found - schema already logged.
+                schemaLogged = true;
+            }
+            if (schemaLogged) {
+                const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
+                std::stringstream ss;
+                ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << schDigest << "\" " << ts
+                   << "\n";
+                KARABO_LOG_FRAMEWORK_DEBUG << "checkSchemaInDb ...\n" << o.payload;
+                m_dbClientWrite->enqueueQuery(ss.str());
                 m_dbClientWrite->flushBatch();
             }
-            // digest already exists!
-            KARABO_LOG_FRAMEWORK_DEBUG << "checkSchemaInDb ...\n" << o.payload;
-            m_dbClientWrite->enqueueQuery(ss.str());
-            m_dbClientWrite->flushBatch();
+        }
+
+
+        bool InfluxDeviceData::logNewSchema(const std::string& schemaDigest) {
+            // Encode serialized schema into Base64
+            const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
+            std::string base64Schema = base64Encode(uarchive, m_archive.size());
+            unsigned int newLogRate = newSchemaLogRate(base64Schema.size());
+            if (newLogRate <= m_maxSchemaLogRateBytesSec) {
+                // New schema can be logged.
+                std::stringstream ss;
+                ss << m_deviceToBeLogged << "__SCHEMAS,"
+                   << "digest=\"" << schemaDigest << "\" digest_start=\"" << schemaDigest.substr(0, 8)
+                   << "\",schema_size=" << base64Schema.size() << "i,schema=\"" << base64Schema << "\"\n";
+                // Flush what was accumulated before ...
+                m_dbClientWrite->flushBatch();
+                m_dbClientWrite->enqueueQuery(ss.str());
+
+                return true;
+            } else {
+                // New schema cannot be logged - would violate max schema logging rate threshold.
+                const RejectedData rejectedSch = std::make_pair(
+                      m_deviceToBeLogged + "::schema",
+                      "Update of schema with size '" + toString(base64Schema.size() / 1024) +
+                            " Kb' would reach a schema logging rate '" + toString(newLogRate / 1024) + " Kb/sec'.");
+                logRejectedDatum(rejectedSch);
+                return false;
+            }
         }
 
 
@@ -606,6 +667,30 @@ namespace karabo {
                   .key("propLogRatePeriod")
                   .displayedName("Interval for logging rate calc")
                   .description("Interval for calculating per device property logging rate")
+                  .assignmentOptional()
+                  .defaultValue(5)
+                  .minInc(1)
+                  .maxInc(60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("maxSchemaLogRate")
+                  .displayedName("Max Schema Logging Rate (Kb/sec)")
+                  .description(
+                        "Schema updates for a device that would move its schema logging rate above this threshold are "
+                        "skipped. Sizes are for the base64 encoded form of the binary serialized schema.")
+                  .assignmentOptional()
+                  .defaultValue(5 * 1024) // 5 Mb/s
+                  .minInc(1)              // 1 Kb/s
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
+                  .key("schemaLogRatePeriod")
+                  .displayedName("Interval for schema logging rate calc")
+                  .description("Interval for calculating per device schema logging rate")
                   .assignmentOptional()
                   .defaultValue(5)
                   .minInc(1)
@@ -705,6 +790,8 @@ namespace karabo {
             config.set("maxVectorSize", get<unsigned int>("maxVectorSize"));
             config.set("maxPropLogRateBytesSec", get<unsigned int>("maxPerDevicePropLogRate") * 1024);
             config.set("propLogRatePeriod", get<unsigned int>("propLogRatePeriod"));
+            config.set("maxSchemaLogRateBytesSec", get<unsigned int>("maxSchemaLogRate") * 1024);
+            config.set("schemaLogRatePeriod", get<unsigned int>("schemaLogRatePeriod"));
             DeviceData::Pointer deviceData =
                   Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
