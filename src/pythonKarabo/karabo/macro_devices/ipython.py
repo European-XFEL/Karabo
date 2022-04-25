@@ -12,8 +12,7 @@ from jupyter_client.manager import KernelManager
 from karabo.common.states import State
 from karabo.interactive.ikarabo import SCRIPT
 from karabo.middlelayer import Device, coslot
-from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, Int32, Slot, VectorChar)
+from karabo.native import AccessLevel, AccessMode, Int32, Slot, VectorChar
 
 
 class ChannelMixin(ZMQSocketChannel, ChannelABC):
@@ -71,10 +70,6 @@ class IPythonKernel(Device):
     client = None
     manager = None
 
-    archive = Bool(
-        displayedName="Archive", accessMode=AccessMode.RECONFIGURABLE,
-        assignment=Assignment.OPTIONAL, defaultValue=False)
-
     @VectorChar(
         accessMode=AccessMode.RECONFIGURABLE,
         requiredAccessLevel=AccessLevel.EXPERT)
@@ -127,7 +122,8 @@ class IPythonKernel(Device):
         info = super(IPythonKernel, self)._initInfo()
         info["lang"] = "python"
         # XXX: The GUI cannot handle this device as client for the time being
-        info["type"] = "device"
+        #      treat it as a macro so it will not be archived.
+        info["type"] = "macro"
         return info
 
     @coslot
