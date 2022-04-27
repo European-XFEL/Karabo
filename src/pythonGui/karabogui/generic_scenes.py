@@ -4,7 +4,7 @@ from karabo.common.display_types import (
 from karabo.common.scenemodel.api import (
     get_alarm_graph_scene, get_image_scene, get_state_graph_scene,
     get_trendline_scene, get_vector_scene)
-from karabogui.binding.types import (
+from karabogui.binding.binding_types import (
     BoolBinding, FloatBinding, ImageBinding, IntBinding, NDArrayBinding,
     NodeBinding, PipelineOutputBinding, VectorNumberBinding)
 

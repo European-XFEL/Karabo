@@ -13,7 +13,7 @@ from karabo.common.scenemodel.api import (
     VectorGraphModel, build_graph_config, restore_graph_config)
 from karabo.common.scenemodel.widgets.graph_plots import NDArrayGraphModel
 from karabogui.binding.api import VectorNumberBinding
-from karabogui.binding.types import NDArrayBinding
+from karabogui.binding.binding_types import NDArrayBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.arrays import get_array_data

@@ -9,10 +9,10 @@ from karabo.common.api import ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_network, get_topology
 
-from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .types import (
+from .binding_types import (
     BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding, SlotBinding,
     VectorBinding)
+from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 _NOCAST_BINDINGS = (FloatBinding, VectorBinding)
