@@ -41,7 +41,7 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     void testReadingHeartbeatsAndLogs();
     void _testReadingHeartbeatsAndLogs();
     void testReadingGlobalCalls();
-    void _testReadingGlobalCalls(const std::string& brokerAddress);
+    void _testReadingGlobalCalls(const std::vector<std::string>& brokerAddress);
     void testReverseOrderedPublishSubscribe();
     void testProducerRestartConsumerContinues();
     void testProducerContinuesConsumerRestart();
