@@ -8,7 +8,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC)
 from karabo.native import Hash, Timestamp, is_equal, simple_deepcopy
 
-from . import types
+from . import binding_types as types
 
 
 def get_editor_value(property_proxy, default=None):
