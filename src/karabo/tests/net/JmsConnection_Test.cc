@@ -15,8 +15,7 @@
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
 #include "karabo/net/JmsProducer.hh"
-
-
+#include "karabo/tests/BrokerUtils.hh"
 using namespace karabo::util;
 using namespace karabo::net;
 
@@ -24,10 +23,9 @@ CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 
 
 JmsConnection_Test::JmsConnection_Test()
-    // If neither environment variable defined nor tcp://exfl-broker.desy.de:7777 in reach,
-    // change the latter e.g. to "tcp://localhost:7777"
-    : m_defaultBrokers(fromString<std::string, std::vector>(
-            getenv("KARABO_BROKER") ? getenv("KARABO_BROKER") : "tcp://exfl-broker.desy.de:7777")),
+    // Use the environment variable KARABO_CI_BROKERS to define the brokers to use in tests:
+    // e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
+    : m_defaultBrokers(getJmsBrokerFromEnv()),
       m_baseTopic(
             Broker::brokerDomainFromEnv()), // parallel CIs or users must get different topics, so take from environment
       m_messageCount(0) {}
@@ -37,6 +35,10 @@ JmsConnection_Test::~JmsConnection_Test() {}
 
 
 void JmsConnection_Test::testConnect() {
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No JMS broker in environment. Skipping..." << std::flush;
+        return;
+    }
     { // constructor with empty vector<string> leads to exception in connect()
         m_connection = JmsConnection::Pointer(new JmsConnection(std::vector<std::string>()));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
@@ -122,6 +124,10 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
 
 
 void JmsConnection_Test::testCommunication1() {
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No JMS broker in environment. Skipping..." << std::flush;
+        return;
+    }
     // Here we test e.g. switching topic in consumer and producer
     m_messageCount = 0;
     m_failures.clear();
@@ -168,6 +174,10 @@ void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
 
 
 void JmsConnection_Test::testCommunication2() {
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No JMS broker in environment. Skipping..." << std::flush;
+        return;
+    }
     // Here we basically test selectors for the consumer.
 
     m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
@@ -209,6 +219,10 @@ void JmsConnection_Test::testCommunication2() {
 
 
 void JmsConnection_Test::testPermanentRead() {
+    if (m_defaultBrokers.empty()) {
+        std::clog << " No JMS broker in environment. Skipping..." << std::flush;
+        return;
+    }
     m_connection = boost::make_shared<JmsConnection>(m_defaultBrokers);
     m_connection->connect();
 
