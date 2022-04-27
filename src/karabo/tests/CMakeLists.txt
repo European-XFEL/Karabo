@@ -60,6 +60,13 @@ set(TEST_TARGETS
     xmsTestRunner
 )
 
+add_library(BROKER_UTILS OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/BrokerUtils.cc)
+target_link_libraries(
+    BROKER_UTILS
+    ${KARABO_LIB_TARGET_NAME}
+    ${CPPUNIT}
+)
+
 add_library(TEST_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunner.cc)
 target_link_libraries(
     TEST_RUNNER
@@ -108,6 +115,7 @@ set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/ReadAsyncStringUntil_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Strand_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/TcpNetworking_Test.cc
+    $<TARGET_OBJECTS:BROKER_UTILS>
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
 )
 
@@ -144,6 +152,7 @@ set(xmsTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/xms/InputOutputChannel_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/xms/Memory_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/xms/SignalSlotable_Test.cc
+    $<TARGET_OBJECTS:BROKER_UTILS>
     $<TARGET_OBJECTS:TEST_RUNNER>
 )
 

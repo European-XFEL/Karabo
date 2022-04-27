@@ -15,21 +15,12 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/tests/BrokerUtils.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
 using namespace karabo::util;
 using namespace karabo::xms;
-
-// please note that these network addresses might change in the future
-// or might be not reacheable to outside the European XFEL network.
-// use the environment variables KARABO_CI_BROKERS,
-// e.g. export KARABO_CI_BROKERS=tcp://a-jms-broker:7777;amqp://an-amqp-broker:5672
-
-#define MQTT_BROKER_DEFAULT "mqtt://exfldl02n0:1883"
-#define JMS_BROKER_DEFAULT "tcp://exflbkr02n0:7777"
-#define AMQP_BROKER_DEFAULT "amqp://xfel:karabo@exflctrl01:5672"
-#define REDIS_BROKER_DEFAULT "redis://exflctrl01:6379"
 
 const int numWaitIterations = 1000;
 const int sleepPerWaitIterationMs = 5;
@@ -167,7 +158,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_Test);
 
 
 SignalSlotable_Test::SignalSlotable_Test()
-    : m_mqttTimeoutBackup(""), m_redisTimeoutBackup(""), m_amqpTimeoutBackup("") {
+    : m_mqttTimeoutBackup(""),
+      m_redisTimeoutBackup(""),
+      m_amqpTimeoutBackup(""),
+      m_brokersUnderTest(getBrokersFromEnv()) {
     const char* mqttTimeout = getenv("KARABO_MQTT_TIMEOUT");
     if (mqttTimeout) {
         m_mqttTimeoutBackup.assign(mqttTimeout);
@@ -187,32 +181,6 @@ SignalSlotable_Test::SignalSlotable_Test()
         setenv("KARABO_AMQP_TIMEOUT", "15", true);
     }
     m_karaboBrokerBackup = (getenv("KARABO_BROKER") ? getenv("KARABO_BROKER") : "");
-    char* brokers_env = getenv("KARABO_CI_BROKERS");
-    if (brokers_env) {
-        std::string brokers(brokers_env);
-        std::vector<std::string> brokerUrls;
-        boost::split(brokerUrls, brokers, boost::is_any_of(";"));
-        for (const std::string& brokerUrl : brokerUrls) {
-            const std::string::size_type n = brokerUrl.find(":");
-            if (n == std::string::npos) {
-                std::clog << "Unexpected Broker syntax for broker '" << brokerUrl << "'. Ignoring..." << std::endl;
-                continue;
-            }
-            const std::string protocol = brokerUrl.substr(0, n);
-            if (protocol == "tcp") {
-                m_brokersUnderTest.set("jms", brokerUrl);
-            } else if (protocol == "mqtt" || protocol == "amqp" || protocol == "redis") {
-                m_brokersUnderTest.set(protocol, brokerUrl);
-            } else {
-                std::clog << "Unexpected Broker protocol '" << protocol << "'. Ignoring..." << std::endl;
-            }
-        }
-    } else {
-        m_brokersUnderTest.set<std::string>("jms", JMS_BROKER_DEFAULT);
-        m_brokersUnderTest.set<std::string>("mqtt", MQTT_BROKER_DEFAULT);
-        m_brokersUnderTest.set<std::string>("amqp", AMQP_BROKER_DEFAULT);
-        m_brokersUnderTest.set<std::string>("redis", REDIS_BROKER_DEFAULT);
-    }
 }
 
 
@@ -246,11 +214,14 @@ void SignalSlotable_Test::setUp() {
 void SignalSlotable_Test::tearDown() {}
 
 void SignalSlotable_Test::_loopFunction(const std::string& functionName, const std::function<void()>& testFunction) {
+    if (m_brokersUnderTest.empty()) {
+        std::clog << "\n\t" << functionName << " No broker specified in the environment, skipping" << std::endl;
+    }
     for (Hash::const_iterator it = m_brokersUnderTest.begin(); it != m_brokersUnderTest.end(); ++it) {
-        const std::string& broker = it->getValue<std::string>();
+        const std::vector<std::string>& brokers = it->getValue<std::vector<std::string>>();
         const std::string& protocol = it->getKey();
-        std::clog << "\n\t" << functionName << " " << protocol << " : '" << broker << "'" << std::endl;
-        setenv("KARABO_BROKER", broker.c_str(), true);
+        std::clog << "\n\t" << functionName << " " << protocol << " : '" << toString(brokers) << "'" << std::endl;
+        setenv("KARABO_BROKER", toString(brokers).c_str(), true);
         testFunction();
     }
 }
