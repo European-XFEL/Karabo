@@ -5,10 +5,10 @@ from karabo.native import (
     AccessMode, Assignment, DaqPolicy, Hash, MetricPrefix, Timestamp, Unit,
     has_changes, is_equal)
 
+from .binding_types import (
+    BindingNamespace, BindingRoot, NodeBinding, SlotBinding, VectorHashBinding)
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .types import (
-    BindingNamespace, BindingRoot, NodeBinding, SlotBinding, VectorHashBinding)
 from .util import attr_fast_deepcopy
 from .validate import sanitize_table_value
 
