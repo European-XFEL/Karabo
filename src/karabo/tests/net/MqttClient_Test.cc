@@ -12,10 +12,7 @@
 #include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/MqttClient.hh"
-
-
-// These default settings are effective only if corresponding env. vars not defined...
-#define MQTT_BROKERS "mqtt://exfldl02n0:1883"
+#include "karabo/tests/BrokerUtils.hh"
 
 using namespace karabo::util;
 using namespace karabo::net;
@@ -37,14 +34,11 @@ class Publisher : public MessageProducer {
           m_qos(qos),
           m_topic(topic),
           m_future(m_promise.get_future()),
-          m_brokers(MQTT_BROKERS),
-          m_domain(Broker::brokerDomainFromEnv()) {
-        if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-    }
+          m_brokers(getMqttBrokerFromEnv()),
+          m_domain(Broker::brokerDomainFromEnv()) {}
 
     void start(const std::string& classId) {
-        Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                    m_instanceId);
+        Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", m_instanceId);
         // auto publisherClient = Configurator<MqttClient>::create("MqttCppClient", config);
         m_client = MqttClient::create(classId, config);
         m_client->connectAsync(boost::bind(&Publisher::handleConnect, this, _1));
@@ -84,7 +78,7 @@ class Publisher : public MessageProducer {
     const std::string m_topic;
     std::promise<void> m_promise;
     std::future<void> m_future;
-    std::string m_brokers;
+    std::vector<std::string> m_brokers;
     std::string m_domain;
 };
 
@@ -98,14 +92,11 @@ class Subscriber : public MessageHandler {
           m_topic(topic),
           m_future(m_promise.get_future()),
           m_subFuture(m_subPromise.get_future()),
-          m_brokers(MQTT_BROKERS),
-          m_domain(Broker::brokerDomainFromEnv()) {
-        if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-    }
+          m_brokers(getMqttBrokerFromEnv()),
+          m_domain(Broker::brokerDomainFromEnv()) {}
 
     void start(const std::string& classId) {
-        Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                    m_instanceId);
+        Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", m_instanceId);
         m_client = MqttClient::create(classId, config);
         m_client->connectAsync([this](const boost::system::error_code ec) {
             CPPUNIT_ASSERT(!ec);
@@ -152,16 +143,15 @@ class Subscriber : public MessageHandler {
     std::future<void> m_future;
     std::promise<void> m_subPromise;
     std::future<void> m_subFuture;
-    std::string m_brokers;
+    std::vector<std::string> m_brokers;
     std::string m_domain;
 };
 
 
-MqttClient_Test::MqttClient_Test() : m_brokers(MQTT_BROKERS), m_domain(Broker::brokerDomainFromEnv()) {
+MqttClient_Test::MqttClient_Test() : m_brokers(getMqttBrokerFromEnv()), m_domain(Broker::brokerDomainFromEnv()) {
     // Logger::configure(Hash("priority","ERROR"));
     // Logger::useOstream();
     std::clog << std::flush;
-    if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
 }
 
 
@@ -207,14 +197,17 @@ void MqttClient_Test::testTopicMatch() {
 
 
 void MqttClient_Test::testConnectSync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testConnectSync_("MqttCppClient");
     //    testConnectSync_("MqttPahoClient");
 }
 
 
 void MqttClient_Test::testConnectSync_(const std::string& classId) {
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                "testConnectSync_" + classId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", "testConnectSync_" + classId);
 
     // Connect to the default broker (environment variable)
     auto client = MqttClient::create(classId, config);
@@ -227,7 +220,7 @@ void MqttClient_Test::testConnectSync_(const std::string& classId) {
     CPPUNIT_ASSERT(client->isConnected() == false);
     client.reset();
 
-    config.set("brokers", fromString<std::string, std::vector>(m_brokers));
+    config.set("brokers", m_brokers);
     client = MqttClient::create(classId, config);
     // Try to connect two times, the second time should return an error
     ec = client->connect();
@@ -265,14 +258,17 @@ void MqttClient_Test::testConnectSync_(const std::string& classId) {
 
 
 void MqttClient_Test::testConnectAsync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testConnectAsync_("MqttCppClient");
     //    testConnectAsync_("MqttPahoClient");
 }
 
 
 void MqttClient_Test::testConnectAsync_(const std::string& classId) {
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                "testConnectAsync_" + classId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", "testConnectAsync_" + classId);
 
     std::string default_broker;
     {
@@ -342,6 +338,10 @@ void MqttClient_Test::testConnectAsync_(const std::string& classId) {
 
 
 void MqttClient_Test::testTryingToCallOperationsWithoutBeingConnected() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testTryingToCallOperationsWithoutBeingConnected_("MqttCppClient");
     //    testTryingToCallOperationsWithoutBeingConnected_("MqttPahoClient");
 }
@@ -351,7 +351,7 @@ void MqttClient_Test::testTryingToCallOperationsWithoutBeingConnected_(const std
     std::promise<void> promise;
     std::future<void> future(promise.get_future());
 
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId",
                 "testTryingToCallOperationsWithoutBeingConnected");
     auto client = MqttClient::create(classId, config);
     auto ec = client->subscribe("foo", SubQos::AtMostOnce, ReadHashHandler());
@@ -397,8 +397,7 @@ void MqttClient_Test::testPublishSubscribeSync(const std::string& classId, const
     auto future = promise.get_future();
 
     std::string instanceId = "test" + classId + operationStr;
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                instanceId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", instanceId);
     auto client = MqttClient::create(classId, config);
     auto ec = client->connect();
     CPPUNIT_ASSERT(!ec);
@@ -464,8 +463,7 @@ void MqttClient_Test::testPublishManySubscribeSync(const std::string& classId, c
     auto future2 = promise2.get_future();
 
     std::string instanceId = "test" + classId + operationStr;
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                instanceId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", instanceId);
     auto client = MqttClient::create(classId, config);
     auto ec = client->connect();
     CPPUNIT_ASSERT(!ec);
@@ -556,8 +554,7 @@ void MqttClient_Test::testPublishMultiSubscribeSync(const std::string& classId, 
     auto future2 = promise2.get_future();
 
     std::string instanceId = "test" + classId + operationStr;
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                instanceId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", instanceId);
     auto client = MqttClient::create(classId, config);
     auto ec = client->connect();
     CPPUNIT_ASSERT(!ec);
@@ -636,6 +633,10 @@ void MqttClient_Test::testPublishMultiSubscribeSync(const std::string& classId, 
 
 
 void MqttClient_Test::testPublishSubscribeAtMostOnceSync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testPublishSubscribeSync("MqttCppClient", 0);
     testPublishManySubscribeSync("MqttCppClient", 0);
     testPublishMultiSubscribeSync("MqttCppClient", 0);
@@ -646,6 +647,10 @@ void MqttClient_Test::testPublishSubscribeAtMostOnceSync() {
 
 
 void MqttClient_Test::testPublishSubscribeAtLeastOnceSync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testPublishSubscribeSync("MqttCppClient", 1);
     testPublishManySubscribeSync("MqttCppClient", 1);
     testPublishMultiSubscribeSync("MqttCppClient", 1);
@@ -656,6 +661,10 @@ void MqttClient_Test::testPublishSubscribeAtLeastOnceSync() {
 
 
 void MqttClient_Test::testPublishSubscribeExactlyOnceSync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testPublishSubscribeSync("MqttCppClient", 2);
     testPublishManySubscribeSync("MqttCppClient", 2);
     testPublishMultiSubscribeSync("MqttCppClient", 2);
@@ -678,8 +687,7 @@ void MqttClient_Test::testPublishSubscribeAsync(const std::string& classId, cons
     std::string operationStr = qos2operationString(qos);
     const std::string TOPIC = m_domain + "/" + classId + "/testPublishSubscribeAsync_" + operationStr + "_Async/0";
     std::string instanceId = m_domain + "_" + classId + "_PublishSubscribe_" + operationStr + "_Async";
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                instanceId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", instanceId);
     std::promise<void> promRecv, promDisc;
     auto futRecv = promRecv.get_future();
     auto futDisc = promDisc.get_future();
@@ -762,8 +770,7 @@ void MqttClient_Test::testPublishManySubscribeAsync(const std::string& classId, 
           m_domain + "/" + classId + "/testPublishManySubscribeAsync_SPECIAL_" + operationStr + "_Async/";
     const std::string TOPIC3 = SPEC + "3";
     std::string instanceId = m_domain + "_" + classId + "_PublishManySubscribeAsync_" + operationStr + "_Async";
-    Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                instanceId);
+    Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", instanceId);
     std::promise<void> promMsgReceived1, promMsgReceived2, promMsgReceived3, promDisconnected;
     auto futMsgReceived1 = promMsgReceived1.get_future();
     auto futMsgReceived2 = promMsgReceived2.get_future();
@@ -870,6 +877,10 @@ void MqttClient_Test::testPublishManySubscribeAsync(const std::string& classId, 
 
 
 void MqttClient_Test::testPublishSubscribeAtMostOnceAsync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testPublishSubscribeAsync("MqttCppClient", 0);
     testPublishManySubscribeAsync("MqttCppClient", 0);
     //    testPublishSubscribeAsync("MqttPahoClient",0);
@@ -878,6 +889,10 @@ void MqttClient_Test::testPublishSubscribeAtMostOnceAsync() {
 
 
 void MqttClient_Test::testPublishSubscribeAtLeastOnceAsync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testPublishSubscribeAsync("MqttCppClient", 1);
     testPublishManySubscribeAsync("MqttCppClient", 1);
     //    testPublishSubscribeAsync("MqttPahoClient",1);
@@ -885,6 +900,10 @@ void MqttClient_Test::testPublishSubscribeAtLeastOnceAsync() {
 }
 
 void MqttClient_Test::testPublishSubscribeExactlyOnceAsync() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testPublishSubscribeAsync("MqttCppClient", 2);
     testPublishManySubscribeAsync("MqttCppClient", 2);
     //    testPublishSubscribeAsync("MqttPahoClient",2);
@@ -893,6 +912,10 @@ void MqttClient_Test::testPublishSubscribeExactlyOnceAsync() {
 
 
 void MqttClient_Test::testMultipleSubscribersToTheSameTopic() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testMultipleSubscribersToTheSameTopic_("MqttCppClient");
     //    testMultipleSubscribersToTheSameTopic_("MqttPahoClient");
 }
@@ -975,6 +998,10 @@ void MqttClient_Test::testMultipleSubscribersToTheSameTopic_(const std::string& 
 }
 
 void MqttClient_Test::testMultipleSubscriptionsToTopicsWithAndWithoutWildcards() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testMultipleSubscriptionsToTopicsWithAndWithoutWildcards_("MqttCppClient");
     //    testMultipleSubscriptionsToTopicsWithAndWithoutWildcards_("MqttPahoClient");
 }
@@ -1073,6 +1100,10 @@ void MqttClient_Test::testMultipleSubscriptionsToTopicsWithAndWithoutWildcards_(
 }
 
 void MqttClient_Test::testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics_("MqttCppClient");
     //    testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics_("MqttPahoClient");
 }
@@ -1091,14 +1122,11 @@ void MqttClient_Test::testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics_
         Consumer(const std::string& instanceId)
             : m_instanceId(instanceId),
               m_future(m_promise.get_future()),
-              m_brokers(MQTT_BROKERS),
-              m_domain(Broker::brokerDomainFromEnv()) {
-            if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-        }
+              m_brokers(getMqttBrokerFromEnv()),
+              m_domain(Broker::brokerDomainFromEnv()) {}
 
         void start(const std::string& classId) {
-            Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                        m_instanceId);
+            Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", m_instanceId);
             m_client = MqttClient::create(classId, config);
             m_client->connectAsync([this](const boost::system::error_code ec) {
                 CPPUNIT_ASSERT(!ec);
@@ -1141,7 +1169,7 @@ void MqttClient_Test::testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics_
         const std::string m_instanceId;
         std::promise<void> m_promise;
         std::future<void> m_future;
-        std::string m_brokers;
+        std::vector<std::string> m_brokers;
         std::string m_domain;
     };
 
@@ -1228,6 +1256,10 @@ void MqttClient_Test::testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics_
 
 
 void MqttClient_Test::testTopicsSubscriptionsInArbitraryOrder() {
+    if (m_brokers.empty()) {
+        std::clog << " No MQTT broker in environment. Skipping..." << std::flush;
+        return;
+    }
     testTopicsSubscriptionsInArbitraryOrder_("MqttCppClient");
     //    testTopicsSubscriptionsInArbitraryOrder_("MqttPahoClient");
 }
@@ -1254,14 +1286,11 @@ void MqttClient_Test::testTopicsSubscriptionsInArbitraryOrder_(const std::string
               m_future1(m_promise1.get_future()),
               m_n2(0),
               m_future2(m_promise2.get_future()),
-              m_brokers(MQTT_BROKERS),
-              m_domain(Broker::brokerDomainFromEnv()) {
-            if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-        }
+              m_brokers(getMqttBrokerFromEnv()),
+              m_domain(Broker::brokerDomainFromEnv()) {}
 
         void start(const std::string& classId) {
-            Hash config("brokers", fromString<std::string, std::vector>(m_brokers), "domain", m_domain, "instanceId",
-                        m_instanceId);
+            Hash config("brokers", m_brokers, "domain", m_domain, "instanceId", m_instanceId);
             m_client = MqttClient::create(classId, config);
             m_client->connectAsync([this](const boost::system::error_code ec) {
                 CPPUNIT_ASSERT(!ec);
@@ -1343,7 +1372,7 @@ void MqttClient_Test::testTopicsSubscriptionsInArbitraryOrder_(const std::string
         std::uint32_t m_n2;
         std::promise<void> m_promise2;
         std::future<void> m_future2;
-        std::string m_brokers;
+        std::vector<std::string> m_brokers;
         std::string m_domain;
     };
 
