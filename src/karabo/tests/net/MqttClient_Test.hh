@@ -77,7 +77,7 @@ class MqttClient_Test : public CPPUNIT_NS::TestFixture {
     std::string qos2operationString(const int qos);
 
    private:
-    std::string m_brokers;
+    std::vector<std::string> m_brokers;
     std::string m_domain;
 };
 
