@@ -4,28 +4,26 @@ from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout, QListView, QToolButton, QWidget)
 from traits.api import Instance
 
-import karabogui.access as krb_access
 import karabogui.icons as icons
-from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayIconCommandModel
-from karabogui.binding.api import SlotBinding, get_binding_value
+from karabogui.binding.api import SlotBinding
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 
 BUTTON_ICONS = {
-    'Left': icons.arrowFancyLeft,
-    'Right': icons.arrowFancyRight,
-    'Up': icons.arrowFancyUp,
-    'Down': icons.arrowFancyDown,
-    'Start': icons.mediaStart,
-    'Stop': icons.mediaStop,
-    'Pause': icons.mediaPause,
-    'Reset': icons.mediaBackward,
-    'Acquire': icons.mediaRecord,
-    'On': icons.on,
-    'Off': icons.off,
-    'Abort': icons.stop,
-    'Halt': icons.halt
+    "Left": icons.arrowFancyLeft,
+    "Right": icons.arrowFancyRight,
+    "Up": icons.arrowFancyUp,
+    "Down": icons.arrowFancyDown,
+    "Start": icons.mediaStart,
+    "Stop": icons.mediaStop,
+    "Pause": icons.mediaPause,
+    "Reset": icons.mediaBackward,
+    "Acquire": icons.mediaRecord,
+    "On": icons.on,
+    "Off": icons.off,
+    "Abort": icons.stop,
+    "Halt": icons.halt
 }
 
 NO_SELECTION = icons.imageMissing
@@ -58,7 +56,7 @@ class IconSelectionDialog(QDialog):
 
         # Variables
         self.icon = NO_SELECTION
-        self.name = ''
+        self.name = ""
 
         # Setup list view
         self.list_view = QListView(self)
@@ -83,8 +81,8 @@ class IconSelectionDialog(QDialog):
         self.close()
 
 
-@register_binding_controller(ui_name='IconCommand',
-                             klassname='DisplayIconCommand',
+@register_binding_controller(ui_name="IconCommand",
+                             klassname="DisplayIconCommand",
                              binding_type=SlotBinding,
                              priority=-10)
 class DisplayIconCommand(BaseBindingController):
@@ -104,7 +102,7 @@ class DisplayIconCommand(BaseBindingController):
         self._button.clicked.connect(self.execute_action)
         layout.addWidget(self._button)
 
-        change_icon = QAction('Change Icon', widget)
+        change_icon = QAction("Change Icon", widget)
         change_icon.triggered.connect(self._change_icon)
         widget.addAction(change_icon)
 
@@ -128,13 +126,5 @@ class DisplayIconCommand(BaseBindingController):
         self.model.icon_name = dialog.name
 
     def state_update(self, proxy):
-        root_proxy = proxy.root_proxy
-        value = get_binding_value(root_proxy.state_binding, '')
-        if value == '':
-            return
-        binding = proxy.binding
-        state = State(value)
-        is_allowed = binding.is_allowed(state)
-        is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
-                         binding.required_access_level)
-        self._button.setEnabled(is_allowed and is_accessible)
+        enable = is_proxy_allowed(proxy)
+        self._button.setEnabled(enable)
