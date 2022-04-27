@@ -1,6 +1,6 @@
 import numpy as np
 
-import karabogui.binding.types as types
+import karabogui.binding.binding_types as types
 from karabo.common.const import (
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC,
