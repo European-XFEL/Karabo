@@ -23,9 +23,10 @@ namespace karabo {
         class InfluxDataLogger;
 
 
-        typedef boost::function<void()> AsyncHandler;
-        typedef boost::function<void(const karabo::net::HttpResponse&)> InfluxResponseHandler;
+        using AsyncHandler = boost::function<void()>;
+        using InfluxResponseHandler = boost::function<void(const karabo::net::HttpResponse&)>;
 
+        using RejectedData = std::pair<std::string, std::string>; // Path, Reason
 
         struct InfluxDeviceData : public karabo::devices::DeviceData {
 
@@ -35,7 +36,7 @@ namespace karabo {
             /**
              * @brief The size, in characters, and the epoch seconds of a device log entry saved to Influx.
              *
-             * Used for calculating the logging rate of the device.
+             * Used for calculating the logging rates associated to a device.
              */
             struct LoggingRecord {
                 std::size_t sizeChars;
@@ -60,7 +61,7 @@ namespace karabo {
             void login(const karabo::util::Hash& configuration, const std::vector<std::string>& sortedPaths);
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
-                                std::vector<std::pair<std::string, std::string>>& rejectedPathReasons);
+                                std::vector<RejectedData>& rejectedPathReasons);
 
             void checkSchemaInDb(const karabo::util::Timestamp& stamp,
                                  const std::string& schDigest,
@@ -84,6 +85,49 @@ namespace karabo {
             unsigned int newPropLogRate(const std::string& propPath, karabo::util::Epochstamp currentStamp,
                                         std::size_t currentSize);
 
+            /**
+             * @brief Calculates what the value of the schema logging rate of the device will be when the logging of
+             * a schema with a given size is taken into account. As schemas currently don't have associated time
+             * information, the current system time is used for all the timing references.
+             *
+             * @param schemaSize The size for the new schema to be logged - this is used along with the other
+             * records in the current log rating window to calculate the new value for the schema logging rate.
+             * @return The updated value of the schema logging rate, in bytes/sec, taking the logging of the
+             * schema into account.
+             */
+            unsigned int newSchemaLogRate(std::size_t schemaSize);
+
+
+            /**
+             * @brief Logs a new schema into the corresponding device's __SCHEMA measurement.
+             * It is assumed that the verification of the uniquiness of the device schema has already been verified
+             * based on its digest.
+             *
+             * @param schemaDigest The digest (assumed unique) of the new schema to be saved.
+             *
+             * @return true If the new schema has been successfuly submitted for logging.
+             * @return false If the logging of the new schema has not been submitted for logging. Currently, this
+             * happens if logging the new schema would be above the allowed schema logging rate threshold for a device.
+             */
+            bool logNewSchema(const std::string& schemaDigest);
+
+            /**
+             * @brief Logs the given set of rejected data in the __BAD__DATA__ measurement and to the Karabo log. To
+             * avoid spanning of the Karabo log, log is emmitted for each device only once in a period of 30 secs.
+             *
+             * @param rejects The rejected data to be logged.
+             * @param ts An epoch with the precision expected in the InfluxDb.
+             */
+            void logRejectedData(const std::vector<RejectedData>& rejects, unsigned long long ts);
+
+            /**
+             * @brief Logs the given rejected data record in the __BAD__DATA__ measurement and to the Karabo log. To
+             * avoid spanning of the Karabo log, log is emmitted for each device only once in a period of 30 secs.
+             *
+             * @param rejects The rejected data to be logged.
+             */
+            void logRejectedDatum(const RejectedData& rejects);
+
             karabo::net::InfluxDbClient::Pointer m_dbClientRead;
             karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
@@ -92,12 +136,17 @@ namespace karabo {
             std::vector<char> m_archive;
             int m_maxTimeAdvance;
             size_t m_maxVectorSize;
-            unsigned int m_maxPropLogRateBytesSec; // in bytes/sec.
-            unsigned int m_propLogRatePeriod;
             unsigned long long m_secsOfLogOfRejectedData; // epoch seconds of last logging of rejected data
 
+            unsigned int m_maxPropLogRateBytesSec; // in bytes/sec.
+            unsigned int m_propLogRatePeriod;
             // Logging records for the device property in the current log rating window.
             std::unordered_map<std::string, std::deque<LoggingRecord>> m_propLogRecs;
+
+            unsigned int m_maxSchemaLogRateBytesSec;
+            unsigned int m_schemaLogRatePeriod;
+            // Logging records for the device schema in the current log rating window.
+            std::deque<LoggingRecord> m_schemaLogRecs;
 
             karabo::util::Timestamp m_loggingStartStamp;
         };

@@ -209,6 +209,138 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 }
 
 
+void DataLogging_Test::testInfluxMaxSchemaLogRate() {
+    std::clog << "Testing enforcing of max schema logging rate limit for Influx ..." << std::endl;
+
+    const unsigned int rateWinSecs = 2u;
+
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string deviceId(getDeviceIdPrefix() + "SchemaLogRateDevice");
+
+    // defValueSuffix guarantees uniqueness of the schema - the test doesn't
+    // assume that the database is clear of its previous runs.
+    const std::string defValueSuffix = toString(Epochstamp().getTime());
+
+    // Schema injections to be used throughout the test.
+    Schema schemaStrA;
+    STRING_ELEMENT(schemaStrA)
+          .key("stringProperty")
+          .assignmentOptional()
+          .defaultValue("A_" + defValueSuffix)
+          .reconfigurable()
+          .commit();
+    Schema schemaStrB;
+    STRING_ELEMENT(schemaStrB)
+          .key("stringProperty")
+          .assignmentOptional()
+          .defaultValue("B_" + defValueSuffix)
+          .reconfigurable()
+          .commit();
+    Schema schemaStrC;
+    STRING_ELEMENT(schemaStrC)
+          .key("stringProperty")
+          .assignmentOptional()
+          .defaultValue("C_" + defValueSuffix)
+          .reconfigurable()
+          .commit();
+    Schema schemaStrD;
+    STRING_ELEMENT(schemaStrD)
+          .key("stringProperty")
+          .assignmentOptional()
+          .defaultValue("D_" + defValueSuffix)
+          .reconfigurable()
+          .commit();
+
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Starts the logger and readers with a lower max schema rate threshold - 38 kb/s - over a rateWinSecs seconds
+    // rating window. The 38 kb/s comes from the verified sizes of the different device schemas used in the
+    // test - which varied from 37.708 bytes to 75.248 bytes.
+    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 38, rateWinSecs);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated();
+
+    // Wait some time to isolate the schema update bursts.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
+
+    ///////  Checks that a schema update within the rating limit is accepted.
+    Epochstamp beforeFirstBurst;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrA).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+    // Makes sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    Epochstamp afterFirstBurst;
+
+    // Checks that the schema update has not been flagged as bad data.
+    Hash badDataAllDevices;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot
+                ->request(dlreader0, "slotGetBadData", beforeFirstBurst.toIso8601Ext(), afterFirstBurst.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+
+    // Wait some time to isolate the schema update bursts.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
+
+    ////////  Checks that two schema updates in a fast succession would go above the
+    ////////  threshold and one of the updates (the second) would be rejected.
+    Epochstamp beforeSecondBurst;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrB).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrC).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+    // Makes sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    Epochstamp afterSecondBurst;
+
+    // Checks that one of the schema updates failed.
+    badDataAllDevices.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
+                                  ->request(dlreader0, "slotGetBadData", beforeSecondBurst.toIso8601Ext(),
+                                            afterSecondBurst.toIso8601Ext())
+                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                  .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size());
+    CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
+    const auto &badDataEntries = badDataAllDevices.get<std::vector<Hash>>(deviceId);
+    CPPUNIT_ASSERT_EQUAL(1ul, badDataEntries.size());
+    const std::string &badDataInfo = badDataEntries[0].get<std::string>("info");
+    CPPUNIT_ASSERT_MESSAGE(
+          "Expected pattern, '" + deviceId + "::schema', not found in bad data description:\n'" + badDataInfo + "'",
+          badDataInfo.find(deviceId + "::schema") != std::string::npos);
+
+    // Wait some time to isolate the schema update bursts.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
+
+    //////  Checks that after the updates have settled down for a while, schemas
+    //////  can be logged again.
+    Epochstamp beforeThirdBurst;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrD).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+    // Makes sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    Epochstamp afterThirdBurst;
+    // Checks that the schema update succeeded.
+    badDataAllDevices.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot
+                ->request(dlreader0, "slotGetBadData", beforeThirdBurst.toIso8601Ext(), afterThirdBurst.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+
+    std::clog << "OK" << std::endl;
+}
+
+
 void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     std::clog << "Testing enforcing of max per device property logging rate limit for Influx ..." << std::endl;
 

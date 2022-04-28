@@ -353,7 +353,9 @@ void BaseLogging_Test::setPropertyTestSchema() {
 std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std::string& loggerType,
                                                                       bool useInvalidInfluxUrl, bool useInvalidDbName,
                                                                       unsigned int maxPerDevicePropLogRate,
-                                                                      unsigned int propLogRatePeriod) {
+                                                                      unsigned int propLogRatePeriod,
+                                                                      unsigned int maxSchemaLogRate,
+                                                                      unsigned int schemaLogRatePeriod) {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
@@ -401,6 +403,8 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std:
         manager_conf.set("logger.InfluxDataLogger.maxVectorSize", maxVectorSize);
         manager_conf.set("logger.InfluxDataLogger.maxPerDevicePropLogRate", maxPerDevicePropLogRate);
         manager_conf.set("logger.InfluxDataLogger.propLogRatePeriod", propLogRatePeriod);
+        manager_conf.set("logger.InfluxDataLogger.maxSchemaLogRate", maxSchemaLogRate);
+        manager_conf.set("logger.InfluxDataLogger.schemaLogRatePeriod", schemaLogRatePeriod);
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
@@ -726,7 +730,7 @@ void BaseLogging_Test::testDropBadData() {
         const Hash& futureHash = badData[i];
         CPPUNIT_ASSERT(futureHash.has("info"));
         const std::string& info = futureHash.get<std::string>("info");
-        CPPUNIT_ASSERT_MESSAGE(info, info.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(info, info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
         CPPUNIT_ASSERT_MESSAGE(info, info.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
                                            std::string::npos);
         CPPUNIT_ASSERT(futureHash.has("time"));
@@ -743,7 +747,7 @@ void BaseLogging_Test::testDropBadData() {
     const Hash& vectorHash = badData[badData.size() - 3];
     CPPUNIT_ASSERT(vectorHash.has("info"));
     const std::string& info = vectorHash.get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(info, info.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(info, info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(info,
                            info.find("'vector' (vector length " + toString(vectorSize) += ")") != std::string::npos);
     CPPUNIT_ASSERT(vectorHash.has("time"));
@@ -758,7 +762,7 @@ void BaseLogging_Test::testDropBadData() {
     const Hash& mixtureHash1 = badData[badData.size() - 2];
     CPPUNIT_ASSERT(mixtureHash1.has("info"));
     const std::string& info2 = mixtureHash1.get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(info2, info2.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(info2, info2.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(info2,
                            info2.find("'vector' (vector length " + toString(vectorSize) += ")") != std::string::npos);
     CPPUNIT_ASSERT(mixtureHash1.has("time"));
@@ -772,7 +776,7 @@ void BaseLogging_Test::testDropBadData() {
     const Hash& mixtureHash2 = badData[badData.size() - 1];
     CPPUNIT_ASSERT(mixtureHash2.has("info"));
     const std::string& info3 = mixtureHash2.get<std::string>("info");
-    CPPUNIT_ASSERT_MESSAGE(info3, info3.find("Skip properties of '" + deviceId + "'") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(info3, info3.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(info3, info3.find("'value' (from far future " + inAlmostAFortnite.toIso8601Ext() += ")") !=
                                         std::string::npos);
     CPPUNIT_ASSERT(mixtureHash2.has("time"));
