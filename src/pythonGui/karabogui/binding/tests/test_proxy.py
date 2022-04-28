@@ -108,12 +108,16 @@ def test_device_proxy_status():
 
         proxy.remove_monitor()
         network.onStopMonitoringDevice.assert_called_with('dev')
-        assert proxy.status == ProxyStatus.ALIVE
+        assert proxy.status == ProxyStatus.ONLINE
 
-        proxy.schema_update = True
-        network.onGetDeviceConfiguration.assert_called_with('dev')
+        # Full cycle, reset mock
+        network.reset_mock()
 
         proxy.add_monitor()
+        assert proxy.status == ProxyStatus.ONLINEREQUESTED
+        network.onGetDeviceSchema.assert_called_with('dev')
+        proxy.schema_update = True
+        assert proxy.status == ProxyStatus.SCHEMA
         proxy.config_update = True
         assert proxy.status == ProxyStatus.MONITORING
 
