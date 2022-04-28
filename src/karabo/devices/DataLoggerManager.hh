@@ -68,6 +68,11 @@ namespace karabo {
 
             virtual ~DataLoggerManager();
 
+           protected:
+            void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
+
+            void postReconfigure() override;
+
            private: // Functions
             void initialize();
 
@@ -93,11 +98,11 @@ namespace karabo {
              */
             void printLoggerData() const;
 
-            void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
+            void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& counter,
                                    const karabo::util::Hash& config, const std::string& loggerId);
 
             void checkLoggerConfigOnStrand(const std::string& errorTxt,
-                                           const boost::shared_ptr<std::atomic<size_t> >& counter,
+                                           const boost::shared_ptr<std::atomic<size_t>>& counter,
                                            const karabo::util::Hash& config, const std::string& loggerId);
             /**
              * If deviceId's logging status is fishy, re-add to its logger.
@@ -107,16 +112,16 @@ namespace karabo {
              */
             void forceDeviceToBeLogged(const std::string& deviceId);
 
-            void checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+            void checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                    const std::string& loggerId, unsigned int toleranceSec,
-                                   const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                   const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
                                    karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
                                    const std::string& deviceId);
 
             void checkDeviceConfigOnStrand(const std::string& errorTxt,
-                                           const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                           const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                            const std::string& loggerId, unsigned int toleranceSec,
-                                           const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                           const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
                                            karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
                                            const std::string& deviceId);
 
@@ -206,6 +211,21 @@ namespace karabo {
                 return false;
             }
 
+            /**
+             * @brief Evaluate old and new configuration in order to possibly start/stop archiving
+             *        for some devices/device classes
+             *
+             * @param oldList   old configuration for blocked devices/classes
+             * @param newList   new configuration for blocked devices/classes
+             */
+            void evaluateBlockedOnStrand(const karabo::util::Hash& oldList, const karabo::util::Hash& newList);
+
+            bool isDeviceBlocked(const std::string& deviceId);
+
+            bool isClassBlocked(const std::string& classId);
+
+            bool isBlocked(const std::string& id, const std::string& typeIds);
+
            private: // Data
             const std::vector<std::string> m_serverList;
             size_t m_serverIndex;
@@ -228,10 +248,15 @@ namespace karabo {
             karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog",
                                              /// "beingAdded" and "devices"
             karabo::util::Hash m_checkStatus; /// Keep track of all important stuff during check
+            std::unordered_map<std::string, std::set<std::string>> m_knownClasses; /// to be accessed on the strand
             karabo::net::Strand::Pointer m_strand;
 
             boost::asio::deadline_timer m_topologyCheckTimer;
             std::string m_logger;
+
+            boost::mutex m_blockedMutex;
+            karabo::util::Hash m_blocked;      /// Hash with 'deviceIds' and 'classIds' entries
+            const std::string m_blockListFile; /// File name of blocked devices and/or device classes
         };
     } // namespace devices
 } // namespace karabo
