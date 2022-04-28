@@ -3,7 +3,7 @@ from traits.api import Undefined
 from karabo.common import const
 from karabo.native import Hash, NodeType, Schema
 
-from . import recursive, types
+from . import binding_types as types, recursive
 from .util import attr_fast_deepcopy
 
 

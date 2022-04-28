@@ -1,15 +1,5 @@
 # flake8: noqa
-from .builder import build_binding
-from .config import (
-    apply_configuration, apply_default_configuration, apply_fast_data,
-    apply_project_configuration, extract_attribute_modifications,
-    extract_configuration, extract_edits, extract_init_configuration,
-    extract_online_edits, extract_sparse_configurations)
-from .proxy import (
-    BaseDeviceProxy, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
-    PropertyProxy)
-from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .types import (
+from .binding_types import (
     BaseBinding, BindingNamespace, BindingRoot, BoolBinding, ByteArrayBinding,
     CharBinding, ComplexBinding, FloatBinding, HashBinding, ImageBinding,
     Int8Binding, Int16Binding, Int32Binding, Int64Binding, IntBinding,
@@ -23,6 +13,16 @@ from .types import (
     VectorNoneBinding, VectorNumberBinding, VectorStringBinding,
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding, WidgetNodeBinding)
+from .builder import build_binding
+from .config import (
+    apply_configuration, apply_default_configuration, apply_fast_data,
+    apply_project_configuration, extract_attribute_modifications,
+    extract_configuration, extract_edits, extract_init_configuration,
+    extract_online_edits, extract_sparse_configurations)
+from .proxy import (
+    BaseDeviceProxy, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
+    PropertyProxy)
+from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .util import (
     REFERENCE_TYPENUM_TO_DTYPE, attr_fast_deepcopy, get_binding_array_value,
     get_binding_value, get_dtype_format, get_editor_value, get_min_max,
