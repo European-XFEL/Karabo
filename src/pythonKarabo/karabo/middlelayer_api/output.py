@@ -15,14 +15,17 @@ class KaraboStream:
 
     def write(self, data):
         try:
-            get_event_loop().instance().printToConsole(data)
+            loop = get_event_loop()
+            instance = loop.instance()
+            coro = instance.printToConsole(data)
+            loop.create_task(coro, instance=instance)
         except BaseException:
             self.base.write(data)
 
     def flush(self):
         try:
             get_event_loop().instance().update()
-        except (RuntimeError, AttributeError):
+        except BaseException:
             # RuntimeError can appear when no local loop has been set anymore.
             # We simply flush to keep going.
             self.base.flush()
