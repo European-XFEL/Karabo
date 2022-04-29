@@ -1,5 +1,3 @@
-from os import path as op
-
 from qtpy import uic
 from qtpy.QtCore import Signal
 from qtpy.QtWidgets import QWidget
@@ -16,6 +14,8 @@ from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 from karabogui.util import SignalBlocker
 
+from .util import get_ui_file
+
 
 class FrameSlider(QWidget):
     axisChanged = Signal(str)
@@ -23,7 +23,7 @@ class FrameSlider(QWidget):
 
     def __init__(self, parent=None):
         super(FrameSlider, self).__init__(parent)
-        ui_file = op.join(op.dirname(__file__), 'frame_slider.ui')
+        ui_file = get_ui_file("frame_slider.ui")
         uic.loadUi(ui_file, self)
 
         # Populate our axis combobox
@@ -72,8 +72,8 @@ class FrameSlider(QWidget):
         self.cellChanged.emit(0)
 
 
-@register_binding_controller(ui_name='Detector Graph',
-                             klassname='DetectorGraph',
+@register_binding_controller(ui_name="Detector Graph",
+                             klassname="DetectorGraph",
                              binding_type=ImageBinding, priority=10,
                              can_show_nothing=False)
 class DisplayDetectorGraph(BaseBindingController):
