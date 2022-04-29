@@ -317,6 +317,24 @@ class NoEventLoop(AbstractEventLoop):
     def create_future(self):
         return Future(loop=self._instance._ss.loop)
 
+    def create_task(self, coro, name=None, instance=None):
+        """Create a task on the main eventloop with this instance"""
+        loop = self._instance._ss.loop
+        hastask = threading.Lock()
+        hastask.acquire()
+
+        task = None
+        instance = instance or self._instance
+
+        def inner():
+            nonlocal task
+            task = loop.create_task(coro, name=name, instance=self._instance)
+            hastask.release()
+
+        loop.call_soon_threadsafe(inner)
+        hastask.acquire()
+        return task
+
     def instance(self):
         return self._instance
 
