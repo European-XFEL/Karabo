@@ -59,6 +59,7 @@
 #include <string.h> // strlen
 
 #include <algorithm> // std::find, std::max
+#include <boost/algorithm/string.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <set>
 #include <string>
@@ -97,6 +98,13 @@ namespace karabo {
                 h.get<std::set<T>>(key).insert(object);
             } else {
                 h.set(key, std::set<T>({object}));
+            }
+        }
+
+
+        static void trim_vector_elements(std::vector<std::string>& v) {
+            for (auto& str : v) {
+                boost::algorithm::trim(str);
             }
         }
 
@@ -399,6 +407,41 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue("loggermap.xml")
                   .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("blocklistfile")
+                  .displayedName("Blocklist file")
+                  .assignmentOptional()
+                  .defaultValue("blocklist.xml")
+                  .init()
+                  .commit();
+
+            NODE_ELEMENT(expected)
+                  .key("blocklist")
+                  .displayedName("blockList")
+                  .description("Hash of 'deviceIds' and 'classIds' lists that are not archived")
+                  .expertAccess()
+                  .commit();
+
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("blocklist.deviceIds")
+                  .displayedName("Blocked deviceIds")
+                  .description("Comma-separated list of deviceIds that are not archived by DataLogger")
+                  .reconfigurable()
+                  .expertAccess()
+                  .assignmentOptional()
+                  .defaultValue({})
+                  .commit();
+
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("blocklist.classIds")
+                  .displayedName("Blocked classIds")
+                  .description("Comma-separated list of classIds of devices that are not archived by DataLogger")
+                  .reconfigurable()
+                  .expertAccess()
+                  .assignmentOptional()
+                  .defaultValue({})
+                  .commit();
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input)
@@ -408,7 +451,9 @@ namespace karabo {
               m_loggerMapFile(input.get<string>("loggermap")),
               m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
               m_topologyCheckTimer(karabo::net::EventLoop::getIOService()),
-              m_logger("Unsupported") {
+              m_logger("Unsupported"),
+              m_blocked(input.get<Hash>("blocklist")),
+              m_blockListFile(input.get<string>("blocklistfile")) {
             if (input.has("logger.FileDataLogger")) {
                 m_logger = "FileDataLogger";
             } else if (input.has("logger.InfluxDataLogger")) {
@@ -424,13 +469,113 @@ namespace karabo {
             KARABO_SLOT(slotGetLoggerMap);
             KARABO_SLOT(topologyCheck_slotForceCheck);
 
+            if (boost::filesystem::exists(m_blockListFile)) {
+                Hash blocked;
+                karabo::io::loadFromFile(blocked, m_blockListFile);
+                if (blocked.has("deviceIds")) {
+                    auto& ids = blocked.get<std::vector<std::string>>("deviceIds");
+                    trim_vector_elements(ids);
+                    m_blocked.set("deviceIds", ids); // overwrite 'input' version
+                }
+                if (blocked.has("classIds")) {
+                    auto& ids = blocked.get<std::vector<std::string>>("classIds");
+                    trim_vector_elements(ids);
+                    m_blocked.set("classIds", ids); // overwrite 'input' version
+                }
+            }
+
             KARABO_INITIAL_FUNCTION(initialize);
         }
 
         DataLoggerManager::~DataLoggerManager() {}
 
 
+        void DataLoggerManager::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
+            if (incomingReconfiguration.has("blocklist")) {
+                boost::mutex::scoped_lock lock(m_blockedMutex);
+                Hash oldList = m_blocked; // save old version
+                const Hash& config = incomingReconfiguration.get<Hash>("blocklist");
+                if (config.has("deviceIds")) {
+                    auto ids = config.get<std::vector<std::string>>("deviceIds");
+                    trim_vector_elements(ids);
+                    m_blocked.set("deviceIds", ids);
+                }
+                if (config.has("classIds")) {
+                    auto ids = config.get<std::vector<std::string>>("classIds");
+                    trim_vector_elements(ids);
+                    m_blocked.set("classIds", ids);
+                }
+                m_strand->post(bind_weak(&Self::evaluateBlockedOnStrand, this, oldList, m_blocked));
+            }
+        }
+
+
+        void DataLoggerManager::postReconfigure() {
+            boost::mutex::scoped_lock lock(m_blockedMutex);
+            karabo::io::saveToFile(m_blocked, m_blockListFile);
+        }
+
+
+        void DataLoggerManager::evaluateBlockedOnStrand(const karabo::util::Hash& oldHash,
+                                                        const karabo::util::Hash& newHash) {
+            // Previous config: collect all devices without duplicates ...
+            auto oldSet = std::set<std::string>();
+            {
+                const auto& oldDeviceVec = oldHash.get<std::vector<std::string>>("deviceIds");
+                const auto& oldClassVec = oldHash.get<std::vector<std::string>>("classIds");
+                oldSet.insert(oldDeviceVec.begin(), oldDeviceVec.end());
+                for (const auto& cls : oldClassVec) {
+                    oldSet.insert(m_knownClasses[cls].begin(), m_knownClasses[cls].end());
+                }
+            }
+            // Current config: collect all devices without duplicates ...
+            auto newSet = std::set<std::string>();
+            {
+                const auto& newDeviceVec = newHash.get<std::vector<std::string>>("deviceIds");
+                const auto& newClassVec = newHash.get<std::vector<std::string>>("classIds");
+                newSet.insert(newDeviceVec.begin(), newDeviceVec.end());
+                for (const auto& cls : newClassVec) {
+                    newSet.insert(m_knownClasses[cls].begin(), m_knownClasses[cls].end());
+                }
+            }
+            // get devices for which archiving (logging) should be stopped
+            std::vector<std::string> goneCandidates(newSet.size()); // 0 <= goneCandidates.size() <= newSet.size()
+            {
+                std::vector<std::string>::iterator it;
+                it = std::set_difference(newSet.begin(), newSet.end(), oldSet.begin(), oldSet.end(),
+                                         goneCandidates.begin());
+                goneCandidates.resize(it - goneCandidates.begin());
+            }
+            // get devices for which the logging should be started
+            std::vector<std::string> newCandidates(oldSet.size()); // 0 << newCandidates.size() <= oldSet.size()
+            {
+                std::vector<std::string>::iterator it;
+                it = std::set_difference(oldSet.begin(), oldSet.end(), newSet.begin(), newSet.end(),
+                                         newCandidates.begin());
+                newCandidates.resize(it - newCandidates.begin());
+            }
+            // stop logging ...
+            for (const auto& deviceId : goneCandidates) {
+                // Function 'goneDeviceToLog' is protected in case of deviceId is not logged
+                KARABO_LOG_FRAMEWORK_INFO << "Block list changes cause logging for \"" << deviceId << "\" to stop";
+                goneDeviceToLog(deviceId);
+            }
+            // start logging ...
+            for (const auto& deviceId : newCandidates) {
+                // Function 'newDeviceToLog' is protected against duplicates...
+                KARABO_LOG_FRAMEWORK_INFO << "Block list changes cause logging for \"" << deviceId << "\" to start";
+                newDeviceToLog(deviceId);
+            }
+        }
+
+
         void DataLoggerManager::initialize() {
+            if (!m_blocked.empty()) {
+                // Fill out the values from file to the blocklist node for proper rendering in GUI
+                boost::mutex::scoped_lock lock(m_blockedMutex);
+                set("blocklist", m_blocked);
+            }
+
             std::string exceptTxt;
             try {
                 checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
@@ -948,13 +1093,21 @@ namespace karabo {
             const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type)
                                                    ? topologyEntry.get<Hash>(type).begin()->getKey()
                                                    : std::string("?"));
+
             KARABO_LOG_FRAMEWORK_INFO << "instanceNew --> instanceId: '" << instanceId << "', type: '" << type << "'";
 
             if (type == "device") {
                 const Hash& entry = topologyEntry.begin()->getValue<Hash>();
-                newDeviceToLog(instanceId);
-                if (entry.hasAttribute(instanceId, "classId") &&
-                    entry.getAttribute<std::string>(instanceId, "classId") == m_logger) {
+                const std::string classId = (entry.hasAttribute(instanceId, "classId")
+                                                   ? entry.getAttribute<std::string>(instanceId, "classId")
+                                                   : std::string(""));
+                if (!classId.empty()) m_knownClasses[classId].insert(instanceId);
+                if (!isDeviceBlocked(instanceId) && !isClassBlocked(classId)) {
+                    newDeviceToLog(instanceId);
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "Logging of instance '" << instanceId << "' blocked.";
+                }
+                if (classId == m_logger) {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -1140,9 +1293,13 @@ namespace karabo {
             if (type == "device") {
                 // Figure out who logs and tell to stop
                 goneDeviceToLog(instanceId);
-                if (instanceInfo.has("classId") && instanceInfo.get<std::string>("classId") == m_logger) {
+                const std::string& classId = (instanceInfo.has("classId") && instanceInfo.is<std::string>("classId")
+                                                    ? instanceInfo.get<string>("classId")
+                                                    : std::string(""));
+                if (classId == m_logger) {
                     goneLogger(instanceId);
                 }
+                if (!classId.empty()) m_knownClasses[classId].erase(instanceId);
             } else if (type == "server") {
                 if (m_loggerData.has(instanceId)) {
                     // It is one of our logger servers
@@ -1261,6 +1418,28 @@ namespace karabo {
             beingAdded.clear();
 
             data.set("state", LoggerState::OFFLINE);
+        }
+
+
+        bool DataLoggerManager::isDeviceBlocked(const std::string& deviceId) {
+            return isBlocked(deviceId, "deviceIds");
+        }
+
+
+        bool DataLoggerManager::isClassBlocked(const std::string& classId) {
+            return isBlocked(classId, "classIds");
+        }
+
+
+        bool DataLoggerManager::isBlocked(const std::string& id, const std::string& typeIds) {
+            if (typeIds != "classIds" && typeIds != "deviceIds") {
+                throw KARABO_PARAMETER_EXCEPTION("Valid blocklist types are \"classIds\" and \"deviceIds\"");
+            }
+            boost::mutex::scoped_lock lock(m_blockedMutex);
+            if (!m_blocked.has(typeIds)) return false;
+            const auto& ids = m_blocked.get<std::vector<std::string>>(typeIds);
+            const auto it = std::find(ids.begin(), ids.end(), id);
+            return (it != ids.end());
         }
     } // namespace devices
 } // namespace karabo
