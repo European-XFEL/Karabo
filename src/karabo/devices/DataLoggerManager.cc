@@ -557,13 +557,13 @@ namespace karabo {
             // stop logging ...
             for (const auto& deviceId : goneCandidates) {
                 // Function 'goneDeviceToLog' is protected in case of deviceId is not logged
-                KARABO_LOG_FRAMEWORK_INFO << "The logging for \"" << deviceId << "\" is going to stop";
+                KARABO_LOG_FRAMEWORK_INFO << "Block list changes cause logging for \"" << deviceId << "\" to stop";
                 goneDeviceToLog(deviceId);
             }
             // start logging ...
             for (const auto& deviceId : newCandidates) {
                 // Function 'newDeviceToLog' is protected against duplicates...
-                KARABO_LOG_FRAMEWORK_INFO << "The logging for \"" << deviceId << "\" is going to start";
+                KARABO_LOG_FRAMEWORK_INFO << "Block list changes cause logging for \"" << deviceId << "\" to start";
                 newDeviceToLog(deviceId);
             }
         }
@@ -1104,6 +1104,8 @@ namespace karabo {
                 if (!classId.empty()) m_knownClasses[classId].insert(instanceId);
                 if (!isDeviceBlocked(instanceId) && !isClassBlocked(classId)) {
                     newDeviceToLog(instanceId);
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "Logging of instance '" << instanceId << "' blocked.";
                 }
                 if (classId == m_logger) {
                     // A new logger has started - check whether there is more work for it to do
