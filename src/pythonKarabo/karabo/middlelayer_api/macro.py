@@ -266,7 +266,7 @@ class Macro(Device):
                             'exception in monitor "{}" of device "{}"'.
                             format(m.key, self.deviceId))
 
-    def printToConsole(self, data):
+    async def printToConsole(self, data):
         self.print = data
         # Make sure a new timestamp gets attached!
         self.doNotCompressEvents = self.doNotCompressEvents.value + 1
