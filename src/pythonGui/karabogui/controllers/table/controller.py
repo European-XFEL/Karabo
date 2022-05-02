@@ -414,7 +414,9 @@ class BaseFilterTableController(BaseTableController):
         ac_column_filter.triggered.connect(self._change_filter_column)
         widget.addAction(ac_column_filter)
 
-        if self.model.sortingEnabled:
+        # Widgets in extensions might not have this model setting
+        if ("sortingEnabled" in self.model.copyable_trait_names()
+                and self.model.sortingEnabled):
             table_widget.setSortingEnabled(True)
             table_widget.sortByColumn(0, Qt.AscendingOrder)
 
