@@ -97,7 +97,7 @@ def start_ikarabo():
     ip = IPython.get_ipython()
     ip.set_hook("complete_command", device_completer,
                 re_key=".*((get|connect)Device|execute(NoWait)?|"
-                       "set(No)?Wait|shutdown(NoWait)?|getHistory|"
+                       "set(No)?Wait|shutdown(NoWait)?|(get|print)History|"
                        "(getConfiguration|saveConfiguration)FromName|"
                        "listConfigurationFromName|call(NoWait)?|"
                        "getConfiguration(FromPast)?|"
