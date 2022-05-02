@@ -10,8 +10,9 @@ from qtpy.QtCore import (
     Qt, Slot)
 from qtpy.QtGui import QClipboard, QColor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QApplication, QHBoxLayout, QHeaderView, QLineEdit,
-    QMenu, QPushButton, QTableView, QVBoxLayout, QWidget)
+    QAbstractItemView, QApplication, QFrame, QHBoxLayout, QHeaderView, QLabel,
+    QLayout, QLineEdit, QMenu, QPushButton, QTableView, QToolButton,
+    QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
@@ -21,6 +22,8 @@ from karabogui.util import getSaveFileName
 TYPE_COLUMN = 1
 INSTANCE_COLUMN = 2
 MAX_LOG_ENTRIES = 300
+MIN_ROW_SIZE = 30
+MAX_ROW_SIZE = 200
 MAX_COLUMN_SIZE = 500
 
 Log = namedtuple("Log", ["dateTime", "messageType", "instanceId",
@@ -28,37 +31,117 @@ Log = namedtuple("Log", ["dateTime", "messageType", "instanceId",
 
 
 class LogWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, resize_contents=False, parent=None):
         super().__init__(parent)
+        self.resize_contents = resize_contents
 
         # Main layout
         vertical_layout = QVBoxLayout(self)
+        vertical_layout.setSizeConstraint(QLayout.SetNoConstraint)
         vertical_layout.setContentsMargins(0, 0, 0, 0)
-        vertical_layout.setSpacing(2)
+        vertical_layout.setSpacing(4)
 
         filter_layout = QHBoxLayout()
         filter_layout.setContentsMargins(2, 2, 2, 2)
         vertical_layout.addLayout(filter_layout)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setLineWidth(2)
+        vertical_layout.addWidget(line)
 
         text = "Search"
         filter_text = QLineEdit()
         filter_text.setStatusTip(text)
         filter_text.setToolTip(text)
         filter_layout.addWidget(filter_text)
+        self.filter_text = filter_text
 
         clear_button = QPushButton("Clear Filter")
         filter_layout.addWidget(clear_button)
 
+        # Filter buttons
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(25)
+        vertical_layout.addLayout(button_layout)
+
+        text = "Category Filter"
+        label = QLabel()
+        font = label.font()
+        font.setBold(True)
+        label.setFont(font)
+        label.setText(text)
+        label.setMinimumSize(32, 32)
+        label.setStatusTip(text)
+        label.setToolTip(text)
+
+        text = "Show debug messages"
+        self.button_debug = QToolButton()
+        self.button_debug.setIcon(icons.logDebug)
+        self.button_debug.setMinimumSize(32, 32)
+        self.button_debug.setStatusTip(text)
+        self.button_debug.setToolTip(text)
+        self.button_debug.setCheckable(True)
+        self.button_debug.setChecked(True)
+        self.button_debug.clicked.connect(self.onFilterChanged)
+
+        text = "Show information messages"
+        self.button_info = QToolButton()
+        self.button_info.setIcon(icons.logInfo)
+        self.button_info.setMinimumSize(32, 32)
+        self.button_info.setStatusTip(text)
+        self.button_info.setToolTip(text)
+        self.button_info.setCheckable(True)
+        self.button_info.setChecked(True)
+        self.button_info.clicked.connect(self.onFilterChanged)
+
+        text = "Show warn messages"
+        self.button_warn = QToolButton()
+        self.button_warn.setIcon(icons.logWarning)
+        self.button_warn.setMinimumSize(32, 32)
+        self.button_warn.setStatusTip(text)
+        self.button_warn.setToolTip(text)
+        self.button_warn.setCheckable(True)
+        self.button_warn.setChecked(True)
+        self.button_warn.clicked.connect(self.onFilterChanged)
+
+        text = "Show error messages"
+        self.button_error = QToolButton()
+        self.button_error.setIcon(icons.logError)
+        self.button_error.setMinimumSize(32, 32)
+        self.button_error.setStatusTip(text)
+        self.button_error.setToolTip(text)
+        self.button_error.setCheckable(True)
+        self.button_error.setChecked(True)
+        self.button_error.clicked.connect(self.onFilterChanged)
+
+        text = "Resize to Contents"
+        resize_button = QPushButton()
+        resize_button.setStatusTip(text)
+        resize_button.setToolTip(text)
+        resize_button.setIcon(icons.resize)
+        resize_button.clicked.connect(self._resize_contents)
+        resize_button.setMinimumSize(32, 32)
+
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.addWidget(label)
+        button_layout.addWidget(self.button_debug)
+        button_layout.addWidget(self.button_info)
+        button_layout.addWidget(self.button_warn)
+        button_layout.addWidget(self.button_error)
+        button_layout.addStretch()
+        button_layout.addWidget(resize_button)
+
         self.table_model = TableLogModel()
-        self.filter_model = QSortFilterProxyModel()
+        self.filter_model = LogFilterModel()
         self.filter_model.setFilterCaseSensitivity(False)
         self.filter_model.setFilterRole(Qt.DisplayRole)
         self.filter_model.setFilterKeyColumn(INSTANCE_COLUMN)
-
         self.filter_model.setSourceModel(self.table_model)
 
         clear_button.clicked.connect(filter_text.clear)
-        filter_text.textChanged.connect(self.filter_model.setFilterFixedString)
+        filter_text.textChanged.connect(self.onFilterChanged)
 
         table_view = QTableView(parent=self)
         vertical_layout.addWidget(table_view)
@@ -75,22 +158,6 @@ class LogWidget(QWidget):
         table_view.setContextMenuPolicy(Qt.CustomContextMenu)
         table_view.customContextMenuRequested.connect(self._context_menu)
         self.table = table_view
-        self.setLayout(vertical_layout)
-
-    def _resize_contents(self):
-        """Resize columns to contents"""
-        last_column = self.table_model.columnCount() - 1
-        hor_header = self.table.horizontalHeader()
-        width = hor_header.defaultSectionSize()
-        hor_header.setMinimumSectionSize(width)
-        hor_header.setMaximumSectionSize(MAX_COLUMN_SIZE)
-        hor_header.resizeSections(QHeaderView.ResizeToContents)
-        hor_header.resizeSection(last_column, QHeaderView.Stretch)
-
-        ver_header = self.table.verticalHeader()
-        height = ver_header.defaultSectionSize()
-        ver_header.setMinimumSectionSize(height)
-        ver_header.resizeSections(QHeaderView.ResizeToContents)
 
     def _convert_log_data(self, data):
         """Convert log data coming from the network"""
@@ -106,7 +173,8 @@ class LogWidget(QWidget):
     def initialize(self, data):
         new = self._convert_log_data(data)
         self.table_model.initialize(new)
-        self._resize_contents()
+        if self.resize_contents:
+            self._resize_contents()
 
     def onLogDataAvailable(self, data):
         new = self._convert_log_data(data)
@@ -119,6 +187,36 @@ class LogWidget(QWidget):
 
     # ---------------------------------------------------------------------
     # Slots
+
+    @Slot()
+    def _resize_contents(self):
+        """Resize columns to contents"""
+        columns = self.table_model.columnCount() - 1
+        hor_header = self.table.horizontalHeader()
+        hor_header.setMaximumSectionSize(MAX_COLUMN_SIZE)
+        hor_header.resizeSections(QHeaderView.ResizeToContents)
+        hor_header.resizeSection(columns, QHeaderView.Stretch)
+
+        ver_header = self.table.verticalHeader()
+        ver_header.setMinimumSectionSize(MIN_ROW_SIZE)
+        ver_header.setMaximumSectionSize(MAX_ROW_SIZE)
+        ver_header.resizeSections(QHeaderView.ResizeToContents)
+
+    @Slot()
+    def onFilterChanged(self):
+        filter_types = []
+        if self.button_error.isChecked():
+            filter_types.append("ERROR")
+        if self.button_warn.isChecked():
+            filter_types.append("WARN")
+        if self.button_info.isChecked():
+            filter_types.append("INFO")
+        if self.button_debug.isChecked():
+            filter_types.append("DEBUG")
+        self.filter_model.filter_type = filter_types
+        self.filter_model.setFilterFixedString(self.filter_text.text())
+        if self.resize_contents:
+            self._resize_contents()
 
     @Slot(QPoint)
     def _context_menu(self, pos):
@@ -181,6 +279,20 @@ class LogWidget(QWidget):
         with open(filename, "w") as out:
             for log in self.table_model.getData():
                 out.write("{0} | {1} | {2} | {3} | {4} #\n".format(*log))
+
+
+class LogFilterModel(QSortFilterProxyModel):
+    def __init__(self, source_model=None, parent=None):
+        super().__init__(parent)
+        self.setSourceModel(source_model)
+        self.filter_type = ["INFO", "WARN", "ERROR", "DEBUG"]
+
+    def filterAcceptsRow(self, row, parent=QModelIndex):
+        model = self.sourceModel()
+        category = model.data(model.index(row, TYPE_COLUMN))
+        if category not in self.filter_type:
+            return False
+        return super().filterAcceptsRow(row, parent)
 
 
 class TableLogModel(QAbstractTableModel):
