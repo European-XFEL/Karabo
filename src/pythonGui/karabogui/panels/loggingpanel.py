@@ -29,7 +29,7 @@ class LoggingPanel(BasePanelWidget):
         """
         widget = QWidget(self)
 
-        self._log_widget = LogWidget(widget)
+        self._log_widget = LogWidget(parent=widget)
         mainLayout = QVBoxLayout(widget)
         mainLayout.setContentsMargins(5, 5, 5, 5)
         mainLayout.addWidget(self._log_widget)
