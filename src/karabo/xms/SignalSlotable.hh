@@ -843,6 +843,9 @@ namespace karabo {
                                                                                    const char sep = ':') const;
 
             template <class TFunc>
+#if __cplusplus >= 201402L
+            [[deprecated("This will be removed in Karabo 2.15")]]
+#endif
             void storeSignal(const std::string& signalFunction, const SignalInstancePointer& signalInstance,
                              const TFunc& emitFunction) {
                 storeSignal(signalFunction, signalInstance);
@@ -850,6 +853,9 @@ namespace karabo {
             }
 
             template <class TFunc>
+#if __cplusplus >= 201402L
+            [[deprecated("This will be removed in Karabo 2.15")]]
+#endif
             void retrieveEmitFunction(const std::string& signalFunction, TFunc& emitFunction) const {
                 try {
                     emitFunction = m_emitFunctions.get<TFunc > (signalFunction);
@@ -910,6 +916,9 @@ namespace karabo {
             /**
              * Helper to store signalInstance in container with signalFunction as key.
              */
+#if __cplusplus >= 201402L
+            [[deprecated("This will be removed in Karabo 2.15")]]
+#endif
             void storeSignal(const std::string &signalFunction, SignalInstancePointer signalInstance);
 
             /**
@@ -1411,18 +1420,16 @@ namespace karabo {
         template <typename ...Args>
         SignalSlotable::SignalInstancePointer SignalSlotable::addSignalIfNew(const std::string& signalFunction,
                                                                              int priority, int messageTimeToLive) {
+            SignalInstancePointer s;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-                if (m_signalInstances.find(signalFunction) != m_signalInstances.end()) {
-                    SignalInstancePointer s;
-                    return s;
+                if (m_signalInstances.find(signalFunction) == m_signalInstances.end()) {
+                    s = boost::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
+                                                   messageTimeToLive);
+                    s->setSignature<Args...>();
+                    m_signalInstances[signalFunction] = s;
                 }
             }
-            // TODO Check mutex here
-            auto s = boost::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
-                                                messageTimeToLive);
-            s->setSignature < Args...>();
-            storeSignal(signalFunction, s);
             return s;
         }
 
