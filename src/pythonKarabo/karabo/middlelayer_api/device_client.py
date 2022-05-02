@@ -149,6 +149,13 @@ async def waitUntilNew(*props):
 
 
 def _parse_date(date):
+    """
+    Parse date via dateutil.parser.parse and return UTC iso string
+
+    :param date: None means now and Timestamp objects are understood
+    """
+    if date is None:
+        date = Timestamp()
     if isinstance(date, Timestamp):
         date = date.toLocal()
     d = dateutil.parser.parse(date)
@@ -353,7 +360,7 @@ async def _getHistory(prop, begin, end, maxNumData, verbose=False):
     if verbose:
         message = f"""Requesting history of property '{attr}'
         of device '{deviceId}'
-        between {begin} and {end}
+        between {begin} UTC and {end} UTC
         from the DataLogReader device '{reader}'
         """
         print(message)
@@ -380,7 +387,10 @@ def getHistory(prop, begin,
     the last row in a set (typically, the device has been switched off
     afterwards), and the value of the property at that time.
 
-    Given that a device may not be on line by the time one is trying to
+    If you want to directly see the result in a more readable format,
+    try the 'printHistory' method.
+
+    Given that a device may not be online by the time one is trying to
     get the history, the property name may also be given as a string::
 
         getHistory("device.someProperty", "2009-09-01", "2009-09-02")
@@ -406,6 +416,13 @@ def getHistory(prop, begin,
     will return the history of `device.someProperty` between 10 and 5 hours ago
     and of the last 10 minutes respectively. The shorthand can be with string
     property parameters as well.
+
+    :param prop: device property
+    :param begin: begin of the timespan
+    :param end: end of the timespan, None means now
+    :param maxNumData: max. number of points to return
+                       (downsampling depends on storage backend)
+    :param verbose: if True, print request details
     """
     if (isinstance(prop, ProxyBase) or isinstance(prop, str) and
             "." not in prop):
@@ -413,6 +430,27 @@ def getHistory(prop, begin,
 
     return _getHistory(prop, begin, end, maxNumData,
                        timeout=timeout, verbose=verbose)
+
+
+def printHistory(prop, begin, end=None, maxNumData=100):
+    """
+    Print the history of a device property.
+
+    See getHistory about arguments and their meaning and format
+    """
+    res = getHistory(prop, begin, end, maxNumData=maxNumData, verbose=True)
+
+    def create_lines():
+        for tup in res:
+            stamp = Timestamp(tup[0]).toLocal(sep=' ')
+            # Print only non-zero trainId:
+            trainId = "" if not tup[1] else f"(tid {tup[1]})"
+            item = str(tup[3])
+            # Newline for all stuff with new line (e.g. table) else space
+            sep = "\n" if "\n" in item else " "
+            yield f"{stamp} {trainId}:{sep}{item}"
+
+    print("\n".join((line for line in create_lines())))
 
 
 @synchronize
