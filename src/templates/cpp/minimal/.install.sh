@@ -1,5 +1,18 @@
 #!/bin/bash
 
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+    echo cmnd=$cmnd
+    eval $cmnd 2>&1
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        echo
+        exit $ret_code
+    fi
+}
+
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework you would like to use."
   exit 1
@@ -20,7 +33,7 @@ if [[ "${2}" != "" ]]; then
 fi
 
 
-cmake \
+safeRunCommand cmake \
     -DCMAKE_BUILD_TYPE=$1 \
     -DBoost_NO_BOOST_CMAKE=ON \
     -DBoost_NO_SYSTEM_PATHS=ON \
@@ -28,6 +41,5 @@ cmake \
     -DCMAKE_INSTALL_PREFIX=$TARGET_DIR \
     -B $BUILD_DIR .
 cd $BUILD_DIR
-cmake $BUILD_OPT
-$(cp $BUILD_DIR/__PACKAGE_NAME__/lib*.so $TARGET_DIR | true)
-
+safeRunCommand cmake $BUILD_OPT
+safeRunCommand cp $BUILD_DIR/__PACKAGE_NAME__/lib*.so $TARGET_DIR
