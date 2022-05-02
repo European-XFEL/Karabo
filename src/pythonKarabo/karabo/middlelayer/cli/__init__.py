@@ -10,7 +10,7 @@ from karabo.middlelayer_api.device_client import (
     getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
     getSchema, getSchemaFromPast, getServers, getTimeInfo, getTopology,
     instantiate, instantiateFromName, instantiateNoWait, isAlive,
-    listConfigurationFromName, listDevicesWithConfiguration,
+    listConfigurationFromName, listDevicesWithConfiguration, printHistory,
     saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.ikarabo import connectDevice
