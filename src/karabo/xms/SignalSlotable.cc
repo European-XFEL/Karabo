@@ -967,8 +967,10 @@ namespace karabo {
                                                                          m_instanceId, "signalHeartbeat",
                                                                          KARABO_PUB_PRIO, KARABO_SYS_TTL);
             heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
-            storeSignal("signalHeartbeat", heartbeatSignal);
-
+            {
+                boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
+                m_signalInstances["signalHeartbeat"] = heartbeatSignal;
+            }
 
             // Listener for heartbeats
             KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
