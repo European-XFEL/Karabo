@@ -21,7 +21,7 @@ class LogDialog(QDialog):
         self.setModal(False)
         self.setSizeGripEnabled(True)
         self.setWindowTitle(f"Server log for serverId: {server_id}")
-        self.log_widget = LogWidget(parent=self)
+        self.log_widget = LogWidget(resize_contents=True, parent=self)
         self.log_layout.insertWidget(0, self.log_widget)
 
         self.server_id = server_id
