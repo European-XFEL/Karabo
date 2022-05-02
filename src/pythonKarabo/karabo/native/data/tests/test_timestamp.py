@@ -34,6 +34,14 @@ class Tests(TestCase):
         t6 = Timestamp(ival)
         self.assertAlmostEqual(t6.toTimestamp(), fval)
 
+    def test_toLocal(self):
+        local_str = "2022-05-01T11:22:33.123456"
+        t = Timestamp(local_str)
+        # by default get back local string with 'T' separator
+        self.assertEqual(t.toLocal(), local_str)
+        # can define any other separator
+        self.assertEqual(t.toLocal(' '), "2022-05-01 11:22:33.123456")
+
     def test_hash_read(self):
         self.assertIsNone(Timestamp.fromHashAttributes(dict()))
         t = Timestamp.fromHashAttributes(dict(sec=1234, frac=5678, tid=22))
