@@ -956,22 +956,10 @@ namespace karabo {
                     logTxt << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
                            << " UTC, but most recent data logged by " << loggerId << " is from "
                            << lastUpdateLogger.toFormattedString() << " UTC.";
-                    if (Epochstamp().elapsed(lastDeviceUpdate) < tolerance) { // device update is 'recent'
-                        // The lastUpdateLogger stamp just missed the last update of the device (we asked for
-                        // lastUpdateLogger before we asked for lastDeviceUpdate), a case that would, without this diff,
-                        // lead e.g. to
-                        // clang-format off
-                        // 2022-02-27 14:16:07 WARN  karabo.devices.DataLoggerManager  : <deviceId> had last update at 2022-Feb-27 13:16:01 UTC, but most recent data logged by DataLogger-karabo/sqs_dataLogger4_influx is from 2022-Feb-27 12:18:36 UTC - force logging to start again
-                        // clang-format on
-                        KARABO_LOG_FRAMEWORK_INFO << logTxt.str() << " Since last update is rather recent, it can be "
-                                                  << "assumed that our info from " << loggerId
-                                                  << " is just not up to date."; // Wrong? Next topology check will cure
-                    } else {
-                        KARABO_LOG_FRAMEWORK_WARN << logTxt.str() << " - force logging to start again";
-                        forceDeviceToBeLogged(deviceId);
-                        const std::string serverId(loggerIdToServerId(loggerId));
-                        addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
-                    }
+                    KARABO_LOG_FRAMEWORK_WARN << logTxt.str() << " - force logging to start again";
+                    forceDeviceToBeLogged(deviceId);
+                    const std::string serverId(loggerIdToServerId(loggerId));
+                    addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Last update of " << deviceId << " at "
                                                << lastDeviceUpdate.toFormattedString() << " UTC: logger not behind.";
