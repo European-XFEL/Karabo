@@ -89,9 +89,13 @@ class Timestamp(object):
         """Return the time as seconds since 1970-01-01 00:00 UTC"""
         return self.time / RESOLUTION
 
-    def toLocal(self):
-        """Return the time as an ISO 8601 string in the local timezone"""
-        return datetime.fromtimestamp(self.toTimestamp()).isoformat()
+    def toLocal(self, sep="T"):
+        """
+        Return the time as an ISO 8601 string in the local timezone
+
+        :param sep: unicode character to separate date and time, default is 'T'
+        """
+        return datetime.fromtimestamp(self.toTimestamp()).isoformat(sep)
 
     def __eq__(self, other):
         if not isinstance(other, Timestamp):
