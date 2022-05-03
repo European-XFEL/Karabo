@@ -148,9 +148,7 @@ class DeviceProxy(BaseDeviceProxy):
         assert self._monitor_count > 0
         self._monitor_count -= 1
         if self._monitor_count == 0:
-            get_network().onStopMonitoringDevice(self.device_id)
-            if self.status is ProxyStatus.MONITORING:
-                self.status = ProxyStatus.ALIVE
+            self._stop_monitoring()
 
     def connect_pipeline(self, path):
         """Ask the GUI server to subscribe to a pipeline output
@@ -197,6 +195,12 @@ class DeviceProxy(BaseDeviceProxy):
 
     def _start_monitoring(self):
         get_network().onStartMonitoringDevice(self.device_id)
+
+    def _stop_monitoring(self):
+        """Stop monitoring of the device proxy"""
+        get_network().onStopMonitoringDevice(self.device_id)
+        if self.status in (ProxyStatus.ALIVE, ProxyStatus.MONITORING):
+            self.status = ProxyStatus.ONLINE
 
 
 class DeviceClassProxy(BaseDeviceProxy):
