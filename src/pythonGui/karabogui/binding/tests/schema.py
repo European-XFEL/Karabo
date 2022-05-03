@@ -35,6 +35,10 @@ def get_pipeline_schema():
     return PipelineData.getClassSchema()
 
 
+def get_pipeline_vector_schema():
+    return VectorPipelineData.getClassSchema()
+
+
 def get_simple_schema():
     return Simple.getClassSchema()
 
@@ -71,6 +75,14 @@ class OutputNodeInner(Configurable):
     image = Node(Configurable, displayType='Image')
 
 
+class OutputVectorNodeInner(Configurable):
+    vector = VectorDouble()
+
+
+class OutputVectorNode(Configurable):
+    data = Node(OutputVectorNodeInner)
+
+
 class OutputNode(Configurable):
     data = Node(OutputNodeInner)
 
@@ -85,6 +97,10 @@ class Simple(Configurable):
 
 class PipelineData(Configurable):
     output = Node(OutputNode, displayType='OutputChannel')
+
+
+class VectorPipelineData(Configurable):
+    output = Node(OutputVectorNode, displayType='OutputChannel')
 
 
 class SlottedDevice(Configurable):
