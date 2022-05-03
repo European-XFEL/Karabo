@@ -12,8 +12,8 @@ from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
 
 from .schema import (
-    get_all_props_schema, get_pipeline_schema, get_simple_schema,
-    get_slotted_schema)
+    get_all_props_schema, get_pipeline_schema, get_pipeline_vector_schema,
+    get_simple_schema, get_slotted_schema)
 
 
 def test_device_proxy_classes():
@@ -259,6 +259,12 @@ def test_property_proxy_pipeline():
     assert isinstance(proxy.binding, ImageBinding)
     assert proxy.pipeline_parent_path == 'output'
 
+    proxy = PropertyProxy(root_proxy=root_proxy,
+                          path='output.data.vector')
+    assert proxy.binding is None
+    # No pipeline established
+    assert proxy.pipeline_parent_path == ''
+
 
 def test_property_proxy_pipeline_monitoring():
     network = Mock()
@@ -266,17 +272,44 @@ def test_property_proxy_pipeline_monitoring():
         schema = get_pipeline_schema()
         binding = build_binding(schema)
         root_proxy = DeviceProxy(device_id='dev', binding=binding)
+        root_proxy.status = ProxyStatus.ONLINE
         proxy = PropertyProxy(root_proxy=root_proxy, path='output.data.image')
 
         assert not proxy.visible
 
         proxy.start_monitoring()
         assert proxy.visible
+        assert proxy.root_proxy._pipeline_subscriptions['output'] == 1
         network.onSubscribeToOutput.assert_called_with('dev', 'output', True)
 
         proxy.stop_monitoring()
         assert not proxy.visible
         network.onSubscribeToOutput.assert_called_with('dev', 'output', False)
+        assert proxy.root_proxy._pipeline_subscriptions['output'] == 0
+
+        # Test that we don't subscribe to a property that is not available
+        network.reset_mock()
+        proxy = PropertyProxy(root_proxy=root_proxy,
+                              path='output.data.vector')
+        assert proxy.binding is None
+        assert not proxy.visible
+        proxy.start_monitoring()
+        assert proxy.root_proxy.status is ProxyStatus.ONLINEREQUESTED
+        assert proxy.visible
+        assert proxy.root_proxy._monitor_count > 0
+        # not called
+        network.onSubscribeToOutput.assert_not_called()
+
+        # Got the schema now
+        schema = get_pipeline_vector_schema()
+        with assert_trait_change(proxy, 'pipeline_parent_path'):
+            build_binding(schema, existing=binding)
+            assert proxy.binding is not None
+
+        assert proxy.pipeline_parent_path == 'output'
+        assert proxy.root_proxy._pipeline_subscriptions['output'] == 1
+        assert proxy.root_proxy.status is ProxyStatus.SCHEMA
+        network.onSubscribeToOutput.assert_called_with('dev', 'output', True)
 
 
 def test_schema_updates():

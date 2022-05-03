@@ -302,6 +302,9 @@ class PropertyProxy(HasStrictTraits):
             binding.value = value
 
     def _pipeline_parent_path_default(self):
+        if self.binding is None:
+            return ''
+
         def _gen_parents(p):
             if '.' in p:
                 p = p.rsplit('.', 1)[0]
@@ -336,9 +339,9 @@ class PropertyProxy(HasStrictTraits):
             return
 
         self.binding = self.root_proxy.get_property_binding(self.path)
-        self.pipeline_parent_path = self._pipeline_parent_path_default()
         if self.root_proxy.status in SCHEMA_STATUSES:
             self.existing = self.binding is not None
+            self.pipeline_parent_path = self._pipeline_parent_path_default()
 
     def _edit_value_changed(self, value):
         """When `edit_value` changes, set it to a binding object to validate
