@@ -5,7 +5,7 @@
 #############################################################################
 from qtpy.QtCore import QObject
 
-from karabogui.util import WeakMethodRef
+from karabo.common.api import WeakMethodRef
 
 
 class SystemTopologyListener(QObject):
