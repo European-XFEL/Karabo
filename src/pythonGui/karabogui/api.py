@@ -54,8 +54,8 @@ from karabogui.topology.api import (
     SystemTopology, SystemTree, SystemTreeNode, get_macro_servers,
     is_device_online, is_server_online)
 from karabogui.util import (
-    SignalBlocker, WeakMethodRef, generateObjectName, get_reason_parts,
-    get_spin_widget, show_wait_cursor, wait_cursor)
+    SignalBlocker, generateObjectName, get_reason_parts, get_spin_widget,
+    show_wait_cursor, wait_cursor)
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexListValidator,
     RegexValidator)

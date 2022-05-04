@@ -2,9 +2,10 @@ from qtpy import uic
 from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtWidgets import QDialog
 
+from karabo.common.api import WeakMethodRef
 from karabogui import messagebox
 from karabogui.request import call_device_slot
-from karabogui.util import WeakMethodRef, get_spin_widget
+from karabogui.util import get_spin_widget
 from karabogui.widgets.log import LogWidget
 
 from .utils import get_dialog_ui
