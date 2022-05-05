@@ -107,7 +107,7 @@ class ServerTest(TestCase):
                                      Hash())
             self.assertEqual(len(server.deviceInstanceMap.keys()), 1)
             vis = server.getVisibilities()
-            self.assertEqual(vis, {"PropertyTestMDL": 4})
+            self.assertEqual(vis, {"PropertyTestMDL": 3})
 
             schema, classId, serv_id = server.slotGetClassSchema(
                 "PropertyTestMDL")
@@ -167,7 +167,7 @@ class ServerTest(TestCase):
             self.assertIn(deviceId_1, server.deviceInstanceMap)
             self.assertIn(deviceId_2, server.deviceInstanceMap)
             vis = server.getVisibilities()
-            self.assertEqual(vis, {"PropertyTestMDL": 4})
+            self.assertEqual(vis, {"PropertyTestMDL": 3})
             device = server.deviceInstanceMap[deviceId_1]
             self.assertEqual(server, device.device_server)
             local = device.getLocalDevice(deviceId_2)

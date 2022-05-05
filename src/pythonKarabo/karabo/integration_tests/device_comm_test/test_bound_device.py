@@ -35,7 +35,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(props.get("classVersion"),
                              "karabo-" + karaboVersion)
             self.assertEqual(props.get("karaboVersion"), karaboVersion)
-            self.assertEqual(props.get("visibility"), AccessLevel.ADMIN)
+            self.assertEqual(props.get("visibility"), AccessLevel.EXPERT)
             self.assertEqual(props.get("serverId"), SERVER_ID)
             # Cannot know the pid - but it is non-zero and different from ours
             self.assertNotEqual(props.get("pid"), 0)
