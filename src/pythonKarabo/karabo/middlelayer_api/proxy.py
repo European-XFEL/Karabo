@@ -508,11 +508,13 @@ class DeviceClientProxyFactory(ProxyFactory):
         def __exit__(self, exc_type, exc_value, traceback):
             """Exit the proxy by disconnecting from the signals
             """
-            self._used -= 1
-            if self._used == 0:
-                signals = ["signalChanged", "signalStateChanged"]
-                self._device._ss.disconnect(self._deviceId, signals,
-                                            self._device.slotChanged)
+            if self._used > 0:
+                # Make sure to protect against multiple disconnect calls
+                self._used -= 1
+                if self._used == 0:
+                    signals = ["signalChanged", "signalStateChanged"]
+                    self._device._ss.disconnect(self._deviceId, signals,
+                                                self._device.slotChanged)
 
         async def __aenter__(self):
             self._used += 1

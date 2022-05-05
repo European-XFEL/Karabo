@@ -16,9 +16,9 @@ from karabo.middlelayer import (
     AlarmCondition, Bool, Configurable, Device, DeviceNode, Float, Hash, Int32,
     KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
     Timestamp, Unit, VectorChar, VectorFloat, VectorInt16, VectorString,
-    background, call, connectDevice, coslot, decodeBinary, execute,
-    filterByTags, getDevice, getInstanceInfo, getTimeInfo, isAlive, isSet,
-    lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
+    background, call, connectDevice, coslot, decodeBinary, disconnectDevice,
+    execute, filterByTags, getDevice, getInstanceInfo, getTimeInfo, isAlive,
+    isSet, lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
     waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
@@ -482,6 +482,11 @@ class Tests(DeviceTest):
         self.assertLess(tmp, 20)
         self.assertLess(d.counter - tmp, 2,
                         "too many messages arrived after disconnecting")
+
+        # Disconnecting although disconnected should not harm
+        for _ in range(5):
+            await disconnectDevice(d)
+
         with d:
             await sleep(0.8)
             if amqp:
