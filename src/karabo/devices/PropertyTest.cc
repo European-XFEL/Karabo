@@ -70,7 +70,7 @@ namespace karabo {
                   .setNewDefaultValue(State::INIT)
                   .commit();
 
-            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
+            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::EXPERT).commit();
 
             BOOL_ELEMENT(expected)
                   .key("boolProperty")
