@@ -1,0 +1,10 @@
+***************************
+What's New in Karabo 2.15.0
+***************************
+
+- GUI: The client will prevent adding "backbone" devices to projects. Pre-existing Devices will not be modified.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- Coming ...
