@@ -76,24 +76,21 @@ class ServiceInteractiveRow(Configurable):
         displayedName="Start",
         displayType="TableBoolButton",
         description="Start the service",
-        accessMode=AccessMode.READONLY
-    )
+        accessMode=AccessMode.READONLY)
 
     restart = Bool(
         defaultValue=True,
         displayedName="Restart",
-        displayType="TableBoolButton",
+        displayType="TableBoolButton|confirmation=1",
         description="Restart the service",
-        accessMode=AccessMode.READONLY
-    )
+        accessMode=AccessMode.READONLY)
 
     stop = Bool(
         defaultValue=True,
         displayedName="Stop",
-        displayType="TableBoolButton",
+        displayType="TableBoolButton|confirmation=1",
         description="Stop the service",
-        accessMode=AccessMode.READONLY
-    )
+        accessMode=AccessMode.READONLY)
 
 
 class DaemonManager(Device):
