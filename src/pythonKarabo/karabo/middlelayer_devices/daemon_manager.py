@@ -23,6 +23,7 @@ STATUS_PAGE = "{}/status.json"
 STATUS_UP = "UP"
 STATUS_DOWN = "DOWN"
 STATUS_CHANGING = "CHANGING"
+WAIT_STATUS_POLLTIME = 1  # seconds
 
 
 def get_table_row(entry):
@@ -218,8 +219,12 @@ class DaemonManager(Device):
             if self.state != State.UNKNOWN:
                 self.state = State.UNKNOWN
                 self.status = f"Error in fetch: {e}"
+                self.services = []
+                self.numHosts = 0
+                self.numServices = 0
         else:
-            if self.state != State.ON and not len(self.post_action_tasks):
+            changing = len(self.post_action_tasks) > 0
+            if self.state != State.ON and not changing:
                 self.state = State.ON
             # Synchronize to error status outside of the normal polling.
             status = "Fetched server information"
@@ -327,6 +332,9 @@ class DaemonManager(Device):
     def _post_action(self, service_name, host, request):
         """A post action for a service related to service request"""
         task = self.post_action_tasks.get((service_name, host))
+        # Always provide a changing state to show some action has been done
+        if self.state != State.CHANGING:
+            self.state = State.CHANGING
         if request == "start":
             pass  # nothing to follow up on start
         elif request == "stop" and task is None:
@@ -336,47 +344,40 @@ class DaemonManager(Device):
             self.post_action_tasks[(service_name, host)] = background(
                 self._ensure_service_restart(service_name, host))
 
-    async def wait_status(self, service_name, status, calls=7):
-        """Wait for a status `status` for a `service_name`"""
+    async def wait_status(self, service_name, status, num=7):
+        """Wait for a status `status` for a `service_name` for
+        a number of polls"""
         try:
-            while calls > 0:
-                await sleep(1)
+            total_calls = num
+            while total_calls > 0:
+                await sleep(WAIT_STATUS_POLLTIME)
                 await self._fetch()
                 row = self.services.where_value(
                     "name", service_name).value[0]
                 if row["status"] == status:
                     return True
-                calls -= 1
+                total_calls -= 1
         except CancelledError:
             pass
         return False
 
     async def _ensure_service_restart(self, service_name, host):
         """Ensure a service can restart after being stopped"""
-        self.state = State.CHANGING
         try:
-            ok = await self.wait_status(service_name, STATUS_DOWN)
-            if not ok:
-                # Execute the action, the service is not down
+            if not await self.wait_status(service_name, STATUS_DOWN):
                 await self._action_service(service_name, host, "kill")
-            # We wait until the server resolves
-            ok = await self.wait_status(service_name, STATUS_DOWN, calls=15)
-            if not ok:
+            # Wait until the kill resolves
+            if not await self.wait_status(service_name, STATUS_DOWN, num=15):
                 self.logger.error(f"Service {service_name} does not go down")
                 return
             await self._action_service(service_name, host, "up")
-        except Exception as e:
-            self.logger.error(f"Service task error: {e}")
         finally:
             self.post_action_tasks.pop((service_name, host))
 
     async def _ensure_service_down(self, service_name, host):
         """Ensure a service is down by killing a service"""
-        self.state = State.CHANGING
         try:
-            ok = await self.wait_status(service_name, STATUS_DOWN)
-            if not ok:
-                # Execute the action, the status was not met
+            if not await self.wait_status(service_name, STATUS_DOWN):
                 await self._action_service(service_name, host, "kill")
         finally:
             self.post_action_tasks.pop((service_name, host))
