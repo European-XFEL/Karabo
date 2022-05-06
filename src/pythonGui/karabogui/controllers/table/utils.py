@@ -59,3 +59,15 @@ def create_brushes(display_string):
                in color_map.items()}
 
     return default_brush, brushes
+
+
+def has_confirmation(display_string):
+    """Check if the confirmation is provided on a table display string"""
+    splitted = display_string.split("|")
+    if not len(splitted) > 1:
+        return False
+    parsed = parse_qs(splitted[1], keep_blank_values=False)
+    options = {name: opt[0] for name, opt in parsed.items()}
+
+    confirm = options.get("confirmation") == "1"
+    return confirm
