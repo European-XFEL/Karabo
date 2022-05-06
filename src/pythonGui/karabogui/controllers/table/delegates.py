@@ -7,8 +7,8 @@
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import (
-    QApplication, QComboBox, QLineEdit, QStyle, QStyledItemDelegate,
-    QStyleOptionFrame, QStyleOptionProgressBar)
+    QApplication, QComboBox, QLineEdit, QMessageBox, QStyle,
+    QStyledItemDelegate, QStyleOptionFrame, QStyleOptionProgressBar)
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabo.native import Hash, is_equal
@@ -24,7 +24,7 @@ from karabogui.topology.api import is_device_online
 from karabogui.util import SignalBlocker, get_reason_parts
 
 from .button_delegate import TableButtonDelegate
-from .utils import create_brushes
+from .utils import create_brushes, has_confirmation
 
 
 def get_display_delegate(proxy, binding, parent, read_only=True):
@@ -81,6 +81,7 @@ class BoolButtonDelegate(TableButtonDelegate):
         self.text = binding.displayed_name or proxy.path
         self.deviceId = proxy.root_proxy.device_id
         self.path = proxy.path
+        self.confirm = has_confirmation(binding.display_type)
 
     def isEnabled(self, index=None):
         """Reimplemented function of TableButtonDelegate"""
@@ -95,6 +96,16 @@ class BoolButtonDelegate(TableButtonDelegate):
         """Reimplemented function of TableButtonDelegate"""
         if not index.isValid() or not is_device_online(self.deviceId):
             return
+
+        if self.confirm:
+            message_box = QMessageBox()
+            message_box.setModal(False)
+            confirm = message_box.question(
+                self.parent(), "Confirmation",
+                f"Do you really want to proceed with <b>{self.text}</b>?",
+                QMessageBox.No, QMessageBox.Yes)
+            if confirm == QMessageBox.No:
+                return
 
         model = index.model()
         row = index.row()
@@ -112,13 +123,14 @@ class BoolButtonDelegate(TableButtonDelegate):
                 messagebox.show_error("Request for table action for device "
                                       f"<b>{self.deviceId}</b> failed."
                                       "The reason is:<br>"
-                                      f"<i>{reason}</i>", details=details)
+                                      f"<i>{reason}</i>", details=details,
+                                      parent=self.parent())
             elif not reply.get("payload.success", True):
                 reason = reply.get("payload.reason", "")
                 messagebox.show_error(
                     "Request for table action for device "
                     f"<b>{self.deviceId}</b> reported an error "
-                    f"with the reason: {reason}.")
+                    f"with the reason: {reason}.", parent=self.parent())
             else:
                 get_logger().info("Successfully executed action "
                                   f"<b>{self.text}</b> for device "
