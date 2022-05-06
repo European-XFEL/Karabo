@@ -4,7 +4,8 @@ from karabo.common.const import KARABO_SCHEMA_DISPLAY_TYPE
 from karabogui.binding.api import StringBinding
 
 from ..utils import (
-    create_brushes, is_state_display_type, list2string, string2list)
+    create_brushes, has_confirmation, is_state_display_type, list2string,
+    string2list)
 
 
 def test_display_type_state():
@@ -69,3 +70,17 @@ def test_create_brushes():
     assert "offline" in brushes
     assert "online" in brushes
     assert "nodefault" in brushes
+
+
+def test_has_confirmation():
+    confirm = has_confirmation("TableColor|confirmation=1")
+    assert confirm is True
+    # No caseless hickups, we have a contract
+    confirm = has_confirmation("TableColor|Confirmation=1")
+    assert confirm is False
+    confirm = has_confirmation("TableColor|confirmation=1&icon=0")
+    assert confirm is True
+    confirm = has_confirmation("TableColor|confirmation=0")
+    assert confirm is False
+    confirm = has_confirmation("TableColor|confirmation")
+    assert confirm is False
