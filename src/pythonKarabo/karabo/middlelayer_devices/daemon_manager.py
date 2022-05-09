@@ -204,14 +204,21 @@ class DaemonManager(Device):
             await self._fetch()
             await sleep(self.updateTime)
 
-    async def _fetch(self):
+    async def _fetch(self, update=True):
+        """Fetch the online data from the webaggregator
+
+        If set to `update` parameter is set to `True`, the service table
+        will be updated.
+
+        :returns: Success boolean and table
+        """
         try:
             fut = self.client.fetch(
                 STATUS_PAGE.format(self.aggregator_uri), method="GET")
             response = await to_asyncio_future(fut)
         except CancelledError:
             # NOTE: Do nothing, we only got cancelled by the server
-            pass
+            return False, None
         except Exception as e:
             if self.state != State.UNKNOWN:
                 self.state = State.UNKNOWN
@@ -219,6 +226,7 @@ class DaemonManager(Device):
                 self.services = []
                 self.numHosts = 0
                 self.numServices = 0
+            return False, None
         else:
             changing = len(self.post_action_tasks) > 0
             if self.state != State.ON and not changing:
@@ -251,9 +259,10 @@ class DaemonManager(Device):
                     self.services_info[key] = entry
             table_value.sort()
             table_value = self.services.descriptor.toKaraboValue(table_value)
-            if has_changes(self.services.value, table_value.value):
+            if update and has_changes(self.services.value, table_value.value):
                 self.numServices = len(table_value)
                 self.services = table_value
+            return True, table_value
 
     @coslot
     async def requestAction(self, params):
@@ -328,16 +337,18 @@ class DaemonManager(Device):
 
     def _post_action(self, service_name, host, request):
         """A post action for a service related to service request"""
-        task = self.post_action_tasks.get((service_name, host))
-        # Always provide a changing state to show some action has been done
         if self.state != State.CHANGING:
             self.state = State.CHANGING
+        task = self.post_action_tasks.get((service_name, host))
+        if task is not None:
+            return
+
         if request == "start":
             pass  # nothing to follow up on start
-        elif request == "stop" and task is None:
+        elif request == "stop":
             self.post_action_tasks[(service_name, host)] = background(
                 self._ensure_service_down(service_name, host))
-        elif request == "restart" and task is None:
+        elif request == "restart":
             self.post_action_tasks[(service_name, host)] = background(
                 self._ensure_service_restart(service_name, host))
 
@@ -348,11 +359,12 @@ class DaemonManager(Device):
             total_calls = num
             while total_calls > 0:
                 await sleep(WAIT_STATUS_POLLTIME)
-                await self._fetch()
-                row = self.services.where_value(
-                    "name", service_name).value[0]
-                if row["status"] == status:
-                    return True
+                success, table = await self._fetch(update=False)
+                if success:
+                    row = table.where_value(
+                        "name", service_name).value[0]
+                    if row["status"] == status:
+                        return True
                 total_calls -= 1
         except CancelledError:
             pass
