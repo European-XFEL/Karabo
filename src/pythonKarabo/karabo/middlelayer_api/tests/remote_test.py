@@ -1347,6 +1347,7 @@ class Tests(DeviceTest):
             self.assertEqual(d.counter, counter)
         await task
         async with d:
+            await updateDevice(d)
             self.assertEqual(d.counter, 29)
 
     @async_tst
@@ -1365,6 +1366,7 @@ class Tests(DeviceTest):
         self.assertTrue(d.counter < 29)
         await task
         async with d:
+            await updateDevice(d)
             self.assertEqual(d.counter, 29)
 
     @async_tst
