@@ -319,7 +319,7 @@ class DigitDialog(_BaseDialog):
 
     @Slot()
     def on_addValue_clicked(self):
-        idx = 0
+        new_idx = 0
         entry_value = self.value.value()
         entry_equal = self.lessEqual.isChecked()
         for idx, item in enumerate(self.items):
@@ -333,13 +333,16 @@ class DigitDialog(_BaseDialog):
             # Find new position in list widget
             if (entry_value < item_value or
                     entry_value == item_value and item.equal):
+                new_idx = idx
                 break
 
+            new_idx = idx + 1
+
         item = IconItem(value=entry_value, equal=entry_equal)
-        self.items.insert(idx, item)
-        self.valueList.insertItem(idx, self.text_for_item(item))
+        self.items.insert(new_idx, item)
+        self.valueList.insertItem(new_idx, self.text_for_item(item))
         # Trigger the imageView to generate default data!
-        self.valueList.setCurrentRow(idx)
+        self.valueList.setCurrentRow(new_idx)
 
     def text_for_item(self, item):
         if item.value is None:
