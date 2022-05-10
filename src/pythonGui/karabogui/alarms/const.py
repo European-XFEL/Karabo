@@ -33,7 +33,6 @@ ACKNOWLEDGE = 'acknowledge'  # puts together needsAcknowledging/acknowledgeable
 SHOW_DEVICE = 'showDevice'
 
 ALARM_DATA = OrderedDict()
-ALARM_DATA[ALARM_ID] = 'ID'
 ALARM_DATA[TIME_OF_FIRST_OCCURENCE] = 'Time of First Occurence'
 ALARM_DATA[TIME_OF_OCCURENCE] = 'Time of Occurence'
 ALARM_DATA[DEVICE_ID] = 'Device ID'
@@ -41,6 +40,7 @@ ALARM_DATA[PROPERTY] = 'Property'
 ALARM_DATA[ALARM_TYPE] = 'Type'
 ALARM_DATA[DESCRIPTION] = 'Description'
 ALARM_DATA[ACKNOWLEDGE] = 'Acknowledge'
+ALARM_DATA[ALARM_ID] = 'ID'
 
 AlarmEntry = namedtuple('AlarmEntry', [key for key in ALARM_DATA.keys()])
 
