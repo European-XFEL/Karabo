@@ -9,9 +9,8 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
     waitUntil, waitWhile)
-from karabo.middlelayer_api.compat import jms
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import call, getSchema, updateDevice
+from karabo.middlelayer_api.device_client import call, getSchema
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sync_tst)
@@ -189,8 +188,6 @@ class Tests(DeviceTest):
         schema_before = await getSchema("MyDevice", onlyCurrentState=False)
         # The notation `before` refers to the device in state ON.
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             # Set a transient state
             await self.myDevice.set_state(State.ACQUIRING)
             proxy_before_schema = await getSchema(d, onlyCurrentState=False)
@@ -247,8 +244,6 @@ class Tests(DeviceTest):
     async def test_lastCommand(self):
         self.assertEqual(self.myDevice.lastCommand, "")
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             await d.nodeWithSlot.pressMe()
             self.assertEqual(self.myDevice.lastCommand, "nodeWithSlot.pressMe")
             await d.start()
@@ -260,8 +255,6 @@ class Tests(DeviceTest):
     async def test_two_calls_concurrent(self):
         self.assertEqual(self.myDevice.counter, 0)
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             await d.increaseCounter()
             await waitUntil(lambda: d.state != State.ON)
             await waitWhile(lambda: d.state == State.ACQUIRING)
@@ -276,8 +269,6 @@ class Tests(DeviceTest):
     @async_tst
     async def test_clear_table_external(self):
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             dtype = d.table.descriptor.dtype
             current_value = np.array((2.0, 5.6), dtype=dtype)
             self.assertEqual(d.table[0].value, current_value)
@@ -300,8 +291,6 @@ class Tests(DeviceTest):
     @async_tst
     async def test_allowed_state_reconfigure_nodes(self):
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             self.assertEqual(d.noded.floatProperty, 10.0)
             await setWait(d, 'noded.floatProperty', 27.0)
             self.assertEqual(d.noded.floatProperty, 27.0)
@@ -372,8 +361,6 @@ class Tests(DeviceTest):
     @async_tst
     async def test_applyRunTimeUpdates(self):
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             self.assertEqual(d.counter.descriptor.minInc, 0)
             self.assertEqual(d.counter.descriptor.maxInc, 2000)
 
@@ -384,8 +371,6 @@ class Tests(DeviceTest):
         self.assertTrue(reply['success'])
 
         with (await getDevice("MyDevice")) as d:
-            if not jms:
-                await updateDevice(d)
             self.assertEqual(d.counter.descriptor.minInc, 0)
             self.assertEqual(d.counter.descriptor.maxInc, 100)
 
