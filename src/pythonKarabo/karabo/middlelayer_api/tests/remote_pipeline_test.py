@@ -5,9 +5,7 @@ from unittest import main
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
     InputChannel, Int32, Node, OutputChannel, Overwrite, Slot, State,
-    Timestamp, UInt32, call, coslot, getDevice, isAlive, setWait, updateDevice,
-    waitUntil)
-from karabo.middlelayer_api.compat import jms
+    Timestamp, UInt32, call, coslot, getDevice, isAlive, setWait, waitUntil)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -215,8 +213,6 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
-            if not jms:
-                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             received = False
             connected = False
@@ -299,8 +295,6 @@ class RemotePipelineTest(DeviceTest):
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
-            if not jms:
-                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
             self.assertEqual(receiver.node.received, 0)
@@ -353,8 +347,6 @@ class RemotePipelineTest(DeviceTest):
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
-            if not jms:
-                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
             for data in range(NUM_DATA):
@@ -391,8 +383,6 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
-            if not jms:
-                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             proxy.output.connect()
             # Send more often as our proxy has a drop setting and we are busy
@@ -440,8 +430,6 @@ class RemotePipelineTest(DeviceTest):
             connected_name = channel_name
 
         with (await getDevice("outputdevice")) as proxy:
-            if not jms:
-                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             proxy.output.setConnectHandler(connect_handler)
             proxy.output.setCloseHandler(close_handler)
@@ -503,8 +491,6 @@ class RemotePipelineTest(DeviceTest):
         self.assertEqual(delta.received, 0)
         proxy = await getDevice("alice")
         with proxy:
-            if not jms:
-                await updateDevice(proxy)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 1)
             await proxy.sendData()
