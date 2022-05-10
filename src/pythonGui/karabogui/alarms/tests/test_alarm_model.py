@@ -95,13 +95,13 @@ class TestModel(GuiTestCase):
         self.assertNotEqual(mdl.all_entries, [])
 
     def test_columnCount_filter_model(self):
-        self.assertEqual(self.model.columnCount(), 8)
+        self.assertEqual(self.model.columnCount(), 7)
 
     def test_rowCount_filter_model(self):
         self.assertEqual(self.model.rowCount(), 10)
 
     def test_columnCount_alarm(self):
-        self.assertEqual(self.alarm_model.columnCount(), 8)
+        self.assertEqual(self.alarm_model.columnCount(), 7)
 
     def test_rowCount_alarm(self):
         self.assertEqual(self.alarm_model.rowCount(), 13)
@@ -111,7 +111,7 @@ class TestModel(GuiTestCase):
             section=0,
             role=Qt.DisplayRole,
             orientation=Qt.Horizontal)
-        self.assertEqual(header, 'ID')
+        self.assertEqual(header, 'Time of First Occurence')
 
     def test_update_alarms(self):
         mdl = AlarmModel()
@@ -140,12 +140,20 @@ class TestModel(GuiTestCase):
     # Filter test
 
     def test_updateFilter_alarms(self):
-        self.model.updateFilter(filter_type=ALARM_WARNING_TYPES)
+        self.model.filter_type = ALARM_WARNING_TYPES
+        self.model.setFilterFixedString("")
         self.assertEqual(self.model.rowCount(), 10)
+        self.model.setFilterFixedString("dev3")
+        self.assertEqual(self.model.rowCount(), 1)
+        self.model.setFilterFixedString("notthere")
+        self.assertEqual(self.model.rowCount(), 0)
 
     def test_updateFilter_interlocks(self):
-        self.model.updateFilter(filter_type=INTERLOCK_TYPES)
+        self.model.filter_type = INTERLOCK_TYPES
+        self.model.setFilterFixedString("")
         self.assertEqual(self.model.rowCount(), 3)
+        self.model.setFilterFixedString("devValve")
+        self.assertEqual(self.model.rowCount(), 1)
 
     # ------------------------------------------------------------
     # Basic alarm model stress test
@@ -156,13 +164,13 @@ class TestModel(GuiTestCase):
     def test_data_id(self):
         idx = self.alarm_model.createIndex(0, 0)
         cell = self.alarm_model.data(idx, Qt.DisplayRole)
-        self.assertEqual(cell, 0)
+        self.assertEqual(cell, "2017-04-20T09:32:22 UTC")
         idx = self.alarm_model.createIndex(1, 0)
         cell = self.alarm_model.data(idx, Qt.DisplayRole)
-        self.assertEqual(cell, 1)
+        self.assertEqual(cell, "2017-04-20T09:32:22 UTC")
 
     def test_data_alarmtype(self):
-        idx = self.alarm_model.createIndex(0, 5)
+        idx = self.alarm_model.createIndex(0, 4)
         cell = self.alarm_model.data(idx, Qt.DisplayRole)
         self.assertEqual(cell, 'alarmHigh')
 

@@ -13,7 +13,7 @@ class TestConst(GuiTestCase):
 
     def test_get_alarm_key_index(self):
         idx_id = const.get_alarm_key_index('id')
-        assert idx_id == 0
+        assert idx_id == 7
         with assert_raises(ValueError):
             const.get_alarm_key_index('Bob')
 

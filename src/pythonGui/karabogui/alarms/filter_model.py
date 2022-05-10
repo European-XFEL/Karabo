@@ -8,7 +8,8 @@ from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
 
 from .const import ALARM_WARNING_TYPES
 
-ALARM_TYPE_COLUMN = 5
+INSTANCE_COLUMN = 2
+ALARM_TYPE_COLUMN = 4
 
 
 class AlarmFilterModel(QSortFilterProxyModel):
@@ -17,6 +18,8 @@ class AlarmFilterModel(QSortFilterProxyModel):
         self.setSourceModel(source_model)
         self.setFilterRole(Qt.DisplayRole)
         self.filter_type = ALARM_WARNING_TYPES  # default filter
+        self.setFilterKeyColumn(INSTANCE_COLUMN)
+        self.setFilterCaseSensitivity(False)
 
     @property
     def instanceId(self):
@@ -24,11 +27,13 @@ class AlarmFilterModel(QSortFilterProxyModel):
         model = self.sourceModel()
         return model.instanceId
 
+    def get_alarm_id(self, index):
+        source_index = self.mapToSource(index)
+        return self.sourceModel().get_alarm_id(source_index)
+
     def filterAcceptsRow(self, row, parent=QModelIndex):
         model = self.sourceModel()
         _type = model.data(model.index(row, ALARM_TYPE_COLUMN))
-        return _type in self.filter_type
-
-    def updateFilter(self, filter_type):
-        self.filter_type = filter_type
-        self.invalidateFilter()
+        if _type not in self.filter_type:
+            return False
+        return super().filterAcceptsRow(row, parent)
