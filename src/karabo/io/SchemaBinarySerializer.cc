@@ -4,7 +4,6 @@
  *
  * Created on July 9, 2013, 8:59 AM
  */
-
 #include <karabo/util/Configurator.hh>
 //#include "HashBinarySerializer.hh"
 #include "SchemaBinarySerializer.hh"
@@ -28,7 +27,7 @@ namespace karabo {
 
         void SchemaBinarySerializer::expectedParameters(karabo::util::Schema& expected) {}
 
-        void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) try {
+        void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) {
             ostringstream os;
             const string& rootName = object.getRootName();
             const unsigned char size = rootName.size();
@@ -38,8 +37,6 @@ namespace karabo {
             string str = os.str();
             archive.insert(archive.end(), str.c_str(), str.c_str() + str.length());
             m_serializer->save2(object.getParameterHash(), archive); // save2(..) just appends to 'archive'!
-        } catch (...) {
-            std::clog << "Something wrong happend!!!" << std::endl;
         }
 
         void SchemaBinarySerializer::save2(const karabo::util::Schema& object, std::vector<char>& archive) {
