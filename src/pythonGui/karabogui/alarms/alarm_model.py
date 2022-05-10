@@ -84,11 +84,16 @@ class AlarmModel(QAbstractTableModel):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return self.headers[section]
 
+    def get_alarm_id(self, index):
+        entry = self.all_entries[index.row()]
+        return entry.id
+
     def rowCount(self, parent=QModelIndex()):
         return len(self.all_entries)
 
     def columnCount(self, parent=QModelIndex()):
-        return len(self.headers)
+        # We substract the id to show
+        return len(self.headers) - 1
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
