@@ -201,10 +201,8 @@ class Tests(DeviceTest):
     @sync_tst
     def test_disconnect(self):
         """check that we don't get updates when we're not connected"""
-        if not jms:
-            self.remote.counter = -1
-            sleep(1)
-        d = getDevice("remote")    # proxy is not connected
+        d = getDevice("remote")    # proxy is not connected after 5 seconds
+        sleep(5)
         executeNoWait(d, "count")
         if not amqp:
             time.sleep(0.1)
@@ -230,10 +228,7 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             self.assertEqual(d.value, 7)
             d.value = 10
-            if not jms:
-                updateDevice(d)
-            else:
-                time.sleep(0.1)
+            time.sleep(0.1)
             self.assertEqual(d.value, 10)
             d.changeit()
             self.assertEqual(d.value, 6)
@@ -252,10 +247,7 @@ class Tests(DeviceTest):
         self.remote.value = 7
         with getDevice("remote") as d:
             d.other = 102
-        if not jms:
-            updateDevice(d)
-        else:
-            time.sleep(0.1)
+        time.sleep(0.1)
         self.assertEqual(self.remote.value, 102)
 
     @sync_tst
@@ -329,12 +321,8 @@ class Tests(DeviceTest):
     @sync_tst
     def test_waituntil(self):
         """test the waitUntil function"""
-        if not jms:
-            sleep(1)
         with getDevice("remote") as d:
             d.counter = 0
-            if not jms:
-                updateDevice(d)
             self.assertEqual(d.counter, 0)
             executeNoWait(d, "count")
             waitUntil(lambda: d.counter > 10)
@@ -357,10 +345,7 @@ class Tests(DeviceTest):
     @sync_tst
     def test_waituntilnew(self):
         """test the waitUntilNew function"""
-        sleep(1)
         with getDevice("remote") as d:
-            if not jms:
-                updateDevice(d)
             d.counter = 0
             executeNoWait(d, "count")
             waitUntil(lambda: d.counter >= 0)
@@ -379,9 +364,6 @@ class Tests(DeviceTest):
     @async_tst
     async def test_print(self):
         """test that macros can print via expected parameters"""
-        if not jms:
-            self.local.doNotCompressEvents = 0
-            await sleep(1)
         sys.stdout = KaraboStream(sys.stdout)
         try:
             self.assertEqual(self.local.currentSlot, "")
@@ -513,8 +495,6 @@ class Tests(DeviceTest):
           * the task gets properly marked done
         Test that for both if the slot is stuck in a karabo function, or not.
         """
-        if not jms:
-            await sleep(2)
         # Rename sleep to make it clean which sleep is being used
         karabo_sleep = sleep
         d = await getDevice("local")
@@ -572,12 +552,8 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_connectdevice(self):
-        if not jms:
-            sleep(1)
         self.remote.value = 123
         d = connectDevice("remote")
-        if not jms:
-            updateDevice(d)
         try:
             self.assertEqual(d.value, 123)
             self.remote.value = 456
@@ -612,50 +588,34 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             d.value = 22
             d.lockedBy = "whoever"
-            if not jms:
-                updateDevice(d)
             try:
                 with self.assertRaisesRegex(KaraboError, "lock"):
                     d.value = 7
-                    if not jms:
-                        updateDevice(d)
                 self.assertEqual(d.value, 22)
             finally:
                 self.remote.lockedBy = ""
             d.value = 3
-            if not jms:
-                updateDevice(d)
             self.assertEqual(d.value, 3)
 
     @sync_tst
     def test_lock(self):
         with getDevice("remote") as d:
-            if not jms:
-                updateDevice(d)
             with lock(d):
                 self.assertEqual(d.lockedBy, "local")
                 with lock(d):
                     self.assertEqual(d.lockedBy, "local")
                     d.value = 33
-                    if not jms:
-                        updateDevice(d)
                     self.assertEqual(d.value, 33)
                 self.assertEqual(d.lockedBy, "local")
-            if not jms:
-                updateDevice(d)
             self.assertEqual(d.lockedBy, "")
 
     @sync_tst
     @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_lock_nowait(self):
         with getDevice("remote") as d:
-            if not jms:
-                updateDevice(d)
             with lock(d, wait_for_release=False):
                 self.assertEqual(d.lockedBy, "local")
                 d.value = 33
-                if not jms:
-                    updateDevice(d)
                 self.assertEqual(d.value, 33)
             self.assertEqual(d.lockedBy, "local")
             waitUntil(lambda: d.lockedBy == "")
@@ -664,7 +624,6 @@ class Tests(DeviceTest):
     async def test_async_slot_macro(self):
         d = await getDevice("local")
         with d:
-            await updateDevice(d)
             self.assertEqual(d.state, State.PASSIVE)
             await d.asyncSleep()
             # Macro slot is blocking with a sleep
