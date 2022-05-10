@@ -6,21 +6,21 @@
 
 from qtpy.QtCore import QModelIndex, Slot
 from qtpy.QtWidgets import (
-    QAbstractButton, QAbstractItemView, QButtonGroup, QHBoxLayout, QHeaderView,
-    QRadioButton, QTableView, QVBoxLayout, QWidget)
+    QAbstractItemView, QButtonGroup, QFrame, QHBoxLayout, QHeaderView, QLabel,
+    QLineEdit, QPushButton, QRadioButton, QTableView, QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.alarms.api import (
-    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES, INTERLOCK_TYPES,
-    AlarmFilterModel, get_alarm_key_index)
+    ACKNOWLEDGE, ALARM_DATA, ALARM_WARNING_TYPES, INTERLOCK_TYPES,
+    AlarmFilterModel)
 from karabogui.controllers.table.api import TableButtonDelegate
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_alarm_model, get_network
 
 from .base import BasePanelWidget
 
-DEVICE_COLUMN = 3
-ACKNOWLEDGE_COLUMN = 7
+DEVICE_COLUMN = 2
+ACKNOWLEDGE_COLUMN = 6
 
 
 class AlarmPanel(BasePanelWidget):
@@ -32,7 +32,7 @@ class AlarmPanel(BasePanelWidget):
         """
         widget = QWidget(parent=self)
         self.ui_filter_group = QButtonGroup(parent=widget)
-        self.ui_filter_group.buttonClicked.connect(self.filterToggled)
+        self.ui_filter_group.buttonClicked.connect(self.onFilterChanged)
         self.ui_show_alarm_warn = QRadioButton("Show alarms and warnings",
                                                parent=widget)
         self.ui_show_alarm_warn.setIcon(icons.alarmWarning)
@@ -42,11 +42,42 @@ class AlarmPanel(BasePanelWidget):
         self.ui_show_interlock.setIcon(icons.interlock)
         self.ui_filter_group.addButton(self.ui_show_interlock)
 
+        search_layout = QHBoxLayout()
+        text = "InstanceID"
+        label = QLabel()
+        label.setText(text)
+        label.setStatusTip(text)
+        label.setToolTip(text)
+        search_layout.addWidget(label)
+
+        text = "Search"
+        filter_text = QLineEdit()
+        filter_text.setStatusTip(text)
+        filter_text.setToolTip(text)
+        search_layout.addWidget(filter_text)
+        self.filter_text = filter_text
+
+        filter_button = QPushButton("Filter")
+        clear_button = QPushButton("Clear Filter")
+        search_layout.addWidget(filter_button)
+        search_layout.addWidget(clear_button)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setLineWidth(2)
+
         filter_layout = QHBoxLayout()
         filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.addLayout(search_layout)
+        filter_layout.addWidget(line)
+        filter_layout.addStretch()
         filter_layout.addWidget(self.ui_show_alarm_warn)
         filter_layout.addWidget(self.ui_show_interlock)
-        filter_layout.addStretch()
+
+        clear_button.clicked.connect(self.clear_filter)
+        filter_button.clicked.connect(self.onFilterChanged)
+        filter_text.returnPressed.connect(self.onFilterChanged)
 
         self.table_view = QTableView(parent=widget)
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectItems
@@ -72,19 +103,28 @@ class AlarmPanel(BasePanelWidget):
 
         return widget
 
-    @Slot(QAbstractButton)
-    def filterToggled(self, button):
-        """ The filter ``button`` was activated. Update filtering needed."""
-        if button is self.ui_show_alarm_warn:
-            self.model.updateFilter(filter_type=ALARM_WARNING_TYPES)
-        elif button is self.ui_show_interlock:
-            self.model.updateFilter(filter_type=INTERLOCK_TYPES)
-
     def closeEvent(self, event):
         """Tell main window to enable the button to add me back."""
         super(AlarmPanel, self).closeEvent(event)
         if event.isAccepted():
             self.signalPanelClosed.emit(self.windowTitle())
+
+    @Slot()
+    def clear_filter(self):
+        self.filter_text.setText("")
+        self.onFilterChanged()
+
+    @Slot()
+    def onFilterChanged(self):
+        if self.ui_show_alarm_warn.isChecked():
+            filter_types = ALARM_WARNING_TYPES
+        elif self.ui_show_interlock.isChecked():
+            filter_types = INTERLOCK_TYPES
+
+        pattern = self.filter_text.text()
+        self.filter_text.setPlaceholderText(pattern)
+        self.model.filter_type = filter_types
+        self.model.setFilterFixedString(pattern)
 
     @Slot(QModelIndex)
     def onRowDoubleClicked(self, index):
@@ -114,7 +154,6 @@ class ButtonDelegate(TableButtonDelegate):
             return
 
         # Send a signal to acknowledge alarm
-        id_index = get_alarm_key_index(ALARM_ID)
         model = index.model()
-        alarm_id = model.index(index.row(), id_index).data()
+        alarm_id = model.get_alarm_id(index)
         get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
