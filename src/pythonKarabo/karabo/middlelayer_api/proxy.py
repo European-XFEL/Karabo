@@ -5,6 +5,7 @@ from contextlib import suppress
 from inspect import isfunction
 from weakref import WeakSet
 
+from karabo.common.api import WeakMethodRef
 from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
 from karabo.middlelayer_api.eventloop import synchronize
 from karabo.native import (
@@ -19,6 +20,8 @@ elif redis:
     from aioredis import RedisError as OMQError
 elif amqp:
     from aio_pika import AMQPException as OMQError
+
+UNSUBSCRIBE_TIMEOUT = 5
 
 
 class _ProxyBase(object):
@@ -497,6 +500,19 @@ class DeviceClientProxyFactory(ProxyFactory):
                     raise KaraboError(
                         'device "{}" died'.format(self._deviceId))
 
+        async def initialize(self):
+            """Initialize the proxy by subscribing to updates
+
+            Note: This increments the use counter and will decrease the
+            counter after a period to make sure the proxy is connected
+            on creation.
+            """
+            self.__enter__()
+            loop = asyncio.get_event_loop()
+            loop.call_later(UNSUBSCRIBE_TIMEOUT,
+                            WeakMethodRef(self.__exit__), None, None, None)
+            await self.update_proxy()
+
         def __enter__(self):
             self._used += 1
             if self._used == 1:
@@ -530,11 +546,13 @@ class DeviceClientProxyFactory(ProxyFactory):
         async def __aexit__(self, exc_type, exc_value, traceback):
             """Exit the proxy by disconnecting from the signals
             """
-            self._used -= 1
-            if self._used == 0:
-                signals = ["signalChanged", "signalStateChanged"]
-                await self._device._ss.async_disconnect(
-                    self._deviceId, signals, self._device.slotChanged)
+            if self._used > 0:
+                # Make sure to protect against multiple disconnect calls
+                self._used -= 1
+                if self._used == 0:
+                    signals = ["signalChanged", "signalStateChanged"]
+                    await self._device._ss.async_disconnect(
+                        self._deviceId, signals, self._device.slotChanged)
 
         def _disconnectSchemaUpdated(self):
             if self._schemaUpdateConnected:
