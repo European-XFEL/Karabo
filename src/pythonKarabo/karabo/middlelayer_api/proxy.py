@@ -1,25 +1,15 @@
 import asyncio
 import time
 from collections import defaultdict
-from contextlib import suppress
 from inspect import isfunction
 from weakref import WeakSet
 
 from karabo.common.api import WeakMethodRef
-from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
+from karabo.middlelayer_api.compat import suppressBrokerException
 from karabo.middlelayer_api.eventloop import synchronize
 from karabo.native import (
     Descriptor, Hash, KaraboError, KaraboValue, NDArray, NodeType, NoneValue,
     Slot, Timestamp, Type, Weak, get_timestamp, isSet)
-
-if jms:
-    from karabo.middlelayer_api.openmq import Error as OMQError
-elif mqtt:
-    from karabo.middlelayer_api.pahomqtt import MqttError as OMQError
-elif redis:
-    from aioredis import RedisError as OMQError
-elif amqp:
-    from aio_pika import AMQPException as OMQError
 
 UNSUBSCRIBE_TIMEOUT = 5
 
@@ -579,21 +569,21 @@ class DeviceClientProxyFactory(ProxyFactory):
 
         def __del__(self):
             self._disconnect_outputs()
-            with suppress(OMQError):
+            with suppressBrokerException():
                 self._disconnectSchemaUpdated()
             if self._used > 0:
                 self._used = 1
-                with suppress(OMQError):
+                with suppressBrokerException():
                     self.__exit__(None, None, None)
 
         async def delete_proxy(self):
             """Delete the proxy, disconnect all channels and signals"""
             self._disconnect_outputs()
-            with suppress(OMQError):
+            with suppressBrokerException():
                 await self._async_disconnectSchemaUpdated()
             if self._used > 0:
                 self._used = 1
-                with suppress(OMQError):
+                with suppressBrokerException():
                     await self.__aexit__(None, None, None)
 
         async def update_proxy(self):
