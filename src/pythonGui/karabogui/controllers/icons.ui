@@ -37,7 +37,7 @@
 The dialog helps to set custom icons on the widget based on the defined formulas. To show the icon for the current property, please:
 &lt;ul&gt;
 &lt;li&gt;Define a condition by entering a value and by clicking on the '+' button. &lt;li/&gt;
-&lt;li&gt;Use 'Open Icon File' to open an image file containing the icon&lt;li/&gt;  or
+&lt;li&gt;Use 'Open Icon File' to open an image file containing the icon. &lt;li/&gt;
 &lt;li&gt;Use 'Paste from Clipboard' to paste the image from the clipboard. Please make sure to copy the image (ie, file content) and not the image file.&lt;/li&gt;
 &lt;ul&gt;
 &lt;/body&gt;
