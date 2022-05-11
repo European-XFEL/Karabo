@@ -500,7 +500,7 @@ class DeviceClientProxyFactory(ProxyFactory):
                     raise KaraboError(
                         'device "{}" died'.format(self._deviceId))
 
-        async def initialize(self):
+        async def initialize_proxy(self):
             """Initialize the proxy by subscribing to updates
 
             Note: This increments the use counter and will decrease the
@@ -511,7 +511,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             loop = asyncio.get_event_loop()
             loop.call_later(UNSUBSCRIBE_TIMEOUT,
                             WeakMethodRef(self.__exit__), None, None, None)
-            await self.update_proxy()
 
         def __enter__(self):
             self._used += 1
