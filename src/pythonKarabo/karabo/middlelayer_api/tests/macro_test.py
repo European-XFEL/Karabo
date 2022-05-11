@@ -15,7 +15,7 @@ from karabo.middlelayer_api.device_client import (
     getDevice, getInstanceInfo, getSchema, lock, setNoWait, setWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.device_server import KaraboStream
-from karabo.middlelayer_api.macro import Macro
+from karabo.middlelayer_api.macro import Macro, MacroSlot
 from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
 from karabo.middlelayer_api.tests.eventloop import (
@@ -25,6 +25,7 @@ from karabo.native import (
 
 FLAKY_MAX_RUNS = 5
 FLAKY_MIN_PASSES = 3
+TIMEOUT_LOGS = 3
 
 
 class Superslot(Slot):
@@ -158,6 +159,64 @@ class LocalAbstract(Macro):
         sleep(0.1)
 
 
+class NodeSlow(Configurable):
+
+    @MacroSlot()
+    async def startASync(self):
+        """Just sleep a bit for state change"""
+        await sleep(0.1)
+
+    @MacroSlot()
+    def startSync(self):
+        """Just sleep a bit for state change"""
+        sleep(0.1)
+
+class LocalMacroSlot(Macro):
+
+    exc_slot = None
+    exception = None
+    traceback = None
+    cancelled_slot = None
+
+    node = Node(NodeSlow)
+
+    async def set_state(self, state):
+        self.state = state
+
+    @MacroSlot(activeState=State.MOVING, passiveState=State.ON)
+    async def startCustom(self):
+        """Just sleep a bit for state change"""
+        await sleep(0.1)
+
+    @MacroSlot()
+    def startSync(self):
+        """Just sleep a bit for state change"""
+        sleep(0.1)
+
+    @MacroSlot()
+    async def startASync(self):
+        """Just sleep a bit for state change"""
+        await sleep(0.1)
+
+    @MacroSlot()
+    def error(self):
+        raise RuntimeError
+
+    @MacroSlot()
+    def error_in_error(self):
+        raise RuntimeError
+
+    def onException(self, slot, exc, tb):
+        self.exc_slot = slot
+        self.exception = exc
+        self.traceback = tb
+        if self.exc_slot is LocalMacroSlot.error_in_error:
+            raise RuntimeError
+
+    def onCancelled(self, slot):
+        self.cancelled_slot = slot
+
+
 class Tests(DeviceTest):
     @classmethod
     @contextmanager
@@ -165,13 +224,152 @@ class Tests(DeviceTest):
         cls.local = Local(_deviceId_="local", project="test", module="test",
                           may_start_thread=False)
         cls.remote = Remote(dict(_deviceId_="remote"))
-        with cls.deviceManager(cls.remote, lead=cls.local):
+        cls.localMacro = LocalMacroSlot(_deviceId_="localMacroSlot",
+                                        project="no", module="test")
+        with cls.deviceManager(cls.remote, cls.localMacro, lead=cls.local):
             yield
 
     @async_tst
     async def tearDown(self):
         with (await getDevice("remote")) as d:
             await waitUntil(lambda: d.state == State.UNKNOWN)
+
+    @async_tst
+    async def test_macro_slotter_custom(self):
+        """Test that we can customize the state machine"""
+        localMacro = LocalMacroSlot(_deviceId_="localCustomSlot",
+                                    project="no", module="test")
+        await localMacro.startInstance()
+        await waitUntil(lambda: localMacro.is_initialized)
+        try:
+            with await getDevice("localCustomSlot") as d:
+                await sleep(1)
+                await localMacro.set_state(State.ON)
+                if not jms:
+                    await updateDevice(d)
+                for _ in range(4):
+                    await waitUntil(lambda: d.state == State.ON)
+                    self.assertEqual(d.state, State.ON)
+                    await d.startCustom()
+                    self.assertEqual(d.state, State.MOVING)
+        finally:
+            await localMacro.set_state(State.PASSIVE)
+            await localMacro.slotKillDevice()
+
+    @sync_tst
+    def test_macro_slotter_sync(self):
+        """Test the execution of MacroSlots in sync case"""
+        with getDevice("localMacroSlot") as d:
+            # 1.1
+            if not jms:
+                updateDevice(d)
+            self.assertEqual(d.state, State.PASSIVE)
+            d.startSync()
+            self.assertEqual(d.state, State.ACTIVE)
+            waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            # 1.2 Cancel the sync macro slot
+            d.startSync()
+            self.assertEqual(d.state, State.ACTIVE)
+            d.cancel()
+            self.assertIs(self.localMacro.cancelled_slot,
+                          LocalMacroSlot.startSync)
+            waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            self.localMacro.cancelled_slot = None
+
+            # 2.1 Nodes
+            self.assertEqual(d.state, State.PASSIVE)
+            d.node.startSync()
+            self.assertEqual(d.state, State.ACTIVE)
+            waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            # 2.2 Cancel the sync macro slot
+            d.node.startSync()
+            self.assertEqual(d.state, State.ACTIVE)
+            d.cancel()
+            self.assertIs(self.localMacro.cancelled_slot,
+                          LocalMacroSlot.node.cls.startSync)
+            waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            self.localMacro.cancelled_slot = None
+
+    @async_tst
+    async def test_macro_slotter_async(self):
+        """Test the execution of MacroSlots in async case"""
+        with await getDevice("localMacroSlot") as d:
+            # Using async with works out of the box ...
+            if not jms:
+                await updateDevice(d)
+            # 1.1
+            self.assertEqual(d.state, State.PASSIVE)
+            await d.startASync()
+            self.assertEqual(d.state, State.ACTIVE)
+            await waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            # 1.2 Cancel the async macro slot
+            await d.startASync()
+            self.assertEqual(d.state, State.ACTIVE)
+            await d.cancel()
+            self.assertIs(self.localMacro.cancelled_slot,
+                          LocalMacroSlot.startASync)
+            await waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            self.localMacro.cancelled_slot = None
+
+            # 2.1 Nodes
+            self.assertEqual(d.state, State.PASSIVE)
+            await d.node.startASync()
+            self.assertEqual(d.state, State.ACTIVE)
+            await waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            # 2.2 Cancel the sync macro slot
+            await d.node.startASync()
+            self.assertEqual(d.state, State.ACTIVE)
+            await d.cancel()
+            self.assertIs(self.localMacro.cancelled_slot,
+                          LocalMacroSlot.node.cls.startASync)
+            await waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            self.localMacro.cancelled_slot = None
+
+    @async_tst
+    async def test_macro_slotter_error(self):
+        """test that errors are properly logged and error functions called"""
+        with self.assertLogs(logger="localMacroSlot", level="ERROR"), \
+                (await getDevice("localMacroSlot")) as d:
+            await d.error()
+            await sleep(TIMEOUT_LOGS)
+
+        self.assertIs(self.localMacro.exc_slot, LocalMacroSlot.error)
+        self.assertIsInstance(self.localMacro.exception, RuntimeError)
+        self.assertIsNotNone(self.localMacro.traceback)
+        self.localMacro.exc_slot = None
+        self.localMacro.exception = None
+        self.localMacro.traceback = None
+
+    @async_tst
+    async def test_macro_slotter_error_in_error(self):
+        """test errors in error handlers are logged in a macro slot"""
+        with self.assertLogs(logger="localMacroSlot", level="ERROR") as logs, \
+                (await getDevice("localMacroSlot")) as d:
+            await d.error_in_error()
+            await sleep(TIMEOUT_LOGS)
+        self.assertEqual(logs.records[-1].msg, "error in error handler")
+        self.assertIs(self.localMacro.exc_slot, LocalMacroSlot.error_in_error)
+        self.assertIsInstance(self.localMacro.exception, RuntimeError)
+        self.assertIsNotNone(self.localMacro.traceback)
+        self.localMacro.exc_slot = None
+        self.localMacro.exception = None
+        self.localMacro.traceback = None
 
     @sync_tst
     def test_execute(self):
