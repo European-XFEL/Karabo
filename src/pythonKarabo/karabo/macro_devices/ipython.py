@@ -1,5 +1,5 @@
 import pickle
-from asyncio import ensure_future, get_event_loop
+from asyncio import TimeoutError, ensure_future, get_event_loop, wait_for
 from queue import Empty
 from textwrap import dedent
 
@@ -134,9 +134,17 @@ class IPythonKernel(Device):
     async def slotKillDevice(self):
         self.state = State.STOPPING
         if self.manager is not None and self.manager.has_kernel:
-            self.manager.request_shutdown()
-            await self._ss.loop.run_in_executor(
-                None, self.manager.finish_shutdown)
-            self.manager = None
+            try:
+                self.manager.request_shutdown()
+                await wait_for(self._ss.loop.run_in_executor(
+                    None, self.manager.finish_shutdown), timeout=5)
+            except TimeoutError:
+                # A gracefull shutdown did not work, we simply kill the kernel
+                # without waiting, as a second attempt with a blocking call
+                # would hit the macro server.
+                if self.manager.kernel is not None:
+                    self.manager.kernel.kill()
+            finally:
+                self.manager = None
         self.state = State.STOPPED
         await super().slotKillDevice()
