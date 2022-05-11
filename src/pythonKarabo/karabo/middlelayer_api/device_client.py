@@ -710,18 +710,15 @@ async def waitWhile(condition):
 
 
 class DeviceFuture:
-    proxy = None
-    base = None
-    entered = False
+
+    def __init__(self, base):
+        self.base = base
+        self.proxy = None
 
     def __await__(self):
         return self.base.__await__()
 
-    def __bool__(self):
-        return self.entered
-
     async def __aenter__(self):
-        self.entered = True
         self.proxy = await self
         return (await self.proxy.__aenter__())
 
@@ -733,7 +730,8 @@ class DeviceFuture:
 
 
 @synchronize
-async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
+async def _getDevice(deviceId, sync, initialize,
+                     factory=DeviceClientProxyFactory):
     instance = get_instance()
     proxy = instance._proxies.get(deviceId)
     if proxy is not None:
@@ -741,8 +739,9 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
             raise KaraboError(
                 "do not mix getDevice with connectDevice!\n"
                 '(deleting the old proxy with "del proxy" may help)')
-        if not lazy:
-            await proxy.initialize()
+        if initialize:
+            await proxy.initialize_proxy()
+        await proxy.update_proxy()
         return proxy
 
     futures = instance._proxy_futures
@@ -807,8 +806,9 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
                     await closure_proxy._async_disconnectSchemaUpdated()
 
         await instance._ss.enter_async_context(connectSchemaUpdated())
-        if not lazy:
-            await proxy.initialize()
+        if initialize:
+            await proxy.initialize_proxy()
+        await proxy.update_proxy()
         return proxy
 
     future = asyncio.ensure_future(create())
@@ -816,7 +816,7 @@ async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
     return (await asyncio.shield(future))
 
 
-def getDevice(deviceId, *, sync=None, timeout=5):
+def getDevice(deviceId, *, sync=None, initialize=True, timeout=5):
     """get a device proxy for the device deviceId
 
     Request a schema of a remote device and create a proxy object which
@@ -836,11 +836,10 @@ def getDevice(deviceId, *, sync=None, timeout=5):
     if sync is None:
         sync = get_event_loop().sync_set
 
-    lazy = DeviceFuture()
-    ret = _getDevice(deviceId, lazy=lazy, sync=sync, timeout=timeout)
+    ret = _getDevice(deviceId, sync=sync, initialize=initialize,
+                     timeout=timeout)
     if asyncio.iscoroutine(ret):
-        lazy.base = ret
-        return lazy
+        return DeviceFuture(ret)
     else:
         return ret
 
@@ -866,14 +865,13 @@ async def connectDevice(device, *, autodisconnect=None, timeout=5):
         else:
             factory = AutoDisconnectProxyFactory
         device = await _getDevice(device, sync=get_event_loop().sync_set,
-                                  lazy=None,
+                                  initialize=True,
                                   timeout=timeout, factory=factory)
     if autodisconnect is None:
         ret = device.__enter__()
     else:
         device._interval = autodisconnect
         ret = device
-    await updateDevice(ret)
     return ret
 
 
