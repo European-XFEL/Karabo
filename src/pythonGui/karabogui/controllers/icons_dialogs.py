@@ -14,6 +14,7 @@ from traits.api import Instance, Property
 from karabo.common.scenemodel.api import IconData
 from karabogui import icons, messagebox
 from karabogui.binding.api import FloatBinding, get_min_max
+from karabogui.singletons.api import get_config
 from karabogui.util import getOpenFileName, temp_file
 
 ICON_FILE_SIZE_LIMIT = 102400  # 100 KB
@@ -251,12 +252,15 @@ class _BaseDialog(QDialog):
 
     @Slot()
     def on_open_clicked(self):
+
         filename = getOpenFileName(
             parent=self, caption='Open Icon',
             filter='Images (*.png *.xpm *.jpg *.jpeg *.svg *.gif *.ico '
-                   '*.tif *.tiff *.bmp)')
+                   '*.tif *.tiff *.bmp)', directory=get_config()["data_dir"])
         if not filename:
             return
+
+        get_config()["data_dir"] = filename
 
         if len(self.items) == 0:
             messagebox.show_error("No item is selected, aborting...")
