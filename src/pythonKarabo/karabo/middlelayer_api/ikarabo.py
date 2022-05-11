@@ -10,7 +10,7 @@ import IPython
 from karabo._version import version
 
 from . import device_client
-from .device_client import DeviceClientBase, getDevice
+from .device_client import DeviceClientBase
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
 from .signalslot import coslot
@@ -49,6 +49,11 @@ class DeviceClient(Macro, DeviceClientBase):
 def connectDevice(device, *, autodisconnect=15, **kwargs):
     return device_client.connectDevice(device, autodisconnect=autodisconnect,
                                        **kwargs)
+
+
+@functools.wraps(device_client.getDevice)
+def getDevice(device, timeout=5):
+    return device_client.getDevice(device, initialize=False, timeout=timeout)
 
 
 def device_completer(self, line):
