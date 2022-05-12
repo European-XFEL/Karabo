@@ -363,7 +363,10 @@ class DeviceServerBase(SignalSlotable):
                 except KeyboardInterrupt:
                     pass
                 finally:
+                    # Close the loop with the broker connection
                     loop.close()
+                    # Always terminate the process
+                    os.kill(os.getpid(), SIGTERM)
 
     async def onInitialization(self):
         """Initialization coroutine of the server to start up devices
@@ -510,6 +513,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
     @coslot
     async def slotKillServer(self):
+        self.logger.info("Received request to shutdown server.")
         if self.deviceInstanceMap:
             # first check if there are device instances to be removed
 
