@@ -4,7 +4,8 @@ import socket
 import sys
 from asyncio import (
     TimeoutError, all_tasks, create_subprocess_exec, ensure_future, gather,
-    get_event_loop, set_event_loop, sleep, wait, wait_for)
+    get_event_loop, set_event_loop, sleep, wait_for)
+from collections import ChainMap
 from enum import Enum
 from json import loads
 from signal import SIGTERM
@@ -26,7 +27,7 @@ from .logger import CacheLog, Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, coslot, slot
-from .synchronization import background, firstCompleted
+from .synchronization import allCompleted, background, firstCompleted
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.
@@ -511,12 +512,24 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     async def slotKillServer(self):
         if self.deviceInstanceMap:
             # first check if there are device instances to be removed
-            done, pending = await wait(
-                [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
-                timeout=10)
 
-            if pending:
-                self.logger.warning("some devices could not be killed")
+            futures = {instanceId: dev.slotKillDevice()
+                       for instanceId, dev in self.deviceInstanceMap.items()}
+            done, *errors = await allCompleted(**futures, timeout=10)
+            # SlotKillDevice returns a success boolean if all tasks could be
+            # destroyed on time
+            if not all(list(done.values())):
+                devices = ', '.join(done.keys())
+                self.logger.warning(
+                    f"Some devices could not be killed: {devices}")
+
+            errors = ChainMap(*errors)
+            if errors:
+                devices = ', '.join(errors.keys())
+                self.logger.error(
+                    "Some devices had exceptions when they "
+                    f"were shutdown: {devices} --- {errors.values()}")
+
         # then kill the server
         await super(MiddleLayerDeviceServer, self).slotKillServer()
 
