@@ -11,8 +11,8 @@ import time
 import traceback
 import weakref
 from asyncio import (
-    CancelledError, Future, ensure_future, gather, get_event_loop, shield,
-    sleep, wait_for)
+    CancelledError, Future, TimeoutError, ensure_future, gather,
+    get_event_loop, shield, sleep, wait_for)
 from contextlib import AsyncExitStack, closing
 from functools import wraps
 from itertools import count
@@ -338,8 +338,12 @@ class JmsBroker(Broker):
         # the device is shutdown.
         # Hence, this makes sure the device gets killed and thus a server
         # can shutdown by closing the eventloop.
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
+        try:
+            await wait_for(gather(*tasks, return_exceptions=True),
+                           timeout=5)
+            return True
+        except TimeoutError:
+            return False
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
