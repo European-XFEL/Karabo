@@ -392,6 +392,11 @@ class SignalSlotable(Configurable):
 
     @coslot
     async def slotKillDevice(self):
+        """Kill the device on shutdown
+
+        :returns: success boolean if all tasks related to the device
+                  are gone.
+        """
         if self.__initialized:
             self.__initialized = False
             try:
@@ -400,7 +405,11 @@ class SignalSlotable(Configurable):
             except Exception:
                 self.logger.exception("Exception in onDestruction")
         if self._ss is not None:
-            await self._ss.stop_tasks()
+            # Returns success
+            return await self._ss.stop_tasks()
+
+        # No tasks are running
+        return True
 
     def __del__(self):
         if self._ss is not None and self._ss.loop.is_running():
