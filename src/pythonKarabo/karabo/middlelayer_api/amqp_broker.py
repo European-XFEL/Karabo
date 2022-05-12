@@ -12,7 +12,8 @@ import time
 import traceback
 import weakref
 from asyncio import (
-    CancelledError, Future, Lock, ensure_future, gather, sleep, wait_for)
+    CancelledError, Future, Lock, TimeoutError, ensure_future, gather, sleep,
+    wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -482,9 +483,14 @@ class AmqpBroker(Broker):
         is not cancelled. That's the chicken-egg-problem.
         """
         await self._cleanup()
-        await self._stop_tasks()
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.ensure_disconnect())
+        try:
+            await self._stop_tasks()
+            return True
+        except TimeoutError:
+            return False
+        finally:
+            self.loop.call_soon_threadsafe(
+                    self.loop.create_task, self.ensure_disconnect())
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
