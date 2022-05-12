@@ -7,24 +7,23 @@
     - export BUILD_TYPE=Debug
     - export NUM_JOBS=$(grep "processor" /proc/cpuinfo | wc -l)
     - export REL_BUILD_DIR=$CI_PROJECT_DIR/dist/$BUILD_TYPE/GNU-Linux-x86/
-    - export REL_ARTIFACT_DEST=karaboDevices/$REL_PROJECT_NAME/tags/$REL_TAG
-    - export REL_ARTIFACT_NAME=libbeckhoff-$REL_TAG-$REL_OS_NAME-$REL_OS_VERS_LONG.so
     - curl http://exflserv05.desy.de/karabo/karaboFramework/tags/$KARABO_TAG/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
     - bash karabo.sh --prefix=/root
     - source /root/karabo/activate
+    - karabo -g https://$XFEL_TOKEN@git.xfel.eu/gitlab install $REL_PROJECT_NAME $REL_TAG
     - pushd $CI_PROJECT_DIR
     - pip install -e .
     - python -m isort --check .
     - pytest .
 
-test:centos7:relese:
+test:centos7:release:
   image: europeanxfel/karabo-ci:centos-7gcc7
   before_script:
     - source /opt/rh/devtoolset-7/enable
     - export KARABO_TAG="latest_build"
   <<: *test_build
 
-test:centos7:prerelese:
+test:centos7:prerelease:
   image: europeanxfel/karabo-ci:centos-7gcc7
   before_script:
     - source /opt/rh/devtoolset-7/enable
