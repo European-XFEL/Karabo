@@ -512,8 +512,10 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         return True, deviceId
 
     @coslot
-    async def slotKillServer(self):
-        self.logger.info("Received request to shutdown server.")
+    async def slotKillServer(self, message):
+        instanceId = self._ss.get_property(message, "signalInstanceId")
+        self.logger.info("Received request to shutdown server "
+                         f"from {instanceId}.")
         if self.deviceInstanceMap:
             # first check if there are device instances to be removed
 
@@ -538,6 +540,8 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         await super(MiddleLayerDeviceServer, self).slotKillServer()
 
         return self.serverId
+
+    slotKillServer = coslot(slotKillServer, passMessage=True)
 
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
