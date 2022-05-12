@@ -143,4 +143,4 @@ class IPythonKernel(Device):
             finally:
                 self.manager = None
         self.state = State.STOPPED
-        await super().slotKillDevice()
+        return await super().slotKillDevice()
