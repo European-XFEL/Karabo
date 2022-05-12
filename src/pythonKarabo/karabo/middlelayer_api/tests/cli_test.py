@@ -93,10 +93,20 @@ class Tests(TestCase):
     def test_main(self):
         Remote.main(["", "count", "counter=7"])
 
-    @skip
     def test_remote_timeout(self):
-        with self.assertLogs("NoRemote"):
-            NoRemote(_deviceId_="NoRemote")
+        """Test that remote devices can timeout and send logs"""
+        thread = None
+        try:
+            # start a thread with event loop and then try
+            # to run the device
+            thread = start_device_client()
+            with self.assertLogs("NoRemote"):
+                NoRemote(_deviceId_="NoRemote")
+        finally:
+            if thread is not None:
+                thread.stop()
+                thread.join(0.5)
+                self.assertFalse(thread.is_alive())
 
     async def init_other(self):
         self.other = Other(dict(_deviceId_="other", _serverId_="tserver"))
