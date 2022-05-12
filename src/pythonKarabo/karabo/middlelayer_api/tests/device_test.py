@@ -127,7 +127,7 @@ class MyDevice(Device):
 
     async def slotKillDevice(self):
         self.isDown = True
-        await super().slotKillDevice()
+        return await super().slotKillDevice()
 
     async def setState(self, state):
         self.state = state
