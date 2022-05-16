@@ -175,7 +175,6 @@ namespace karabo {
             /// Works for lines written to archive_index.txt by >= 1.5
             void extractTailOfArchiveIndex(const std::string& tail, FileLoggerIndex& entry) const;
 
-
             static boost::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer> m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
