@@ -31,8 +31,8 @@
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>,
-                                  karabo::devices::DataLogReader, karabo::devices::FileLogReader)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
+                                  karabo::devices::FileLogReader)
 
 namespace karabo {
     namespace devices {
@@ -142,8 +142,7 @@ namespace karabo {
                                                                " misses data directory: " + dirPath.string());
                     }
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR
-                          << "slotGetPropertyHistory Standard Exception while checking deviceId path : " << e.what();
+                    onException("slotGetPropertyHistory Standard Exception while checking deviceId path");
                     throw KARABO_SYSTEM_EXCEPTION(getInstanceId() + " fails accessing raw directory path");
                 }
 
@@ -217,8 +216,7 @@ namespace karabo {
                         }
                     }
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR
-                          << "slotGetPropertyHistory Standard Exception while registering property file : " << e.what();
+                    onException("slotGetPropertyHistory Standard Exception while registering property file");
                     throw KARABO_LOGIC_EXCEPTION(getInstanceId() + " fails registering property file");
                 }
 
@@ -397,6 +395,7 @@ namespace karabo {
                 }
 
                 reply(deviceId, property, result);
+                onOk();
 
                 p.stopPeriod("reaction");
                 p.close();
@@ -524,13 +523,14 @@ namespace karabo {
 
                 string configTimepointStr(configTimepoint.toIso8601Ext());
                 aReply(hash, schema, configAtTimepoint, configTimepointStr);
-                KARABO_LOG_FRAMEWORK_INFO << "sent result";
+                onOk();
+                KARABO_LOG_FRAMEWORK_DEBUG << "sent result";
 
             } catch (const std::exception& e) {
-                aReply.error(e.what());
-                KARABO_LOG_FRAMEWORK_INFO << "caught exception";
+                const std::string msg = onException("getConfigurationFromPast error");
+                aReply.error(msg);
             }
-            KARABO_LOG_FRAMEWORK_INFO << "end of slot";
+            KARABO_LOG_FRAMEWORK_DEBUG << "end of slot";
         }
 
 
@@ -694,8 +694,9 @@ namespace karabo {
                         }
                     }
                 } catch (const exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum
-                                               << "): " << e.what();
+                    std::ostringstream oss;
+                    oss << "FileLogReader (" << contentpath << ", ln. " << lineNum << ")";
+                    onException(oss.str());
                     continue;
                 }
             }
