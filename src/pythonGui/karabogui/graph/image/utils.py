@@ -221,3 +221,22 @@ def ensure_finite_levels(levels, default_min=0, default_max=255):
         cmax = default_max
 
     return cmin, cmax
+
+
+def get_level_limits(image):
+    """Retrieve the native level limits for an image value
+
+    :returns: tuple of (min, max) if limits found else `None`
+    """
+    assert isinstance(image, np.ndarray), "Input value must be an array"
+
+    if np.issubdtype(image.dtype, np.integer):
+        info = np.iinfo(image.dtype)
+        return info.min, info.max
+
+    elif np.issubdtype(image.dtype, np.floating):
+        info = np.finfo(image.dtype)
+        return info.min, info.max
+
+    # No limits found!
+    return None
