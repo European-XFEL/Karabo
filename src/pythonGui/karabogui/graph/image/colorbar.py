@@ -10,7 +10,7 @@ from karabogui.graph.common.api import COLORMAPS
 from karabogui.util import move_to_cursor
 
 from .dialogs.levels import LevelsDialog
-from .utils import levels_almost_equal
+from .utils import ensure_finite_levels, levels_almost_equal
 
 NUM_SAMPLES = 256
 
@@ -118,12 +118,13 @@ class ColorBarWidget(GraphicsWidget):
         self.grid_layout.setContentsMargins(0, top, 0, bottom)
 
     def set_levels(self, image_range):
+        """Set the mininum and maximum levels on the color bar"""
+        image_min, image_max = ensure_finite_levels(image_range)
         # Check if levels and range are almost equal.
         # Only change y-range values if not.
-        if levels_almost_equal(self.levels, image_range):
+        if levels_almost_equal(self.levels, [image_min, image_max]):
             return
         # Transform the bar item according to the range
-        image_min, image_max = image_range
         if image_min == image_max:
             # Protect against same levels and simply lower the minimum
             # for a functional colorbar
