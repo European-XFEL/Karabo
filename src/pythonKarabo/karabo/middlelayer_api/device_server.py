@@ -514,7 +514,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     @coslot
     async def slotKillServer(self, message=None):
         instanceId = (self._ss.get_property(message, "signalInstanceId")
-                      if message is not None else "supervise")
+                      if message is not None else "OS signal")
         self.logger.info("Received request to shutdown server "
                          f"from {instanceId}.")
         if self.deviceInstanceMap:
