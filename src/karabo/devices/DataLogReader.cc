@@ -46,7 +46,8 @@ namespace karabo {
         }
 
 
-        DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+        DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<>(input) {
+            KARABO_INITIAL_FUNCTION(initialize)
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);
         }
@@ -71,7 +72,27 @@ namespace karabo {
             slotGetConfigurationFromPastImpl(deviceId, timepoint);
         }
 
-        void DataLogReader::okStateOnEntry() {}
+        void DataLogReader::initialize() {
+            onOk();
+        }
+
+        void DataLogReader::onOk() {
+            if (getState() != State::ON) {
+                updateState(State::ON);
+            }
+        }
+
+        const string DataLogReader::onException(const string& message) {
+            ostringstream oss;
+            try {
+                throw;
+            } catch (const std::exception& e) {
+                oss << message << " : " << e.what();
+            }
+            KARABO_LOG_FRAMEWORK_ERROR << oss.str();
+            updateState(State::ERROR, Hash("status", message));
+            return oss.str();
+        }
 
     } // namespace devices
 

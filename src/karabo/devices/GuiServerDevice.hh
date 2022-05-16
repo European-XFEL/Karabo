@@ -16,7 +16,6 @@
 #include <unordered_map>
 
 #include "karabo/core/Device.hh"
-#include "karabo/core/OkErrorFsm.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/util/Version.hh"
