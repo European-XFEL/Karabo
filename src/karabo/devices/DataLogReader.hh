@@ -11,7 +11,6 @@
 #include <boost/filesystem.hpp>
 
 #include "karabo/core/Device.hh"
-#include "karabo/core/OkErrorFsm.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Version.hh"
@@ -37,7 +36,7 @@ namespace karabo {
          * methods.
          *
          */
-        class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
+        class DataLogReader : public karabo::core::Device<> {
            public:
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "karabo-" + karabo::util::Version::getVersion())
 
@@ -61,8 +60,8 @@ namespace karabo {
              * of the property at timepoint signified in "v"'s attributes using a format compatible with
              * karabo::util::Timestamp::fromHashAttributes
              */
-            virtual void slotGetPropertyHistory(const std::string& deviceId, const std::string& property,
-                                                const karabo::util::Hash& params);
+            void slotGetPropertyHistory(const std::string& deviceId, const std::string& property,
+                                        const karabo::util::Hash& params);
 
             /**
              * Request the configuration Hash and schema of a device at a given point at time.
@@ -91,6 +90,21 @@ namespace karabo {
              */
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
+            /**
+             * helper functions to handle state transition in derived classes:
+             * onOk: sets the State to ON
+             */
+            void onOk();
+            /**
+             * helper functions to handle state transition in derived classes:
+             * onException: sets the State to ERROR, logs the exception trace to status and to the Karabo Logs
+             *
+             * @param message a string to be prepended to the trace
+             * @return the exception trace
+             */
+            const std::string onException(const std::string& message);
+
+
            protected:
             virtual void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
                                                     const karabo::util::Hash& params) = 0;
@@ -99,7 +113,8 @@ namespace karabo {
                                                           const std::string& timepoint) = 0;
 
            private: // Functions
-            void okStateOnEntry();
+            // The initialization function. Currently simply calls the `onOk` helper method.
+            void initialize();
         };
     } // namespace devices
 } // namespace karabo
