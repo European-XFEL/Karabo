@@ -27,7 +27,7 @@ dependencies:
   - icu
   # - sip
   - nlohmann_json
-  - numpy=1.13.3
+  - numpy=1.22.3
   - libtiff
   - pugixml=1.2=xfel
   - cppunit
