@@ -17,7 +17,6 @@
 
 #include "DataLogReader.hh"
 #include "karabo/core/Device.hh"
-#include "karabo/core/NoFsm.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/net/InfluxDbClient.hh"
