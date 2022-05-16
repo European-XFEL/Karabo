@@ -10,7 +10,7 @@ from karabogui.graph.common.api import COLORMAPS
 from karabogui.util import move_to_cursor
 
 from .dialogs.levels import LevelsDialog
-from .utils import ensure_finite_levels, levels_almost_equal
+from .utils import ensure_finite_levels, get_level_limits, levels_almost_equal
 
 NUM_SAMPLES = 256
 
@@ -70,8 +70,10 @@ class ColorBarWidget(GraphicsWidget):
         image_range = self.imageItem.image.min(), self.imageItem.image.max()
         auto_levels = self.imageItem.auto_levels
         default = None if auto_levels else levels
+        limits = get_level_limits(self.imageItem.image)
 
-        dialog = LevelsDialog(levels, image_range, auto_levels, self.parent())
+        dialog = LevelsDialog(levels, image_range, auto_levels,
+                              limits=limits, parent=self.parent())
         move_to_cursor(dialog)
         proxy = SignalProxy(dialog.levelsPreview, rateLimit=10,
                             slot=self.dynamic_event_throttle)

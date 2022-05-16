@@ -186,16 +186,34 @@ class TestLevelsDialog(GuiTestCase):
         image_range = image.min(), image.max()
 
         self.imageItem.setImage(image)
+        min_limit = -70
+        max_limit = 200
+
+        preview_levels = None
+
+        @Slot(object)
+        def preview(levels):
+            nonlocal preview_levels
+            preview_levels = levels
 
         # Instantiate dialog
         dialog = LevelsDialog(self.imageItem.levels, image_range,
-                              self.imageItem.auto_levels)
+                              self.imageItem.auto_levels,
+                              limits=[min_limit, max_limit])
+        dialog.levelsPreview.connect(preview)
+
+        # Check the min and max protection
+        assert dialog.min_spinbox.minimum() == min_limit
+        assert dialog.min_spinbox.maximum() == max_limit
+        assert dialog.max_spinbox.minimum() == min_limit
+        assert dialog.max_spinbox.maximum() == max_limit
 
         # Change the values then accept the dialog
         input_levels = [-50, 50]
         dialog.automatic_checkbox.setChecked(False)
         dialog.min_spinbox.setValue(input_levels[1])
         dialog.max_spinbox.setValue(input_levels[0])
+        assert preview_levels == [-50, 50]
         dialog.accept()
 
         # Check if changes are saved
