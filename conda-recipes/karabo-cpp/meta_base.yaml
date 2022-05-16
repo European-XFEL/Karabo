@@ -26,7 +26,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - make
-    - cmake>3.12
+    - cmake>=3.14
     - clang-tools=13.0.0
     - log4cpp=1.1.3=xfel
     - boost=1.68=xfel
@@ -47,7 +47,7 @@ requirements:
     - amqp-cpp=4.3.16=xfel
   run:
     - python=3.8
-    - numpy=1.13.3
+    - numpy=1.22.3
     - log4cpp=1.1.3=xfel
     - boost=1.68=xfel
     - openssl
