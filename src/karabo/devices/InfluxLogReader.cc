@@ -36,8 +36,8 @@
 #include "karabo/util/Types.hh"
 
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>,
-                                  karabo::devices::DataLogReader, karabo::devices::InfluxLogReader)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
+                                  karabo::devices::InfluxLogReader)
 
 namespace karabo {
 
@@ -216,8 +216,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onDataCountForProperty, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying data count for property: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying data count for property");
                 // As this is in the same thread at which the slot call started, if we send the async reply directly,
                 // the reply will be sent, and then unregistered from the SignalSlotable. When this method execution
                 // finishes soon after and the control returns to the SignalSlotable, it won't find any asynchronous
@@ -258,8 +257,7 @@ namespace karabo {
                     dataCount += countValue;
                 }
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error summing up amount of values: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error summing up amount of values");
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -293,9 +291,7 @@ namespace karabo {
                     }
                 }
             } catch (const std::exception &e) {
-                const std::string &errMsg =
-                      std::string("Error checking if fields support statistics aggregators: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error checking if fields support statistics aggregators");
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -303,6 +299,7 @@ namespace karabo {
             if (dataCount < 1) {
                 // No data point for the given period.
                 ctxt->aReply(ctxt->deviceId, ctxt->property, std::vector<Hash>());
+                onOk();
             } else if (dataCount <= ctxt->maxDataPoints) {
                 asyncGetPropertyValues(ctxt);
             } else if (allNumbers) { // group by mean
@@ -325,8 +322,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "", ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying property values: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying property values");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -344,8 +340,7 @@ namespace karabo {
                 m_influxClient->queryDb(queryStr,
                                         bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "sample_", ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying property values samples: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying property values samples");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -370,14 +365,13 @@ namespace karabo {
                 influxResultSetToVectorHash(influxResult, propValues);
 
                 ctxt->aReply(ctxt->deviceId, ctxt->property, propValues);
+                onOk();
 
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving values of property '" << ctxt->property << "' of device '" << ctxt->deviceId
-                    << "' between '" << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "':\n"
-                    << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << "' between '" << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "'";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -394,8 +388,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onMeanPropertyValues, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying property values samples: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying property values samples");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -460,14 +453,13 @@ namespace karabo {
                 }
 
                 ctxt->aReply(ctxt->deviceId, ctxt->property, propValues);
+                onOk();
 
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving values of property '" << ctxt->property << "' of device '" << ctxt->deviceId
-                    << "' between '" << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "':\n"
-                    << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << "' between '" << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "'";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -496,8 +488,7 @@ namespace karabo {
                 m_influxClient->queryDb(queryStr,
                                         bind_weak(&InfluxLogReader::onLastLoginFormatBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying last login before time: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying last login before time");
                 boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
                 EventLoop::getIOService().post([weakThis, ctxt, errMsg]() {
                     // Only sends a reply if the InfluxLogReader instance is still alive - lock() call is successful.
@@ -543,10 +534,8 @@ namespace karabo {
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving timestamp and log format for last instantiation of device '" << ctxt->deviceId
-                    << "' before '" << ctxt->atTime.toIso8601Ext()
-                    << "' as part of operation getConfigurationFromPast: " << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << "' before '" << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -567,8 +556,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onLastLogoutBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying last logout before time: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying last logout before time");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -606,10 +594,8 @@ namespace karabo {
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving timestamp of last end of logging for device '" << ctxt->deviceId
-                    << "' before '" << ctxt->atTime.toIso8601Ext()
-                    << "' as part of operation getConfigurationFromPast: " << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << "' before '" << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -631,8 +617,7 @@ namespace karabo {
                 m_influxClient->queryDb(queryStr,
                                         bind_weak(&InfluxLogReader::onLastSchemaDigestBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string errMsg = std::string("Error querying last schema digest before time: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying last schema digest before time");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -654,7 +639,9 @@ namespace karabo {
                 auto value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (value.is_null()) {
                     // No digest has been found - it's not possible to go ahead.
-                    ctxt->aReply.error("Failed to query schema digest");
+                    const std::string errMsg = "Failed to query schema digest";
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    ctxt->aReply.error(errMsg);
                     return;
                 } else {
                     digest = value.get<std::string>();
@@ -662,9 +649,8 @@ namespace karabo {
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving schema that was active for device '" << ctxt->deviceId << "' at '"
-                    << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast: " << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -685,8 +671,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onSchemaForDigest, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying schema for digest: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const std::string errMsg = onException("Error querying schema for digest");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -708,7 +693,9 @@ namespace karabo {
                 const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (value.is_null()) {
                     // No schema corresponding to the digest has been found - it's not possible to go ahead.
-                    ctxt->aReply.error("Failed to query schema");
+                    const std::string errMsg = "Failed to query schema";
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    ctxt->aReply.error(errMsg);
                     return;
                 } else {
                     encodedSch = value.get<std::string>();
@@ -716,9 +703,8 @@ namespace karabo {
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving schema by digest for device '" << ctxt->deviceId << "' at '"
-                    << ctxt->atTime.toIso8601Ext() << "': " << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << ctxt->atTime.toIso8601Ext() << "'";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -752,9 +738,8 @@ namespace karabo {
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error processing schema retrieved for device '" << ctxt->deviceId << "' at '"
-                    << ctxt->atTime.toIso8601Ext() << "': " << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    << ctxt->atTime.toIso8601Ext() << "'";
+                const std::string errMsg = onException(oss.str());
                 ctxt->aReply.error(errMsg);
                 return;
             }
@@ -800,8 +785,7 @@ namespace karabo {
                 m_influxClient->queryDb(queryStr,
                                         bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfo, _1, ctxt));
             } catch (const std::exception &e) {
-                const auto &errMsg = std::string("Error querying property value before time: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                const auto errMsg = onException("Error querying property value before time");
                 ctxt->aReply.error(errMsg);
             }
         }
@@ -870,6 +854,7 @@ namespace karabo {
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
                 ctxt->aReply(ctxt->configHash, ctxt->configSchema, configAtTimePoint,
                              ctxt->configTimePoint.toIso8601Ext());
+                onOk();
             }
         }
 
