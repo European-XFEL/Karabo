@@ -285,9 +285,9 @@ class KaraboImageItem(GraphicsObject):
             else:
                 # Levels are assigned and we have to clip the
                 # image and rescale the minimum and maximum.
-                level_min, level_max = self.levels
-                # XXX: We might not have to clip with autoLevels
-                image = np.clip(image, level_min, level_max)
+                level_min, level_max = self.levels.astype(image.dtype)
+                # In place clipping with correct dtype
+                image = np.clip(image, level_min, level_max, out=image)
                 image_min, image_max = image.min(), image.max()
                 # Calculate new color ranges with the ratio of the image
                 # extrema and the preset levels.
