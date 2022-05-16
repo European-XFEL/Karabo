@@ -226,7 +226,8 @@ class KaraboImageItem(GraphicsObject):
                     mn = mnn
                 else:
                     mx += 1
-            elif np.isnan(mn) or np.isnan(mx):
+            elif not np.isfinite(mn) or not np.isfinite(mx):
+                # Check for `NaN` as well as `inf`
                 mn = 0
                 mx = 255
             kwargs['levels'] = [mn, mx]
