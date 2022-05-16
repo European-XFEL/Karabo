@@ -205,3 +205,19 @@ def bytescale(data, cmin=None, cmax=None, low=0, high=255):
     bytedata = (data - cmin) * scale + low
 
     return (bytedata.clip(low, high) + 0.5).astype(np.uint8)
+
+
+def ensure_finite_levels(levels, default_min=0, default_max=255):
+    """Make sure the image levels have finite values
+
+    This function assumes the levels are ordered correctly [min, max].
+
+    :returns: tuple of min and max level
+    """
+    cmin, cmax = levels
+    if not np.isfinite(cmin):
+        cmin = default_min
+    if not np.isfinite(cmax):
+        cmax = default_max
+
+    return cmin, cmax
