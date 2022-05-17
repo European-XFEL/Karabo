@@ -507,7 +507,7 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
                   karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
-
+            m_archive.clear();
             serializer->save(schema, m_archive);
             const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (m_archive.data());
 
