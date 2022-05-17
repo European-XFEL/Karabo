@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from traits.api import TraitError
 
-from ..api import (
+from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
