@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo.bound import PythonDevice, KARABO_CLASSINFO
+from karabo.bound import KARABO_CLASSINFO, PythonDevice
 
 from ._version import version as deviceVersion
 
