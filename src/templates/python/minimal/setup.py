@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 from os.path import dirname, join, realpath
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 from karabo.packaging.versioning import device_scm_version
-
 
 ROOT_FOLDER = dirname(realpath(__file__))
 scm_version = device_scm_version(
