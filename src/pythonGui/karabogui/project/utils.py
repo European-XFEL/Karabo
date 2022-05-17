@@ -6,12 +6,12 @@
 from qtpy.QtWidgets import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
-from karabo.common.macro_sanity_check import validate_macro
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
     device_instance_exists, device_server_exists, macro_exists,
     read_lazy_object, recursive_save_object)
+from karabo.common.sanity_check import validate_macro
 from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, SceneLinkModel, SceneModel)
 from karabo.native import Hash, read_project_model

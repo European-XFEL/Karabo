@@ -7,7 +7,7 @@ def validate_macro(code):
     tree = compile(code, "MacroSanityCheck", "exec", ast.PyCF_ONLY_AST)
     ret = []
     # Check if we are using forbidden imports
-    lines = _has_imports(tree, "time", "sleep")
+    lines = has_imports(tree, "time", "sleep")
     if lines:
         ret.extend(lines)
 
@@ -15,7 +15,7 @@ def validate_macro(code):
     # - register is a function of a `Configurable` to register descriptors
     # - cancel is the native cancel function of a macro
     # - clear_namespace is the gui binding clear command
-    lines = _has_methods(
+    lines = has_methods(
         tree, "update", "clear_namespace", "register", "cancel"
     )
     if lines:
@@ -23,14 +23,19 @@ def validate_macro(code):
 
     # filter out `except` handlers catching base exception to launching
     # unstoppable macros on the macro server.
-    lines = _has_base_exceptions(tree)
+    lines = has_base_exceptions(tree)
     if lines:
         ret.extend(lines)
 
+    # Make sure there are no sub module imports
+    for mod in ["karabo.middlelayer_api", "karabo.middlelayer"]:
+        lines = has_sub_imports(tree, mod)
+        if lines:
+            ret.extend(lines)
     return ret
 
 
-def _has_imports(tree, module, func):
+def has_imports(tree, module, func):
     """Check an ast tree for a forbidden import and its usage
 
     :param tree: the code tree as ast object
@@ -114,7 +119,7 @@ def _has_imports(tree, module, func):
     return reports
 
 
-def _has_methods(tree, *methods):
+def has_methods(tree, *methods):
     reports = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
@@ -127,7 +132,7 @@ def _has_methods(tree, *methods):
     return reports
 
 
-def _has_base_exceptions(tree):
+def has_base_exceptions(tree):
     reports = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ExceptHandler):
@@ -151,4 +156,30 @@ def _has_base_exceptions(tree):
                     f"Found `except {node.type.id}:`"
                     f" clause in line {node.lineno}: {explanation}"
                 )
+    return reports
+
+
+def has_sub_imports(tree, global_module, ignore=[]):
+
+    reports = []
+
+    def _check_sub_imports(module):
+        """Check for sub imports of the module"""
+        if global_module in module:
+            # Strip global_module, if something is left, we have a subimport
+            sub = module.strip(global_module)
+            return False if sub else True
+        return True
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            module = node.module
+            if ignore and module in ignore:
+                continue
+            if not _check_sub_imports(module):
+                warning_msg = (
+                    f'Sub imports are not allowed from "{global_module}". '
+                    f'The import is from module {module}!')
+                reports.append(warning_msg)
+
     return reports
