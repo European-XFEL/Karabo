@@ -256,10 +256,10 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Starts the logger and readers with a lower max schema rate threshold - 38 kb/s - over a rateWinSecs seconds
-    // rating window. The 38 kb/s comes from the verified sizes of the different device schemas used in the
-    // test - which varied from 37.708 bytes to 75.248 bytes.
-    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 38, rateWinSecs);
+    // Starts the logger and readers with a lower max schema rate threshold - 11 kb/s - over a rateWinSecs seconds
+    // rating window. The 11 kb/s comes from the verified size of the different device schemas used in the
+    // test - 6.258 bytes.
+    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 11, rateWinSecs);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
