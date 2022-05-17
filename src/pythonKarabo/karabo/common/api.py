@@ -50,6 +50,7 @@ from .enums import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES,
     ONLINE_STATUSES, SCHEMA_STATUSES, Capabilities, Interfaces, ProxyStatus)
 from .module import create_module
+from .sanity_check import has_sub_imports
 from .savable import BaseSavableModel, set_initialized_flag, set_modified_flag
 from .services import (
     KARABO_ALARM_SERVICE, KARABO_CONFIG_MANAGER, KARABO_DAEMON_MANAGER,
