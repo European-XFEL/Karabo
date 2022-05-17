@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from karabo.common.macro_sanity_check import validate_macro
+from karabo.common.sanity_check import validate_macro
 
 ASYNC_UPDATE_MACRO = """
 from karabo.middlelayer import Macro, Slot, String
@@ -120,6 +120,22 @@ class Macro(Macro):
             raise e
 """
 
+SUB_IMPORT_MACRO = """
+from karabo.middlelayer import Slot, String
+from karabo.middlelayer_api.device_client import DeviceClientBase
+
+class Macro(DeviceClientBase):
+    name = String()
+    @Slot()
+    def execute(self):
+        try:
+            print("Hello {}!".format(self.name))
+        except Exception:
+            # this is bad practice! but in python 3.8 is not a problem
+            # the CancelledError will not be caught by this macro.
+            pass
+"""
+
 
 class Tests(TestCase):
     def test_fromtime(self):
@@ -221,3 +237,7 @@ class Tests(TestCase):
         # But we will allow it for the moment
         res = validate_macro(STOPPABLE_MACRO_CANCELLED_EXC)
         self.assertEqual(len(res), 0, "\n".join(res))
+
+    def test_sub_imports(self):
+        res = validate_macro(SUB_IMPORT_MACRO)
+        self.assertEqual(len(res), 2)

@@ -5,3 +5,4 @@ from karabo.middlelayer_api.tests.eventloop import (
     event_loop, setEventLoop, sync_tst)
 
 from .naming import check_device_package_properties
+from .utils import get_ast_objects
