@@ -1,8 +1,7 @@
 from pytest import raises as assert_raises
 
 from karabo.native import AccessLevel, AccessMode, Assignment
-
-from ..api import (
+from karabogui.binding.api import (
     BindingNamespace, BoolBinding, ByteArrayBinding, CharBinding,
     ChoiceOfNodesBinding, ComplexBinding, FloatBinding, HashBinding,
     Int8Binding, Int16Binding, Int32Binding, Int64Binding, ListOfNodesBinding,
