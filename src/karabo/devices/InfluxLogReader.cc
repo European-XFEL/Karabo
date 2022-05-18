@@ -729,7 +729,17 @@ namespace karabo {
                 std::vector<unsigned char> base64Decoded;
                 base64Decode(encodedSch, base64Decoded);
                 const char *decoded = reinterpret_cast<const char *>(base64Decoded.data());
-                m_schemaSerializer->load(ctxt->configSchema, decoded, base64Decoded.size());
+                // Older versions of Karabo were concatenating schemas as binary buffers.
+                // To revert this bug for historic data without migrating the database,
+                // one needs to deserialize schemas from the received buffer until the buffer
+                // is read out entirely. The last entry in the buffer is the one needed.
+                const size_t fullSize = base64Decoded.size();
+                size_t readSize = 0u;
+                while (readSize < fullSize) {
+                    Schema s;
+                    readSize += m_schemaSerializer->load(s, decoded + readSize, fullSize - readSize);
+                    ctxt->configSchema = std::move(s);
+                }
                 const Schema &schema = ctxt->configSchema;
 
                 // Stores the properties keys and types in the context.
