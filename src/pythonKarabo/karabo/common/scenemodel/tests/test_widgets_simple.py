@@ -63,9 +63,6 @@ def test_display_editable_widgets():
         api.CheckBoxModel,
         api.ChoiceElementModel,
         api.ComboBoxModel,
-        api.DirectoryModel,
-        api.FileInModel,
-        api.FileOutModel,
         api.LineEditModel,
     )
     for klass in model_classes:
@@ -202,3 +199,21 @@ def test_web_link_model():
     assert read_model.foreground == "#000000"
     assert read_model.background == "#ffffff"
     assert read_model.frame_width == 1
+
+
+def test_deprecated_file_system_model():
+    traits = _geometry_traits()
+    model = api.FileInModel(klass="EditableFileIn", **traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert isinstance(read_model, api.LineEditModel)
+
+    model = api.FileOutModel(klass="EditableFileOut", **traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert isinstance(read_model, api.LineEditModel)
+
+    model = api.DirectoryModel(klass="EditableDirectory", **traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert isinstance(read_model, api.LineEditModel)
