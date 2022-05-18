@@ -48,13 +48,6 @@ class ComboBoxModel(BaseDisplayEditableWidget):
     klass = Enum("DisplayComboBox", "EditableComboBox")
 
 
-class DirectoryModel(BaseDisplayEditableWidget):
-    """A model for DisplayDirectory/EditableDirectory"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayDirectory", "EditableDirectory")
-
-
 class DaemonManagerModel(BaseWidgetObjectData):
     """A model for the DaemonManager Table element"""
 
@@ -66,10 +59,10 @@ class DisplayLabelModel(BaseWidgetObjectData):
     font_weight = Enum(*SCENE_FONT_WEIGHTS)
 
     def __init__(
-        self,
-        font_size=SCENE_FONT_SIZE,
-        font_weight=SCENE_FONT_WEIGHT,
-        **traits
+            self,
+            font_size=SCENE_FONT_SIZE,
+            font_weight=SCENE_FONT_WEIGHT,
+            **traits
     ):
         # We set the default values as Enum doesn't set this straightforwardly
         super(DisplayLabelModel, self).__init__(
@@ -103,20 +96,6 @@ class EditableSpinBoxModel(BaseEditWidget):
 
 class EditableRegexModel(BaseEditWidget):
     """A model for RegexEdit"""
-
-
-class FileInModel(BaseDisplayEditableWidget):
-    """A model for DisplayFileIn/EditableFileIn"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayFileIn", "EditableFileIn")
-
-
-class FileOutModel(BaseDisplayEditableWidget):
-    """A model for DisplayFileOut/EditableFileOut"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayFileOut", "EditableFileOut")
 
 
 class GlobalAlarmModel(BaseWidgetObjectData):
@@ -445,6 +424,47 @@ def __sticker_widget_writer(model, parent):
     return element
 
 
+class DirectoryModel(BaseDisplayEditableWidget):
+    """A model for DisplayDirectory/EditableDirectory"""
+
+    # The actual type of the widget
+    klass = Enum("DisplayDirectory", "EditableDirectory")
+
+
+class FileInModel(BaseDisplayEditableWidget):
+    """A model for DisplayFileIn/EditableFileIn"""
+
+    # The actual type of the widget
+    klass = Enum("DisplayFileIn", "EditableFileIn")
+
+
+class FileOutModel(BaseDisplayEditableWidget):
+    """A model for DisplayFileOut/EditableFileOut"""
+
+    # The actual type of the widget
+    klass = Enum("DisplayFileOut", "EditableFileOut")
+
+
+@register_scene_reader("EditableDirectory", version=1)
+@register_scene_reader("EditableFileOut", version=1)
+@register_scene_reader("EditableFileIn", version=1)
+def _deprecated_filesystem_reader(element):
+    """Deprecated directory and file edit reader now showing as line edit"""
+    traits = read_base_widget_data(element)
+    return LineEditModel(klass="EditableLineEdit", **traits)
+
+
+@register_scene_writer(FileInModel)
+@register_scene_writer(FileOutModel)
+@register_scene_writer(DirectoryModel)
+def _deprecated_filesystem_writer(model, parent):
+    """Deprecated directory and file edit writer now showing as line edit"""
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "EditableLineEdit")
+
+    return element
+
+
 def _build_empty_widget_readers_and_writers():
     """Build readers and writers for the empty widget classes"""
 
@@ -510,9 +530,6 @@ def _build_empty_display_editable_readers_and_writers():
         "CheckBoxModel",
         "ChoiceElementModel",
         "ComboBoxModel",
-        "DirectoryModel",
-        "FileInModel",
-        "FileOutModel",
         "LineEditModel",
     )
     for name in names:
