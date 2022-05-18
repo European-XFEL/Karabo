@@ -2114,13 +2114,8 @@ void BaseLogging_Test::testSchemaEvolution() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Second int value different from expected for history entry", 10,
                                  history[5].get<int>("v"));
 
-
     std::clog << "Ok" << std::endl;
 }
 
 // TODO: implement testVectorFloat() (include vectors of different length and empty vector);
 // TODO: implement test and FIX for a vector of strings with an empty string as its only element
-
-// TODO: ideally, all properties of the PropertyTest device should be implemented,
-//       to add them one should add a method per property and add the proper cppunit helpers at the beginning of this
-//       file
