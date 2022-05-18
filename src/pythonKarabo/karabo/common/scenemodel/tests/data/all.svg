@@ -171,22 +171,6 @@
             <svg:g krb:class="BoxLayout" krb:direction="2" krb:height="139"
                    krb:width="590" krb:x="532" krb:y="586">
                 <svg:g krb:class="BoxLayout" krb:direction="0" krb:height="43"
-                       krb:width="580" krb:x="537" krb:y="591">
-                    <svg:rect height="33" width="167" x="542" y="596"
-                              krb:class="Label"
-                              krb:font="Cantarell,11,-1,5,50,0,0,0,0,0"
-                              krb:foreground="#313739" krb:frameWidth="0"
-                              krb:text="Directory"/>
-                    <svg:rect height="33" width="167" x="709" y="596"
-                              krb:class="DisplayComponent"
-                              krb:keys="p1.directory"
-                              krb:widget="DisplayLineEdit"/>
-                    <svg:rect height="33" width="236" x="876" y="596"
-                              krb:class="EditableApplyLaterComponent"
-                              krb:keys="p1.directory"
-                              krb:widget="EditableDirectory"/>
-                </svg:g>
-                <svg:g krb:class="BoxLayout" krb:direction="0" krb:height="43"
                        krb:width="580" krb:x="537" krb:y="634">
                     <svg:rect height="33" width="167" x="542" y="639"
                               krb:class="Label"
@@ -197,26 +181,6 @@
                               krb:class="DisplayComponent"
                               krb:keys="p1.filenameIn"
                               krb:widget="DisplayLineEdit"/>
-                    <svg:rect height="33" width="236" x="876" y="639"
-                              krb:class="EditableApplyLaterComponent"
-                              krb:keys="p1.filenameIn"
-                              krb:widget="EditableFileIn"/>
-                </svg:g>
-                <svg:g krb:class="BoxLayout" krb:direction="0" krb:height="43"
-                       krb:width="580" krb:x="537" krb:y="677">
-                    <svg:rect height="33" width="167" x="542" y="682"
-                              krb:class="Label"
-                              krb:font="Cantarell,11,-1,5,50,0,0,0,0,0"
-                              krb:foreground="#313739" krb:frameWidth="0"
-                              krb:text="Filename out"/>
-                    <svg:rect height="33" width="167" x="709" y="682"
-                              krb:class="DisplayComponent"
-                              krb:keys="p1.filenameOut"
-                              krb:widget="DisplayLineEdit"/>
-                    <svg:rect height="33" width="236" x="876" y="682"
-                              krb:class="EditableApplyLaterComponent"
-                              krb:keys="p1.filenameOut"
-                              krb:widget="EditableFileOut"/>
                 </svg:g>
             </svg:g>
         </svg:g>
