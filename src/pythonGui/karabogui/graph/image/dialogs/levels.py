@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal, Slot
@@ -12,10 +12,10 @@ from karabogui.widgets.range_slider import RangeSlider
 class LevelsDialog(QDialog):
     levelsPreview = Signal(object)
 
-    def __init__(self, levels, image_range, auto_levels, parent=None):
+    def __init__(self, levels, image_range, auto_levels, limits=None,
+                 parent=None):
         super(LevelsDialog, self).__init__(parent)
-        ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                               'levels_dialog.ui')
+        ui_path = str(Path(__file__).parent / "levels_dialog.ui")
         uic.loadUi(ui_path, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.values_widget.setEnabled(not auto_levels)
@@ -40,6 +40,13 @@ class LevelsDialog(QDialog):
         slider_max = max(max_level, max_range)
         self.slider.initialize(slider_min, slider_max)
 
+        if limits is not None:
+            min_value, max_value = limits
+            self.min_spinbox.setMinimum(min_value)
+            self.max_spinbox.setMinimum(min_value)
+            self.min_spinbox.setMaximum(max_value)
+            self.max_spinbox.setMaximum(max_value)
+
         default = image_range if auto_levels else levels
         self._set_editor_default(default)
 
@@ -59,12 +66,13 @@ class LevelsDialog(QDialog):
         self.slider.setValue(min_level, max_level)
 
     @Slot(float)
-    def levelChanged(self, value):
-        min_position = self.min_spinbox.value()
-        max_position = self.max_spinbox.value()
+    def levelChanged(self, float):
+        values = [self.min_spinbox.value(), self.max_spinbox.value()]
+        min_level = min(values)
+        max_level = max(values)
         with SignalBlocker(self.slider):
-            self.slider.setValue(min_position, max_position)
-        levels = [min_position, max_position]
+            self.slider.setValue(min_level, max_level)
+        levels = [min_level, max_level]
         self.levelsPreview.emit(levels)
 
     @Slot(int, int)
