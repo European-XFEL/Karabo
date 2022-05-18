@@ -220,53 +220,18 @@ The dialog helps to set custom icons on the widget based on the defined formulas
              <number>0</number>
             </property>
             <item>
-             <widget class="QPushButton" name="up">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>../icons/up.svg</normaloff>../icons/up.svg</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="down">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QLineEdit" name="textValue"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="infoMessage">
+              <property name="text">
+               <string>Leading and trailing white-
+space will be removed.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
