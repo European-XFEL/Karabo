@@ -287,24 +287,6 @@ class _BaseDialog(QDialog):
                 self.image.setDefaultPixmap()
         self._update_buttons()
 
-    @Slot()
-    def on_up_clicked(self):
-        cr = self.valueList.currentRow()
-        if not 0 < cr <= len(self.items) - 1:
-            return
-        self.valueList.insertItem(cr - 1, self.valueList.takeItem(cr))
-        self.items[cr - 1], self.items[cr] = self.items[cr], self.items[cr - 1]
-        self.valueList.setCurrentRow(cr - 1)
-
-    @Slot()
-    def on_down_clicked(self):
-        cr = self.valueList.currentRow()
-        if cr >= len(self.items) - 1:
-            return
-        self.valueList.insertItem(cr + 1, self.valueList.takeItem(cr))
-        self.items[cr + 1], self.items[cr] = self.items[cr], self.items[cr + 1]
-        self.valueList.setCurrentRow(cr + 1)
-
 
 class DigitDialog(_BaseDialog):
     def __init__(self, items, binding, parent=None):
@@ -368,9 +350,22 @@ class TextDialog(_BaseDialog):
         super(TextDialog, self).__init__(items, parent)
         self.stack.setCurrentWidget(self.textPage)
 
+        if binding.options:
+            self._updateWidgetVisibility()
+            self.valueList.clear()
+            for option in binding.options:
+                item = IconItem(value=option)
+                self.items.append(item)
+                self.valueList.addItem(option)
+
+    def _updateWidgetVisibility(self):
+        for widget in (self.textValue, self.addValue, self.deleteValue,
+                       self.infoMessage):
+            widget.setVisible(False)
+
     @Slot()
     def on_addValue_clicked(self):
-        entry_value = self.textValue.text()
+        entry_value = self.textValue.text().strip()
         # Check if entry is already existing
         if entry_value in [item.value for item in self.items]:
             message = "Cannot add new condition; it already exists."
