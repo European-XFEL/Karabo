@@ -256,7 +256,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           .commit();
     Schema schemaStrD;
     STRING_ELEMENT(schemaStrD)
-          .key("stringProperty")
+          .key("stringPropertyD")
           .assignmentOptional()
           .defaultValue("D_" + defValueSuffix)
           .reconfigurable()
@@ -346,6 +346,22 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(badDataAllDevices));
     CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+
+    // Checks that the latest version of the schema, and by consequence, the past configuration are retrieved correctly.
+    // This check fails for schemas saved by versions of the InfluxDataLogger prior to the fixes in
+    // https://git.xfel.eu/Karabo/Framework/-/merge_requests/6470 and retrieved with versions of the InfluxLogReader
+    // prior to the modifications in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6478.
+    Schema schema;
+    Hash pastCfg;
+    bool cfgAtTime;
+    std::string cfgTime;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterThirdBurst.toIso8601())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(pastCfg, schema, cfgAtTime, cfgTime));
+    CPPUNIT_ASSERT_MESSAGE("Schema lacks expected key, \"stringPropertyD\"", schema.has("stringPropertyD"));
+    CPPUNIT_ASSERT_EQUAL(Types::STRING, schema.getValueType("stringPropertyD"));
+    CPPUNIT_ASSERT_EQUAL(pastCfg.get<std::string>("stringPropertyD"), "D_" + defValueSuffix);
 
     std::clog << "OK" << std::endl;
 }
