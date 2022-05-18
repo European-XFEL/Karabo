@@ -130,8 +130,7 @@ class SelectionIcons(_BaseIcons):
 
 
 @register_binding_controller(ui_name='Icons', binding_type=StringBinding,
-                             klassname='TextIcons',
-                             is_compatible=has_options)
+                             klassname='TextIcons')
 class TextIcons(_BaseIcons):
     model = Instance(TextIconsModel, args=())
     dialog_klass = Type(TextDialog)
