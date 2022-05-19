@@ -84,6 +84,21 @@ namespace karabo {
             }
 
             /**
+             * @brief Loads the last object from a sequence of concatenated binary serialized objects of
+             * the same type. Sequences with only one object are also supported.
+             *
+             * @param object to load the last instance into.
+             * @param archive sequence containing 1 or more objects of type T in binary serialized form.
+             */
+            void loadLastFromSequence(T& object, const char* archive, const std::size_t nBytes) {
+                const std::size_t fullSize = nBytes;
+                std::size_t readSize = 0u;
+                while (readSize < fullSize) {
+                    readSize += this->load(object, archive + readSize, fullSize - readSize);
+                };
+            }
+
+            /**
              * Save an object to a binary archive
              * @param object to save
              * @param archive to save to
