@@ -6,7 +6,9 @@ from unittest import main, skipIf
 from karabo.middlelayer_api.compat import amqp, mqtt, redis
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
+from karabo.middlelayer_api.synchronization import sleep
+from karabo.middlelayer_api.tests.eventloop import (
+    DeviceTest, async_tst, sync_tst)
 from karabo.native import Int32 as Int, Slot
 
 
@@ -21,6 +23,10 @@ class Remote(Device):
         for i in range(1, 30):
             self.counter = i
             await sleep(0.1)
+
+
+class LocalRemoteDevice(Macro):
+    notthere = RemoteDevice("notthere", timeout=5)
 
 
 class Local(Macro):
@@ -77,6 +83,15 @@ class Tests(DeviceTest):
     def test_error(self):
         with self.assertLogs("local", "ERROR"):
             self.local.error()
+
+    @async_tst
+    async def test_quick_shutdown(self):
+        """Test that a quick instantiation and shutdown works"""
+        device = LocalRemoteDevice(dict(_deviceId_="localWithRemote"))
+        ensure_future(device.startInstance())
+        # Use sleep to make sure we are trying to connect to remote
+        await sleep(1)
+        await device.slotKillDevice()
 
 
 if __name__ == "__main__":
