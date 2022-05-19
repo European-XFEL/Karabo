@@ -13,7 +13,8 @@ import traceback
 import uuid
 import weakref
 from asyncio import (
-    Future, ensure_future, gather, get_event_loop, sleep, wait_for)
+    Future, TimeoutError, ensure_future, gather, get_event_loop, sleep,
+    wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
@@ -496,8 +497,12 @@ class MqttBroker(Broker):
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
             t.cancel()
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
+        try:
+            await wait_for(gather(*tasks, return_exceptions=True),
+                           timeout=5)
+            return True
+        except TimeoutError:
+            return False
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)

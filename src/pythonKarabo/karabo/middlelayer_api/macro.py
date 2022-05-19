@@ -224,7 +224,35 @@ class Macro(Device):
         starting the device the devices are searched and then
         assigned to the object's properties """
         await super(Macro, self)._run(**kwargs)
+        try:
+            await self.__initialize_devices_monitors()
+        except CancelledError:
+            # we are cancelled from the outside, nothing to do
+            pass
+        except Exception:
+            await self.slotKillDevice()
+            raise
+        else:
+            self.state = self.abstractPassiveState
 
+    async def __holdDevice(self, d):
+        """keep the connection to a remote device
+
+        this method holds the connection to the RemoteDevice d, and calls
+        all monitors upon changes in this device."""
+        with d:
+            while True:
+                await waitUntilNew(d)
+                for m in self.__monitors:
+                    try:
+                        setattr(self, m.key, m.monitor(self))
+                    except BaseException:
+                        self.logger.exception(
+                            'exception in monitor "{}" of device "{}"'.
+                            format(m.key, self.deviceId))
+
+    async def __initialize_devices_monitors(self):
+        """Initialize all RemoteDevice and their monitors"""
         holders = []
 
         async def connect(key, remote):
@@ -246,23 +274,6 @@ class Macro(Device):
                        if isinstance(v, RemoteDevice)))
         for h in holders:
             ensure_future(h)
-        self.state = self.abstractPassiveState
-
-    async def __holdDevice(self, d):
-        """keep the connection to a remote device
-
-        this method holds the connection to the RemoteDevice d, and calls
-        all monitors upon changes in this device."""
-        with d:
-            while True:
-                await waitUntilNew(d)
-                for m in self.__monitors:
-                    try:
-                        setattr(self, m.key, m.monitor(self))
-                    except BaseException:
-                        self.logger.exception(
-                            'exception in monitor "{}" of device "{}"'.
-                            format(m.key, self.deviceId))
 
     def printToConsole(self, data):
         self.print = data

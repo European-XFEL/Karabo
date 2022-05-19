@@ -438,8 +438,12 @@ class AmqpBroker(Broker):
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
             t.cancel()
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
+        try:
+            await wait_for(gather(*tasks, return_exceptions=True),
+                           timeout=5)
+            return True
+        except asyncio.TimeoutError:
+            return False
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)

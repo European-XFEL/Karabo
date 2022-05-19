@@ -3,8 +3,9 @@ import os
 import socket
 import sys
 from asyncio import (
-    TimeoutError, create_subprocess_exec, ensure_future, gather,
-    get_event_loop, set_event_loop, sleep, wait, wait_for)
+    TimeoutError, all_tasks, create_subprocess_exec, ensure_future, gather,
+    get_event_loop, set_event_loop, sleep, wait_for)
+from collections import ChainMap
 from enum import Enum
 from json import loads
 from signal import SIGTERM
@@ -24,7 +25,7 @@ from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, coslot, slot
-from .synchronization import background, firstCompleted
+from .synchronization import allCompleted, background, firstCompleted
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.
@@ -343,13 +344,27 @@ class DeviceServerBase(SignalSlotable):
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
             server.is_server = True
-            server.startInstance(broadcast=True)
             try:
-                loop.run_forever()
-            except KeyboardInterrupt:
-                pass
-            finally:
-                loop.close()
+                loop.run_until_complete(
+                    server.startInstance(broadcast=True))
+            except BaseException:
+                # ServerId is already in use for KaraboError
+                # User might cancel even with Interrupt and a
+                # slotKillDevice is running. We wait for finish off
+                pending = all_tasks(loop)
+                loop.run_until_complete(
+                    wait_for(gather(*pending, return_exceptions=False),
+                             timeout=5))
+            else:
+                try:
+                    loop.run_forever()
+                except KeyboardInterrupt:
+                    pass
+                finally:
+                    # Close the loop with the broker connection
+                    loop.close()
+                    # Always terminate the process
+                    os.kill(os.getpid(), SIGTERM)
 
     async def onInitialization(self):
         """Initialization coroutine of the server to start up devices
@@ -483,14 +498,26 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
     @coslot
     async def slotKillServer(self):
+        self.logger.info("Received request to shutdown server.")
         if self.deviceInstanceMap:
             # first check if there are device instances to be removed
-            done, pending = await wait(
-                [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
-                timeout=10)
+            futures = {instanceId: dev.slotKillDevice()
+                       for instanceId, dev in self.deviceInstanceMap.items()}
+            done, *errors = await allCompleted(**futures, timeout=10)
+            # SlotKillDevice returns a success boolean if all tasks could be
+            # destroyed on time
+            if not all(list(done.values())):
+                devices = ', '.join(done.keys())
+                self.logger.warning(
+                    f"Some devices could not be killed: {devices}")
 
-            if pending:
-                self.logger.warning("some devices could not be killed")
+            errors = ChainMap(*errors)
+            if errors:
+                devices = ', '.join(errors.keys())
+                self.logger.error(
+                    "Some devices had exceptions when they "
+                    f"were shutdown: {devices} --- {errors.values()}")
+
         # then kill the server
         await super(MiddleLayerDeviceServer, self).slotKillServer()
 
