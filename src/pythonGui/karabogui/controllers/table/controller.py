@@ -415,10 +415,17 @@ class BaseFilterTableController(BaseTableController):
         widget.addAction(ac_column_filter)
 
         # Widgets in extensions might not have this model setting
-        if ("sortingEnabled" in self.model.copyable_trait_names()
-                and self.model.sortingEnabled):
-            table_widget.setSortingEnabled(True)
-            table_widget.sortByColumn(0, Qt.AscendingOrder)
+        if "sortingEnabled" in self.model.copyable_trait_names():
+            enabled = self.model.sortingEnabled
+            if enabled:
+                table_widget.setSortingEnabled(True)
+                table_widget.sortByColumn(0, Qt.AscendingOrder)
+
+            ac_sort = QAction("Sorting Enabled", table_widget)
+            ac_sort.setCheckable(True)
+            ac_sort.setChecked(enabled)
+            ac_sort.triggered.connect(self._change_sorting_enabled)
+            widget.addAction(ac_sort)
 
         return widget
 
@@ -446,3 +453,10 @@ class BaseFilterTableController(BaseTableController):
             filter_model = self.tableWidget().model()
             filter_model.setFilterKeyColumn(column)
             self.searchLabel.setToolTip(f"Search column: {column}")
+
+    def _change_sorting_enabled(self):
+        enabled = not self.model.sortingEnabled
+        self.model.sortingEnabled = enabled
+        self.tableWidget().setSortingEnabled(enabled)
+        if enabled:
+            self.tableWidget().sortByColumn(0, Qt.AscendingOrder)
