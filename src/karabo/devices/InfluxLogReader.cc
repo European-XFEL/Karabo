@@ -709,23 +709,17 @@ namespace karabo {
                 return;
             }
 
-            // A schema has been found - processing it means base64 decoding it, deserializing it and
-            // then traverse it capturing all the properties keys and their types for further processing.
+            // A schema has been found - processing it means base64 decoding, deserializing and
+            // then iterating over it to capture all the properties keys and their types for further processing.
             try {
-                std::vector<unsigned char> base64Decoded;
-                base64Decode(encodedSch, base64Decoded);
-                const char *decoded = reinterpret_cast<const char *>(base64Decoded.data());
-                // Older versions of Karabo were concatenating schemas as binary buffers.
-                // To revert this bug for historic data without migrating the database,
-                // one needs to deserialize schemas from the received buffer until the buffer
-                // is read out entirely. The last entry in the buffer is the one needed.
-                const size_t fullSize = base64Decoded.size();
-                size_t readSize = 0u;
-                while (readSize < fullSize) {
-                    Schema s;
-                    readSize += m_schemaSerializer->load(s, decoded + readSize, fullSize - readSize);
-                    ctxt->configSchema = std::move(s);
-                }
+                // The use of the specialized method loadLastFromSequence is needed because schemas saved in Influx
+                // prior to the fix in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6470 can have multiple (and
+                // different) versions of a device's schema. When that happens, the version that must be retrieved is
+                // the last one (the most recent at the time the schema was saved in Influx).
+                std::vector<unsigned char> decodedSch;
+                base64Decode(encodedSch, decodedSch);
+                const char *decoded = reinterpret_cast<const char *>(decodedSch.data());
+                m_schemaSerializer->loadLastFromSequence(ctxt->configSchema, decoded, decodedSch.size());
                 const Schema &schema = ctxt->configSchema;
 
                 // Stores the properties keys and types in the context.
