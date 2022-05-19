@@ -264,6 +264,44 @@ void SchemaSerializer_Test::testBinarySerializer() {
 }
 
 
+void SchemaSerializer_Test::testLoadLastFromSequence() {
+    BinarySerializer<Schema>::Pointer ser = BinarySerializer<Schema>::create("Bin");
+
+    Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
+    TestSchemaSerializer::expectedParameters(testSchema);
+    CPPUNIT_ASSERT_EQUAL(std::string{"Navigation"}, testSchema.getDefaultValue<std::string>("exampleKey1"));
+
+    Schema testSchemaMod("TestSchemaMod", Schema::AssemblyRules(READ | WRITE | INIT));
+    TestSchemaSerializer::expectedParameters(testSchemaMod);
+    testSchemaMod.setDefaultValue("exampleKey1", std::string{"Orientation"});
+    CPPUNIT_ASSERT_EQUAL(std::string{"Orientation"}, testSchemaMod.getDefaultValue<std::string>("exampleKey1"));
+
+    // CAVEAT: from the BinarySerializer<T>::save(T&, std::vector<char>&) documentation it can be seen that some
+    // specializations of BinarySerializer may clear the receiving vector before adding the bytes of the serialized
+    // form. That is not the case of the Schema specialization; if that changes, this test will break. It is intentional
+    // that this test breaks if the Schema specialization changes as such a change would, most likely, introduce
+    // undesired (and unknown) behavior changes in the Framework.
+
+    // Generate two binary sequences: one with the serialized binary form of the
+    // testSchema and another with the serialized binary form of testSchema and
+    // testSchemaMod concatenated.
+    std::vector<char> archSingle;
+    ser->save(testSchema, archSingle);
+    const char* archSingleSer = reinterpret_cast<const char*>(archSingle.data());
+    std::vector<char> archTwo = archSingle;
+    ser->save(testSchemaMod, archTwo);
+    const char* archTwoSer = reinterpret_cast<const char*>(archTwo.data());
+
+    Schema loadedSch;
+    // Checks that the first element gets loaded for the sequence with just 1 element.
+    CPPUNIT_ASSERT_NO_THROW(ser->loadLastFromSequence(loadedSch, archSingleSer, archSingle.size()));
+    CPPUNIT_ASSERT(testSchema.getParameterHash().fullyEquals(loadedSch.getParameterHash()));
+    // Checks that the second element gets loaded for the sequence with 2 elements.
+    CPPUNIT_ASSERT_NO_THROW(ser->loadLastFromSequence(loadedSch, archTwoSer, archTwo.size()));
+    CPPUNIT_ASSERT(testSchemaMod.getParameterHash().fullyEquals(loadedSch.getParameterHash()));
+}
+
+
 void SchemaSerializer_Test::testXmlSerializer() {
     CPPUNIT_ASSERT(true);
 }
