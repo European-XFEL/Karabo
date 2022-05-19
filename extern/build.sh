@@ -26,7 +26,10 @@ pg8000 )
 
 BUILD_MARKER_NAME=".marker.txt"
 DEPS_MARKER_NAME=".deps_tag.txt"
-DEP_URL_BASE="http://exflserv05.desy.de/karabo/karaboDevelopmentDeps"
+if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
+    KARABO_UPLOAD_CURL_PREFIX=http://exflserv05.desy.de/karabo
+fi
+DEP_URL_BASE="${KARABO_UPLOAD_CURL_PREFIX}/karaboDevelopmentDeps"
 DEPS_OS_IDENTIFIER=$(lsb_release -is)$(lsb_release -rs | sed -r 's/^([0-9]+).*/\1/')
 DEP_TAG_PATTERN="deps-*"
 
