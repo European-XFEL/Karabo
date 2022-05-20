@@ -938,17 +938,6 @@ class ByteArray(Vector):
         return VectorCharValue(data, descriptor=self)
 
 
-class Int8(Integer, Type):
-    number = 4
-    format = "b"
-    numpy = np.int8
-
-
-class VectorInt8(NumpyVector):
-    basetype = Int8
-    number = 5
-
-
 def _create_numpy_integer(name, number, numpy):
 
     class NumpyInteger(Integer, Type):
@@ -979,41 +968,6 @@ Int64 = _create_numpy_integer("Int64", 16, np.int64)
 
 # Hide implementation
 del _create_numpy_integer
-
-
-class VectorUInt8(NumpyVector):
-    basetype = UInt8
-    number = 7
-
-
-class VectorInt16(NumpyVector):
-    basetype = Int16
-    number = 9
-
-
-class VectorUInt16(NumpyVector):
-    basetype = UInt16
-    number = 11
-
-
-class VectorInt32(NumpyVector):
-    basetype = Int32
-    number = 13
-
-
-class VectorUInt32(NumpyVector):
-    basetype = UInt32
-    number = 15
-
-
-class VectorInt64(NumpyVector):
-    basetype = Int64
-    number = 17
-
-
-class VectorUInt64(NumpyVector):
-    basetype = UInt64
-    number = 19
 
 
 def _create_numpy_floating(name, number, numpy):
@@ -1047,24 +1001,52 @@ ComplexDouble = _create_numpy_floating("ComplexDouble", 26, np.complex128)
 del _create_numpy_floating
 
 
-class VectorFloat(NumpyVector):
-    basetype = Float
-    number = 21
+def _create_numpy_vector(name, number, numpy, basetype):
+    """Create a numpy vector with a specific default value"""
+    class VectorDefault(Attribute):
+        """Attribute class to set a defaultValue for a numpy vector"""
+
+        def __init__(self, default=None, dtype=None):
+            super().__init__(default, dtype)
+
+        def check(self, value):
+            if self.dtype is None or not isSet(value):
+                return value
+            # Vector defaults are lists...
+            array = np.array(value, dtype=self.dtype)
+            return array.tolist()
+
+    ns_dict = {"number": number, "basetype": basetype,
+               "defaultValue": VectorDefault(dtype=numpy)}
+    return type(name, (NumpyVector,), ns_dict)
 
 
-class VectorDouble(NumpyVector):
-    basetype = Double
-    number = 23
+VectorInt8 = _create_numpy_vector(
+    "VectorInt8", 5, np.int8, Int8)
+VectorUInt8 = _create_numpy_vector(
+    "VectorUInt8", 7, np.uint8, UInt8)
+VectorInt16 = _create_numpy_vector(
+    "VectorInt16", 9, np.int16, Int16)
+VectorUInt16 = _create_numpy_vector(
+    "VectorUInt16", 11, np.uint16, UInt16)
+VectorInt32 = _create_numpy_vector(
+    "VectorInt32", 13, np.int32, Int32)
+VectorUInt32 = _create_numpy_vector(
+    "VectorUInt32", 15, np.uint32, UInt32)
+VectorInt64 = _create_numpy_vector(
+    "VectorInt64", 17, np.int64, Int64)
+VectorUInt64 = _create_numpy_vector(
+    "VectorUInt64", 19, np.uint64, UInt64)
+VectorFloat = _create_numpy_vector(
+    "VectorFloat", 21, np.float32, Float)
+VectorDouble = _create_numpy_vector(
+    "VectorDouble", 23, np.float64, Double)
+VectorComplexFloat = _create_numpy_vector(
+    "VectorComplexFloat", 25, np.complex64, ComplexFloat)
+VectorComplexDouble = _create_numpy_vector(
+    "VectorComplexDouble", 27, np.complex128, ComplexDouble)
 
-
-class VectorComplexFloat(NumpyVector):
-    basetype = ComplexFloat
-    number = 25
-
-
-class VectorComplexDouble(NumpyVector):
-    basetype = ComplexDouble
-    number = 27
+del _create_numpy_vector
 
 
 class String(Enumable, Type):
