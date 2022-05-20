@@ -221,6 +221,18 @@ class Tests(TestCase):
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3000)
 
+        # Cast properly
+        d = VectorInt8(unitSymbol=Unit.METER,
+                       metricPrefixSymbol=MetricPrefix.MICRO,
+                       defaultValue=[1.0, 2.0, 3.5])
+        self.assertEqual(d.defaultValue, [1, 2, 3])
+
+        # Overflow for -1, we are a UInt8
+        d = VectorUInt8(unitSymbol=Unit.METER,
+                        metricPrefixSymbol=MetricPrefix.MICRO,
+                        defaultValue=[-1.0, 2.0, 3.5])
+        self.assertEqual(d.defaultValue, [255, 2, 3])
+
     def test_floats(self):
         d = Float()
         v = d.toKaraboValue(3)
@@ -260,6 +272,11 @@ class Tests(TestCase):
         d = VectorFloat(unitSymbol=Unit.METER,
                         metricPrefixSymbol=MetricPrefix.MILLI,
                         defaultValue=[1, 2, 3])
+        default = d.defaultValue
+        # Test that the values are casted to floats
+        self.assertEqual(type(default[0]), float)
+        self.assertEqual(d.defaultValue, [1.0, 2.0, 3.0])
+
         v = d.toKaraboValue([2, 3, 4])
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue([2, 3, 4] * unit.m / unit.m)
