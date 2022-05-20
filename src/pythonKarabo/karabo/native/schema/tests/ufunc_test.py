@@ -1,5 +1,4 @@
-from platform import system
-from unittest import TestCase, main, skip, skipIf
+from unittest import TestCase, main, skip
 
 import numpy as np
 from numpy import e, pi
@@ -8,6 +7,13 @@ from pint import DimensionalityError
 from karabo.native.data import MetricPrefix, Timestamp, Unit
 from karabo.native.schema import (
     Int32, QuantityValue as QV, VectorComplexDouble, VectorDouble, VectorInt32)
+
+
+def _is_numpy_old():
+    """In older version of numpy the floor division (floor_divide, remainder,
+    fmod) by zero raises no warning/error"""
+
+    return np.__version__ <= "1.19.5"
 
 
 class Tests(TestCase):
@@ -407,8 +413,6 @@ class Tests(TestCase):
         assert np.true_divide is np.divide
         self.test_divide()
 
-    @skipIf(system() == "Darwin",
-            reason="No RuntimeWarning raised on Mac OS")
     def test_floor_divide(self):
         """
         Return the largest integer smaller or equal to the division of the
@@ -436,10 +440,10 @@ class Tests(TestCase):
 
         # first argument is of type `float`
         one_float_vec = QV([1., 1., 1.], unit='m', timestamp=self.ts1)
-        if np.__version__ == "1.19.5":
-            with self.assertWarns(RuntimeWarning):
-                self.assertBinaryUfunc(ufunc, one_float_vec, self.zero,
-                                       self.nan_vec)
+
+        if _is_numpy_old():
+            self.assertBinaryUfunc(ufunc, one_float_vec, self.zero,
+                                   self.nan_vec)
         else:
             with self.assertRaises(AssertionError):
                 self.assertBinaryUfunc(ufunc, one_float_vec, self.zero,
@@ -508,8 +512,6 @@ class Tests(TestCase):
         # [[1, 2, 3], [0, 1, 2]] * [1, 2] => error
         # [[1, 2, 3], [0, 1, 2]] * [2, 1, 0] => [[1, 2, 1], [0, 1, 2]]
 
-    @skipIf(system() == "Darwin",
-            reason="No RuntimeWarning raised on Mac OS")
     def test_remainder(self):
         """
         Return element-wise remainder of division
@@ -549,8 +551,11 @@ class Tests(TestCase):
         # arrays of floats: [0m, 2m, 4m] / [0., 0., 1.] = [nan, nan, 0m]
         denominator = QV([0., 0., 1.], timestamp=self.ts2)
         res = QV([np.nan, np.nan, 0], unit='m')
-        with self.assertWarns(RuntimeWarning):
+        if _is_numpy_old():
             self.assertBinaryUfunc(ufunc, numerator, denominator, res)
+        else:
+            with self.assertWarns(RuntimeWarning):
+                self.assertBinaryUfunc(ufunc, numerator, denominator, res)
 
         # Negative values (differ from the result of `fmod`):
         # [0m, 2m, 4m] / [-1, 2, -3] = [0m, 0m, -1m]
@@ -565,8 +570,6 @@ class Tests(TestCase):
         """
         assert np.mod is np.remainder
 
-    @skipIf(system() == "Darwin",
-            reason="No RuntimeWarning raised on Mac OS")
     def test_fmod(self):
         """
         Return the element-wise remainder of division.
@@ -598,8 +601,11 @@ class Tests(TestCase):
         # arrays of floats: [0m, 2m, 4m] / [0., 0., 1.] = [nan, nan, 0s]
         denominator = QV([0., 0., 1.], timestamp=self.ts2)
         res = QV([np.nan, np.nan, 0], unit='m')
-        with self.assertWarns(RuntimeWarning):
+        if _is_numpy_old():
             self.assertBinaryUfunc(ufunc, numerator, denominator, res)
+        else:
+            with self.assertWarns(RuntimeWarning):
+                self.assertBinaryUfunc(ufunc, numerator, denominator, res)
 
         # units: [1m, 1m, 1m] / [1, 1, 1] != [1s, 1s, 1s]
         with self.assertRaises(DimensionalityError):
