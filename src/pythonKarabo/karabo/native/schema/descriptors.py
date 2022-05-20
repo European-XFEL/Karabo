@@ -1012,9 +1012,11 @@ def _create_numpy_vector(name, number, numpy, basetype):
         def check(self, value):
             if self.dtype is None or not isSet(value):
                 return value
+            if isinstance(value, np.ndarray) and value.ndim != 1:
+                raise KaraboError("Only 1 dimensional vectors are allowed.")
             # Vector defaults are lists...
-            array = np.array(value, dtype=self.dtype)
-            return array.tolist()
+            array = [self.dtype(v) for v in value]
+            return array
 
     ns_dict = {"number": number, "basetype": basetype,
                "defaultValue": VectorDefault(dtype=numpy)}
