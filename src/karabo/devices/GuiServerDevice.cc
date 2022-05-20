@@ -1514,9 +1514,10 @@ namespace karabo {
                 std::set<WeakChannelPointer>& channelSet = m_networkConnections[channelName]; // might create empty set
                 if (subscribe) {
                     const bool notYetRegistered = channelSet.empty();
-                    if (!channelSet.insert(channel).second) {
+                    const bool inserted = channelSet.insert(channel).second;
+                    if (!inserted) {
                         // This happens when a GUI client has a scene open while the device is down and then restarts:
-                        // Client [at least until 2.14. will call this (but does not have to or maybe should not).
+                        // Client [at least until 2.14.X] will call this (but does not have to or maybe should not).
                         KARABO_LOG_FRAMEWORK_INFO << "A GUI client wants to subscribe a second time to output channel: "
                                                   << channelName;
                     }
@@ -1535,8 +1536,9 @@ namespace karabo {
                         }
                     } else {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Do not register to monitor '" << channelName << "' "
-                                                   << "since " << channelSet.size() - 1u
-                                                   << " client(s) already registered."; // -1: the new one
+                                                   << "since "
+                                                   << channelSet.size() - (1u * inserted) // -1 except if not new
+                                                   << " client(s) already registered.";
                     }
                 } else { // i.e. un-subscribe
                     if (0 == channelSet.erase(channel)) {
