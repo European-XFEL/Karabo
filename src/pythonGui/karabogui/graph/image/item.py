@@ -37,11 +37,61 @@ class KaraboImageItem(GraphicsObject):
 
         self.levels = None
         # We have row-major
-        self.axisOrder = getConfigOption('imageAxisOrder')
+        self.axisOrder = getConfigOption("imageAxisOrder")
         self.setImage(image)
 
     # ---------------------------------------------------------------------
-    # Public methods
+    # Public abstract methods
+
+    def setLookUpTable(self, lut, update=True):
+        """Set a color map on the image item"""
+        self.lut = lut
+        stride = lut.shape[0] // 256
+        self._qlut = [qRgb(*v) for v in lut[::stride, :]]
+        if update:
+            self.updateImage()
+
+    def setOpts(self, update=True, **kwargs):
+        if "axisOrder" in kwargs:
+            value = kwargs["axisOrder"]
+            if value not in ("row-major", "col-major"):
+                raise ValueError("axisOrder must be either 'row-major' "
+                                 "or 'col-major'")
+            self.axisOrder = value
+        if "lut" in kwargs:
+            self.setLookUpTable(kwargs["lut"], update=update)
+        if "levels" in kwargs:
+            self.setLevels(kwargs["levels"], update=update)
+        if update:
+            self.update()
+
+    def updateImage(self, **kwargs):
+        """Update the Image"""
+        defaults = {
+            "autoLevels": False,
+        }
+        defaults.update(kwargs)
+        return self.setImage(**defaults)
+
+    def width(self):
+        if self.image is None:
+            return None
+        axis = 0 if self.axisOrder == "col-major" else 1
+        return self.image.shape[axis]
+
+    def height(self):
+        if self.image is None:
+            return None
+        axis = 1 if self.axisOrder == "col-major" else 0
+        return self.image.shape[axis]
+
+    def boundingRect(self):
+        if self.image is None:
+            return QRectF(0, 0, 0, 0)
+        return QRectF(0, 0, self.width(), self.height())
+
+    # ---------------------------------------------------------------------
+    # Custom public interface
 
     def set_transform(self, scaling=(1, 1), translation=(0, 0), rotation=0):
         transform = QTransform()
@@ -59,52 +109,6 @@ class KaraboImageItem(GraphicsObject):
         if self._rect is None:
             return self.boundingRect()
         return self._rect
-
-    def set_lookup_table(self, lut, update=True):
-        self.lut = lut
-        stride = lut.shape[0] // 256
-        self._qlut = [qRgb(*v) for v in lut[::stride, :]]
-        if update:
-            self.updateImage()
-
-    def setOpts(self, update=True, **kwargs):
-        if 'axisOrder' in kwargs:
-            value = kwargs['axisOrder']
-            if value not in ('row-major', 'col-major'):
-                raise ValueError('axisOrder must be either "row-major" '
-                                 'or "col-major"')
-            self.axisOrder = value
-        if 'lut' in kwargs:
-            self.set_lookup_table(kwargs['lut'], update=update)
-        if 'levels' in kwargs:
-            self.setLevels(kwargs['levels'], update=update)
-        if update:
-            self.update()
-
-    def updateImage(self, **kwargs):
-        """Update the Image"""
-        defaults = {
-            'autoLevels': False,
-        }
-        defaults.update(kwargs)
-        return self.setImage(**defaults)
-
-    def width(self):
-        if self.image is None:
-            return None
-        axis = 0 if self.axisOrder == 'col-major' else 1
-        return self.image.shape[axis]
-
-    def height(self):
-        if self.image is None:
-            return None
-        axis = 1 if self.axisOrder == 'col-major' else 0
-        return self.image.shape[axis]
-
-    def boundingRect(self):
-        if self.image is None:
-            return QRectF(0, 0, 0, 0)
-        return QRectF(0, 0, self.width(), self.height())
 
     def get_color(self, x, y):
         """Get color of selected pixel. Return NULL color if there's
@@ -207,7 +211,7 @@ class KaraboImageItem(GraphicsObject):
                 self.informViewBoundsChanged()
 
         if autoLevels is None:
-            if 'levels' in kwargs:
+            if "levels" in kwargs:
                 autoLevels = False
             else:
                 autoLevels = True
@@ -230,7 +234,7 @@ class KaraboImageItem(GraphicsObject):
                 # Check for `NaN` as well as `inf`
                 mn = 0
                 mx = 255
-            kwargs['levels'] = [mn, mx]
+            kwargs["levels"] = [mn, mx]
 
         # Apply levels here!
         self.setOpts(update=False, **kwargs)
@@ -327,7 +331,7 @@ class KaraboImageItem(GraphicsObject):
 
     def _build_qimage(self, image, img_format):
         # Transpose image array to match axis orientation.
-        if self.axisOrder == 'col-major':
+        if self.axisOrder == "col-major":
             image = image.transpose((1, 0, 2)[:image.ndim]).copy()
 
         ny, nx = image.shape[:2]
@@ -366,7 +370,7 @@ class KaraboImageItem(GraphicsObject):
         # Start calculating the view geometry
         # 1. Get image shape wrt to axis order
         shape = image.shape[:2]
-        if self.axisOrder == 'row-major':
+        if self.axisOrder == "row-major":
             shape = shape[::-1]
 
         # 2. Check if coords is in the view rect.
