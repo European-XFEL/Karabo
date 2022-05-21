@@ -195,7 +195,7 @@ class KaraboImagePlot(PlotItem):
         """
         lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
                .getLookupTable(alpha=False, mode="RGB"))
-        self.imageItem.set_lookup_table(lut)
+        self.imageItem.setLookUpTable(lut)
 
     @Slot(object)
     def set_image_levels(self, levels):
