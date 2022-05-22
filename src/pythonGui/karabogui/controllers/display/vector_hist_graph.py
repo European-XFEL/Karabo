@@ -78,7 +78,7 @@ class VectorHistogramGraph(BaseBindingController):
         if len(edges) > 1:
             bin_w = (stop - start) / (self.model.bins)
             self._plot.setData(edges - bin_w / 2, hist, fillLevel=0,
-                               stepMode=True)
+                               stepMode="center")
 
     def value_update(self, proxy):
         value, _ = get_array_data(proxy, default=[])

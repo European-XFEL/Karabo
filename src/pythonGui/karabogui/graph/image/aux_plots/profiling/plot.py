@@ -41,14 +41,14 @@ class ProfilePlot(BasePlot):
     def set_data(self, x_data, y_data):
         # Assuming that data is discrete, we add the difference to the last
         # value and feed it to the plot. This last is needed to plot all values
-        # when stepMode=True, which is then not used.
+        # when stepMode="center" (True), which is then not used.
         if x_data.size <= 1 or y_data.size <= 1:
             return
 
         offset = x_data[1] - x_data[0]
         x_corrected = np.append(x_data, x_data[-1] + offset)
         self._data_item.setData(x_corrected, y_data,
-                                stepMode=True, pen=self._data_pen,
+                                stepMode="center", pen=self._data_pen,
                                 brush=self._data_brush, fillLevel=0)
 
         # Adjust the y range to the data range to not show the pedestal.
