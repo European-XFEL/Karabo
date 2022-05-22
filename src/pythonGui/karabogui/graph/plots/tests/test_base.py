@@ -54,7 +54,8 @@ class TestPlotViewExport(GuiTestCase):
         curve = self.widget.add_curve_item(name=NAMES[0])
 
         # Test curves with data
-        curve.setData(np.concatenate((X_ARRAY, [10])), Y_ARRAY, stepMode=True)
+        curve.setData(np.concatenate((X_ARRAY, [10])), Y_ARRAY,
+                      stepMode="center")
         self._assert_npy_export()
 
     def test_export_scatter_item(self):
