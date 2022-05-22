@@ -98,9 +98,8 @@ def get_instance_info_icon(status):
     return None
 
 
-def get_device_status_icon(status, error=False):
-    """A `QIcon` for the given `status` is returned.
-    """
+def get_device_status_icon(status):
+    """A `QIcon` for the given `status` is returned."""
     status_icons = {
         ProxyStatus.OFFLINE: icons.deviceOffline,
         ProxyStatus.OK: icons.deviceAlive,
@@ -119,21 +118,16 @@ def get_device_status_icon(status, error=False):
     if not isinstance(status, ProxyStatus):
         status = ProxyStatus(status)
 
-    if status == ProxyStatus.MONITORING and not error:
-        return None
-    elif status != ProxyStatus.OFFLINE and error:
-        return status_icons.get(ProxyStatus.ERROR)
-
     return status_icons.get(status)
 
 
-def get_device_status_pixmap(status, error, extent=16):
+def get_device_status_pixmap(status, extent=16):
     """A `QPixmap` for the given `status` is returned.
 
     `extent` sets the size of the pixmap. The pixmap might be smaller than
     requested, but never larger.
     """
-    icon = get_device_status_icon(status, error=error)
+    icon = get_device_status_icon(status)
     if icon is not None:
         return icon.pixmap(extent)
 
