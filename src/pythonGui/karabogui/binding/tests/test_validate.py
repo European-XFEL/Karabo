@@ -11,8 +11,7 @@ from karabogui.binding.builder import build_binding
 from karabogui.binding.validate import (
     get_default_value, sanitize_table_value, validate_binding_configuration,
     validate_table_value, validate_value)
-
-from .schema import get_simple_props_schema
+from karabogui.testing import get_simple_props_schema
 
 
 class TableRow(Configurable):

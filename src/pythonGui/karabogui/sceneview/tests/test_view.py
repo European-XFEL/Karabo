@@ -22,11 +22,10 @@ from karabogui.binding.api import (
     StringBinding, TableBinding, Uint8Binding, UnsignedIntBinding,
     VectorBinding, VectorHashBinding, VectorNoneBinding, VectorNumberBinding,
     VectorUint8Binding, WidgetNodeBinding, build_binding)
-from karabogui.binding.tests.schema import (
-    ALL_PROPERTIES_MAP, get_all_props_schema)
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.registry import get_model_controller
-from karabogui.testing import GuiTestCase
+from karabogui.testing import (
+    ALL_PROPERTIES_MAP, GuiTestCase, get_all_props_schema)
 
 from ..api import SceneView
 from ..layout.api import GroupLayout

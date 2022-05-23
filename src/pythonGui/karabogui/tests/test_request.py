@@ -8,13 +8,12 @@ from karabo.native import Hash
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, apply_configuration,
     apply_default_configuration, build_binding)
-from karabogui.binding.tests.schema import get_simple_schema
 from karabogui.events import KaraboEvent
 from karabogui.request import (
     get_macro_from_server, get_scene_from_server, onConfigurationUpdate,
     onSchemaUpdate)
 from karabogui.singletons.manager import Manager
-from karabogui.testing import GuiTestCase, singletons
+from karabogui.testing import GuiTestCase, get_simple_schema, singletons
 
 
 class TestRequestModule(GuiTestCase):
