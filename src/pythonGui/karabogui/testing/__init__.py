@@ -1,4 +1,8 @@
 # flake8: noqa
+from .schema import (
+    ALL_PROPERTIES_MAP, get_all_props_schema, get_pipeline_schema,
+    get_pipeline_vector_schema, get_recursive_schema, get_simple_props_schema,
+    get_simple_schema, get_slotted_schema, get_vectorattr_schema)
 from .utils import (
     GuiTestCase, SimpleDeviceSchema, alarm_data, assert_trait_change,
     click_button, device_hash, flushed_registry, get_class_property_proxy,
