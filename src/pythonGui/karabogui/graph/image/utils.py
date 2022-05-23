@@ -203,8 +203,9 @@ def bytescale(data, cmin=None, cmax=None, low=0, high=255):
 
     scale = float(high - low) / cscale
     bytedata = (data - cmin) * scale + low
-
-    return (bytedata.clip(low, high) + 0.5).astype(np.uint8)
+    bytedata.clip(low, high, out=bytedata)
+    bytedata += 0.5
+    return bytedata.astype(np.uint8)
 
 
 def ensure_finite_levels(levels, default_min=0, default_max=255):
