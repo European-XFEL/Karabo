@@ -9,11 +9,9 @@ from karabogui.binding.api import (
     apply_default_configuration, build_binding, extract_sparse_configurations,
     get_editor_value)
 from karabogui.testing import (
-    assert_trait_change, get_class_property_proxy, singletons)
-
-from .schema import (
-    get_all_props_schema, get_pipeline_schema, get_pipeline_vector_schema,
-    get_simple_schema, get_slotted_schema)
+    assert_trait_change, get_all_props_schema, get_class_property_proxy,
+    get_pipeline_schema, get_pipeline_vector_schema, get_simple_schema,
+    get_slotted_schema, singletons)
 
 
 def test_device_proxy_classes():

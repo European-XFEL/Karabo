@@ -3,14 +3,13 @@ from traits.api import TraitError
 
 from karabo.common.api import KARABO_WARN_HIGH
 from karabo.native import Hash
-
-from ..api import (
+from karabogui.binding.api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
     Int32Binding, ListOfNodesBinding, NodeBinding, apply_configuration,
     apply_default_configuration, build_binding,
     extract_attribute_modifications, extract_configuration)
-from ..recursive import duplicate_binding
-from .schema import get_recursive_schema
+from karabogui.binding.recursive import duplicate_binding
+from karabogui.testing import get_recursive_schema
 
 
 def test_choice_of_nodes():

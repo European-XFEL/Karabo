@@ -9,8 +9,7 @@ from karabo.native import (
     VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
     VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
     VectorUInt16, VectorUInt32, VectorUInt64)
-
-from ..api import (
+from karabogui.binding.api import (
     BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
     ComplexBinding, FloatBinding, HashBinding, Int8Binding, Int16Binding,
     Int32Binding, Int64Binding, ListOfNodesBinding, NodeBinding, SchemaBinding,
