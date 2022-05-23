@@ -9,15 +9,15 @@ from karabo.common.api import KARABO_ALARM_LOW, State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Schema,
     String, Timestamp, decodeBinary)
+from karabogui.testing import (
+    ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
+    get_simple_schema, get_vectorattr_schema)
 
 from ..api import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, build_binding,
     extract_attribute_modifications, extract_configuration, extract_edits,
     extract_init_configuration, extract_online_edits)
-from .schema import (
-    ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
-    get_simple_schema, get_vectorattr_schema)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
