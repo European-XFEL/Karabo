@@ -184,9 +184,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         if not existing:
             status = ProxyStatus.MISSING
 
-        # NOTE: The error notification on the scene is DEPRECATED as the online
-        # device status can not anymore be separated from the proxy status
-        pixmap = get_device_status_pixmap(status, False)
+        pixmap = get_device_status_pixmap(status)
         if pixmap is not None:
             self.status_symbol.setPixmap(pixmap)
             self.status_symbol.show()
