@@ -225,13 +225,39 @@ class Tests(TestCase):
         d = VectorInt8(unitSymbol=Unit.METER,
                        metricPrefixSymbol=MetricPrefix.MICRO,
                        defaultValue=[1.0, 2.0, 3.5])
+
         self.assertEqual(d.defaultValue, [1, 2, 3])
 
         # Overflow for -1, we are a UInt8
         d = VectorUInt8(unitSymbol=Unit.METER,
                         metricPrefixSymbol=MetricPrefix.MICRO,
                         defaultValue=[-1.0, 2.0, 3.5])
-        self.assertEqual(d.defaultValue, [255, 2, 3])
+        default = d.defaultValue
+        self.assertEqual(default, [255, 2, 3])
+        self.assertEqual(type(default[0]), np.uint8)
+
+        # Check for unsinged int64 bit
+        max_uint64 = 18446744073709551615
+        d = VectorUInt64(unitSymbol=Unit.METER,
+                         metricPrefixSymbol=MetricPrefix.MICRO,
+                         defaultValue=[max_uint64, max_uint64])
+        default = d.defaultValue
+        self.assertEqual(default, [max_uint64, max_uint64])
+        self.assertEqual(type(default[0]), np.uint64)
+
+        # Test assignment with vectors
+        d = VectorUInt64(unitSymbol=Unit.METER,
+                         metricPrefixSymbol=MetricPrefix.MICRO,
+                         defaultValue=np.array([1, 2], dtype=np.uint8))
+        default = d.defaultValue
+        self.assertEqual(default, [1, 2])
+        self.assertEqual(type(default[0]), np.uint64)
+
+        # Wrong dimension
+        with self.assertRaises(KaraboError):
+            VectorInt16(unitSymbol=Unit.METER,
+                        metricPrefixSymbol=MetricPrefix.MICRO,
+                        defaultValue=np.array([[1, 2], [3, 4]]))
 
     def test_floats(self):
         d = Float()
@@ -274,7 +300,7 @@ class Tests(TestCase):
                         defaultValue=[1, 2, 3])
         default = d.defaultValue
         # Test that the values are casted to floats
-        self.assertEqual(type(default[0]), float)
+        self.assertEqual(type(default[0]), np.float64)
         self.assertEqual(d.defaultValue, [1.0, 2.0, 3.0])
 
         v = d.toKaraboValue([2, 3, 4])
