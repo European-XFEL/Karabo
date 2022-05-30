@@ -128,7 +128,7 @@ class TableModel(QAbstractTableModel):
 
         return flags
 
-    def setData(self, index, value, role=Qt.EditRole, from_device=False):
+    def setData(self, index, value, role=Qt.EditRole):
         """Reimplemented function of QAbstractTableModel"""
         if not index.isValid():
             return False
@@ -141,29 +141,34 @@ class TableModel(QAbstractTableModel):
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
                 self.dataChanged.emit(index, index)
-                if not from_device:
-                    self._set_edit_value(self._data)
+                self._set_edit_value(self._data)
                 return True
 
             return False
 
-        if role in (Qt.DisplayRole, Qt.EditRole):
+        elif role in (Qt.DisplayRole, Qt.EditRole):
             key = self._header[column]
             binding = self._bindings[key]
-            if isinstance(binding, VectorBinding) and not from_device:
+            if isinstance(binding, VectorBinding):
                 value = string2list(value)
-                # Before Karabo 2.2 the value was cast here...
 
             self._data[row][key] = value
             self.dataChanged.emit(index, index)
-
-            if not from_device:
-                # Before check for Qt.EditRole, but device updates
-                # are channeled with Qt.DisplayRole
-                self._set_edit_value(self._data)
+            self._set_edit_value(self._data)
             return True
 
         return False
+
+    def updateData(self, data):
+        """External update of the table data"""
+        roles = [Qt.BackgroundRole, Qt.CheckStateRole, Qt.DisplayRole,
+                 Qt.ToolTipRole]
+        columns = self.columnCount() - 1
+        for row, hsh in enumerate(data):
+            self._data[row] = hsh
+            first_index = self.index(row, 0)
+            last_index = self.index(row, columns)
+            self.dataChanged.emit(first_index, last_index, roles)
 
     def insertRows(self, pos, rows, index, *,
                    copy_row=None, from_device=False):
