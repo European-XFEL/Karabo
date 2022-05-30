@@ -114,26 +114,20 @@ class BaseTableController(BaseBindingController):
             self._item_model.clear_model()
             return
 
+        # Remove or add rows if necessary
         row_count = self._item_model.rowCount()
-
-        # Remove rows if necessesary
         if row_count > len(value):
             start = len(value) - 1
             count = row_count - len(value)
             self._item_model.removeRows(start, count, QModelIndex(),
                                         from_device=True)
-
-        # Add rows if necessary
         elif row_count < len(value):
             start = row_count
             count = len(value) - row_count
             self._item_model.insertRows(start, count, QModelIndex(),
                                         from_device=True)
-        for r, row in enumerate(value):
-            for c, key in enumerate(row.getKeys()):
-                index = self._item_model.index(r, c, QModelIndex())
-                self._item_model.setData(index, row[key], Qt.DisplayRole,
-                                         from_device=True)
+
+        self._item_model.updateData(value)
 
     def destroy_widget(self):
         if self._item_model is not None:
