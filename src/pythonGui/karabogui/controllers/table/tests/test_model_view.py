@@ -430,6 +430,20 @@ class TestTableModelView(GuiTestCase):
         self.assertTrue(button_delegate.isEnabled(index))
         button_delegate.click_action(index)
 
+    def test_set_data(self):
+        self.proxy.edit_value = None
+        self.assertIsNone(self.proxy.edit_value)
+
+        model = self.controller._item_model
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "a")
+        model.setData(index, "b")
+        index = model.index(0, 0)
+        self.assertEqual(index.data(), "b")
+        self.assertIsNotNone(self.proxy.edit_value)
+        first_hash = self.proxy.edit_value[0]
+        self.assertEqual(first_hash["arch"], "b")
+
     def test_basic_settings_controller(self):
         self.assertFalse(self.controller.isReadOnly())
         self.assertIsInstance(self.controller.widget, KaraboTableView)
