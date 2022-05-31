@@ -15,11 +15,11 @@ from karabogui.controllers.api import (
     register_binding_controller)
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
-LOCALE = QLocale('en_US')
+LOCALE = QLocale("en_US")
 
 
-@register_binding_controller(ui_name='Integer SpinBox', can_edit=True,
-                             klassname='EditableSpinBox',
+@register_binding_controller(ui_name="Integer SpinBox", can_edit=True,
+                             klassname="EditableSpinBox",
                              binding_type=IntBinding)
 class EditableSpinBox(BaseBindingController):
     model = Instance(EditableSpinBoxModel, args=())
@@ -43,12 +43,13 @@ class EditableSpinBox(BaseBindingController):
         return widget
 
     def binding_update(self, proxy):
+        self.widget.update_unit_label(proxy)
         low, high = get_min_max(proxy.binding)
-        self._internal_widget.setRange(max(-0x80000000, low),
-                                       min(0x7fffffff, high))
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setRange(max(-0x80000000, low),
+                                           min(0x7fffffff, high))
 
     def value_update(self, proxy):
-        self.widget.update_label(proxy)
         value = get_editor_value(proxy)
         if value is not None:
             with SignalBlocker(self._internal_widget):
