@@ -12,11 +12,11 @@ from karabogui.controllers.api import (
     register_binding_controller)
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
-LOCALE = QLocale('en_US')
+LOCALE = QLocale("en_US")
 
 
-@register_binding_controller(ui_name='Double SpinBox', can_edit=True,
-                             klassname='FloatSpinBox',
+@register_binding_controller(ui_name="Double SpinBox", can_edit=True,
+                             klassname="FloatSpinBox",
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     model = Instance(FloatSpinBoxModel, args=())
@@ -40,11 +40,11 @@ class FloatSpinBox(BaseBindingController):
                                 parent=parent)
 
         # add actions
-        step_action = QAction('Change Step...', widget)
+        step_action = QAction("Change Step...", widget)
         step_action.triggered.connect(self._change_step)
         widget.addAction(step_action)
 
-        decimal_action = QAction('Change Decimals...', widget)
+        decimal_action = QAction("Change Decimals...", widget)
         decimal_action.triggered.connect(self._change_decimals)
         widget.addAction(decimal_action)
 
@@ -53,11 +53,12 @@ class FloatSpinBox(BaseBindingController):
         return widget
 
     def binding_update(self, proxy):
+        self.widget.update_unit_label(proxy)
         low, high = get_min_max(proxy.binding)
-        self._internal_widget.setRange(low, high)
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setRange(low, high)
 
     def value_update(self, proxy):
-        self.widget.update_label(proxy)
         value = get_editor_value(proxy)
         if value is not None:
             with SignalBlocker(self._internal_widget):
@@ -67,12 +68,12 @@ class FloatSpinBox(BaseBindingController):
         enable = is_proxy_allowed(proxy)
         self.widget.setEnabled(enable)
 
-    @on_trait_change('model:decimals')
+    @on_trait_change("model:decimals", post_init=True)
     def _set_decimals(self, value):
         if self._internal_widget is not None:
             self._internal_widget.setDecimals(value)
 
-    @on_trait_change('model:step')
+    @on_trait_change("model:step", post_init=True)
     def _set_step(self, value):
         if self._internal_widget is not None:
             self._internal_widget.setSingleStep(value)
@@ -80,7 +81,7 @@ class FloatSpinBox(BaseBindingController):
     def _change_step(self):
         step = self._internal_widget.singleStep()
         step, ok = QInputDialog.getDouble(
-            self.widget, 'Single Step', 'Enter size of a single step', step)
+            self.widget, "Single Step", "Enter size of a single step", step)
         if ok:
             self.model.step = step
 
@@ -95,7 +96,7 @@ class FloatSpinBox(BaseBindingController):
 
         # Then ask the user
         decimals, ok = QInputDialog.getInt(
-            self.widget, 'Decimals', 'Enter number of decimals',
+            self.widget, "Decimals", "Enter number of decimals",
             value=decimals, min=0, max=15)
         if ok:
             self.model.decimals = decimals
