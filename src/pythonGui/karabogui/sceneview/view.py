@@ -18,7 +18,7 @@ from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.generic_scenes import get_generic_scene
-from karabogui.request import send_property_changes
+from karabogui.request import retrieve_default_scene, send_property_changes
 
 from .bases import BaseSceneTool
 from .builder import (
@@ -206,7 +206,15 @@ class SceneView(QWidget):
             event.accept()
         else:
             item = self.controller_at_position(event.pos())
-            if item is not None and not item.is_editable:
+            if item is None or item.is_editable:
+                event.ignore()
+                return
+            # Either retrieve a device provided scene or create a generic one
+            proxy_selecting = isinstance(self.current_tool, ProxySelectionTool)
+            if proxy_selecting:
+                proxy = item.widget_controller.proxy
+                retrieve_default_scene(proxy.root_proxy.device_id)
+            else:
                 proxy = item.widget_controller.proxy
                 model = get_generic_scene(proxy, include_images=False)
                 if model is not None:
@@ -214,7 +222,7 @@ class SceneView(QWidget):
                     broadcast_event(KaraboEvent.ShowUnattachedSceneView,
                                     {'model': model, 'target_window': window})
 
-        super(SceneView, self).mouseDoubleClickEvent(event)
+            event.accept()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Alt and not self.design_mode:

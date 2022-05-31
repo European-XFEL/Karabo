@@ -9,7 +9,7 @@ from io import StringIO
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
-from traits.api import Instance, Property, Undefined, on_trait_change
+from traits.api import Instance, Property, on_trait_change
 
 import karabogui.icons as icons
 from karabo.common.api import (
@@ -27,14 +27,12 @@ from karabogui.dialogs.api import (
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.itemtypes import ProjectItemTypes
-from karabogui.logger import get_logger
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
 from karabogui.request import (
-    get_macro_from_server, get_scene_from_server, onConfigurationUpdate,
-    onSchemaUpdate)
+    get_macro_from_server, get_scene_from_server, retrieve_default_scene)
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor, open_documentation_link
@@ -212,68 +210,9 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def double_click(self, project_controller, parent=None):
         project_device = self.project_device
-        device_id = project_device.device_id
-        # Check first if we are online!
-        if project_device is None or not project_device.online:
+        if project_device is None:
             return
-
-        topology_node = self.project_device.device_node
-        capabilities = topology_node.capabilities if topology_node else 0
-
-        def _test_mask(mask, bit):
-            return (mask & bit) == bit
-
-        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
-        if not has_scene:
-            msg = f"The device <b>{device_id}</b> does not provide a scene."
-            get_logger().info(msg)
-            return
-
-        def _config_handler():
-            """Act on the arrival of the configuration
-            """
-            scenes = proxy["availableScenes"].value
-            if scenes is Undefined or not len(scenes):
-                msg = (f"The device <b>{device_id}</b> does not provide a "
-                       "scene.")
-                get_logger().info(msg)
-            else:
-                scene_name = scenes[0]
-                get_scene_from_server(device_id, scene_name)
-
-        def _schema_handler():
-            """Act on the arrival of the schema
-            """
-            scenes = proxy["availableScenes"].value
-            if scenes is Undefined:
-                onConfigurationUpdate(proxy, _config_handler)
-            elif not len(scenes):
-                msg = (f"The device <b>{device_id}</b> does not provide "
-                       "a scene.")
-                get_logger().info(msg)
-            else:
-                scene_name = scenes[0]
-                get_scene_from_server(device_id, scene_name)
-
-        proxy = project_device.proxy
-        if not len(proxy.binding.value):
-            # We completely miss our schema and wait for it.
-            onSchemaUpdate(proxy, _schema_handler)
-        elif proxy["availableScenes"].value is Undefined:
-            # The configuration did not yet arrive and we cannot get
-            # a scene name from the availableScenes. We wait for the
-            # configuration to arrive and install a handler.
-            onConfigurationUpdate(proxy, _config_handler)
-        else:
-            scenes = proxy["availableScenes"].value
-            if not len(scenes):
-                # The device might not have a scene name in property
-                msg = (f"The device <b>{device_id}</b> does not provide a "
-                       "scene.")
-                get_logger().info(msg)
-            else:
-                scene_name = scenes[0]
-                get_scene_from_server(device_id, scene_name)
+        retrieve_default_scene(project_device.device_id)
 
     def delete_press(self, project_controller, parent=None):
         """Reimplemented function on `BaseProjectController`"""
