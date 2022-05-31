@@ -7,6 +7,9 @@ from functools import partial
 from inspect import signature
 from io import StringIO
 
+from traits.api import Undefined
+
+from karabo.common.enums import Capabilities
 from karabo.common.project.macro import read_macro
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.common.scenemodel.io import read_scene
@@ -16,6 +19,7 @@ from karabogui import messagebox
 from karabogui.binding.api import DeviceProxy, extract_sparse_configurations
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import substitute_font
+from karabogui.logger import get_logger
 from karabogui.singletons.api import get_manager, get_network, get_topology
 from karabogui.util import get_reason_parts
 
@@ -231,3 +235,61 @@ def get_macro_from_server(device_id, macro_name, project):
 
     return call_device_slot(handler, device_id, slot_name='requestMacro',
                             name=macro_name)
+
+
+def retrieve_default_scene(device_id):
+    """Retrieve a default scene from device with `device_id`"""
+    attrs = get_topology().get_attributes(f"device.{device_id}")
+    if attrs is None:
+        msg = f"The device <b>{device_id}</b> is not online."
+        get_logger().info(msg)
+        return
+
+    capabilities = attrs.get("capabilities", 0)
+    bit = Capabilities.PROVIDES_SCENES
+
+    if (capabilities & bit) != bit:
+        msg = f"The device <b>{device_id}</b> does not provide a scene."
+        get_logger().info(msg)
+        return
+
+    def _config_handler():
+        """Act on the arrival of the configuration"""
+        scenes = proxy["availableScenes"].value
+        if scenes is Undefined or not len(scenes):
+            messagebox.show_warning(
+                "The device <b>{}</b> does not specify a scene "
+                "name!".format(device_id))
+        else:
+            scene_name = scenes[0]
+            get_scene_from_server(device_id, scene_name)
+
+    def _schema_handler():
+        """Act on the arrival of the schema"""
+        scenes = proxy["availableScenes"].value
+        if scenes is Undefined:
+            onConfigurationUpdate(proxy, _config_handler)
+        elif not len(scenes):
+            messagebox.show_warning(
+                "The device <b>{}</b> does not specify a scene "
+                "name!".format(device_id))
+        else:
+            scene_name = scenes[0]
+            get_scene_from_server(device_id, scene_name)
+
+    proxy = get_topology().get_device(device_id)
+    if not len(proxy.binding.value):
+        # We completely miss our schema and wait for it.
+        onSchemaUpdate(proxy, _schema_handler)
+    elif proxy["availableScenes"].value is Undefined:
+        onConfigurationUpdate(proxy, _config_handler)
+    else:
+        scenes = proxy["availableScenes"].value
+        if not len(scenes):
+            # The device might not have a scene name in property
+            messagebox.show_warning(
+                "The device <b>{}</b> does not specify a scene "
+                "name!".format(device_id))
+        else:
+            scene_name = scenes[0]
+            get_scene_from_server(device_id, scene_name)
