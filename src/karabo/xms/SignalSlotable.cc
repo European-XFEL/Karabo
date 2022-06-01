@@ -40,7 +40,11 @@ namespace karabo {
         const int msPingTimeoutInIsValidInstanceId = 1000;
         const char* beatsTopicSuffix = "_beats";
 
-        const int channelReconnectIntervalSec = 5;
+        const int channelReconnectIntervalSec = 6; // seconds  - significantly longer than getOutChannelInfoTimeoutMsec
+        const int getOutChannelInfoTimeoutMsec = 3000; // milliseconds - this plus time of few other async actions in
+                                                       // the input channel reconnection cycle should be smaller than
+                                                       // channelReconnectIntervalSec to avoid interference between
+                                                       // reconnection cycles
         // Static initializations
         boost::mutex SignalSlotable::m_uuidGeneratorMutex;
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
@@ -2411,14 +2415,17 @@ namespace karabo {
             if (e) return; // cancelled
 
             // Loop channels
+            std::vector<std::string> channelsToCheck;
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             using karabo::net::AsyncStatus;
             auto status = boost::make_shared<std::vector<AsyncStatus>>(m_inputChannels.size(), AsyncStatus::PENDING);
             auto aMutex = boost::make_shared<boost::mutex>(); // protects access to above vector of status
             size_t counter = 0;
+            size_t fullyConnected = 0;
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end();
                  ++it, ++counter) {
                 const std::string& channelName = it->first;
+                channelsToCheck.push_back(channelName);
                 const InputChannel::Pointer& channel = it->second;
 
                 // Treat only connections that are disconnected
@@ -2445,17 +2452,22 @@ namespace karabo {
                         outputsToIgnore.push_back(outputChannel);
                     }
                 }
+                if (outputsToIgnore.size() == connectStatus.size()) {
+                    ++fullyConnected;
+                    // Could skip asyncConnectInputChannel, but then take care of counter and size of 'status'
+                }
                 asyncConnectInputChannel(channel,
                                          bind_weak(&SignalSlotable::handleInputConnected, this, _1, channelName, aMutex,
                                                    status, counter, outputsToIgnore.size()),
                                          outputsToIgnore);
             }
-            if (m_inputChannels.empty()) {
-                // Also in this case repeat connection tries - an InputChannel might get injected
-                m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(channelReconnectIntervalSec));
-                m_channelConnectTimer.async_wait(
-                      bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
-            }
+            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " Channel reconnection cycle cares about '"
+                                       << toString(channelsToCheck) << "' (" << fullyConnected
+                                       << " of them do not need reconnection)";
+
+            m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(channelReconnectIntervalSec));
+            m_channelConnectTimer.async_wait(
+                  bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
         }
 
         void SignalSlotable::handleInputConnected(
@@ -2485,14 +2497,17 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(*mut);
             (*status)[i] = (success ? AsyncStatus::DONE : AsyncStatus::FAILED);
+            size_t nSucceeded = 0;
             for (size_t j = 0; j < status->size(); ++j) {
                 if ((*status)[j] == AsyncStatus::PENDING) return;
+                if ((*status)[j] == AsyncStatus::DONE) ++nSucceeded;
             }
 
-            // All are done - charge timer again
-            m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(channelReconnectIntervalSec));
-            m_channelConnectTimer.async_wait(
-                  bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
+            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": Finished input channel reconnection attempts - "
+                                       << nSucceeded << " out of " << status->size() << " succeeded";
+            // If this handler would be reliably called, could charge here the m_channelConnectTimer
+            // (instead of at the end of connectInputChannels
+            //  [where it would then be needed for the m_inputChannels.empty() case only]).
         }
 
         void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
@@ -2505,8 +2520,9 @@ namespace karabo {
                 for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin();
                      ii != outputChannels.end(); ++ii) {
                     const string& outputChannelString = ii->first;
-                    if (instanceId != outputChannelString.substr(0, instanceId.size()))
+                    if (instanceId != outputChannelString.substr(0, instanceId.size())) {
                         continue; // instanceId ~ instanceId@output
+                    }
                     KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels for '" << m_instanceId
                                                << "' to output channel '" << outputChannelString << "'";
                     const std::string myInstanceId(getInstanceId());
@@ -2791,7 +2807,7 @@ namespace karabo {
                 }
             };
             this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int>(getpid()))
-                  .timeout(5000) // 5 s - not too long, a used timeout adds to the interval of reconnection retries
+                  .timeout(getOutChannelInfoTimeoutMsec)
                   .receiveAsync<bool, karabo::util::Hash>(successHandler, failureHandler);
         }
 
