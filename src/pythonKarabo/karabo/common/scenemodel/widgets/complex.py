@@ -5,7 +5,8 @@ from traits.api import Bool, Enum, Float, Int, String
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
-    NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
+    NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_SIZES, SCENE_FONT_WEIGHT,
+    SCENE_FONT_WEIGHTS, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
     read_font_format_data, write_base_widget_data, write_font_format_data)
@@ -92,6 +93,14 @@ class FloatSpinBoxModel(BaseEditWidget):
     # The step size
     step = Float
     decimals = Int(3)
+    font_size = Enum(*SCENE_FONT_SIZES)
+    font_weight = Enum(*SCENE_FONT_WEIGHTS)
+
+    def __init__(self, font_size=SCENE_FONT_SIZE,
+                 font_weight=SCENE_FONT_WEIGHT, **traits):
+        # We set the default values as Enum doesn't set this straightforwardly
+        super().__init__(font_size=font_size, font_weight=font_weight,
+                         **traits)
 
 
 class MonitorModel(BaseWidgetObjectData):
@@ -309,6 +318,7 @@ def _float_spin_box_reader(element):
     decimals = element.get(NS_KARABO + "decimals", "")
     if decimals:
         traits["decimals"] = int(decimals)
+    traits.update(read_font_format_data(element))
     return FloatSpinBoxModel(**traits)
 
 
@@ -318,6 +328,8 @@ def _float_spin_box_writer(model, parent):
     write_base_widget_data(model, element, "FloatSpinBox")
     element.set(NS_KARABO + "step", str(model.step))
     element.set(NS_KARABO + "decimals", str(model.decimals))
+    write_font_format_data(model, element)
+
     return element
 
 
