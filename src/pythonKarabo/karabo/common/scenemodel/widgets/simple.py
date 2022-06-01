@@ -92,6 +92,14 @@ class EditableListElementModel(BaseEditWidget):
 
 class EditableSpinBoxModel(BaseEditWidget):
     """A model for EditableSpinBox"""
+    font_size = Enum(*SCENE_FONT_SIZES)
+    font_weight = Enum(*SCENE_FONT_WEIGHTS)
+
+    def __init__(self, font_size=SCENE_FONT_SIZE,
+                 font_weight=SCENE_FONT_WEIGHT, **traits):
+        # We set the default values as Enum doesn't set this straightforwardly
+        super().__init__(font_size=font_size, font_weight=font_weight,
+                         **traits)
 
 
 class EditableRegexModel(BaseEditWidget):
@@ -445,6 +453,22 @@ class FileOutModel(BaseDisplayEditableWidget):
     klass = Enum("DisplayFileOut", "EditableFileOut")
 
 
+@register_scene_reader("EditableSpinbox")
+def _editable_spinbox_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
+    return EditableSpinBoxModel(**traits)
+
+
+@register_scene_writer(EditableSpinBoxModel)
+def _editable_spinbox_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "EditableSpinbox")
+    write_font_format_data(model, element)
+
+    return element
+
+
 @register_scene_reader("EditableDirectory", version=1)
 @register_scene_reader("EditableFileOut", version=1)
 @register_scene_reader("EditableFileIn", version=1)
@@ -493,7 +517,6 @@ def _build_empty_widget_readers_and_writers():
         "EditableRegexListModel",
         "EditableListElementModel",
         "EditableRegexModel",
-        "EditableSpinBoxModel",
         "GlobalAlarmModel",
         "HexadecimalModel",
         "IntLineEditModel",

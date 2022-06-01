@@ -136,6 +136,18 @@ def test_label_model():
     assert_raises(TraitError, api.LabelModel, alignh=5)
 
 
+def test_spinbox_model():
+    traits = _geometry_traits()
+    traits["font_size"] = 12
+    traits["font_weight"] = "bold"
+
+    model = api.EditableSpinBoxModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.font_size == 12
+    assert read_model.font_weight == "bold"
+
+
 def test_scene_link_model():
     traits = _geometry_traits()
     traits["target"] = "other.svg"
