@@ -67,7 +67,7 @@ def test_display_iconset_widget():
     model = api.DisplayIconsetModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
-    assert read_model.data == b"karabo"
+    assert read_model.image == 'data:image/png;base64,a2FyYWJv'
 
 
 def test_icon_widgets():
@@ -83,7 +83,7 @@ def test_icon_widgets():
 def test_display_iconset_widget_version_1():
     read_model = single_model_from_data(VERSION_1_DISPLAY_ICONSET_SVG)
     assert_base_traits(read_model)
-    assert read_model.image == "blah.svg"
+    assert read_model.image == 'data:image/svg;base64,'
 
 
 def test_icon_widget_version_1():
