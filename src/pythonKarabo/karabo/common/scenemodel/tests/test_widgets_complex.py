@@ -151,12 +151,16 @@ def test_evaluator_widget():
 def test_float_spinbox_widget():
     traits = base_widget_traits()
     traits["step"] = 1.5
+    traits["font_size"] = 12
+    traits["font_weight"] = "bold"
     model = api.FloatSpinBoxModel(**traits)
     assert model.parent_component == "EditableApplyLaterComponent"
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.step == 1.5
     assert read_model.parent_component == model.parent_component
+    assert read_model.font_size == 12
+    assert read_model.font_weight == "bold"
 
 
 def test_monitor_widget():
