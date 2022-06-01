@@ -30,8 +30,8 @@ class BaseLineEdit(BaseBindingController):
     _internal_widget = Instance(QLineEdit)
     _normal_palette = Instance(QPalette)
     _error_palette = Instance(QPalette)
-    _display_value = Str('')
-    _internal_value = Str('')
+    _display_value = Str("")
+    _internal_value = Str("")
     _last_cursor_pos = Int(0)
 
     def create_widget(self, parent):
@@ -61,6 +61,7 @@ class BaseLineEdit(BaseBindingController):
         low, high = get_min_max(proxy.binding)
         self._validator.setBottom(low)
         self._validator.setTop(high)
+        self.widget.update_unit_label(proxy)
 
     def _on_text_changed(self, text):
         acceptable_input = self._internal_widget.hasAcceptableInput()
@@ -101,8 +102,8 @@ class BaseLineEdit(BaseBindingController):
         self._internal_widget.setPalette(self._normal_palette)
 
 
-@register_binding_controller(ui_name='Float Field', can_edit=True,
-                             klassname='DoubleLineEdit',
+@register_binding_controller(ui_name="Float Field", can_edit=True,
+                             klassname="DoubleLineEdit",
                              binding_type=FloatBinding, priority=10)
 class DoubleLineEdit(BaseLineEdit):
     # The scene model class used by this controller
@@ -112,21 +113,20 @@ class DoubleLineEdit(BaseLineEdit):
         self._validator = NumberValidator()
         self._validator.decimals = self.model.decimals
         widget = super(DoubleLineEdit, self).create_widget(parent)
-        decimal_action = QAction('Change number of decimals', widget)
+        decimal_action = QAction("Change number of decimals", widget)
         decimal_action.triggered.connect(self._pick_decimals)
         widget.addAction(decimal_action)
         return widget
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy, '')
-        self.widget.update_label(proxy)
+        value = get_editor_value(proxy, "")
         self._internal_value = str(value)
-        if value == '':
-            displayed = ''
+        if value == "":
+            displayed = ""
         else:
             # Note: Avoid numpy to float casting here using the str value
-            format_str = ('{}' if self.model.decimals == -1
-                          else '{{:.{}f}}'.format(self.model.decimals))
+            format_str = ("{}" if self.model.decimals == -1
+                          else "{{:.{}f}}".format(self.model.decimals))
             try:
                 displayed = format_str.format(float(self._internal_value))
             except ValueError:
@@ -138,14 +138,14 @@ class DoubleLineEdit(BaseLineEdit):
             self._internal_widget.setText(self._display_value)
         self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
-    @on_trait_change('model.decimals', post_init=True)
+    @on_trait_change("model.decimals", post_init=True)
     def _decimals_update(self):
         self.value_update(self.proxy)
         self._validator.decimals = self.model.decimals
 
     def _pick_decimals(self, checked):
         num_decimals, ok = QInputDialog.getInt(
-            self.widget, 'Decimal', 'Floating point precision:',
+            self.widget, "Decimal", "Floating point precision:",
             self.model.decimals, -1, MAX_FLOATING_PRECISION)
         if ok:
             self.model.decimals = num_decimals
@@ -155,8 +155,8 @@ class DoubleLineEdit(BaseLineEdit):
         return float(ret) if ret is not None else None
 
 
-@register_binding_controller(ui_name='Integer Field', can_edit=True,
-                             klassname='IntLineEdit', binding_type=IntBinding,
+@register_binding_controller(ui_name="Integer Field", can_edit=True,
+                             klassname="IntLineEdit", binding_type=IntBinding,
                              priority=10)
 class IntLineEdit(BaseLineEdit):
     # The scene model class used by this controller
@@ -167,7 +167,7 @@ class IntLineEdit(BaseLineEdit):
         return super(IntLineEdit, self).create_widget(parent)
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy, '')
+        value = get_editor_value(proxy, "")
         self.widget.update_label(proxy)
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
@@ -180,8 +180,8 @@ class IntLineEdit(BaseLineEdit):
         return int(ret) if ret is not None else None
 
 
-@register_binding_controller(ui_name='Hexadecimal', can_edit=True,
-                             klassname='Hexadecimal', binding_type=IntBinding)
+@register_binding_controller(ui_name="Hexadecimal", can_edit=True,
+                             klassname="Hexadecimal", binding_type=IntBinding)
 class Hexadecimal(BaseLineEdit):
     model = Instance(HexadecimalModel, args=())
 
@@ -190,10 +190,9 @@ class Hexadecimal(BaseLineEdit):
         return super(Hexadecimal, self).create_widget(parent)
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy, '')
-        if value == '':
+        value = get_editor_value(proxy, "")
+        if value == "":
             return
-        self.widget.update_label(proxy)
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
             self._display_value = "{:x}".format(value)
@@ -209,25 +208,25 @@ def _is_regex_compatible(binding):
     return binding.attributes.get(KARABO_SCHEMA_REGEX, None) is not None
 
 
-@register_binding_controller(ui_name='Regex Field', can_edit=True,
+@register_binding_controller(ui_name="Regex Field", can_edit=True,
                              is_compatible=_is_regex_compatible,
-                             klassname='RegexEdit', binding_type=StringBinding,
+                             klassname="RegexEdit", binding_type=StringBinding,
                              priority=90)
 class EditRegex(BaseLineEdit):
     model = Instance(EditableRegexModel, args=())
 
     def create_widget(self, parent):
         self._validator = RegexValidator()
-        return super(EditRegex, self).create_widget(parent)
+        return super().create_widget(parent)
 
     def binding_update(self, proxy):
         binding = proxy.binding
-        regex = binding.attributes.get(KARABO_SCHEMA_REGEX, '')
+        regex = binding.attributes.get(KARABO_SCHEMA_REGEX, "")
         self._validator.setRegex(regex)
+        self.widget.update_unit_label(proxy)
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy, '')
-        self.widget.update_label(proxy)
+        value = get_editor_value(proxy, "")
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
             self._display_value = "{}".format(value)
