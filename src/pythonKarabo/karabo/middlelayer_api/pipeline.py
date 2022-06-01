@@ -69,7 +69,7 @@ class RingQueue(CancelQueue):
 
         The maxsize is forward from the initializer!
         """
-        maxlen = maxsize if maxsize >= 0 else None
+        maxlen = int(maxsize) if maxsize >= 0 else None
         self._queue = deque(maxlen=maxlen)
 
     def _put(self, item):
@@ -335,7 +335,7 @@ class NetworkInput(Configurable):
                     Schema(name=name, hash=schema.hash[name]["schema"]))
 
             reader, writer = await open_connection(
-                info["hostname"], int(info["port"]), limit=2**22)
+                info["hostname"], int(info["port"]), limit=2 ** 22)
 
             sock = writer.get_extra_info("socket")
             assert sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY)
@@ -823,7 +823,8 @@ class NetworkOutput(Configurable):
                                              DEFAULT_MAX_QUEUE_LENGTH))
             # Protect against unnecessary high values from outside!
             # The MDL does not have a memory queue ...
-            maxQueueLength = min(maxQueueLength, self.maxQueueLength)
+            maxQueueLength = min(maxQueueLength,
+                                 int(self.maxQueueLength.value))
             if slowness == "throw":
                 print(f"Throw configuration detected for {channel_name}!")
                 slowness = "drop"
