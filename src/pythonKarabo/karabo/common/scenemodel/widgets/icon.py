@@ -11,6 +11,8 @@ from karabo.common.scenemodel.io_utils import (
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
+from .tools import ImageRendererModel, convert_to_svg_image
+
 
 class DisplayIconsetModel(BaseWidgetObjectData):
     """A model for DisplayIconset"""
@@ -55,10 +57,15 @@ class TextIconsModel(BaseIconsModel):
 
 
 @register_scene_reader("DisplayIconset", version=2)
-def _display_iconset_reader(element):
+def _deprecated_icon_set_reader(element):
+    """The icon set is deprecated and further shown as `ImageRenderer`"""
     traits = read_base_widget_data(element)
-    traits["data"] = base64.b64decode(element.get("data", b""))
-    return DisplayIconsetModel(**traits)
+    data = base64.b64decode(element.get("data", b""))
+    try:
+        traits["image"] = convert_to_svg_image("png", data)
+    except Exception:
+        traits["image"] = convert_to_svg_image("svg", b"")
+    return ImageRendererModel(**traits)
 
 
 @register_scene_writer(DisplayIconsetModel)
@@ -147,8 +154,11 @@ _build_icon_widget_readers_and_writers()
 
 
 @register_scene_reader("DisplayIconset", version=1)
-def _display_iconset_version_1_reader(element):
-    """DisplayIconset reader for legacy scene files"""
+def _deprecated_icon_set_version_1_reader(element):
+    """DisplayIconset reader for legacy scene files
+
+    The icon set is deprecated and further shown as `ImageRenderer`
+    """
     traits = read_base_widget_data(element)
     image = element.get(NS_KARABO + "url", "")
     if not image:
@@ -156,8 +166,11 @@ def _display_iconset_version_1_reader(element):
         filename = element.get(NS_KARABO + "filename")
         if filename is not None:
             image = filename
-    traits["image"] = image
-    return DisplayIconsetModel(**traits)
+    try:
+        traits["image"] = convert_to_svg_image("png", image)
+    except Exception:
+        traits["image"] = convert_to_svg_image("svg", b"")
+    return ImageRendererModel(**traits)
 
 
 def _build_version_1_icon_widget_readers():
