@@ -284,7 +284,8 @@ class TestLoadSceneModel(BaseSceneViewTest):
 
     def test_icon_widgets(self):
         self._assert_geometry(sm.DigitIconsModel)
-        self._assert_geometry(sm.DisplayIconsetModel, data=b"<svg></svg>")
+        # Note: IconSet is deprecated and now becomes a ImageRenderer
+        # self._assert_geometry(sm.DisplayIconsetModel, data=b"<svg></svg>")
         self._assert_geometry(sm.SelectionIconsModel)
         self._assert_geometry(sm.TextIconsModel)
 
