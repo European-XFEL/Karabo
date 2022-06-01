@@ -9,8 +9,7 @@ from zlib import adler32
 from karabo.middlelayer import (
     Hash, Int32, NetworkInput, NetworkOutput, Proxy, background, encodeBinary)
 from karabo.middlelayer_api.pipeline import Channel, RingQueue
-
-from .eventloop import DeviceTest, async_tst
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 
 class ChecksumTransport(WriteTransport):
@@ -376,6 +375,21 @@ class TestChannel(DeviceTest):
         self.feedRequest()
         await self.sleep()
         self.assertChecksum(881158557)
+        self.reader.feed_eof()
+        await task
+        self.assertTrue(self.writer.transport.closed)
+
+    @async_tst
+    async def test_copy_queue_drop_large_max_queue(self):
+        """Test the queue drop with a high max queue length"""
+        output = NetworkOutput({"noInputShared": "queueDrop"})
+        await output._run()
+        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
+                           "onSlowness", "queueDrop", "instanceId", "Test",
+                           "maxQueueLength", 200))
+        task = await self.write_something(output, 200)
+        await self.sleep()
+        self.assertChecksum(3020956469)
         self.reader.feed_eof()
         await task
         self.assertTrue(self.writer.transport.closed)

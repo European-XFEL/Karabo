@@ -45,7 +45,7 @@ class RingQueue(CancelQueue):
 
         The maxsize is forward from the initializer!
         """
-        maxlen = maxsize if maxsize >= 0 else None
+        maxlen = int(maxsize) if maxsize >= 0 else None
         self._queue = deque(maxlen=maxlen)
 
     def _put(self, item):
@@ -766,7 +766,8 @@ class NetworkOutput(Configurable):
                                              DEFAULT_MAX_QUEUE_LENGTH))
             # Protect against unnecessary high values from outside!
             # The MDL does not have a memory queue ...
-            maxQueueLength = min(maxQueueLength, self.maxQueueLength)
+            maxQueueLength = min(maxQueueLength,
+                                 int(self.maxQueueLength.value))
             if slowness == "throw":
                 print(f"Throw configuration detected for {channel_name}!")
                 slowness = "drop"
