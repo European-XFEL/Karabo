@@ -1,20 +1,17 @@
 from numpy import log10
-from qtpy.QtCore import QLocale, Qt
 from qtpy.QtWidgets import QAction, QDialog, QDoubleSpinBox, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import FloatBinding, get_editor_value, get_min_max
-from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, is_proxy_allowed,
     register_binding_controller)
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
-
-LOCALE = QLocale("en_US")
+from karabogui.widgets.api import DoubleSpinBox
 
 
 @register_binding_controller(ui_name="Double SpinBox", can_edit=True,
@@ -27,13 +24,9 @@ class FloatSpinBox(BaseBindingController):
     _blocker = Instance(MouseWheelEventBlocker)
 
     def create_widget(self, parent):
-        self._internal_widget = QDoubleSpinBox(parent)
-        self._internal_widget.setLocale(LOCALE)
-        self._internal_widget.setMinimumSize(WIDGET_MIN_WIDTH,
-                                             WIDGET_MIN_HEIGHT)
+        self._internal_widget = DoubleSpinBox(parent)
         self._internal_widget.setDecimals(self.model.decimals)
         self._internal_widget.setSingleStep(self.model.step)
-        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
         self._internal_widget.valueChanged[float].connect(self._on_user_edit)
         self._blocker = MouseWheelEventBlocker(self._internal_widget)
         self._internal_widget.installEventFilter(self._blocker)
