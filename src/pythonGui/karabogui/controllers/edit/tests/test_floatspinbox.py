@@ -54,7 +54,7 @@ class TestFloatSpinBox(GuiTestCase):
 
     def test_actions(self):
         actions = self.controller.widget.actions()
-        change_step, change_decimals = actions
+        change_step, change_decimals, formatting = actions
 
         assert 'step' in change_step.text().lower()
         assert 'decimals' in change_decimals.text().lower()
