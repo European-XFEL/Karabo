@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QPushButton
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
-from karabogui import icons, messagebox
+from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.controllers.util import load_extensions
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -326,9 +326,9 @@ def _find_scene_model(name, uuid):
 
     if visitor.found is None:
         msg = ("The UUID of the linked scene <b>{}</b> was not found in the "
-               "project! Trying to retrieve the scene in <b>control mode</b> "
-               "from the project <b>database</b> instead.".format(name))
-        messagebox.show_error(msg)
+               "project! Trying to retrieve the scene in from the project "
+               "<b>database</b> instead.".format(name))
+        get_logger().warning(msg)
         return None
 
     return visitor.found
