@@ -7,7 +7,7 @@ from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
-    QTreeView, QVBoxLayout, QWidget)
+    QToolButton, QTreeView, QVBoxLayout, QWidget)
 
 import karabogui.access as krb_access
 from karabo.native import AccessMode, Assignment, Hash, has_changes
@@ -28,6 +28,7 @@ from karabogui.util import (
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
+from .tool_widget import ConfiguratorSearch
 from .utils import format_property_details, format_vector_hash_details
 
 BLANK_PAGE = 0
@@ -114,7 +115,7 @@ class ConfigurationPanel(BasePanelWidget):
         """
         widget = QWidget(self)
         mainLayout = QVBoxLayout(widget)
-        mainLayout.setContentsMargins(0, 0, 0, 0)
+        mainLayout.setContentsMargins(0, 0, 0, 2)
 
         # Stacked widget for configuration parameters
         self._stacked_tree_widgets = QStackedWidget(widget)
@@ -130,8 +131,13 @@ class ConfigurationPanel(BasePanelWidget):
 
         # CONFIGURATION_PAGE
         editor = ConfigurationTreeView(widget)
-        editor.model().signalHasModifications.connect(self._on_button_changes)
+        editor.sourceModel().signalHasModifications.connect(
+            self._on_button_changes)
         self._stacked_tree_widgets.addWidget(editor)
+
+        self.searchBar = ConfiguratorSearch()
+        self.searchBar.setView(editor)
+        mainLayout.addWidget(self.searchBar)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0, 5, 5, 5)
@@ -232,8 +238,18 @@ class ConfigurationPanel(BasePanelWidget):
         tb_save_config.setFlat(True)
         tb_save_config.clicked.connect(self._on_save_to_file)
 
+        text = "Search Device Properties"
+        tb_search_device = QToolButton()
+        tb_search_device.setIcon(icons.zoomImage)
+        tb_search_device.setIconSize(icon_size)
+        tb_search_device.setStatusTip(text)
+        tb_search_device.setToolTip(text)
+        tb_search_device.setVisible(True)
+        tb_search_device.clicked.connect(self.searchBar.toggleActivate)
+
         self.ui_open_config = toolbar.addWidget(tb_open_config)
         self.ui_save_config = toolbar.addWidget(tb_save_config)
+        self.ui_search_device = toolbar.addWidget(tb_search_device)
 
         return [toolbar]
 
@@ -365,7 +381,7 @@ class ConfigurationPanel(BasePanelWidget):
         state = proxy.state_binding.value
 
         editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
-        model = editor.model()
+        model = editor.sourceModel()
         for path, value, _ in Hash.flat_iterall(configuration):
             prop_proxy = model.property_proxy(path)
             prop_binding = prop_proxy.binding
@@ -632,7 +648,7 @@ class ConfigurationPanel(BasePanelWidget):
 
         index = CONFIGURATION_PAGE
         tree_widget = self._stacked_tree_widgets.widget(index)
-        model = tree_widget.model()
+        model = tree_widget.sourceModel()
         if model is not None:
             model.notify_of_modifications()
 

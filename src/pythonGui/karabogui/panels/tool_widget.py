@@ -8,7 +8,7 @@ import weakref
 from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtGui import QValidator
-from qtpy.QtWidgets import QWidget
+from qtpy.QtWidgets import QHeaderView, QWidget
 
 import karabogui.icons as icons
 from karabo.common.enums import Interfaces
@@ -82,9 +82,10 @@ class BaseSearchBar(QWidget):
             proxy_model.setFilterFixedString(pattern)
             tree_view.expandAll()
             # Expand whole tree and scroll try to keep the selection
-            index = proxy_model.currentIndex()
+            index = self.currentIndex()
             if index.isValid():
                 tree_view.scrollTo(index)
+            self.post_search()
 
     @Slot()
     def _clear_clicked(self):
@@ -100,9 +101,10 @@ class BaseSearchBar(QWidget):
             proxy_model.setFilterFixedString(pattern)
             # Collapse whole tree and scroll / expand the selection
             tree_view.collapseAll()
-            index = proxy_model.currentIndex()
+            index = self.currentIndex()
             if index.isValid():
                 tree_view.scrollTo(index)
+            self.post_clear()
 
     # -----------------------------------------
     # Subclass functions
@@ -112,6 +114,17 @@ class BaseSearchBar(QWidget):
 
     def on_clear(self):
         """Subclass this method to act on clearing of a pattern"""
+
+    def post_search(self):
+        """Subclass this method to act after searching of a pattern"""
+
+    def post_clear(self):
+        """Subclass this method to act after clearing of a pattern"""
+
+    def currentIndex(self):
+        """Subclass this method to retrieve the current index"""
+        view = self.tree_view()
+        return view.model().currentIndex()
 
 
 class SearchBar(BaseSearchBar):
@@ -155,3 +168,38 @@ class InterfaceBar(BaseSearchBar):
         self.ui_interface.setCurrentIndex(0)
         model = self.tree_view().model()
         model.setInterface(self.ui_interface.currentText())
+
+
+class ConfiguratorSearch(BaseSearchBar):
+    ui_file = "configurator_filter.ui"
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.active = False
+        self.setVisible(False)
+
+    def currentIndex(self):
+        return self.tree_view().currentIndex()
+
+    @Slot()
+    def toggleActivate(self):
+        """Toggle the activation and swap of the qt models"""
+        self.tree_view().swap_models()
+        active = not self.active
+        if active:
+            self.reset(True)
+        self.setVisible(active)
+        # Finally, resize when phasing out!
+        if not active:
+            self.resize_contents()
+        self.active = active
+
+    def resize_contents(self):
+        header = self.tree_view().header()
+        header.resizeSections(QHeaderView.ResizeToContents)
+
+    def post_search(self):
+        self.resize_contents()
+
+    def post_clear(self):
+        self.resize_contents()

@@ -495,8 +495,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 # background here!
                 proxy.revert_edit()
 
-            # XXX: Layout changed to be investigated
-            # self.layoutChanged.emit()
             self.notify_of_modifications()
 
         # A value was successfully set!
@@ -605,8 +603,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                                  NodeBinding)
         configure_access = (AccessMode.INITONLY, AccessMode.RECONFIGURABLE)
         is_uneditable_node = isinstance(binding, uneditable_node_types)
-        is_editable_type = (not is_uneditable_node or (is_project and
-                            isinstance(binding, ChoiceOfNodesBinding)))
+        is_editable_type = (not is_uneditable_node or (
+                is_project and isinstance(binding, ChoiceOfNodesBinding)))
         is_project_editable = (is_project and binding.access_mode in
                                configure_access and binding.assignment
                                is not Assignment.INTERNAL)
