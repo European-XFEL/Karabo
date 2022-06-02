@@ -28,6 +28,7 @@ from karabogui.generic_scenes import get_generic_scene
 from karabogui.widgets.popup import PopupWidget
 
 from .edit_delegate import EditDelegate
+from .filter_model import ConfiguratorFilterModel
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
 from .utils import get_proxy_value
@@ -35,8 +36,7 @@ from .value_delegate import ValueDelegate
 
 
 class ConfigurationTreeView(QTreeView):
-    """A tree view for `Configuration` instances
-    """
+    """A tree view for `Configuration` instances"""
     itemSelectionChanged = Signal()
 
     def __init__(self, parent=None):
@@ -44,6 +44,7 @@ class ConfigurationTreeView(QTreeView):
         self.setDragEnabled(True)
         self.setTabKeyNavigation(True)
         self.header().setSectionsMovable(False)
+        self.header().setMinimumSectionSize(100)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         triggers = (QAbstractItemView.CurrentChanged |
@@ -53,8 +54,12 @@ class ConfigurationTreeView(QTreeView):
         self.edit_delegate = EditDelegate(parent=self)
 
         model = ConfigurationTreeModel(parent=self)
+        self._source_model = model
         self.setModel(model)
         model.dataChanged.connect(self._update_popup_contents)
+
+        # On demand we can have a filter model
+        self._filter_model = None
 
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
@@ -81,8 +86,31 @@ class ConfigurationTreeView(QTreeView):
     # ------------------------------------
     # Public methods
 
+    def swap_models(self):
+        """Swap the models of the tree view between filter and source"""
+        if self._filter_model is None:
+            model = ConfiguratorFilterModel(self.sourceModel())
+            self.setModel(model)
+            self._filter_model = model
+        else:
+            current_index = self.currentIndex()
+            index = self.model().mapToSource(current_index)
+            self.setModel(self.sourceModel())
+            self._filter_model.deleteLater()
+            self._filter_model = None
+            if index.isValid():
+                self.scrollTo(index)
+
+    def sourceModel(self):
+        """Public method to retrieve the source model"""
+        return self._source_model
+
+    def filterModel(self):
+        """Public method to retrieve the filter model"""
+        return self._filter_model
+
     def assign_proxy(self, proxy):
-        model = self.model()
+        model = self.sourceModel()
         model.root = proxy
         if proxy is None:
             return
@@ -97,10 +125,11 @@ class ConfigurationTreeView(QTreeView):
         model.notify_of_modifications()
 
     def apply_all(self):
-        self.model().apply_changes()
+        self.sourceModel().apply_changes()
 
     def decline_all(self):
-        model = self.model()
+        model = self.sourceModel()
+        model.layoutAboutToBeChanged.emit()
         model.decline_changes()
         model.layoutChanged.emit()
 
@@ -255,7 +284,7 @@ class ConfigurationTreeView(QTreeView):
                 proxy.edit_value = default_value
             else:
                 proxy.value = default_value
-            self.model().layoutChanged.emit()
+            self.sourceModel().layoutChanged.emit()
 
     @Slot(QModelIndex, QModelIndex)
     def _update_popup_contents(self, topLeft, bottomRight):
@@ -281,16 +310,16 @@ class ConfigurationTreeView(QTreeView):
         so we avoid signals altogether and call it directly...
         """
         self.edit_delegate.close_editor(editor, hint)
-        super(ConfigurationTreeView, self).closeEditor(editor, hint)
+        super().closeEditor(editor, hint)
 
     def currentChanged(self, current, previous):
         """Pass selection changes along to the value delegate
         """
         self.edit_delegate.current_changed(current)
-        super(ConfigurationTreeView, self).currentChanged(current, previous)
+        super().currentChanged(current, previous)
 
     def _event_access_level(self, data):
-        model = self.model()
+        model = self.sourceModel()
         proxy = model.root
         self.assign_proxy(None)
         self.assign_proxy(proxy)
@@ -300,7 +329,7 @@ class ConfigurationTreeView(QTreeView):
             index = self.indexAt(event.pos())
             if index.isValid() and index.column() == 0:
                 self._show_popup_widget(index, event.pos())
-        super(ConfigurationTreeView, self).mousePressEvent(event)
+        super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -314,7 +343,7 @@ class ConfigurationTreeView(QTreeView):
                                     {'model': model, 'target_window': window})
                 event.accept()
 
-        super(ConfigurationTreeView, self).mouseDoubleClickEvent(event)
+        super().mouseDoubleClickEvent(event)
 
     def keyPressEvent(self, event):
         """Reimplemented function of QTreeView.
@@ -341,4 +370,4 @@ class ConfigurationTreeView(QTreeView):
                         selected_index, QAbstractItemDelegate.RevertModelCache)
                     return
 
-        super(ConfigurationTreeView, self).keyPressEvent(event)
+        super().keyPressEvent(event)
