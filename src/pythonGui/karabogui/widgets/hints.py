@@ -4,10 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import QLocale, QSize, Qt
 from qtpy.QtGui import QFontMetrics
 from qtpy.QtSvg import QSvgWidget
-from qtpy.QtWidgets import QFrame, QLabel, QLineEdit
+from qtpy.QtWidgets import QDoubleSpinBox, QFrame, QLabel, QLineEdit, QSpinBox
 
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.fonts import substitute_font
@@ -19,6 +19,7 @@ SIZE_HINT_SVG = 20
 MIN_STATE_SIZE = 10
 SIZE_HINT_STATE_WIDTH = 30
 SIZE_HINT_STATE_HEIGHT = 20
+LOCALE = QLocale("en_US")
 
 
 class KaraboSceneWidget:
@@ -83,6 +84,38 @@ class LineEdit(QLineEdit):
         CONTENT_MARGIN = 10
         width = fm.width(self.text()) + CONTENT_MARGIN
 
+        return QSize(width, 20)
+
+
+class SpinBox(QSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumWidth(WIDGET_MIN_WIDTH)
+        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
+        self.setLocale(LOCALE)
+        self.setFocusPolicy(Qt.StrongFocus)
+
+    def sizeHint(self):
+        fm = QFontMetrics(self.font())
+        CONTENT_MARGIN = 10
+        width = fm.width(self.cleanText()) + CONTENT_MARGIN
+        return QSize(width, 20)
+
+
+class DoubleSpinBox(QDoubleSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMinimumWidth(WIDGET_MIN_WIDTH)
+        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
+        self.setLocale(LOCALE)
+        self.setFocusPolicy(Qt.StrongFocus)
+
+    def sizeHint(self):
+        fm = QFontMetrics(self.font())
+        CONTENT_MARGIN = 10
+        width = fm.width(self.cleanText()) + CONTENT_MARGIN
         return QSize(width, 20)
 
 

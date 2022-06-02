@@ -3,26 +3,28 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtCore import QLocale, Qt
 from qtpy.QtWidgets import QAction, QDialog, QSpinBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
-from karabogui.binding.api import IntBinding, get_editor_value, get_min_max
-from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.binding.api import (
+    Int8Binding, Int16Binding, Int32Binding, Uint8Binding, Uint16Binding,
+    Uint32Binding, get_editor_value, get_min_max)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, is_proxy_allowed,
     register_binding_controller)
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
+from karabogui.widgets.api import SpinBox
 
-LOCALE = QLocale("en_US")
+INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Uint8Binding,
+                Uint16Binding, Uint32Binding)
 
 
 @register_binding_controller(ui_name="Integer SpinBox", can_edit=True,
                              klassname="EditableSpinBox",
-                             binding_type=IntBinding)
+                             binding_type=INT_BINDINGS)
 class EditableSpinBox(BaseBindingController):
     model = Instance(EditableSpinBoxModel, args=())
 
@@ -30,11 +32,8 @@ class EditableSpinBox(BaseBindingController):
     _blocker = Instance(MouseWheelEventBlocker)
 
     def create_widget(self, parent):
-        self._internal_widget = QSpinBox(parent)
-        self._internal_widget.setLocale(LOCALE)
-        self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self._internal_widget = SpinBox(parent)
         self._internal_widget.valueChanged[int].connect(self._on_user_edit)
-        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
         self._blocker = MouseWheelEventBlocker(self._internal_widget)
         self._internal_widget.installEventFilter(self._blocker)
 
