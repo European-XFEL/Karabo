@@ -23,7 +23,6 @@ from karabogui.project.controller.build import (
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.device_config import (
     DeviceConfigurationController)
-from karabogui.project.controller.project import ProjectController
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
 
@@ -331,8 +330,6 @@ class ProjectViewItemModel(QAbstractItemModel):
         elif column == ALARM_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
                 return get_alarm_icon(ui_data.alarm_type)
-            elif isinstance(controller, ProjectController):
-                return ui_data.conflict_icon
         elif column == STATUS_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
                 return get_instance_info_icon(ui_data.status)
