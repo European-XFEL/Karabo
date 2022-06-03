@@ -94,7 +94,7 @@ class ConfigurationTreeView(QTreeView):
             self.setColumnHidden(1, True)
 
         # XXX: This is slightly hacky, but it keeps the buttons consistent
-        model._notify_of_modifications()
+        model.notify_of_modifications()
 
     def apply_all(self):
         self.model().apply_changes()
