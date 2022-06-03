@@ -31,7 +31,6 @@ from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
 from .utils import get_proxy_value
-from .value_delegate import ValueDelegate
 
 
 class ConfigurationTreeView(QTreeView):
@@ -59,8 +58,6 @@ class ConfigurationTreeView(QTreeView):
         # Add a delegate for rows with slot buttons
         delegate = SlotButtonDelegate(parent=self)
         self.setItemDelegateForColumn(0, delegate)
-        # ... and a delegate for the value column
-        self.setItemDelegateForColumn(1, ValueDelegate(parent=self))
         # ... and a delegate for the editable value column
         self.setItemDelegateForColumn(2, self.edit_delegate)
 
