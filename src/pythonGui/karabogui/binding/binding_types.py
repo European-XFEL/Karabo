@@ -88,7 +88,7 @@ class BaseBinding(HasStrictTraits):
         if isinstance(state, State):
             state = state.value
 
-        alloweds = self.attributes.get(const.KARABO_SCHEMA_ALLOWED_STATES, [])
+        alloweds = self._attributes.get(const.KARABO_SCHEMA_ALLOWED_STATES, [])
         return alloweds == [] or state in alloweds
 
     def _get_attributes(self):
@@ -96,7 +96,6 @@ class BaseBinding(HasStrictTraits):
 
     def _set_attributes(self, value):
         self._attributes = value
-        self._update_shortcuts(value)
 
     def update_attributes(self, attrs):
         """Silently update attributes dictionary"""
@@ -107,28 +106,28 @@ class BaseBinding(HasStrictTraits):
             self._update_shortcuts(attrs)
 
     def _displayed_name_default(self):
-        return self.attributes.get(const.KARABO_SCHEMA_DISPLAYED_NAME, '')
+        return self._attributes.get(KEY_DISPLAYED_NAME, '')
 
     def _display_type_default(self):
-        return self.attributes.get(const.KARABO_SCHEMA_DISPLAY_TYPE, '')
+        return self._attributes.get(KEY_DISPLAY_TYPE, '')
 
     def _access_mode_default(self):
-        mode = self.attributes.get(const.KARABO_SCHEMA_ACCESS_MODE)
+        mode = self._attributes.get(KEY_ACCMODE)
         return AccessMode.UNDEFINED if mode is None else AccessMode(mode)
 
     def _assignment_default(self):
-        assign = self.attributes.get(const.KARABO_SCHEMA_ASSIGNMENT)
+        assign = self._attributes.get(KEY_ASSIGNMENT)
         return Assignment.OPTIONAL if assign is None else Assignment(assign)
 
     def _options_default(self):
-        return self.attributes.get(KEY_OPT, [])
+        return self._attributes.get(KEY_OPT, [])
 
     def _required_access_level_default(self):
-        level = self.attributes.get(KEY_ACCLVL)
+        level = self._attributes.get(KEY_ACCLVL)
         return AccessLevel.OBSERVER if level is None else AccessLevel(level)
 
     def _unit_label_default(self):
-        attrs = self.attributes
+        attrs = self._attributes
         unit = attrs.get(KEY_UNITPREFIX, '') + attrs.get(KEY_UNIT, '')
         return unit
 
@@ -151,7 +150,7 @@ class BaseBinding(HasStrictTraits):
 
     def check(self, value):
         """Check and validate the value of this binding"""
-        options = self.attributes.get(const.KARABO_SCHEMA_OPTIONS, None)
+        options = self._attributes.get(KEY_OPT, None)
         if options is not None and value not in options:
             raise TraitError(f"The value {value} is not in the allowed options"
                              f"{options}")
@@ -240,6 +239,9 @@ class BoolBinding(BaseBinding):
     # comparing numpy arrays, result is an array as well.
     options = CArray
 
+    def _options_default(self):
+        return self._attributes.get(KEY_OPT, [])
+
 
 class _ByteArrayHandler(TraitHandler):
     """A trait handler to work around middlelater stupidity.
@@ -269,6 +271,9 @@ class FloatBinding(BaseBinding):
     value = Float
     options = CArray
 
+    def _options_default(self):
+        return self._attributes.get(KEY_OPT, [])
+
     def check(self, value):
         value = super().check(value)
         # Karabo attribute check
@@ -281,7 +286,7 @@ class FloatBinding(BaseBinding):
         return value
 
     def getMinMax(self):
-        attrs = self.attributes
+        attrs = self._attributes
         value_type = attrs.get(const.KARABO_SCHEMA_VALUE_TYPE)
         if value_type in ('FLOAT', 'COMPLEX_FLOAT'):
             info = np.finfo(np.float32)
@@ -311,6 +316,9 @@ class IntBinding(BaseBinding):
     """The base class for all integer binding types"""
     options = CArray
 
+    def _options_default(self):
+        return self._attributes.get(KEY_OPT, [])
+
     def check(self, value):
         value = super().check(value)
         # Karabo attribute check
@@ -330,7 +338,7 @@ class IntBinding(BaseBinding):
         if range_trait._exclude_high:
             value_range = (value_range[0], value_range[1] - 1)
 
-        attrs = self.attributes
+        attrs = self._attributes
         low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
         if low is not None:
             low += 1
@@ -438,7 +446,7 @@ class VectorBinding(BaseBinding):
     def check(self, value):
         value = super().check(value)
         # Karabo attribute check for minSize and maxSize
-        attributes = self.attributes
+        attributes = self._attributes
         minSize = attributes.get(const.KARABO_SCHEMA_MIN_SIZE)
         if minSize is not None and len(value) < minSize:
             raise TraitError(f"Vector with size {len(value)} is shorter than "
@@ -507,14 +515,21 @@ class VectorHashBinding(VectorBinding):
         from .builder import _BINDING_MAP
         bindings = {}
         for key in self.row_schema.getKeys():
-            value_type = self.row_schema[key, const.KARABO_SCHEMA_VALUE_TYPE]
-            binding_factory = _BINDING_MAP[value_type]
             attrs = self.row_schema[key, ...]
+            value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
+            binding_factory = _BINDING_MAP[value_type]
             bindings[key] = binding_factory(attributes=attrs, value=Undefined)
         return bindings
 
     def get_binding(self, key):
         return self.bindings.get(key)
+
+    def _row_schema_default(self):
+        row_schema = self._attributes.get(KEY_ROW_SCHEMA)
+        if row_schema is None:
+            return Hash()
+
+        return row_schema.hash
 
     def _update_shortcuts(self, attrs):
         super(VectorHashBinding, self)._update_shortcuts(attrs)
