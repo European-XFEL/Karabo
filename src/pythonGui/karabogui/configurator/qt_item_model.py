@@ -107,7 +107,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         for proxy in self._property_proxies.values():
             if proxy.edit_value is not None:
                 proxy.revert_edit()
-        self._notify_of_modifications()
+        self.notify_of_modifications()
 
     def clear_index_modification(self, index):
         """Clear any stored modifications for the proxy referenced by `index`
@@ -121,7 +121,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             # XXX: Announce the data update for the edit value, as there is no
             # external triggered update!
             self.dataChanged.emit(index, index)
-            self._notify_of_modifications()
+            self.notify_of_modifications()
 
     def flush_index_modification(self, index):
         """Send any stored modification for the proxy referenced by `index`
@@ -157,6 +157,19 @@ class ConfigurationTreeModel(QAbstractItemModel):
             self._property_proxies[path] = proxy
         return proxy
 
+    def announceDataChanged(self):
+        """Public method to announce that data has changed"""
+        last_row = self.rowCount() - 1
+        first = self.index(0, 1)
+        last = self.index(last_row, 1)
+        self.dataChanged.emit(first, last, [Qt.BackgroundRole, Qt.DisplayRole])
+
+    def notify_of_modifications(self):
+        """Tell interested listeners about any changes"""
+        has_modifications = any(p.edit_value is not None
+                                for p in self._property_proxies.values())
+        self.signalHasModifications.emit(has_modifications)
+
     # ----------------------------
     # Private interface
 
@@ -177,12 +190,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
         """Notify the view of a schema update
         """
         self.layoutAboutToBeChanged.emit()
-        last_row = self.rowCount()
-        first = self.index(0, 1)
-        last = self.index(last_row, 1)
-        self.dataChanged.emit(first, last)
+        self.announceDataChanged()
         self.layoutChanged.emit()
-        self._notify_of_modifications()
+        self.notify_of_modifications()
 
     def _config_update(self):
         """Notify the view of item updates.
@@ -190,18 +200,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         Note: The `config_update` updates background color for alarms and
         states as well as the display value
         """
-        last_row = self.rowCount()
-        first = self.index(0, 1)
-        last = self.index(last_row, 1)
-        self.dataChanged.emit(first, last, [Qt.BackgroundRole, Qt.DisplayRole])
-        self._notify_of_modifications()
-
-    def _notify_of_modifications(self):
-        """Tell interested listeners about any changes
-        """
-        has_modifications = any(p.edit_value is not None
-                                for p in self._property_proxies.values())
-        self.signalHasModifications.emit(has_modifications)
+        self.announceDataChanged()
+        self.notify_of_modifications()
 
     def _proxy_row(self, proxy):
         """Return the row for the given ``proxy``
@@ -497,7 +497,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
             # XXX: Layout changed to be investigated
             # self.layoutChanged.emit()
-            self._notify_of_modifications()
+            self.notify_of_modifications()
 
         # A value was successfully set!
         return True
