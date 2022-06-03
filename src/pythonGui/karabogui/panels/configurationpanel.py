@@ -395,9 +395,10 @@ class ConfigurationPanel(BasePanelWidget):
                     elif has_changes(prop_value, valid):
                         edit_value = valid
             prop_proxy.edit_value = edit_value
-        # NOTE: We tell the model directly to send dataChanged signal and
+        # Note: We tell the model directly to send dataChanged signal and
         # notify for changes!
-        model._config_update()
+        model.announceDataChanged()
+        model.notify_of_modifications()
 
         # Show a dialog for invalid keys:
         if invalid_prop:
@@ -633,7 +634,7 @@ class ConfigurationPanel(BasePanelWidget):
         tree_widget = self._stacked_tree_widgets.widget(index)
         model = tree_widget.model()
         if model is not None:
-            model._notify_of_modifications()
+            model.notify_of_modifications()
 
     def _update_displayed_configuration(self, proxy):
         if self._showing_proxy is None:
