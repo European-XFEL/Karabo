@@ -129,9 +129,8 @@ class ConfigurationTreeView(QTreeView):
 
     def decline_all(self):
         model = self.sourceModel()
-        model.layoutAboutToBeChanged.emit()
         model.decline_changes()
-        model.layoutChanged.emit()
+        model.announceDataChanged()
 
     def clear(self):
         self.assign_proxy(None)
@@ -284,7 +283,7 @@ class ConfigurationTreeView(QTreeView):
                 proxy.edit_value = default_value
             else:
                 proxy.value = default_value
-            self.sourceModel().layoutChanged.emit()
+            self.sourceModel().announceDataChanged()
 
     @Slot(QModelIndex, QModelIndex)
     def _update_popup_contents(self, topLeft, bottomRight):
