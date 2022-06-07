@@ -650,8 +650,7 @@ class SceneView(QWidget):
                 self._collect_removed_widgets(obj, model)
                 # Then remove
                 remove_object_from_layout(obj, self.layout,
-                                          self._scene_obj_cache,
-                                          self.tab_visible)
+                                          self._scene_obj_cache)
 
         for model in event.added:
             create_object_from_model(self.layout, model, self.inner,
