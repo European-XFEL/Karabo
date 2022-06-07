@@ -187,10 +187,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         return self._attr_backreferences.get(binding)
 
     def _schema_update(self):
-        """Notify the view of a schema update
-        """
+        """Notify the view of a schema update"""
         self.layoutAboutToBeChanged.emit()
-        self.announceDataChanged()
         self.layoutChanged.emit()
         self.notify_of_modifications()
 
