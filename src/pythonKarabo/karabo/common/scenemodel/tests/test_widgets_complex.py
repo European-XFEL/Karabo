@@ -81,10 +81,14 @@ def test_color_bool_widget():
 def test_display_command():
     traits = _geometry_traits()
     traits["requires_confirmation"] = True
+    traits["font_size"] = 12
+    traits["font_weight"] = "bold"
     model = api.DisplayCommandModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.requires_confirmation
+    assert read_model.font_size == 12
+    assert read_model.font_weight == "bold"
 
 
 def test_display_icon_command():
@@ -199,8 +203,8 @@ def test_table_element_widget():
 
 def test_filter_table_element_widget():
     for klass_name in (
-        "DisplayFilterTableElement",
-        "EditableFilterTableElement",
+            "DisplayFilterTableElement",
+            "EditableFilterTableElement",
     ):
         traits = base_widget_traits()
         traits["klass"] = klass_name
