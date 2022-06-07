@@ -46,7 +46,7 @@ class HistogramPlot(BasePlot):
         brush = self._calc_brush(x_data)
 
         # plot the data with the resulting gradient
-        self._data_item.setData(x_data, y_data, stepMode=True,
+        self._data_item.setData(x_data, y_data, stepMode="center",
                                 pen=self._pen, brush=brush, fillLevel=0)
 
     def destroy(self):
