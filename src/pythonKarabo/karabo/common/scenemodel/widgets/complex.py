@@ -24,8 +24,14 @@ class ColorBoolModel(BaseWidgetObjectData):
 
 class DisplayCommandModel(BaseWidgetObjectData):
     """A model for DisplayCommand"""
-
     requires_confirmation = Bool(False)
+    font_size = Enum(*SCENE_FONT_SIZES)
+    font_weight = Enum(*SCENE_FONT_WEIGHTS)
+
+    def __init__(self, font_size=SCENE_FONT_SIZE,
+                 font_weight=SCENE_FONT_WEIGHT, **traits):
+        super().__init__(font_size=font_size, font_weight=font_weight,
+                         **traits)
 
 
 class DisplayIconCommandModel(BaseWidgetObjectData):
@@ -146,6 +152,8 @@ def __display_command_reader(element):
     confirmation = confirmation.lower() == "true"
     traits = read_base_widget_data(element)
     traits["requires_confirmation"] = confirmation
+    traits.update(read_font_format_data(element))
+
     return DisplayCommandModel(**traits)
 
 
@@ -157,6 +165,7 @@ def __display_command_writer(model, parent):
         NS_KARABO + "requires_confirmation",
         str(model.requires_confirmation).lower(),
     )
+    write_font_format_data(model, element)
     return element
 
 
