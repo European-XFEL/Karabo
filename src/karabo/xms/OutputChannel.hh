@@ -262,7 +262,7 @@ namespace karabo {
              * called for the channel.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
             void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData = true);
 
@@ -277,7 +277,7 @@ namespace karabo {
              * called for the channel.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
             void write(const karabo::util::Hash& data, bool copyAllData = true);
 
@@ -287,7 +287,7 @@ namespace karabo {
              * @param metaData a MetaData object containing meta data for this data token.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
 
@@ -298,7 +298,7 @@ namespace karabo {
              * @param data shared pointer to input Hash object
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
@@ -307,7 +307,7 @@ namespace karabo {
              * by calling write(...).
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
             void update();
 
@@ -316,7 +316,7 @@ namespace karabo {
              * in the data stream.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
             void signalEndOfStream();
 

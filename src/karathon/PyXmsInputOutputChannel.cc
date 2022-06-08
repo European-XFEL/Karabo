@@ -556,11 +556,25 @@ void exportPyXmsInputOutputChannel() {
               .def("getInformation", &karabo::xms::OutputChannel::getInformation)
 
               .def("write", &karathon::OutputChannelWrap().writePy,
-                   (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData") = true))
+                   (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData") = true),
+                   "data - a Hash with the data to write\n"
+                   "meta - ChannelMetaData\n"
+                   "copyAllData - can (for performance reasons should) be set to False if all\n"
+                   "              ndarray inside 'data' are NOT changed until update() is called\n"
+                   "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
+                   "      be called concurrently")
 
-              .def("update", &karathon::OutputChannelWrap().updatePy)
+              .def("update", &karathon::OutputChannelWrap().updatePy,
+                   "Update the output channel, i.e. send all data over the wire that was\n"
+                   "previously written by calling write(..).\n"
+                   "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
+                   "      be called concurrently")
 
-              .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy)
+              .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy,
+                   "Send end-of-stream (EOS) notification to all connected input channels to\n"
+                   "indicate a logical break in the data stream.\n"
+                   "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
+                   "      be called concurrently")
 
               .def("registerShowConnectionsHandler", &karathon::OutputChannelWrap().registerShowConnectionsHandlerPy,
                    (bp::arg("handler")))
