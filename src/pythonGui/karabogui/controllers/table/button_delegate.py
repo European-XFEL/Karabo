@@ -5,26 +5,9 @@
 #############################################################################
 from enum import Enum
 
-from qtpy.QtCore import QEvent, QMargins, Qt
-from qtpy.QtGui import QPalette
+from qtpy.QtCore import QEvent, QMargins
 from qtpy.QtWidgets import (
     QApplication, QStyle, QStyledItemDelegate, QStyleOptionButton)
-
-
-def set_fill_rect(painter, option, index):
-    """Update the rectangle of the given `painter` depending on the given
-    `options`
-    """
-    if option.state & QStyle.State_Selected:
-        if option.state & QStyle.State_Active:
-            painter.fillRect(option.rect, option.palette.highlight())
-        elif not (option.state & QStyle.State_HasFocus):
-            painter.fillRect(option.rect,
-                             option.palette.brush(QPalette.Background))
-    else:
-        brush = index.data(Qt.BackgroundRole)
-        if brush is not None:
-            painter.fillRect(option.rect, brush)
 
 
 class ButtonState(Enum):
@@ -47,7 +30,6 @@ class TableButtonDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         """Reimplemented function of QStyledItemDelegate."""
-        set_fill_rect(painter, option, index)
         self._draw_button(painter, option, index)
 
     def editorEvent(self, event, model, option, index):
@@ -70,7 +52,7 @@ class TableButtonDelegate(QStyledItemDelegate):
         button.state = state.value
         button.rect = option.rect
         button.text = self.get_button_text(index) or "No text"
-        button.features = QStyleOptionButton.AutoDefaultButton
+        button.features = QStyleOptionButton.None_
         QApplication.style().drawControl(QStyle.CE_PushButton, button, painter)
 
     def _handle_event_state(self, event, option, index):
