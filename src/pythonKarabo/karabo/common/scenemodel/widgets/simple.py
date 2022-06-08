@@ -15,10 +15,6 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
-class AnalogModel(BaseWidgetObjectData):
-    """A model for Analog Widget"""
-
-
 class BitfieldModel(BaseEditWidget):
     """A model for Bitfield"""
 
@@ -508,7 +504,6 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = (
-        "AnalogModel",
         "BitfieldModel",
         "DaemonManagerModel",
         "DisplayListModel",
