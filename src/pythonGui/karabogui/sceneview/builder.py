@@ -105,22 +105,19 @@ def add_object_to_layout(obj, layout):
     obj.show()
 
 
-def remove_object_from_layout(obj, layout, object_dict, scene_visible):
+def remove_object_from_layout(obj, layout, object_dict):
     """Remove a SceneView object from a layout"""
     if is_shape(obj):
         layout._remove_shape(obj)
     elif is_widget(obj):
         layout._remove_widget(obj)
-        if scene_visible:
-            obj.set_visible(False)
     elif is_layout(obj):
         layout._remove_layout(obj)
         # Recursively remove all children
         for model in obj.model.children:
             child_obj = object_dict.get(model)
             if child_obj:
-                remove_object_from_layout(child_obj, obj, object_dict,
-                                          scene_visible)
+                remove_object_from_layout(child_obj, obj, object_dict)
 
     # Hide object from scene until reparenting is done
     obj.hide()
