@@ -234,10 +234,6 @@ class TestSceneView(BaseSceneViewTest):
 
 class TestLoadSceneModel(BaseSceneViewTest):
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
-    def test_display_widget_problematic(self):
-        self._assert_geometry(sm.AnalogModel)
-
     def test_display_widgets(self):
         """Testing the loading of display widgets"""
         self._assert_geometry(sm.CheckBoxModel)
