@@ -95,8 +95,12 @@ void exportp2p() {
                    "Register handler that will be called when the message is arrived.  Never blocks. The message will "
                    "be represented as bytearray.")
               .def("readAsyncHash", &ChannelWrap().readAsyncHash, (bp::arg("handler")),
-                   "Register handler that will be called when the message is arrived.  Never blocks. The message will "
-                   "be represented as Hash.")
+                   "Register handler that will be called when the next message arrives.\n"
+                   "Never blocks, but requires running EventLoop.\n"
+                   "Handler will be called with three arguments:\n"
+                   "  - an ErrorCode object\n"
+                   "  - the channel that called readAsyncHash\n"
+                   "  - the sent data deserialized to a Hash")
               .def("readAsyncHashStr", &ChannelWrap().readAsyncHashStr, (bp::arg("handler")),
                    "Register handler that will be called when the message is arrived.  Never blocks. The message will "
                    "have a header as Hash and a body as bytearray.")

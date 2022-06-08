@@ -931,6 +931,9 @@ class PythonDevice(NoFsm):
         imgArray = numpy.array(...)
         self.writeChannel("output", Hash("image", ImageData(imgArray),
                                          "frame", frameNumber))
+        Note:
+        The methods 'writeChannel(..)' and 'signalEndOfStream(..)'
+        must not be called concurrently.
         """
 
         channel = self._ss.getOutputChannel(channelName)
@@ -947,6 +950,10 @@ class PythonDevice(NoFsm):
         """Signal an end-of-stream event
 
         The channel is identified by `channnelName`
+
+        Note:
+        The methods 'writeChannel(..)' and 'signalEndOfStream(..)'
+        must not be called concurrently.
         """
         self._ss.getOutputChannel(channelName).signalEndOfStream()
 
