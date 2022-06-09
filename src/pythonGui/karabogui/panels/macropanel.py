@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import QEvent, QPoint, Qt, Slot
-from qtpy.QtGui import QTextCursor
-from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
+from qtpy.QtGui import QKeySequence, QTextCursor
+from qtpy.QtWidgets import (
+    QMenu, QPlainTextEdit, QShortcut, QSplitter, QVBoxLayout, QWidget)
 
 import karabogui.access as krb_access
 
@@ -24,12 +25,14 @@ from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_topology
 from karabogui.util import getSaveFileName
 from karabogui.widgets.codeeditor import CodeEditor
+from karabogui.widgets.find_toolbar import FindToolBar
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
 
 
 class MacroPanel(BasePanelWidget):
+
     def __init__(self, model):
         self.model = model
         super(MacroPanel, self).__init__(model.simple_name, allow_closing=True)
@@ -49,9 +52,23 @@ class MacroPanel(BasePanelWidget):
         for instance in model.instances:
             self.connect(instance)
 
+    @Slot()
+    def showFindToolbar(self):
+        self.find_toolbar.setVisible(True)
+        selected_text = self.ui_editor.textCursor().selectedText()
+        self.find_toolbar.find_line_edit.setText(selected_text)
+        match_case = self.find_toolbar.match_case.isChecked()
+        if selected_text:
+            self.ui_editor.highlight(selected_text, match_case=match_case)
+        self.find_toolbar.find_line_edit.setFocus()
+
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
+        content_widget = QWidget(parent=self)
+        layout = QVBoxLayout(content_widget)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
         widget = QSplitter(Qt.Vertical, parent=self)
         self.ui_editor = CodeEditor(widget)
         self.ui_editor.installEventFilter(self)
@@ -73,7 +90,22 @@ class MacroPanel(BasePanelWidget):
 
         widget.addWidget(self.ui_console)
 
-        return widget
+        self.find_toolbar = FindToolBar(parent=self)
+        self.find_toolbar.findRequested.connect(
+            self.ui_editor.findAndHighlight)
+        self.find_toolbar.highlightRequested.connect(self.ui_editor.highlight)
+        self.find_toolbar.aboutToClose.connect(self.ui_editor.clearHighlight)
+        self.find_toolbar.setVisible(False)
+
+        layout.addWidget(self.find_toolbar)
+        layout.addWidget(widget)
+
+        find = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F), self)
+        find.activated.connect(self.showFindToolbar)
+
+        self.ui_editor.resultFound.connect(self.find_toolbar.setResultText)
+
+        return content_widget
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
