@@ -22,13 +22,16 @@ def _safe_bool(value, make_bool=True):
 
 
 class Item:
-    __slots__ = ["name", "default", "q_set", "group", "path", "editable"]
+    __slots__ = ["name", "default", "q_set", "group", "path", "editable",
+                 "dtype"]
 
-    def __init__(self, default=None, q_set=False, group=None, editable=False):
+    def __init__(self, default=None, q_set=False, group=None, editable=False,
+                 dtype=None):
         self.q_set = q_set
         self.group = group
-        self.editable = editable
         self.default = default
+        self.editable = editable
+        self.dtype = dtype
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -47,17 +50,15 @@ class Item:
         if self.q_set:
             self.default = QSettings().value(self.path) or self.default
 
+    def toDict(self):
+        return {name: getattr(self, name) for name in
+                ["editable", "name", "dtype"]}
+
     def erase(self):
         QSettings().remove(self.path)
 
     def __str__(self):
         return self.name
-
-
-def panel_default():
-    ret = {
-        'visible': False}
-    return ret
 
 
 NETWORK = "network"
@@ -110,15 +111,17 @@ class Configuration(QObject):
     # ----------------------------------------------
     # Panels
 
-    console_panel = Item(default=panel_default(), q_set=True, group=PANEL)
-    alarm_panel = Item(default=panel_default(), q_set=True, group=PANEL)
-    log_panel = Item(default=panel_default(), q_set=True, group=PANEL)
+    console_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
+    alarm_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
+    log_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
 
     # ----------------------------------------------
     # MainWindow, Wizard and DPI
 
-    wizard = Item(default=True, q_set=True, group=USER)
-    highDPI = Item(default=True, q_set=True, group=USER)
+    wizard = Item(default=True, q_set=True, group=USER, editable=True,
+                  dtype=bool)
+    highDPI = Item(default=True, q_set=True, group=USER, editable=False,
+                   dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER)
 
@@ -180,11 +183,12 @@ class Configuration(QObject):
     def groups(self):
         """Return a dictionary with groups as keys and config keys as values
         """
-        ret = defaultdict(set)
+        ret = defaultdict(list)
         for key in self._memory:
             group = getattr(self.__class__, key).group
-            ret[group].add(getattr(self.__class__, key))
-        return ret
+            ret[group].append(getattr(self.__class__, key))
+            ret[group] = sorted(ret[group], key=lambda i: i.name)
+        return dict(sorted(ret.items()))
 
     def __delitem__(self, key):
         """Convenient shortcut to erase configuration information"""
