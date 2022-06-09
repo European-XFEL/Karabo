@@ -37,6 +37,18 @@ class TestAppConfDialog(GuiTestCase):
             self.assertTrue(model.setData(index, "Karabo", Qt.EditRole))
             self.assertEqual(index.data(), "Karabo")
 
+            # Check a boolean
+            group_index = model.index(5, 0)
+            self.assertEqual(group_index.data(), "user")
+            index = model.index(3, 0, group_index)
+            self.assertEqual(index.data(), "wizard")
+            index_value = model.index(3, 1, group_index)
+            flag = model.flags(index_value)
+            self.assertEqual(int(flag), 49)
+            self.assertEqual(flag & Qt.ItemIsEnabled, Qt.ItemIsEnabled)
+            self.assertEqual(flag & Qt.ItemIsUserCheckable,
+                             Qt.ItemIsUserCheckable)
+
     def test_model_tester(self):
         from pytestqt.modeltest import ModelTester
         config = Configuration()
