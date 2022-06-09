@@ -46,9 +46,9 @@ DEVICE_TOPOLOGY_TITLE = 'Device Topology'
 PROJECT_TITLE = 'Projects'
 
 _PANEL_TITLE_CONFIG = {
-    CONSOLE_TITLE: 'console_panel',
-    LOG_TITLE: 'log_panel',
-    AlARM_TITLE: 'alarm_panel'
+    CONSOLE_TITLE: 'console_visible',
+    LOG_TITLE: 'log_visible',
+    AlARM_TITLE: 'alarm_visible'
 }
 
 MENU_HEIGHT = 40
@@ -118,7 +118,7 @@ class PanelAreaEnum(Enum):
     Right = 2
 
 
-def get_panel_configuration(name):
+def get_panel_visible(name):
     """Get the associated panel configuration of a closable panel
 
     This function uses a mapping between `panel title` and `configuration
@@ -129,14 +129,10 @@ def get_panel_configuration(name):
     return get_config()[config_name]
 
 
-def set_panel_configuration(name, **params):
-    """Write the associated panel configuration of a closable panel
-    """
+def set_panel_visible(name, visible):
+    """Write the associated panel configuration of a closable panel"""
     config_name = _PANEL_TITLE_CONFIG[name]
-    panel_config = get_config()[config_name]
-    panel_config.update(params)
-
-    get_config()[config_name] = panel_config
+    get_config()[config_name] = visible
 
 
 _CLOSABLE_PANELS = {
@@ -201,7 +197,7 @@ class MainWindow(QMainWindow):
             action.triggered.connect(callback)
             self._addPanelMenuAction(action)
             # Set the visibility with the panel configuration!
-            visible = get_panel_configuration(name)['visible']
+            visible = get_panel_visible(name)
             self.panelActions[name] = action
             self.panelActions[name].setEnabled(not visible)
             if visible:
@@ -459,7 +455,7 @@ class MainWindow(QMainWindow):
         self.acClientTopology = QAction("Client Topology", self)
         self.acClientTopology.triggered.connect(self.onClientTopology)
 
-        self.acConfig = QAction("Configuration", self)
+        self.acConfig = QAction("Application Configuration", self)
         self.acConfig.triggered.connect(self.onConfiguration)
 
         self.acWizard = QAction("Tips'N'Tricks", self)
@@ -749,7 +745,7 @@ class MainWindow(QMainWindow):
     def _store_panel_configuration(self):
         for name in _CLOSABLE_PANELS:
             visible = name in self._active_closable_panels
-            set_panel_configuration(name, visible=visible)
+            set_panel_visible(name, visible=visible)
 
     @Slot()
     def onConfiguration(self):
