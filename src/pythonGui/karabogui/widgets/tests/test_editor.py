@@ -1,5 +1,8 @@
+from unittest import mock
+
 from karabogui.testing import GuiTestCase
-from karabogui.widgets.codeeditor import CodeEditor
+from karabogui.widgets.codeeditor import (
+    DEFAULT_BACKGROUND_COLOR, TEXT_HIGHLIGHT_COLOR, CodeEditor)
 
 
 class TestConst(GuiTestCase):
@@ -33,3 +36,65 @@ class TestConst(GuiTestCase):
         self.assertGreaterEqual(widget.numberWidgetArea(), 21)
         self.assertEqual(widget.textCursor().block().lineCount(), 1)
         widget.destroy()
+
+    def test_findAndHighlight(self):
+        editor = CodeEditor(None)
+        editor.setPlainText("one two three one one")
+        assert editor.textCursor().position() == 0
+
+        editor.findAndHighlight("one", False, False)
+        assert editor.textCursor().position() == 3
+        assert editor.textCursor().selectedText() == "one"
+        editor.textCursor().movePosition(2)
+        assert (editor.textCursor().charFormat().background().color()
+                == TEXT_HIGHLIGHT_COLOR)
+
+        editor.findAndHighlight("one", False, False)
+        assert editor.textCursor().position() == 17
+
+        editor.findAndHighlight("one", False, False)
+        assert editor.textCursor().position() == 21
+
+        # After hitting the bottom, cursor should go back to
+        # the first hit.
+        editor.findAndHighlight("one", False, False)
+        assert editor.textCursor().position() == 3
+
+        editor.findAndHighlight("two", False, False)
+        assert editor.textCursor().position() == 7
+        assert editor.textCursor().selectedText() == "two"
+
+        # Case-sensitive search
+        editor.findAndHighlight("Three", True, False)
+        assert editor.textCursor().selectedText() == ""
+
+        editor.findAndHighlight("three", True, False)
+        assert editor.textCursor().selectedText() == "three"
+
+        # Find should emit 'resultFound' signal with number of hits
+        mock_slot = mock.Mock()
+        editor.resultFound.connect(mock_slot)
+        editor.findAndHighlight("one", False, False)
+        count = mock_slot.call_args[0][0]
+        assert count == 3
+
+        mock_slot.reset_mock()
+        editor.findAndHighlight("non_existing_text", False, False)
+        count = mock_slot.call_args[0][0]
+        assert count == 0
+
+    def test_Highlight(self):
+        editor = CodeEditor(None)
+        editor.setPlainText("one two three one one")
+
+        editor.findAndHighlight("one", False, False)
+        assert (editor.textCursor().charFormat().background().color()
+                == TEXT_HIGHLIGHT_COLOR)
+
+        editor.clearHighlight()
+        assert (editor.textCursor().charFormat().background().color()
+                == DEFAULT_BACKGROUND_COLOR)
+
+        with mock.patch.object(editor, "clearHighlight") as clear_mock:
+            editor.findAndHighlight("foo", False, False)
+            assert clear_mock.call_count == 1
