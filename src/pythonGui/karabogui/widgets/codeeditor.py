@@ -4,13 +4,17 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import QRect, QSize, Qt, Slot
-from qtpy.QtGui import QColor, QFontMetrics, QPainter, QTextFormat
+from qtpy.QtCore import QRect, QRegularExpression, QSize, Qt, Signal, Slot
+from qtpy.QtGui import (
+    QBrush, QColor, QFontMetrics, QPainter, QTextCharFormat, QTextCursor,
+    QTextDocument, QTextFormat)
 from qtpy.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
 
 LINE_WIDGET_BACKGROUND = QColor(224, 224, 224)
 LINE_WIDGET_COLOR = QColor(160, 160, 160)
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
+TEXT_HIGHLIGHT_COLOR = QColor(Qt.yellow)
+DEFAULT_BACKGROUND_COLOR = QBrush(QColor(Qt.white))
 
 
 class LineNumberWidget(QWidget):
@@ -31,6 +35,9 @@ class CodeEditor(QPlainTextEdit):
     The code has been extended with block and line caching to prevent
     unnecessary repainting.
     """
+
+    resultFound = Signal(int)
+
     def __init__(self, parent=None):
         super(CodeEditor, self).__init__(parent)
         self.number_widget = LineNumberWidget(parent=self)
@@ -42,6 +49,74 @@ class CodeEditor(QPlainTextEdit):
 
         self.updateMargins()
         self.highlightCurrentLine()
+
+        self._highlighted_word = None
+
+    @Slot(str, bool, bool)
+    def findAndHighlight(self, text, match_case, find_backward):
+        """
+        Look for the given text in the Macro editor and highlight all the
+        occurrences.
+        Case-sensitive if match_case is 'True'.
+        """
+        is_new_word = self._highlighted_word != text
+        flags = QTextDocument.FindFlags()
+        if match_case:
+            flags = flags | QTextDocument.FindCaseSensitively
+        if find_backward:
+            flags = flags | QTextDocument.FindBackward
+        found = self.find(text, flags)
+        if is_new_word:
+            self.clearHighlight()
+            if found:
+                self.highlight(text, match_case)
+        if not found:
+            location = QTextCursor.End if find_backward else QTextCursor.Start
+            self.moveCursor(location)
+            self.find(text, flags)
+
+    @Slot(str, bool)
+    def highlight(self, text, match_case):
+        """ Highlight all the occurrence of the given text"""
+        self.clearHighlight()
+        if text == "":
+            return
+        self._highlighted_word = text
+        cursor = self.textCursor()
+        text_format = QTextCharFormat()
+        text_format.setBackground(QBrush(TEXT_HIGHLIGHT_COLOR))
+
+        options = QRegularExpression().patternOptions()
+
+        if not match_case:
+            options = options | QRegularExpression.CaseInsensitiveOption
+        pattern = QRegularExpression(text, options)
+
+        matches = pattern.globalMatch(self.toPlainText())
+
+        hit_count = 0
+        while matches.hasNext():
+            match = matches.next()
+            if match.capturedLength() != len(pattern.pattern()):
+                # Avoid matching regular expression.
+                continue
+            cursor.setPosition(match.capturedStart(), QTextCursor.MoveAnchor)
+            cursor.setPosition(match.capturedEnd(), QTextCursor.KeepAnchor)
+            cursor.mergeCharFormat(text_format)
+            hit_count += 1
+        self.resultFound.emit(hit_count)
+
+    @Slot()
+    def clearHighlight(self):
+        text_cursor = self.textCursor()
+        text_format = QTextCharFormat()
+        text_format.setBackground(DEFAULT_BACKGROUND_COLOR)
+        text_cursor.setPosition(0, QTextCursor.MoveAnchor)
+        text_cursor.setPosition(len(self.toPlainText()),
+                                QTextCursor.KeepAnchor)
+        text_cursor.setCharFormat(text_format)
+        self._highlighted_word = None
+        self.resultFound.emit(0)
 
     # -----------------------------------
     # Qt slots
