@@ -39,10 +39,11 @@ class TestConfiguration(GuiTestCase):
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
         self.assertEqual(list(config.keys()),
-                         ['alarm_panel', 'broker_topic', 'console_panel',
+                         ['alarm_visible',
+                          'broker_topic', 'console_visible',
                           'data_dir', 'db_token', 'development',
                           'device_domain', 'documentation', 'domain',
-                          'gui_servers', 'highDPI', 'log_panel',
+                          'gui_servers', 'highDPI', 'log_visible',
                           'main_geometry', 'username', 'wizard'])
 
     def test_set_wrong_key(self):
@@ -101,6 +102,6 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('documentation', bone_group)
         panel_group = [item.name for item in groups[PANEL]]
         self.assertEqual(len(panel_group), 3)
-        self.assertIn('alarm_panel', panel_group)
-        self.assertIn('log_panel', panel_group)
-        self.assertIn('console_panel', panel_group)
+        self.assertIn('alarm_visible', panel_group)
+        self.assertIn('log_visible', panel_group)
+        self.assertIn('console_visible', panel_group)
