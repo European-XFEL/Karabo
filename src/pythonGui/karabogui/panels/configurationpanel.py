@@ -29,7 +29,9 @@ from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
 from .tool_widget import ConfiguratorSearch
-from .utils import format_property_details, format_vector_hash_details
+from .utils import (
+    compare_proxy_essential, format_property_details,
+    format_vector_hash_details)
 
 BLANK_PAGE = 0
 WAITING_PAGE = 1
@@ -70,7 +72,8 @@ class ConfigurationPanel(BasePanelWidget):
 
     def _event_update_config(self, data):
         proxy = data['proxy']
-        self._update_displayed_configuration(proxy)
+        refresh = data.get('refresh', False)
+        self._update_displayed_configuration(proxy, refresh)
 
     def _event_display_update(self, data):
         proxy = data['proxy']
@@ -652,26 +655,20 @@ class ConfigurationPanel(BasePanelWidget):
         if model is not None:
             model.notify_of_modifications()
 
-    def _update_displayed_configuration(self, proxy):
+    def _update_displayed_configuration(self, proxy, refresh=False):
+        """Update the displayed configuration for a `proxy`
+
+        This can be enforced with `refresh` equal to `True`.
+        """
         if self._showing_proxy is None:
             return
 
-        def _get_ids(conf):
-            class_id = conf.binding.class_id
-            server_id = conf.server_id
-            device_id = ('' if not hasattr(conf, 'device_id')
-                         else conf.device_id)
-            return class_id, server_id, device_id
-
-        previous = self._showing_proxy
-        cur_class_id, cur_server_id, cur_dev_id = _get_ids(previous)
-        class_id, server_id, dev_id = _get_ids(proxy)
-        if (server_id == cur_server_id and class_id == cur_class_id and
-                dev_id == cur_dev_id):
-            # If current showing device proxy matches the updated one,
-            # refresh the view.
-            # The device might have been gone from online to offline. In case
-            # of a project device proxy, make sure we have a schema!
+        if compare_proxy_essential(proxy, self._showing_proxy) or refresh:
+            # - If current showing device proxy matches the updated one,
+            #   refresh the view.
+            # - The device might have been gone from online to offline. In case
+            #   of a project device proxy, make sure we have a schema!
+            # - We might have to refresh in case a device is renamed
             if isinstance(proxy, ProjectDeviceProxy):
                 proxy.ensure_class_schema()
 
