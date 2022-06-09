@@ -30,13 +30,14 @@ from karabo.middlelayer_api.device_client import (
     saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.devicenode import DeviceNode
-from karabo.middlelayer_api.eventloop import KaraboFuture
+from karabo.middlelayer_api.eventloop import (
+    EventLoop, KaraboFuture, NoEventLoop, synchronize, synchronize_notimeout)
 from karabo.middlelayer_api.injectable import Injectable
 from karabo.middlelayer_api.json import KaraboJSONEncoder
 from karabo.middlelayer_api.macro import (
-    Macro, MacroSlot, Monitor, RemoteDevice)
+    EventThread, Macro, MacroSlot, Monitor, RemoteDevice)
 from karabo.middlelayer_api.pipeline import (
-    InputChannel, NetworkInput, NetworkOutput, OutputChannel)
+    InputChannel, NetworkInput, NetworkOutput, OutputChannel, OutputProxy)
 from karabo.middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxyNodeBase as ProxyNode, ProxySlotBase as ProxySlot,
     SubProxyBase as SubProxy)
