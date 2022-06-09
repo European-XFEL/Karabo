@@ -31,12 +31,7 @@ class ProjectController(BaseProjectController):
         font.setBold(True)
         return ProjectControllerUiData(font=font, icon=icons.folder)
 
-    @on_trait_change('model.conflict')
-    def _update_conflict_icon(self):
-        if self.model.conflict:
-            self.ui_data.conflict_icon = icons.alarmGlobal
-
-    @on_trait_change('model.is_trashed')
+    @on_trait_change('model.is_trashed,model.conflict')
     def _update_icon_style(self):
         if self.model.is_trashed:
             self.ui_data.icon = icons.folderTrash
@@ -45,6 +40,8 @@ class ProjectController(BaseProjectController):
                     "You are working with an actively trashed project "
                     "<b>{}</b>! Please untrash or close "
                     "the project.".format(self.model.simple_name))
+        elif self.model.conflict:
+            self.ui_data.icon = icons.alarmGlobal
         else:
             self.ui_data.icon = icons.folder
 
