@@ -456,8 +456,11 @@ class DeviceInstanceController(BaseProjectGroupController):
                 # When renaming, we have to apply the config hash!
                 if renamed:
                     project_dev = self.project_device
+                    proxy = project_dev.proxy
                     config_hash = conf_model.configuration
                     project_dev.set_project_config_hash(config_hash)
+                    broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
+                                    {"proxy": proxy, "refresh": True})
 
     def _about_device(self, parent=None):
         device = self.model
