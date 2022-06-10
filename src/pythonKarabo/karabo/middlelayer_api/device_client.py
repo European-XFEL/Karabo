@@ -756,7 +756,6 @@ async def _getDevice(deviceId, sync, initialize,
 
             cls = factory.createProxy(schema)
             proxy = cls(instance, deviceId, sync)
-            proxy._schema_hash = schema.hash
             instance._proxies[deviceId] = proxy
             weakproxy = ref(proxy)
 
