@@ -22,8 +22,8 @@ if (NOT DEFINED ENV{KARABO} OR NOT EXISTS $ENV{KARABO})
   # Karabo installation.
   include("${CMAKE_SOURCE_DIR}/cmake/infer_karabo_env.cmake")
   inferKaraboEnv()
-  if (DEFINED ENV{KARABO} AND EXISTS $ENV{KARABO})
-      message(STATUS "Karabo installation found at '${KARABO_INST}'.")
+  if (KARABO_ENV_VAR_SET)
+      message(STATUS "Karabo installation found at '$ENV{KARABO}'.")
       message(STATUS "It will be used during the CMake configuration phase.")
   else()
       message(
@@ -33,17 +33,30 @@ if (NOT DEFINED ENV{KARABO} OR NOT EXISTS $ENV{KARABO})
   endif()
 endif()
 
-# Creates an IMPORTED target for the Karabo Framework Library and stores the
-# target name in the variable KARABO_LIB_TARGET_NAME to be used downstream.
-if (EXISTS "$ENV{KARABO}/lib/cmake/import_karabo_lib.cmake")
-     # Prefer the importKaraboLib version shipped with the Karabo installation.
-     include("$ENV{KARABO}/lib/cmake/import_karabo_lib.cmake")
+set(CMAKE_PREFIX_PATH
+    ${CMAKE_PREFIX_PATH} $ENV{KARABO} $ENV{KARABO}/extern)
+
+find_package(PkgConfig)
+set(ENV{PKG_CONFIG_PATH} "$ENV{KARABO}/lib:$ENV{PKG_CONFIG_PATH}")
+pkg_check_modules(karabo IMPORTED_TARGET karaboDependencies>=1.0)
+
+if (karabo_FOUND)
+    # if karaboDependencies.pc is found in the Karabo installation
+    # pkg_check_modules() creates an CMake imported target for it
+    set(KARABO_LIB_TARGET_NAME "PkgConfig::karabo")
+    find_library(KARABO_LIB karabo PATHS $ENV{KARABO}/lib)
+
+    set_target_properties(${KARABO_LIB_TARGET_NAME} PROPERTIES
+        INTERFACE_COMPILE_DEFINITIONS "__SO__"
+        INTERFACE_COMPILE_OPTIONS "-Wfatal-errors;-Wno-unused-local-typedefs;-Wno-deprecated-declarations;-Wall"
+        INTERFACE_INCLUDE_DIRECTORIES "$ENV{KARABO}/include;$ENV{KARABO}/extern/include"
+    )
 else()
-     # It may be an older Karabo installation that didn't come with the file.
-     # Fallback to the version shipped with the device.
+     # If using pkg-config fails,
+     # fallback to the version shipped with the device
      include(cmake/import_karabo_lib.cmake)
+     importKaraboLib()
 endif()
-importKaraboLib()
 
 if(NOT DEFINED KARABO_LIB_TARGET_NAME)
     message(FATAL_ERROR
