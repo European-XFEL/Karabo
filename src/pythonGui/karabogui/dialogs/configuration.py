@@ -1,5 +1,5 @@
 from qtpy import uic
-from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt
+from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QAbstractItemView, QDialog, QHeaderView
 from traits.api import Any, Bool, HasStrictTraits, Instance, Int, List, String
@@ -196,7 +196,7 @@ class ConfigurationDialog(QDialog):
     def __init__(self, parent=None):
         super(ConfigurationDialog, self).__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        # Don"t block the event loop!
+        # Don't block the event loop!
         self.setModal(False)
         filepath = get_dialog_ui("configuration.ui")
         uic.loadUi(filepath, self)
@@ -206,6 +206,7 @@ class ConfigurationDialog(QDialog):
         self.tree_view.setModel(item_model)
         self.tree_view.setAlternatingRowColors(True)
         self.configure_header()
+        self.expanded = False
 
     def configure_header(self):
         """Configure the treeview header to automatically resize its contents
@@ -213,3 +214,19 @@ class ConfigurationDialog(QDialog):
         header = self.tree_view.header()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.sectionDoubleClicked.connect(self.onDoubleClickHeader)
+
+    @Slot()
+    def onDoubleClickHeader(self):
+        if self.expanded:
+            self.collapseAll()
+        else:
+            self.expandAll()
+
+    def collapseAll(self):
+        self.expanded = False
+        self.tree_view.collapseAll()
+
+    def expandAll(self):
+        self.expanded = True
+        self.tree_view.expandAll()
