@@ -222,10 +222,11 @@ class SceneMoveAction(BaseSceneAction):
         if len(selection_model) == 0:
             return
 
-        increment = {"Left": QPoint(-GRID_INC, 0),
-                     "Right": QPoint(GRID_INC, 0),
-                     "Up": QPoint(0, -GRID_INC),
-                     "Down": QPoint(0, GRID_INC)}
+        inc = GRID_INC if scene_view.snap_to_grid else 1
+        increment = {"Left": QPoint(-inc, 0),
+                     "Right": QPoint(inc, 0),
+                     "Up": QPoint(0, -inc),
+                     "Down": QPoint(0, inc)}
         offset = increment.get(self.text)
         # move each item in the selection with increment!
         for c in scene_view.selection_model:
