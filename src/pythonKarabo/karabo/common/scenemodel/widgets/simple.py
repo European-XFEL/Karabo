@@ -48,6 +48,14 @@ class DaemonManagerModel(BaseWidgetObjectData):
     """A model for the DaemonManager Table element"""
 
 
+class HistoricTextModel(BaseWidgetObjectData):
+    """A model for the historic text element
+
+    Note: This model is not associated with a reader and writer and cannot
+    be written.
+    """
+
+
 class DisplayLabelModel(BaseWidgetObjectData):
     """A model for DisplayLabel"""
 
