@@ -3,10 +3,10 @@ from karabo.common.display_types import (
     KARABO_SCHEMA_DISPLAY_TYPE_ALARM, KARABO_SCHEMA_DISPLAY_TYPE_STATE)
 from karabo.common.scenemodel.api import (
     get_alarm_graph_scene, get_image_scene, get_state_graph_scene,
-    get_trendline_scene, get_vector_scene)
+    get_text_history_scene, get_trendline_scene, get_vector_scene)
 from karabogui.binding.binding_types import (
     BoolBinding, FloatBinding, ImageBinding, IntBinding, NDArrayBinding,
-    NodeBinding, PipelineOutputBinding, VectorNumberBinding)
+    NodeBinding, PipelineOutputBinding, StringBinding, VectorNumberBinding)
 
 
 def get_generic_scene(proxy, include_images=True):
@@ -29,7 +29,11 @@ def get_generic_scene(proxy, include_images=True):
         path = proxy.path
         return get_alarm_graph_scene(instance_id, path)
 
-    if isinstance(binding, (BoolBinding, FloatBinding, IntBinding)):
+    if isinstance(binding, StringBinding):
+        path = proxy.path
+        return get_text_history_scene(instance_id, path)
+
+    elif isinstance(binding, (BoolBinding, FloatBinding, IntBinding)):
         path = proxy.path
         return get_trendline_scene(instance_id, path)
 
