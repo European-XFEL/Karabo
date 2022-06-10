@@ -11,7 +11,7 @@ from .const import (
 from .exceptions import SceneReaderException, SceneWriterException
 from .generic_scenes import (
     get_alarm_graph_scene, get_image_scene, get_state_graph_scene,
-    get_trendline_scene, get_vector_scene)
+    get_text_history_scene, get_trendline_scene, get_vector_scene)
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (
     BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
@@ -54,9 +54,9 @@ from .widgets.simple import (
     DisplayTextLogModel, DisplayTimeModel, EditableListElementModel,
     EditableListModel, EditableRegexListModel, EditableRegexModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
-    HexadecimalModel, IntLineEditModel, LabelModel, LampModel, LineEditModel,
-    PopUpModel, RunConfiguratorModel, SceneLinkModel, SliderModel,
-    StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
+    HexadecimalModel, HistoricTextModel, IntLineEditModel, LabelModel,
+    LampModel, LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
+    SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, convert_from_svg_image, convert_to_svg_image)
