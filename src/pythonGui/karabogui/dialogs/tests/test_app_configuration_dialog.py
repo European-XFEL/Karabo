@@ -49,6 +49,16 @@ class TestAppConfDialog(GuiTestCase):
             self.assertEqual(flag & Qt.ItemIsUserCheckable,
                              Qt.ItemIsUserCheckable)
 
+            self.assertFalse(dialog.expanded)
+            dialog.expandAll()
+            self.assertTrue(dialog.expanded)
+
+            # Double clicks, unfortunately, we cannot use QTest for that
+            dialog.onDoubleClickHeader()
+            self.assertFalse(dialog.expanded)
+            dialog.onDoubleClickHeader()
+            self.assertTrue(dialog.expanded)
+
     def test_model_tester(self):
         from pytestqt.modeltest import ModelTester
         config = Configuration()
