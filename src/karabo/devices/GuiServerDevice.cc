@@ -593,8 +593,12 @@ namespace karabo {
                 const Version clientVersion(hash.get<string>("version"));
                 auto weakChannel = WeakChannelPointer(channel);
                 if (clientVersion >= Version(get<std::string>("minClientVersion"))) {
-                    KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username")
-                            << " (version " << clientVersion.getString() << ")";
+                    std::stringstream extraInfo;
+                    if (hash.has("info")) {
+                        extraInfo << "\nDetails: " << hash.get<Hash>("info");
+                    }
+                    KARABO_LOG_FRAMEWORK_INFO << "Login request of user: " << hash.get<string>("username")
+                                              << " (version " << clientVersion.getString() << ")." << extraInfo.str();
                     registerConnect(clientVersion, channel);
                     // TODO: Add user authentication and subscribe `onRead` on success
                     channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
