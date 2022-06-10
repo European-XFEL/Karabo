@@ -146,11 +146,13 @@ class Tests(TestCase):
         self.assertEqual(proxy.a, 3 * unit.A)
         self.assertEqual(proxy.node.b, "whatever")
 
+        self.assertNotIn("setB", proxy._schema_hash)
         ProxyFactory.updateSchema(proxy, schema)
         proxy._onChanged(Hash("node", Hash("c", "whatever"),
                               "a", Hash("c", "bla")))
         self.assertEqual(proxy.a.c, "bla")
         self.assertEqual(proxy.node.c, "whatever")
+        self.assertIn("setB", proxy._schema_hash)
 
     def test_get_descriptors(self):
         cls = ProxyFactory.createProxy(self.schema)
