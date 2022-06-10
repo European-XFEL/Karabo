@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>642</width>
-    <height>347</height>
+    <height>451</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,6 +15,9 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
+    <widget class="QTreeView" name="tree_view"/>
+   </item>
+   <item row="2" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -25,7 +28,17 @@
     </widget>
    </item>
    <item row="0" column="0">
-    <widget class="QTreeView" name="tree_view"/>
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <italic>true</italic>
+      </font>
+     </property>
+     <property name="text">
+      <string>Note: Configuration changes will be loaded after restart of the application.</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
