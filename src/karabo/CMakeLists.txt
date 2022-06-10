@@ -242,17 +242,6 @@ updateDependenciesCondaEnvironment()
 # finding dependencies
 set(EXTERN_DEPS_INCLUDE "" )
 
-# To find the external dependencies a sensible value should be set for
-# CMAKE_PREFIX_PATH.
-if (NOT DEFINED CMAKE_PREFIX_PATH OR NOT EXISTS ${CMAKE_PREFIX_PATH})
-    message(WARNING
-            "-- WARNING --\n"
-            "No sensible value specified for CMAKE_PREFIX_PATH. "
-            "Dependency resolution depends on that setting.\n"
-            "--------------"
-    )
-endif()
-
 find_package(HDF5 REQUIRED)
 
 # Karabo currently expect to find the hdf5 libraries in an `hdf5` folder
