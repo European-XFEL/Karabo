@@ -20,6 +20,7 @@ from .scene_dialogs import ReplaceDialog, ResizeSceneDialog, SceneItemDialog
 from .scene_link_dialog import SceneLinkDialog
 from .sticker_dialog import GREY, StickerDialog
 from .textdialog import TextDialog
+from .time_detail_dialog import RequestTimeDialog
 from .update_dialog import UpdateDialog
 from .utils import get_dialog_ui
 from .webdialog import WebDialog, WebValidator
