@@ -12,13 +12,14 @@ from qtpy.QtWidgets import QDoubleSpinBox, QFrame, QLabel, QLineEdit, QSpinBox
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.fonts import substitute_font
 
+DEFAULT_SIZE_HINT = 20
 CONTENT_MARGIN = 10
-MAX_SVG_SIZE = 24
-SIZE_HINT_SVG = 20
 
-MIN_STATE_SIZE = 10
-SIZE_HINT_STATE_WIDTH = 30
-SIZE_HINT_STATE_HEIGHT = 20
+SVG_MAX_SIZE = 24
+
+STATE_MIN_SIZE = 10
+STATE_WIDTH_HINT = 30
+
 LOCALE = QLocale("en_US")
 
 
@@ -69,7 +70,7 @@ class Label(QLabel):
         fm = QFontMetrics(self.font())
         width = fm.width(self.text()) + CONTENT_MARGIN
 
-        return QSize(width, 20)
+        return QSize(width, DEFAULT_SIZE_HINT)
 
 
 class LineEdit(QLineEdit):
@@ -81,10 +82,9 @@ class LineEdit(QLineEdit):
 
     def sizeHint(self):
         fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
         width = fm.width(self.text()) + CONTENT_MARGIN
 
-        return QSize(width, 20)
+        return QSize(width, DEFAULT_SIZE_HINT)
 
 
 class SpinBox(QSpinBox):
@@ -98,9 +98,8 @@ class SpinBox(QSpinBox):
 
     def sizeHint(self):
         fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
         width = fm.width(self.cleanText()) + CONTENT_MARGIN
-        return QSize(width, 20)
+        return QSize(width, DEFAULT_SIZE_HINT)
 
 
 class DoubleSpinBox(QDoubleSpinBox):
@@ -114,18 +113,17 @@ class DoubleSpinBox(QDoubleSpinBox):
 
     def sizeHint(self):
         fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
         width = fm.width(self.cleanText()) + CONTENT_MARGIN
-        return QSize(width, 20)
+        return QSize(width, DEFAULT_SIZE_HINT)
 
 
 class SvgWidget(QSvgWidget):
     def __init__(self, parent=None):
         super(SvgWidget, self).__init__(parent)
-        self.setMaximumSize(MAX_SVG_SIZE, MAX_SVG_SIZE)
+        self.setMaximumSize(SVG_MAX_SIZE, SVG_MAX_SIZE)
 
     def sizeHint(self):
-        return QSize(SIZE_HINT_SVG, SIZE_HINT_SVG)
+        return QSize(DEFAULT_SIZE_HINT, DEFAULT_SIZE_HINT)
 
 
 class FrameWidget(QLabel):
@@ -133,10 +131,10 @@ class FrameWidget(QLabel):
         super(FrameWidget, self).__init__(parent)
         self.setAutoFillBackground(True)
         self.setAlignment(Qt.AlignCenter)
-        self.setMinimumWidth(MIN_STATE_SIZE)
-        self.setMinimumHeight(MIN_STATE_SIZE)
+        self.setMinimumWidth(STATE_MIN_SIZE)
+        self.setMinimumHeight(STATE_MIN_SIZE)
         self.setWordWrap(True)
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
 
     def sizeHint(self):
-        return QSize(SIZE_HINT_STATE_WIDTH, SIZE_HINT_STATE_HEIGHT)
+        return QSize(STATE_WIDTH_HINT, DEFAULT_SIZE_HINT)
