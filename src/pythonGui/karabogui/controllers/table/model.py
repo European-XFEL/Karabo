@@ -160,12 +160,14 @@ class TableModel(QAbstractTableModel):
         return False
 
     def updateData(self, data):
-        """External update of the table data"""
+        """External quick update of the table data"""
         roles = [Qt.BackgroundRole, Qt.CheckStateRole, Qt.DisplayRole,
                  Qt.ToolTipRole]
         columns = self.columnCount() - 1
         for row, hsh in enumerate(data):
-            self._data[row] = hsh
+            row_hash = self._data[row]
+            for key, value in hsh.items():
+                row_hash[key] = value
             first_index = self.index(row, 0)
             last_index = self.index(row, columns)
             self.dataChanged.emit(first_index, last_index, roles)
