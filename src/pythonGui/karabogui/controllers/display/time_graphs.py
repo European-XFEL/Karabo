@@ -17,6 +17,7 @@ from karabogui.controllers.api import (
     HIDDEN, MAX_NUMBER_LIMIT, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
     BaseBindingController, Curve, get_start_end_date_time,
     register_binding_controller, with_display_type)
+from karabogui.dialogs.api import RequestTimeDialog
 from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
@@ -29,21 +30,6 @@ TIME_ACTIONS = BASE_ACTIONS + ["y_range"]
 
 MIN_TIMESTAMP = datetime.datetime(1970, 1, 31).timestamp()
 MAX_TIMESTAMP = datetime.datetime(2038, 12, 31).timestamp()
-
-
-class RequestTime(QDialog):
-    def __init__(self, start, end, parent=None):
-        super().__init__(parent)
-        self.setModal(False)
-        uic.loadUi(get_ui_file("ui_trendline_detail.ui"), self)
-        self.dt_start.setDateTime(start)
-        self.dt_end.setDateTime(end)
-
-    def get_start_and_end_time(self):
-        """Return the start and end time in seconds"""
-        start = self.dt_start.dateTime().toMSecsSinceEpoch() / 1000
-        end = self.dt_end.dateTime().toMSecsSinceEpoch() / 1000
-        return start, end
 
 
 def curve_to_actions(axis_type):
@@ -193,7 +179,7 @@ class BaseSeriesGraph(BaseBindingController):
         start = QDateTime.fromMSecsSinceEpoch(x_min * 1000)
         end = QDateTime.fromMSecsSinceEpoch(x_max * 1000)
 
-        dialog = RequestTime(start=start, end=end, parent=self.widget)
+        dialog = RequestTimeDialog(start=start, end=end, parent=self.widget)
         if dialog.exec() == QDialog.Accepted:
             # Convert to again to set the interval
             self._button_scale = False
