@@ -163,14 +163,14 @@ class TableModel(QAbstractTableModel):
         """External quick update of the table data"""
         roles = [Qt.BackgroundRole, Qt.CheckStateRole, Qt.DisplayRole,
                  Qt.ToolTipRole]
+        rows = self.rowCount() - 1
         columns = self.columnCount() - 1
         for row, hsh in enumerate(data):
-            row_hash = self._data[row]
-            for key, value in hsh.items():
-                row_hash[key] = value
-            first_index = self.index(row, 0)
-            last_index = self.index(row, columns)
-            self.dataChanged.emit(first_index, last_index, roles)
+            self._data[row].update(hsh)
+
+        first_index = self.index(0, 0)
+        last_index = self.index(rows, columns)
+        self.dataChanged.emit(first_index, last_index, roles)
 
     def insertRows(self, pos, rows, index, *,
                    copy_row=None, from_device=False):
