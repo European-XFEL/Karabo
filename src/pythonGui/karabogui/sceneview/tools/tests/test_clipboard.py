@@ -66,13 +66,40 @@ class TestClipboard(GuiTestCase):
         assert label.x == 10
         assert label.y == 10
 
+        # Without snap grid, simple pixel movement
+        scene_view.snap_to_grid = False
+
+        # Left
+        action = SceneMoveAction(text="Left")
+        action.perform(scene_view)
+        assert label.x == 9
+        assert label.y == 10
+
+        # Right
+        action = SceneMoveAction(text="Right")
+        action.perform(scene_view)
+        assert label.x == 10
+        assert label.y == 10
+
+        # Up
+        action = SceneMoveAction(text="Up")
+        action.perform(scene_view)
+        assert label.x == 10
+        assert label.y == 9
+
+        # Down
+        action = SceneMoveAction(text="Down")
+        action.perform(scene_view)
+        assert label.x == 10
+        assert label.y == 10
+
     def test_align_action(self):
         for action in ("Left", "Right", "Top", "Bottom"):
             self._assert_align_action(action)
 
     def _assert_align_action(self, action):
         labels = [
-            LabelModel(x=i*10, y=i*10, text="bar") for i in range(4)
+            LabelModel(x=i * 10, y=i * 10, text="bar") for i in range(4)
         ]
         model = SceneModel(children=labels)
         scene_view = SceneView(model=model)
