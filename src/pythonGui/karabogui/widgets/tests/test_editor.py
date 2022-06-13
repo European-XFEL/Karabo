@@ -2,7 +2,7 @@ from unittest import mock
 
 from karabogui.testing import GuiTestCase
 from karabogui.widgets.codeeditor import (
-    DEFAULT_BACKGROUND_COLOR, TEXT_HIGHLIGHT_COLOR, CodeEditor)
+    DEFAULT_BACKGROUND_COLOR, TEXT_HIGHLIGHT_COLOR, CodeBook, CodeEditor)
 
 
 class TestConst(GuiTestCase):
@@ -98,3 +98,31 @@ class TestConst(GuiTestCase):
         with mock.patch.object(editor, "clearHighlight") as clear_mock:
             editor.findAndHighlight("foo", False, False)
             assert clear_mock.call_count == 1
+
+    def test_code_book(self):
+        code_book = CodeBook(parent=None, code="Hello karabo")
+
+        # set code to the editor
+        assert code_book.code_editor.toPlainText() == "Hello karabo"
+
+        # get code from editor
+        assert code_book.getEditorCode() == "Hello karabo"
+
+    def test_move_cursor(self):
+        code = """
+        This is a dummy code
+        containing multiple lines
+        text 1
+        text 2
+        text 3
+        """
+        code_book = CodeBook(parent=None, code=code)
+        assert code_book.code_editor.textCursor().position() == 0
+
+        code_book.moveCursorToLine(3, 0)
+        assert code_book.code_editor.firstVisibleBlock().blockNumber() == 2
+        assert code_book.code_editor.textCursor().columnNumber() == 0
+
+        code_book.moveCursorToLine(4, 2)
+        assert code_book.code_editor.firstVisibleBlock().blockNumber() == 3
+        assert code_book.code_editor.textCursor().columnNumber() == 2
