@@ -172,12 +172,10 @@ class BindingNamespace(object):
         self.__dict__[priv_prefix + '__priv_prefix'] = priv_prefix
 
     def clear_namespace(self):
-        """Remove all items from the namespace.
-        """
+        """Remove all items from the namespace"""
+        func = super().__delattr__
         for key in self.__names:
-            # Avoid the local implementation of __delattr__ since
-            # it will modify self.__names and that is undesirable.
-            super(BindingNamespace, self).__delattr__(key)
+            func(key)
         self.__names.clear()
 
     def __contains__(self, key):
