@@ -3,18 +3,11 @@
 # Created in June 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtCore import QEvent, QPoint, Qt, Slot
-from qtpy.QtGui import QKeySequence, QTextCursor
-from qtpy.QtWidgets import (
-    QMenu, QPlainTextEdit, QShortcut, QSplitter, QVBoxLayout, QWidget)
+from qtpy.QtCore import QPoint, Qt, Slot
+from qtpy.QtGui import QTextCursor
+from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
 
 import karabogui.access as krb_access
-
-try:
-    from qtconsole.pygments_highlighter import PygmentsHighlighter
-except ImportError:
-    from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
-
 from karabo.common.project.api import write_macro
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
@@ -24,8 +17,7 @@ from karabogui.events import (
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_topology
 from karabogui.util import getSaveFileName
-from karabogui.widgets.codeeditor import CodeEditor
-from karabogui.widgets.find_toolbar import FindToolBar
+from karabogui.widgets.codeeditor import CodeBook
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
@@ -52,34 +44,14 @@ class MacroPanel(BasePanelWidget):
         for instance in model.instances:
             self.connect(instance)
 
-    @Slot()
-    def showFindToolbar(self):
-        self.find_toolbar.setVisible(True)
-        selected_text = self.ui_editor.textCursor().selectedText()
-        self.find_toolbar.find_line_edit.setText(selected_text)
-        match_case = self.find_toolbar.match_case.isChecked()
-        if selected_text:
-            self.ui_editor.highlight(selected_text, match_case=match_case)
-        self.find_toolbar.find_line_edit.setFocus()
-
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
-        content_widget = QWidget(parent=self)
-        layout = QVBoxLayout(content_widget)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
         widget = QSplitter(Qt.Vertical, parent=self)
-        self.ui_editor = CodeEditor(widget)
-        self.ui_editor.installEventFilter(self)
-        self.ui_editor.setStyleSheet("font-family: monospace")
-        self.ui_editor.setPlainText(write_macro(self.model))
-
-        self.ui_editor.setLineWrapMode(QPlainTextEdit.NoWrap)
-
-        PygmentsHighlighter(self.ui_editor.document())
-        widget.addWidget(self.ui_editor)
-        self.ui_editor.textChanged.connect(self.on_macro_changed)
+        ui_editor = CodeBook(parent=widget, code=write_macro(self.model))
+        widget.addWidget(ui_editor)
+        ui_editor.codeChanged.connect(self.on_macro_changed)
+        self.ui_editor = ui_editor
 
         self.ui_console = QPlainTextEdit(widget)
         self.ui_console.setReadOnly(True)
@@ -90,22 +62,7 @@ class MacroPanel(BasePanelWidget):
 
         widget.addWidget(self.ui_console)
 
-        self.find_toolbar = FindToolBar(parent=self)
-        self.find_toolbar.findRequested.connect(
-            self.ui_editor.findAndHighlight)
-        self.find_toolbar.highlightRequested.connect(self.ui_editor.highlight)
-        self.find_toolbar.aboutToClose.connect(self.ui_editor.clearHighlight)
-        self.find_toolbar.setVisible(False)
-
-        layout.addWidget(self.find_toolbar)
-        layout.addWidget(widget)
-
-        find = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F), self)
-        find.activated.connect(self.showFindToolbar)
-
-        self.ui_editor.resultFound.connect(self.find_toolbar.setResultText)
-
-        return content_widget
+        return widget
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
@@ -115,13 +72,6 @@ class MacroPanel(BasePanelWidget):
         toolbar.addAction(icons.run, "Run", self.on_run)
         toolbar.addAction(icons.save, "Save", self.on_save)
         return [toolbar]
-
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Tab:
-                self.ui_editor.textCursor().insertText(" " * 4)
-                return True
-        return False
 
     # -----------------------------------------------------------------------
 
@@ -231,11 +181,7 @@ class MacroPanel(BasePanelWidget):
             compile(self.model.code, self.model.simple_name, "exec")
         except SyntaxError as e:
             if e.filename == self.model.simple_name:
-                c = self.ui_editor.textCursor()
-                c.movePosition(c.Start)
-                c.movePosition(c.Down, n=e.lineno - 1)
-                c.movePosition(c.Right, n=e.offset)
-                self.ui_editor.setTextCursor(c)
+                self.ui_editor.moveCursorToLine(e.lineno, e.offset)
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
                     e.msg, e.text, " " * e.offset, e.filename, e.lineno)
             messagebox.show_warning(formatted_msg, title=type(e).__name__)
@@ -258,4 +204,4 @@ class MacroPanel(BasePanelWidget):
 
     @Slot()
     def on_macro_changed(self):
-        self.model.code = self.ui_editor.toPlainText()
+        self.model.code = self.ui_editor.getEditorCode()
