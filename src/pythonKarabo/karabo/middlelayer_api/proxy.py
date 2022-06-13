@@ -283,6 +283,7 @@ class ProxyFactory(object):
     @classmethod
     def createProxy(cls, schema):
         namespace = cls.createNamespace(schema.hash)
+        namespace["_schema_hash"] = schema.hash
         return type(schema.name, (cls.Proxy,), namespace)
 
     @classmethod
