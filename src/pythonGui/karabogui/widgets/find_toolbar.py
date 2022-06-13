@@ -27,8 +27,9 @@ class FindToolBar(QWidget):
         self.close_button.setStyleSheet("border: 0px;")
         self.close_button.clicked.connect(self.close)
 
-        self.find_line_edit.textChanged.connect(self.highlightRequest)
-        self.match_case.toggled.connect(self.findNext)
+        self.find_line_edit.returnPressed.connect(self.findNext)
+        self.find_line_edit.textChanged.connect(self._onSearchTextChanged)
+        self.match_case.toggled.connect(self._onMatchCaseToggled)
 
     @Slot(bool)
     def setReplaceWidgetsVisibility(self, toggled):
@@ -56,10 +57,18 @@ class FindToolBar(QWidget):
             text = f"Found {count} hits"
         self.result_label.setText(text)
 
+    @Slot(bool)
+    def _onMatchCaseToggled(self, match_case):
+        text = self.find_line_edit.text()
+        self._highlightRequest(text, match_case)
+
     @Slot(str)
-    def highlightRequest(self, text):
+    def _onSearchTextChanged(self, text):
         case_sensitive = self.match_case.isChecked()
-        self.highlightRequested.emit(text, case_sensitive)
+        self._highlightRequest(text, case_sensitive)
+
+    def _highlightRequest(self, text, match_case):
+        self.highlightRequested.emit(text, match_case)
 
     def close(self):
         self.aboutToClose.emit()

@@ -1,6 +1,6 @@
 from unittest import mock
 
-from karabogui.testing import GuiTestCase
+from karabogui.testing import GuiTestCase, click_button
 from karabogui.widgets.codeeditor import (
     DEFAULT_BACKGROUND_COLOR, TEXT_HIGHLIGHT_COLOR, CodeBook, CodeEditor)
 
@@ -98,6 +98,26 @@ class TestConst(GuiTestCase):
         with mock.patch.object(editor, "clearHighlight") as clear_mock:
             editor.findAndHighlight("foo", False, False)
             assert clear_mock.call_count == 1
+
+    def test_case_sensitive_highlight(self):
+        code = "one two three One one One"
+        widget = CodeBook(code=code, parent=None)
+        find_toolbar = widget.find_toolbar
+        find_toolbar.match_case.setChecked(True)
+
+        mock_slot = mock.Mock()
+        find_toolbar.highlightRequested.connect(mock_slot)
+        find_toolbar.find_line_edit.setText("one")
+
+        mock_slot.reset_mock()
+        click_button(find_toolbar.match_case)
+        assert mock_slot.call_count == 1
+        assert mock_slot.call_args[0] == ("one", False)
+
+        mock_slot.reset_mock()
+        click_button(find_toolbar.match_case)
+        assert mock_slot.call_count == 1
+        assert mock_slot.call_args[0] == ("one", True)
 
     def test_code_book(self):
         code_book = CodeBook(parent=None, code="Hello karabo")
