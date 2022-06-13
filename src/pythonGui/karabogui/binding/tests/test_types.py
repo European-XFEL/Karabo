@@ -67,6 +67,9 @@ def test_binding_namespace():
     ns.clear_namespace()
     assert list(ns) == []
 
+    with assert_raises(AttributeError):
+        del ns.foo
+
     ints_only = BindingNamespace(item_type=int)
     with assert_raises(ValueError):
         ints_only.not_an_int = 3.14
