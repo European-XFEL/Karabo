@@ -110,7 +110,7 @@ def update_cmake_settings(settings: Dict[str, str]) -> int:
     else:
         dir_path = Path(file_dir)
         if not dir_path.exists():
-            dir_path.mkdir(parents=True, exists_ok=True)
+            dir_path.mkdir(parents=True, exist_ok=True)
         file_operation = "created"
 
     data_to_save["cmake.configureSettings"] = (
