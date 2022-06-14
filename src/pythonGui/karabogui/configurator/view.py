@@ -6,7 +6,9 @@
 from collections import OrderedDict
 from functools import partial
 
-from qtpy.QtCore import QModelIndex, QPoint, QRect, Qt, Signal, Slot
+from qtpy.QtCore import (
+    QItemSelection, QItemSelectionModel, QModelIndex, QPoint, QRect, Qt,
+    Signal, Slot)
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import (
     QAbstractItemDelegate, QAbstractItemView, QAction, QMenu, QTreeView)
@@ -88,18 +90,19 @@ class ConfigurationTreeView(QTreeView):
 
     def swap_models(self):
         """Swap the models of the tree view between filter and source"""
+        current_index = self.currentIndex()
         if self._filter_model is None:
             model = ConfiguratorFilterModel(self.sourceModel())
             self.setModel(model)
             self._filter_model = model
+            index = model.mapFromSource(current_index)
         else:
-            current_index = self.currentIndex()
             index = self.model().mapToSource(current_index)
             self.setModel(self.sourceModel())
             self._filter_model.deleteLater()
             self._filter_model = None
-            if index.isValid():
-                self.scrollTo(index)
+        # Select row of index and set current index
+        self.setRowSelection(index)
 
     def sourceModel(self):
         """Public method to retrieve the source model"""
@@ -108,6 +111,20 @@ class ConfigurationTreeView(QTreeView):
     def filterModel(self):
         """Public method to retrieve the filter model"""
         return self._filter_model
+
+    def setRowSelection(self, index):
+        """Select the full row in the configurator and set the `index`"""
+        if not index.isValid():
+            self.selectionModel().clearSelection()
+            return
+
+        model = index.model()
+        parent = index.parent()
+        selection = QItemSelection(model.index(index.row(), 0, parent),
+                                   model.index(index.row(), 2, parent))
+        self.selectionModel().select(selection,
+                                     QItemSelectionModel.ClearAndSelect)
+        self.setCurrentIndex(index)
 
     def assign_proxy(self, proxy):
         model = self.sourceModel()
