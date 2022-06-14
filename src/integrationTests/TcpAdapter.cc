@@ -31,6 +31,8 @@ namespace karabo {
         h.set("port", config.get<unsigned int>("port"));
         h.set("serializationType", "binary");
         m_dataConnection = Connection::create("Tcp", h);
+
+        // Cannot yet use bind_weak in constructor - not worth to recfactor this test class
         m_dataConnection->startAsync(boost::bind(&karabo::TcpAdapter::onConnect, this, _1, 500, 10, _2));
         m_debug = config.has("debug") ? config.get<bool>("debug") : false;
     }
@@ -47,13 +49,13 @@ namespace karabo {
             onError(ec, channel);
             if (ec != boost::asio::error::eof && repetition >= 0) {
                 m_deadline.expires_from_now(boost::posix_time::milliseconds(timeout));
-                m_deadline.async_wait(boost::bind(&karabo::TcpAdapter::waitHandler, this,
-                                                  boost::asio::placeholders::error, timeout, repetition));
+                m_deadline.async_wait(bind_weak(&karabo::TcpAdapter::waitHandler, this,
+                                                boost::asio::placeholders::error, timeout, repetition));
             }
             return;
         }
         m_channel = boost::dynamic_pointer_cast<TcpChannel>(channel);
-        if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
+        if (channel->isOpen()) channel->readAsyncHash(bind_weak(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
     }
 
     void TcpAdapter::waitHandler(const karabo::net::ErrorCode& ec, int timeout, int repetition) {
@@ -67,7 +69,7 @@ namespace karabo {
             return;
         };
 
-        m_dataConnection->startAsync(boost::bind(&karabo::TcpAdapter::onConnect, this, _1, timeout, repetition, _2));
+        m_dataConnection->startAsync(bind_weak(&karabo::TcpAdapter::onConnect, this, _1, timeout, repetition, _2));
     }
 
 
@@ -108,11 +110,11 @@ namespace karabo {
             }
 
             if (channel->isOpen())
-                channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
+                channel->readAsyncHash(bind_weak(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
         } catch (const Exception& e) {
             std::cerr << "Problem in onRead(): " << e.userFriendlyMsg(true) << std::endl;
             if (channel->isOpen())
-                channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
+                channel->readAsyncHash(bind_weak(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
         }
     }
 
@@ -128,8 +130,11 @@ namespace karabo {
     }
 
 
-    void TcpAdapter::login() {
-        QueuePtr messageQ = getNextMessages("systemTopology", 1, [&] { sendMessage(k_defaultLoginData); });
+    void TcpAdapter::login(const karabo::util::Hash& extraLoginData) {
+        Hash loginData(k_defaultLoginData);
+        loginData.merge(extraLoginData);
+
+        QueuePtr messageQ = getNextMessages("systemTopology", 1, [this, loginData] { sendMessage(loginData); });
         // Clean received message from internal cache.
         Hash lastMessage;
         messageQ->pop(lastMessage);
@@ -161,7 +166,7 @@ namespace karabo {
         boost::unique_lock<boost::mutex> lock(m_writeConditionMutex);
         m_writeWaitForId = ++m_MessageId;
         m_channel->writeAsyncHash(message,
-                                  boost::bind(&karabo::TcpAdapter::onWriteComplete, this, _1, m_channel, m_MessageId));
+                                  bind_weak(&karabo::TcpAdapter::onWriteComplete, this, _1, m_channel, m_MessageId));
         if (block) {
             m_writeCondition.wait(lock);
         }
