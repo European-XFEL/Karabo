@@ -33,13 +33,13 @@ class TestConfiguration(GuiTestCase):
         config['device_domain'] = 'CAS_INTERNAL'
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
-        self.assertEqual(len(config), 15)
+        self.assertEqual(len(config), 17)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['device_domain'], 'CAS_INTERNAL')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
         self.assertEqual(list(config.keys()),
-                         ['alarm_visible',
+                         ['alarm_navigation', 'alarm_project', 'alarm_visible',
                           'broker_topic', 'console_visible',
                           'data_dir', 'db_token', 'development',
                           'device_domain', 'documentation', 'domain',
@@ -74,13 +74,15 @@ class TestConfiguration(GuiTestCase):
             del config["wizard"]
             assert mock.last_path == "user/wizard"
 
-    def test_configuration_groups(self):
+    def test_configuration_groups_info(self):
         config = Configuration()
         groups = config.groups()
         self.assertEqual(len(groups), 6)
         user_group = [item.name for item in groups[USER]]
-        self.assertEqual(len(user_group), 4)
+        self.assertEqual(len(user_group), 6)
         self.assertIn('wizard', user_group)
+        self.assertIn('alarm_project', user_group)
+        self.assertIn('alarm_navigation', user_group)
         self.assertIn('main_geometry', user_group)
         self.assertIn('highDPI', user_group)
         self.assertIn('development', user_group)
@@ -105,3 +107,7 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('alarm_visible', panel_group)
         self.assertIn('log_visible', panel_group)
         self.assertIn('console_visible', panel_group)
+
+        info = config.info()
+        self.assertIn(PANEL, info)
+        self.assertIn(USER, info)
