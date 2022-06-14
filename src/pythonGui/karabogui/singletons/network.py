@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 import karabogui.access as krb_access
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
-    AccessLevel, Hash, Timestamp, decodeBinary, encodeBinary)
+    AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
 from karabogui.const import REQUEST_REPLY_TIMEOUT
 from karabogui.dialogs.logindialog import LoginDialog
@@ -621,6 +621,7 @@ class Network(QObject):
         login_info = Hash("type", "login")
         login_info["username"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
+        login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
 
     def _empty_request_queue(self):
