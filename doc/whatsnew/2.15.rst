@@ -3,6 +3,11 @@ What's New in Karabo 2.15.0
 ***************************
 
 - GUI: The client will prevent adding "backbone" devices to projects. Pre-existing Devices will not be modified.
+- GUI: The alarm columns in the Navigation and Project Panel are now by default hidden.
+  The reason is that extra alarms visualization is performance draining. The visibility can be toggled
+  on in the `Application Configuration` dialog of the menu bar. Changes in this configuration
+  will be active after application restart. This information is now logged by the GUI server.
+  The `AlarmPanel` now have a ``deviceId`` search option, please consider using this instead.
 
 Detailed Merge-Log
 ++++++++++++++++++
