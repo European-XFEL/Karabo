@@ -1,6 +1,6 @@
 from pytest import raises as assert_raises
 
-from karabo.native import AccessLevel, AccessMode, Assignment
+from karabo.native import AccessLevel, AccessMode, Assignment, Hash
 from karabogui.binding.api import (
     BindingNamespace, BoolBinding, ByteArrayBinding, CharBinding,
     ChoiceOfNodesBinding, ComplexBinding, FloatBinding, HashBinding,
@@ -70,3 +70,10 @@ def test_binding_namespace():
     ints_only = BindingNamespace(item_type=int)
     with assert_raises(ValueError):
         ints_only.not_an_int = 3.14
+
+
+def test_table_binding():
+    vector_hash = VectorHashBinding()
+    assert vector_hash.row_schema == Hash()
+    vector_hash.update_attributes({})
+    assert vector_hash.row_schema == Hash()
