@@ -125,6 +125,11 @@ class Configuration(QObject):
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER)
 
+    alarm_project = Item(default=False, q_set=True, group=USER,
+                         editable=True, dtype=bool)
+    alarm_navigation = Item(default=False, q_set=True, group=USER,
+                            editable=True, dtype=bool)
+
     # ----------------------------------------------
     # Project db interface
 
@@ -195,6 +200,19 @@ class Configuration(QObject):
         assert key in self._memory
         item = getattr(self.__class__, key)
         item.erase()
+
+    def info(self):
+        """Return the relevant user meta data information from the config
+
+        This method only accounts `PANEL` and `USER` group information.
+        """
+        ret = {PANEL: {}, USER: {}}
+        for key in self._memory:
+            group = getattr(self.__class__, key).group
+            if group not in (PANEL, USER):
+                continue
+            ret[group][key] = getattr(self, key)
+        return ret
 
     def __len__(self):
         return len(self._memory)
