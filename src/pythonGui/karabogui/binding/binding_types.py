@@ -532,10 +532,10 @@ class VectorHashBinding(VectorBinding):
         return row_schema.hash
 
     def _update_shortcuts(self, attrs):
-        super(VectorHashBinding, self)._update_shortcuts(attrs)
+        super()._update_shortcuts(attrs)
         row_schema = attrs.get(KEY_ROW_SCHEMA)
         if row_schema is None:
-            return
+            return Hash()
 
         self.row_schema = row_schema.hash
 
