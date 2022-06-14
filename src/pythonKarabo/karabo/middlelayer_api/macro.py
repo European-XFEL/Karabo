@@ -11,11 +11,14 @@ from functools import wraps
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, DaqPolicy, Descriptor, Int32, Slot, String)
+    AccessLevel, AccessMode, Attribute, DaqPolicy, Descriptor, Int32, Slot,
+    String)
 
 from .device import Device
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
+
+DEFAULT_ACTION_NAME = "_last_action"
 
 
 def Monitor():
@@ -25,6 +28,74 @@ def Monitor():
         del prop.setter
         return prop
     return outer
+
+
+class MacroSlot(Slot):
+    """This is the `MacroSlot` that mostly behaves like a normal `Slot`
+
+    The method of this slot is always executed in a background task. It works
+    with both synchronized and asyncio coroutines.
+
+    This Slot by design has an `Active` and `Passive` state mechanism. It is
+    allowed to be called in the `Passive` state and sets the Device's
+    state to the `Active` state on execution. When the task is finished the
+    device state is set to the `Passive` state.
+
+    Both states are Attributes on the `MacroSlot` descriptor and they are
+    by default `State.ACTIVE` and `State.PASSIVE`, respectively.
+    """
+    activeState = Attribute(dtype=State)
+    passiveState = Attribute(dtype=State)
+
+    def __init__(self, allowedStates=None, activeState=None,
+                 passiveState=None, **kwargs):
+        activeState = activeState or State.ACTIVE
+        passiveState = passiveState or State.PASSIVE
+        # Make sure both states are not the same!
+        assert activeState is not passiveState
+        allowedStates = allowedStates or {passiveState}
+        super().__init__(strict=True, activeState=activeState,
+                         passiveState=passiveState,
+                         allowedStates=allowedStates, **kwargs)
+
+    def __call__(self, method):
+        name = method.__name__
+
+        def background_slot(loop, configurable, device):
+            device.state = self.activeState
+            device.currentSlot = name
+
+            async def inner():
+                try:
+                    await loop.run_coroutine_or_thread(method, configurable)
+                except CancelledError:
+                    coro = suppress_exception(loop.run_coroutine_or_thread(
+                        device.onCancelled, self))
+                    loop.create_task(coro, instance=device)
+                except Exception as exc:
+                    tb = exc.__traceback__
+                    device._onException(self, exc, tb)
+                finally:
+                    device.currentSlot = ""
+                    device.state = self.passiveState
+
+            task = loop.create_task(inner(), instance=device)
+            device.__dict__[DEFAULT_ACTION_NAME] = task
+
+        if iscoroutinefunction(method):
+            @wraps(method)
+            async def wrapper(configurable):
+                device = configurable.get_root()
+                loop = get_event_loop()
+                background_slot(loop, configurable, device)
+        else:
+            @wraps(method)
+            def wrapper(configurable):
+                device = configurable.get_root()
+                loop = device._ss.loop
+                background_slot(loop, configurable, device)
+
+        return super().__call__(wrapper)
 
 
 class RemoteDevice:
@@ -185,7 +256,7 @@ class Macro(Device):
         Macro._subclasses = {}
         for k, v in dict.items():
             # patch slots for macro state machine behavior
-            if isinstance(v, Slot):
+            if isinstance(v, Slot) and not isinstance(v, MacroSlot):
                 passive_state = cls.abstractPassiveState
                 active_state = cls.abstractActiveState
                 _wrapslot(v, k, passive_state, active_state)
