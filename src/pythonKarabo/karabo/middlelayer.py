@@ -56,7 +56,7 @@ from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.injectable import Injectable
 from .middlelayer_api.json import KaraboJSONEncoder
-from .middlelayer_api.macro import Macro, Monitor, RemoteDevice
+from .middlelayer_api.macro import Macro, MacroSlot, Monitor, RemoteDevice
 from .middlelayer_api.pipeline import (
     InputChannel, NetworkInput, NetworkOutput, OutputChannel)
 from .middlelayer_api.proxy import (
