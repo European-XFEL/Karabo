@@ -24,7 +24,7 @@
  */
 namespace karabo {
 
-    class TcpAdapter {
+    class TcpAdapter : public boost::enable_shared_from_this<TcpAdapter> {
        public:
         typedef boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> > QueuePtr;
 
@@ -113,9 +113,9 @@ namespace karabo {
         void disconnect();
 
         /**
-         * Send the default login message and wait for reply
+         * Merge the given argument (default: empty) to the default login message, send it and wait for reply
          */
-        void login();
+        void login(const karabo::util::Hash& extraLoginData = karabo::util::Hash());
 
         /**
          * Waits for a callback to return true when executed on messages of a specifc type.
