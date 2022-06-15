@@ -21,7 +21,7 @@ import aioredis
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
-from .eventloop import Broker
+from .base import Broker
 
 
 class RedisMessage:
