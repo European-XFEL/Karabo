@@ -4,8 +4,8 @@ from karabo.common.const import KARABO_SCHEMA_DISPLAY_TYPE
 from karabogui.binding.api import StringBinding
 
 from ..utils import (
-    create_brushes, has_confirmation, is_state_display_type, list2string,
-    string2list)
+    create_brushes, get_button_attributes, has_confirmation,
+    is_state_display_type, list2string, parse_table_link, string2list)
 
 
 def test_display_type_state():
@@ -84,3 +84,25 @@ def test_has_confirmation():
     assert confirm is False
     confirm = has_confirmation("TableColor|confirmation")
     assert confirm is False
+
+
+def test_get_button_attributes():
+    attrs = get_button_attributes("TableColor|confirmation=1")
+    assert attrs.get("confirmation") == "1"
+    attrs = get_button_attributes("TableSelection|Confirmation=1&")
+    assert attrs.get("Confirmation") == "1"
+    attrs = get_button_attributes("TableBoolButton|confirmation=1&icon=0")
+    assert attrs.get("confirmation") == "1"
+    assert attrs.get("icon") == "0"
+
+
+def test_table_scheme_parsing():
+    action, options = parse_table_link(
+        "deviceScene|device_id=CAM&name=scene")
+    assert action == "deviceScene"
+    assert options["device_id"] == "CAM"
+    assert options["name"] == "scene"
+
+    action, options = parse_table_link("url|https://www.xfel.eu")
+    assert action == "url"
+    assert options == "https://www.xfel.eu"
