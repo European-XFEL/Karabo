@@ -8,7 +8,7 @@ from unittest import main
 from flaky import flaky
 
 from karabo.common.states import State
-from karabo.middlelayer_api.compat import amqp, jms
+from karabo.middlelayer_api.broker import amqp, jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
