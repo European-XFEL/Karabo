@@ -10,3 +10,4 @@ from .placeholderpanel import PlaceholderPanel
 from .projectpanel import ProjectPanel
 from .scenepanel import ScenePanel
 from .scriptingpanel import ScriptingPanel
+from .widgetcontrollerpanel import WidgetControllerPanel
