@@ -385,7 +385,10 @@ fi
 echo "### Now building and packaging Karabo... ###";
 
 mkdir -p $EXTERN_DEPS_BASE_DIR
-$scriptDir/extern/build.sh $EXTERN_DEPS_DIR ALL
+# Uses the specified number of jobs for building any dependency whose build is
+# driven by CMake.
+export CMAKE_BUILD_PARALLEL_LEVEL=$NUM_JOBS
+safeRunCommand $scriptDir/extern/build.sh $EXTERN_DEPS_DIR ALL
 
 LOWER_CMAKE_CONF=$(echo "$CONF" | tr '[:upper:]' '[:lower:]')
 FRAMEWORK_BUILD_DIR="$scriptDir/build_$LOWER_CMAKE_CONF"
