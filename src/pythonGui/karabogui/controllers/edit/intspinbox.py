@@ -15,7 +15,8 @@ from karabogui.controllers.api import (
     register_binding_controller)
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
-from karabogui.util import MouseWheelEventBlocker, SignalBlocker
+from karabogui.util import (
+    MouseWheelEventBlocker, SignalBlocker, generateObjectName)
 from karabogui.widgets.api import SpinBox
 
 INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Uint8Binding,
@@ -39,6 +40,10 @@ class EditableSpinBox(BaseBindingController):
 
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
+        objectName = generateObjectName(self)
+        sheet = "QWidget#{}".format(objectName)
+        widget.setObjectName(objectName)
+        widget.setStyleSheet(sheet)
         widget.setFocusProxy(self._internal_widget)
 
         # Formats
