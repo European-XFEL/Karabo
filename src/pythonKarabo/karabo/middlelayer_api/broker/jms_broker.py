@@ -20,7 +20,7 @@ from itertools import count
 from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
 
 from . import openmq
-from .eventloop import Broker
+from .base import Broker
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
