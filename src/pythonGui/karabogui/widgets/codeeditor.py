@@ -40,7 +40,6 @@ class CodeBook(QWidget):
         if code is not None:
             code_editor.setPlainText(code)
         code_editor.installEventFilter(self)
-        PygmentsHighlighter(code_editor.document())
         code_editor.resultFound.connect(self.updateResultText)
         code_editor.textChanged.connect(self.codeChanged)
 
@@ -58,6 +57,7 @@ class CodeBook(QWidget):
         self.code_editor = code_editor
         layout.addWidget(self.find_toolbar)
         layout.addWidget(self.code_editor)
+        PygmentsHighlighter(self.code_editor.document())
 
     @Slot(str, bool, bool)
     def _findAndHighlight(self, text, match_case, find_backward):
