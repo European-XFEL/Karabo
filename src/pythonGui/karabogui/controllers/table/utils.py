@@ -62,12 +62,37 @@ def create_brushes(display_string):
 
 
 def has_confirmation(display_string):
-    """Check if the confirmation is provided on a table display string"""
+    attributes = get_button_attributes(display_string)
+    return attributes.get("confirmation") == "1"
+
+
+def get_button_attributes(display_string):
+    """Retrieve the button attributes from a table display string"""
     splitted = display_string.split("|")
-    if not len(splitted) > 1:
-        return False
+    if not len(splitted) == 2:
+        return {}
+
     parsed = parse_qs(splitted[1], keep_blank_values=False)
     options = {name: opt[0] for name, opt in parsed.items()}
 
-    confirm = options.get("confirmation") == "1"
-    return confirm
+    return options
+
+
+def parse_table_link(string):
+    """Parse a table link for a table string button
+
+    Valid schemes are for now `url` and `deviceScene`
+    """
+    splitted = string.split("|", 1)
+    if not len(splitted) == 2:
+        return None, {}
+
+    action_type = splitted[0]
+    if action_type == "deviceScene":
+        parsed = parse_qs(splitted[1], keep_blank_values=False)
+        options = {name: opt[0] for name, opt in parsed.items()}
+    elif action_type == "url":
+        options = splitted[1]
+    else:
+        options = {}
+    return action_type, options
