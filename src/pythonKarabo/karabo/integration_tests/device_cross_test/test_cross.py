@@ -22,7 +22,7 @@ from karabo.middlelayer import (
     Unit, VectorDouble, background, call, encodeXML, getDevice, getHistory,
     isSet, setWait, shutdown, sleep, unit, updateDevice, waitUntil,
     waitUntilNew)
-from karabo.middlelayer_api.compat import jms
+from karabo.middlelayer_api.broker import jms
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 

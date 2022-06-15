@@ -10,27 +10,28 @@ import os
 import socket
 import time
 import traceback
+import uuid
 import weakref
 from asyncio import (
-    CancelledError, Future, Lock, TimeoutError, ensure_future, gather, sleep,
-    wait_for)
+    CancelledError, Future, Lock, TimeoutError, ensure_future, gather,
+    get_event_loop, sleep, wait_for)
 from contextlib import AsyncExitStack
 from functools import partial, wraps
 from itertools import count
 
-import aio_pika
-
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
-from .eventloop import Broker
+from .base import Broker
+from .pahomqtt import AsyncioMqttHelper, MqttError
 
 
-class AmqpBroker(Broker):
+class MqttBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(AmqpBroker, self).__init__(True)
+        super(MqttBroker, self).__init__(True)
         self.domain = loop.topic
         self.loop = loop
+        self.clientId = str(uuid.uuid4())
         self.deviceId = deviceId
         self.classId = classId
         self.broadcast = broadcast
@@ -40,72 +41,49 @@ class AmqpBroker(Broker):
         self.info = None
         self.slots = {}
         self.exitStack = AsyncExitStack()
-        # AMQP specific bookkeeping ...
-        self.subscriptions = set()  # registered tuple: exchange, routing key
-        self.connection = None      # broker connection
-        self.channel = None         # channel for communication
-        self.exchanges = {}         # registered exchanges
-        self.queue = None           # main queue
-        self.consumer_tag = None    # tag returned by consume method
-        # Connection birth time representing device ID incarnation.
+        self.subscriptions = set()
+        self.client = AsyncioMqttHelper(
+                self.loop, client_id=self.clientId, logger=self.logger)
+        # Client birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
         self.logproc = None
-        self.future = None
+        # Every MqttBroker instance has the following 4 dictionaries...
+        self.conMap = {}        # consumer order number's map
+        self.conTStamp = {}     # consumer timestamp's map ("incarnation")
+        self.proMap = {}        # producer order number's map
+        self.store = {}         # store for pending messages (re-ordering)
         self.heartbeatTask = None
         self.lastPublishTask = None
         self.subscrLock = Lock()
 
     async def subscribe_default(self):
-        """Subscribe to 'default' exchanges to allow a communication
+        """Subscribe to 'default' topics to allow a communication
         through the broker:
-            -------------
-            exchange = <domain>.global_slots
-            routing_key = ''
-            queue = <deviceId>
-            -------------
-            exchange = <domain>.slots
-            routing_key = <deviceId>
-            queue = <deviceId>
+            <domain>/global_slots
+            <domain>/slots/<deviceId>
         """
-        self.queue = await self.channel.declare_queue(exclusive=True)
-        # create main exchange : <domain>.slots
-        exchange = self.domain + ".slots"
-        binding_key = self.deviceId
-        exch = await self.channel.declare_exchange(
-                exchange, aio_pika.ExchangeType.TOPIC)
-        self.exchanges[exchange] = exch   # aio_pika.exchange.Exchange instance
-        # bind to the queue
-        await self.queue.bind(exch, routing_key=binding_key)
+        topics = None
+        # subscribe to all slots of instance
+        topic = self.domain + "/slots/" + self.deviceId.replace('/', '|')
         async with self.subscrLock:
-            self.subscriptions.add((exch, binding_key))
-
+            if topic not in self.subscriptions:
+                self.subscriptions.add(topic)
+                topics = [(topic, 1)]
+        # subscribe to all global slots
         if self.broadcast:
-            # declare exchange
-            exchange = self.domain + ".global_slots"
-            binding_key = ""
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-            await self.queue.bind(exch, routing_key=binding_key)
+            topic_broadcast = self.domain + "/global_slots"
             async with self.subscrLock:
-                self.subscriptions.add((exch, binding_key))
+                if topic_broadcast not in self.subscriptions:
+                    self.subscriptions.add(topic_broadcast)
+                    topics.append((topic_broadcast, 1))
+        if topics is None:
+            return
+        await self.client.subscribe(topics)
 
-        exchange = self.domain + ".signals"
-        self.exchanges[exchange] = await self.channel.declare_exchange(
-                exchange, aio_pika.ExchangeType.TOPIC)
-        exchange = self.domain + ".log"
-        self.exchanges[exchange] = await self.channel.declare_exchange(
-                exchange, aio_pika.ExchangeType.TOPIC)
+    async def publish(self, topic, m, qos):
+        await self.client.publish(topic, m, qos)
 
-    async def publish(self, exchange, routing_key, message):
-        exch = self.exchanges.get(exchange, None)
-        if exch is None:
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-        await exch.publish(message, routing_key)
-
-    def send(self, exchange, routing_key, header, args):
+    def send(self, topic, header, args, qos=2):
         if self.loop.is_closed() or not self.loop.is_running():
             return
         body = Hash()
@@ -114,15 +92,32 @@ class AmqpBroker(Broker):
         header['signalInstanceId'] = self.deviceId
         header['__format'] = 'Bin'
         header['producerTimestamp'] = self.timestamp
-        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
-        m = aio_pika.Message(bindata)
-        # publish is awaitable
+        self.incrementOrderNumbers(topic, header, qos)
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
         self.lastPublishTask = self.loop.create_task(
-                self.publish(exchange, routing_key, m))
+                self.publish(topic, m, qos))
 
-    def heartbeat(self, interval):
-        exchange = self.domain + ".signals"
-        routing_key = self.deviceId + ".signalHeartbeat"
+    def incrementOrderNumbers(self, topic, header, qos):
+        if qos == 0:
+            return
+        if "orderNumbers" in header:
+            del header['orderNumbers']
+        if header['slotInstanceIds'] == '|*|':
+            return
+        if header['signalFunction'] == 'signalChanged':
+            return
+        slots = (header['slotInstanceIds'][1:-1]).split('||')
+        orders = []
+        for slot in slots:
+            if slot not in self.proMap:
+                self.proMap[slot] = 0
+            self.proMap[slot] += 1
+            orders.append(str(self.proMap[slot]))
+        header['orderNumbers'] = ','.join(orders)
+
+    async def heartbeat(self, interval):
+        topic = (self.domain + "/signals/" + self.deviceId.replace('/', '|')
+                 + "/signalHeartbeat")
         header = Hash("signalFunction", "signalHeartbeat")
         # Note: C++ adds
         header["signalInstanceId"] = self.deviceId  # redundant and unused
@@ -133,11 +128,8 @@ class AmqpBroker(Broker):
         body["a1"] = self.deviceId
         body["a2"] = interval
         body["a3"] = self.info
-        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
-        m = aio_pika.Message(bindata)
-        # publish is awaitable
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(exchange, routing_key, m))
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
+        await self.client.publish(topic, m, 0)
 
     def notify_network(self, info):
         """notify the network that we are alive
@@ -165,7 +157,7 @@ class AmqpBroker(Broker):
                         sleepInterval = sleepInterval // 2 + 1
                         first = False
                     await sleep(sleepInterval)
-                    self.heartbeat(interval)
+                    await self.heartbeat(interval)
             except CancelledError:
                 pass
             finally:
@@ -188,24 +180,19 @@ class AmqpBroker(Broker):
             p['replyTo'] = reply
         p['hostname'] = socket.gethostname()
         p['classId'] = self.classId
-        # AMQP specific follows ...
-        slotInstanceId = slotInstanceIds.strip("|")
+        signal_id = self.deviceId.replace('/', '|')
+        slot_id = slotInstanceIds.strip('|').replace('/', '|')
         if (signal == "__request__" or signal == "__replyNoWait__"
                 or signal == "__reply__" or signal == "__replyNoWait"):
-            exchange = self.domain + ".slots"
-            routing_key = slotInstanceId
+            topic = self.domain + "/slots/" + slot_id
         elif signal == "call" or signal == "__call__":
-            if slotInstanceId == '*':
-                exchange = self.domain + ".global_slots"
-                routing_key = ""
+            if slot_id == '*':
+                topic = self.domain + "/global_slots"
             else:
-                exchange = self.domain + ".slots"
-                routing_key = slotInstanceId
+                topic = self.domain + "/slots/" + slot_id
         else:
-            exchange = self.domain + ".signals"
-            routing_key = self.deviceId + '.' + signal
-
-        self.send(exchange, routing_key, p, args)
+            topic = self.domain + "/signals/" + signal_id + '/' + signal
+        self.send(topic, p, args)
 
     async def request(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
@@ -216,14 +203,12 @@ class AmqpBroker(Broker):
         return (await future)
 
     def log(self, message):
-        exchange = self.domain + ".log"
-        routing_key = ""
+        topic = self.domain + "/log"
         header = Hash("target", "log")
         body = Hash("messages", [message])
-        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
-        m = aio_pika.Message(bindata)
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(exchange, routing_key, m))
+        m = b''.join([encodeBinary(header), encodeBinary(body)])
+        self.loop.call_soon_threadsafe(self.loop.create_task,
+                                       self.client.publish(topic, m, 0))
 
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
@@ -242,9 +227,8 @@ class AmqpBroker(Broker):
             p['signalFunction'] = "__reply__"
             p['slotInstanceIds'] = '|' + sender + '|'
             p['error'] = error
-            exchange = self.domain + ".slots"
-            routing_key = sender
-            self.send(exchange, routing_key, p, reply)
+            topic = self.domain + "/slots/" + sender.replace('/', '|')
+            self.send(topic, p, reply)
 
         if 'replyInstanceIds' in header:
             replyId = header['replyInstanceIds']
@@ -254,9 +238,8 @@ class AmqpBroker(Broker):
             p['slotFunctions'] = header['replyFunctions']
             p['error'] = error
             dest = replyId.strip('|')
-            exchange = self.domain + ".slots"
-            routing_key = dest
-            self.send(exchange, routing_key, p, reply)
+            topic = self.domain + "/slots/" + dest.replace('/', '|')
+            self.send(topic, p, reply)
 
     def replyException(self, message, exception):
         trace = ''.join(traceback.format_exception(
@@ -264,10 +247,10 @@ class AmqpBroker(Broker):
         self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signal, slot):
-        """This is way of establishing 'karabo signalslot' connection with
-        a signal.  In AMQP case this is just creating a task that will
-        call `async_connect` that, in turn, may take time because communication
-        with RabbitMQ broker is involved.
+        """This is way of establishing "karabo signalslot"connection with
+        a signal.  In MQTT case this is just creating a task that will
+        call `async_connect` that, in turn, may take time becuase communication
+        with MQTT broker is involved.
         """
         self.loop.call_soon_threadsafe(self.loop.create_task,
                                        self.async_connect(deviceId,
@@ -275,42 +258,37 @@ class AmqpBroker(Broker):
 
     async def async_connect(self, deviceId, signal, slot):
         """This is way of establishing karabo connection between local slot and
-        remote signal.  In AMQP case this is two steps procedure:
+        remote signal.  In MQTT case this is two steps procedure:
         1. subscription to the topic with topic name built from signal info
         2. sending to the signal side the slot registration message
-        NOTE: Optimization: we can connect many signals to the same alot
+        NOTE: Optimization: we can connect many signals to the same slot
         at once
         """
         if isinstance(signal, (list, tuple)):
             signals = list(signal)
         else:
             signals = [signal]
-
-        exchange = self.domain + ".signals"
-        if exchange not in self.exchanges:
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-        else:
-            exch = self.exchanges[exchange]
+        topics = []
+        for s in signals:
+            topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
+                     + "/" + s)
+            async with self.subscrLock:
+                if topic not in self.subscriptions:
+                    self.subscriptions.add(topic)
+                    topics.append((topic, 1))
+        if topics:
+            await self.client.subscribe(topics)
 
         for s in signals:
-            binding_key = deviceId + "." + s
-            t = (exch, binding_key)
-            async with self.subscrLock:
-                if t not in self.subscriptions:
-                    await self.queue.bind(exch, routing_key=binding_key)
-                    self.subscriptions.add(t)
-
             self.emit("call", {deviceId: ["slotConnectToSignal"]},
                       s, slot.__self__.deviceId, slot.__name__)
 
     def disconnect(self, deviceId, signal, slot):
         if self.loop.is_closed() or not self.loop.is_running():
             return
-        self.loop.call_soon_threadsafe(self.loop.create_task,
-                                       self.async_disconnect(deviceId,
-                                                             signal, slot))
+        self.loop.call_soon_threadsafe(
+            self.loop.create_task, self.async_disconnect(deviceId,
+                                                         signal, slot))
 
     async def async_disconnect(self, deviceId, signal, slot):
         signals = []
@@ -323,22 +301,19 @@ class AmqpBroker(Broker):
                 f'Cannot disconnect from signals: {signals}')
             return
 
-        exchange = self.domain + ".signals"
-        if exchange not in self.exchanges:
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-        else:
-            exch = self.exchanges[exchange]
-        try:
-            for s in signals:
-                binding_key = deviceId + "." + s
-                t = (exch, binding_key)
-                async with self.subscrLock:
-                    if t in self.subscriptions:
-                        self.subscriptions.remove(t)
-                        await self.queue.unbind(exch, routing_key=binding_key)
+        topics = []
 
+        for s in signals:
+            topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
+                     + "/" + s)
+            async with self.subscrLock:
+                if topic in self.subscriptions:
+                    self.subscriptions.remove(topic)
+                    topics.append(topic)
+        try:
+            if topics:
+                await self.client.unsubscribe(topics)
+            for s in signals:
                 self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
                           s, slot.__self__.deviceId, slot.__name__)
         except BaseException:
@@ -347,8 +322,7 @@ class AmqpBroker(Broker):
 
     async def async_unsubscribe_all(self):
         async with self.subscrLock:
-            for exch, binding_key in self.subscriptions:
-                await self.queue.unbind(exch, routing_key=binding_key)
+            await self.client.unsubscribe([t for t in self.subscriptions])
             self.subscriptions = set()
 
     async def stopHeartbeat(self):
@@ -360,47 +334,118 @@ class AmqpBroker(Broker):
         task = self.lastPublishTask
         self.lastPublishTask = None
         if task is not None and not task.done():
-            await wait_for(task, timeout=1)
+            await wait_for(task, timeout=5)
 
     async def ensure_disconnect(self):
         """Close broker connection"""
-        await self.connection.close()
+        await self.client.disconnect()
+        self.client.loop_stop()
 
     async def _cleanup(self):
-        await self.stopHeartbeat()
-        self.future.set_result(None)
-        if self.logproc is not None:
-            self.logproc = None
-        if self.consumer_tag is not None:
-            await self.queue.cancel(self.consumer_tag)
-            self.consumer_tag = None
         await self.async_unsubscribe_all()
-
-    async def on_message(self, device, message: aio_pika.IncomingMessage):
-        async with message.process():
-            d = device()
-            if d is None:
-                return
-            await self.handleMessage(message.body, d)
+        await self.stopHeartbeat()
 
     async def handleMessage(self, message, device):
-        """Decode message from binary blob
+        """Check message order first if the header
         has valid information to do so...  Otherwise
         simply call handle the message as usual...
         """
         try:
-            header, pos = decodeBinaryPos(message)
+            topic = message.topic
+            header, pos = decodeBinaryPos(message.payload)
             islog = header.get('target', '')
             if islog == 'log':
                 if self.logproc is not None:
-                    self.logproc(message[pos:])
+                    self.logproc(message.payload[pos:])
                 return
-            body = decodeBinary(message[pos:])
-            decoded = Hash("header", header, "body", body)
+            body = decodeBinary(message.payload[pos:])
+            hash = Hash("header", header, "body", body)
+            self.checkOrder(topic, device, hash)
         except BaseException:
             self.logger.exception("Malformed message")
+
+    def checkOrder(self, topic, device, hash):
+        loop = get_event_loop()
+        callback = partial(self._handleMessage, hash, device)
+        header = hash.get('header')
+        if (not header
+                or 'signalInstanceId' not in header
+                or 'slotInstanceIds' not in header
+                or 'orderNumbers' not in header
+                or header['slotInstanceIds'] == '|*|'):
+            loop.call_soon(callback)
             return
-        self._handleMessage(decoded, device)
+        src = header.get('signalInstanceId')
+        if 'producerTimestamp' not in header:
+            self.logger.exception("Message lacks \"producer timestamp\"")
+            return
+        proTStamp = header['producerTimestamp']
+        if src not in self.conMap:
+            # Producer was not known before
+            self.conMap[src] = 0
+            self.conTStamp[src] = 0.0
+            self.store[src] = {}
+        slots = (header['slotInstanceIds'][1:-1]).split('||')
+        numbers = [int(k) for k in header['orderNumbers'].split(',')]
+        # Find deviceId in the list of targets (slotInstanceIds) ...
+        recvNumber = None
+        for ii, slotname in enumerate(slots):
+            if self.deviceId == slotname:
+                recvNumber = numbers[ii]
+                break
+        if recvNumber is None:
+            return      # subscribed but slot is not registered yet
+
+        if self.conTStamp[src] != proTStamp:
+            # producer is restarted
+            self.conTStamp[src] = proTStamp
+            self.cleanObsolete(src, proTStamp)  # clean old messages
+            self.conMap[src] = 0                # synchronize consumer count
+
+        # Expect message received in order: recvNumber == self.conMap[src]+1
+        expectedNumber = self.conMap[src] + 1
+
+        if recvNumber < expectedNumber:
+            return                          # ignore duplicated message
+        elif recvNumber > expectedNumber:
+            # out-of-order: add to store of pending messages
+            if self.conMap[src] == 0:
+                self.conMap[src] = recvNumber  # synchronize consumer
+                loop.call_soon(callback)
+            else:
+                self.store[src][recvNumber] = (proTStamp, callback)
+        else:
+            # Message received in order
+            self.conMap[src] = recvNumber
+            loop.call_soon(callback)
+        self.handleStore(src)
+
+    def handleStore(self, src):
+        # try to sort and resolve pending messages in store...
+        self.store[src] = {
+            k: self.store[src][k] for k in sorted(self.store[src])
+            if not self.reorderedInStore(src, k, self.store[src][k])}
+
+    def reorderedInStore(self, src, recvNumber, value):
+        loop = get_event_loop()
+        proTStamp, callback = value
+        if proTStamp != self.conTStamp[src]:    # other incarnation
+            return False    # keep in store for now
+        expected = self.conMap[src] + 1
+        if recvNumber > expected:
+            return False    # keep pending
+        # synchronize counter with producer... if not duplicated
+        if recvNumber == expected:
+            self.conMap[src] = recvNumber
+            loop.call_soon(callback)
+        return True         # remove resolved entry
+
+    def cleanObsolete(self, src, valid):
+        """Keep only entries with 'valid' timestamp
+        """
+        self.store[src] = {
+            k: self.store[src][k] for k in sorted(self.store[src])
+            if self.store[src][k][0] == valid}
 
     def _handleMessage(self, decoded, device):
         try:
@@ -451,11 +496,19 @@ class AmqpBroker(Broker):
             self.slots[name] = slot
 
     async def consume(self, device):
-        self.consumer_tag = await self.queue.consume(
-            partial(self.on_message, device))
-        # Be under exitStack scope as soon as queue is alive
-        self.future = Future()
-        await self.future
+        if self.client is None:
+            raise MqttError("MQTT client is not connected")
+
+        def receiver(client, userdata, msg):
+            d = device()
+            if d is None:
+                return
+            self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.handleMessage(msg, d), d)
+            d = None
+
+        self.client.register_on_message(receiver)
+        await self.client.custom_loop()
 
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
@@ -553,25 +606,13 @@ class AmqpBroker(Broker):
 
     async def ensure_connection(self):
         urls = os.environ.get("KARABO_BROKER",
-                              "amqp://localhost:5672").split(',')
-        error = None
-        for url in urls:
-            try:
-                # Perform connection
-                self.connection = await aio_pika.connect(url, loop=self.loop)
-                # Creating a channel
-                self.channel = await self.connection.channel()
-                await self.channel.set_qos(prefetch_count=1)
-                await self.subscribe_default()
-                break
-            except Exception as e:
-                error = e
-                self.connection = None
-                self.channel = None
-
-        if self.connection is None or self.channel is None:
-            raise RuntimeError(f'Fail to connect to any of KARABO_BROKER='
-                               f'"{urls}": {str(error)}')
+                              "mqtt://exfldl02n0:1883").split(',')
+        try:
+            await self.client.connect(urls)
+            await self.subscribe_default()
+        except MqttError as e:
+            raise MqttError(
+                f'Fail to connect to any of KARABO_BROKER="{urls}": {str(e)}')
 
     @staticmethod
     def create_connection(hosts, connection):
