@@ -47,6 +47,7 @@ class KaraboEvent(Enum):
     ShowDevice = "Show device"
     ShowMacroView = "Show macro"
     ShowSceneView = "Show scene"
+    ShowUnattachedController = "Show unattached controller"
     ShowUnattachedSceneView = "Show unattached scene"
     StartMonitoringDevice = "Start listening to device updates"
     StopMonitoringDevice = "Stop listening to device updates"

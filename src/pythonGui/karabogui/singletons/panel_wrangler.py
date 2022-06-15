@@ -14,7 +14,7 @@ from karabogui.controllers.util import load_extensions
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.logger import get_logger
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
-from karabogui.panels.api import MacroPanel, ScenePanel
+from karabogui.panels.api import MacroPanel, ScenePanel, WidgetControllerPanel
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model
 from karabogui.util import process_qt_events
 from karabogui.wizards import TipsTricksWizard
@@ -40,6 +40,9 @@ class PanelWrangler(QObject):
         # Unattached scene panels {model: panel}
         self._unattached_scene_panels = {}
 
+        # Unattached controller panels {`deviceId.path|Panel`: panel}
+        self._widget_controller_panels = {}
+
         # Panels linked to instances {instance id: (panel, pos)}
         self._instance_panels = {}
 
@@ -49,6 +52,7 @@ class PanelWrangler(QObject):
         event_map = {
             KaraboEvent.ShowSceneView: self._event_attached_scene,
             KaraboEvent.ShowUnattachedSceneView: self._event_unattached_scene,
+            KaraboEvent.ShowUnattachedController: self._event_controller_panel,
             KaraboEvent.OpenSceneLink: self._event_scene_link,
             KaraboEvent.RemoveProjectModelViews: self._event_remove_model_view,
             KaraboEvent.MiddlePanelClosed: self._event_middle_panel,
@@ -93,6 +97,28 @@ class PanelWrangler(QObject):
         model = data['model']
         self._open_scene(model, target_window, attached=True)
 
+    def _event_controller_panel(self, data):
+        model = data["model"]
+        title = f"{model.keys[0]}|Panel"
+        existing = self._widget_controller_panels.items()
+        existing = [panel for key, panel in existing if title == key]
+
+        # Create a new widget controller panels and afterwards close the old
+        # ones. This way the visibility counter is not disturbed!
+        panel = WidgetControllerPanel(title, model)
+        panel.signalPanelClosed.connect(self._on_controller_panel_close)
+        for old_panel in existing:
+            self._close_panel(old_panel)
+
+        self._widget_controller_panels[title] = panel
+        main_win = self.main_window
+        if main_win is None:
+            panel.show()
+            return
+
+        main_win.addPanel(panel, PanelAreaEnum.Middle)
+        panel.onUndock()
+
     def _event_unattached_scene(self, data):
         target_window = data.get('target_window',
                                  SceneTargetWindow.MainWindow)
@@ -127,6 +153,8 @@ class PanelWrangler(QObject):
             self._project_item_panels.pop(model)
         elif model in self._unattached_scene_panels:
             self._unattached_scene_panels.pop(model)
+        elif model in self._widget_controller_panels:
+            self._widget_controller_panels.pop(model)
 
     def _event_show_macro(self, data):
         self._open_macro(data['model'])
@@ -189,6 +217,11 @@ class PanelWrangler(QObject):
         if instance_id in self._instance_panels:
             del self._instance_panels[instance_id]
 
+    @Slot(str)
+    def _on_controller_panel_close(self, panel):
+        if panel in self._widget_controller_panels:
+            del self._widget_controller_panels[panel]
+
     def _close_panel(self, panel):
         if panel is None:
             return
@@ -202,7 +235,9 @@ class PanelWrangler(QObject):
             self._close_panel(self._project_item_panels.get(model))
 
     def _close_unattached_panels(self):
-        for panel in self._unattached_scene_panels.values():
+        for panel in list(self._unattached_scene_panels.values()):
+            self._close_panel(panel)
+        for panel in list(self._widget_controller_panels.values()):
             self._close_panel(panel)
 
     def _create_main_window(self):
