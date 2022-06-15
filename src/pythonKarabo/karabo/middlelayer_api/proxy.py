@@ -5,7 +5,7 @@ from inspect import isfunction
 from weakref import WeakSet
 
 from karabo.common.api import WeakMethodRef
-from karabo.middlelayer_api.compat import suppressBrokerException
+from karabo.middlelayer_api.broker import suppressBrokerException
 from karabo.middlelayer_api.eventloop import synchronize
 from karabo.native import (
     Descriptor, Hash, KaraboError, KaraboValue, NDArray, NodeType, NoneValue,
