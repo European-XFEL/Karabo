@@ -13,11 +13,11 @@ from qtpy.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 import karabogui.access as krb_access
 from karabo.common.api import set_initialized_flag
 from karabo.common.scenemodel.api import (
-    SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, FixedLayoutModel, SceneTargetWindow)
+    SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, FixedLayoutModel)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
-from karabogui.generic_scenes import get_generic_scene
+from karabogui.generic_scenes import get_property_proxy_model
 from karabogui.request import retrieve_default_scene, send_property_changes
 
 from .bases import BaseSceneTool
@@ -211,16 +211,14 @@ class SceneView(QWidget):
                 return
             # Either retrieve a device provided scene or create a generic one
             proxy_selecting = isinstance(self.current_tool, ProxySelectionTool)
+            proxy = item.widget_controller.proxy
             if proxy_selecting:
-                proxy = item.widget_controller.proxy
                 retrieve_default_scene(proxy.root_proxy.device_id)
             else:
-                proxy = item.widget_controller.proxy
-                model = get_generic_scene(proxy, include_images=False)
+                model = get_property_proxy_model(proxy, include_images=False)
                 if model is not None:
-                    window = SceneTargetWindow.Dialog
-                    broadcast_event(KaraboEvent.ShowUnattachedSceneView,
-                                    {'model': model, 'target_window': window})
+                    data = {"model": model}
+                    broadcast_event(KaraboEvent.ShowUnattachedController, data)
 
             event.accept()
 

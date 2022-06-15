@@ -19,14 +19,13 @@ from karabo.common.api import (
     KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
     KARABO_SCHEMA_TAGS, KARABO_SCHEMA_UNIT_SYMBOL)
-from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
 from karabogui.alarms.api import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
-from karabogui.generic_scenes import get_generic_scene
+from karabogui.generic_scenes import get_property_proxy_model
 from karabogui.widgets.popup import PopupWidget
 
 from .edit_delegate import EditDelegate
@@ -352,11 +351,10 @@ class ConfigurationTreeView(QTreeView):
             index = self.indexAt(event.pos())
             if index.isValid() and index.column() == 1:
                 proxy = self.model().index_ref(index)
-                model = get_generic_scene(proxy)
+                model = get_property_proxy_model(proxy, include_images=True)
                 if model is not None:
-                    window = SceneTargetWindow.Dialog
-                    broadcast_event(KaraboEvent.ShowUnattachedSceneView,
-                                    {'model': model, 'target_window': window})
+                    data = {"model": model}
+                    broadcast_event(KaraboEvent.ShowUnattachedController, data)
                 event.accept()
 
         super().mouseDoubleClickEvent(event)
