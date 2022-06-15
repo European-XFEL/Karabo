@@ -3,6 +3,7 @@
 # Created on March 6, 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import webbrowser
 
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
@@ -19,12 +20,13 @@ from karabogui.binding.api import (
 from karabogui.controllers.validators import (
     BindingValidator as GenericValidator, ListValidator, SimpleValidator)
 from karabogui.logger import get_logger
-from karabogui.request import call_device_slot
+from karabogui.request import call_device_slot, get_scene_from_server
 from karabogui.topology.api import is_device_online
 from karabogui.util import SignalBlocker, get_reason_parts
 
 from .button_delegate import TableButtonDelegate
-from .utils import create_brushes, has_confirmation
+from .utils import (
+    create_brushes, get_button_attributes, has_confirmation, parse_table_link)
 
 
 def get_display_delegate(proxy, binding, parent, read_only=True):
@@ -41,6 +43,9 @@ def get_display_delegate(proxy, binding, parent, read_only=True):
     if (display_type == "TableBoolButton" and read_only and
             isinstance(binding, BoolBinding)):
         return BoolButtonDelegate(proxy, binding, parent)
+    elif (display_type == "TableStringButton" and read_only and
+          isinstance(binding, StringBinding)):
+        return StringButtonDelegate(proxy, binding, parent)
     elif (display_type == "TableProgressBar"
           and isinstance(binding, (FloatBinding, IntBinding))):
         return ProgressBarDelegate(binding, parent)
@@ -139,6 +144,44 @@ class BoolButtonDelegate(TableButtonDelegate):
         call_device_slot(request_handler, self.deviceId,
                          "requestAction", action="TableButton",
                          path=self.path, table=data)
+
+
+class StringButtonDelegate(TableButtonDelegate):
+    def __init__(self, proxy, binding, parent=None):
+        super().__init__(parent)
+        self.text = binding.displayed_name or proxy.path
+        self.deviceId = proxy.root_proxy.device_id
+        self.attributes = get_button_attributes(binding.display_type)
+
+    def get_button_text(self, index):
+        """Reimplemented function of TableButtonDelegate"""
+        return self.text
+
+    def click_action(self, index):
+        """Reimplemented function of TableButtonDelegate"""
+        if not index.isValid() or not is_device_online(self.deviceId):
+            return
+
+        model = index.model()
+        _, data = model.get_model_data(index.row(), index.column())
+
+        action, options = parse_table_link(data)
+        if action is None:
+            get_logger().debug(
+                "Invalid scheme provided for table string button")
+        elif action == "deviceScene":
+            try:
+                deviceId = options["device_id"]
+                name = options["name"]
+                get_scene_from_server(deviceId, name)
+            except Exception:
+                get_logger().warning(
+                    f"Invalid deviceScene information: {data}.")
+        elif action == "url":
+            try:
+                webbrowser.open_new(options)
+            except Exception:
+                get_logger().error(f"No valid url specified {options}")
 
 
 class ComboBoxDelegate(QStyledItemDelegate):

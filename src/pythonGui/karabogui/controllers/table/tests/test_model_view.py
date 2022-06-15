@@ -15,14 +15,19 @@ from karabo.native import (
 from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import (
     BaseFilterTableController, BaseTableController, KaraboTableView,
-    TableButtonDelegate, list2string)
+    StringButtonDelegate, TableButtonDelegate, list2string)
 from karabogui.itemtypes import NavigationItemTypes
-from karabogui.testing import GuiTestCase, get_property_proxy
+from karabogui.testing import GuiTestCase, get_property_proxy, singletons
+from karabogui.topology.api import SystemTopology
 
 
 class ButtonSchema(Configurable):
     arch = String(
-        defaultValue="NoString")
+        displayType="TableStringButton",
+        defaultValue="deviceScene|device_id=XHQ_EG_DG/CAM/CAMERA&name=scene")
+    bar = String(
+        displayType="TableStringButton",
+        defaultValue="url|http://www.xfel.eu")
     foo = Bool(
         displayType="TableBoolButton",
         defaultValue=False,
@@ -57,7 +62,8 @@ class TableSchema(Configurable):
 
 
 class Object(Configurable):
-    prop = VectorHash(rows=TableSchema)
+    prop = VectorHash(rows=TableSchema,
+                      accessMode=AccessMode.READONLY)
 
 
 class ButtonObject(Configurable):
@@ -91,7 +97,7 @@ class TestTableModelView(GuiTestCase):
 
     def assertModelRow(self, row, first_column, second_column, third_column,
                        fourth_column, fifth_column, sixth_column, size=None):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         # Boolean is represented as Qt value in table model
 
         self.assertEqual(model.index(row, 0).data(), first_column)
@@ -105,7 +111,7 @@ class TestTableModelView(GuiTestCase):
         # Vector data is always retrieved as string list
         self.assertEqual(model.index(row, 5).data(), list2string(sixth_column))
 
-        data = self.controller._item_model._data
+        data = self.controller.sourceModel()._data
         # Our Hash still has real booleans, but the model does not!
         self.assertEqual(data[row], Hash("arch", first_column,
                                          "foo", second_column,
@@ -127,7 +133,7 @@ class TestTableModelView(GuiTestCase):
         self.assertModelRow(3, "d", True, "CHANGING", 1, 5.0, ["d"])
 
     def test_header(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         header_keys = model._header
         self.assertEqual(header_keys, ["arch", "foo", "bar", "cat", "dog",
                                        "eagle"])
@@ -162,7 +168,7 @@ class TestTableModelView(GuiTestCase):
         self.assertModelRow(1, "b", False, "ERROR", 3, 4.0, ["b"])
 
         # Move it
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         model.move_row_up(1)
 
         self.assertModelRow(0, "b", False, "ERROR", 3, 4.0, ["b"])
@@ -178,7 +184,7 @@ class TestTableModelView(GuiTestCase):
         self.assertModelRow(1, "b", False, "ERROR", 3, 4.0, ["b"])
 
         # Move it
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         model.move_row_down(0)
 
         self.assertModelRow(0, "b", False, "ERROR", 3, 4.0, ["b"])
@@ -196,14 +202,14 @@ class TestTableModelView(GuiTestCase):
     def test_duplicate_row(self):
         self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
         self.assertModelRow(1, "b", False, "ERROR", 3, 4.0, ["b"])
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         model.duplicate_row(0)
         self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
         self.assertModelRow(1, "a", True, "ACTIVE", 1, 2.0, ["a"])
         self.assertModelRow(2, "b", False, "ERROR", 3, 4.0, ["b"])
 
     def test_empty_value(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         self.assertNotEqual(model._data, [])
         model.clear_model()
         self.assertEqual(model._data, [])
@@ -241,7 +247,7 @@ class TestTableModelView(GuiTestCase):
         self.assertEqual(value, ("arch", "b"))
 
     def test_background_value(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         index = model.index(0, 1)
         self.assertEqual(index.data(role=Qt.BackgroundRole), None)
         index = model.index(0, 2)
@@ -261,7 +267,7 @@ class TestTableModelView(GuiTestCase):
         self.assertIsNone(brush)
 
     def test_set_boolean_data(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         index = model.index(0, 1)
         self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
         model.setData(index, value=Qt.Unchecked, role=Qt.CheckStateRole)
@@ -270,7 +276,7 @@ class TestTableModelView(GuiTestCase):
         self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
 
     def test_set_vector_data(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
         index = model.index(0, 5)
         # The model expects string data for lists
@@ -282,7 +288,7 @@ class TestTableModelView(GuiTestCase):
             model.setData(index, value=["a", "b", "c"])
 
     def test_tooltip_data(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         index = model.index(0, 5)
         data = index.data(role=Qt.ToolTipRole)
         self.assertEqual(data, "a")
@@ -303,14 +309,14 @@ class TestTableModelView(GuiTestCase):
         self.assertNotIn("minInc", data)
 
     def test_invalid_model_index(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         ret = model.setData(QModelIndex(), 2, Qt.EditRole)
         self.assertFalse(ret)
         self.assertIsNone(model.data(QModelIndex()))
         self.assertEqual(model.flags(QModelIndex()), 0)
 
     def test_model_flags(self):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         # 1. User checkable boolean
         index = model.index(0, 1)
         flags = index.flags()
@@ -340,7 +346,7 @@ class TestTableModelView(GuiTestCase):
         menu_path = "karabogui.controllers.table.controller.QMenu"
         pos = QPoint(0, 0)
         with mock.patch(menu_path) as menu:
-            model = self.controller._item_model
+            model = self.controller.sourceModel()
             index = model.index(2, 0)
 
             view = self.controller.widget
@@ -383,7 +389,7 @@ class TestTableModelView(GuiTestCase):
         view = self.controller.widget
         self.assertEqual(view._drag_column, 0)
 
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         index = model.index(0, 0)
         self.assertEqual(index.data(), "a")
 
@@ -392,12 +398,12 @@ class TestTableModelView(GuiTestCase):
         view.dropEvent(event)
         self.assertEqual(index.data(), "XFEL/SIM/DG")
 
-        self.assertEqual(self.controller._item_model.rowCount(None), 4)
+        self.assertEqual(self.controller.sourceModel().rowCount(None), 4)
         # Drag somewhere to outer regions, add a row
         event = QDropEvent(QPoint(0, 1000), Qt.CopyAction, items,
                            Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
         view.dropEvent(event)
-        self.assertEqual(self.controller._item_model.rowCount(None), 5)
+        self.assertEqual(self.controller.sourceModel().rowCount(None), 5)
         # Row is added with defaults and forced
         self.assertModelRow(4, "XFEL/SIM/DG", False, "ON", 1, 2.0, [])
 
@@ -420,7 +426,7 @@ class TestTableModelView(GuiTestCase):
         # XXX: Find a better of testing the delegate!
         button_delegate = Delegate()
         self.controller.widget.setItemDelegateForColumn(1, button_delegate)
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         index = model.index(2, 1)
         self.assertFalse(button_delegate.isEnabled(index))
         button_delegate.click_action(index)
@@ -430,11 +436,61 @@ class TestTableModelView(GuiTestCase):
         self.assertTrue(button_delegate.isEnabled(index))
         button_delegate.click_action(index)
 
+    def test_string_button_delegate(self):
+        """Test the table string button delegate of the karabo table view"""
+        s = "deviceScene|device_id=XHQ_EG_DG/CAM/CAMERA&name=scene"
+        table_hash = Hash(
+            "prop", [Hash("arch", s,
+                          "bar", "url|https://www.xfel.eu",
+                          "foo", True)])
+
+        proxy = get_property_proxy(ButtonObject.getClassSchema(), "prop")
+        model = TableElementModel()
+        controller = BaseTableController(proxy=proxy, model=model)
+        controller.create(None)
+        apply_configuration(table_hash, proxy.root_proxy.binding)
+        model = controller.sourceModel()
+
+        # 1.1 Device scene delegate
+        self.assertEqual(model.rowCount(), 1)
+        index = model.index(0, 0)
+        table_view = controller.tableWidget()
+        delegate = table_view.itemDelegate(index)
+        self.assertIsInstance(delegate, StringButtonDelegate)
+        topology = SystemTopology()
+        network = mock.Mock()
+        with singletons(topology=topology, network=network):
+            delegate.click_action(index)
+            # Click, but device is offline
+            network.onExecuteGeneric.assert_not_called()
+
+            device_id = proxy.root_proxy.device_id
+            device_hash = Hash(device_id, "")
+            device_hash[device_id, ...] = {"status": "ok"}
+            topology.initialize(Hash("device", device_hash))
+            # Click again, device is online
+            delegate.click_action(index)
+            args = network.onExecuteGeneric.call_args
+            assert "XHQ_EG_DG/CAM/CAMERA" in args[0]
+            assert "requestScene" in args[0]
+
+            # 1.2 Check the url web link delegate
+            index = model.index(0, 1)
+            table_view = controller.tableWidget()
+            delegate = table_view.itemDelegate(index)
+            self.assertIsInstance(delegate, StringButtonDelegate)
+            path = "karabogui.controllers.table.delegates.webbrowser"
+            with mock.patch(path) as web:
+                delegate.click_action(index)
+                web.open_new.assert_called_with("https://www.xfel.eu")
+
+        controller.destroy()
+
     def test_set_data(self):
         self.proxy.edit_value = None
         self.assertIsNone(self.proxy.edit_value)
 
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         index = model.index(0, 0)
         self.assertEqual(index.data(), "a")
         model.setData(index, "b")
@@ -452,7 +508,7 @@ class TestTableModelView(GuiTestCase):
         # Destroy before teardown
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
-        self.assertIsNone(self.controller._item_model)
+        self.assertIsNone(self.controller.sourceModel())
 
     def test_table_actions(self):
         actions = self.controller.widget.actions()
@@ -491,7 +547,7 @@ class TestFilterTableModelView(GuiTestCase):
 
     def assertModelRow(self, row, first_column, second_column, third_column,
                        fourth_column, fifth_column, sixth_column, size=None):
-        model = self.controller._item_model
+        model = self.controller.sourceModel()
         # Boolean is represented as Qt value in table model
 
         self.assertEqual(model.index(row, 0).data(), first_column)
@@ -505,7 +561,7 @@ class TestFilterTableModelView(GuiTestCase):
         # Vector data is always retrieved as string list
         self.assertEqual(model.index(row, 5).data(), list2string(sixth_column))
 
-        data = self.controller._item_model._data
+        data = self.controller.sourceModel()._data
         # Our Hash still has real booleans, but the model does not!
         self.assertEqual(data[row], Hash("arch", first_column,
                                          "foo", second_column,
