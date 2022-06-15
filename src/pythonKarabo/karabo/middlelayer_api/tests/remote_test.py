@@ -20,8 +20,7 @@ from karabo.middlelayer import (
     execute, filterByTags, getDevice, getInstanceInfo, getTimeInfo, isAlive,
     isSet, lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
     waitUntilNew)
-from karabo.middlelayer_api import openmq
-from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
+from karabo.middlelayer_api.broker import amqp, jms, mqtt, openmq, redis
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
