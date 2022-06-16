@@ -1,13 +1,12 @@
 from numpy import log10
-from qtpy.QtWidgets import QAction, QDialog, QDoubleSpinBox, QInputDialog
-from traits.api import Instance, on_trait_change
+from qtpy.QtWidgets import QAction, QDialog, QInputDialog
+from traits.api import Instance, String, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import FloatBinding, get_editor_value, get_min_max
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, is_proxy_allowed,
-    register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import (
@@ -20,26 +19,22 @@ from karabogui.widgets.api import DoubleSpinBox
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     model = Instance(FloatSpinBoxModel, args=())
-
-    _internal_widget = Instance(QDoubleSpinBox)
     _blocker = Instance(MouseWheelEventBlocker)
+    _style_sheet = String
 
     def create_widget(self, parent):
-        self._internal_widget = DoubleSpinBox(parent)
-        self._internal_widget.setDecimals(self.model.decimals)
-        self._internal_widget.setSingleStep(self.model.step)
-        self._internal_widget.valueChanged[float].connect(self._on_user_edit)
-        self._blocker = MouseWheelEventBlocker(self._internal_widget)
-        self._internal_widget.installEventFilter(self._blocker)
+        widget = DoubleSpinBox(parent)
+        widget.setDecimals(self.model.decimals)
+        widget.setSingleStep(self.model.step)
+        widget.valueChanged[float].connect(self._on_user_edit)
+        self._blocker = MouseWheelEventBlocker(widget)
+        widget.installEventFilter(self._blocker)
 
-        widget = add_unit_label(self.proxy, self._internal_widget,
-                                parent=parent)
         objectName = generateObjectName(self)
-        sheet = "QWidget#{}".format(objectName)
         widget.setObjectName(objectName)
-        widget.setStyleSheet(sheet)
-        widget.setFocusProxy(self._internal_widget)
 
+        self._style_sheet = ("QDoubleSpinBox#{}".format(objectName) +
+                             " {{ font: {}; font-size: {}pt; }}")
         # add actions
         step_action = QAction("Change Step...", widget)
         step_action.triggered.connect(self._change_step)
@@ -49,25 +44,30 @@ class FloatSpinBox(BaseBindingController):
         decimal_action.triggered.connect(self._change_decimals)
         widget.addAction(decimal_action)
 
-        # Formats
         format_action = QAction("Format field...", widget)
         format_action.triggered.connect(self._format_field)
         widget.addAction(format_action)
-        self._apply_format(self._internal_widget)
+
+        # Apply initial formats
+        self._apply_format(widget)
 
         return widget
 
     def binding_update(self, proxy):
-        self.widget.update_unit_label(proxy)
-        low, high = get_min_max(proxy.binding)
-        with SignalBlocker(self._internal_widget):
-            self._internal_widget.setRange(low, high)
+        binding = proxy.binding
+        label = None
+        if binding is not None:
+            label = f" {binding.unit_label}" if binding.unit_label else None
+        low, high = get_min_max(binding)
+        with SignalBlocker(self.widget):
+            self.widget.setSuffix(label)
+            self.widget.setRange(low, high)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy)
         if value is not None:
-            with SignalBlocker(self._internal_widget):
-                self._internal_widget.setValue(value)
+            with SignalBlocker(self.widget):
+                self.widget.setValue(value)
 
     def state_update(self, proxy):
         enable = is_proxy_allowed(proxy)
@@ -75,16 +75,16 @@ class FloatSpinBox(BaseBindingController):
 
     @on_trait_change("model:decimals", post_init=True)
     def _set_decimals(self, value):
-        if self._internal_widget is not None:
-            self._internal_widget.setDecimals(value)
+        if self.widget is not None:
+            self.widget.setDecimals(value)
 
     @on_trait_change("model:step", post_init=True)
     def _set_step(self, value):
-        if self._internal_widget is not None:
-            self._internal_widget.setSingleStep(value)
+        if self.widget is not None:
+            self.widget.setSingleStep(value)
 
     def _change_step(self):
-        step = self._internal_widget.singleStep()
+        step = self.widget.singleStep()
         step, ok = QInputDialog.getDouble(
             self.widget, "Single Step", "Enter size of a single step", step)
         if ok:
@@ -125,10 +125,11 @@ class FloatSpinBox(BaseBindingController):
 
     def _apply_format(self, widget=None):
         if widget is None:
-            widget = self._internal_widget
+            widget = self.widget
 
         # Apply font formatting
-        font = widget.font()
-        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
-        font.setBold(self.model.font_weight == "bold")
-        widget.setFont(font)
+        sheet = self._style_sheet.format(
+            self.model.font_weight,
+            get_font_size_from_dpi(self.model.font_size))
+        widget.setStyleSheet(sheet)
+        widget.update()
