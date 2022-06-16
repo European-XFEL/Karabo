@@ -3,16 +3,15 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtWidgets import QAction, QDialog, QSpinBox
-from traits.api import Instance
+from qtpy.QtWidgets import QAction, QDialog
+from traits.api import Instance, String
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
 from karabogui.binding.api import (
     Int8Binding, Int16Binding, Int32Binding, Uint8Binding, Uint16Binding,
     Uint32Binding, get_editor_value, get_min_max)
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, is_proxy_allowed,
-    register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.dialogs.api import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.util import (
@@ -28,44 +27,47 @@ INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Uint8Binding,
                              binding_type=INT_BINDINGS)
 class EditableSpinBox(BaseBindingController):
     model = Instance(EditableSpinBoxModel, args=())
-
-    _internal_widget = Instance(QSpinBox)
     _blocker = Instance(MouseWheelEventBlocker)
+    _style_sheet = String
 
     def create_widget(self, parent):
-        self._internal_widget = SpinBox(parent)
-        self._internal_widget.valueChanged[int].connect(self._on_user_edit)
-        self._blocker = MouseWheelEventBlocker(self._internal_widget)
-        self._internal_widget.installEventFilter(self._blocker)
+        widget = SpinBox(parent)
+        widget.valueChanged[int].connect(self._on_user_edit)
+        widget.setSingleStep(1)
+        self._blocker = MouseWheelEventBlocker(widget)
+        widget.installEventFilter(self._blocker)
 
-        widget = add_unit_label(self.proxy, self._internal_widget,
-                                parent=parent)
         objectName = generateObjectName(self)
-        sheet = "QWidget#{}".format(objectName)
         widget.setObjectName(objectName)
-        widget.setStyleSheet(sheet)
-        widget.setFocusProxy(self._internal_widget)
+
+        self._style_sheet = ("SpinBox#{}".format(objectName) +
+                             " {{ font: {}; font-size: {}pt; }}")
 
         # Formats
         format_action = QAction("Format field...", widget)
         format_action.triggered.connect(self._format_field)
         widget.addAction(format_action)
-        self._apply_format(self._internal_widget)
+
+        self._apply_format(widget)
 
         return widget
 
     def binding_update(self, proxy):
-        self.widget.update_unit_label(proxy)
-        low, high = get_min_max(proxy.binding)
-        with SignalBlocker(self._internal_widget):
-            self._internal_widget.setRange(max(-0x80000000, low),
-                                           min(0x7fffffff, high))
+        binding = proxy.binding
+        label = None
+        if binding is not None:
+            label = f" {binding.unit_label}" if binding.unit_label else None
+        low, high = get_min_max(binding)
+        with SignalBlocker(self.widget):
+            self.widget.setSuffix(label)
+            self.widget.setRange(max(-0x80000000, low),
+                                 min(0x7fffffff, high))
 
     def value_update(self, proxy):
         value = get_editor_value(proxy)
         if value is not None:
-            with SignalBlocker(self._internal_widget):
-                self._internal_widget.setValue(value)
+            with SignalBlocker(self.widget):
+                self.widget.setValue(value)
 
     def state_update(self, proxy):
         enable = is_proxy_allowed(proxy)
@@ -90,10 +92,11 @@ class EditableSpinBox(BaseBindingController):
 
     def _apply_format(self, widget=None):
         if widget is None:
-            widget = self._internal_widget
+            widget = self.widget
 
         # Apply font formatting
-        font = widget.font()
-        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
-        font.setBold(self.model.font_weight == "bold")
-        widget.setFont(font)
+        sheet = self._style_sheet.format(
+            self.model.font_weight,
+            get_font_size_from_dpi(self.model.font_size))
+        widget.setStyleSheet(sheet)
+        widget.update()
