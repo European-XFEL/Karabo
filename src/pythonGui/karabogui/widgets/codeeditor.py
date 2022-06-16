@@ -88,7 +88,19 @@ class CodeBook(QWidget):
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
-                self.code_editor.textCursor().insertText(" " * 4)
+                cursor = self.code_editor.textCursor()
+                if cursor.hasSelection():
+                    self.code_editor.indent_blocks()
+                else:
+                    self.code_editor.indent_line()
+                return True
+
+            if event.key() == Qt.Key_Backtab:
+                cursor = self.code_editor.textCursor()
+                if cursor.hasSelection():
+                    self.code_editor.deindent_blocks()
+                else:
+                    self.code_editor.deindent_line()
                 return True
         return False
 
@@ -210,6 +222,89 @@ class CodeEditor(QPlainTextEdit):
         text_cursor.setCharFormat(text_format)
         self._highlighted_word = None
         self.resultFound.emit(0)
+
+    def indent_line(self):
+        """ Indent the cursor line by adding spaces at the beginning"""
+        start_pos = self._get_text_start_position()
+        remainder = start_pos % 4
+        number_of_spaces = 4 - remainder
+
+        cursor = self.textCursor()
+        cursor.movePosition(cursor.StartOfLine)
+        cursor.insertText(" " * number_of_spaces)
+
+    def indent_blocks(self):
+        """ Indent the selected lines."""
+        cursor = self.textCursor()
+        selection_start = cursor.selectionStart()
+        selection_end = cursor.selectionEnd()
+
+        cursor.setPosition(selection_end)
+        end_block = cursor.blockNumber()
+        cursor.setPosition(selection_start)
+        start_block = cursor.blockNumber()
+
+        if end_block == start_block:
+            self.indent_line()
+            return
+
+        for i in range(end_block - start_block + 1):
+            cursor.movePosition(cursor.StartOfLine)
+            cursor.insertText(" " * 4)
+            cursor.movePosition(cursor.NextBlock)
+
+    def deindent_line(self):
+        cursor = self.textCursor()
+        start_line = self._get_text_start_position()
+        remainder = start_line % 4
+        space_count = remainder if remainder else 4
+        for i in range(space_count):
+            cursor.movePosition(cursor.StartOfLine)
+            cursor.movePosition(cursor.Right, cursor.KeepAnchor)
+            if cursor.selectedText() == " ":
+                cursor.removeSelectedText()
+            else:
+                break
+
+    def deindent_blocks(self):
+        cursor = self.textCursor()
+        selection_start = cursor.selectionStart()
+        selection_end = cursor.selectionEnd()
+
+        cursor.setPosition(selection_end)
+        end_block = cursor.blockNumber()
+        cursor.setPosition(selection_start)
+        start_block = cursor.blockNumber()
+
+        if end_block == start_block:
+            self.deindent_line()
+            return
+
+        for i in range(end_block - start_block + 1):
+            for j in range(4):
+                cursor.movePosition(cursor.StartOfLine)
+                cursor.movePosition(cursor.Right, cursor.KeepAnchor)
+                if cursor.selectedText() == " ":
+                    cursor.removeSelectedText()
+                else:
+                    break
+            cursor.movePosition(cursor.NextBlock)
+
+    def _get_text_start_position(self):
+        """
+        Get the starting position of the text  in the line.
+        This is to get the number of space to add in order to match the next
+        indentation (multiples of four).
+        """
+        cursor = self.textCursor()
+        cursor.clearSelection()
+        cursor.movePosition(cursor.StartOfLine)
+        cursor.movePosition(cursor.NextWord)
+        pos = cursor.position()
+        cursor.movePosition(cursor.PreviousWord, cursor.KeepAnchor)
+        if not cursor.selectedText().strip():
+            cursor.setPosition(pos)
+        return cursor.columnNumber()
 
     # -----------------------------------
     # Qt slots
