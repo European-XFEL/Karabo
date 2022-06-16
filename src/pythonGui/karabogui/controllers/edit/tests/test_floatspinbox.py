@@ -1,8 +1,12 @@
+from unittest import skipIf
 from unittest.mock import patch
 
+from qtpy.QtWidgets import QDialog
+
 from karabo.common.scenemodel.api import FloatSpinBoxModel
-from karabo.native import Configurable, Double
+from karabo.native import Configurable, Double, Unit
 from karabogui.binding.api import build_binding
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
@@ -10,7 +14,8 @@ from ..floatspinbox import FloatSpinBox
 
 
 class Object(Configurable):
-    prop = Double(minInc=-10.0, maxInc=10.0, absoluteError=0.5)
+    prop = Double(minInc=-10.0, maxInc=10.0, absoluteError=0.5,
+                  unitSymbol=Unit.METER)
 
 
 class Other(Configurable):
@@ -32,25 +37,27 @@ class TestFloatSpinBox(GuiTestCase):
 
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', 5.0)
-        assert self.controller._internal_widget.value() == 5.0
+        assert self.controller.widget.value() == 5.0
 
     def test_edit_value(self):
-        self.controller._internal_widget.setValue(3.0)
+        self.controller.widget.setValue(3.0)
         assert self.proxy.edit_value == 3.0
 
     def test_schema_update(self):
         proxy = get_class_property_proxy(Other.getClassSchema(), 'prop')
         controller = FloatSpinBox(proxy=proxy, model=FloatSpinBoxModel())
         controller.create(None)
+        assert controller.widget.suffix() == ""
 
-        assert controller._internal_widget.minimum() == 1.0
-        assert controller._internal_widget.maximum() == 42.0
+        assert controller.widget.minimum() == 1.0
+        assert controller.widget.maximum() == 42.0
 
         build_binding(Object.getClassSchema(),
                       existing=proxy.root_proxy.binding)
 
-        assert controller._internal_widget.minimum() == -10.0
-        assert controller._internal_widget.maximum() == 10.0
+        assert controller.widget.minimum() == -10.0
+        assert controller.widget.maximum() == 10.0
+        assert controller.widget.suffix() == " m"
 
     def test_actions(self):
         actions = self.controller.widget.actions()
@@ -69,3 +76,18 @@ class TestFloatSpinBox(GuiTestCase):
 
             change_decimals.trigger()
             assert self.controller.model.decimals == 9
+
+    @skipIf(IS_MAC_SYSTEM, "Fonts are different on MacOS")
+    def test_font_setting(self):
+        settings = "{ font: normal; font-size: 10pt; }"
+        assert settings in self.controller.widget.styleSheet()
+
+        path = "karabogui.controllers.edit.floatspinbox.FormatLabelDialog"
+        with patch(path) as dialog:
+            dialog().exec.return_value = QDialog.Accepted
+            dialog().font_size = 11
+            dialog().font_weight = "bold"
+            self.controller._format_field()
+
+            settings = "{ font: bold; font-size: 11pt; }"
+            assert settings in self.controller.widget.styleSheet()
