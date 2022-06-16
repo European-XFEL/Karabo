@@ -1,8 +1,27 @@
 from unittest import mock
 
+from qtpy.QtCore import Qt
+from qtpy.QtTest import QTest
+
 from karabogui.testing import GuiTestCase, click_button
 from karabogui.widgets.codeeditor import (
     DEFAULT_BACKGROUND_COLOR, TEXT_HIGHLIGHT_COLOR, CodeBook, CodeEditor)
+
+MULTILINE_CODE = """
+This is a dummy code
+containing multiple lines
+Number 1
+Number 2
+Number 3
+"""
+
+INDENTED_CODE = """
+This is a dummy code
+containing multiple lines
+    Number 1
+    Number 2
+Number 3
+"""
 
 
 class TestConst(GuiTestCase):
@@ -119,6 +138,64 @@ class TestConst(GuiTestCase):
         assert mock_slot.call_count == 1
         assert mock_slot.call_args[0] == ("one", True)
 
+    def test_indent_and_deindent(self):
+        widget = CodeBook(code=MULTILINE_CODE)
+        editor = widget.code_editor
+        cursor = editor.textCursor()
+
+        # Indent: No line selected
+        cursor.setPosition(1)
+        editor.setTextCursor(cursor)
+
+        QTest.keyClick(editor, Qt.Key_Tab)
+        assert editor.textCursor().position() == 5
+
+        # Deindent
+        QTest.keyClick(editor, Qt.Key_Backtab)
+        assert editor.textCursor().position() == 1
+
+        # Hit Tab key twice
+        QTest.keyClick(editor, Qt.Key_Tab)
+        QTest.keyClick(editor, Qt.Key_Tab)
+        assert editor.textCursor().position() == 9
+
+        # Shift+Tab twice.
+        QTest.keyClick(editor, Qt.Key_Backtab)
+        QTest.keyClick(editor, Qt.Key_Backtab)
+        assert editor.textCursor().position() == 1
+
+        # Indent: on multiple lines selected.
+        cursor.setPosition(65, cursor.MoveAnchor)
+        cursor.setPosition(52, cursor.KeepAnchor)
+        editor.setTextCursor(cursor)
+
+        QTest.keyClick(editor, Qt.Key_Tab)
+
+        assert editor.toPlainText() == INDENTED_CODE
+
+        # Verify the selection
+        assert editor.textCursor().selectionStart() == 56
+        assert editor.textCursor().selectionEnd() == 73
+
+        # Deindent
+        QTest.keyClick(editor, Qt.Key_Backtab)
+        assert editor.toPlainText() == MULTILINE_CODE
+        assert editor.textCursor().hasSelection()
+
+        # For single line, Tab key sets the indentation to next indentation
+        # block (ie, multiples of 4 spaces)
+        cursor = editor.textCursor()
+        cursor.movePosition(cursor.Start)
+        editor.setTextCursor(cursor)
+        # Add two space.
+        QTest.keyClick(editor, Qt.Key_Space)
+        QTest.keyClick(editor, Qt.Key_Space)
+        assert editor.textCursor().position() == 2
+        QTest.keyClick(editor, Qt.Key_Tab)
+        assert editor.textCursor().position() == 4
+        QTest.keyClick(editor, Qt.Key_Tab)
+        assert editor.textCursor().position() == 8
+
     def test_code_book(self):
         code_book = CodeBook(parent=None, code="Hello karabo")
 
@@ -129,14 +206,7 @@ class TestConst(GuiTestCase):
         assert code_book.getEditorCode() == "Hello karabo"
 
     def test_move_cursor(self):
-        code = """
-        This is a dummy code
-        containing multiple lines
-        text 1
-        text 2
-        text 3
-        """
-        code_book = CodeBook(parent=None, code=code)
+        code_book = CodeBook(parent=None, code=MULTILINE_CODE)
         assert code_book.code_editor.textCursor().position() == 0
 
         code_book.moveCursorToLine(3, 0)
