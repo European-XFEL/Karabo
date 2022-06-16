@@ -1692,39 +1692,26 @@ void Device_Test::testBadInit() {
                                 Hash("classId", "TestDeviceBadInit", "deviceId", devId, "configuration",
                                      Hash("initProblem", "throw")))
                       .timeout(2000); // starting a device takes at least one second...
-    // Despite the failing initialization, the device instantiates successfully, no timeout:
+    // Despite the failing initialization, the device replies successfully, no timeout:
     ok = false;
     CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
     CPPUNIT_ASSERT(ok);
 
-    // After instantiation, state switches to INIT, as soon as that method runs  (and will stay like that forever...)
-    waitOk = waitForCondition(
-          [this, devId, &devState]() {
-              devState = m_deviceClient->get<State>(devId, "state");
-              return (devState == State::INIT);
-          },
-          2000);
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
-
-    // ..., but the "status" field will tell us about the exception:
-    std::string status;
-    waitOk = waitForCondition(
-          [this, devId, &status]() {
-              status = m_deviceClient->get<std::string>(devId, "status");
-              return (status.find("Initialization failed: ") == 0ul);
+    // Device does not appear in the topology, it shuts down due to an error in initialization
+    bool waitFails = waitForCondition(
+          [this, devId]() {
+              const karabo::util::Hash topo = m_deviceClient->getSystemTopology();
+              const karabo::util::Hash& devices = topo.get<karabo::util::Hash>("device");
+              boost::optional<const Hash::Node&> ret = devices.find(devId);
+              return static_cast<bool>(ret);
           },
           2500);
-    CPPUNIT_ASSERT_MESSAGE(status, waitOk);
-    CPPUNIT_ASSERT_MESSAGE(status,
-                           status.find("Throw during initialization - for test purposes!") != std::string::npos);
-    // State stays INIT
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
 
-    m_deviceClient->killDeviceNoWait(devId);
-
+    CPPUNIT_ASSERT_MESSAGE(std::string("Device did not vanish from the topology, but should be down"), !waitFails);
     //
     // Case 3: A very long lasting initialization method (as case 1), with a try to shutdown while initialization:
     //
+
     devId.back() += 1; // another id again, see above ('+= 1' for Alessandro... )
     requestor = m_deviceServer
                       ->request("", "slotStartDevice",
