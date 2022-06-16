@@ -59,5 +59,5 @@ from karabogui.util import (
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexListValidator,
     RegexValidator)
-from karabogui.widgets.api import CodeEditor, RangeSlider
+from karabogui.widgets.api import CodeBook, RangeSlider
 from karabogui.widgets.hints import FrameWidget, Label, LineEdit, SvgWidget
