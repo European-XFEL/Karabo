@@ -55,6 +55,10 @@ class BaseROIController(QObject):
     def current_tool(self):
         return self._current_tool
 
+    @property
+    def current_tool_item(self):
+        return self._current_item[self._current_tool]
+
     def show(self, roi):
         """
         Enables the given ROITool.
