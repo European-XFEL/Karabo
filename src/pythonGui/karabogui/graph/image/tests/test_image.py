@@ -1,7 +1,8 @@
 import numpy as np
 from qtpy.QtCore import QPointF
 
-from karabogui.graph.common.api import ImageROIController, ROITool
+from karabogui.graph.common.api import (
+    CrosshairROI, ImageROIController, RectROI, ROITool)
 from karabogui.graph.image.plot import KaraboImagePlot
 from karabogui.testing import GuiTestCase
 
@@ -17,6 +18,9 @@ class TestKaraboImagePlotROIController(GuiTestCase):
         self.roi_controller.updated.connect(self._mock_emit)
 
         self._region = None
+
+        self.assertIsNone(self.roi_controller.current_tool_item)
+        self.assertEqual(self.roi_controller.current_tool, ROITool.NoROI)
 
     def _mock_emit(self, value):
         self._region = value
@@ -47,6 +51,9 @@ class TestKaraboImagePlotROIController(GuiTestCase):
         self.assertTrue(np.array_equal(x_axis[x_slice], [0, 1]))
         self.assertTrue(np.array_equal(y_axis[y_slice], [0, 1]))
 
+        self.assertIsInstance(self.roi_controller.current_tool_item, RectROI)
+        self.assertEqual(self.roi_controller.current_tool, ROITool.Rect)
+
     def test_image_crosshair_roi(self):
         roi = self.roi_controller.add(ROITool.Crosshair,
                                       pos=QPointF(-3, -3))
@@ -76,3 +83,7 @@ class TestKaraboImagePlotROIController(GuiTestCase):
         self.assertFalse(self._region.valid(axis=0))
         self.assertTrue(self._region.valid(axis=1))
         self.assertTrue(np.array_equal(y_axis[y_slice], np.arange(125)))
+
+        self.assertIsInstance(self.roi_controller.current_tool_item,
+                              CrosshairROI)
+        self.assertEqual(self.roi_controller.current_tool, ROITool.Crosshair)
