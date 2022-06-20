@@ -547,6 +547,9 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
 
+    def removeChild(self, deviceId):
+        self.deviceInstanceMap.pop(deviceId, None)
+
     @coslot
     async def slotInstanceNew(self, instanceId, info):
         await super(MiddleLayerDeviceServer, self).slotInstanceNew(
@@ -563,7 +566,6 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     def slotInstanceGone(self, instanceId, info):
         super(MiddleLayerDeviceServer, self).slotInstanceGone(instanceId,
                                                               info)
-        self.deviceInstanceMap.pop(instanceId, None)
         # Forward the broadcast to the device instances!
         for device in self.deviceInstanceMap.values():
             device.slotInstanceGone(instanceId, info)
