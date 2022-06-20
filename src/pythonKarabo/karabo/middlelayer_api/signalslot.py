@@ -18,7 +18,7 @@ from karabo.native import (
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
 from .synchronization import FutureDict, firstCompleted
-from .utils import get_karabo_version
+from .utils import get_karabo_version, get_property
 
 
 class Signal(object):
@@ -261,7 +261,10 @@ class SignalSlotable(Configurable):
 
     @coslot
     async def slotGetOutputChannelInformation(self, ioChannelId, processId):
-        ch = getattr(self, ioChannelId, None)
+        try:
+            ch = get_property(self, ioChannelId)
+        except AttributeError:
+            ch = None
         if isinstance(ch, NetworkOutput):
             ret = await ch.getInformation("{}:{}".format(
                 self.deviceId, ioChannelId))
