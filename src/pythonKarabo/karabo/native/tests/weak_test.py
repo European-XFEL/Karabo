@@ -17,16 +17,20 @@ class Tests(TestCase):
         self.assertIsInstance(A.w, Weak)
 
         a = A()
-        self.assertFalse(hasattr(a, "w"))
+        self.assertTrue(hasattr(a, "w"))
+        self.assertIsNone(a.w)
+
         a.w = sentinel
         self.assertIs(a.w, sentinel)
         del sentinel
-        self.assertIs(a.w, None)
+        self.assertIsNone(a.w)
+
         del a.w
-        self.assertFalse(hasattr(a, "w"))
+        self.assertTrue(hasattr(a, "w"))
+        self.assertIsNone(a.w)
 
         a.w = None
-        self.assertIs(a.w, None)
+        self.assertIsNone(a.w)
 
         sentinel = B()
         a.w = sentinel

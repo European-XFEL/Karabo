@@ -17,6 +17,7 @@ class Weak:
     to define a weak variable ham. As a bonus to standard weak
     references, one may set the value to None.
     """
+    __slots__ = ("myid", )
 
     def __init__(self):
         self.myid = str(id(self))
@@ -24,14 +25,8 @@ class Weak:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        try:
-            ret = instance.__dict__[self.myid]
-        except KeyError:
-            raise AttributeError
-        if ret is None:
-            return None
-        else:
-            return ret()
+        ret = instance.__dict__.get(self.myid, None)
+        return ret() if ret is not None else ret
 
     def __set__(self, instance, value):
         if value is None:
@@ -40,4 +35,4 @@ class Weak:
             instance.__dict__[self.myid] = weakref.ref(value)
 
     def __delete__(self, instance):
-        del instance.__dict__[self.myid]
+        instance.__dict__[self.myid] = None
