@@ -1843,10 +1843,11 @@ namespace karabo {
                     this->startFsm(); // (This function must be inherited from the templated base class (it's a
                                       // concept!)
                 } catch (const std::exception& e) {
+                    const std::string exceptionTxt(e.what());
                     KARABO_LOG_ERROR << "The instance with deviceId " << this->getInstanceId()
-                                     << "is going down due to an exception in initialization ..." << e.what();
-                    set("status", std::string("Initialization failed: ") += e.what());
+                                     << "is going down due to an exception in initialization ..." << exceptionTxt;
                     // Indicate in the status and kill the device
+                    set("status", std::string("Initialization failed: ") += exceptionTxt);
                     this->call("", "slotKillDevice");
                 }
             }
