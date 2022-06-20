@@ -27,6 +27,7 @@ from karabogui.dialogs.api import (
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.itemtypes import ProjectItemTypes
+from karabogui.logger import get_logger
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
@@ -704,10 +705,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         classId = device.class_id
         serverId = device.server_id
         if device.status in NO_CLASS_STATUSES:
-            msg = ('Please install device plugin {} on server {} '
-                   'first.'.format(classId, serverId))
-            messagebox.show_warning(msg, title='Unknown device schema',
-                                    parent=parent)
+            msg = (f"Unknown class schema for device plugin {classId} on "
+                   f"server {serverId}. Please make sure to install the "
+                   "device plugin first.")
+            get_logger().warning(msg)
             return
 
         proxy = device.proxy
