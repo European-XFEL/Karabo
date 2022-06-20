@@ -28,6 +28,11 @@ class TestKaraboImagePlotROIController(GuiTestCase):
 
         image = np.zeros((125, 125))
 
+        self.assertEqual(roi.center, QPointF(-1.5, -1.5))
+        self.assertEqual(
+            roi.textItem.toPlainText(),
+            "Region of Interest\nCenter: (-1.5, -1.5)\nSize: (3, 3)")
+
         # 1. Check invalid ROI (out of bounds)
         self.plot_item.set_image(image)
         x_axis, y_axis = self.plot_item.transformed_axes
@@ -59,6 +64,10 @@ class TestKaraboImagePlotROIController(GuiTestCase):
 
         # Move the ROI to a valid x position (projects y-axis)
         roi.setPos(QPointF(-3, 3))
+        self.assertEqual(roi.center, QPointF(-3.000000, 3.000000))
+        self.assertEqual(roi.textItem.toPlainText(),
+                         "Region of Interest\nCenter: (-3, 3)")
+
         self.plot_item.set_image(image)
         x_axis = self.plot_item.transformed_axes[0]
         x_slice = self._region.slices[0]
@@ -69,6 +78,9 @@ class TestKaraboImagePlotROIController(GuiTestCase):
 
         # Move the ROI to a valid y position (projects x-axis)
         roi.setPos(QPointF(3, -3))
+        self.assertEqual(roi.center, QPointF(3.000000, -3.000000))
+        self.assertEqual(roi.textItem.toPlainText(),
+                         "Region of Interest\nCenter: (3, -3)")
         self.plot_item.set_image(image)
         y_axis = self.plot_item.transformed_axes[1]
         y_slice = self._region.slices[1]
