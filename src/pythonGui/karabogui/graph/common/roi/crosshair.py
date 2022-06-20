@@ -20,9 +20,8 @@ class CrosshairROI(KaraboROI):
           (+ scale/2, where scale = 1)
         - Force redraw the crosshair shape with sigRegionChanged"""
 
-        super(CrosshairROI, self).__init__(pos + 0.5, size, name,
-                                           scale_snap, translate_snap,
-                                           pen=pen)
+        super().__init__(pos + 0.5, size, name, scale_snap, translate_snap,
+                         pen=pen)
         self._shape = None
         self._path = None
         self.sigRegionChanged.connect(self.redraw)
@@ -33,8 +32,9 @@ class CrosshairROI(KaraboROI):
         if not self.textItem:
             return
 
-        self.textItem.setPos(self.pos())
-        x, y = [float_to_string(coord) for coord in self.center]
+        center = self.center
+        self.textItem.setPos(center)
+        x, y = [float_to_string(coord) for coord in center]
         self.textItem.setHtml(set_roi_html(name=self.name, center=(x, y)))
 
     def invalidate(self):
@@ -43,7 +43,7 @@ class CrosshairROI(KaraboROI):
 
     @property
     def center(self):
-        return self.pos() - (self._scaling / 2)
+        return self.pos()
 
     @property
     def coords(self):
@@ -100,7 +100,7 @@ class CrosshairROI(KaraboROI):
         return self._shape
 
     def viewTransformChanged(self):
-        super(CrosshairROI, self).viewTransformChanged()
+        super().viewTransformChanged()
         self.invalidate()
 
     # ---------------------------------------------------------------------
