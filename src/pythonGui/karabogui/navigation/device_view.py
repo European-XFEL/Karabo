@@ -7,14 +7,17 @@
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QHeaderView, QMenu, QTreeView)
+    QAbstractItemView, QAction, QDialog, QHeaderView, QMenu, QTreeView)
 
+from karabo.common.api import Capabilities
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.api import (
-    ConfigurationFromNameDialog, ConfigurationFromPastDialog)
+    ConfigurationFromNameDialog, ConfigurationFromPastDialog,
+    DeviceCapabilityDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
+from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget
@@ -79,6 +82,13 @@ class DeviceTreeView(QTreeView):
         self.ac_config_name.setToolTip(text)
         self.ac_config_name.triggered.connect(self.onGetConfigurationFromName)
 
+        text = "Open Device Scene..."
+        self.ac_open_device_scene = QAction(text, self)
+        self.ac_open_device_scene.setStatusTip(text)
+        self.ac_open_device_scene.setToolTip(text)
+        self.ac_open_device_scene.setVisible(False)
+        self.ac_open_device_scene.triggered.connect(self.onOpenDeviceScene)
+
         text = "Shutdown device"
         self.ac_kill_device = QAction(icons.delete, text, self)
         self.ac_kill_device.setStatusTip(text)
@@ -91,7 +101,9 @@ class DeviceTreeView(QTreeView):
 
         self.menu.addAction(self.ac_config_past)
         self.menu.addAction(self.ac_config_name)
+        self.menu.addSeparator()
         self.menu.addAction(self.ac_kill_device)
+        self.menu.addAction(self.ac_open_device_scene)
         self.menu.addSeparator()
         self.menu.addAction(self.ac_about)
         self.menu.addAction(self.ac_docu)
@@ -172,6 +184,18 @@ class DeviceTreeView(QTreeView):
         self.popupWidget.show()
 
     @Slot()
+    def onOpenDeviceScene(self):
+        info = self.indexInfo()
+        dialog = DeviceCapabilityDialog(
+            device_id=info.get('deviceId', ''),
+            capability=Capabilities.PROVIDES_SCENES,
+            parent=self)
+        if dialog.exec() == QDialog.Accepted:
+            device_id = dialog.device_id
+            scene_name = dialog.capa_name
+            get_scene_from_server(device_id, scene_name=scene_name)
+
+    @Slot()
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
         archive = info.get("archive", False)
@@ -205,12 +229,18 @@ class DeviceTreeView(QTreeView):
 
     @Slot(QPoint)
     def onCustomContextMenuRequested(self, pos):
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
         info = self.indexInfo()
-        node_type = info.get('type', NavigationItemTypes.UNDEFINED)
+        node_type = info.get("type", NavigationItemTypes.UNDEFINED)
         if node_type is NavigationItemTypes.DEVICE:
             # Killing services is access level dependent!
             enable = access_role_allowed(AccessRole.SERVICE_EDIT)
             self.ac_kill_device.setEnabled(enable)
+            has_scenes = _test_mask(info.get("capabilities", 0),
+                                    Capabilities.PROVIDES_SCENES)
+            self.ac_open_device_scene.setVisible(has_scenes)
             self.menu.exec(QCursor.pos())
 
     @Slot()
