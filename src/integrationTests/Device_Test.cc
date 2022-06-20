@@ -1687,6 +1687,15 @@ void Device_Test::testBadInit() {
     // Case 2: The initialization method fails with an exception:
     //
     devId.back() = '2'; // let's take a new id to avoid delays until the previous device is down
+    std::atomic<bool> instanceNewCalled(false);
+    m_deviceClient->registerInstanceNewMonitor([&instanceNewCalled, devId](const karabo::util::Hash& topologyEntry) {
+        if (topologyEntry.has("device." + devId)) instanceNewCalled = true;
+    });
+    std::atomic<bool> instanceGoneCalled(false);
+    m_deviceClient->registerInstanceGoneMonitor(
+          [&instanceGoneCalled, devId](const std::string& instanceId, const karabo::util::Hash& info) {
+              if (devId == instanceId) instanceGoneCalled = true;
+          });
     requestor = m_deviceServer
                       ->request("", "slotStartDevice",
                                 Hash("classId", "TestDeviceBadInit", "deviceId", devId, "configuration",
@@ -1697,17 +1706,13 @@ void Device_Test::testBadInit() {
     CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
     CPPUNIT_ASSERT(ok);
 
-    // Device does not appear in the topology, it shuts down due to an error in initialization
-    bool waitFails = waitForCondition(
-          [this, devId]() {
-              const karabo::util::Hash topo = m_deviceClient->getSystemTopology();
-              const karabo::util::Hash& devices = topo.get<karabo::util::Hash>("device");
-              boost::optional<const Hash::Node&> ret = devices.find(devId);
-              return static_cast<bool>(ret);
-          },
-          2500);
+    const bool newAndGone = waitForCondition(
+          [&instanceNewCalled, &instanceGoneCalled]() { return (instanceNewCalled && instanceGoneCalled); }, 5000);
+    CPPUNIT_ASSERT(newAndGone);
+    // Reset handlers that use references to local variables
+    m_deviceClient->registerInstanceNewMonitor([](const karabo::util::Hash&) {});
+    m_deviceClient->registerInstanceGoneMonitor([](const std::string&, const karabo::util::Hash&) {});
 
-    CPPUNIT_ASSERT_MESSAGE(std::string("Device did not vanish from the topology, but should be down"), !waitFails);
     //
     // Case 3: A very long lasting initialization method (as case 1), with a try to shutdown while initialization:
     //
