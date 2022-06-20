@@ -4,8 +4,9 @@ from unittest import main, skipIf
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
-    InputChannel, Int32, OutputChannel, Overwrite, Slot, State, Timestamp,
-    UInt32, call, coslot, getDevice, isAlive, setWait, updateDevice, waitUntil)
+    InputChannel, Int32, Node, OutputChannel, Overwrite, Slot, State,
+    Timestamp, UInt32, call, coslot, getDevice, isAlive, setWait, updateDevice,
+    waitUntil)
 from karabo.middlelayer_api.compat import amqp, jms
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -20,6 +21,31 @@ def get_channel_node(displayed_name=""):
 
     return ChannelNode
 
+class NodeOutput(Configurable):
+    output = OutputChannel(
+        get_channel_node(),
+        assignment=Assignment.OPTIONAL,
+        requiredAccessLevel=AccessLevel.OPERATOR,
+        accessMode=AccessMode.READONLY)
+
+
+class NodedSender(Device):
+    state = Overwrite(options=[State.ON])
+
+    node = Node(NodeOutput)
+
+    outputCounter = UInt32(
+        defaultValue=0,
+        displayedName="Output Counter")
+
+    @Slot()
+    async def sendData(self):
+        self.node.output.schema.data += 1
+        self.outputCounter += 1
+        await self.node.output.writeData()
+
+    def __init__(self, configuration):
+        super().__init__(configuration)
 
 class Sender(Device):
     # The state is explicitly overwritten, State.UNKNOWN is always possible by
@@ -507,6 +533,32 @@ class RemotePipelineTest(DeviceTest):
         await self.alice.output.close()
         self.assertEqual(self.alice.output.server.sockets, ())
         self.assertEqual(len(self.alice.output.active_channels), 0)
+
+    @async_tst
+    async def test_noded_output_channel(self):
+        """Test the operation of a noded output channel sending"""
+        NUM_DATA = 5
+        output_device = NodedSender({"_deviceId_": "NodedSender"})
+        await output_device.startInstance()
+        try:
+            with (await getDevice("NodedSender")) as proxy:
+                self.assertTrue(isAlive(proxy))
+                received = False
+
+                def handler(data, meta):
+                    """Output handler to see if we received data
+                    """
+                    nonlocal received
+                    received = True
+
+                self.assertEqual(received, False)
+                proxy.node.output.setDataHandler(handler)
+                proxy.node.output.connect()
+                for _ in range(NUM_DATA):
+                    await proxy.sendData()
+                self.assertEqual(received, True)
+        finally:
+            await output_device.slotKillDevice()
 
 
 if __name__ == "__main__":
