@@ -443,10 +443,10 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         This method has an empty input argument to allow a generic protocol.
         """
         h = Hash("time", True)
-        h["time", ...] = get_timestamp().toDict()
-        h["timeServerId"] = self.timeServerId or "None"
+        h["time", ...].update(get_timestamp().toDict())
+        h["timeServerId"] = self.timeServerId.value or "None"
         h["reference"] = True
-        h["reference", ...] = TimeMixin.toDict()
+        h["reference", ...].update(TimeMixin.toDict())
 
         return h
 
