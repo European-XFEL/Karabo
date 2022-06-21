@@ -163,6 +163,7 @@ class BaseBindingController(HasStrictTraits):
         This is especially important for properties which change often, as
         `deferred_update` will only be called after many updates have finished.
         """
+
         def updater():
             self.deferred_update()
             self._deferred = False
@@ -200,12 +201,11 @@ class BaseBindingController(HasStrictTraits):
             # Forget about it!
             return False
 
-    def remove_additional_property_path(self, key):
-        """Remove an additional property proxy identified by `key`"""
-        try:
-            proxy = [p for p in self._additional_proxies if p.key == key][0]
-        except IndexError:
-            return False
+    def remove_additional_property(self, proxy):
+        """Remove an additional property proxy"""
+        if proxy not in self.proxies:
+            return False  # Not there
+
         try:
             if not self.remove_proxy(proxy):
                 return False
@@ -215,7 +215,7 @@ class BaseBindingController(HasStrictTraits):
 
             # And finally stop tracking of this proxy
             self._additional_proxies.remove(proxy)
-            self.model.keys.remove(key)
+            self.model.keys.remove(proxy.key)
             return True
         except NotImplementedError:
             # Forget about it!
