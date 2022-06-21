@@ -252,15 +252,14 @@ class TestBaseBindingController(GuiTestCase):
 
             # Remove an additional proxy
             assert self.second in controller.proxies
-            controller.remove_additional_property_path(self.second.path)
+            controller.remove_additional_property(self.second)
             binding_update.assert_not_called()
 
             assert controller.model.keys == ['first']
             assert self.second not in controller.proxies
 
             # Already removed!
-            assert not controller.remove_additional_property_path(
-                self.second.path)
+            assert not controller.remove_additional_property(self.second)
 
             # Value update is not effective anymore
             set_proxy_value(self.second, self.second.path, "NoUpdateShould")

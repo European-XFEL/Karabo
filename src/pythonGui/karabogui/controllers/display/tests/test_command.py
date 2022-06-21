@@ -88,6 +88,17 @@ class TestDisplayCommand(GuiTestCase):
         assert controller.visualize_additional_property(slot_p2)
         # no displayedName, should be path
         assert controller._actions[1].action.text() == "yep"
+        assert len(controller._actions) == 2
+        assert slot_p2 in controller.proxies
+        assert slot_p2.key in controller.model.keys
+
+        assert controller.remove_additional_property(slot_p2)
+        assert len(controller._actions) == 1
+        assert slot_p2 not in controller.proxies
+        assert slot_p2.key not in controller.model.keys
+
+        # Already removed
+        assert not controller.remove_additional_property(slot_p2)
 
     def test_state_change(self):
         schema = SlottedDevice.getClassSchema()
