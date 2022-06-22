@@ -48,10 +48,14 @@ class CodeBook(QWidget):
         find_toolbar.findRequested.connect(self._findAndHighlight)
         find_toolbar.highlightRequested.connect(self._highlight)
         find_toolbar.aboutToClose.connect(self._clearHighlight)
+        find_toolbar.replaceRequested.connect(self._replace)
         find_toolbar.setVisible(False)
 
         find = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F), self)
         find.activated.connect(self.showFindToolbar)
+
+        replace = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_R), self)
+        replace.activated.connect(self.showReplaceToolbar)
 
         self.find_toolbar = find_toolbar
         self.code_editor = code_editor
@@ -79,11 +83,24 @@ class CodeBook(QWidget):
     def showFindToolbar(self):
         self.find_toolbar.setVisible(True)
         selected_text = self.code_editor.textCursor().selectedText()
-        self.find_toolbar.find_line_edit.setText(selected_text)
         match_case = self.find_toolbar.match_case.isChecked()
         if selected_text:
+            self.find_toolbar.find_line_edit.setText(selected_text)
             self.code_editor.highlight(selected_text, match_case=match_case)
         self.find_toolbar.find_line_edit.setFocus()
+        self.find_toolbar.set_replace_widgets_visibility(False)
+
+    @Slot()
+    def showReplaceToolbar(self):
+        self.showFindToolbar()
+        self.find_toolbar.set_replace_widgets_visibility(True)
+
+    @Slot(str, str, bool, bool)
+    def _replace(self, text, new_text, match_case, replace_all):
+        if replace_all:
+            self.code_editor.replace_all(text, new_text, match_case)
+        else:
+            self.code_editor.replace(text, new_text, match_case)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress:
@@ -230,12 +247,15 @@ class CodeEditor(QPlainTextEdit):
         number_of_spaces = 4 - remainder
 
         cursor = self.textCursor()
+        cursor.beginEditBlock()
         cursor.movePosition(cursor.StartOfLine)
         cursor.insertText(" " * number_of_spaces)
+        cursor.endEditBlock()
 
     def indent_blocks(self):
         """ Indent the selected lines."""
         cursor = self.textCursor()
+        cursor.beginEditBlock()
         selection_start = cursor.selectionStart()
         selection_end = cursor.selectionEnd()
 
@@ -245,6 +265,7 @@ class CodeEditor(QPlainTextEdit):
         start_block = cursor.blockNumber()
 
         if end_block == start_block:
+            cursor.endEditBlock()
             self.indent_line()
             return
 
@@ -252,9 +273,11 @@ class CodeEditor(QPlainTextEdit):
             cursor.movePosition(cursor.StartOfLine)
             cursor.insertText(" " * 4)
             cursor.movePosition(cursor.NextBlock)
+        cursor.endEditBlock()
 
     def deindent_line(self):
         cursor = self.textCursor()
+        cursor.beginEditBlock()
         start_line = self._get_text_start_position()
         remainder = start_line % 4
         space_count = remainder if remainder else 4
@@ -265,9 +288,11 @@ class CodeEditor(QPlainTextEdit):
                 cursor.removeSelectedText()
             else:
                 break
+        cursor.endEditBlock()
 
     def deindent_blocks(self):
         cursor = self.textCursor()
+        cursor.beginEditBlock()
         selection_start = cursor.selectionStart()
         selection_end = cursor.selectionEnd()
 
@@ -277,6 +302,7 @@ class CodeEditor(QPlainTextEdit):
         start_block = cursor.blockNumber()
 
         if end_block == start_block:
+            cursor.endEditBlock()
             self.deindent_line()
             return
 
@@ -289,6 +315,7 @@ class CodeEditor(QPlainTextEdit):
                 else:
                     break
             cursor.movePosition(cursor.NextBlock)
+        cursor.endEditBlock()
 
     def _get_text_start_position(self):
         """
@@ -306,6 +333,35 @@ class CodeEditor(QPlainTextEdit):
             cursor.setPosition(pos)
         return cursor.columnNumber()
 
+    def replace(self, text, new_text, match_case):
+        """ Replace the 'text' with new_text. It also selects the next
+        occurrence of 'text'. """
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        selected_text = cursor.selectedText()
+        text_is_selected = (selected_text == text if match_case else
+                            selected_text.lower() == text.lower())
+        if text_is_selected:
+            cursor.insertText(new_text)
+        self._highlighted_word = None
+        self.findAndHighlight(text, match_case, find_backward=False)
+        cursor.endEditBlock()
+
+    def replace_all(self, text, new_text, match_case):
+        """ Recursively replace a text with a new text."""
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        flags = QTextDocument.FindFlags()
+        if match_case:
+            flags = flags | QTextDocument.FindCaseSensitively
+
+        self.moveCursor(QTextCursor.Start)
+        if self.find(text, flags):
+            self.textCursor().insertText(new_text)
+            self.replace_all(text, new_text, match_case)
+        else:
+            self.clearHighlight()
+        cursor.endEditBlock()
     # -----------------------------------
     # Qt slots
 
