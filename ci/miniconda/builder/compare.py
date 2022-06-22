@@ -18,7 +18,12 @@ import logging
 import os
 
 from conda.core.prefix_data import PrefixData
-from conda_env import exceptions, specs
+from conda_env import specs
+try:
+    from conda_env.exceptions import SpecNotFound
+except ImportError:
+    from conda_env.specs import SpecNotFound
+
 from conda.models.match_spec import MatchSpec
 
 from .utils import get_conda_prefix
@@ -83,7 +88,7 @@ def execute(env_name, filename):
     try:
         spec = specs.detect(filename=filename)
         env = spec.environment
-    except exceptions.SpecNotFound:
+    except SpecNotFound:
         message = f"Cannot compare, the file {filename} cannot be read."
         raise RuntimeError(message)
 
