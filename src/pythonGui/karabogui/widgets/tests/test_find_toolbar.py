@@ -40,6 +40,9 @@ class TestFindToolBar(GuiTestCase):
     def test_setResultText(self):
         """Test the label gets updated with the correct text"""
         self.find_toolbar.setResultText(0)
-        assert self.find_toolbar.result_label.text() == "No Result"
+        assert self.find_toolbar.result_label.text() == "0 Results"
         self.find_toolbar.setResultText(10)
-        assert self.find_toolbar.result_label.text() == "Found 10 hits"
+        assert self.find_toolbar.result_label.text() == "10 Results"
+
+        self.find_toolbar.setResultText(1)
+        assert self.find_toolbar.result_label.text() == "1 Result"

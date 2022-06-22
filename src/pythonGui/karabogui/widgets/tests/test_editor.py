@@ -196,6 +196,25 @@ class TestConst(GuiTestCase):
         QTest.keyClick(editor, Qt.Key_Tab)
         assert editor.textCursor().position() == 8
 
+    def test_undo_block_indentation(self):
+        """
+        Test undoing (Ctrl+Z) the block-indentation changes the entire
+        block to previous indentation.
+        """
+        widget = CodeBook(code=MULTILINE_CODE)
+        editor = widget.code_editor
+        cursor = editor.textCursor()
+
+        cursor.setPosition(65, cursor.MoveAnchor)
+        cursor.setPosition(52, cursor.KeepAnchor)
+        editor.setTextCursor(cursor)
+
+        QTest.keyClick(editor, Qt.Key_Tab)
+
+        # Ctrl+Z to undo changes.
+        QTest.keyClick(editor, Qt.Key_Z, Qt.ControlModifier)
+        assert widget.getEditorCode() == MULTILINE_CODE
+
     def test_code_book(self):
         code_book = CodeBook(parent=None, code="Hello karabo")
 
@@ -216,3 +235,43 @@ class TestConst(GuiTestCase):
         code_book.moveCursorToLine(4, 2)
         assert code_book.code_editor.firstVisibleBlock().blockNumber() == 3
         assert code_book.code_editor.textCursor().columnNumber() == 2
+
+    def test_replace_all(self):
+        code_book = CodeBook(parent=None, code=MULTILINE_CODE)
+        initial_code = code_book.getEditorCode()
+        count = initial_code.count('Number')
+        expected_code = initial_code.replace('Number', 'row')
+
+        code_book.code_editor.replace_all('number', 'row', match_case=False)
+
+        code = code_book.getEditorCode()
+        assert "Number" not in code
+        assert code.count('row') == count
+        assert code == expected_code
+
+    def test_replace(self):
+        code_book = CodeBook(parent=None, code=MULTILINE_CODE)
+        editor = code_book.code_editor
+        initial_code = code_book.getEditorCode()
+
+        # Case-sensitive
+        code_book.code_editor.replace('number', 'row', match_case=True)
+        assert not editor.textCursor().selectedText()
+        assert code_book.getEditorCode() == initial_code
+
+        # Case-insensitive with no hit
+        code_book.code_editor.replace('number', 'row', match_case=False)
+        # If existing selection is not the text to be replaced, 'replace'
+        # first just selects the next hit and doesn't replace.
+        assert editor.textCursor().selectedText() == 'Number'
+
+        code_book.code_editor.replace('number', 'row', match_case=False)
+        code = code_book.getEditorCode()
+        assert code.count('row') == 1
+        assert code.split("\n")[3] == 'row 1'
+
+        # Case-sensitive with hit
+        code_book.code_editor.replace('Number', 'row', match_case=True)
+        code = code_book.getEditorCode()
+        assert code.count('row') == 2
+        assert code.split("\n")[4] == 'row 2'
