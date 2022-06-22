@@ -12,14 +12,14 @@ class FindToolBar(QWidget):
     aboutToClose = Signal()
     highlightRequested = Signal(str, bool)
 
+    replaceRequested = Signal(str, str, bool, bool)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         ui_file_path = Path(__file__).parent.joinpath("ui", "find_widget.ui")
         uic.loadUi(ui_file_path, self)
         self.find_next.clicked.connect(self.findNext)
         self.find_previous.clicked.connect(self.findPrevious)
-        self.replace_checkbox.toggled.connect(self.setReplaceWidgetsVisibility)
-        self.setReplaceWidgetsVisibility(False)
 
         self.find_next.setIcon(icons.arrowDown)
         self.find_previous.setIcon(icons.arrowUp)
@@ -31,11 +31,13 @@ class FindToolBar(QWidget):
         self.find_line_edit.textChanged.connect(self._onSearchTextChanged)
         self.match_case.toggled.connect(self._onMatchCaseToggled)
 
-    @Slot(bool)
-    def setReplaceWidgetsVisibility(self, toggled):
+        self.replace_button.clicked.connect(self.requestReplace)
+        self.replace_all_button.clicked.connect(self.requestReplaceAll)
+
+    def set_replace_widgets_visibility(self, visible):
         for widget in (self.replace_label, self.replace_line_edit,
                        self.replace_button, self.replace_all_button):
-            widget.setVisible(toggled)
+            widget.setVisible(visible)
 
     @Slot()
     def findNext(self):
@@ -52,9 +54,10 @@ class FindToolBar(QWidget):
 
     @Slot(int)
     def setResultText(self, count):
-        text = "No Result"
-        if count:
-            text = f"Found {count} hits"
+        result = "Results"
+        if count == 1:
+            result = "Result"
+        text = f"{count} {result}"
         self.result_label.setText(text)
 
     @Slot(bool)
@@ -69,6 +72,17 @@ class FindToolBar(QWidget):
 
     def _highlightRequest(self, text, match_case):
         self.highlightRequested.emit(text, match_case)
+
+    @Slot()
+    def requestReplaceAll(self):
+        self.requestReplace(replace_all=True)
+
+    @Slot()
+    def requestReplace(self, replace_all=False):
+        text = self.find_line_edit.text()
+        new_text = self.replace_line_edit.text()
+        match_case = self.match_case.isChecked()
+        self.replaceRequested.emit(text, new_text, match_case, replace_all)
 
     def close(self):
         self.aboutToClose.emit()
