@@ -43,7 +43,7 @@ class AlarmPanel(BasePanelWidget):
         self.ui_filter_group.addButton(self.ui_show_interlock)
 
         search_layout = QHBoxLayout()
-        text = "InstanceID"
+        text = "Device ID"
         label = QLabel()
         label.setText(text)
         label.setStatusTip(text)
