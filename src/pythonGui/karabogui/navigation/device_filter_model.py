@@ -15,14 +15,14 @@ class DeviceFilterModel(QSortFilterProxyModel):
     signalItemChanged = Signal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, source_model=None, parent=None):
-        super(DeviceFilterModel, self).__init__(parent)
+        super().__init__(parent)
+        self._interface = None
         self.setSourceModel(source_model)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.setFilterKeyColumn(0)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
-        self._interface = None
 
     def filterAcceptsRow(self, source_row, source_parent):
         model = self.sourceModel()
