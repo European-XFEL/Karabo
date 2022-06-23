@@ -22,14 +22,14 @@ class TopologyFilterModel(QSortFilterProxyModel):
     signalItemChanged = Signal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, source_model=None, parent=None):
-        super(TopologyFilterModel, self).__init__(parent)
+        super().__init__(parent)
+        self._filter_status = None
         self.setSourceModel(source_model)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.setFilterKeyColumn(0)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
-        self._filter_status = None
         event_map = {
             KaraboEvent.ShowDevice: self._event_show_device
         }
