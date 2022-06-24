@@ -98,11 +98,17 @@ class TestVectorGraph(GuiTestCase):
     def test_visualize_prop(self):
         self.controller.visualize_additional_property(self.value)
         self.assertEqual(len(self.controller._curves), 2)
+        self.assertEqual(len(self.controller.proxies), 2)
+
         curve = self.controller._curves.get(self.value)
         self.assertIsNotNone(curve)
         value = [6, 12, 6]
         set_proxy_value(self.value, "value", value)
         self.assertEqual(list(curve.yData), value)
+
+        self.assertTrue(self.controller.remove_additional_property(self.value))
+        self.assertEqual(len(self.controller._curves), 1)
+        self.assertEqual(len(self.controller.proxies), 1)
 
     def test_set_bool_value(self):
         self.controller.visualize_additional_property(self.bool_value)
