@@ -1,4 +1,35 @@
 ***************************
+What's New in Karabo 2.14.2
+***************************
+
+This hotfix release aims to strenghthen the core backend.
+
+- The data logger manager receives a blocklist feature.
+- The Gui Server pipeline bug fix is backported
+- For the GUI Client the online schema is always synchronized
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- GUI: Always synchronize online schema for devices
+- GUI: Fix the pipeline counter for schema evolution
+- Macro: Protect IPython SlotKillDevice from hanging manager kernels
+- C++ influx: Do not wait for connection with mutex locked
+- C++: More pipeline info in GuiServer debug dump
+- C++: GuiServerDevice synchronisation fix
+- C++: Gui server keeps registered pipelines
+- Bound Integration Tests: Increase timeout
+- Bound: Fix regression of zombie device killing
+- C++ loggers: No logging re-enforcement if not needed
+- C++ Influx: Reject too long vectors, but log all rejections in DB
+- C++: Reject device log entries while above a logging rate threshold
+- Influx: Add support for max schema logging rate for a device
+- C++: Don't skip forceDeviceToBeLogged when the logger is behind the device update time
+- Influx: Fetch Schema until the buffer is done; test for fixes in !6470 and !6478
+- DataLoggerManager blocklist
+
+
+***************************
 What's New in Karabo 2.14.1
 ***************************
 
