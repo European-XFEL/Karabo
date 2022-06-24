@@ -1,4 +1,78 @@
 ***************************
+What's New in Karabo 2.13.7
+***************************
+
+The Macro's can have a new Slot, the MacroSlot that moves the executed function to a background task.
+In this release, the middlelayer can have output channels in nodes and the gui server prints client meta information
+to the logfile.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- MDL: Fix schema hash after update for proxies
+- MDL: Cherry pick Macro Slot for 2.13.X
+- MDL: Support output channel in nodes
+- C++: Gui server login info collection
+
+
+***************************
+What's New in Karabo 2.13.6
+***************************
+
+Version strongly harden the middlelayer device server shutdown procedure. In addition, the long
+term gui server pipeline reconnection bug is fixed.
+Middlelayer gets an important bugfix to be able to have pipelining with the DAQ on queueDrop policy.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- Macro: Protect IPython SlotKillDevice from hanging manager kernels
+- MDL: Cherry pick server and device shutdown fixes
+- MDL: Fix maxQueueLength for queueDrop
+- C++: Fix that pipeline re-connection cycle can get broken
+- Influx: Fix for ever-growing schema's m_archive of a device being logged
+
+
+***************************
+What's New in Karabo 2.13.5
+***************************
+
+Another hotfix release dedicated to the datalogging backend. Datalogger blocklist feature included.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- C++: Protected signal container handling (and deprecate dead code)
+- Influx: Add support for max schema logging rate for a device
+- C++: Don't skip forceDeviceToBeLogged when the logger is behind the device update time
+- DataLoggerManager blocklist
+
+
+***************************
+What's New in Karabo 2.13.4
+***************************
+
+Version aimed to for the datalogging backend.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- MDL: Always provide the correct stack trace if available
+
+- C++ loggers: No logging re-enforcement if not needed
+- C++ Influx: Reject too long vectors, but log all rejections in DB
+- C++ influx: Do not wait for connection with mutex locked
+- C++: GuiServerDevice synchronisation fix
+- C++: More pipeline info in GuiServer debug dump
+- C++: Gui server keeps registered pipelines
+- C++: 2_13_hotfix_lograte
+
+
+
+***************************
 What's New in Karabo 2.13.3
 ***************************
 
