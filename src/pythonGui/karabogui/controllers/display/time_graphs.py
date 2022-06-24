@@ -162,6 +162,18 @@ class BaseSeriesGraph(BaseBindingController):
 
         return True
 
+    def remove_proxy(self, proxy):
+        """Remove an additional proxy curve from the controller"""
+        self._curves_start.discard(proxy)
+        curve = self._curves.pop(proxy)
+        item = curve.curve
+        self._plot.remove_item(item)
+        item.sigPlotChanged.disconnect()
+        item.deleteLater()
+        legend_visible = len(self._curves) > 1
+        self._plot.set_legend(legend_visible)
+        return True
+
     def value_update(self, proxy):
         raise NotImplementedError
 
