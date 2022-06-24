@@ -15,7 +15,7 @@ from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import icons
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui.dialogs.api import SceneItemDialog
+from karabogui.dialogs.api import ProxiesDialog, SceneItemDialog
 from karabogui.sceneview.tools.api import send_to_back, send_to_front, ungroup
 from karabogui.sceneview.widget.api import ControllerContainer
 
@@ -162,8 +162,8 @@ class SceneControllerHandler(SceneWidgetHandler):
 
         # But we don't allow to mutate a controller which contains many proxies
         if len(controller.proxies) > 1:
-            info = menu.addAction('No mutation for multiple properties')
-            info.setEnabled(False)
+            remove_action = menu.addAction('Remove additional property')
+            remove_action.triggered.connect(self._change_widget_proxies)
             menu.exec(event.globalPos())
             return
 
@@ -211,3 +211,7 @@ class SceneControllerHandler(SceneWidgetHandler):
         traits['height'] = traits['width'] = 0
         new_model = model_klass(**traits)
         scene_view.replace_model(old_model, new_model)
+
+    def _change_widget_proxies(self):
+        controller = self.widget.widget_controller
+        ProxiesDialog(controller, parent=self.widget).open()

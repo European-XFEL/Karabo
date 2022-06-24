@@ -44,6 +44,15 @@ class DisplayCommand(BaseBindingController):
             self._item_creation(item)
         return True
 
+    def remove_proxy(self, proxy):
+        """Remove an additional property proxy `proxy` from the controller"""
+        item = [item for item in self._actions
+                if item.proxy is proxy][0]
+        self._button.removeAction(item.action)
+        self._actions.remove(item)
+        self._set_default_action()
+        return True
+
     def create_widget(self, parent):
         widget = QWidget(parent)
 
@@ -53,7 +62,7 @@ class DisplayCommand(BaseBindingController):
 
         self.add_proxy(self.proxy)
 
-        confirmation = QAction('Requires Confirmation', widget)
+        confirmation = QAction("Requires Confirmation", widget)
         confirmation.setCheckable(True)
         confirmation.setChecked(self.model.requires_confirmation)
         confirmation.toggled.connect(self._requires_confirmation_slot)
