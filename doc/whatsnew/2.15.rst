@@ -2,6 +2,67 @@
 What's New in Karabo 2.15.0
 ***************************
 
+This section shows the new features in Karabo 2.15.0, compared to 2.14.0.
+The use of this version of the GUI is encouraged without the need of upgrading the Karabo Servers.
+This release is **backwards compatible** until version **2.11**.
+
+This Karabo release contains against a ``nympy`` dependency update: **1.22.3**
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+- GuiServer: The pipeline reconnection bug preventing image updates in the graphical user interface was fixed.
+- GUI: HistoricText Widget for historic string data available on double-click in Configurator and Scene.
+- GUI: Optional Search in Configurator Panel added
+- GUI: Rework of Logging and Alarm Panel for performance and filtering options
+- GUI: TableStringButton added to the framework for device scene links and urls
+- GUI: In general there are major performance improvements for the table widgets (up to >10),
+  Configurator (more than 2), image updates and Device/Schema Building (around a factor of 2).
+- GUI: Macro Editor handling: Indent, Unindent on key events and search / replace bar added to code editor.
+- MDL: Both InputChannel and OutputChannel are supported in Nodes
+- MDL: Proxies created with getDevice (e.g. DeviceNode) retrieve a configuration only once
+- MDL: Shutdown of devices and servers is hardened against device hanging or faulty jupyter kernel shutdown. A device server will always
+  terminate the process at the end.
+- MDL: *printHistory* and *getTimeInfo* added to CLI commands.
+- MDL: Full pytest support and test template including pytest dependencies for asyncio, timeout, mock, and subtest.
+- MDL: A new Hash view showing the data type for each value and a table for table values was implemented
+- MDL: Better table value handling, e.g. Hashes can be set to single cells, filtering options with `TableValue.where_value`.
+- C++: DeviceClient support for synchronous execution of slot with args
+- Core Devices: New DaemonManager using the TableBoolButton interface with Start/Restart and Stop button
+- Core Devices: Webaggregator now uses the unmangled karabo service name. This means that servers appear with their
+  correct serverId in the service manager table.
+
+Breaking Changes
+++++++++++++++++
+
+
+Change of behaviour
++++++++++++++++++++
+
+- C++/Bound: Both C++ and Bound devices will shutdown if they experience an exception in their `initialization` method.
+- MDL: Default values of vector properties are now fully casted to their numpy dtype. Before the first element
+  was considered only for simple types (int, float). Now 64 bit values are possible as well.
+
+.. code-block:: python
+
+    int32 = VectorInt32(
+        defaultValue=[1, 2, 3])
+
+    int32.descriptor.defaultValue -> [np.int32(1), np.int32(2), np.int32(3)]
+
+- MDL: Using i-operators in KaraboValues will set the timestamp to `None`.
+  This means that in a `Device` a new timestamp is generated afterwards.
+
+.. code-block:: python
+
+    int32 = Int32(
+        defaultValue=1)
+
+    def increase(self):
+        self.int32 += 1  # This will provide a new timestamp on device property!
+
+- GUI: A few widgets have been removed: AnalogWidget, IconSet and FileIn/Out controllers.
+- GUI: The Icon Widget can handle string as replacement for IconSet
 - GUI: The client will prevent adding "backbone" devices to projects. Pre-existing Devices will not be modified.
 - GUI: The alarm columns in the Navigation and Project Panel are now by default hidden.
   The reason is that extra alarms visualization is performance draining. The visibility can be toggled
@@ -9,7 +70,317 @@ What's New in Karabo 2.15.0
   will be active after application restart. This information is now logged by the GUI server.
   The `AlarmPanel` now have a ``deviceId`` search option, please consider using this instead.
 
+
 Detailed Merge-Log
 ++++++++++++++++++
 
-- Coming ...
+
+Documentation
+=============
+
+- Add tabulate to mock in docs !6333
+- Update requirements for docs !6332
+- Document 2.14.1 hotfix release !6325
+- DOC: Information on alarms in project and navigation [ci skip] !6560
+- DOC: expand 2.14.0 documentation !6239
+- DOC: Make documentation 'Remote Installation' step clearer. !6346
+
+
+Bound/cpp core
+==============
+
+
+- C++: Proper use of util::Exception::what(), more robust device test !6577
+- C++: Fix that pipeline re-connection cycle can get broken !6491
+- C++: Do not catch exceptions in SchemaBinarySerializer !6369
+- C++: Fix implicit default value of readOnly tableFixes
+- C++ influx: Do not wait for connection with mutex lockedPlus minor clean-up like less handler copies.
+- C++: Protected signal container handling (and remove dead code)Inspired from to https://in.xfel.eu/redmine/issues/121483, some missing mutex protections have been identified. But it is not deemed likely that they fix the issue.
+- C++ Influx: Reject too long vectors, but log all rejections in DB !6238
+- C++: remove unused FSM features from core devices 6181
+- C++: reduce boiler plate code in net::Broker_Test !6396
+- C++: make the xms::SignalSlotable_Test parametric !6395
+- C++: make the net::Broker_Test parametric !6389
+- C++: Device shuts down when receiving an error in initialization !6387
+- C++: refactor test code handling broker env. vars !6398
+- C++: DeviceClient support for synchronous execution of slot with args. !5977
+- C++: Add a function to load the last schema in a sequence and use it in the InfluxDataLogger. !6484
+- Bound: Kill a device when it comes faulty !6384
+- Bound: Remove Motor and CameraInterface !6339
+- Bound: Exceptions in preDestruction should not prevent device shutdown. !6406
+- Bound: Fix regression of zombie device killing !6124
+- Bound: Add/improve function doc strings for pipelining and p2p !6514
+- Bound: Raise on inconsistent NDArray in Hash
+- C++/Bound: Better device instantiation failure reply. Split short message and details for device instantiation failure.
+
+
+MDL/Native core
+===============
+
+- Native: Better TableValue repr !6340
+- Native: Where_value returns TableValue !6308
+- Native: Use tabulate in html hash !6364
+- Native: Has_changes uses floating point tolerance only for floating vectors !6350
+- Native: Skip flaky time mixin test on macos !6534
+- Native: Preserve dtype of vector elements !6492
+- MDL: slimmer compat imports !6457
+- MDL: set the karabo slot name in lastCommand !6233
+- MDL: Support output channel in nodes !6571
+- MDL: Unify broker api for overview !6542
+- MDL: Fix schema hash after update for proxies !6536
+- MDL: Add missing functions to package !6540
+- MDL: Fix queue pipelining with faulty maxQueue value !6508
+- MDL: Make sure vector defaults are casted !6488
+- MDL: Log who requested server shutdown !6461
+- MDL: Align async with and with behavior !6447
+- MDL: Provide a message if shutdown by daemon !6467
+- MDL: InstanceId becomes None when no message is provided in server shutdown !6473
+- MDL: Make sure a server process is terminated !6459
+- MDL: Fix macro device instantiation cancellation !6455
+- MDL: Fix device shutdown !6458
+- MDL: getDevice behaves on ikarabo as default !6449
+- MDL: Provide a MacroSlot for background tasks !6431
+- MDL: Always connect a proxy on startup !6438
+- MDL: Fix manual disconnection in proxy !6439
+- MDL: Catch exceptions in onDestruction !6407
+- MDL: Ensure low delay in pipeline !6386
+- MDL: Bunch injections for protections !6391
+- MDL: Fix unhandled exception in Redis reader !6342
+- MDL: Explicit connection closure at the end of device lifetime !6335
+- MDL: Correction to MR!6315. !6324
+- MDL: Fix closure in Redis that works for test_topology !6315
+- MDL: Fix shutdown process in MDL !6313
+- MDL: Support for reading of log messages for non-JMS brokers !6249
+- MDL: Make MDL a package !6270
+- MDL: Swap testing to pytest example !6260
+- MDL: Provide a table default row option !6244
+- MDL: Fix initial instanceInfo for device servers !6297
+- MDL: Remove one conversion for comparison in daemon manager. !6351
+- MDL: Provide a new hash view !6266
+- MDL: Document more the localdevice option !6334
+- MDL: Remove pitfall of i operators !6259
+- MDL: Use tabulate for Hashlist representation !6331
+- MDL: Allow Noded InputChannel !6245
+- MDL: Use a weakref in mdl device context !6304
+- MDL: Enhance getSchema to check for state dependent schema !6280
+- MDL: Provide device shortcut possibility !6322
+- MDL: Move sleep in scanPluginsloop to wait for the instanceInfo to be set !6252
+- MDL: Wait for instanceInfos to arrive !6258
+- MDL: Add external testing module !6250
+- MDL: Provide easy filtering operations for table values !6242
+- MDL: Only connect once in device node !6243
+- MDL: Python compat drain lock in pipelining !6246
+- MDL: Modify context with timeout and merge instances !6256
+- MDL: Add device context for pytest asyncio !6248
+- MDL: Use an async context for the proxy killer !6225
+- MDL: Enable setting of Hashes as rows in table element and provide columnIndex function !6241
+- MDL: Add isort to templates !6237
+- MDL: Include tests in the future for flake8 !6236
+- MDL: Always provide the correct stack trace if available !6286
+- MDL: Provide an init variable for channelName !6285
+- MDL: Add function for getClassSchema !6274
+- MDL: Don't use deprecated numpy type in ndarray !6292
+- MDL: Provide better HashList repr !6267
+- MDL: getTimeInfo function to retrieve ticking information and latency !6257
+- MDL: Add printHistory for nice history print !6414
+- MDL: Timestamp.toLocal with selectable separator !6434
+- MDL: Dump Karabo version to log file !6317
+- MDL: Better instantiation failure report. If instantiation fails due to unknown class, add id of missing class to instantiation failure exception.
+- Macro API: Include listDeviceInstantiators !6261
+- Macro: Activate cli remote timeout test !6456
+- Macro: Protect IPython SlotKillDevice from hanging manager kernels !6451
+- Macro: Don't miss an output print for macros !6416
+- Macro: do not archive CLI devices !6409
+- Common: Cure potential circular import in graph model files !6390
+- Common: Provide WeakMethodRef in Karabo.common !6437
+- Common: Do some code formatting !6336
+
+
+Dependencies and deployment
+===========================
+
+
+- DEPS: Add tabulate to conda recipes !6330
+- DEPS: python using tkinter !5892
+- DEPS: use the new web host for miniconda !6338
+- DEPS: enable Debian-10 build !6373
+- DEPS: Add pytest timeout to dependencies !6411
+- DEPS: Add pytest-mock and pytest-subtests to the framework !6264
+- DEPS: Add tabulate to dependencies !6329
+- DEPS: Add pytest asyncio !6247
+- DEPS: Upgrade AMQP-CPP package to 4.3.16 !6343
+- DEPS: Update numpy dependency on karabo-cpp Conda env to 1.22.3 (from 1.13.3). !6469
+- DEPS: Update amqp-cpp to version 4.3.16 in the karabo-cpp Conda env. !6344
+- TOOLS: make the location of the binaries configurable !6479
+- TOOLS: Enable conditional installation !6217
+- CMake: Fix typo in prepare vs code cmake !6555
+- CMake: Remove CMAKE_PREFIX_PATH check
+- CMake: Add hint to setupVSCodeCMake.py !6229
+- CMake: Script to set up VSCode CMake builds just like auto_build_all.sh. !6129
+- Deployment: Fix service in names by removing trailing newline and account webserver for that !6352
+- karabo-cpp: Fix for numpy version inconsistency in "meta_base.yaml". !6561
+- karabo-cpp dependency building: fix silent failures, "numJobs" for cmake-based builds. !6563
+- karabo-cpp: Sync template with the latest changes in Beckhoff's CMake project. !6537
+
+
+Core Devices
+=============
+
+- DaemonManager: Fix post action and use of new table filter features !6357
+- DaemonManager: Implement TableBoolButton Interface !6221
+- DaemonManager: Performance optimization in cycling !6444
+- DaemonManager: Add Restart to DaemonManager !6372
+- DaemonManager: Erase information on UNKNOWN state and cleanup !6441
+- WebAggregator: Implement heartbeat checking and remove servers if hosts vanish !6442
+- FW: Change visiblity of property test devices to EXPERT !6436
+- GuiServer: Fix a debug message in GuiServerDevice !6490
+- GuiServer: Small GuiServer improvements !6380
+- GuiServer: Gui server keeps registered pipelines
+- GuiServer: Increase minimum client version to 2.11.3 !6295
+- GuiServer: More pipeline info in GuiServer debug dump.
+- GuiServer: Print meta data received from client !6541
+- GuiServer: GuiServerDevice synchronisation fix. Register device monitoring with lock to ensure to stay in sync with `m_monitoredDevices`.
+- DataLogger: Log when data logging is blocked !6423
+- Datalogger: No logging re-enforcement if not needed !6235
+- Datalogger: Allow to ignore archiving some deviceIds/classIds. !6410
+- Datalogger: Influx logging: add 'logger_time' metric to events of type '+LOG' and '-LOG'. !6363
+- Datalogger: Reject device log entries while above a logging rate threshold. !6283
+- Datalogger: Don't skip forceDeviceToBeLogged when the logger is behind the device update time. !6426
+- Influx: Add support for max schema logging rate for a device. !6405
+- Influx: Add "digest_start" and "schema_size" to "*__SCHEMAS" measurements !6399
+- Influx: Fix for ever-growing schema's m_archive of a device being logged.
+
+
+Tests and CI
+============
+
+- CI: conda build to run remote script !6392
+- CI: Flake naming test !6481
+- CI: Better Python CI !6462
+- CI: Add code quality check for submodule imports !6397
+- CI: Provide a property naming tests in templates !6465
+- CI: improve integration tests compilation times !6388
+- TEST: remove C++ runner code duplication !6219
+- TEST: Add timeout to MDL template test !6550
+- TEST: Align initial MDL template to isort !6299
+- C++ tests: Fetch Schema until the buffer is done; test for fixes in !6470 and !6478. !6478
+- C++ tests: More robust pipeline integration test !6379
+- C++ tests: Increase broker timeouts !6360
+- C++ tests: Reliable BaseLogger_Test !6362
+- C++ tests: Increase timeout in InputOutputChannel_Test !6356
+- C++ tests: Safer TcpAdapter with extended login(..)method. Use of bind_weak protects against failures like "try to lock invalid mutex" that were at least seen in failure conditions.
+- C++ Tests: increase timeouts !6358
+- Fix BoundPy integration tests. !6298
+- Bound Integration Tests: Increase timeout !6240
+- Fix minimal template for new Cpp devices. !6385
+- C++ Template: cmake return on compilation failures. !6433
+
+
+Graphical User Interface
+========================
+
+- GUI: avoid macro server confusion !6365
+- GUI: Skip topology instances without attributes
+- GUI: Show a log message instead of a message box for missing schema !6578
+- GUI: Fix text for CrosshairRoi item !6576
+- GUI: Expose current roi from controller !6570
+- GUI: Make sure fonts are considered correctly on scene view for spinboxes !6565
+- GUI: Expose CodeBook in karabogui.api !6567
+- GUI: Add a table string button to the framework !6516
+- GUI: Implement controller panels !6547
+- GUI: Protect spinboxes with an own stylesheet !6562
+- GUI: Provide configurable navigation and project alarms and info login !6557
+- GUI: Increase table display performance once more !6558
+- GUI: Protect vector hash binding when no schema is specified !6531
+- GUI: Improve user experience in configurator selection
+- GUI: Add test for moving scene items without snap to grid !6552
+- GUI: Test binding clear namespace and make it faster !6530
+- GUI: Add Historic Text Widget for String retrieval !6493
+- GUI: Enhance app config dialog with header double click action and put a description !6548
+- GUI: Unify and cleanup size hint constants !6546
+- GUI: Remove model index bookkeeping in configurator for performance increase !6529
+- GUI: Fix table setting via Configurator !6519
+- GUI: Another performance update configurator !6525
+- GUI: Make the application configuration editable for booleans !6523
+- GUI: Fix project device rename !6538
+- GUI: No alarm for project models, but conflicts !6521
+- GUI: Don't request new schemas when moving scene element to back or foreground !6527
+- GUI: Simplify table button delegate !6526
+- Revert "GUI: Remove value delegate from Configurator" !6532
+- GUI: Deprecate and Remove AnalogWidget !6486
+- GUI: Remove value delegate from Configurator !6517
+- GUI: Performance increase schema update configurator !6528
+- GUI: StepMode true is deprecated in pyqtgraph, use center !6497
+- GUI: Make schema building a lot faster !6524
+- GUI: Add fonts to the command controller !6513
+- GUI: Provide lazy Configurator filtering !6520
+- GUI: Fix announce of value update in Configurator !6518
+- GUI:  SizeHints for spinboxes and use in controllers !6515
+- GUI: Show a warning message instead of a popup for missing scene in project !6499
+- GUI: Add formatting to float spinbox !6509
+- GUI: Deprecate Iconset widget !6485
+- GUI: Add formatting to intspinbox !6506
+- GUI: Performance lineedit unitlabels and code quality !6507
+- GUI: A few fixes for the spinbox !6505
+- GUI: A few fixes for the double spinbox !6504
+- GUI: Enable to get default scene of device from scene elements !6502
+- GUI: Increase display performance of table controllers !6501
+- GUI: Cleanup get_device_status_pixmap !6500
+- GUI: Drop Weakmethod ref since in common !6498
+- GUI: Move test schema code to testing !6482
+- GUI: Speed up bytescale !6496
+- GUI: Image alignment lookup table and code quality !6495
+- GUI: Add optional sorting feature to table widget !6489
+- GUI: Image levels protection in levels dialog !6474
+- GUI: Remove directory and filesystem widgets !6463
+- GUI: ColorBar and Image protection for infinite values !6446
+- GUI: Performance boost for image clipping !6468
+- GUI: Provide testing module !6464
+- GUI: Tune icons dialog with data directory and more !6454
+- GUI: AlarmPanel - Add instanceId filtering and remove Id from the view !6443
+- GUI: Offer confirmation option for table button and use in daemon manager !6440
+- GUI: Prevent admin devices from creation !6435
+- GUI: Add model sortingEnabled for filter controllers protection !6393
+- GUI: Add log level filtering to log widget !6404
+- GUI: Move frameslider ui file !6421
+- GUI: Always synchronize online schema for devices !6413
+- GUI: Fix the pipeline counter for schema evolution !6412
+- GUI: Rename types to binding types !6417
+- GUI: Cleanup icon command widget !6415
+- GUI: Add resize contents on initialize in log widget and continue cleaning up !6402
+- GUI: Refactor log server dialog !6401
+- GUI: Rename label text to Clear Filter for filter controller !6394
+- GUI: Align access level change on tables with buttons !6366
+- GUI: Add sortingEnabled option to table filter controller !6359
+- GUI: Have a single paint event for the log widget !6361
+- GUI: Rework logging widget for performance and filtering !6345
+- GUI: Don't show another image on image controller double click !6300
+- GUI: Only show unit label on eval widget when required !6307
+- GUI: Unit util for abs errors and type checks !6328
+- GUI: Show unit label only when needed in LabelWidget !6305
+- GUI: Add subtests module !6271
+- GUI: Ensure future high dpi compatibility !6302
+- GUI: Slight refactor to RangeSlider !6312
+- GUI: Provide display type formatting for labels !6318
+- GUI: Show a log message for missing scenes on project scene handling and cleanup !6327
+- GUI: Fix image profiling when weighted with zeros !6303
+- GUI: Protect range slider from handle movement to a threshold !6277
+- GUI: Protect against schema evolution on the command controller !6272
+- GUI: Substitute font only if available and rewrite base to pathlib !6301
+- GUI: Create conftest for pytest !6265
+- GUI: Prevent viewbox exceptions in profiling !6291
+- GUI: Protect levels dialog from segfaulting, slider protection !6273
+- GUI: Ensure class schema for project devices when shown in configurator !6269
+- GUI: Remove class schemas on server leave !6268
+- GUI: Use pytest-mock in sticker dialog test !6263
+- GUI: Provide possibility to move to pytest easily !6255
+- GUI: Add pytest-mock to recipes !6262
+- GUI: Fix the log message of bad disconnect !6251
+- GUI: Move by 1px if snap_to_grid is false
+- GUI: Indent/De-indent code in Macro Editor using Tab/Shift+Tab key(s).
+- GUI: Macro Editor - Fix Syntax highlight issue !6566
+- GUI: Toggling match case button should just highlights hits. !6554
+- GUI: Create a widget for Macro editor.
+- GUI: Find Toolbar for Macro editor.
+- GUI: IconWidget for String Properties !6471
+- GUI: Improve 'Change Icon' Dialog appearance. !6445
