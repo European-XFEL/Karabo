@@ -1,0 +1,66 @@
+from qtpy import uic
+from qtpy.QtCore import QStringListModel, Slot
+from qtpy.QtWidgets import QDialog, QMessageBox
+
+from karabogui import icons, messagebox
+
+from .utils import get_dialog_ui
+
+
+class ProxiesDialog(QDialog):
+    """The basic dialog to remove additional proxies from a `widget_controller`
+    """
+
+    def __init__(self, widget_controller, parent=None):
+        super().__init__(parent)
+        self.setModal(False)
+        ui_file = get_dialog_ui("proxies_dialog.ui")
+        uic.loadUi(ui_file, self)
+
+        self.widget_controller = widget_controller
+        self.ui_main_property.setText(self.widget_controller.proxy.key)
+
+        list_model = QStringListModel()
+        paths = [proxy.key for proxy in self.widget_controller.proxies[1:]]
+        list_model.setStringList(paths)
+        self._list_model = list_model
+
+        self.ui_list_view.setModel(list_model)
+        # Removal button
+        self.ui_remove_button.clicked.connect(self._on_remove_clicked)
+        self.ui_remove_button.setIcon(icons.delete)
+        self._on_update_buttons()
+
+    # ----------------------------------------------------------------------
+    # Private interface
+
+    def _on_update_buttons(self):
+        """Keep the removal button in sync with the items"""
+        has_items = self._list_model.rowCount() > 0
+        self.ui_remove_button.setEnabled(has_items)
+
+    # ----------------------------------------------------------------------
+    # Slots
+
+    @Slot()
+    def _on_remove_clicked(self):
+        index = self.ui_list_view.selectionModel().currentIndex()
+        if not index.isValid():
+            return
+
+        proxy = self.widget_controller.proxies[index.row() + 1]
+        prop = proxy.key
+        ask = f"Are you sure you want to remove the property <b>{prop}</b>?"
+        options = (QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.question(self, "Remove Property", ask, options,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+
+        if not self.widget_controller.remove_additional_property(proxy):
+            messagebox.show_error(f"The removal of property {prop} is not "
+                                  "supported by this controller.")
+            return
+        self._list_model.setStringList([proxy.key for proxy
+                                        in self.widget_controller.proxies[1:]])
+        self._on_update_buttons()
