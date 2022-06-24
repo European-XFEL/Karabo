@@ -6,16 +6,19 @@ This section shows the new features in Karabo 2.15.0, compared to 2.14.0.
 The use of this version of the GUI is encouraged without the need of upgrading the Karabo Servers.
 This release is **backwards compatible** until version **2.11**.
 
-This Karabo release contains a ``nympy`` dependency update: **1.22.3**
+This Karabo release contains a ``numpy`` dependency update: **1.21.4**
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
+- Macro: MacroSlot decorator added that moves executed functions to a background task. These tasks can
+  be cancelled with the `Cancel` slot of the macro.
 - GuiServer: The pipeline reconnection bug preventing image updates in the graphical user interface was fixed.
 - GUI: HistoricText Widget for historic string data available on double-click in Configurator and Scene.
 - GUI: Optional Search in Configurator Panel added
 - GUI: Rework of Logging and Alarm Panel for performance and filtering options
 - GUI: TableStringButton added to the framework for device scene links and urls
+- GUI: Font size editing for Spin and Double spin boxes as well as Command Widgets (Buttons)
 - GUI: In general there are major performance improvements for the table widgets (up to >10),
   Configurator (more than 2), image updates and Device/Schema Building (around a factor of 2).
 - GUI: Macro Editor handling: Indent, Unindent on key events and search / replace bar added to code editor.
