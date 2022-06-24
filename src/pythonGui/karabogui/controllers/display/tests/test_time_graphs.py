@@ -1,11 +1,13 @@
-import unittest
 from datetime import datetime
 from platform import system
 
-from karabo.native import Bool, Configurable
+import pytest
+from qtpy.QtCore import Qt
+
+from karabo.native import Bool, Configurable, Float, Int32
 from karabogui.controllers.trendmodel import UPTIME
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
+from karabogui.util import process_qt_events
 
 from ..time_graphs import DisplayTrendGraph
 from .data import build_historic_data_float
@@ -13,71 +15,90 @@ from .data import build_historic_data_float
 
 class Object(Configurable):
     prop = Bool(defaultValue=True)
+    fprop = Float(defaultValue=1.0)
+    iprop = Int32(defaultValue=2.1)
 
 
-class TestDisplayTrendGraph(GuiTestCase):
-    def setUp(self):
-        super(TestDisplayTrendGraph, self).setUp()
+def test_trendline(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = DisplayTrendGraph(proxy=proxy)
+    controller.create(None)
 
-        schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = DisplayTrendGraph(proxy=self.proxy)
-        self.controller.create(None)
+    set_proxy_value(proxy, "prop", True)
+    process_qt_events()
 
-    def tearDown(self):
-        super(TestDisplayTrendGraph, self).tearDown()
-        self.controller.destroy()
-        assert self.controller.widget is None
+    assert controller._x_detail == UPTIME
 
-    def test_set_value(self):
-        set_proxy_value(self.proxy, 'prop', True)
-        self.process_qt_events()
+    # actions
+    actions = controller.widget.actions()
+    texts = [action.text() for action in actions]
+    assert len(actions) == 7
+    assert "Range Y" in texts
+    assert "View" in texts
 
-    def test_initial_state(self):
-        self.assertEqual(self.controller._x_detail, UPTIME)
+    # historic data
+    data = build_historic_data_float()
+    t0 = data[0]["v", ...]["sec"]
+    t1 = data[-1]["v", ...]["sec"]
 
-    def test_actions(self):
-        actions = self.controller.widget.actions()
-        texts = [action.text() for action in actions]
-        self.assertEqual(len(actions), 7)
-        self.assertIn("Range Y", texts)
-        self.assertIn("View", texts)
+    controller.set_time_interval(t0, t1)
 
-    def test_historic_data(self):
-        data = build_historic_data_float()
-        t0 = data[0]['v', ...]['sec']
-        t1 = data[-1]['v', ...]['sec']
+    proxy.binding.historic_data = data
+    process_qt_events()
 
-        self.controller.set_time_interval(t0, t1)
+    # Range settings
+    view_box = controller._plot.plotItem.vb
+    view_box.setXRange(1570536895, 1571536895, padding=0.05)
 
-        self.proxy.binding.historic_data = data
-        self.process_qt_events()
+    dt_start = controller.widget.dt_start.dateTime().toUTC()
+    dt_end = controller.widget.dt_end.dateTime().toUTC()
 
-    @unittest.skip(reason='The real range is being disturbed in CI')
-    def test_datetime_update(self):
-        view_box = self.controller._plot.plotItem.vb
-        view_box.setXRange(1570536895, 1571536895, padding=0.05)
+    assert dt_start.toString(Qt.ISODate) == "2019-10-07T22:21:35Z"
+    assert dt_end.toString(Qt.ISODate) == "2019-10-20T15:54:55Z"
 
-        # We should've changed the datetimes
-        dt_start = self.controller.widget.dt_start.dateTime()
-        dt_end = self.controller.widget.dt_end.dateTime()
+    # Additional proxies
+    assert len(controller.proxies) == 1
 
-        self.assertEqual(dt_start.toString(), 'Tue Oct 8 00:21:35 2019')
-        self.assertEqual(dt_end.toString(), 'Sun Oct 20 17:54:55 2019')
+    float_proxy = get_class_property_proxy(schema, "fprop")
+    controller.visualize_additional_property(float_proxy)
+    assert len(controller.proxies) == 2
 
-    @unittest.skipIf(system() == "Windows",
-                     reason="This tests is Unix specific")
-    def test_range_update(self):
-        """When the viewbox change, we must make sure the time axis is
-        not overflown"""
-        plot_view = self.controller._plot
-        plot_item = plot_view.plotItem
+    int_proxy = get_class_property_proxy(schema, "iprop")
+    controller.visualize_additional_property(int_proxy)
+    assert len(controller.proxies) == 3
 
-        view_box = plot_item.vb
-        view_box.setXRange(datetime(1378, 12, 31).timestamp(),
-                           datetime(2070, 12, 31).timestamp(), update=False)
+    controller.remove_additional_property(float_proxy)
+    assert len(controller.proxies) == 2
+    controller.remove_additional_property(int_proxy)
+    assert len(controller.proxies) == 1
 
-        # Relax the assertion as the CI is non deterministic
-        x_min, x_max = plot_item.getAxis("bottom").range
-        self.assertEqual(datetime.utcfromtimestamp(x_min).year, 1970)
-        self.assertEqual(datetime.utcfromtimestamp(x_max).year, 2038)
+    # Destroy controller
+    controller.destroy()
+    assert controller.widget is None
+
+
+@pytest.mark.skipif(system() == "Windows",
+                    reason="This tests is Unix specific")
+def test_time_graph_range_update(gui_app):
+    """When the viewbox change, we must make sure the time axis is
+    not overflown"""
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = DisplayTrendGraph(proxy=proxy)
+    controller.create(None)
+
+    plot_view = controller._plot
+    plot_item = plot_view.plotItem
+
+    view_box = plot_item.vb
+    view_box.setXRange(datetime(1378, 12, 31).timestamp(),
+                       datetime(2070, 12, 31).timestamp(), update=False)
+    process_qt_events()
+    # Relax the assertion as the CI is non deterministic
+    x_min, x_max = plot_item.getAxis("bottom").range
+    assert datetime.utcfromtimestamp(x_min).year == 1970
+    assert datetime.utcfromtimestamp(x_max).year == 2038
+
+    controller.destroy()
+    assert controller.widget is None
