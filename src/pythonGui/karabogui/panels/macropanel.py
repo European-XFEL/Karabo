@@ -71,7 +71,17 @@ class MacroPanel(BasePanelWidget):
         toolbar = ToolBar(parent=self)
         toolbar.addAction(icons.run, "Run", self.on_run)
         toolbar.addAction(icons.save, "Save", self.on_save)
+        toolbar.addAction(icons.zoomIn, "Increase font", self.increaseFont)
+        toolbar.addAction(icons.zoomOut, "Decrease font", self.decreaseFont)
         return [toolbar]
+
+    @Slot()
+    def increaseFont(self):
+        self.ui_editor.increaseFontSize()
+
+    @Slot()
+    def decreaseFont(self):
+        self.ui_editor.decreaseFontSize()
 
     # -----------------------------------------------------------------------
 
