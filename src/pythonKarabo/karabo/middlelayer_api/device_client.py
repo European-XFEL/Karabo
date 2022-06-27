@@ -616,7 +616,8 @@ async def instantiateFromName(device, name=None, classId=None, serverId=None):
 
 
 @synchronize
-async def saveConfigurationFromName(devices, name, description='', priority=1):
+async def saveConfigurationFromName(devices, name, description='', priority=1,
+                                    overwritable=False):
     """Save configuration(s) in the KaraboConfigurationManager::
 
         - The parameter `devices` can be a Karabo `proxy`, a list of deviceIds,
@@ -626,6 +627,8 @@ async def saveConfigurationFromName(devices, name, description='', priority=1):
         - The description is by default empty.
 
         - The priority default is the lowest -> 1.
+
+        - The overwritable is by default False
 
         saveConfigurationFromName(devices, name="proposal2020",
                                   description="working at end", priority=3)
@@ -643,7 +646,8 @@ async def saveConfigurationFromName(devices, name, description='', priority=1):
     instance = get_instance()
     slot = "slotSaveConfigurationFromName"
     h = Hash("deviceIds", devices, "priority", priority,
-             "name", name, "description", description)
+             "name", name, "description", description,
+             "overwritable", overwritable)
 
     await instance.call(KARABO_CONFIG_MANAGER, slot, h)
 
