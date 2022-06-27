@@ -9,6 +9,9 @@ try:
 except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
+from pygments.style import Style
+from pygments.token import (
+    Comment, Keyword, Literal, Name, Number, Operator, String, Token)
 from qtpy.QtCore import (
     QEvent, QRect, QRegularExpression, QSize, Qt, Signal, Slot)
 from qtpy.QtGui import (
@@ -26,6 +29,32 @@ TEXT_HIGHLIGHT_COLOR = QColor(Qt.yellow)
 DEFAULT_BACKGROUND_COLOR = QBrush(QColor(Qt.white))
 MAX_FONT_SIZE = 35
 MIN_FONT_SIZE = 9
+
+
+class CustomStyle(Style):
+    default_style = "#000000"
+    styles = {
+        Comment: 'italic #8C8C8C',
+        Keyword: '#0033B3',
+        Keyword.Type: '#000000',
+        Literal: '#000000',
+        Name: '#000000',
+        Name.Builtin: '#000080',
+        Name.Builtin.Pseudo: '#94558D',
+        Name.Class: '#000000',
+        Name.Decorator: '#9E880D',
+        Name.Exception: '#0033B3',
+        Name.Function: '#00627A',
+        Name.Function.Magic: '#B200B2',
+        Name.Namespace: '#000000',
+        Name.Variable.Magic: '#B200B2',
+        Number: '#1750EB',
+        String: '#067D17',
+        String.Doc: 'italic #8C8C8C',
+        String.Escape: '#0037A6',
+        Operator.Word: '#0033B3',
+        Token.Text: '#000000',
+    }
 
 
 class CodeBook(QWidget):
@@ -63,7 +92,8 @@ class CodeBook(QWidget):
         self.code_editor = code_editor
         layout.addWidget(self.find_toolbar)
         layout.addWidget(self.code_editor)
-        PygmentsHighlighter(self.code_editor.document())
+        syntax_highlighter = PygmentsHighlighter(self.code_editor.document())
+        syntax_highlighter.set_style(CustomStyle)
 
         increase = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Plus), self)
         increase.activated.connect(self.code_editor.increase_font_size)
