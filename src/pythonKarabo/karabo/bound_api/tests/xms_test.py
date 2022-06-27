@@ -541,7 +541,7 @@ class Xms_TestCase(unittest.TestCase):
             self.assertIn(msgWhoFailed, errorMsg)
             self.assertIn(msgSlotFailure, errorMsg)
             self.assertIn(msgRuntimeError, errorMsg)
-            self.assertNotIn("Exception Type....:", errorMsg)  # no C++ trace!
+            self.assertNotIn("Exception Type....:", errorMsg)  # also C++ trace
 
             self.assertIn(msgWhoFailed, detailsMsg)
             self.assertIn(msgSlotFailure, detailsMsg)
@@ -571,7 +571,7 @@ class Xms_TestCase(unittest.TestCase):
             self.assertIn(msgWhoFailed, errorMsg)
             self.assertIn(msgSlotFailure, errorMsg)
             self.assertIn(msgKeyFailure, errorMsg)
-            self.assertNotIn("Exception Type....:", errorMsg)  # no C++ trace!
+            self.assertIn("Exception Type....:", errorMsg)  # also C++ trace
 
             self.assertIn(msgWhoFailed, detailsMsg)
             self.assertIn(msgSlotFailure, detailsMsg)
