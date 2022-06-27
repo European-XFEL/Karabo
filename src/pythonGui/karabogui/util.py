@@ -390,7 +390,7 @@ def version_compatible(version: str, major: int, minor: int):
 def qtversion_compatible(major: int, minor: int):
     """Return if we are compatible to a qt version with `major` and `minor`"""
     qt_version = tuple(map(int, QtCore.__version__.split(".")))
-    return (major, minor) >= qt_version
+    return qt_version >= (major, minor)
 
 
 ERROR_DETAILS_DELIM = "\nDetails:\n"  # == GuiServerDevice::m_errorDetailsDelim
