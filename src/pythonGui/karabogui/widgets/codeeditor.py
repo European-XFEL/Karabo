@@ -24,6 +24,8 @@ LINE_WIDGET_COLOR = QColor(160, 160, 160)
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
 TEXT_HIGHLIGHT_COLOR = QColor(Qt.yellow)
 DEFAULT_BACKGROUND_COLOR = QBrush(QColor(Qt.white))
+MAX_FONT_SIZE = 35
+MIN_FONT_SIZE = 9
 
 
 class CodeBook(QWidget):
@@ -62,6 +64,12 @@ class CodeBook(QWidget):
         layout.addWidget(self.find_toolbar)
         layout.addWidget(self.code_editor)
         PygmentsHighlighter(self.code_editor.document())
+
+        increase = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Plus), self)
+        increase.activated.connect(self.code_editor.increase_font_size)
+
+        decrease = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Minus), self)
+        decrease.activated.connect(self.code_editor.decrease_font_size)
 
     @Slot(str, bool, bool)
     def _findAndHighlight(self, text, match_case, find_backward):
@@ -135,6 +143,14 @@ class CodeBook(QWidget):
     def getEditorCode(self):
         """ Get the current code from the editor """
         return self.code_editor.toPlainText()
+
+    @Slot()
+    def increaseFontSize(self):
+        self.code_editor.increase_font_size()
+
+    @Slot()
+    def decreaseFontSize(self):
+        self.code_editor.decrease_font_size()
 
 
 class LineNumberWidget(QWidget):
@@ -362,6 +378,27 @@ class CodeEditor(QPlainTextEdit):
         else:
             self.clearHighlight()
         cursor.endEditBlock()
+
+    def increase_font_size(self):
+        font = self.font()
+        font_size = font.pointSize() + 2
+        if font_size > MAX_FONT_SIZE:
+            return
+        font.setPointSize(font_size)
+        self.setFont(font)
+        self.update()
+        self.number_widget.setFont(font)
+        self.number_widget.update()
+
+    def decrease_font_size(self):
+        font = self.font()
+        font_size = font.pointSize() - 2
+        if font_size < MIN_FONT_SIZE:
+            return
+        font.setPointSize(font_size)
+        self.setFont(font)
+        self.number_widget.setFont(font)
+        self.update()
     # -----------------------------------
     # Qt slots
 
