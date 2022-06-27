@@ -23,7 +23,7 @@ TEST_DEVICE_ID = 'dev'
 def make_project_db_handler(fall_through):
     # Creates a wrapped function to test the project_db_handler decorator
     @project_db_handler(fall_through)
-    def handle(self, reply):
+    def handle(self, success, request, reply, reason=''):
         return reply
 
     return handle
@@ -308,20 +308,22 @@ class TestManager(GuiTestCase):
         with patch(target) as msg_box:
             # this creates a function wrapped by the handler that returns
             # the input data
+            request = Hash()
             handler = make_project_db_handler(False)
-            handler('placeholder', bad_result)
+            handler('placeholder', True, request, bad_result, reason="")
             # error shown in case of bad result
             msg_box.show_error.assert_called_with('error_msg', details=None)
 
-            handled_result = handler('placeholder', good_result)
+            handled_result = handler('placeholder', True, request,
+                                     good_result, reason="")
             assert handled_result.get('value') == 1
 
             # returning results in case `fall_through` is True
             handler = make_project_db_handler(True)
-            handled_result = handler('placeholder', bad_result)
+            handled_result = handler('placeholder', False, request, bad_result)
             assert handled_result.get('value') == 1
 
-            handled_result = handler('placeholder', good_result)
+            handled_result = handler('placeholder', True, request, good_result)
             assert handled_result.get('value') == 1
 
     def test_on_received_data(self):
@@ -367,7 +369,7 @@ class TestManager(GuiTestCase):
         target = 'karabogui.singletons.manager.broadcast_event'
         with patch(target) as broadcast_event:
             h = Hash('success', True, 'items', ['schleem', 'plumbus'])
-            manager.handle_projectListItems(h)
+            manager.handle_projectListItems(True, Hash(), h)
             broadcast_event.assert_called_with(
                 KaraboEvent.ProjectItemsList,
                 {'items': ['schleem', 'plumbus']}
@@ -378,21 +380,10 @@ class TestManager(GuiTestCase):
         target = 'karabogui.singletons.manager.broadcast_event'
         with patch(target) as broadcast_event:
             h = Hash('success', True, 'domains', ['WESTEROS'])
-            manager.handle_projectListDomains(h)
+            manager.handle_projectListDomains(True, Hash(), h)
             broadcast_event.assert_called_with(
                 KaraboEvent.ProjectDomainsList,
                 {'items': ['WESTEROS']}
-            )
-
-    def test_handle_project_list_project_managers(self):
-        manager = Manager()
-        target = 'karabogui.singletons.manager.broadcast_event'
-        with patch(target) as broadcast_event:
-            h = Hash('success', True, 'items', ['fast_eddy'])
-            manager.handle_projectListProjectManagers(h)
-            broadcast_event.assert_called_with(
-                KaraboEvent.ProjectManagersList,
-                {'items': h}
             )
 
     def test_handle_project_load_items(self):
@@ -402,7 +393,7 @@ class TestManager(GuiTestCase):
         broadcast = 'karabogui.singletons.manager.broadcast_event'
         messagebox = 'karabogui.singletons.manager.messagebox'
         with patch(broadcast) as broadcast_event, patch(messagebox):
-            manager.handle_projectLoadItems(h)
+            manager.handle_projectLoadItems(True, Hash(), h)
             broadcast_event.assert_called_with(
                 KaraboEvent.ProjectItemsLoaded,
                 {'success': False, 'items': ['load_me']}
@@ -414,7 +405,7 @@ class TestManager(GuiTestCase):
 
         target = 'karabogui.singletons.manager.broadcast_event'
         with patch(target) as broadcast_event:
-            manager.handle_projectSaveItems(h)
+            manager.handle_projectSaveItems(True, Hash(), h)
             broadcast_event.assert_called_with(
                 KaraboEvent.ProjectItemsSaved,
                 {'items': ['remember_this'], 'success': True}
@@ -426,7 +417,7 @@ class TestManager(GuiTestCase):
 
         target = 'karabogui.singletons.manager.broadcast_event'
         with patch(target) as broadcast_event:
-            manager.handle_projectUpdateAttribute(h)
+            manager.handle_projectUpdateAttribute(True, Hash(), h)
             broadcast_event.assert_called_with(
                 KaraboEvent.ProjectAttributeUpdated,
                 {'items': ['new_stuff']}
