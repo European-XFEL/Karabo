@@ -1,4 +1,5 @@
 from IPython import start_ipython
+from traitlets.config.loader import Config
 
 SCRIPT = """
 # This provides the namespace
@@ -13,8 +14,10 @@ del ikarabo
 
 
 def main():
-    start_ipython(code_to_run=SCRIPT, force_interact=True,
-                  display_banner=False)
+    c = Config()
+    c.TerminalIPythonApp.display_banner = False
+    c.InteractiveShellApp.exec_lines = SCRIPT.split("\n")
+    start_ipython(config=c)
 
 
 if __name__ == '__main__':
