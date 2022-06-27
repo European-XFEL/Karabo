@@ -11,15 +11,14 @@ namespace bp = boost::python;
 
 // Translate C++ karabo::util::Exception into python RuntimeError exception
 void translatorException(const karabo::util::Exception &e) {
-    // Assemble message only from type and friendly message.
+    // Assemble message from type, friendly message and - separated by \nDETAILS:\n" - detailed message.
     std::string msg(e.type());
     msg += ": ";
     msg += e.userFriendlyMsg(false);
+    msg += "\nDETAILS:\n";
+    // Order of calls to userFriendlyMsg(false) and detailedMsg() matters since the latter clears the stack.
+    msg += e.detailedMsg();
 
-    // To get as much details as possible for debugging, details are logged.
-    // Note: Logs require activation and thus are typically not available on command line or in tests.
-    // Note 2: Order of calls to userFriendlyMsg(false) and detailedMsg() matters since the latter clears the stack.
-    KARABO_LOG_FRAMEWORK_WARN_C("Karathon") << "Exception from C++ forwarded as RuntimeError:\n" << e.detailedMsg();
     // Pass C-pointer to Python
     PyErr_SetString(PyExc_RuntimeError, msg.c_str());
 }
