@@ -4,7 +4,8 @@ from qtpy.QtWidgets import QSlider, QSpinBox
 
 from karabogui.testing import GuiTestCase
 from karabogui.util import (
-    SignalBlocker, _get_invalid_chars, version_compatible)
+    SignalBlocker, _get_invalid_chars, qtversion_compatible,
+    version_compatible)
 
 
 class TestUtilsGUI(GuiTestCase):
@@ -82,6 +83,10 @@ class TestUtilsGUI(GuiTestCase):
 
         # Test garbage
         self.assertFalse(version_compatible("2.&7as7.13", 2, 0))
+
+    def test_qversion_compatible(self):
+        self.assertFalse(qtversion_compatible(5, 13))
+        self.assertTrue(qtversion_compatible(5, 9))
 
 
 if __name__ == "__main__":
