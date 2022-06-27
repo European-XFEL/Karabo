@@ -14,10 +14,10 @@ ALARM_TYPE_COLUMN = 4
 
 class AlarmFilterModel(QSortFilterProxyModel):
     def __init__(self, source_model=None, parent=None):
-        super(AlarmFilterModel, self).__init__(parent)
+        super().__init__(parent)
+        self.filter_type = ALARM_WARNING_TYPES  # default filter
         self.setSourceModel(source_model)
         self.setFilterRole(Qt.DisplayRole)
-        self.filter_type = ALARM_WARNING_TYPES  # default filter
         self.setFilterKeyColumn(INSTANCE_COLUMN)
         self.setFilterCaseSensitivity(False)
 
