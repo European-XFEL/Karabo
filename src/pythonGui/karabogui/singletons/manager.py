@@ -32,17 +32,19 @@ def project_db_handler(fall_through=False):
 
     def inner(handler):
         @wraps(handler)
-        def wrapped(self, reply):
-            success = reply.get('success', True)
+        def wrapped(self, success, request, reply, reason=""):
             if not success:
-                reason, details = get_reason_parts(reply["reason"])
-                messagebox.show_error(reason, details=details)
-            # If needed, call the handler even when there was a failure
+                error, details = get_reason_parts(reason)
+                messagebox.show_error(error, details=details)
+            elif not reply.get("success", True):
+                success = False
+                reason = reply.get("reason")
+                error, details = get_reason_parts(reason)
+                messagebox.show_error(error, details=details)
             if fall_through or success:
-                return handler(self, reply)
+                return handler(self, success, request, reply, reason=reason)
 
         return wrapped
-
     return inner
 
 
@@ -574,28 +576,25 @@ class Manager(QObject):
     # ---------------------------------------------------------------------
     # Current Project Interface
 
-    def handle_projectBeginUserSession(self, reply):
+    def handle_projectBeginUserSession(self, **reply):
         pass
 
-    def handle_projectEndUserSession(self, reply):
+    def handle_projectEndUserSession(self, **reply):
         pass
 
     @project_db_handler()
-    def handle_projectListDomains(self, reply):
+    def handle_projectListDomains(self, success, request, reply, reason=""):
         # ``reply`` is a Hash containing a list of domain names
         broadcast_event(KaraboEvent.ProjectDomainsList,
-                        {'items': reply['domains']})
+                        {'items': reply.get('domains', [])})
 
     @project_db_handler()
-    def handle_projectListItems(self, reply):
-        # ``reply`` is a Hash containing a list of item hashes
+    def handle_projectListItems(self, success, request, reply, reason=""):
         broadcast_event(KaraboEvent.ProjectItemsList,
                         {'items': reply.get('items', [])})
 
-    # This does not use the "project_db_handler" decorator because it is
-    # handled by the "requestGeneric" protocol of the GUI Server.
     def handle_projectListProjectsWithDevice(self, success, request,
-                                             reply, reason=''):
+                                             reply, reason=""):
         error_details = None
         if not success:
             # An error occurred at the GUI Server level
@@ -609,35 +608,29 @@ class Manager(QObject):
                 KaraboEvent.ProjectFindWithDevice,
                 {'projects': [], 'error': error_details})
         else:
+            projects = reply.get('projects', [])
             broadcast_event(
                 KaraboEvent.ProjectFindWithDevice, {
-                    'projects': reply.get('projects', []),
-                    'error': None})
+                    'projects': projects, 'error': None})
 
     def handle_projectListProjectManagers(self, reply):
-        # ``reply`` is a list of strings
-        broadcast_event(KaraboEvent.ProjectManagersList,
-                        {'items': reply})
+        pass
 
     @project_db_handler(fall_through=True)
-    def handle_projectLoadItems(self, reply):
-        # ``reply`` is a Hash containing a list of item hashes
-        success = reply.get('success', True)
+    def handle_projectLoadItems(self, success, request, reply, reason=""):
         d = {'success': success, 'items': reply.get('items', [])}
         broadcast_event(KaraboEvent.ProjectItemsLoaded, d)
 
     @project_db_handler(fall_through=True)
-    def handle_projectSaveItems(self, reply):
-        # ``reply`` is a Hash containing a list of item hashes
-        success = reply.get('success', True)
-        d = {'success': success, 'items': reply.get('items', [])}
-        broadcast_event(KaraboEvent.ProjectItemsSaved, d)
+    def handle_projectSaveItems(self, success, request, reply, reason=""):
+        data = {'success': success, 'items': reply.get('items', [])}
+        broadcast_event(KaraboEvent.ProjectItemsSaved, data)
 
     @project_db_handler()
-    def handle_projectUpdateAttribute(self, reply):
-        # ``reply`` is a Hash containing a list of item hashes
-        broadcast_event(KaraboEvent.ProjectAttributeUpdated,
-                        {'items': reply['items']})
+    def handle_projectUpdateAttribute(self, success, request, reply,
+                                      reason=""):
+        data = {'items': reply['items']}
+        broadcast_event(KaraboEvent.ProjectAttributeUpdated, data)
 
     def handle_projectUpdate(self, **info):
         """Handle the project update signal from the project manager
