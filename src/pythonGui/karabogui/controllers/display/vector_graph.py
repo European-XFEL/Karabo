@@ -66,6 +66,15 @@ class BaseArrayGraph(BaseBindingController):
             self.widget.set_legend(True)
         return True
 
+    def remove_proxy(self, proxy):
+        """Remove a `proxy` from the controller"""
+        item = self._curves.pop(proxy)
+        self.widget.remove_item(item)
+        item.deleteLater()
+        legend_visible = len(self._curves) > 1
+        self.widget.set_legend(legend_visible)
+        return True
+
     def _add_curve(self, proxy, widget=None):
         """The widget is passed as an argument in create_widget as it is not
            yet bound to self.widget then"""
