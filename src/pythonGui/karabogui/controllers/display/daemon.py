@@ -106,7 +106,7 @@ def get_status_brush(service_status):
 
 
 def get_duration_brush(service_duration):
-    time = int(service_duration)
+    time = float(service_duration)
     return None if time > 1 else QBrush(QColor(255, 0, 0))
 
 
