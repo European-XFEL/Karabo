@@ -5,7 +5,8 @@ from qtpy.QtTest import QTest
 
 from karabogui.testing import GuiTestCase, click_button
 from karabogui.widgets.codeeditor import (
-    DEFAULT_BACKGROUND_COLOR, TEXT_HIGHLIGHT_COLOR, CodeBook, CodeEditor)
+    DEFAULT_BACKGROUND_COLOR, MAX_FONT_SIZE, MIN_FONT_SIZE,
+    TEXT_HIGHLIGHT_COLOR, CodeBook, CodeEditor)
 
 MULTILINE_CODE = """
 This is a dummy code
@@ -275,3 +276,30 @@ class TestConst(GuiTestCase):
         code = code_book.getEditorCode()
         assert code.count('row') == 2
         assert code.split("\n")[4] == 'row 2'
+
+    def test_change_font_size(self):
+        """ Test increase/decrease of editor font size"""
+        code_book = CodeBook(parent=None, code=MULTILINE_CODE)
+        editor = code_book.code_editor
+        current_font_size = editor.font().pointSize()
+
+        editor.increase_font_size()
+        assert editor.font().pointSize() == current_font_size + 2
+
+        editor.decrease_font_size()
+        assert editor.font().pointSize() == current_font_size
+
+        # No increase in font size after MAX_FONT_SIZE
+        font = editor.font()
+        font.setPointSize(MAX_FONT_SIZE)
+        editor.setFont(font)
+        for _ in range(4):
+            editor.increase_font_size()
+            assert editor.font().pointSize() == MAX_FONT_SIZE
+
+        # No decrease in font size after MIN_FONT_SIZE
+        font.setPointSize(MIN_FONT_SIZE)
+        editor.setFont(font)
+        for _ in range(4):
+            editor.decrease_font_size()
+            assert editor.font().pointSize() == MIN_FONT_SIZE
