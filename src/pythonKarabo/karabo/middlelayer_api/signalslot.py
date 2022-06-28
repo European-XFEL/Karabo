@@ -403,8 +403,11 @@ class SignalSlotable(Configurable):
         if self.__initialized:
             self.__initialized = False
             try:
-                await get_event_loop().run_coroutine_or_thread(
-                    self.onDestruction)
+                await wait_for(get_event_loop().run_coroutine_or_thread(
+                    self.onDestruction), timeout=5)
+            except TimeoutError:
+                self.logger.exception(
+                    "onDestruction took longer than 5 seconds")
             except Exception:
                 self.logger.exception("Exception in onDestruction")
         if self._ss is not None:
@@ -570,7 +573,12 @@ class SignalSlotable(Configurable):
         """This method is called just after instance is running"""
 
     async def onDestruction(self):
-        """This method is called just before the device ceases existence"""
+        """This method is called just before the device ceases existence
+
+        Subclass this method to cancel and cleanup any existing long-term
+        tasks quickly. This method will be cancelled if the execution is longer
+        than 5 seconds.
+        """
 
     async def onCancelled(self, slot):
         """This method is called if a slot gets cancelled"""
