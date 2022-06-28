@@ -316,7 +316,7 @@ class TestPlotViewRestore(_BasePlotTest):
         self.assertEqual(y, 15)
 
         # Check if tool button is checked
-        self.assertTrue(toolbar.buttons[roi_tool].isChecked())
+        self.assertTrue(toolbar.buttons[ROITool(roi_tool).name].isChecked())
 
     def test_restore_manual_ranges(self):
         # Set range with with log

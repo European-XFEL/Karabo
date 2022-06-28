@@ -41,6 +41,7 @@ class KaraboImageModel(BaseWidgetObjectData):
 
 class ImageGraphModel(KaraboImageModel):
     """A model of the Image Graph"""
+    undock = Bool(False, transient=True)
 
 
 class DisplayImageModel(ImageGraphModel):
