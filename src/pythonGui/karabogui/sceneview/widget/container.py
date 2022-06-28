@@ -41,9 +41,9 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         self._proxy_status_changed("status", proxy.status)
 
     def add_proxies(self, proxies):
-        """Add more proxies to a controller which allows more than one proxy.
-        ``True`` is returned when this was possible, otherwise ``False`` is
-        returned.
+        """Add proxies to a controller which allows more than one proxy.
+
+        :returns: `True` if successful, otherwise `False`
         """
         if self.model.parent_component != "DisplayComponent":
             return False
@@ -53,7 +53,21 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         for proxy in proxies:
             if controller.visualize_additional_property(proxy):
                 proxies_added.append(proxy)
+        self.setToolTip(", ".join(self.model.keys))
         return len(proxies_added) == len(proxies)
+
+    def remove_proxies(self, proxies):
+        """Remove proxies from a controller which allows more than one proxy.
+
+        :returns: `True` if successful, otherwise `False`
+        """
+        controller = self.widget_controller
+        proxies_removed = []
+        for proxy in proxies:
+            if controller.remove_additional_property(proxy):
+                proxies_removed.append(proxy)
+        self.setToolTip(", ".join(self.model.keys))
+        return len(proxies_removed) == len(proxies)
 
     def apply_changes(self):
         """Apply user-entered values to the remote device properties
