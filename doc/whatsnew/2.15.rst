@@ -6,7 +6,7 @@ This section shows the new features in Karabo 2.15.0, compared to 2.14.0.
 The use of this version of the GUI is encouraged without the need of upgrading the Karabo Servers.
 This release is **backwards compatible** until version **2.11**.
 
-This Karabo release contains a ``numpy`` dependency update: **1.21.4**
+This Karabo release contains a ``numpy`` dependency of: **1.21.4**
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
@@ -23,10 +23,12 @@ Summary – Release highlights
   Configurator (more than 2), image updates and Device/Schema Building (around a factor of 2).
 - GUI: Macro Editor handling: Indent, Unindent on key events and search / replace bar added to code editor.
 - MDL: Both InputChannel and OutputChannel are supported in Nodes
-- MDL: Proxies created with getDevice (e.g. DeviceNode) retrieve a configuration only once
+- MDL: Proxies created with *getDevice* (e.g. DeviceNode) retrieve a configuration only once
 - MDL: Shutdown of devices and servers is hardened against device hanging or faulty jupyter kernel shutdown. A device server will always
   terminate the process at the end.
 - MDL: *printHistory* and *getTimeInfo* added to CLI commands.
+- MDL: Devices on the same device server can shortcut the broker communication and coordinate or communicate with each other. See below
+  in the examples section a possible Motor and controller scenario. This deprecates the dependency `middlelayer-shared`.
 - MDL: Full pytest support and test template including pytest dependencies for asyncio, timeout, mock, and subtest.
 - MDL: A new Hash view showing the data type for each value and a table for table values was implemented
 - MDL: Better table value handling, e.g. Hashes can be set to single cells, filtering options with `TableValue.where_value`.
@@ -387,3 +389,26 @@ Graphical User Interface
 - GUI: Find Toolbar for Macro editor.
 - GUI: IconWidget for String Properties !6471
 - GUI: Improve 'Change Icon' Dialog appearance. !6445
+
+
+
+Examples (MDL - Broker Shortcut)
+================================
+
+.. code-block:: python
+
+    class Motor(Device):
+        """This is a motor that has shared access to a controller talking
+        to hardware"""
+
+        controllerId = String()
+        channelId = Int32(defaultValue=1)
+
+        async def onInitialization(self):
+
+            await waitUntil(lambda: self.getLocalDevice(self.controllerId.value)
+                             is not None)
+            # Strong reference to the controller device
+            controller = self.getLocalDevice(self.controllerId.value)
+            # Call a function directly on the device object
+            values = await controller.read_hardware_values(self.channelId)
