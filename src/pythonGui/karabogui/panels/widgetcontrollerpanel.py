@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import QSize
-from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QWidget
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtWidgets import QLabel, QSizePolicy, QStackedLayout, QWidget
 
 from karabogui.controllers.api import get_model_controller
+from karabogui.indicators import get_device_status_pixmap
 from karabogui.sceneview.api import get_proxy
 
 from .base import BasePanelWidget
@@ -46,17 +47,37 @@ class WidgetControllerPanel(BasePanelWidget):
         self.controller.finish_initialization()
         self.controller.show()
 
-        layout = QHBoxLayout()
-        layout.setContentsMargins(2, 2, 2, 2)
+        self.status_symbol = QLabel("", self)
+        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
+
+        layout = QStackedLayout()
+        layout.setStackingMode(QStackedLayout.StackAll)
         layout.addWidget(self.controller.widget)
+        layout.addWidget(self.status_symbol)
         widget.setLayout(layout)
 
+        proxy = self.controller.proxy.root_proxy
+        proxy.on_trait_change(self._proxy_status_changed, "status")
+        self._proxy_status_changed(proxy.status)
+
         return widget
+
+    def _proxy_status_changed(self, value):
+        """Show depending on the status if we are online or offline"""
+        pixmap = get_device_status_pixmap(value)
+        if pixmap is not None:
+            self.status_symbol.setPixmap(pixmap)
+            self.status_symbol.show()
+        else:
+            self.status_symbol.hide()
 
     def closeEvent(self, event):
         super().closeEvent(event)
         if event.isAccepted():
             self.signalPanelClosed.emit(self.windowTitle())
+            proxy = self.controller.proxy.root_proxy
+            proxy.on_trait_change(self._proxy_status_changed, "status",
+                                  remove=True)
             self.controller.destroy()
 
     def onUndock(self):
