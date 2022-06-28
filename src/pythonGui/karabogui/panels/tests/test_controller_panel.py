@@ -19,7 +19,9 @@ def test_panel_controller_basics(gui_app):
     """Test the basics of the widget controller"""
     mediator = Mediator()
     topology = SystemTopology()
-    topology.initialize(system_hash())
+    h = system_hash()
+    h.setAttribute("device.divvy", "status", "offline")
+    topology.initialize(h)
     with singletons(mediator=mediator, topology=topology):
         proxy = get_property_proxy(Object.getClassSchema(), "prop",
                                    device_id="divvy")
@@ -31,8 +33,12 @@ def test_panel_controller_basics(gui_app):
         assert panel.controller._showing
         assert panel.proxy is not proxy
         proxy = panel.proxy
+        # Root device is offline, we are showing the pixmap
+        assert not panel.status_symbol.isHidden()
         assert proxy.visible
-
+        # Root devices comes online
+        proxy.root_proxy.status = ProxyStatus.ONLINE
+        # Moves to requested
         assert proxy.root_proxy.status is ProxyStatus.ONLINEREQUESTED
         assert proxy.root_proxy._monitor_count == 1
 
@@ -44,10 +50,12 @@ def test_panel_controller_basics(gui_app):
         proxy.root_proxy.config_update = True
 
         assert proxy.root_proxy.status is ProxyStatus.MONITORING
+        assert panel.status_symbol.isHidden()
         panel.close()
 
         # And we stop monitoring if we close the panel
         assert proxy.root_proxy._monitor_count == 0
         assert proxy.root_proxy.status is ProxyStatus.ONLINE
         assert not panel.controller._showing
+
         panel.destroy()
