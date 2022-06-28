@@ -213,5 +213,4 @@ class SceneControllerHandler(SceneWidgetHandler):
         scene_view.replace_model(old_model, new_model)
 
     def _change_widget_proxies(self):
-        controller = self.widget.widget_controller
-        ProxiesDialog(controller, parent=self.widget).open()
+        ProxiesDialog(self.widget, parent=self.widget).open()
