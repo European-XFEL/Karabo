@@ -45,6 +45,10 @@ class TestToolbarController(GuiTestCase):
         # Count the number of buttons in the toolbar
         mouse_mode = self.toolbar.toolsets[MouseMode]
         self.assertEqual(len(widget.actions()), len(mouse_mode.buttons))
+        self.assertEqual(len(self.toolbar.buttons), 3)
+        self.assertIn("Pointer", self.toolbar.buttons)
+        self.assertIn("Zoom", self.toolbar.buttons)
+        self.assertIn("Move", self.toolbar.buttons)
 
         # Add new toolset
         self.toolbar.add_toolset(ROITool)
@@ -53,12 +57,16 @@ class TestToolbarController(GuiTestCase):
         # Count the number of buttons in the toolbar, including one separator
         num_actions = len(mouse_mode.buttons) + len(roi.buttons) + 1
         self.assertEqual(len(widget.actions()), num_actions)
+        self.assertEqual(len(self.toolbar.buttons), 5)
+        self.assertIn("Crosshair", self.toolbar.buttons)
+        self.assertIn("Rect", self.toolbar.buttons)
 
         # Add invalid toolset
         self.toolbar.add_toolset("foo")
         # Check if there is no changes.
         self.assertEqual(len(self.toolbar.toolsets), 2)
         self.assertEqual(len(widget.actions()), num_actions)
+        self.assertEqual(len(self.toolbar.buttons), 5)
 
     def test_add_optional_tool(self):
         # Add optional tool to toolbar with MouseMode toolset
@@ -72,3 +80,7 @@ class TestToolbarController(GuiTestCase):
         self.assertEqual(set(buttons.keys()),
                          {MouseMode.Pointer, MouseMode.Zoom, MouseMode.Move,
                           MouseMode.Picker})
+        self.assertIn("Picker", self.toolbar.buttons)
+        self.assertIn("Pointer", self.toolbar.buttons)
+        self.assertIn("Zoom", self.toolbar.buttons)
+        self.assertIn("Move", self.toolbar.buttons)
