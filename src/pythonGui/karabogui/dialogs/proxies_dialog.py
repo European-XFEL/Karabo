@@ -8,20 +8,21 @@ from .utils import get_dialog_ui
 
 
 class ProxiesDialog(QDialog):
-    """The basic dialog to remove additional proxies from a `widget_controller`
+    """The basic dialog to remove additional proxies from a `container`
     """
 
-    def __init__(self, widget_controller, parent=None):
+    def __init__(self, container, parent=None):
         super().__init__(parent)
         self.setModal(False)
         ui_file = get_dialog_ui("proxies_dialog.ui")
         uic.loadUi(ui_file, self)
 
-        self.widget_controller = widget_controller
-        self.ui_main_property.setText(self.widget_controller.proxy.key)
+        self.widget_container = container
+        controller = container.widget_controller
+        self.ui_main_property.setText(controller.proxy.key)
 
         list_model = QStringListModel()
-        paths = [proxy.key for proxy in self.widget_controller.proxies[1:]]
+        paths = [proxy.key for proxy in controller.proxies[1:]]
         list_model.setStringList(paths)
         self._list_model = list_model
 
@@ -48,7 +49,8 @@ class ProxiesDialog(QDialog):
         if not index.isValid():
             return
 
-        proxy = self.widget_controller.proxies[index.row() + 1]
+        controller = self.widget_container.widget_controller
+        proxy = controller.proxies[index.row() + 1]
         prop = proxy.key
         ask = f"Are you sure you want to remove the property <b>{prop}</b>?"
         options = (QMessageBox.Yes | QMessageBox.No)
@@ -57,10 +59,11 @@ class ProxiesDialog(QDialog):
         if reply == QMessageBox.No:
             return
 
-        if not self.widget_controller.remove_additional_property(proxy):
+        if not self.widget_container.remove_proxies([proxy]):
             messagebox.show_error(f"The removal of property {prop} is not "
-                                  "supported by this controller.")
+                                  "supported by this controller.",
+                                  self.parent())
             return
         self._list_model.setStringList([proxy.key for proxy
-                                        in self.widget_controller.proxies[1:]])
+                                        in controller.proxies[1:]])
         self._on_update_buttons()
