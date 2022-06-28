@@ -6,7 +6,7 @@ from weakref import WeakSet
 
 from karabo.common.api import WeakMethodRef
 from karabo.middlelayer_api.broker import suppressBrokerException
-from karabo.middlelayer_api.eventloop import synchronize
+from karabo.middlelayer_api.synchronization import synchronize, synchronous
 from karabo.native import (
     Descriptor, Hash, KaraboError, KaraboValue, NDArray, NodeType, NoneValue,
     Slot, Timestamp, Type, Weak, get_timestamp, isSet)
@@ -601,6 +601,7 @@ class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
             self._lastused = time.time()
             self._task = asyncio.ensure_future(self._connector())
 
+        @synchronous
         def _use(self):
             self._lastused = time.time()
             if self._task.done():

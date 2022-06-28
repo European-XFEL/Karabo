@@ -5,12 +5,13 @@ from asyncio import (
     ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
 from itertools import count
-from unittest import TestCase, main, skip
+from unittest import TestCase, main
 
+from karabo.common.states import State
 from karabo.middlelayer_api.broker import amqp, jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    findDevices, getClients, getDevice, getDevices, shutdown)
+    callNoWait, findDevices, getClients, getDevice, getDevices, shutdown)
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.ikarabo import (
     DeviceClient, connectDevice, start_device_client)
@@ -43,19 +44,30 @@ class NoRemote(Macro):
 class Other(Device):
     something = Int(defaultValue=333)
     counter = Int(defaultValue=-1)
+    task = None
 
     async def do_count(self):
-        for i in count():
-            self.counter = i
-            await sleep(0.1)
+        try:
+            for i in count():
+                self.counter = i
+                await sleep(0.1)
+        finally:
+            self.state = State.ON
 
     @Slot()
     async def count(self):
-        ensure_future(self.do_count())
+        self.state = State.PROCESSING
+        self.task = ensure_future(self.do_count())
+
+    @Slot()
+    async def stopCount(self):
+        if self.task is not None:
+            self.task.cancel()
 
     async def onInitialization(self):
         self.myself = await getDevice("other")
         self.myself.something = 222
+        self.state = State.ON
 
     async def onDestruction(self):
         with self.myself:
@@ -130,19 +142,28 @@ class Tests(TestCase):
 
             # test whether proxy stays alive while used
             other = connectDevice("other")
+            self.assertEqual(other.state, State.ON)
             other.count()
             lastcount = -2
             for i in range(20):
+                self.assertEqual(other.state, State.PROCESSING)
                 self.assertLess(lastcount, other.counter)
                 lastcount = other.counter
                 time.sleep(1)
 
             # test proxy disconnects when not used
             time.sleep(16)
+            # but call to stop counting, we don't receive the state
+            # update as well
+            callNoWait("other", "stopCount")
             lastcount = other.__dict__["counter"]
+            laststate = other.__dict__["state"]
             time.sleep(3)
             self.assertEqual(other.__dict__["counter"], lastcount)
+            self.assertEqual(laststate, State.PROCESSING)
+            # reconnect with fresh state and counter
             self.assertNotEqual(other.counter, lastcount)
+            self.assertEqual(other.state, State.ON)
 
             set_event_loop(oel)
             del self.other
