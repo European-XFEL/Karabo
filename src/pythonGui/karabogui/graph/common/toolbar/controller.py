@@ -8,14 +8,13 @@ from .widgets import ToolBar
 
 
 class ToolbarController(HasStrictTraits):
-
     widget = Instance(QToolBar)
 
     toolsets = Dict
     buttons = Dict
 
     def __init__(self, parent=None, **traits):
-        super(ToolbarController, self).__init__(**traits)
+        super().__init__(**traits)
         self.widget = ToolBar(parent=parent)
 
         default_tool_type = MouseMode
@@ -34,11 +33,15 @@ class ToolbarController(HasStrictTraits):
             self.widget.addSeparator()
 
         for controller in event.added.values():
-            for name, button in controller.buttons.items():
+            for tool, button in controller.buttons.items():
                 self.widget.add_button(button)
+                self.buttons[tool.name] = button
 
     def add_tool(self, tool):
-        """Adds individual tools"""
+        """Adds individual tools
+
+        :param tool: An enumerable defining the tool
+        """
         toolset = tool.__class__
         if toolset in self.toolsets:
             # We add the tool in the existing toolset
@@ -47,7 +50,8 @@ class ToolbarController(HasStrictTraits):
         else:
             # We add the tool as a separate button.
             button = tool_factory(tool)
-            self.buttons[tool] = button
+
+        self.buttons[tool.name] = button
         self.widget.add_button(button)
 
         return button
@@ -72,7 +76,6 @@ class ToolbarController(HasStrictTraits):
         controller = get_toolset(tool_type, tools=tools)
         if controller is not None:
             self.toolsets[tool_type] = controller
-
         return controller
 
     def register_toolset(self, toolset, klass):

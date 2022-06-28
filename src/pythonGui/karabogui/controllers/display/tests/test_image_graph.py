@@ -119,6 +119,17 @@ class TestImageGraph(GuiTestCase):
             name, coords = expected_roi_config[tool]
             self.assertEqual(roi_item.coords, coords)
             self.assertEqual(roi_item.name, name)
+
+        menu = widget.plotItem.vb.menu
+        self.assertEqual(len(menu.actions()), 3)
+        self.assertEqual(menu.actions()[0].text(), "View all")
+        self.assertEqual(menu.actions()[1].text(), "")
+        self.assertEqual(menu.actions()[2].text(), "Undock")
+
+        path = "karabogui.controllers.display.image_graph.broadcast_event"
+        with mock.patch(path) as broadcast:
+            menu.actions()[2].trigger()
+            broadcast.assert_called_once()
         controller.destroy()
 
     def test_value_update(self):
@@ -143,6 +154,44 @@ class TestImageGraph(GuiTestCase):
         image_hash = get_image_hash(dimZ=3, stack_axis=False)
         apply_configuration(image_hash, self.output_proxy.binding)
         self._assert_gray_features(enabled=True)
+
+    def test_undock_image(self):
+        """Create a model with ROI settings and undock the Image Graph"""
+        model = ImageGraphModel()
+        model.aux_plots = AuxPlots.ProfilePlot
+        model.undock = True
+
+        roi_items = [CrossROIData(**{'roi_type': ROITool.Crosshair,
+                                     'x': 15, 'y': 15,
+                                     'name': 'CrossROI'}),
+                     RectROIData(**{'roi_type': ROITool.Rect,
+                                    'x': 25, 'y': 25,
+                                    'w': 10, 'h': 10,
+                                    'name': 'RectROI'})]
+        model.roi_items = roi_items
+
+        controller = DisplayImageGraph(proxy=self.img_proxy, model=model)
+        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
+            controller.create(None)
+
+        # Assert the information was loaded
+        widget = controller.widget
+
+        # Assert ROI configuration
+        expected_roi_config = {ROITool.Crosshair: ('CrossROI', (15, 15)),
+                               ROITool.Rect: ('RectROI', (25, 25, 10, 10))}
+
+        for tool, roi_items in widget.roi.roi_items.items():
+            roi_item = roi_items[0]
+            name, coords = expected_roi_config[tool]
+            self.assertEqual(roi_item.coords, coords)
+            self.assertEqual(roi_item.name, name)
+            self.assertFalse(roi_item.translatable)
+
+        menu = controller.widget.plotItem.vb.menu
+        self.assertEqual(len(menu.actions()), 1)
+        self.assertEqual(menu.actions()[0].text(), "View all")
+        controller.destroy()
 
     def _assert_gray_features(self, enabled):
         widget = self.controller.widget
