@@ -404,6 +404,20 @@ class KaraboImageView(QWidget):
             if toolset is not None and aux_plots_class is not None:
                 toolset.check(aux_plots_class)
 
+    def deactivate_roi(self):
+        """Deactivate the region of interest"""
+        if self.roi is not None:
+            for name, roi_type in self.roi.roi_items.items():
+                for roi in roi_type:
+                    roi.translatable = False
+
+            if self.toolbar is not None:
+                for roi_type in [ROITool.Rect, ROITool.Crosshair]:
+                    buttons = self.toolbar.buttons[roi_type.name]
+                    menu = buttons.menu()
+                    action = menu.actions()[1]
+                    menu.removeAction(action)
+
     # -----------------------------------------------------------------------
     # Qt Slots
 

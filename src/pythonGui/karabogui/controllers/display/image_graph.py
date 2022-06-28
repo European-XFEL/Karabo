@@ -4,16 +4,18 @@ from traits.api import Bool, Instance, WeakRef
 from karabo.common.scenemodel.api import (
     ImageGraphModel, build_graph_config, restore_graph_config)
 from karabo.native import EncodingType, Timestamp
+from karabogui import icons
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.graph.common.api import AuxPlots
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 
 
-@register_binding_controller(ui_name='Image Graph',
-                             klassname='ImageGraph',
+@register_binding_controller(ui_name="Image Graph",
+                             klassname="ImageGraph",
                              binding_type=ImageBinding,
                              priority=10,
                              can_show_nothing=False)
@@ -50,6 +52,15 @@ class DisplayImageGraph(BaseBindingController):
         # Restore the model information
         widget.restore(build_graph_config(self.model))
 
+        # Undock - Transient model data
+        if self.model.undock:
+            widget.deactivate_roi()
+        else:
+            # Offer undock action
+            undock_action = QAction(icons.undock, "Undock", widget)
+            undock_action.triggered.connect(self._undock_graph)
+            self._plot.vb.add_action(undock_action)
+
         return widget
 
     # -----------------------------------------------------------------------
@@ -84,6 +95,13 @@ class DisplayImageGraph(BaseBindingController):
                           and array.ndim == 2)
 
         self._plot.setData(array)
+
+    def _undock_graph(self):
+        """Undock the graph image but don't offer roi option"""
+        model = self.model.clone_traits()
+        model.undock = True
+        broadcast_event(KaraboEvent.ShowUnattachedController,
+                        {"model": model})
 
     def _grayscale_changed(self, grayscale):
         if grayscale:
