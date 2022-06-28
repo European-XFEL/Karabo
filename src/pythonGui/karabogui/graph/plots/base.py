@@ -386,7 +386,8 @@ class KaraboPlotView(QWidget):
             # Make sure that we checked the tool!
             if self._toolbar is not None:
                 if roi_tool != ROITool.NoROI:
-                    self._toolbar.buttons[roi_tool].setChecked(True)
+                    tool = ROITool(roi_tool).name
+                    self._toolbar.buttons[tool].setChecked(True)
 
         self.reset_range()
 
