@@ -56,6 +56,7 @@ class ChannelNode(Configurable):
 class CrazyRemote(Device):
 
     counter = 0
+    destructed = False
 
     async def injectDirect(self):
         await self._inject_crazy()
@@ -72,6 +73,11 @@ class CrazyRemote(Device):
     def _notifyNewSchema(self):
         self.counter += 1
         super()._notifyNewSchema()
+
+    async def onDestruction(self):
+        self.destructed = True
+        # This should be cancelled by timelimit
+        await sleep(1e6)
 
 
 class Remote(Device):
@@ -1369,10 +1375,11 @@ class Tests(DeviceTest):
             self.assertEqual(d.counter, 29)
 
     @async_tst
-    async def test_crazy_injection(self):
+    async def test_crazy_injection_destruction(self):
         deviceId =  "crazy-test-device"
         d = CrazyRemote({"_deviceId_": deviceId})
         await d.startInstance()
+        self.assertFalse(d.destructed)
         try:
             await d.injectSlot()
             # Wait very very long, 1 seconds
@@ -1385,6 +1392,7 @@ class Tests(DeviceTest):
             self.assertEqual(d.counter, 1)
         finally:
             await d.slotKillDevice()
+            self.assertTrue(d.destructed)
 
     @async_tst
     @coroutine
