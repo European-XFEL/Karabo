@@ -10,9 +10,8 @@ channels:
 {{ conda_local_channel }}
 
 dependencies:
-  - python=3.6.7=he025d50_1005 # [win]
-  - python=3.6.* # [linux]
-  - python=3.6.* # [osx]
+  - python=3.8.13=h6244533_0 # [win]
+  - python=3.8.* # [not win]
   # for tests and building
   - flake8=3.8.4
   - isort=5.8.0
@@ -26,7 +25,8 @@ dependencies:
   # GUI
   - qtpy<=1.9
   - pyqtgraph=0.11.1
-  - qt=5.9.7
+  - qt=5.9.7 # [not win]
+  - qt=5.9.7=vc14h73c81de_0 # [win]
   - pyqt=5.9.2
   - qtconsole=5.0.2
   - ipython=7.13.0
