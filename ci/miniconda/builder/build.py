@@ -85,7 +85,7 @@ class Builder:
             self.clean()
         if self.args.ci:
             self.adapt_platform()
-        
+
 
         for recipe in self.recipes:
             # Proceed only if recipe supports testing
@@ -228,13 +228,14 @@ class Builder:
             self.create_devenv(recipe)
 
         with self.karabo_installed(recipe):
-            cmd = [
-                Commands.RUN, '-n', recipe, 'python', '-c',
-                'import sys; print(sys.executable)']
+            cmd = [Commands.LIST]
             output = conda_run(*cmd)
-            executable = output.strip()
-            output = command_run([executable, test_script])
-            print(output.decode())
+            print(output)
+            cmd = [
+                Commands.RUN, '-n', recipe, 'python',
+                test_script]
+            output = conda_run(*cmd)
+            print(output)
             print('Tests successful')
 
     # -----------------------------------------------------------------------
