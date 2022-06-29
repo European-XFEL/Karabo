@@ -85,7 +85,7 @@ class TestUtilsGUI(GuiTestCase):
         self.assertFalse(version_compatible("2.&7as7.13", 2, 0))
 
     def test_qversion_compatible(self):
-        self.assertFalse(qtversion_compatible(5, 13))
+        self.assertTrue(qtversion_compatible(5, 13))
         self.assertTrue(qtversion_compatible(5, 9))
 
 
