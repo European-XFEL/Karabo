@@ -62,7 +62,7 @@ class ProxiesDialog(QDialog):
         if not self.widget_container.remove_proxies([proxy]):
             messagebox.show_error(f"The removal of property {prop} is not "
                                   "supported by this controller.",
-                                  self.parent())
+                                  parent=self.parent())
             return
         self._list_model.setStringList([proxy.key for proxy
                                         in controller.proxies[1:]])
