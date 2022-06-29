@@ -23,11 +23,11 @@ dependencies:
   - setuptools=49.6.0
   - setuptools_scm=5.0.1
   # GUI
-  - qtpy<=1.9
+  - qtpy=2.1.0
   - pyqtgraph=0.11.1
-  - qt=5.9.7 # [not win]
-  - qt=5.9.7=vc14h73c81de_0 # [win]
-  - pyqt=5.9.2
+  - qt-main=5.15
+  - qtpy=2.1.0
+  - pyqt=5.15.4
   - qtconsole=5.0.2
   - ipython=7.13.0
   - ipykernel=5.2.0
@@ -44,7 +44,7 @@ dependencies:
   - requests=2.25.1
   - python-dateutil=2.8.1
   - jupyter_client=6.0.0
-  - conda=4.9.2
+  - conda=4.12.0
   - pint=0.17
 
 environment:
