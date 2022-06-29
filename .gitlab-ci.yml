@@ -69,6 +69,11 @@ stages:
   tags:
     - KaraboFramework
 
+.image_miniconda_: &image_miniconda
+  image: europeanxfel/karabo-ci:miniconda-3
+  tags:
+    - KaraboFramework
+
 # # TODO: remove this after reporting support for ctest is working
 # .test_template_miniconda_cmake: &test-miniconda-cmake
 #   stage: test
@@ -96,6 +101,7 @@ stages:
 .release_build_conda: &release-build-conda
   stage: build
   script:
+    - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
       python ci/miniconda pack karabogui
       --ci --clean --upload-env
@@ -114,6 +120,7 @@ stages:
 .prerelease_build_conda: &prerelease-build-conda
   stage: build
   script:
+    - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
       python ci/miniconda pack karabogui
       --ci --clean --upload-env
@@ -132,6 +139,7 @@ stages:
 .nightly_build_conda: &nightly-build-conda
   stage: build
   script:
+    - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
       python ci/miniconda pack karabogui
       --ci --clean --upload-env
@@ -209,7 +217,9 @@ stages:
 
 # GUI tests to be executed in a Conda environment
 .gui_unit_tests: &gui-unit-tests
+  stage: test
   script:
+    - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
       python ci/miniconda pack karabogui
       -c $KARABO_CONDA_CHANNEL
@@ -280,7 +290,7 @@ release build ubuntu18:
   <<: *release-build
 
 release build miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *image_miniconda
   <<: *release-build-conda
 
 release build miniconda-osx64:
@@ -320,7 +330,7 @@ prerelease build ubuntu18:
   <<: *prerelease-build
 
 prerelease build miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *image_miniconda
   <<: *prerelease-build-conda
 
 prerelease build miniconda-osx64:
@@ -374,7 +384,7 @@ nightly build miniconda-win64:
   <<: *nightly-build-conda
 
 nightly build miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *image_miniconda
   <<: *nightly-build-conda
 
 # Dependencies build
@@ -484,7 +494,7 @@ cpp_unit tests ubuntu18:
   <<: *cpp-unit-tests
 
 gui_unit tests miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *image_miniconda
   <<: *gui-unit-tests
 
 gui_unit tests miniconda-osx64:
