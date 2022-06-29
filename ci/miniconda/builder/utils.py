@@ -11,7 +11,9 @@ def conda_run(command, *args, **kwargs):
     stdout, stderr, ret_code = run_command(command, *args, **kwargs)
     if ret_code != 0:
         msg = f'Command {command} [{args}] ' \
-              f'{kwargs} returned {ret_code}\n{stderr}'
+              f'{kwargs} returned {ret_code}\n' \
+              f'STDOUT:\n {stdout}\n' \
+              f'STDERR:\n {stderr}'
         raise RuntimeError(msg)
     return stdout
 
