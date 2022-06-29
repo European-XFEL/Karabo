@@ -1,3 +1,4 @@
+from platform import system
 from unittest import TestCase, main, skip
 
 import numpy as np
@@ -554,8 +555,11 @@ class Tests(TestCase):
         if _is_numpy_old():
             self.assertBinaryUfunc(ufunc, numerator, denominator, res)
         else:
-            with self.assertWarns(RuntimeWarning):
+            if system() == "Darwin":
                 self.assertBinaryUfunc(ufunc, numerator, denominator, res)
+            else:
+                with self.assertWarns(RuntimeWarning):
+                    self.assertBinaryUfunc(ufunc, numerator, denominator, res)
 
         # Negative values (differ from the result of `fmod`):
         # [0m, 2m, 4m] / [-1, 2, -3] = [0m, 0m, -1m]
@@ -604,8 +608,11 @@ class Tests(TestCase):
         if _is_numpy_old():
             self.assertBinaryUfunc(ufunc, numerator, denominator, res)
         else:
-            with self.assertWarns(RuntimeWarning):
+            if system() == "Darwin":
                 self.assertBinaryUfunc(ufunc, numerator, denominator, res)
+            else:
+                with self.assertWarns(RuntimeWarning):
+                    self.assertBinaryUfunc(ufunc, numerator, denominator, res)
 
         # units: [1m, 1m, 1m] / [1, 1, 1] != [1s, 1s, 1s]
         with self.assertRaises(DimensionalityError):
