@@ -46,10 +46,7 @@ class CoordsLegend(KaraboLegend):
         self.hide()
 
     def set_value(self, x, y):
-        if x is None or y is None:
-            self._label.setText("x: {}<br>y: {}".format(x, y))
-        else:
-            self._label.setText("x: {:.2f}<br>y: {:.2f}".format(x, y))
+        self._label.setText("x: {}<br>y: {}".format(x, y))
 
 
 class ColorBox(ItemSample):
