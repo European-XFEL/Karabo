@@ -7,6 +7,7 @@ from karabogui.graph.common.const import DEFAULT_PEN_WIDTH
 
 class Colors(object):
     def __init__(self, alpha):
+        self.a = (255, 191, 0, alpha)  # dark gold
         self.b = (51, 153, 255, alpha)  # fancy blue
         self.r = (255, 51, 51, alpha)  # red
         self.g = (51, 160, 44, alpha)  # green
