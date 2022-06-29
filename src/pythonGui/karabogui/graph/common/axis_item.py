@@ -5,8 +5,8 @@ from qtpy.QtCore import Qt, Signal
 
 from karabogui.fonts import get_qfont
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, AXIS_X, AXIS_Y, INTEGER_ALARM_MAP, INTEGER_STATE_MAP,
-    X_AXIS_HEIGHT, Y_AXIS_WIDTH)
+    AXIS_ITEMS, AXIS_X, AXIS_Y, X_AXIS_HEIGHT, Y_AXIS_WIDTH, get_alarm_string,
+    get_state_string)
 from karabogui.graph.common.enums import AxisType
 
 
@@ -121,7 +121,7 @@ class StateAxisItem(AxisItem):
 
         NOTE: Always cast the value as integer due to PyQtGraph protection!
         """
-        return [INTEGER_STATE_MAP.get(int(value), '') for value in values]
+        return [get_state_string(value) for value in values]
 
 
 class AlarmAxisItem(AxisItem):
@@ -135,7 +135,7 @@ class AlarmAxisItem(AxisItem):
 
         NOTE: Always cast the value as integer due to PyQtGraph protection!
         """
-        return [INTEGER_ALARM_MAP.get(int(value), '') for value in values]
+        return [get_alarm_string(value) for value in values]
 
 
 class AuxPlotAxisItem(AxisItem):
