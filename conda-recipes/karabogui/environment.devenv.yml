@@ -20,8 +20,8 @@ dependencies:
   - pytest-cov=2.12.1
   - pytest-mock=2.0.0
   - pytest-subtests=0.5.0
-  - setuptools=49.6.0
-  - setuptools_scm=5.0.1
+  - setuptools
+  - setuptools_scm
   # GUI
   - qtpy=2.1.0
   - pyqtgraph=0.11.1
@@ -32,9 +32,9 @@ dependencies:
   - ipython=7.13.0
   - ipykernel=5.2.0
   # Plotting and utils
-  - numpy=1.19.5
-  - scipy=1.4.1
-  - lttbc=0.2.0
+  - numpy=1.22.*
+  - scipy=1.6.0
+  - lttbc=0.2.1
   - natsort=6.2.0
   # Other
   - cycler=0.10.0
