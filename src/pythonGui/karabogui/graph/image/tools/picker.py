@@ -3,7 +3,7 @@ from qtpy.QtCore import QObject, QPointF, QRectF, Qt, Slot
 from qtpy.QtGui import QColor, QPen
 from qtpy.QtWidgets import QGraphicsObject, QGraphicsRectItem
 
-from karabogui.graph.common.api import CoordsLegend
+from karabogui.graph.common.api import CoordsLegend, float_to_string
 from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION
 from karabogui.graph.image.legends.picker import PickerLegend
 
@@ -104,6 +104,11 @@ class PickerController(QObject):
                 self._indicator_rect.show()
                 self._coords_legend.show()
             self._indicator_rect.setPos(x, y)
+
+        if x is not None:
+            x = float_to_string(x)
+        if y is not None:
+            y = float_to_string(y)
         self._coords_legend.set_value(x, y)
 
     def _update_geometry(self):

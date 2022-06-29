@@ -1,14 +1,18 @@
+from datetime import datetime
+
 from pyqtgraph import InfiniteLine, SignalProxy
 from qtpy.QtCore import QObject, Slot
 
 from karabogui import icons
-from karabogui.graph.common.api import CoordsLegend, create_button
+from karabogui.graph.common.api import (
+    AlarmAxisItem, CoordsLegend, StateAxisItem, TimeAxisItem, create_button,
+    float_to_string, get_alarm_string, get_state_string, make_pen)
 
 
 class CrossTargetController(QObject):
     def __init__(self, plotItem):
         """Controller for showing a cross target on a plot"""
-        super(CrossTargetController, self).__init__()
+        super().__init__()
         self.plotItem = plotItem
 
         self.v_line = None
@@ -29,12 +33,43 @@ class CrossTargetController(QObject):
         if self.plotItem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotItem.vb.mapSceneToView(pos)
             x, y = mousePoint.x(), mousePoint.y()
-            self.legend.set_value(x, y)
+            self.legend.set_value(self._get_x_value(x), self._get_y_value(y))
             self.v_line.setPos(x)
             self.h_line.setPos(y)
             self.legend.setVisible(True)
         else:
             self.legend.setVisible(False)
+
+    def _get_x_value(self, value):
+        """Get the real x value depending on the axis"""
+        plotItem = self.plotItem
+        axis = plotItem.getAxis("bottom")
+        if isinstance(axis, TimeAxisItem):
+            x_min, x_max = axis.range
+            difference = x_max - x_min
+            if difference < 60:
+                fmt = "%H:%M:%S,%f"
+            elif difference < 3600 * 24:
+                fmt = "%H:%M:%S"
+            elif difference < 3600 * 24 * 30:
+                fmt = "%d/%m, %H:%M:%S"
+            elif difference < 3600 * 24 * 30 * 365:
+                fmt = "%d/%m, %H:%M"
+            else:
+                fmt = "%d/%m/%Y"
+            timestamp = datetime.fromtimestamp(value)
+            return timestamp.strftime(fmt)
+        return float_to_string(value, precision=3)
+
+    def _get_y_value(self, value):
+        """Get the real y value depending on the axis"""
+        plotItem = self.plotItem
+        axis = plotItem.getAxis("left")
+        if isinstance(axis, StateAxisItem):
+            return get_state_string(value)
+        elif isinstance(axis, AlarmAxisItem):
+            return get_alarm_string(value)
+        return float_to_string(value, precision=3)
 
     # -----------------------------------------------------------------------
     # Public methods
@@ -47,8 +82,9 @@ class CrossTargetController(QObject):
             self.deactivate()
 
     def activate(self):
-        self.v_line = InfiniteLine(angle=90, movable=False)
-        self.h_line = InfiniteLine(angle=0, movable=False)
+        pen = make_pen("a")
+        self.v_line = InfiniteLine(angle=90, pen=pen, movable=False)
+        self.h_line = InfiniteLine(angle=0, pen=pen, movable=False)
         self.plotItem.addItem(self.v_line, ignoreBounds=True)
         self.plotItem.addItem(self.h_line, ignoreBounds=True)
         self.legend = CoordsLegend()

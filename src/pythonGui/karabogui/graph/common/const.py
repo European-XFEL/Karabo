@@ -120,6 +120,17 @@ ALARM_INTEGER_MAP = {alarm.value: i for i, alarm in
 INTEGER_ALARM_MAP = {i: alarm.value for i, alarm in
                      enumerate(AlarmCondition.__members__.values())}
 
+
+def get_alarm_string(value):
+    """Get an alarm condition from a mapped `index`"""
+    return INTEGER_ALARM_MAP.get(round(value), "")
+
+
+def get_state_string(value):
+    """Get an state value from a mapped `index`"""
+    return INTEGER_STATE_MAP.get(round(value), "")
+
+
 # Image Constants
 # --------------------------------------------------------------------------
 
