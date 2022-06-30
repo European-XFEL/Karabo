@@ -270,7 +270,7 @@ class Packer(Builder):
             # Upload current environment file
             env_file = op.join(self.root_path, ENVIRONMENT_YML)
             conda_run(Commands.RUN, '-n', env,
-                      'conda', 'env', 'export', '--no-builds', '>', env_file)
+                      'conda', 'env', 'export', '-f', env_file, '--no-builds')
             sftp.put(env_file, remote_env_file)
         else:
             print(f"The environment file {remote_env_file} already exists.")
