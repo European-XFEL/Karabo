@@ -20,18 +20,19 @@ using namespace std;
 namespace karabo {
     namespace util {
 
+        static std::string typeNameFromTypeInfo(const std::type_info& typeInf) {
+            std::string typeName = Types::convert<FromTypeInfo, ToCppString>(typeInf);
+            if (Types::from<FromTypeInfo>(typeInf) == Types::ReferenceType::UNKNOWN) {
+                // type_info::name() is implementation dependent - but is at least a hint
+                ((typeName += " (std::type_info: ") += typeInf.name()) += ")";
+            }
+            return typeName;
+        }
 
         std::string createCastFailureMessage(const std::string& key, const std::type_info& src,
                                              const std::type_info& tgt) {
-            std::string srcType = Types::convert<FromTypeInfo, ToCppString>(src);
-            if (Types::from<FromTypeInfo>(src) == Types::ReferenceType::UNKNOWN) {
-                // type_info::name() is implementation dependent - but is at least a hint
-                ((srcType += " (std::type_info: ") += src.name()) += ")";
-            }
-            std::string tgtType = Types::convert<FromTypeInfo, ToCppString>(tgt);
-            if (Types::from<FromTypeInfo>(tgt) == Types::ReferenceType::UNKNOWN) {
-                ((tgtType += " (std::type_info: ") += tgt.name()) += ")";
-            }
+            const std::string srcType = typeNameFromTypeInfo(src);
+            const std::string tgtType = typeNameFromTypeInfo(tgt);
             return "Failed conversion from \"" + srcType + "\" into \"" + tgtType + "\" on key \"" + key + "\"";
         }
 
@@ -41,6 +42,14 @@ namespace karabo {
             std::string srcType = ToType<ToCppString>::to(src);
             std::string tgtType = ToType<ToCppString>::to(tgt);
             return "Failed conversion from \"" + srcType + "\" into \"" + tgtType + "\" on key \"" + key + "\"";
+        }
+
+        std::string createTypeMismatchMessage(const std::string& key, const std::type_info& srcType,
+                                              const std::type_info& tgtType) {
+            const std::string srcTypeName = typeNameFromTypeInfo(srcType);
+            const std::string tgtTypeName = typeNameFromTypeInfo(tgtType);
+            return "Value for key \"" + key + "\" has type \"" + srcTypeName +
+                   "\". It can't be read as being of type \"" + tgtTypeName + "\".";
         }
 
 
