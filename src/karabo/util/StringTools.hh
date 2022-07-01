@@ -41,7 +41,7 @@ namespace karabo {
         class NDArray;
 
         /**
-         * Create a kas failure message for a Hash key when trying to cast to a differnt value type
+         * Create a cast failure message for a Hash key when trying to cast to a different value type
          * @param key the message pertains to
          * @param src typeinfo of source type, i.e. type of the value in the Hash
          * @param tgt typeinfo of target type, i.e. type to which the cast failed
@@ -51,6 +51,18 @@ namespace karabo {
                                              const std::type_info& tgt);
         std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src,
                                              const Types::ReferenceType& tgt);
+
+        /**
+         * @brief Creates a type mismatch message for an attempt to get a Hash node value with a type different from the
+         * current type of the node.
+         *
+         * @param key the key of the node whose value has been requested.
+         * @param srcType the current type of the node whose value should have been retrieved.
+         * @param tgtType the expected type of the node whose value should have been retrieved
+         * @return std::string the failure message.
+         */
+        std::string createTypeMismatchMessage(const std::string& key, const std::type_info& srcType,
+                                              const std::type_info& tgtType);
 
         /**
          * Return a string representation of a value of type T. Overloads for
