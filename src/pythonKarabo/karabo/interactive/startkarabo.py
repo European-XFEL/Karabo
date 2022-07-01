@@ -64,7 +64,7 @@ def entrypoint(func):
     def invocation():
         if "KARABO" not in os.environ:
             print('Please activate Karabo '
-                  '(type ". activate" in your Karabo directory)')
+                  '("source" the activate file in your Karabo directory)')
             return 1
 
         try:
@@ -78,11 +78,9 @@ def entrypoint(func):
 
 def supervise():
     if not osp.isdir(absolute("var", "service")):
-        print("Copy default service directory")
-        src = absolute("service.in")
-        target = absolute("var", "service")
-        shutil.copytree(src, target)
-
+        print("service directory not present."
+              " Please create one with `karabo-create-services`")
+        return
     svok = subprocess.call([absolute("extern", "bin", "svok"),
                             absolute("var", "service", ".svscan")])
     if svok != 0:
@@ -119,6 +117,44 @@ def exec_defaultall(cmd, *args):
 
 def isexecutable(fn):
     return os.path.isfile(fn) and os.access(fn, os.X_OK)
+
+
+@entrypoint
+def make_service_dir():
+    """karabo-create-services - creates Karabo servers folder
+
+      karabo-create-services [-h|--help] template*
+
+    creates a Karabo servers folder for a specific template.
+    If none is given, creates a default template.
+
+    Options are:
+        default - A standard backbone installation. NB: this
+                  configuration is likely targeted to the
+                  infrastructure of the European XFEL
+        empty   - An empty service folder.
+                  Services can be added with the
+                  `karabo-add-deviceserver` option
+    """
+    if osp.isdir(absolute("var", "service")):
+        print("service directory already existing")
+        return
+
+    template = "default"
+    if len(sys.argv[1:]) == 1:
+        template = sys.argv[1]
+
+    if not osp.isdir(absolute("service.in", template)):
+        print(f"template service '{template}' directory not recognised.")
+        dirs = [dir
+                for dir in os.listdir(absolute("service.in"))
+                if osp.isdir(absolute("service.in", dir))]
+        print(f"Available templates are : {' ,'.join(dirs)}")
+        return
+
+    src = absolute("service.in", template)
+    target = absolute("var", "service")
+    shutil.copytree(src, target)
 
 
 @entrypoint
