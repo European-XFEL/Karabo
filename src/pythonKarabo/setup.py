@@ -98,6 +98,7 @@ else:
             'karabo-xterm=karabo.interactive.startkarabo:xtermlog',
             'karabo-add-deviceserver=karabo.interactive.startkarabo:adddeviceserver',
             'karabo-remove-deviceserver=karabo.interactive.startkarabo:removedeviceserver',
+            'karabo-create-services=karabo.interactive.startkarabo:make_service_dir',
             'karabo-webserver=karabo.interactive.webserver:run_webserver',
             'karabo-webaggregatorserver=karabo.interactive.webaggregatorserver:run_webserver',
             'migrate-karabo-history=karabo.influxdb.dl_migrator:main',
