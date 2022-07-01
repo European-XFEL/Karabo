@@ -741,7 +741,7 @@ namespace karabo {
             const Hash* ptr = boost::any_cast<Hash>(&m_value);
             if (ptr) return reinterpret_cast<const ValueType&>(*ptr);
             throw KARABO_CAST_EXCEPTION(
-                  karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid(ValueType)));
+                  karabo::util::createTypeMismatchMessage(m_key, m_value.type(), typeid(ValueType)));
         }
 
         template <class KeyType, typename AttributeType>
@@ -751,7 +751,7 @@ namespace karabo {
             const ValueType* ptr = boost::any_cast<ValueType>(&m_value);
             if (ptr) return *ptr;
             throw KARABO_CAST_EXCEPTION(
-                  karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid(ValueType)));
+                  karabo::util::createTypeMismatchMessage(m_key, m_value.type(), typeid(ValueType)));
         }
 
         template <class KeyType, typename AttributeType>
