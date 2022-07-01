@@ -306,28 +306,31 @@ namespace karabo {
              */
             bool has(const std::string& path, const char separator = '.') const;
 
-            /**
-             * Insert key/value pair in current container
-             * Optimization: to avoid double-copy, ie <i>value</i> into <i>boost::any</i> object, and the later into the
-             * map; we insert first insert an empty object of type <b>boost::any</b> into the map, get a reference to
-             * the <i>boost::any</i> object associated with <b>key</b>, then copy the given value into it.
-             * @param key A string key
-             * @param value Any object as value
-             * @return void
-             *
-             * <b>Example:</b>
-             * @code
-             * Hash hash;
-             * hash.set("myKey", "myValue");
-             * hash.set("myFloat", float(12.44));
-             * @endcode
-             */
+
             // Looks like the 'const ValueType&' version has to stay to ensure that explicit type specifications like
             //    std::string value("v");
             //    aHash.set<std::string>(path, value);
             // still compile. Just
             //    aHash.set(path, value);
             // seems to work correctly even with only the 'ValueType&&' version.
+            /**
+             * @brief Insert key/value pair in current container.
+             *
+             * @param key A string key
+             * @param value Any object as value
+             * @return void
+             *
+             * @example
+             * @code
+             * Hash hash;
+             * hash.set("myKey", "myValue");
+             * hash.set("myFloat", float(12.44));
+             * @endcode
+             *
+             * Optimization: to avoid double-copy, ie *value* into <i>boost::any</i> object, and the later
+             * into the map, we first insert an empty object of type <b>boost::any</b> into the map, get a reference to
+             * the <i>boost::any</i> object associated with <b>key</b>, then copy the given value into it.
+             */
             template <typename ValueType>
             inline Node& set(const std::string& path, const ValueType& value, const char separator = '.');
 
@@ -355,7 +358,8 @@ namespace karabo {
              * your data directly.
              * @param key A string hash key
              * @return A <b>reference</b> to the internal object
-             * <b>Example:<b>
+             *
+             * @example
              * @code
              *  vector<string>& vec = set<vector<string> >("key");
              *  vec.resize(20);
@@ -385,6 +389,10 @@ namespace karabo {
              * Retrieve a constant reference to the value of element identified by 'key'
              * @param key A string key
              * @return The associated value
+             *
+             * @note Differently from Hash::getAs, Hash::get (and its overloads) doesn't perform any
+             * conversion while retrieving a node value. If the node type specified on the get call
+             * doesn't match the actual node type, a cast exception will be thrown.
              */
             template <typename ValueType>
             inline const ValueType& get(const std::string& path, const char separator = '.') const;
@@ -413,6 +421,12 @@ namespace karabo {
              * @param path
              * @param separator
              * @return value
+             *
+             * @note Hash::getAs (and its overload for vector elements) converts the node values to the
+             * target type specified by the caller. As an example, retrieval of unsigned integer values
+             * from nodes that are signed integers will perform the same implicit conversion performed
+             * by C/C++ (e.g., -1 assigned to an INT32 key will be retrieved as 4.294.967.295 when
+             * requested as an UINT32).
              */
             template <typename ValueType>
             inline ValueType getAs(const std::string& path, const char separator = '.') const;
