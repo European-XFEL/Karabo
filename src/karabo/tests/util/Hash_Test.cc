@@ -7,6 +7,7 @@
 
 #include "Hash_Test.hh"
 
+#include <climits>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
@@ -371,6 +372,19 @@ void Hash_Test::testGetSet() {
             caught3 = true;
         }
         CPPUNIT_ASSERT(caught3 == true);
+    }
+
+    {
+        // Checks implicit conversions between signed and unsigned integers.
+        Hash h("uint32Prop", 30450u);
+        CPPUNIT_ASSERT(h.getType("uint32Prop") == Types::UINT32);
+        CPPUNIT_ASSERT(h.get<unsigned int>("uint32Prop") == 30450u);
+        CPPUNIT_ASSERT_NO_THROW(h.set("uint32Prop", -1));
+        // After the previous set, the node type becomes Types::INT32 and an
+        // attempt to get it as Types::UINT32 will fail.
+        CPPUNIT_ASSERT_THROW(h.get<unsigned int>("uint32Prop"), karabo::util::CastException);
+        // Hash::getAs, on the other hand, will do the implicit conversion.
+        CPPUNIT_ASSERT(h.getAs<unsigned int>("uint32Prop") == UINT32_MAX);
     }
 }
 
