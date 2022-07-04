@@ -9,10 +9,13 @@
 #include "Strand_Test.hh"
 #include "boost/asio/deadline_timer.hpp"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/util/Configurator.hh"
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/TimeDuration.hh"
 
 using karabo::net::EventLoop;
+using karabo::net::Strand;
+using karabo::util::Configurator;
 using karabo::util::Epochstamp;
 using karabo::util::Hash;
 using karabo::util::TimeDuration;
@@ -58,8 +61,7 @@ void Strand_Test::testSequential() {
     TimeDuration duration;
     unsigned int numTest = 50;
 
-    // Strands need to be pointed to by shared_ptr
-    auto strand = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService());
+    Strand::Pointer strand = Configurator<Strand>::create("Strand", Hash());
     Epochstamp now;
     // A timer to concurrently run Strand::post (and to start the duration),
     // not sure whether several handlers of the timer will really be executed at the same time or not...
@@ -151,8 +153,7 @@ void Strand_Test::testStrandDies() {
         };
         const unsigned int numPosts = 10;
 
-        // Strands need to be pointed to by shared_ptr
-        auto strand = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService(), cfg);
+        Strand::Pointer strand = Configurator<Strand>::create("Strand", cfg);
         for (unsigned int i = 0; i < numPosts; ++i) {
             strand->post(sleepAndCount);
         }
@@ -191,8 +192,8 @@ void Strand_Test::testMaxInARow() {
     constexpr unsigned int maxInARow = 10;
     constexpr unsigned int numPosts = 2000 * maxInARow;
 
-    auto strand1 = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService());
-    auto strandMany = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService(), Hash("maxInARow", maxInARow));
+    auto strand1 = Configurator<Strand>::create("Strand", Hash());
+    auto strandMany = Configurator<Strand>::create("Strand", Hash("maxInARow", maxInARow));
 
     std::promise<Epochstamp> promise1;
     auto future1 = promise1.get_future();
