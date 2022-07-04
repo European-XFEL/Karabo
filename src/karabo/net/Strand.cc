@@ -13,29 +13,54 @@
 
 #include <utility> // for std::move
 
+#include "EventLoop.hh"
 #include "karabo/log/Logger.hh" // for KARABO_LOG_FRAMEWORK_XXX
 #include "karabo/util/Hash.hh"
 #include "karabo/util/MetaTools.hh" // for bind_weak
+#include "karabo/util/SimpleElement.hh"
 
+using karabo::util::BOOL_ELEMENT;
+using karabo::util::UINT32_ELEMENT;
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Strand)
 
 namespace karabo {
     namespace net {
 
+        void Strand::expectedParameters(karabo::util::Schema& expected) {
+            UINT32_ELEMENT(expected)
+                  .key("maxInARow")
+                  .description(
+                        "Up to this number of handlers are run in a row before control is given back to the event loop")
+                  .assignmentOptional()
+                  .defaultValue(1u)
+                  .minInc(1u)
+                  .commit();
 
-        Strand::Strand(boost::asio::io_service& ioService, const karabo::util::Hash& cfg)
-            : m_ioService(ioService),
+            BOOL_ELEMENT(expected)
+                  .key("guaranteeToRun")
+                  .description(
+                        "If true, all handlers posted are guaranteed to run, even those that are left when destruction "
+                        "of the Strand starts.")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
+        }
+
+
+        Strand::Strand(boost::asio::io_context& ioContext)
+            : Strand(karabo::util::Hash("maxInARow", 1u, "guaranteeToRun", false)) {
+            setContext(ioContext);
+        };
+
+        Strand::Strand(const karabo::util::Hash& cfg)
+            : m_ioContext(&karabo::net::EventLoop::getIOService()),
               m_tasksRunning(false),
-              m_maxInARow(cfg.has("maxInARow") ? cfg.get<unsigned int>("maxInARow") : 1u),
-              m_guaranteeToRun(cfg.has("guaranteeToRun") ? cfg.get<bool>("guaranteeToRun") : false) {
-            if (m_maxInARow == 0u) { // silently convert to useful value
+              m_maxInARow(cfg.get<unsigned int>("maxInARow")),
+              m_guaranteeToRun(cfg.get<bool>("guaranteeToRun")) {
+            if (m_maxInARow == 0u) { // Cannot happen if created via Configurator<Strand>::create
+                // nevertheless silently convert to useful value
                 m_maxInARow = 1u;
-            }
-            size_t nKeys = 0;
-            if (cfg.has("maxInARow")) ++nKeys;
-            if (cfg.has("guaranteeToRun")) ++nKeys;
-            if (cfg.size() > nKeys) {
-                // Exception in ctr. is bad - to be fixed later
-                throw KARABO_PARAMETER_EXCEPTION("Unknown key in " + toString(cfg));
             }
         }
 
@@ -55,6 +80,9 @@ namespace karabo {
             }
         }
 
+        void Strand::setContext(boost::asio::io_context& ioContext) {
+            m_ioContext = &ioContext;
+        }
 
         void Strand::post(const boost::function<void()>& handler) {
             boost::mutex::scoped_lock lock(m_tasksMutex);
@@ -84,8 +112,8 @@ namespace karabo {
                 // Instead of bind_weak to 'this' we could boost::bind to 'shared_from_this()'.
                 // The difference would only be that in the latter 'run' (and thus the tasks to be executed
                 // sequentially) would be executed even if all other shared pointers to it are reset between
-                // this post and when m_ioService actually invokes it.
-                m_ioService.post(karabo::util::bind_weak(&Strand::run, this));
+                // this post and when m_ioContext actually invokes it.
+                m_ioContext->post(karabo::util::bind_weak(&Strand::run, this));
             }
         }
 
@@ -117,7 +145,7 @@ namespace karabo {
                 }
             }
             // Repost to eventually run next task - see comment in startRunningIfNeeded about use of bind_weak.
-            m_ioService.post(karabo::util::bind_weak(&Strand::run, this));
+            m_ioContext->post(karabo::util::bind_weak(&Strand::run, this));
         }
 
 
