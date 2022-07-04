@@ -14,8 +14,8 @@ class ImageROIController(BaseROIController):
         plotItem.imageTransformed.connect(self._update_transform)
 
         # Enable movement wrt image pixels
-        self._scale_snap = True
-        self._translate_snap = True
+        self.scaleSnap = True
+        self.translateSnap = True
 
     def show(self, roi):
         super(ImageROIController, self).show(roi)
