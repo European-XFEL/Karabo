@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from qtpy.QtCore import Qt
+
 from karabo.common.scenemodel.api import TickSliderModel
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
@@ -19,6 +21,9 @@ class TestSlider(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
+
+    def test_focus_policy(self):
+        assert self.controller.slider.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', 1.0)
