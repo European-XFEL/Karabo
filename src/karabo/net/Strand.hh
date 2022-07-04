@@ -16,6 +16,7 @@
 #include <queue>
 
 #include "karabo/util/ClassInfo.hh"
+#include "karabo/util/Hash.hh"
 
 #ifndef KARABO_NET_STRAND_HH
 #define KARABO_NET_STRAND_HH
@@ -50,7 +51,16 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(Strand, "Strand", "2.1")
 
-            explicit Strand(boost::asio::io_service& ioService);
+            /**
+             * Construct the Strand. The configuration can take two keys:
+             *
+             * - "maxInARow" (unsigned int > 0): Up to this number of handlers are run in a row before control is given
+             *                                   back to the event loop (default: 1).
+             * - "guaranteeToRun" (bool): If true (default: false), all handlers posted are guaranteed to run, even
+             *                            those that are left when destruction of the Strand starts.
+             */
+            explicit Strand(boost::asio::io_service& ioService,
+                            const karabo::util::Hash& config = karabo::util::Hash());
 
             Strand(const Strand& orig) = delete;
 
@@ -60,7 +70,9 @@ namespace karabo {
              * Post a handler to the io_service given to the constructor with the guarantee that it is not executed
              * before any other handler posted before has finished.
              * Handlers posted on different Strands can always be run in parallel.
-             * Note that, when a handler posted has not yet run when the Strand is destructed, it will never run.
+             *
+             * Note that "guaranteeToRun" flag of the constructor determines what happens with yet unhandled handlers
+             * when the strand is destructed.
              *
              * @param handler function without arguments and return value - will be copied
              */
@@ -70,7 +82,9 @@ namespace karabo {
              * Post a handler to the io_service given to the constructor with the guarantee that it is not executed
              * before any other handler posted before has finished.
              * Handlers posted on different Strands can always be run in parallel.
-             * Note that, when a handler posted has not yet run when the Strand is destructed, it will never run.
+             *
+             * Note that "guaranteeToRun" flag of the constructor determines what happens with yet unhandled handlers
+             * when the strand is destructed.
              *
              * @param handler function without arguments and return value as r-value reference - will be moved to avoid
              * a copy
@@ -114,6 +128,9 @@ namespace karabo {
             boost::mutex m_tasksMutex; // to protect both, m_tasksRunning and m_tasks
             bool m_tasksRunning;
             std::queue<boost::function<void()> > m_tasks;
+
+            unsigned int m_maxInARow;
+            const bool m_guaranteeToRun;
         };
 
     } // namespace net

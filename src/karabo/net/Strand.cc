@@ -13,7 +13,8 @@
 
 #include <utility> // for std::move
 
-#include "karabo/log/Logger.hh"     // for KARABO_LOG_FRAMEWORK_XXX
+#include "karabo/log/Logger.hh" // for KARABO_LOG_FRAMEWORK_XXX
+#include "karabo/util/Hash.hh"
 #include "karabo/util/MetaTools.hh" // for bind_weak
 
 
@@ -21,10 +22,38 @@ namespace karabo {
     namespace net {
 
 
-        Strand::Strand(boost::asio::io_service& ioService) : m_ioService(ioService), m_tasksRunning(false) {}
+        Strand::Strand(boost::asio::io_service& ioService, const karabo::util::Hash& cfg)
+            : m_ioService(ioService),
+              m_tasksRunning(false),
+              m_maxInARow(cfg.has("maxInARow") ? cfg.get<unsigned int>("maxInARow") : 1u),
+              m_guaranteeToRun(cfg.has("guaranteeToRun") ? cfg.get<bool>("guaranteeToRun") : false) {
+            if (m_maxInARow == 0u) { // silently convert to useful value
+                m_maxInARow = 1u;
+            }
+            size_t nKeys = 0;
+            if (cfg.has("maxInARow")) ++nKeys;
+            if (cfg.has("guaranteeToRun")) ++nKeys;
+            if (cfg.size() > nKeys) {
+                // Exception in ctr. is bad - to be fixed later
+                throw KARABO_PARAMETER_EXCEPTION("Unknown key in " + toString(cfg));
+            }
+        }
 
-
-        Strand::~Strand() {}
+        Strand::~Strand() {
+            if (m_guaranteeToRun) {
+                // We are being destructed, so there is no shared pointer left pointing to us.
+                // ==> No need for mutex protection.
+                while (!m_tasks.empty()) {
+                    try {
+                        m_tasks.front()();
+                    } catch (const std::exception& e) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Caught exception in posted method during destruction: "
+                                                   << e.what();
+                    }
+                    m_tasks.pop();
+                }
+            }
+        }
 
 
         void Strand::post(const boost::function<void()>& handler) {
@@ -63,26 +92,29 @@ namespace karabo {
 
         void Strand::run() {
             boost::function<void()> nextTask;
-            {
-                boost::mutex::scoped_lock lock(m_tasksMutex);
-                if (m_tasks.empty()) {
-                    m_tasksRunning = false;
-                    // Nothing else to do, so stop running
-                    return;
-                } else {
-                    // Get oldest handler - move it to avoid a copy:
-                    nextTask = std::move(m_tasks.front());
-                    // Removes the object from queue (note that it is in undefined state after std::move):
-                    m_tasks.pop();
+            unsigned int counter = 0;
+            while (++counter <= m_maxInARow) {
+                {
+                    boost::mutex::scoped_lock lock(m_tasksMutex);
+                    if (m_tasks.empty()) {
+                        m_tasksRunning = false;
+                        // Nothing else to do, so stop running
+                        return;
+                    } else {
+                        // Get oldest handler - move it to avoid a copy:
+                        nextTask = std::move(m_tasks.front());
+                        // Removes the object from queue (it is in undefined state after std::move):
+                        m_tasks.pop();
+                    }
                 }
-            }
-            // Actually run the task without lock
-            // Catch exceptions, otherwise this Strand would completely stop functioning:
-            // run not posted anymore, but m_tasksRunning still true.
-            try {
-                nextTask();
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Caught exception in posted method: " << e.what();
+                // Actually run the task without lock
+                // Catch exceptions, otherwise this Strand would completely stop functioning:
+                // run not posted anymore, but m_tasksRunning still true.
+                try {
+                    nextTask();
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Caught exception in posted method: " << e.what();
+                }
             }
             // Repost to eventually run next task - see comment in startRunningIfNeeded about use of bind_weak.
             m_ioService.post(karabo::util::bind_weak(&Strand::run, this));
