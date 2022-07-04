@@ -374,6 +374,8 @@ class MainWindow(QMainWindow):
 
         event.accept()
         QMainWindow.closeEvent(self, event)
+        # Process eventual events to gracefully close main window
+        process_qt_events(timeout=1000)
         qApp.quit()
 
     # --------------------------------------
