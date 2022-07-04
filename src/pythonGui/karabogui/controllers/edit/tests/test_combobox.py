@@ -1,3 +1,5 @@
+from qtpy.QtCore import Qt
+
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabo.common.states import State
 from karabo.native import Configurable, Int32, String
@@ -55,3 +57,7 @@ class TestEditableComboBox(GuiTestCase):
                       existing=proxy.root_proxy.binding)
 
         assert controller.widget.count() == 4
+
+    def test_focus(self):
+        combobox = self.controller.widget
+        assert combobox.focusPolicy() == Qt.StrongFocus
