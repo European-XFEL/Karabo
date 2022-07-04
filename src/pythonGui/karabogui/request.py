@@ -237,8 +237,12 @@ def get_macro_from_server(device_id, macro_name, project):
                             name=macro_name)
 
 
-def retrieve_default_scene(device_id):
-    """Retrieve a default scene from device with `device_id`"""
+def retrieve_default_scene(device_id, request=False):
+    """Retrieve a default scene from device with `device_id`
+
+    :param request: Boolean to actively request configuration and schema.
+                    The default is `False`.
+    """
     attrs = get_topology().get_attributes(f"device.{device_id}")
     if attrs is None:
         msg = f"The device <b>{device_id}</b> is not online."
@@ -268,7 +272,7 @@ def retrieve_default_scene(device_id):
         """Act on the arrival of the schema"""
         scenes = proxy["availableScenes"].value
         if scenes is Undefined:
-            onConfigurationUpdate(proxy, _config_handler)
+            onConfigurationUpdate(proxy, _config_handler, request=request)
         elif not len(scenes):
             messagebox.show_warning(
                 "The device <b>{}</b> does not specify a scene "
@@ -280,9 +284,9 @@ def retrieve_default_scene(device_id):
     proxy = get_topology().get_device(device_id)
     if not len(proxy.binding.value):
         # We completely miss our schema and wait for it.
-        onSchemaUpdate(proxy, _schema_handler)
+        onSchemaUpdate(proxy, _schema_handler, request=request)
     elif proxy["availableScenes"].value is Undefined:
-        onConfigurationUpdate(proxy, _config_handler)
+        onConfigurationUpdate(proxy, _config_handler, request=request)
     else:
         scenes = proxy["availableScenes"].value
         if not len(scenes):
