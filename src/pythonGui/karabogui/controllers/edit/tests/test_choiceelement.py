@@ -1,3 +1,5 @@
+from qtpy.QtCore import Qt
+
 from karabo.native import Bool, ChoiceOfNodes, Configurable
 from karabogui.binding.api import apply_default_configuration
 from karabogui.testing import GuiTestCase, get_class_property_proxy
@@ -33,6 +35,9 @@ class TestEditableChoiceElement(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
+
+    def test_focus_policy(self):
+        assert self.controller.widget.focusPolicy() == Qt.StrongFocus
 
     def test_setup(self):
         assert self.controller.widget.count() == 2

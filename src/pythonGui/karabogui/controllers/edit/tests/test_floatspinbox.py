@@ -1,6 +1,7 @@
 from unittest import skipIf
 from unittest.mock import patch
 
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import FloatSpinBoxModel
@@ -34,6 +35,9 @@ class TestFloatSpinBox(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
+
+    def test_focus_policy(self):
+        assert self.controller.widget.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', 5.0)

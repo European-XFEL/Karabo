@@ -1,5 +1,6 @@
 from unittest import mock, skipIf
 
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
@@ -40,6 +41,9 @@ class TestEditableSpinBox(GuiTestCase):
     def test_edit_value(self):
         self.controller.widget.setValue(3)
         assert self.proxy.edit_value == 3
+
+    def test_focus_policy(self):
+        assert self.controller.widget.focusPolicy() == Qt.StrongFocus
 
     def test_schema_update(self):
         proxy = get_class_property_proxy(Other.getClassSchema(), 'prop')
