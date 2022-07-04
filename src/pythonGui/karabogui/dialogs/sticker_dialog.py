@@ -5,7 +5,7 @@
 #############################################################################
 from qtpy import uic
 from qtpy.QtCore import QSize, Qt, Slot
-from qtpy.QtGui import QColor, QIcon, QPixmap, QTextFormat
+from qtpy.QtGui import QColor, QFont, QIcon, QPixmap, QTextFormat
 from qtpy.QtWidgets import QApplication, QColorDialog, QDialog, QTextEdit
 
 from karabogui.dialogs.font_dialog import FontDialog
@@ -15,6 +15,7 @@ from .utils import get_dialog_ui
 
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
 GREY = "#d3d3d3"
+BUTTON_FONT_SIZE = 10
 
 
 class StickerDialog(QDialog):
@@ -28,7 +29,7 @@ class StickerDialog(QDialog):
 
         # Set default font if the model font is empty
         if self.model.font:
-            self.text_font = get_qfont(self.model.font)
+            self.text_font = get_qfont(self.model.font, adjust_size=False)
         else:
             self.text_font = QApplication.font()
             self.model.font = self.text_font.toString()
@@ -45,7 +46,8 @@ class StickerDialog(QDialog):
         self.leText.setFixedSize(QSize(model.width, model.height))
         self.leText.setPlainText(model.text)
         sheet = []
-        sheet.append('qproperty-font: "{}";'.format(model.font))
+        font_string = get_qfont(model.font, adjust_size=True).toString()
+        sheet.append('qproperty-font: "{}";'.format(font_string))
         sheet.append('color: "{}";'.format(model.foreground))
         sheet.append('background-color: "{}";'.format(model.background))
 
@@ -62,8 +64,16 @@ class StickerDialog(QDialog):
             sheet)))
 
     def set_text_font_button(self):
-        self.pbFont.setFont(self.text_font)
-        self.pbFont.setText(get_alias_from_font(self.text_font.family()))
+        """
+        Update the  text and font family of the button. The font size
+        should not be changed in order to keep the button size fixed.
+        """
+        font = QFont(self.text_font)
+        font.setPointSize(BUTTON_FONT_SIZE)
+        self.pbFont.setFont(font)
+        family = get_alias_from_font(self.text_font.family())
+        button_text = f"{family}, {self.text_font.pointSize()}pt"
+        self.pbFont.setText(button_text)
 
     def set_text_color_button(self):
         pixmap = QPixmap(24, 16)

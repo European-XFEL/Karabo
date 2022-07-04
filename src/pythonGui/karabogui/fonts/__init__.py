@@ -80,9 +80,9 @@ def get_font_from_alias(alias):
     return SCENE_FONT_FAMILY
 
 
-def get_alias_from_font(font):
+def get_alias_from_font(font_family):
     for hint, family in FONT_STYLE_HINTS.items():
-        if font == family:
+        if font_family == family:
             return FONT_STYLE_ALIAS[hint]
 
     return SCENE_FONT_FAMILY
