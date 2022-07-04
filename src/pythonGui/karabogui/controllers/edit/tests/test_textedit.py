@@ -1,3 +1,5 @@
+from qtpy.QtCore import Qt
+
 from karabo.common.scenemodel.api import LineEditModel
 from karabo.native import Char, Configurable, String
 from karabogui.testing import (
@@ -25,6 +27,9 @@ class TestEditableLineEdit(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
+
+    def test_focus_policy(self):
+        assert self.controller.widget.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
         self.controller._last_cursor_pos = 0
