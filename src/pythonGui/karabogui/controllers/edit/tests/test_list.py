@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import (
@@ -67,6 +68,9 @@ class TestEditableList(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
+
+    def test_focus_policy(self):
+        assert self.controller._internal_widget.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
         self.controller.last_cursor_position = 0

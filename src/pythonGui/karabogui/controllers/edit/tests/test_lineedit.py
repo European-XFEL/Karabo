@@ -3,6 +3,7 @@ from unittest import skipIf
 from unittest.mock import patch
 
 import numpy as np
+from qtpy.QtCore import Qt
 
 from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel)
@@ -76,6 +77,9 @@ class TestRegexEdit(GuiTestCase):
         super(TestRegexEdit, self).tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
+
+    def test_focus_policy(self):
+        assert self.controller._internal_widget.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', '1')
