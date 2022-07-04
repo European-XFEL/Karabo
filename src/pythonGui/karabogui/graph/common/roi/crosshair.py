@@ -12,7 +12,7 @@ from .utils import ImageRegion, set_roi_html
 class CrosshairROI(KaraboROI):
 
     def __init__(self, pos=None, size=(1, 1), name='',
-                 scale_snap=False, translate_snap=False, pen=None):
+                 scaleSnap=False, translateSnap=False, pen=None):
         """Reimplementation of pyqtgraph CrosshairROI to support transforms
         and add a few fixes/performance improvements:
 
@@ -20,7 +20,7 @@ class CrosshairROI(KaraboROI):
           (+ scale/2, where scale = 1)
         - Force redraw the crosshair shape with sigRegionChanged"""
 
-        super().__init__(pos + 0.5, size, name, scale_snap, translate_snap,
+        super().__init__(pos + 0.5, size, name, scaleSnap, translateSnap,
                          pen=pen)
         self._shape = None
         self._path = None
