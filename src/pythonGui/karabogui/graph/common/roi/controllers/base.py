@@ -39,8 +39,8 @@ class BaseROIController(QObject):
 
         # Position snapping is disabled by default.
         # This is usually utilized by image ROIs
-        self._scale_snap = False
-        self._translate_snap = False
+        self.scaleSnap = False
+        self.translateSnap = False
 
         self._pen = None
 
@@ -81,13 +81,13 @@ class BaseROIController(QObject):
 
         if size is not None:
             roi_item = roi_class(pos=pos, size=size, name=name,
-                                 scale_snap=self._scale_snap,
-                                 translate_snap=self._translate_snap,
+                                 scaleSnap=self.scaleSnap,
+                                 translateSnap=self.translateSnap,
                                  pen=self._pen)
         else:
             roi_item = roi_class(pos=pos, name=name,
-                                 scale_snap=self._scale_snap,
-                                 translate_snap=self._translate_snap,
+                                 scaleSnap=self.scaleSnap,
+                                 translateSnap=self.translateSnap,
                                  pen=self._pen)
 
         # Connect some signals

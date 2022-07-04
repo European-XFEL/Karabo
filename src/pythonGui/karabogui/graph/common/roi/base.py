@@ -13,11 +13,11 @@ from .utils import set_roi_html
 class KaraboROI(ROI):
 
     def __init__(self, pos=(0, 0), size=Point(1, 1), name='',
-                 scale_snap=False, translate_snap=False, pen=None,
+                 scaleSnap=False, translateSnap=False, pen=None,
                  parent=None):
         super(KaraboROI, self).__init__(pos, size,
-                                        scaleSnap=scale_snap,
-                                        translateSnap=translate_snap,
+                                        scaleSnap=scaleSnap,
+                                        translateSnap=translateSnap,
                                         pen=pen, removable=True, parent=parent)
         self.name = name
         self.setZValue(100)
