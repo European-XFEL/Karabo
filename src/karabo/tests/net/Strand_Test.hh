@@ -18,6 +18,7 @@ class Strand_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSequential);
     CPPUNIT_TEST(testThrowing);
     CPPUNIT_TEST(testStrandDies);
+    CPPUNIT_TEST(testMaxInARow);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -32,6 +33,8 @@ class Strand_Test : public CPPUNIT_NS::TestFixture {
     void testThrowing();
 
     void testStrandDies();
+
+    void testMaxInARow();
 
     boost::shared_ptr<boost::thread> m_thread;
     const unsigned int m_nThreadsInPool;
