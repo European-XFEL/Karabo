@@ -151,7 +151,7 @@ class TableModel(QAbstractTableModel):
             binding = self._bindings[key]
             if isinstance(binding, VectorBinding):
                 value = string2list(value)
-
+            value = binding.validate_trait("value", value)
             self._data[row][key] = value
             self.dataChanged.emit(index, index)
             self._set_edit_value(self._data)
@@ -184,7 +184,7 @@ class TableModel(QAbstractTableModel):
                     for key in self._header:
                         binding = self._bindings[key]
                         value = get_default_value(binding, force=True)
-                        # Note: Before 2.2, the value was 'cast' here...
+                        value = binding.validate_trait("value", value)
                         column_hash[key] = value
                 if pos + row_nr < len(self._data):
                     self._data.insert(pos + row_nr, column_hash)
