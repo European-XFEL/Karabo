@@ -121,7 +121,7 @@ class ProjectView(QTreeView):
         if start != 0:
             return
 
-        controller = self.model().controller_ref(parent_index)
+        controller = parent_index.internalPointer()
         if (controller is not None and
                 isinstance(controller, BaseProjectGroupController) and not
                 isinstance(controller, DeviceInstanceController)):
@@ -221,7 +221,7 @@ class ProjectView(QTreeView):
             return None
 
         first_index = indices[0]
-        return self.model().controller_ref(first_index)
+        return first_index.internalPointer()
 
     def _project_controller(self, controller):
         """ Find the parent project controller of a given controller
