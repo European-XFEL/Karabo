@@ -6,7 +6,6 @@
 import json
 import re
 from contextlib import contextmanager
-from weakref import WeakValueDictionary
 
 from qtpy.QtCore import (
     QAbstractItemModel, QItemSelection, QItemSelectionModel, QMimeData,
@@ -47,21 +46,9 @@ class ProjectViewItemModel(QAbstractItemModel):
 
         self._traits_model = None
         self._controller = None
-        self._model_index_refs = WeakValueDictionary()
 
     def supportedDragActions(self):
         return Qt.CopyAction
-
-    def controller_ref(self, model_index):
-        """Get the controller object for a ``QModelIndex``. This is essentially
-        equivalent to a weakref and might return None.
-
-        NOTE: We're doing a rather complicated dance here with `internalId` to
-        avoid PyQt's behaviour of casting pointers into Python objects, because
-        those objects might now be invalid.
-        """
-        key = model_index.internalId()
-        return self._model_index_refs.get(key)
 
     @contextmanager
     def insertion_context(self, parent_controller, first, last):
@@ -155,7 +142,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         # Extract info() dictionaries from controllers
         data = []
         for index in rows.values():
-            controller = self.controller_ref(index)
+            controller = index.internalPointer()
             if controller is None:
                 continue
             data.append(controller.info())
@@ -262,23 +249,6 @@ class ProjectViewItemModel(QAbstractItemModel):
     # ----------------------------
     # Qt methods
 
-    def createIndex(self, row, column, controller):
-        """Prophalaxis for QModelIndex.internalPointer...
-
-        We need a nice way to get back to our controller objects from a
-        QModelIndex. So, we store controller instances in model indices, but
-        indirectly. This is because QModelIndex is not a strong reference AND
-        these objects will tend to outlive the controller objects which they
-        reference. So the solution is to use a WeakValueDictionary as
-        indirection between Qt and our model layer.
-
-        Awesome. QAbstractItemModel can go DIAF.
-        """
-        key = id(controller)
-        if key not in self._model_index_refs:
-            self._model_index_refs[key] = controller
-        return super(ProjectViewItemModel, self).createIndex(row, column, key)
-
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
         """
@@ -287,12 +257,13 @@ class ProjectViewItemModel(QAbstractItemModel):
 
         # All items have these properties
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
-        controller = self.controller_ref(index)
+        controller = index.internalPointer()
         if isinstance(controller, DeviceConfigurationController):
             flags |= Qt.ItemNeverHasChildren
             # We only allow the configurations to be checked for offline
             # devices!
-            parent_controller = self.controller_ref(index.parent())
+            parent_index = index.parent()
+            parent_controller = parent_index.internalPointer()
             if (parent_controller is not None
                     and not parent_controller.project_device.online):
                 flags |= Qt.ItemIsUserCheckable
@@ -305,7 +276,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         if not index.isValid():
             return
 
-        controller = self.controller_ref(index)
+        controller = index.internalPointer()
         if controller is None:
             return
 
@@ -341,12 +312,13 @@ class ProjectViewItemModel(QAbstractItemModel):
             return False
 
         if index.column() == PROJECT_COLUMN:
-            controller = self.controller_ref(index)
+            controller = index.internalPointer()
             if controller is None:
                 return False
             if isinstance(controller, DeviceConfigurationController):
                 config_model = controller.model
-                parent_controller = self.controller_ref(index.parent())
+                parent_index = index.parent()
+                parent_controller = parent_index.internalPointer()
                 if value != Qt.Checked:
                     return False
                 # Only interested in checked to set new active config
@@ -367,7 +339,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         if not parent.isValid():
             return self.createIndex(row, column, self._controller)
         else:
-            parent_controller = self.controller_ref(parent)
+            parent_controller = parent.internalPointer()
 
         if parent_controller is None:
             return QModelIndex()
@@ -387,7 +359,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child_controller = self.controller_ref(index)
+        child_controller = index.internalPointer()
         if child_controller is None:
             return QModelIndex()
 
@@ -419,7 +391,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         if not parent.isValid():
             return 1
         else:
-            parent_controller = self.controller_ref(parent)
+            parent_controller = parent.internalPointer()
 
         if parent_controller is None:
             return 0
