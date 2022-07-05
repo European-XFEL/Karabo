@@ -71,6 +71,7 @@ class MacroPanel(BasePanelWidget):
         toolbar = ToolBar(parent=self)
         toolbar.addAction(icons.run, "Run", self.on_run)
         toolbar.addAction(icons.save, "Save", self.on_save)
+        toolbar.addSeparator()
         toolbar.addAction(icons.zoomIn, "Increase font", self.increaseFont)
         toolbar.addAction(icons.zoomOut, "Decrease font", self.decreaseFont)
         return [toolbar]
