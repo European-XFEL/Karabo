@@ -500,12 +500,12 @@ class Network(QObject):
 
     def onProjectLoadItems(self, project_manager, items):
         self._request_project_message(
-            "loadItems", "projectLoadItems", items=items)
+            "loadItems", "projectLoadItems", timeout=30, items=items)
 
     def onProjectSaveItems(self, project_manager, items):
         self._request_project_message(
-            "saveItems", "projectSaveItems", client=const.KARABO_CLIENT_ID,
-            items=items)
+            "saveItems", "projectSaveItems", timeout=30,
+            client=const.KARABO_CLIENT_ID, items=items)
 
     def onProjectUpdateAttribute(self, project_manager, items):
         self._request_project_message("updateAttribute",
