@@ -500,6 +500,30 @@ class TestTableModelView(GuiTestCase):
         first_hash = self.proxy.edit_value[0]
         self.assertEqual(first_hash["arch"], "b")
 
+        index = model.index(0, 3)
+        self.assertEqual(index.data(), "1")
+        model.setData(index, "13")
+        index = model.index(0, 3)
+        self.assertEqual(index.data(), "13")
+        first_hash = self.proxy.edit_value[0]
+        self.assertEqual(first_hash["cat"], 13)
+
+        index = model.index(0, 4)
+        self.assertEqual(index.data(), "2.0")
+        model.setData(index, "2.12456")
+        index = model.index(0, 4)
+        self.assertEqual(index.data(), "2.12456")
+        first_hash = self.proxy.edit_value[0]
+        self.assertEqual(first_hash["dog"], 2.12456)
+
+        index = model.index(0, 5)
+        self.assertEqual(index.data(), "a")
+        model.setData(index, list2string(["a", "b", "c"]))
+        index = model.index(0, 5)
+        self.assertEqual(index.data(), "a,b,c")
+        first_hash = self.proxy.edit_value[0]
+        self.assertEqual(first_hash["eagle"], ["a", "b", "c"])
+
     def test_basic_settings_controller(self):
         self.assertFalse(self.controller.isReadOnly())
         self.assertIsInstance(self.controller.widget, KaraboTableView)
