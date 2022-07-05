@@ -9,6 +9,8 @@ from karabogui.messagebox import show_error
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_db_conn, get_network, get_topology
 
+from .utils import close_app
+
 
 def create_cinema(ns):
     app = create_gui_app(sys.argv)
@@ -43,7 +45,7 @@ def create_cinema(ns):
                        f"<b>{ns.host}:{ns.port}</b>. Closing karabo cinema.")
             topology.system_tree.on_trait_change(
                 trigger_scenes, 'initialized', remove=True)
-            app.quit()
+            close_app()
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
@@ -71,7 +73,7 @@ def run_cinema(ns):
         app.deleteLater()
         sys.exit()
     else:
-        app.quit()
+        close_app()
 
 
 def main():
