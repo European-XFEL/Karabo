@@ -3,6 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox
 from traits.api import Instance
 
@@ -34,6 +35,7 @@ class EditableComboBox(BaseBindingController):
         self._filter = MouseWheelEventBlocker(widget)
         widget.installEventFilter(self._filter)
         widget.currentIndexChanged[int].connect(self._on_user_edit)
+        widget.setFocusPolicy(Qt.StrongFocus)
         return widget
 
     def binding_update(self, proxy):
