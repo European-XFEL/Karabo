@@ -3,13 +3,14 @@ import re
 import sys
 
 from qtpy.QtCore import QObject, QTimer, Slot
-from qtpy.QtWidgets import qApp
 
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_network, get_topology
+
+from .utils import close_app
 
 DEVSCENE_PROG = re.compile(r"([0-9a-zA-Z/_\-]+)\|(.+)")
 CAPA = Capabilities.PROVIDES_SCENES
@@ -54,7 +55,7 @@ class DeviceWaiter(QObject):
             msg = "{} are not valid sceneIds.".format(
                 ','.join([scene for scene in scene_ids]))
             messagebox.show_warning(msg, title='Theater')
-            qApp.quit()
+            close_app()
 
     def start(self):
         self.timer = QTimer(self)
@@ -102,7 +103,7 @@ class DeviceWaiter(QObject):
             messagebox.show_warning(msg, title='Theater')
         # no scenes are open after the timeout.
         if self.no_scenes:
-            qApp.quit()
+            close_app()
 
     def _topo_update(self):
         topology = get_topology()
@@ -122,7 +123,7 @@ class DeviceWaiter(QObject):
 
         # We specified devices that are not available in the topology, exit!
         if self.no_scenes:
-            qApp.quit()
+            close_app()
         else:
             # We are logged in and can now unsubscribe to logs!
             get_network().onSubscribeLogs(False)
@@ -143,7 +144,7 @@ def create_theatre(ns):
             messagebox.show_error("Error, could not connect to gui server "
                                   f"<b>{ns.host}:{ns.port}</b>. "
                                   "Closing karabo theare.")
-            app.quit()
+            close_app()
         else:
             # We are connected and charge a timeout now!
             waiter.start()
@@ -172,7 +173,7 @@ def run_theatre(ns):
         app.deleteLater()
         sys.exit()
     else:
-        app.quit()
+        close_app()
 
 
 def main():
