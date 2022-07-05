@@ -1,6 +1,10 @@
 import re
 from pathlib import Path
 
+from qtpy.QtWidgets import QApplication
+
+from karabogui.util import process_qt_events
+
 LINUX_DESKTOP_FILE_TEMPLATE = """\
 [Desktop Entry]
 Name={name}
@@ -41,3 +45,10 @@ def get_valid_filename(s):
     """
     s = str(s).strip().replace(' ', '_')
     return re.sub(r'(?u)[^-\w.]', '', s)
+
+
+def close_app():
+    app = QApplication.instance()
+    if app is not None:
+        process_qt_events(app, timeout=1000)
+        app.quit()
