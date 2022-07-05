@@ -4,20 +4,14 @@
 # The karabo activate file needs to be sourced and a broker needs to be
 # started.
 
-# This variables are created to ensure that 'nosetest' and 'coverage'
-# are executed from the karabo environment.
+# This variables are created to ensure that 'coverage'
+# is executed from the karabo environment.
 COVERAGE="python $(which coverage)"
 # For some tests we allow flakiness:
 FLAKY_FLAGS="--with-flaky --no-success-flaky-report"
 
-# coverage configuration file
-COVERAGE_CONF_FILE=".coveragerc"
-
 # A directory to which the code coverage will be stored.
 CODE_COVERAGE_DIR_NAME="pyReport"
-
-# A flag that indicates if sitecustomize.py file was created.
-SITE_CUSTOMIZE_FILE_CREATED=false
 
 ACCEPT_FAILURES=false
 FAILED_TESTS=
@@ -86,74 +80,6 @@ the script behaves as it would if the flag was only called once.
 "
 }
 
-# Set-up coverage tool to also collect coverage data in sub-processes.
-setupCoverageTool() {
-    echo "Entering setupCoverageTool."
-
-    # Set coverage variables.
-    COVER_COVERED_PACKAGES=""
-    COVER_COVERED_PACKAGES+="--cover-package=karabo "
-    # MR-3871: disable while karabogui doesn't support Qt5 on the old deps
-    #COVER_COVERED_PACKAGES+="--cover-package=karabogui "
-    COVER_COVERED_PACKAGES+="--cover-inclusive"
-    COVER_FLAGS="--with-coverage $COVER_COVERED_PACKAGES"
-
-    # Path to the sitecustomize.py file.
-    SITE_PACKAGES_DIR=$KARABO_PROJECT_ROOT_DIR/karabo/extern/bin/python -c 'import site; print(site.getsitepackages()[0])'
-    SITE_CUSTOMIZE_FILE_PATH=$SITE_PACKAGES_DIR/sitecustomize.py
-
-    SITE_CUSTOMIZE_FILE_CREATED=false
-
-    # Create '.coveragerc' file.
-    echo "
-[run]
-  source = $KARABO_PROJECT_ROOT_DIR/karabo
-  parallel = True
-  data_file = $(pwd)/.coverage
-" > $COVERAGE_CONF_FILE
-
-    if [ ! -f $SITE_CUSTOMIZE_FILE_PATH ]; then
-        # Create the sitecustomize.py script.
-
-        SITE_CUSTOMIZE_FILE_CREATED=true
-
-        echo "Creating the sitecustomize.py file. path = '$SITE_CUSTOMIZE_FILE_PATH'"
-
-        echo "import coverage" > $SITE_CUSTOMIZE_FILE_PATH
-        echo "coverage.process_startup()" >> $SITE_CUSTOMIZE_FILE_PATH
-    fi
-
-    # Enable coverage to collect the code coverage data from all the processes
-    # in the following tests.
-    export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
-    # Instruct 'coverage' to display a message when creating a data file.
-    # This is extremely useful when debugging problems related to the
-    # multi-process code coverage collecting process.
-    # export COVERAGE_DEBUG=dataio
-}
-
-# Tear-down the configurations made by the 'setupCoverageTool' function.
-teardownCoverageTool() {
-    if $SITE_CUSTOMIZE_FILE_CREATED; then
-
-        echo "Removing the sitecustomize.py file. path = '$SITE_CUSTOMIZE_FILE_PATH'"
-
-        # Remove the sitecustomize.py file if created by this script.
-        rm $SITE_CUSTOMIZE_FILE_PATH
-    fi
-
-    unset SITE_CUSTOMIZE_FILE_CREATED
-
-    # Disable 'coverage' data collection.
-    unset COVERAGE_PROCESS_START
-    # Disable 'coverage' logging.
-    unset COVERAGE_DEBUG
-}
-
-onExit() {
-    teardownCoverageTool
-}
-
 # Help function for checking successful execution of commands
 safeRunCommand() {
     typeset cmnd="$*"
@@ -167,7 +93,6 @@ safeRunCommand() {
         echo
         echo
         if ! $ACCEPT_FAILURES; then
-            onExit
             exit $ret_code
         fi
         # Append failed command and increase counter
@@ -177,120 +102,91 @@ safeRunCommand() {
 }
 
 safeRunTests() {
-    # mandatory argument: the python module specification
-    # optional argument: extra options
-    # optional argument: output_xml_filename
-    MODULE_SPEC=$1
-    JUNIT_OUTPUT=""
-    if $COLLECT_COVERAGE; then
-        safeRunCommand "python $(which nosetests) -v $COVER_FLAGS $FLAKY_FLAGS $MODULE_SPEC"
-    else
-        _OLD_ACCEPT=$ACCEPT_FAILURES
-        ACCEPT_FAILURES=true
-        PYTHON_TESTS="py.test -v --pyargs"
-        JUNIT_RESULT_FILE="junit.${MODULE_SPEC}_${BROKER_NAME}.xml"
-        rm -f $JUNIT_RESULT_FILE
-        JUNIT_OUTPUT="--junitxml=$JUNIT_RESULT_FILE"
-        safeRunCommand "$PYTHON_TESTS $JUNIT_OUTPUT $MODULE_SPEC"
-        ACCEPT_FAILURES=$_OLD_ACCEPT
-        unset _OLD_ACCEPT
-    fi
-}
-
-_runPythonUnitTests() {
     # mandatory argument: the name of the broker "technology"
     # mandatory argument: the address of the broker
-    BROKER_NAME=$1
-    export KARABO_BROKER=$2
-    echo
+    # mandatory argument: the name of the tests
+    # mandatory argument: the python module specification
+    # optional argument: extra options
+    BROKER=$1
+    BROKER_TYPE=$(echo $BROKER | sed -E "s|(.+)://(.+)|\1|g")
+    if [ "${BROKER_TYPE}" == "tcp" ]; then
+        BROKER_TYPE="jms"
+    fi
+    export KARABO_BROKER=$BROKER
+    TEST_SUITE_NAME=$2
     echo
     echo "*************************************************************************************************"
     echo "*************************************************************************************************"
     echo "**"
-    echo "**   Running Karabo Python unit tests with ${BROKER_NAME^^} broker  ... $KARABO_BROKER"
+    echo "**   Running Karabo Python ${TEST_SUITE_NAME} tests with ${BROKER_TYPE^^} broker  ... ${KARABO_BROKER}"
     echo "**"
     echo "*************************************************************************************************"
     echo "*************************************************************************************************"
     echo
     echo
 
-    safeRunTests "karabo.bound_api"
-    safeRunTests "karabo.bound_devices"
-    safeRunTests "karabo.middlelayer_api"
-    safeRunTests "karabo.middlelayer_devices"
-    safeRunTests "karabo.common"
-    safeRunTests "karabo.macro_api"
-    safeRunTests "karabo.macro_devices"
-    safeRunTests "karabo.influxdb"
-    safeRunTests "karabo.native"
-    safeRunTests "karabo.project_db"
-    safeRunTests "karabo.config_db"
-    safeRunTests "karabo.tests"
-    safeRunTests "karabo.interactive"
+    MODULE_SPEC=$3
+    EXTRA_FLAGS=$4
+    FLAGS="--pyargs"
+    if [ -n "${EXTRA_FLAGS}" ]; then
+        FLAGS="${FLAGS} ${EXTRA_FLAGS}"
+    fi
+    if $COLLECT_COVERAGE; then
+        FLAGS="${FLAGS} --cov=karabo"
+    fi
+    _OLD_ACCEPT=$ACCEPT_FAILURES
+    ACCEPT_FAILURES=true
+    PYTHON_TESTS="py.test -v ${FLAGS}"
+    JUNIT_RESULT_FILE="junit.${TEST_SUITE_NAME}.${MODULE_SPEC}_${BROKER_TYPE}.xml"
+    rm -f $JUNIT_RESULT_FILE
+    JUNIT_OUTPUT="--junitxml=$JUNIT_RESULT_FILE"
+    safeRunCommand "$PYTHON_TESTS $JUNIT_OUTPUT $MODULE_SPEC"
+    ACCEPT_FAILURES=$_OLD_ACCEPT
+    unset _OLD_ACCEPT
 }
 
-runPythonUnitTestsCI() {
+runPythonTestsCI() {
     IFS=';' read -r -a BROKERS <<< "$KARABO_CI_BROKERS"
     for BROKER in "${BROKERS[@]}"
     do
-        PREFIX=$(echo $BROKER | sed -E "s|(.+)://(.+)|\1|g")
-        if [ "${PREFIX}" == "tcp" ]; then
-            PREFIX="jms"
-        fi
-        _runPythonUnitTests $PREFIX $BROKER
+        safeRunTests $BROKER $*
     done
 }
 
-runPythonUnitTests() {
+runPythonTests() {
     savedBroker=${KARABO_BROKER}
 
     if [ ! -z "$KARABO_CI_BROKERS" ]; then
-        runPythonUnitTestsCI
+        runPythonTestsCI $*
     else
-        _runPythonUnitTests "jms" "tcp://exflbkr02n0:7777"
-        _runPythonUnitTests "mqtt" "mqtt://exfldl02n0:1883"
-        _runPythonUnitTests "amqp" "amqp://xfel:karabo@exflctrl01:5672"
-        _runPythonUnitTests "redis" "redis://exflctrl01:6379"
+        # Uncomment or adjust depending on the broker environment
+        safeRunTests "tcp://exflbkr02n0:7777" $*
+        # safeRunTests "mqtt://exfldl02n0:1883" $*
+        # safeRunTests "amqp://xfel:karabo@exflctrl01:5672" $*
+        # safeRunTests "redis://exflctrl01:6379" $*
     fi
 
     export KARABO_BROKER=${savedBroker}
 
     echo
-    echo Karabo Python unit tests complete
+    echo Karabo Python $1 tests complete
     echo
+}
+
+runPythonUnitTests() {
+    runPythonTests "Unit" "karabo" "--ignore-glob=*integration_tests*"
 }
 
 runPythonIntegrationTests() {
-    echo
-    echo Running Karabo Python integration tests ...
-    echo
+    runPythonTests "Integration" "karabo.integration_tests" "--ignore-glob=*karabo.integration_tests.pipeline_cross_test*"
+}
 
-    # TODO: Needs to be uncommented when the bound_device_test integration test is added.
-    #safeRunTests "karabo.integration_tests.bound_device_test"
-    safeRunTests "karabo.integration_tests.all_api_alarm_test"
-    safeRunTests "karabo.integration_tests.config_manager_cross_test"
-    safeRunTests "karabo.integration_tests.device_comm_test"
-    safeRunTests "karabo.integration_tests.device_cross_test"
-    safeRunTests "karabo.integration_tests.device_provided_scenes_test"
-    safeRunTests "karabo.integration_tests.device_schema_injection_test"
-    # safeRunTests "karabo.integration_tests.pipeline_cross_test" # this will run in the long tests.
-    safeRunTests "karabo.integration_tests.pipeline_processing_test"
-    safeRunTests "karabo.integration_tests.signal_slot_order_test"
-    echo
-    echo Karabo Python integration tests complete
-    echo
+runPythonCoverageTests() {
+    runPythonTests "All" "karabo" "--ignore-glob=*karabo.integration_tests.pipeline_cross_test*"
 }
 
 runPythonLongTests() {
-    echo
-    echo Running Karabo Python long tests ...
-    echo
-
-    safeRunTests "karabo.integration_tests.pipeline_cross_test"
-
-    echo
-    echo Karabo Python long tests complete
-    echo
+    runPythonTests "Long" "karabo.integration_tests.pipeline_cross_test"
 }
 
 generateCodeCoverageReport() {
@@ -315,9 +211,8 @@ generateCodeCoverageReport() {
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/config_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_config_db"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
-    # MR-3871: disable while karabogui doesn't support Qt5 on the old deps
-    #safeRunCommand $COVERAGE html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_bound_devices"
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/middlelayer_devices/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_devices"
 
     echo
     echo HTML coverage reports generation complete
@@ -351,19 +246,12 @@ clean() {
 
     # Clean the previous coverage date.
     $COVERAGE erase
-
-    # Remove coverage configuration file file.
-    rm -rf $COVERAGE_CONF_FILE
-
-    # Remove code coverage directory if it exists.
-    rm -rf $CODE_COVERAGE_DIR_PATH
 }
 
 # Main
 
 # Parse arguments.
 
-RUN_CONDA_UNIT_TEST=false
 RUN_UNIT_TEST=false
 RUN_INTEGRATION_TEST=false
 RUN_LONG_TEST=false
@@ -460,13 +348,6 @@ fi
 
 # Run tests.
 
-if $COLLECT_COVERAGE; then
-    # Prepare coverage tool.
-
-    # Set-up coverage tool.
-    setupCoverageTool
-fi
-
 if $RUN_UNIT_TEST; then
     runPythonUnitTests
 fi
@@ -477,14 +358,6 @@ fi
 
 if $RUN_LONG_TEST; then
     runPythonLongTests
-fi
-
-
-if $COLLECT_COVERAGE; then
-    # Clean up after coverage tool.
-
-    # Tear-down configuration for coverage tool.
-    teardownCoverageTool
 fi
 
 # Generate report.

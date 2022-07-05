@@ -75,6 +75,7 @@ src/cmake/resolve-karabo-lib-target.cmake
 # Visual Studio Code settings
 .vscode
 # coverage
+!.coveragerc
 htmlcov/
 coverage.xml
 # Don't ignore linting and formatting config files
