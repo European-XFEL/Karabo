@@ -65,10 +65,12 @@ class AlarmModel(QAbstractTableModel):
                     self.all_entries.pop(entryIndex)
                     self.endRemoveRows()
 
-        # Doing a layoutChange alltogether is much faster for all
-        # the entries than announcing single updates in Qt5!
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
+        rows = self.rowCount() - 1
+        columns = self.columnCount() - 1
+        first_index = self.index(0, 0)
+        last_index = self.index(rows, columns)
+        roles = [Qt.DisplayRole, Qt.ToolTipRole, Qt.DecorationRole]
+        self.dataChanged.emit(first_index, last_index, roles)
 
     def _getEntryIndex(self, entry_id):
         """ The index in ``self.all_entries`` for the given ``entry_id`` is
