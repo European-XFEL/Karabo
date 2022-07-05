@@ -231,15 +231,14 @@ class ProjectDatabaseConnection(QObject):
     def _items_loaded(self, items, success):
         """ A bunch of data just arrived from the network.
         """
-        # To be passed to _pop_reading
-        storage = self
         if success:
             # Cache everything locally first only if loading from DB successful
+            cache_store = self.cache.store
             for item in items:
                 domain = item['domain']
                 uuid = item['uuid']
                 data = item['xml']
-                self.cache.store(domain, uuid, data)
+                cache_store(domain, uuid, data)
             storage = self._build_memcache(items)
         else:
             # Project loading failed, use the fast track to tell the world
@@ -250,10 +249,11 @@ class ProjectDatabaseConnection(QObject):
             return
 
         # Then go back through and load any waiting objects
+        pop_reading = self._pop_reading
         for item in items:
             domain = item['domain']
             uuid = item['uuid']
-            self._pop_reading(domain, uuid, success, storage)
+            pop_reading(domain, uuid, success, storage)
 
         # Make a single request to the GUI server
         self.flush()
@@ -262,6 +262,7 @@ class ProjectDatabaseConnection(QObject):
         """ A bunch of items were just saved
         """
         if success:
+            pop_writing = self._pop_writing
             for item in items:
                 domain = item['domain']
                 uuid = item['uuid']
@@ -270,7 +271,7 @@ class ProjectDatabaseConnection(QObject):
                 success = item['success']
                 if not success:
                     messagebox.show_error(item['reason'])
-                self._pop_writing(domain, uuid, date, success)
+                pop_writing(domain, uuid, date, success)
         else:
             # Project writing failed, use the fast track to tell the world
             self._waiting_for_write.clear()
@@ -328,12 +329,11 @@ class ProjectDatabaseConnection(QObject):
         # Store previous processing state
         is_processing = self.is_processing()
 
-        if uuid in self._waiting_for_read:
-            obj = self._waiting_for_read.pop(uuid)
-            if success:
-                # Only try to read if reading from DB was successful
-                read_lazy_object(domain, uuid, storage, read_project_model,
-                                 existing=obj)
+        obj = self._waiting_for_read.pop(uuid, None)
+        if obj is not None and success:
+            # Only try to read if reading from DB was successful
+            read_lazy_object(domain, uuid, storage, read_project_model,
+                             existing=obj)
 
         self._broadcast_is_processing(is_processing)
 
