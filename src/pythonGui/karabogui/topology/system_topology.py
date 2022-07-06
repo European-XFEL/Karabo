@@ -173,9 +173,6 @@ class SystemTopology(HasStrictTraits):
             instance = self._project_devices[device_id]
             instance.rename(
                 device_id=device_id, class_id=class_id, server_id=server_id)
-        attrs = self._get_device_attributes(device_id)
-        if attrs is not None:
-            instance.error = (attrs.get('status', '') == 'error')
 
         return self._project_devices[device_id]
 
@@ -437,10 +434,6 @@ class SystemTopology(HasStrictTraits):
                 proxy.status = ProxyStatus.ONLINE
             elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
                 proxy.status = ProxyStatus.OFFLINE
-            project_device = self._project_devices.get(proxy.device_id)
-            if project_device is not None and attrs is not None:
-                project_device.error = (attrs.get('status', '') == 'error')
-
             if proxy.device_id in new_topology_nodes:
                 proxy.topology_node = new_topology_nodes[proxy.device_id]
                 proxy.server_id = attrs.get('serverId', '')
@@ -602,10 +595,6 @@ class SystemTopology(HasStrictTraits):
                 proxy.status = ProxyStatus.ONLINE
             elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
                 proxy.status = ProxyStatus.OFFLINE
-            # Synchronize project errors
-            project_device = self._project_devices.get(device_id)
-            if project_device is not None and attrs is not None:
-                project_device.error = (attrs.get('status', '') == 'error')
 
     def _project_device_proxies_server_update(self, server_id):
         """Because the server online status has changed , update the project
