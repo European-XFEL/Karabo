@@ -15,10 +15,12 @@ using namespace std;
 
 #define LOG_LEVEL "FATAL"
 #define KRB_TEST_MAX_TIMEOUT 5
+// Next line must be kept in sync with DeviceClient.hh:
+#define CONNECTION_KEEP_ALIVE 15
 
 USING_KARABO_NAMESPACES
 
-CPPUNIT_TEST_SUITE_REGISTRATION(GuiVersion_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION(GuiServer_Test);
 
 bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
     const unsigned int sleepIntervalMillis = 5;
@@ -32,13 +34,13 @@ bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMilli
 }
 
 
-GuiVersion_Test::GuiVersion_Test() {}
+GuiServer_Test::GuiServer_Test() {}
 
 
-GuiVersion_Test::~GuiVersion_Test() {}
+GuiServer_Test::~GuiServer_Test() {}
 
 
-void GuiVersion_Test::setUp() {
+void GuiServer_Test::setUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
@@ -53,14 +55,14 @@ void GuiVersion_Test::setUp() {
 }
 
 
-void GuiVersion_Test::tearDown() {
+void GuiServer_Test::tearDown() {
     m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 }
 
 
-void GuiVersion_Test::appTestRunner() {
+void GuiServer_Test::appTestRunner() {
     // bring up a GUI server
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
@@ -119,7 +121,7 @@ void GuiVersion_Test::appTestRunner() {
 }
 
 
-void GuiVersion_Test::resetTcpConnection() {
+void GuiServer_Test::resetTcpConnection() {
     int timeout = 5000;
     if (m_tcpAdapter) {
         if (m_tcpAdapter->connected()) {
@@ -141,7 +143,7 @@ void GuiVersion_Test::resetTcpConnection() {
 }
 
 
-void GuiVersion_Test::resetClientConnection(const karabo::util::Hash& loginData) {
+void GuiServer_Test::resetClientConnection(const karabo::util::Hash& loginData) {
     resetTcpConnection();
     karabo::TcpAdapter::QueuePtr messageQ =
           m_tcpAdapter->getNextMessages("systemTopology", 1, [&] { m_tcpAdapter->sendMessage(loginData); });
@@ -151,13 +153,13 @@ void GuiVersion_Test::resetClientConnection(const karabo::util::Hash& loginData)
 }
 
 
-void GuiVersion_Test::resetClientConnection() {
+void GuiServer_Test::resetClientConnection() {
     resetTcpConnection();
     m_tcpAdapter->login();
 }
 
 
-void GuiVersion_Test::testVersionControl() {
+void GuiServer_Test::testVersionControl() {
     std::clog << "testVersionControl: " << std::flush;
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
     // description , client version, server version, should connect
@@ -204,7 +206,7 @@ void GuiVersion_Test::testVersionControl() {
 }
 
 
-void GuiVersion_Test::testReadOnly() {
+void GuiServer_Test::testReadOnly() {
     resetClientConnection();
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -251,7 +253,7 @@ void GuiVersion_Test::testReadOnly() {
     std::clog << "testReadOnly: OK for requestFromSlot with slotGetScene" << std::endl;
 }
 
-void GuiVersion_Test::testExecuteBeforeLogin() {
+void GuiServer_Test::testExecuteBeforeLogin() {
     std::clog << "testExecuteBeforeLogin: " << std::flush;
 
     resetTcpConnection();
@@ -306,7 +308,7 @@ void GuiVersion_Test::testExecuteBeforeLogin() {
     std::clog << "OK" << std::endl;
 }
 
-void GuiVersion_Test::testExecute() {
+void GuiServer_Test::testExecute() {
     std::clog << "testExecute: " << std::flush;
     resetClientConnection();
     // check if we are connected
@@ -403,7 +405,7 @@ void GuiVersion_Test::testExecute() {
 }
 
 
-void GuiVersion_Test::testRequestFailProtocol() {
+void GuiServer_Test::testRequestFailProtocol() {
     resetClientConnection();
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -429,7 +431,7 @@ void GuiVersion_Test::testRequestFailProtocol() {
 }
 
 
-void GuiVersion_Test::testRequestFailOldVersion() {
+void GuiServer_Test::testRequestFailOldVersion() {
     // independently from the minimum Client version configured,
     // we want to block certain actions to be performed.
     // for example: `projectSaveItems` can be poisonous for the database.
@@ -459,7 +461,7 @@ void GuiVersion_Test::testRequestFailOldVersion() {
 }
 
 
-void GuiVersion_Test::testRequestGeneric() {
+void GuiServer_Test::testRequestGeneric() {
     resetClientConnection();
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -538,7 +540,7 @@ void GuiVersion_Test::testRequestGeneric() {
 }
 
 
-void GuiVersion_Test::testSlowSlots() {
+void GuiServer_Test::testSlowSlots() {
     resetClientConnection();
     // bring up a PropertyTestDevice
     std::pair<bool, std::string> success =
@@ -652,7 +654,7 @@ void GuiVersion_Test::testSlowSlots() {
 }
 
 
-void GuiVersion_Test::testReconfigure() {
+void GuiServer_Test::testReconfigure() {
     resetClientConnection();
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -750,10 +752,20 @@ void GuiVersion_Test::testReconfigure() {
 }
 
 
-void GuiVersion_Test::testDeviceConfigUpdates() {
+void GuiServer_Test::testDeviceConfigUpdates() {
     resetClientConnection();
     // checks that we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // Need a 2nd client for parts of this test to test that a badly behaving client does not harm the other one:
+    auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u /*, "debug", true*/));
+    int timeout = 5000;
+    while (!tcpAdapter2->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT(tcpAdapter2->connected());
+    tcpAdapter2->login();
 
     const unsigned int propertyUpdateInterval =
           1500u; // A propertyUpdateInterval that is large enough so that the distance
@@ -773,7 +785,7 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest", Hash("deviceId", "PropTest_2"),
                                           KRB_TEST_MAX_TIMEOUT);
 
-    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Changes a property of one of the test devices and makes sure that no message 'deviceConfigurations' arrives
     // within the propertyUpdateInterval.
@@ -788,20 +800,59 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     }
 
     // "Subscribes" to one of the test property devices by sending the GUI Server a 'startMonitoringDevice' message.
+    // But 2nd client that is not monitoring does not get any message.
     {
         const Hash h("type", "startMonitoringDevice", "deviceId", "PropTest_1");
         // After receiving a startMonitoringDevice, the GUI Server sends a 'deviceConfigurations' message with
         // the full configuration it has for the device.
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "deviceConfigurations", 1, [&] { m_tcpAdapter->sendMessage(h); }, nextMessageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ;
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = m_tcpAdapter->getNextMessages(
+                    "deviceConfigurations", 1, [&] { m_tcpAdapter->sendMessage(h); }, nextMessageTimeout));
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_1"));
+        // key _deviceId_ present means: full config is received, not just an update from signal[State]Changed
+        CPPUNIT_ASSERT_MESSAGE(toString(nextMessage), nextMessage.has("configurations.PropTest_1._deviceId_"));
+        // 2nd client not yet subscribed
+        CPPUNIT_ASSERT_EQUAL(0ul, tcpAdapter2->getAllMessages("deviceConfigurations").size());
     }
 
+    // Now 2nd client also starts to monitor the device - should work in the same way although under the hood just
+    // accesses data from cache
+    {
+        const Hash h("type", "startMonitoringDevice", "deviceId", "PropTest_1");
+        // After receiving a startMonitoringDevice, the GUI Server sends a 'deviceConfigurations' message with
+        // the full configuration it has for the device.
+        karabo::TcpAdapter::QueuePtr messageQ;
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = tcpAdapter2->getNextMessages(
+                    "deviceConfigurations", 1, [&] { tcpAdapter2->sendMessage(h); }, nextMessageTimeout));
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_1"));
+        // key _deviceId_ present means: full config is received, not just an update from signal[State]Changed
+        CPPUNIT_ASSERT_MESSAGE(toString(nextMessage), nextMessage.has("configurations.PropTest_1._deviceId_"));
+    }
+
+    {
+        // 2nd clients unsubscribes again - but once too often.
+        // That must not harm the 1st client in the following tests.
+        const Hash h("type", "stopMonitoringDevice", "deviceId", "PropTest_1");
+        tcpAdapter2->sendMessage(h);
+        tcpAdapter2->sendMessage(h);
+        tcpAdapter2->clearAllMessages(); // to check that no device updates arrive after stop of monitoring
+
+        // The pre-2.15.X problem of a connection miscount by this duplicated "stopMonitoringDevice" is
+        // unfortunately only seen after the device has "aged to death" inside the DeviceClient.
+        // That requires this very long sleep to be sure to test that the issue is fixed - without it, the
+        // next m_tcpAdapter->getNextMessages("deviceConfigurations", ...) does NOT timeout despite of the bug.
+        boost::this_thread::sleep(boost::posix_time::milliseconds(CONNECTION_KEEP_ALIVE * 1000 + 250));
+    }
     // Changes properties on the two devices and assures that an update message arrives containing only the change
-    // to the subscribed one.
+    // to the subscribed one - and 2nd client does not receive anything anymore.
     // NOTE: From this point on, the order of the operations matters - there's a synchronization code before an upcoming
     //       property change test that is based on the timestamp that will be stored in propUpdateTime during the test
     //       below.
@@ -810,13 +861,14 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
         const Hash h_1("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 12));
         const Hash h_2("type", "reconfigure", "deviceId", "PropTest_2", "configuration", Hash("int32Property", 22));
 
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-              "deviceConfigurations", 1,
-              [&] {
-                  m_tcpAdapter->sendMessage(h_2);
-                  m_tcpAdapter->sendMessage(h_1);
-              },
-              nextMessageTimeout);
+        karabo::TcpAdapter::QueuePtr messageQ;
+        CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages(
+                                      "deviceConfigurations", 1,
+                                      [&] {
+                                          m_tcpAdapter->sendMessage(h_2);
+                                          m_tcpAdapter->sendMessage(h_1);
+                                      },
+                                      nextMessageTimeout));
 
         propUpdateTime.now(); // Captures a timestamp that is as close as possible to the update "pulse".
 
@@ -827,9 +879,25 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
         Hash configs = nextMessage.get<Hash>("configurations");
         CPPUNIT_ASSERT(configs.has("PropTest_1"));
         Hash propTest1Config = configs.get<Hash>("PropTest_1");
+        CPPUNIT_ASSERT(propTest1Config.has("int32Property"));
         CPPUNIT_ASSERT(propTest1Config.get<int>("int32Property") == 12);
         CPPUNIT_ASSERT(configs.size() == 1u);
+        // 2nd client did not get any update
+        CPPUNIT_ASSERT_EQUAL(0ul, tcpAdapter2->getAllMessages("deviceConfigurations").size());
     }
+    // Now test that tcpAdapter2 (that previously unsubscribed twice), gets updates again after a single request
+    {
+        const Hash h("type", "startMonitoringDevice", "deviceId", "PropTest_1");
+        karabo::TcpAdapter::QueuePtr messageQ;
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = tcpAdapter2->getNextMessages(
+                    "deviceConfigurations", 1, [h, tcpAdapter2] { tcpAdapter2->sendMessage(h); }, nextMessageTimeout));
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_1"));
+    }
+    tcpAdapter2.reset(); // Not needed anymore.
 
     // "Subscribes" to the yet unsubscribed test device.
     {
@@ -842,6 +910,8 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_2"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_2._deviceId_"));
+        CPPUNIT_ASSERT_EQUAL(22, nextMessage.get<int>("configurations.PropTest_2.int32Property"));
     }
 
     // Changes properties on both test devices and assures that an update message arrives containing the changes
@@ -857,7 +927,7 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
         // Duration constructor takes care of overflow of fractions.
         const TimeDuration duration(
               0ull,
-              propertyUpdateInterval * 1000000000000000ull); // 10^15 => factor from ms. to attosecs.
+              propertyUpdateInterval * 1'000'000'000'000'000ull); // 10^15 => factor from ms. to attosecs.
         const int tolerance = propertyUpdateInterval / 15;
         do {
             targetTime += duration;
@@ -881,12 +951,15 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
         Hash configs = nextMessage.get<Hash>("configurations");
         CPPUNIT_ASSERT(configs.has("PropTest_1"));
         Hash propTest1Config = configs.get<Hash>("PropTest_1");
+        CPPUNIT_ASSERT(propTest1Config.has("int32Property"));
         CPPUNIT_ASSERT(propTest1Config.get<int>("int32Property") == 14);
         CPPUNIT_ASSERT(configs.has("PropTest_2"));
         Hash propTest2Config = configs.get<Hash>("PropTest_2");
+        CPPUNIT_ASSERT(propTest2Config.has("int32Property"));
         CPPUNIT_ASSERT(propTest2Config.get<int>("int32Property") == 24);
         CPPUNIT_ASSERT(configs.size() == 2u);
     }
+
 
     // "Unsubscribes" for both devices by sending the corresponding 'stopMonitoringDevice' for both devices to the
     // GUI Server.
@@ -930,7 +1003,7 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
 }
 
 
-void GuiVersion_Test::testDisconnect() {
+void GuiServer_Test::testDisconnect() {
     std::clog << "testDisconnect: " << std::flush;
     const int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
 
@@ -977,7 +1050,7 @@ void GuiVersion_Test::testDisconnect() {
 }
 
 
-void GuiVersion_Test::testLogMute() {
+void GuiServer_Test::testLogMute() {
     std::clog << "testLogMute: " << std::flush;
     const Hash logCommand("type", "requestFromSlot", "deviceId", "PropTest_LOG", "slot", "logSomething", "args",
                           Hash("priority", "INFO", "message", "log me"), "token", "superSecretPassword");
@@ -1069,7 +1142,7 @@ void GuiVersion_Test::testLogMute() {
 }
 
 
-void GuiVersion_Test::testSlotNotify() {
+void GuiServer_Test::testSlotNotify() {
     std::clog << "testSlotNotify: " << std::flush;
     const int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
     const std::string messageToSend("Banner for everyone!");
@@ -1165,7 +1238,7 @@ void GuiVersion_Test::testSlotNotify() {
     std::clog << "OK" << std::endl;
 }
 
-void GuiVersion_Test::testSlotBroadcast() {
+void GuiServer_Test::testSlotBroadcast() {
     std::clog << "testSlotBroadcast: " << std::flush;
 
     const int timeoutMs = KRB_TEST_MAX_TIMEOUT * 1000;
