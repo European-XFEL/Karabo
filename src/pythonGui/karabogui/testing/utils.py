@@ -10,7 +10,7 @@ from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication
 
 import karabogui.singletons.api as singletons_mod
-from karabo.common.api import Capabilities, ProxyStatus, State
+from karabo.common.api import ProxyStatus, State
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit,
     VectorString)
@@ -32,8 +32,8 @@ class GuiTestCase(unittest.TestCase):
 
     def setUp(self):
         os.environ["KARABO_TEST_GUI"] = "1"
-        if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
-            os.environ['QT_MAC_WANTS_LAYER'] = '1'
+        if system() == "Darwin" and "QT_MAC_WANTS_LAYER" not in os.environ:
+            os.environ["QT_MAC_WANTS_LAYER"] = "1"
         app = QApplication.instance()
         if app is None:
             app = QApplication(sys.argv)
@@ -63,36 +63,36 @@ def click_button(button_widget, button=Qt.LeftButton):
 
 def alarm_data():
     data = OrderedDict()
-    data['entry1'] = {'uptype1': {
+    data["entry1"] = {"uptype1": {
         ALARM_ID: 0,
-        PROPERTY: 'choochability',
-        DESCRIPTION: 'choochability unsufficient',
+        PROPERTY: "choochability",
+        DESCRIPTION: "choochability unsufficient",
         ACKNOWLEDGEABLE: True,
         ALARM_TYPE: ALARM_HIGH,
-        DEVICE_ID: 'Bobby',
+        DEVICE_ID: "Bobby",
         NEEDS_ACKNOWLEDGING: True,
-        TIME_OF_OCCURENCE: '2017-04-20T10:32:22 UTC',
-        TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:32:22 UTC'}}
-    data['entry2'] = {'uptype1': {
+        TIME_OF_OCCURENCE: "2017-04-20T10:32:22 UTC",
+        TIME_OF_FIRST_OCCURENCE: "2017-04-20T09:32:22 UTC"}}
+    data["entry2"] = {"uptype1": {
         ALARM_ID: 1,
-        PROPERTY: 'choochness',
-        DESCRIPTION: 'choochness over 90000',
+        PROPERTY: "choochness",
+        DESCRIPTION: "choochness over 90000",
         ACKNOWLEDGEABLE: False,
         ALARM_TYPE: ALARM_HIGH,
-        DEVICE_ID: 'Jenny',
+        DEVICE_ID: "Jenny",
         NEEDS_ACKNOWLEDGING: False,
-        TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
-        TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
-    data['entry3'] = {'uptype1': {
+        TIME_OF_OCCURENCE: "2017-04-20T10:12:22 UTC",
+        TIME_OF_FIRST_OCCURENCE: "2017-04-20T09:12:22 UTC"}}
+    data["entry3"] = {"uptype1": {
         ALARM_ID: 1,
-        PROPERTY: 'choochness',
-        DESCRIPTION: 'choochness over 90000',
+        PROPERTY: "choochness",
+        DESCRIPTION: "choochness over 90000",
         ACKNOWLEDGEABLE: False,
         ALARM_TYPE: ALARM_NONE,
-        DEVICE_ID: 'Frank',
+        DEVICE_ID: "Frank",
         NEEDS_ACKNOWLEDGING: False,
-        TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
-        TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
+        TIME_OF_OCCURENCE: "2017-04-20T10:12:22 UTC",
+        TIME_OF_FIRST_OCCURENCE: "2017-04-20T09:12:22 UTC"}}
     return data
 
 
@@ -111,7 +111,7 @@ def assert_trait_change(obj, name):
     finally:
         obj.on_trait_change(handler, name, remove=True)
         if len(events) == 0:
-            msg = 'Expected change for trait "{}" was not observed!'
+            msg = "Expected change for trait '{}' was not observed!"
             raise AssertionError(msg.format(name))
 
 
@@ -133,7 +133,7 @@ def flushed_registry():
     registrymod._controller_models = model_registry
 
 
-def get_property_proxy(schema, name, device_id='TestDevice'):
+def get_property_proxy(schema, name, device_id="TestDevice"):
     """Given a device schema and a property name, return a complete
     PropertyProxy object with a `root_proxy` of type `DeviceProxy`.
     """
@@ -148,7 +148,7 @@ def get_class_property_proxy(schema, name):
     PropertyProxy object with a `root_proxy` of type `DeviceClassProxy`.
     """
     binding = build_binding(schema)
-    root = DeviceClassProxy(binding=binding, server_id='Test',
+    root = DeviceClassProxy(binding=binding, server_id="Test",
                             status=ProxyStatus.OFFLINE)
     return PropertyProxy(root_proxy=root, path=name)
 
@@ -175,7 +175,6 @@ def singletons(**objects):
     """Provide a collection of singletons to be used for the duration of a
     `with`-block.
     """
-    # XXX: Yes, we're being naughty here. It's for testing though...
     singletons_dict = singletons_mod.__singletons
     # Remember what got replaced
     replaced = {k: singletons_dict[k] for k in objects if k in singletons_dict}
@@ -198,51 +197,58 @@ def system_hash():
     """
     h = Hash()
 
-    h['server.swerver'] = None
-    h['server.swerver', ...] = {
-        'host': 'BIG_IRON',
-        'visibility': AccessLevel.OBSERVER,
-        'deviceClasses': ['FooClass', 'BarClass'],
-        'type': "server",
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
+    h["server.swerver"] = None
+    h["server.swerver", ...] = {
+        "host": "BIG_IRON",
+        "visibility": AccessLevel.OBSERVER,
+        "deviceClasses": ["FooClass", "BarClass"],
+        "type": "server",
+        "visibilities": [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
     }
-    h['device.divvy'] = None
-    h['device.divvy', ...] = {
-        'host': 'BIG_IRON',
-        'archive': True,
-        'visibility': AccessLevel.OBSERVER,
-        'type': "device",
-        'capabilities': Capabilities.PROVIDES_SCENES,
-        'serverId': 'swerver',
-        'classId': 'FooClass',
-        'status': 'ok'
+    h["device.divvy"] = None
+    h["device.divvy", ...] = {
+        "host": "BIG_IRON",
+        "archive": True,
+        "visibility": AccessLevel.OBSERVER,
+        "type": "device",
+        "capabilities": 5,
+        "serverId": "swerver",
+        "classId": "FooClass",
+        "status": "ok",
+        "interfaces": 0,
     }
-    h['macro.macdonald'] = None
-    h['macro.macdonald', ...] = {
-        'host': 'BIG_IRON',
-        'archive': False,
-        'visibility': AccessLevel.OBSERVER,
-        'serverId': 'swerver',
-        'classId': 'BarClass',
-        'status': 'ok'
-    }
-
-    h['device.orphan'] = None
-    h['device.orphan', ...] = {
-        'visibility': AccessLevel.OBSERVER,
-        'archive': True,
-        'serverId': '__none__',
-        'classId': 'Parentless',
-        'status': 'ok'
+    h["macro.macdonald"] = None
+    h["macro.macdonald", ...] = {
+        "host": "BIG_IRON",
+        "archive": False,
+        "visibility": AccessLevel.OBSERVER,
+        "serverId": "swerver",
+        "classId": "BarClass",
+        "capabilities": 0,
+        "status": "ok",
+        "interfaces": 0,
     }
 
-    h['client.charlie'] = None
-    h['client.charlie', ...] = {
-        'visibility': AccessLevel.OBSERVER,
-        'archive': False,
-        'serverId': '__none__',
-        'classId': 'NoClass',
-        'status': 'ok'
+    h["device.orphan"] = None
+    h["device.orphan", ...] = {
+        "host": "BIG_IRON",
+        "visibility": AccessLevel.OBSERVER,
+        "archive": True,
+        "serverId": "__none__",
+        "classId": "Parentless",
+        "capabilities": 0,
+        "status": "ok",
+        "interfaces": 0,
+    }
+
+    h["client.charlie"] = None
+    h["client.charlie", ...] = {
+        "host": "BIG_IRON",
+        "visibility": AccessLevel.OBSERVER,
+        "archive": False,
+        "serverId": "__none__",
+        "classId": "NoClass",
+        "status": "ok",
     }
 
     return h
@@ -253,37 +259,40 @@ def device_hash():
     """
     h = Hash()
 
-    h['device.XFEL/FOO/1'] = None
-    h['device.XFEL/FOO/1', ...] = {
-        'host': 'BIG_IRON',
-        'archive': False,
-        'visibility': AccessLevel.OBSERVER,
-        'capabilities': Capabilities.PROVIDES_SCENES,
-        'serverId': 'swerver',
-        'classId': 'FooClass',
-        'status': 'ok'
+    h["device.XFEL/FOO/1"] = None
+    h["device.XFEL/FOO/1", ...] = {
+        "host": "BIG_IRON",
+        "archive": False,
+        "visibility": AccessLevel.OBSERVER,
+        "capabilities": 5,
+        "serverId": "swerver",
+        "classId": "FooClass",
+        "status": "ok",
+        "interfaces": 0,
     }
 
-    h['device.XFEL/FOO/2'] = None
-    h['device.XFEL/FOO/2', ...] = {
-        'host': 'BIG_IRON',
-        'archive': True,
-        'visibility': AccessLevel.OBSERVER,
-        'capabilities': Capabilities.PROVIDES_SCENES,
-        'serverId': 'swerver',
-        'classId': 'FooClass',
-        'status': 'ok'
+    h["device.XFEL/FOO/2"] = None
+    h["device.XFEL/FOO/2", ...] = {
+        "host": "BIG_IRON",
+        "archive": True,
+        "visibility": AccessLevel.OBSERVER,
+        "capabilities": 5,
+        "serverId": "swerver",
+        "classId": "FooClass",
+        "status": "ok",
+        "interfaces": 0,
     }
 
-    h['device.XFEL/BAR/1'] = None
-    h['device.XFEL/BAR/1', ...] = {
-        'host': 'BIG_IRON',
-        'archive': True,
-        'visibility': AccessLevel.OBSERVER,
-        'capabilities': Capabilities.PROVIDES_SCENES,
-        'serverId': 'swerver',
-        'classId': 'BarClass',
-        'status': 'error'
+    h["device.XFEL/BAR/1"] = None
+    h["device.XFEL/BAR/1", ...] = {
+        "host": "BIG_IRON",
+        "archive": True,
+        "visibility": AccessLevel.OBSERVER,
+        "capabilities": 5,
+        "serverId": "swerver",
+        "classId": "BarClass",
+        "status": "error",
+        "interfaces": 0,
     }
 
     return h
@@ -294,47 +303,51 @@ def system_hash_server_and_plugins():
     """
     h = Hash()
 
-    h['server.myserver'] = None
-    h['server.myserver', ...] = {
-        'host': 'exflpxc_something',
-        'visibility': AccessLevel.OBSERVER,
-        'deviceClasses': ['FooClass', 'BarClass'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
+    h["server.myserver"] = None
+    h["server.myserver", ...] = {
+        "host": "exflpxc_something",
+        "visibility": AccessLevel.OBSERVER,
+        "deviceClasses": ["FooClass", "BarClass"],
+        "visibilities": [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
     }
-    h['server.samedeviceclasses'] = None
-    h['server.samedeviceclasses', ...] = {
-        'host': 'exflpxc_something',
-        'visibility': AccessLevel.EXPERT,
-        'deviceClasses': ['FooClass', 'BlahClass', 'HooClass_0'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
+    h["server.samedeviceclasses"] = None
+    h["server.samedeviceclasses", ...] = {
+        "host": "exflpxc_something",
+        "visibility": AccessLevel.EXPERT,
+        "deviceClasses": ["FooClass", "BlahClass", "HooClass_0"],
+        "visibilities": [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
                          AccessLevel.OBSERVER]
     }
 
-    h['server.differentaccesslevel'] = None
-    h['server.differentaccesslevel', ...] = {
-        'host': 'exflpxc_something',
-        'visibility': AccessLevel.EXPERT,
-        'deviceClasses': ['FooClass', 'BarClass', 'HooClass_1'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.EXPERT,
+    h["server.differentaccesslevel"] = None
+    h["server.differentaccesslevel", ...] = {
+        "host": "exflpxc_something",
+        "visibility": AccessLevel.EXPERT,
+        "deviceClasses": ["FooClass", "BarClass", "HooClass_1"],
+        "visibilities": [AccessLevel.OBSERVER, AccessLevel.EXPERT,
                          AccessLevel.OBSERVER]
     }
 
-    h['device.orphan'] = None
-    h['device.orphan', ...] = {
-        'host': 'exflpxc_something',
-        'visibility': AccessLevel.OBSERVER,
-        'serverId': 'myserver',
-        'classId': 'FooClass',
-        'status': 'ok'
+    h["device.orphan"] = None
+    h["device.orphan", ...] = {
+        "host": "exflpxc_something",
+        "visibility": AccessLevel.OBSERVER,
+        "serverId": "myserver",
+        "classId": "FooClass",
+        "status": "ok",
+        "interfaces": 0,
+        "capabilities": 0,
     }
 
-    h['device.eddie'] = None
-    h['device.eddie', ...] = {
-        'host': 'exflpxc_something',
-        'visibility': AccessLevel.OBSERVER,
-        'serverId': 'myserver',
-        'classId': 'BarClass',
-        'status': 'ok'
+    h["device.eddie"] = None
+    h["device.eddie", ...] = {
+        "host": "exflpxc_something",
+        "visibility": AccessLevel.OBSERVER,
+        "serverId": "myserver",
+        "classId": "BarClass",
+        "status": "ok",
+        "interfaces": 0,
+        "capabilities": 0,
     }
 
     return h
