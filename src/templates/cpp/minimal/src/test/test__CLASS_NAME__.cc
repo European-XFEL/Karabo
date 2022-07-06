@@ -2,6 +2,7 @@
  * Author: __EMAIL__
  *
  * Created on __DATE__
+ * from template '__TEMPLATE_ID__' of Karabo __KARABO_VERSION__
  *
  * Copyright (c) European XFEL GmbH Hamburg. All rights reserved.
  */
