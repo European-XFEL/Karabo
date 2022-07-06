@@ -92,7 +92,6 @@ namespace karabo {
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
 
             mutable boost::mutex m_channelMutex;
-            mutable boost::mutex m_monitoredDevicesMutex;
             mutable boost::mutex m_networkMutex;
             mutable boost::mutex m_forwardLogsMutex;
             mutable boost::mutex m_pendingAttributesMutex;
@@ -106,7 +105,6 @@ namespace karabo {
             boost::asio::deadline_timer m_checkConnectionTimer;
 
             karabo::net::Broker::Pointer m_loggerConsumer;
-            std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
             // Next map<string, ...> not unordered before use of C++14 because we erase from it while looping over it.
             std::map<std::string, std::map<WeakChannelPointer, bool>> m_readyNetworkConnections;
