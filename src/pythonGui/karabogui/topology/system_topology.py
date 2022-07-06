@@ -134,8 +134,8 @@ class SystemTopology(HasStrictTraits):
                 # We are dealing with an online device. Hence we assign
                 # the class id and server id from the system hash and
                 # if desired, request a schema.
-                binding.class_id = attrs.get('classId', '')
-                proxy.server_id = attrs.get('serverId', '')
+                binding.class_id = attrs['classId']
+                proxy.server_id = attrs['serverId']
                 if request:
                     proxy.refresh_schema()
                 elif proxy.status is ProxyStatus.OFFLINE:
@@ -436,7 +436,7 @@ class SystemTopology(HasStrictTraits):
                 proxy.status = ProxyStatus.OFFLINE
             if proxy.device_id in new_topology_nodes:
                 proxy.topology_node = new_topology_nodes[proxy.device_id]
-                proxy.server_id = attrs.get('serverId', '')
+                proxy.server_id = attrs['serverId']
 
         self._request_server_classes(server_hash)
 

@@ -3,7 +3,6 @@ from unittest import main, mock
 from qtpy.QtCore import QModelIndex, QPoint, QSize, Qt, Slot
 from qtpy.QtWidgets import QDialog
 
-from karabo.common.api import Capabilities
 from karabo.native import AccessLevel, Hash
 from karabogui.events import KaraboEvent
 from karabogui.navigation.system_model import SystemTreeModel
@@ -92,7 +91,8 @@ class TestCase(GuiTestCase):
                  "archive": True,
                  "type": "device",
                  "visibility": AccessLevel.OBSERVER,
-                 "capabilities": Capabilities.PROVIDES_SCENES,
+                 "capabilities": 5,
+                 "interfaces": 0,
                  "serverId": "swerver",
                  "classId": "FooClass",
                  "status": "ok"})
@@ -238,7 +238,8 @@ class TestCase(GuiTestCase):
             "visibility": AccessLevel.OBSERVER,
             "serverId": "swerver",
             "classId": "FooClass",
-            "status": "ok"
+            "status": "ok",
+            "capabilities": 0,
         }
         self.system_model.tree.update(h)
         # __none__ server is not accounted anymore ...

@@ -8,7 +8,7 @@ import json
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
 import karabogui.access as krb_access
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabogui import icons
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
@@ -117,7 +117,7 @@ class DeviceTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 1:
                 return icons.folderType
             elif hierarchyLevel == 2:
-                if node.status is ProxyStatus.ERROR:
+                if node.status is DeviceStatus.ERROR:
                     return icons.deviceInstanceError
                 else:
                     return icons.deviceInstance
