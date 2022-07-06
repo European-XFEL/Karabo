@@ -279,23 +279,21 @@ class SystemTree(HasStrictTraits):
                     continue
                 server_node.attributes = attrs
 
-        for device_type in ('device', 'macro'):
-            if device_type in system_hash:
-                for device_id, _, attrs in system_hash[device_type].iterall():
-                    if len(attrs) == 0:
-                        continue
+        if 'device' in system_hash:
+            for device_id, _, attrs in system_hash['device'].iterall():
+                if len(attrs) == 0:
+                    continue
 
-                    device_node = self._device_nodes.get(device_id, None)
-                    if device_node is None:
-                        continue
+                device_node = self._device_nodes.get(device_id, None)
+                if device_node is None:
+                    continue
 
-                    device_status.add(device_id)
-                    status = DeviceStatus(attrs.get('status', 'ok'))
-                    capabilities = attrs.get('capabilities', 0)
-
-                    device_node.capabilities = capabilities
-                    device_node.status = status
-                    device_node.attributes = attrs
+                device_status.add(device_id)
+                status = DeviceStatus(attrs['status'])
+                capabilities = attrs['capabilities']
+                device_node.capabilities = capabilities
+                device_node.status = status
+                device_node.attributes = attrs
 
         if device_status:
             self.status_update = device_status
@@ -418,9 +416,8 @@ class SystemTree(HasStrictTraits):
             if len(attrs) == 0:
                 continue
 
-            host = attrs.get('host', 'UNKNOWN')
-            visibility = AccessLevel(attrs.get('visibility',
-                                               AccessLevel.OBSERVER))
+            host = attrs['host']
+            visibility = AccessLevel(attrs['visibility'])
 
             # Create node for host
             host_node = self.root.child(host)
@@ -456,13 +453,12 @@ class SystemTree(HasStrictTraits):
             if len(attrs) == 0:
                 continue
 
-            host = attrs.get('host', 'UNKNOWN')
-            visibility = AccessLevel(attrs.get('visibility',
-                                               AccessLevel.OBSERVER))
-            capabilities = attrs.get('capabilities', 0)
-            server_id = attrs.get('serverId', 'unknown-server')
-            class_id = attrs.get('classId', 'unknown-class')
-            status = DeviceStatus(attrs.get('status', 'ok'))
+            host = attrs['host']
+            visibility = AccessLevel(attrs['visibility'])
+            capabilities = attrs['capabilities']
+            server_id = attrs['serverId']
+            class_id = attrs['classId']
+            status = DeviceStatus(attrs['status'])
 
             # A device must have a server added before with host!
             host_node = self.root.child(host)

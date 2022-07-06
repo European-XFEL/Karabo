@@ -2,7 +2,6 @@ from unittest import main, mock
 
 from qtpy.QtCore import QModelIndex, QPoint, QSize, Qt, Slot
 
-from karabo.common.api import Capabilities
 from karabo.native import AccessLevel, Hash
 from karabogui.events import KaraboEvent
 from karabogui.navigation.device_model import DeviceTreeModel
@@ -94,9 +93,10 @@ class TestCase(GuiTestCase):
                 {"host": "BIG_IRON",
                  "archive": True,
                  "visibility": AccessLevel.OBSERVER,
-                 "capabilities": Capabilities.PROVIDES_SCENES,
+                 "capabilities": 5,
                  "serverId": "swerver",
                  "classId": "FooClass",
+                 "interfaces": 0,
                  "status": "ok"})
 
         conf_widget = "karabogui.navigation.device_view." \
@@ -198,7 +198,9 @@ class TestCase(GuiTestCase):
             "visibility": AccessLevel.OBSERVER,
             "serverId": "swerver",
             "classId": "BarClass",
-            "status": "online"
+            "status": "ok",
+            "interfaces": 0,
+            "capabilities": 0,
         }
         self.device_model.tree.update(h)
 
