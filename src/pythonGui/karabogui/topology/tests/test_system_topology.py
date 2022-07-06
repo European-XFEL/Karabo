@@ -186,7 +186,8 @@ class TestSystemTopology(GuiTestCase):
                 "host": "BIG_IRON",
                 "serverId": "swerver",
                 "classId": "FooClass",
-                "status": "error"
+                "status": "error",
+                "capabilities": 0,
             }
 
             dev = topology.get_device("divvy")
@@ -260,7 +261,10 @@ class TestSystemTopology(GuiTestCase):
                 "host": "BIG_IRON",
                 "serverId": "swerver",
                 "classId": "FooClass",
-                "status": "ok"
+                "status": "ok",
+                "visibility": 4,
+                "capabilities": 0,
+                "interfaces": 0,
             }
 
             changes = Hash("new", h, "update", Hash(), "gone", Hash())
