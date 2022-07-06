@@ -1202,25 +1202,29 @@ namespace karabo {
                 const string& deviceId = info.get<string>("deviceId");
 
                 {
+                    bool isKnown = false; // Assume it is yet unknown - if any channel knows it, change this flag
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     karabo::net::Channel::Pointer chan = channel.lock();
-                    ChannelIterator it = m_channels.find(chan);
-                    if (it != m_channels.end()) {
-                        it->second.visibleInstances.insert(deviceId);
+                    for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                        ChannelData& channelData = it->second;
+                        if (it->first == chan) {
+                            const bool inserted = channelData.visibleInstances.insert(deviceId).second;
+                            if (!inserted) {
+                                KARABO_LOG_FRAMEWORK_INFO << " A client registers a second time to monitor device '"
+                                                          << deviceId << "'";
+                                isKnown = true;
+                            }
+                        } else {
+                            if (channelData.visibleInstances.find(deviceId) != channelData.visibleInstances.end()) {
+                                isKnown = true;
+                            }
+                        }
                     }
-                }
-
-                {
-                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    // Increase count of device in visible devices map
-                    const int newCount = ++m_monitoredDevices[deviceId];
-                    if (newCount == 1) {
-                        // Despite mutexes inside registerDeviceForMonitoring, call with m_monitoredDevicesMutex
-                        // locked to ensure that registration is in sync with m_monitoredDevices.
+                    if (!isKnown) {
                         remote().registerDeviceForMonitoring(deviceId);
                     }
-
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " (" << newCount << ")";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " ("
+                                               << (isKnown ? "known" : "new") << ")";
                 }
 
                 // Send back fresh information about device
@@ -1237,26 +1241,29 @@ namespace karabo {
             try {
                 const string& deviceId = info.get<string>("deviceId");
 
-                {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
-                    karabo::net::Channel::Pointer chan = channel.lock();
-                    ChannelIterator it = m_channels.find(chan);
-                    if (it != m_channels.end()) it->second.visibleInstances.erase(deviceId);
-                }
-
-                {
-                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    const int newCount = --m_monitoredDevices[deviceId]; // prefix decrement!
-                    if (newCount <= 0) {
-                        // Erase instance from the monitored list
-                        m_monitoredDevices.erase(deviceId);
-                        // Despite mutexes inside unregisterDeviceFromMonitoring, call with m_monitoredDevicesMutex
-                        // locked to ensure that registration is in sync with m_monitoredDevices.
-                        remote().unregisterDeviceFromMonitoring(deviceId);
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                karabo::net::Channel::Pointer chan = channel.lock();
+                size_t newCount = 0;
+                for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    ChannelData& channelData = it->second;
+                    if (it->first == chan) {
+                        const size_t numErased = channelData.visibleInstances.erase(deviceId);
+                        if (numErased < 1u) {
+                            KARABO_LOG_FRAMEWORK_INFO << " A client is not monitoring device '" << deviceId
+                                                      << "', but wants to stop monitoring it.";
+                        }
+                    } else {
+                        if (channelData.visibleInstances.find(deviceId) != channelData.visibleInstances.end()) {
+                            ++newCount;
+                        }
                     }
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << newCount << ")";
                 }
 
+                KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << newCount
+                                           << " keep monitoring)";
+                if (newCount == 0) { // no client has interest anymore
+                    remote().unregisterDeviceFromMonitoring(deviceId);
+                }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onStopMonitoringDevice(): " << e.what();
             }
@@ -1718,15 +1725,14 @@ namespace karabo {
                     recalculateTimingOutDevices(topologyEntry, timingOutClasses, false);
                     const Hash& deviceHash = topologyEntry.get<Hash>(type);
                     const std::string& instanceId = deviceHash.begin()->getKey();
-                    // Check whether someone already noted interest in it
                     {
-                        boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                        if (m_monitoredDevices.find(instanceId) != m_monitoredDevices.end()) {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId
-                                                       << " which is going to be visible in a GUI client";
-                            // Register with m_monitoredDevicesMutex locked to ensure that registration is in sync with
-                            // m_monitoredDevices
-                            remote().registerDeviceForMonitoring(instanceId);
+                        boost::mutex::scoped_lock lock(m_channelMutex);
+                        for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                            if (it->second.visibleInstances.find(instanceId) != it->second.visibleInstances.end()) {
+                                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler registers " << instanceId;
+                                remote().registerDeviceForMonitoring(instanceId);
+                                break; // no need to check whether any further channel is interested
+                            }
                         }
                     }
 
@@ -1765,12 +1771,18 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
 
-                    // Removes the instance from channel
+                    size_t numClientsUnregister = 0ul;
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                        // it->first->writeAsync(h);
-                        it->second.visibleInstances.erase(instanceId);
                         it->second.requestedDeviceSchemas.erase(instanceId);
-                        it->second.requestedClassSchemas.erase(instanceId);
+                        it->second.requestedClassSchemas.erase(instanceId); // instanceId might be a server
+
+                        // Count clients that had interest in instanceId and keep their interests or not
+                        if (it->second.visibleInstances.erase(instanceId) > 0) ++numClientsUnregister;
+                    }
+                    if (numClientsUnregister > 0ul) {
+                        KARABO_LOG_FRAMEWORK_INFO << "Unregister from " << instanceId << " since gone, "
+                                                  << numClientsUnregister << " clients monitored it";
+                        remote().unregisterDeviceFromMonitoring(instanceId);
                     }
                 }
 
@@ -1778,15 +1790,6 @@ namespace karabo {
                     // Erase instance from the attribute update map (maybe)
                     boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
                     m_pendingAttributeUpdates.erase(instanceId);
-                }
-
-                {
-                    // Erase instance from the monitored list
-                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    std::map<std::string, int>::iterator jt = m_monitoredDevices.find(instanceId);
-                    if (jt != m_monitoredDevices.end()) {
-                        m_monitoredDevices.erase(jt);
-                    }
                 }
 
                 // Older versions cleaned m_networkConnections from input channels of the dead 'instanceId' here.
@@ -1937,20 +1940,38 @@ namespace karabo {
 
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
-            KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \""
-                            << errorCode.message() << "\",  Close connection to a client";
+            KARABO_LOG_FRAMEWORK_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \""
+                                      << errorCode.message() << "\",  Close connection to a client";
 
             try {
                 karabo::net::Channel::Pointer chan = channel.lock();
-                std::set<std::string> deviceIds; // empty set
                 {
+                    std::set<std::string> devIdsToUnregister;
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     ChannelIterator it = m_channels.find(chan);
                     if (it != m_channels.end()) {
                         it->first->close(); // This closes socket and unregisters channel from connection
-                        deviceIds.swap(it->second.visibleInstances); // copy to the empty set
-                        // Remove channel as such
-                        m_channels.erase(it);
+                        devIdsToUnregister.swap(it->second.visibleInstances); // copy to the empty set
+                        m_channels.erase(it);                                 // Remove channel as such
+                        // Now iterate on all remaining clients to see which devices monitored by the removed channel
+                        // are also monitored by any of them.
+                        for (it = m_channels.begin(); it != m_channels.end(); ++it) {
+                            auto& visibles = it->second.visibleInstances;
+                            for (auto itId = devIdsToUnregister.begin(); itId != devIdsToUnregister.end();) {
+                                if (visibles.find(*itId) != visibles.end()) {
+                                    // A deviceId that also another client has interest in: do not unregister
+                                    itId = devIdsToUnregister.erase(itId);
+                                } else {
+                                    ++itId;
+                                }
+                            }
+                        }
+                        // Any device that no-one is still monitoring has to get unregistered
+                        KARABO_LOG_FRAMEWORK_INFO << "Unregister from '" << toString(devIdsToUnregister)
+                                                  << "' since only client monitoring disconnected";
+                        for (const std::string& devId : devIdsToUnregister) {
+                            remote().unregisterDeviceFromMonitoring(devId);
+                        }
                     } else {
                         KARABO_LOG_FRAMEWORK_WARN << "Trying to disconnect non-existing client channel at "
                                                   << chan.get() << " (address " << getChannelAddress(chan) << ").";
@@ -1959,22 +1980,6 @@ namespace karabo {
 
                     // Update the number of clients connected
                     set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
-                }
-
-                // Now check all devices that this channel had interest in and decrement counter.
-                // Unregister monitor if no-one interested anymore.
-                {
-                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); ++jt) {
-                        const std::string& deviceId = *jt;
-                        const int numLeft = --m_monitoredDevices[deviceId]; // prefix---: decrement and then assign
-                        KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << numLeft;
-                        if (numLeft <= 0) {
-                            //  erase the monitor entry to avoid unnecessary monitoring
-                            m_monitoredDevices.erase(deviceId);
-                            remote().unregisterDeviceFromMonitoring(deviceId);
-                        }
-                    }
                 }
 
                 {
@@ -2117,17 +2122,20 @@ namespace karabo {
             if (info.empty() || info.has("devices")) {
                 // monitored devices
                 Hash& monitoredDevices = data.bindReference<Hash>("monitoredDeviceConfigs");
-                {
-                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-
-                    for (auto it = m_monitoredDevices.begin(); it != m_monitoredDevices.end(); ++it) {
-                        Hash config = remote().getConfigurationNoWait(it->first);
-                        if (config.empty()) {
-                            // It's important to know if `getConfigurationNoWait` returned an empty config!
-                            monitoredDevices.set(it->first, Hash("configMissing", true));
-                        } else {
-                            monitoredDevices.set(it->first, config);
-                        }
+                // Create a superset of all devices seen by any of the clients
+                std::set<std::string> visibleDevices; // ordered set => monitoredDevices will have ids sorted
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    visibleDevices.insert(it->second.visibleInstances.begin(), it->second.visibleInstances.end());
+                }
+                // Report configs for these devices
+                for (const std::string& devId : visibleDevices) {
+                    Hash config = remote().getConfigurationNoWait(devId);
+                    if (config.empty()) {
+                        // It's important to know if `getConfigurationNoWait` returned an empty config!
+                        monitoredDevices.set(devId, Hash("configMissing", true));
+                    } else {
+                        monitoredDevices.set(devId, std::move(config));
                     }
                 }
             }
