@@ -65,7 +65,7 @@ set(GEN_CODE_COVERAGE OFF CACHE BOOL "Generate test code coverage report?")
 
 if (GEN_CODE_COVERAGE)
     if(NOT DEFINED ENV{LCOV_PATH_HINT})
-        set(ENV{LCOV_PATH_HINT} ${CMAKE_SOURCE_DIR}/../ci/coverage/lcov)
+        set(ENV{LCOV_PATH_HINT} ${CMAKE_CURRENT_SOURCE_DIR}/../ci/coverage/lcov)
     endif()
     include("cmake/code-coverage.cmake")
     append_coverage_compiler_flags()
@@ -136,7 +136,7 @@ ${KARABO_PATH}/integrationTests\
 ${KARABO_PATH}/cppLongTests\
 ")
 configure_file(
-    "${CMAKE_SOURCE_DIR}/karabo/activateKarabo.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/karabo/activateKarabo.in"
     "${CMAKE_BINARY_DIR}/activateKarabo.sh"
     @ONLY
 )
@@ -148,16 +148,16 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
         setup_target_for_coverage_lcov(
             NAME ${TEST_COVERAGE_TARGET}
             EXECUTABLE ctest -VV
-            BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
+            BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             LCOV_ARGS --no-external --quiet
             EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/cppunit/*" "*/nlohmann/*"
                     "*/krb_log4cpp/*" "*/tests/*" "*/include/python*"
-                    "*/include/numpy/*" "${CMAKE_SOURCE_DIR}/tools/*"
-                    "${CMAKE_SOURCE_DIR}/deviceServer/*"
-                    "${CMAKE_SOURCE_DIR}/brokerMessageLogger/*"
-                    "${CMAKE_SOURCE_DIR}/karathon/*"
-                    "${CMAKE_SOURCE_DIR}/integrationTests/*"
-                    "${CMAKE_SOURCE_DIR}/cppLongTests/*"
+                    "*/include/numpy/*" "${CMAKE_CURRENT_SOURCE_DIR}/tools/*"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/deviceServer/*"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/brokerMessageLogger/*"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/karathon/*"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/integrationTests/*"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/cppLongTests/*"
                     "*/karabo-extern-deps/*"
         )
         string(TIMESTAMP ZIP_FILE_TIMESTAMP "%Y-%m-%dT%H-%M-%S")
