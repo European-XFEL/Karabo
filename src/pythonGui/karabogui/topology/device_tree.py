@@ -11,7 +11,7 @@ from traits.api import (
     WeakRef)
 
 import karabogui.access as krb_access
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
@@ -28,7 +28,7 @@ class DeviceTreeNode(HasStrictTraits):
     node_id = String
     server_id = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*ProxyStatus)
+    status = Enum(*DeviceStatus)
     capabilities = Int
     interfaces = Int
     attributes = Dict
@@ -136,7 +136,7 @@ class DeviceSystemTree(HasStrictTraits):
             if device_node is None:
                 continue
 
-            status = ProxyStatus(attrs.get('status', 'ok'))
+            status = DeviceStatus(attrs['status'])
             device_node.status = status
             device_node.attributes = attrs
             device_status.add(device_id)
@@ -235,7 +235,7 @@ class DeviceSystemTree(HasStrictTraits):
             return
 
         for karabo_name, _, attrs in system_hash[device_type].iterall():
-            if attrs.get('classId', '') in BLACKLIST_CLASSES:
+            if attrs['classId'] in BLACKLIST_CLASSES:
                 continue
 
             # If we don't follow karabo naming convention, we are out!
@@ -244,12 +244,12 @@ class DeviceSystemTree(HasStrictTraits):
                 continue
 
             domain, dev_type, member = device
-            visibility = AccessLevel(attrs.get('visibility',
-                                               AccessLevel.OBSERVER))
-            capabilities = attrs.get('capabilities', 0)
+            visibility = AccessLevel(attrs['visibility'])
+            capabilities = attrs['capabilities']
+            server_id = attrs['serverId']
+            status = DeviceStatus(attrs['status'])
+            # Interfaces are optional ...
             interfaces = attrs.get('interfaces', 0)
-            server_id = attrs.get('serverId', 'unknown-server')
-            status = ProxyStatus(attrs.get('status', 'ok'))
 
             domain_node = self.root.child(domain)
             if domain_node is None:
