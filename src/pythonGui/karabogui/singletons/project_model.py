@@ -303,7 +303,7 @@ class ProjectViewItemModel(QAbstractItemModel):
                 return get_alarm_icon(ui_data.alarm_type)
         elif column == STATUS_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
-                return get_instance_info_icon(ui_data.status)
+                return get_instance_info_icon(ui_data.instance_status)
 
     def setData(self, index, value, role):
         """Reimplemented function of QAbstractItemModel.

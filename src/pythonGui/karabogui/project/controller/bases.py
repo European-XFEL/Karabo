@@ -11,7 +11,7 @@ from traits.api import (
     ABCHasStrictTraits, Bool, Callable, Dict, Enum, HasStrictTraits, Instance,
     Int, List, Property, String, WeakRef, on_trait_change)
 
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus, ProxyStatus
 from karabo.common.project.api import BaseProjectObjectModel
 
 
@@ -26,6 +26,7 @@ class ProjectControllerUiData(HasStrictTraits):
     check_state = Int(Qt.Checked)
     alarm_type = String
     status = Enum(*ProxyStatus)
+    instance_status = Enum(*DeviceStatus)
 
 
 class BaseProjectController(ABCHasStrictTraits):
@@ -133,8 +134,8 @@ class BaseProjectController(ABCHasStrictTraits):
                 self, roles=[Qt.DecorationRole, Qt.FontRole, Qt.ForegroundRole,
                              Qt.CheckStateRole])
 
-    @on_trait_change('ui_data.status')
-    def _update_status(self):
+    @on_trait_change('ui_data.instance_status')
+    def _update_instance_info(self):
         if self._qt_model is not None:
             self._qt_model.controller_data_update(
                 self, column=1, roles=[Qt.DecorationRole])

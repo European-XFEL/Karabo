@@ -8,7 +8,7 @@ from qtpy.QtCore import (
     Slot)
 
 import karabogui.access as krb_access
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
 
@@ -78,11 +78,11 @@ class TopologyFilterModel(QSortFilterProxyModel):
         if text == "No Status Filtering":
             self._filter_status = None
         elif text == "Health Status [OK]":
-            self._filter_status = ProxyStatus.OK
+            self._filter_status = DeviceStatus.OK
         elif text == "Health Status [ERROR]":
-            self._filter_status = ProxyStatus.ERROR
+            self._filter_status = DeviceStatus.ERROR
         elif text == "Health Status [UNKNOWN]":
-            self._filter_status = ProxyStatus.UNKNOWN
+            self._filter_status = DeviceStatus.UNKNOWN
         else:
             self._filter_status = None
 

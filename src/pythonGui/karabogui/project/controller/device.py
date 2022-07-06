@@ -196,7 +196,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         ui_data = ProjectControllerUiData()
         self._update_icon(ui_data)
         self._update_alarm_type(ui_data)
-
+        self._update_instance_status(ui_data)
         return ui_data
 
     def single_click(self, project_controller, parent=None):
@@ -273,6 +273,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         self._update_icon(self.ui_data)
         self._update_alarm_type(self.ui_data)
+        self._update_instance_status(self.ui_data)
 
     @on_trait_change("model:active_config_ref")
     def _active_config_ref_change(self):
@@ -303,6 +304,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         self._update_icon(self.ui_data)
         # Show the device's configuration, iff it was already showing
         self._update_configurator()
+
+    @on_trait_change("project_device:instance_status")
+    def instance_status_change(self, status):
+        self._update_instance_status(self.ui_data)
 
     @on_trait_change("project_device:device_node.alarm_info.alarm_dict_items")
     def _alarm_info_change(self):
@@ -369,6 +374,11 @@ class DeviceInstanceController(BaseProjectGroupController):
         else:
             alarm_type = device_node.alarm_info.alarm_type
         ui_data.alarm_type = alarm_type
+
+    def _update_instance_status(self, ui_data):
+        if not self.model.initialized:
+            return
+        ui_data.instance_status = self.project_device.instance_status
 
     def _update_configurator(self):
         broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
