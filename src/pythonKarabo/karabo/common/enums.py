@@ -88,3 +88,10 @@ ONLINE_CONFIG_STATUSES = (
     ProxyStatus.ERROR,
     ProxyStatus.UNKNOWN,
 )
+
+
+class DeviceStatus(Enum):
+    OK = "ok"
+    UNKNOWN = "unknown"
+    ERROR = "error"
+    NONE = "none"
