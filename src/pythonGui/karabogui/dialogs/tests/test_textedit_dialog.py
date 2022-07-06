@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QDialog
 from karabo.common.scenemodel.api import (
     LabelModel, SceneLinkModel, WebLinkModel)
 from karabogui.dialogs.textdialog import TextDialog
+from karabogui.fonts import get_alias_from_font
 from karabogui.testing import GuiTestCase
 
 
@@ -90,6 +91,59 @@ class TestTextDialog(GuiTestCase):
             self.assertEqual(self.dialog.cbAlignment.currentIndex(), 2)
             self.assertEqual(self.dialog.cbAlignment.currentText(),
                              "AlignHCenter")
+
+    def test_set_text_font_button(self):
+        """
+        The Font buttons text and font family is updated, on changing the font
+        selection. Font size remains same.
+        """
+        model = LabelModel()
+        dialog = TextDialog(model)
+
+        font = QFont()
+        font.setFamily("Monospaced")
+        font.setPointSize(23)
+        dialog.text_font = font
+        dialog.set_text_font_button()
+        button_font = dialog.pbFont.font()
+
+        assert button_font.family() == "Monospaced"
+        assert button_font.pointSize() == 10
+        text = get_alias_from_font("Monospaced") + ", 23pt"
+        assert dialog.pbFont.text() == text
+
+        font.setFamily("Sans Serif")
+        font.setPointSize(30)
+        dialog.text_font = font
+        dialog.set_text_font_button()
+
+        button_font = dialog.pbFont.font()
+        assert button_font.family() == "Sans Serif"
+        assert button_font.pointSize() == 10
+        text = get_alias_from_font("Sans Serif") + ", 30pt"
+        assert dialog.pbFont.text() == text
+
+        font.setStrikeOut(True)
+        font.setBold(True)
+        font.setItalic(True)
+        dialog.text_font = font
+        dialog.set_text_font_button()
+
+        button_font = dialog.pbFont.font()
+        assert button_font.strikeOut()
+        assert button_font.bold()
+        assert button_font.italic()
+
+        font.setStrikeOut(False)
+        font.setBold(False)
+        font.setItalic(False)
+        dialog.text_font = font
+        dialog.set_text_font_button()
+
+        button_font = dialog.pbFont.font()
+        assert not button_font.strikeOut()
+        assert not button_font.bold()
+        assert not button_font.italic()
 
 
 if __name__ == "__main__":
