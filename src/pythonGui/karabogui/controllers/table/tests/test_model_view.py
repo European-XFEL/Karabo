@@ -466,7 +466,12 @@ class TestTableModelView(GuiTestCase):
 
             device_id = proxy.root_proxy.device_id
             device_hash = Hash(device_id, "")
-            device_hash[device_id, ...] = {"status": "ok"}
+            device_hash[device_id, ...] = {"status": "ok",
+                                           "capabilities": 0,
+                                           "host": "BIG_IRON",
+                                           "visibility": 4,
+                                           "serverId": "swerver",
+                                           "classId": "FooBar"}
             topology.initialize(Hash("device", device_hash))
             # Click again, device is online
             delegate.click_action(index)
