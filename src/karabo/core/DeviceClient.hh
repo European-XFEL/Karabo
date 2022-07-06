@@ -67,7 +67,7 @@ namespace karabo {
                   ClassSchemaHandler;
             typedef boost::function<void(const karabo::util::Hash& /* devicesChanges */)> DevicesChangedHandler;
 
-            static const int CONNECTION_KEEP_ALIVE = 15;
+            static const int CONNECTION_KEEP_ALIVE = 15; // keep in sync with GuiSever_Test.cc!
 
             boost::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
 
