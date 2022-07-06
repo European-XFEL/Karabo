@@ -215,7 +215,7 @@ def system_hash():
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
         'classId': 'FooClass',
-        'status': 'online'
+        'status': 'ok'
     }
     h['macro.macdonald'] = None
     h['macro.macdonald', ...] = {
@@ -224,7 +224,7 @@ def system_hash():
         'visibility': AccessLevel.OBSERVER,
         'serverId': 'swerver',
         'classId': 'BarClass',
-        'status': 'incompatible'
+        'status': 'ok'
     }
 
     h['device.orphan'] = None
@@ -233,7 +233,7 @@ def system_hash():
         'archive': True,
         'serverId': '__none__',
         'classId': 'Parentless',
-        'status': 'noserver'
+        'status': 'ok'
     }
 
     h['client.charlie'] = None
@@ -325,7 +325,7 @@ def system_hash_server_and_plugins():
         'visibility': AccessLevel.OBSERVER,
         'serverId': 'myserver',
         'classId': 'FooClass',
-        'status': 'online'
+        'status': 'ok'
     }
 
     h['device.eddie'] = None
@@ -334,7 +334,7 @@ def system_hash_server_and_plugins():
         'visibility': AccessLevel.OBSERVER,
         'serverId': 'myserver',
         'classId': 'BarClass',
-        'status': 'online'
+        'status': 'ok'
     }
 
     return h
