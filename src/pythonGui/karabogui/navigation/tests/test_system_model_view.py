@@ -95,7 +95,7 @@ class TestCase(GuiTestCase):
                  "capabilities": Capabilities.PROVIDES_SCENES,
                  "serverId": "swerver",
                  "classId": "FooClass",
-                 "status": "online"})
+                 "status": "ok"})
 
         conf_widget = "karabogui.navigation.system_view." \
                       "ConfigurationFromPastDialog"
@@ -238,7 +238,7 @@ class TestCase(GuiTestCase):
             "visibility": AccessLevel.OBSERVER,
             "serverId": "swerver",
             "classId": "FooClass",
-            "status": "online"
+            "status": "ok"
         }
         self.system_model.tree.update(h)
         # __none__ server is not accounted anymore ...

@@ -5,7 +5,7 @@
 #############################################################################
 from enum import Enum
 
-from karabo.common.api import ProxyStatus, State
+from karabo.common.api import DeviceStatus, ProxyStatus, State
 
 from . import icons
 
@@ -73,27 +73,17 @@ STATE_COLORS = {
 
 
 def get_instance_info_icon(status):
-    """Return an instance info icon which reflects the given `ProxyStatus`
+    """Return an instance info icon which reflects the given `DeviceStatus`
     """
-    if not isinstance(status, ProxyStatus):
-        status = ProxyStatus(status)
+    if not isinstance(status, DeviceStatus):
+        status = DeviceStatus(status)
 
-    unknown_statuses = (ProxyStatus.OFFLINE,
-                        ProxyStatus.REQUESTED,
-                        ProxyStatus.DEAD,
-                        ProxyStatus.NOSERVER,
-                        ProxyStatus.NOPLUGIN,
-                        ProxyStatus.INCOMPATIBLE,
-                        ProxyStatus.MISSING)
-
-    if status is ProxyStatus.OK:
+    if status is DeviceStatus.OK:
         return icons.statusOk
-    elif status is ProxyStatus.ERROR:
+    elif status is DeviceStatus.ERROR:
         return icons.statusError
-    elif status is ProxyStatus.UNKNOWN:
+    elif status is DeviceStatus.UNKNOWN:
         return icons.statusUnknown
-    elif status not in unknown_statuses:
-        return icons.statusOk
     # No icon!
     return None
 
