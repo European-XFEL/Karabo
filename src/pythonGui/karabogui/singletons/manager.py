@@ -10,7 +10,7 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 from qtpy.QtCore import QObject, Slot
 from qtpy.QtWidgets import QMessageBox
 
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus, ProxyStatus
 from karabo.native import AccessMode, Assignment, Hash, Timestamp
 from karabogui import messagebox
 from karabogui.alarms.api import extract_alarms_data
@@ -753,7 +753,7 @@ def _extract_topology_devices(topo_hash):
                 continue
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
-            devices.append((device_id, class_id, ProxyStatus(status)))
+            devices.append((device_id, class_id, DeviceStatus(status)))
 
     if 'macro' in topo_hash:
         for device_id, _, attrs in topo_hash['macro'].iterall():
@@ -764,12 +764,11 @@ def _extract_topology_devices(topo_hash):
                 get_logger().error(msg)
                 continue
             class_id = attrs.get('classId', 'unknown-class')
-            devices.append((device_id, class_id, ProxyStatus.OK))
+            devices.append((device_id, class_id, ProxyStatus.ONLINE))
 
     if 'server' in topo_hash:
         for server_id, _, attrs in topo_hash['server'].iterall():
             host = attrs.get('host', 'UNKNOWN')
-            status = attrs.get('status', 'ok')
-            servers.append((server_id, host, ProxyStatus(status)))
+            servers.append((server_id, host, ProxyStatus.ONLINE))
 
     return devices, servers

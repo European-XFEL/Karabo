@@ -2,7 +2,7 @@ from unittest.mock import ANY, Mock, call, patch
 
 from qtpy.QtCore import QSize
 
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus, ProxyStatus
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import (
@@ -159,8 +159,8 @@ class TestManager(GuiTestCase):
 
                 topo_update = {
                     'devices': [('orphan', 'Parentless',
-                                 ProxyStatus.NOSERVER)],
-                    'servers': [('swerver', 'BIG_IRON', ProxyStatus.OK)]
+                                 DeviceStatus.OK)],
+                    'servers': [('swerver', 'BIG_IRON', ProxyStatus.ONLINE)]
                 }
                 calls = broadcast_event.mock_calls
                 assert len(calls) == 2
