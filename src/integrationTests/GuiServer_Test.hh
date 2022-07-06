@@ -1,11 +1,11 @@
 /*
- * File:   GuiVersion_Test.hh
+ * File:   GuiServer_Test.hh
  * Author: alessandro.silenzi@xfel.eu
 
  */
 
-#ifndef GuiVersion_Test_HH
-#define GuiVersion_Test_HH
+#ifndef GUISERVER_TEST_HH
+#define GUISERVER_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -17,16 +17,16 @@
 #include "karabo/karabo.hpp"
 
 
-class GuiVersion_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(GuiVersion_Test);
+class GuiServer_Test : public CPPUNIT_NS::TestFixture {
+    CPPUNIT_TEST_SUITE(GuiServer_Test);
 
     CPPUNIT_TEST(appTestRunner);
 
     CPPUNIT_TEST_SUITE_END();
 
    public:
-    GuiVersion_Test();
-    virtual ~GuiVersion_Test();
+    GuiServer_Test();
+    virtual ~GuiServer_Test();
     void setUp();
     void tearDown();
 
@@ -65,4 +65,4 @@ class GuiVersion_Test : public CPPUNIT_NS::TestFixture {
     static const karabo::util::Hash k_defaultLoginData;
 };
 
-#endif /* GuiVersion_Test_HH */
+#endif /* GUISERVER_TEST_HH */
