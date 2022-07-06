@@ -5,11 +5,12 @@ from qtpy.QtWidgets import QColorDialog, QDialog
 
 from karabo.common.scenemodel.api import LabelModel
 from karabogui.dialogs.font_dialog import FontDialog
-from karabogui.fonts import (
-    get_alias_from_font, get_font_size_from_dpi, get_qfont)
+from karabogui.fonts import get_alias_from_font, get_qfont
 from karabogui.util import SignalBlocker
 
 from .utils import get_dialog_ui
+
+BUTTON_SIZE = 10
 
 
 class TextDialog(QDialog):
@@ -56,10 +57,16 @@ class TextDialog(QDialog):
                 self.cbAlignment.setEnabled(False)
 
     def set_text_font_button(self):
+        """
+        Update the  text and font family of the button. The font size
+        should not be changed in order to keep the button size fixed.
+        """
         qfont = QFont(self.text_font)
-        qfont.setPointSize(get_font_size_from_dpi(qfont.pointSize()))
+        qfont.setPointSize(BUTTON_SIZE)
         self.pbFont.setFont(qfont)
-        self.pbFont.setText(get_alias_from_font((self.text_font.family())))
+        family = get_alias_from_font(self.text_font.family())
+        button_text = f"{family}, {self.text_font.pointSize()}pt"
+        self.pbFont.setText(button_text)
 
     def set_text_color_button(self):
         pixmap = QPixmap(24, 16)
