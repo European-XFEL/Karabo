@@ -11,7 +11,7 @@ from traits.api import (
     WeakRef)
 
 import karabogui.access as krb_access
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabo.native import AccessLevel
 from karabogui.alarms.api import AlarmInfo
 from karabogui.itemtypes import NavigationItemTypes
@@ -28,7 +28,7 @@ class SystemTreeNode(HasStrictTraits):
     node_id = String
     path = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*ProxyStatus)
+    status = Enum(*DeviceStatus)
     capabilities = Int
     attributes = Dict
     # Struct to keep track of all alarms related to this
@@ -290,7 +290,7 @@ class SystemTree(HasStrictTraits):
                         continue
 
                     device_status.add(device_id)
-                    status = ProxyStatus(attrs.get('status', 'ok'))
+                    status = DeviceStatus(attrs.get('status', 'ok'))
                     capabilities = attrs.get('capabilities', 0)
 
                     device_node.capabilities = capabilities
@@ -462,7 +462,7 @@ class SystemTree(HasStrictTraits):
             capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
             class_id = attrs.get('classId', 'unknown-class')
-            status = ProxyStatus(attrs.get('status', 'ok'))
+            status = DeviceStatus(attrs.get('status', 'ok'))
 
             # A device must have a server added before with host!
             host_node = self.root.child(host)
@@ -490,14 +490,12 @@ class SystemTree(HasStrictTraits):
                 device_node = SystemTreeNode(node_id=device_id, path=device_id,
                                              parent=class_node,
                                              visibility=visibility,
+                                             status=status,
+                                             capabilities=capabilities,
+                                             attributes=attrs,
                                              level=DEVICE_LEVEL)
                 handler(class_node, device_node)
-                device_node.monitoring = False
                 # new nodes should be returned
                 new_dev_nodes[device_id] = device_node
-
-            device_node.status = status
-            device_node.attributes = attrs
-            device_node.capabilities = capabilities
 
         return new_dev_nodes

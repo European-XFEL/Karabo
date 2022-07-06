@@ -20,7 +20,6 @@ def test_panel_controller_basics(gui_app):
     mediator = Mediator()
     topology = SystemTopology()
     h = system_hash()
-    h.setAttribute("device.divvy", "status", "offline")
     topology.initialize(h)
     with singletons(mediator=mediator, topology=topology):
         proxy = get_property_proxy(Object.getClassSchema(), "prop",

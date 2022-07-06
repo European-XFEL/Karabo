@@ -5,10 +5,11 @@
 #############################################################################
 
 from traits.api import (
-    Bool, DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
+    DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
     on_trait_change)
 
-from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE, ProxyStatus
+from karabo.common.api import (
+    KARABO_SCHEMA_DEFAULT_VALUE, DeviceStatus, ProxyStatus)
 from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
@@ -53,19 +54,18 @@ class ProjectDeviceInstance(HasStrictTraits):
     # Monitor count
     _monitor_count = Int(0)
 
-    # Error flag of the online device proxy
-    error = Bool(False)
-    # The status of this device, take into consider the error flag and
-    # offline proxy's status (server may be gone, status has to change
-    # accordingly)
-    status = Property(depends_on=['_online_proxy.online', 'error',
+    # The proxy status
+    status = Property(depends_on=['_online_proxy.online',
                                   '_offline_proxy.status'])
+
+    # The instance status deliverd by the instance info
+    instance_status = Property(
+        depends_on=['_online_proxy.topology_node.status'])
 
     configuration = Property
 
     def __init__(self, device_id, server_id, class_id):
-        super(ProjectDeviceInstance, self).__init__()
-
+        super().__init__()
         self._init_object_state(device_id, server_id, class_id)
 
     def get_user_edited_config_hash(self):
@@ -178,6 +178,14 @@ class ProjectDeviceInstance(HasStrictTraits):
     # ---------------------------------------------------------------------
     # Traits Handlers
 
+    def _get_instance_status(self):
+        """Return the online topology information"""
+        node = self.device_node
+        if node is not None:
+            return node.status
+        # None status is offline
+        return DeviceStatus.NONE
+
     def _get_configuration(self):
         """Return the configured configuration (`offline`) for this device"""
         return self._offline_config
@@ -202,16 +210,12 @@ class ProjectDeviceInstance(HasStrictTraits):
         return self._offline_proxy
 
     def _get_status(self):
+        """Return the proxy status information"""
         if self._online_proxy.online:
-            status = self._online_proxy.status
-            if self.error:
-                status = ProxyStatus.ERROR
-            elif self.class_id != self._online_proxy.binding.class_id:
-                status = ProxyStatus.INCOMPATIBLE
-        else:
-            status = self._offline_proxy.status
-
-        return status
+            if self.class_id != self._online_proxy.binding.class_id:
+                return ProxyStatus.INCOMPATIBLE
+            return self._online_proxy.status
+        return self._offline_proxy.status
 
     @on_trait_change('_online_proxy:online,_offline_proxy:schema_update')
     def _apply_offline_config(self):

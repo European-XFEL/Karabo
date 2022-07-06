@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from karabo.common.api import KARABO_WARN_HIGH, ProxyStatus
+from karabo.common.api import KARABO_WARN_HIGH, DeviceStatus, ProxyStatus
 from karabo.native import Configurable, Hash, String
 from karabogui.singletons.mediator import Mediator
 from karabogui.testing import singletons, system_hash
@@ -56,7 +56,6 @@ def test_project_device():
         device.stop_monitoring()
         assert device._online_proxy._monitor_count == 0
 
-        device._online_proxy.status = ProxyStatus.ONLINE
-        assert device.status is ProxyStatus.ONLINE
-        device.error = True
-        assert device.status is ProxyStatus.ERROR
+        # Test instanceInfo update
+        device._online_proxy.topology_node.status = DeviceStatus.ERROR
+        assert device.instance_status is DeviceStatus.ERROR
