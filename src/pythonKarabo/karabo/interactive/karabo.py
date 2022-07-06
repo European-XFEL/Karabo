@@ -245,7 +245,8 @@ def new(args):
         # command and interrupt the script.
         run_cmd('cp -fp {} {}'.format(os.path.join(tpath, '.[gi]*'), path))
         email = os.environ.get('USER', 'Unknown')
-        configure_template(path, args.device, class_name, email)
+        configure_template(path, args.device, class_name, email,
+                           " ".join([args.template, args.api]))
         os.chdir(path)
         run_cmd('git init')
         run_cmd('git remote add origin {}/karaboDevices/{}.git'

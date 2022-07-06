@@ -4,6 +4,8 @@ import re
 import tokenize
 from datetime import datetime
 
+from karabo import version as karabo_version
+
 
 def rename_files_and_directories(path, class_name, package_name):
     def rename(root, names, regex, new_name):
@@ -47,7 +49,7 @@ def make_substitutions(path, substitutions):
         fout.writelines(rewritten_text)
 
 
-def configure_template(path, package_name, class_name, email):
+def configure_template(path, package_name, class_name, email, template_id):
     """Configure a device template
 
     This renames files and directories named __CLASS_NAME__ and
@@ -59,6 +61,8 @@ def configure_template(path, package_name, class_name, email):
         re.compile('__CLASS_NAME__'): class_name,
         re.compile('__CLASS_NAME_ALL_CAPS__'): class_name.upper(),
         re.compile('__DATE__'): date,
+        re.compile('__KARABO_VERSION__'): karabo_version,
+        re.compile('__TEMPLATE_ID__'): template_id,
         re.compile('__EMAIL__'): email,
         re.compile('__PACKAGE_NAME__'): package_name,
         re.compile('__PACKAGE_NAME_ALL_CAPS__'): package_name.upper(),
