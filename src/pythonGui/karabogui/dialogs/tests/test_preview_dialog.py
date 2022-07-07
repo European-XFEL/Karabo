@@ -1,10 +1,10 @@
 from contextlib import contextmanager
 from unittest import main, mock
 
-from karabo.common.api import ProxyStatus
 from karabo.native import Hash
 from karabogui.binding.api import (
-    BindingRoot, DeviceProxy, apply_default_configuration, build_binding)
+    BindingRoot, DeviceProxy, ProxyStatus, apply_default_configuration,
+    build_binding)
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.singletons.configuration import Configuration
 from karabogui.testing import GuiTestCase, get_device_schema, singletons

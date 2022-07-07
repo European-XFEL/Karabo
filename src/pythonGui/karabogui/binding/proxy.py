@@ -5,13 +5,13 @@ from traits.api import (
     Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
-from karabo.common.api import ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_network, get_topology
 
 from .binding_types import (
     BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding, SlotBinding,
     VectorBinding)
+from .enums import ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)

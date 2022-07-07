@@ -1,12 +1,11 @@
 from unittest import main, mock
 
-from karabo.common.api import ProxyStatus
 from karabo.common.project.api import MacroModel, ProjectModel, write_macro
 from karabo.common.scenemodel.api import (
     SceneModel, SceneTargetWindow, write_scene)
 from karabo.native import Hash
 from karabogui.binding.api import (
-    DeviceProxy, PropertyProxy, apply_configuration,
+    DeviceProxy, PropertyProxy, ProxyStatus, apply_configuration,
     apply_default_configuration, build_binding)
 from karabogui.events import KaraboEvent
 from karabogui.request import (
