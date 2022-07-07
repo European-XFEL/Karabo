@@ -11,8 +11,9 @@ from traits.api import (
     ABCHasStrictTraits, Bool, Callable, Dict, Enum, HasStrictTraits, Instance,
     Int, List, Property, String, WeakRef, on_trait_change)
 
-from karabo.common.api import DeviceStatus, ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabo.common.project.api import BaseProjectObjectModel
+from karabogui.binding.api import ProxyStatus
 
 
 class ProjectControllerUiData(HasStrictTraits):

@@ -13,15 +13,14 @@ from qtpy.QtWidgets import QBoxLayout, QDialog
 
 import karabo.common.scenemodel.api as sm
 import karabo.common.scenemodel.tests as sm_tests
-from karabo.common.api import (
-    ProxyStatus, set_initialized_flag, set_modified_flag)
+from karabo.common.api import set_initialized_flag, set_modified_flag
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabogui.binding.api import (
     DeviceProxy, ImageBinding, Int8Binding, IntBinding, NDArrayBinding,
-    NodeBinding, PipelineOutputBinding, PropertyProxy, SignedIntBinding,
-    StringBinding, TableBinding, Uint8Binding, UnsignedIntBinding,
-    VectorBinding, VectorHashBinding, VectorNoneBinding, VectorNumberBinding,
-    VectorUint8Binding, WidgetNodeBinding, build_binding)
+    NodeBinding, PipelineOutputBinding, PropertyProxy, ProxyStatus,
+    SignedIntBinding, StringBinding, TableBinding, Uint8Binding,
+    UnsignedIntBinding, VectorBinding, VectorHashBinding, VectorNoneBinding,
+    VectorNumberBinding, VectorUint8Binding, WidgetNodeBinding, build_binding)
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import (

@@ -10,9 +10,9 @@ from qtpy.QtCore import QPoint, QRect
 from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import ABCHasStrictTraits, Any
 
-from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import icons
+from karabogui.binding.proxy import ONLINE_STATUSES
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.dialogs.api import ProxiesDialog, SceneItemDialog

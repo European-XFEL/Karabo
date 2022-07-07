@@ -9,7 +9,7 @@ from qtpy.QtGui import QStandardItem, QStandardItemModel
 from qtpy.QtWidgets import (
     QAbstractItemView, QDialog, QHeaderView, QMenu, QTreeView)
 
-from karabo.common.api import ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabogui import icons
 from karabogui.singletons.api import get_manager, get_topology
 
@@ -44,9 +44,9 @@ class ClientTopologyTreeView(QTreeView):
 
         root_item = model.invisibleRootItem()
         for name, _, attrs in system_hash['client'].iterall():
-            status = ProxyStatus(attrs.get('status', 'ok'))
+            status = DeviceStatus(attrs.get('status', 'ok'))
             client_item = QStandardItem(name)
-            if status is ProxyStatus.ERROR:
+            if status is DeviceStatus.ERROR:
                 icon = icons.deviceInstanceError
             else:
                 icon = icons.deviceInstance
