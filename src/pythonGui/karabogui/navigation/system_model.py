@@ -8,7 +8,7 @@ import json
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
 import karabogui.access as krb_access
-from karabo.common.api import DeviceStatus
+from karabo.common.api import InstanceStatus
 from karabogui import icons
 from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -136,7 +136,7 @@ class SystemTreeModel(QAbstractItemModel):
             return node.node_id
         elif column == 0 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
-                if node.status is DeviceStatus.ERROR:
+                if node.status is InstanceStatus.ERROR:
                     return icons.deviceInstanceError
                 if node.monitoring:
                     return icons.deviceMonitored
