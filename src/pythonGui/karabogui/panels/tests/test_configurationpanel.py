@@ -3,13 +3,13 @@ from unittest.mock import patch
 import numpy as np
 from traits.api import Undefined
 
-from karabo.common.api import ProxyStatus, State
+from karabo.common.api import State
 from karabo.native import (
     AccessMode, Assignment, Bool, Configurable, Float, Hash, HashList, String,
     UInt32, VectorBool, VectorHash, VectorUInt32)
 from karabogui.binding.api import (
-    DeviceProxy, ProjectDeviceProxy, VectorHashBinding, apply_configuration,
-    build_binding, validate_table_value, validate_value)
+    DeviceProxy, ProjectDeviceProxy, ProxyStatus, VectorHashBinding,
+    apply_configuration, build_binding, validate_table_value, validate_value)
 from karabogui.testing import GuiTestCase
 
 from ..configurationpanel import CONFIGURATION_PAGE, ConfigurationPanel

@@ -1,11 +1,10 @@
 from unittest import main
 from unittest.mock import patch
 
-from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabo.native import Configurable, Float
 from karabogui.binding.api import (
-    DeviceClassProxy, PropertyProxy, build_binding)
+    DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.controllers.display.eval import Evaluator
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
