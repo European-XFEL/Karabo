@@ -2,10 +2,10 @@ from unittest.mock import patch
 
 from qtpy.QtWidgets import QMessageBox
 
-from karabo.common.enums import ProxyStatus
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
 from karabo.native import Configurable, VectorString
+from karabogui.binding.api import ProxyStatus
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology

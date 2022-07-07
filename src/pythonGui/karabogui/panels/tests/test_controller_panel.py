@@ -1,7 +1,6 @@
-from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import TrendGraphModel
 from karabo.native import Configurable, Float, Hash
-from karabogui.binding.api import build_binding
+from karabogui.binding.api import ProxyStatus, build_binding
 from karabogui.generic_scenes import get_property_proxy_model
 from karabogui.panels.widgetcontrollerpanel import WidgetControllerPanel
 from karabogui.singletons.mediator import Mediator
