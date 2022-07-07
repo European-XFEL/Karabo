@@ -1,6 +1,6 @@
 from traits.api import pop_exception_handler, push_exception_handler
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import InstanceStatus
 from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
@@ -19,7 +19,7 @@ def test_tree_node_basics():
     empty = DeviceTreeNode(
         node_id='node_id',
         visibility=AccessLevel.EXPERT,
-        status=DeviceStatus.OK,
+        status=InstanceStatus.OK,
         children=[]
     )
 

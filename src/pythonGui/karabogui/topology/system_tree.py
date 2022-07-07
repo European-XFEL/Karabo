@@ -11,7 +11,7 @@ from traits.api import (
     WeakRef)
 
 import karabogui.access as krb_access
-from karabo.common.api import DeviceStatus
+from karabo.common.api import InstanceStatus
 from karabo.native import AccessLevel
 from karabogui.alarms.api import AlarmInfo
 from karabogui.itemtypes import NavigationItemTypes
@@ -28,7 +28,7 @@ class SystemTreeNode(HasStrictTraits):
     node_id = String
     path = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*DeviceStatus)
+    status = Enum(*InstanceStatus)
     capabilities = Int
     attributes = Dict
     # Struct to keep track of all alarms related to this
@@ -279,21 +279,20 @@ class SystemTree(HasStrictTraits):
                     continue
                 server_node.attributes = attrs
 
-        if 'device' in system_hash:
-            for device_id, _, attrs in system_hash['device'].iterall():
-                if len(attrs) == 0:
-                    continue
+        for device_type in ('device', 'macro'):
+            if device_type in system_hash:
+                for device_id, _, attrs in system_hash[device_type].iterall():
+                    if len(attrs) == 0:
+                        continue
 
-                device_node = self._device_nodes.get(device_id, None)
-                if device_node is None:
-                    continue
+                    device_node = self._device_nodes.get(device_id, None)
+                    if device_node is None:
+                        continue
 
-                device_status.add(device_id)
-                status = DeviceStatus(attrs['status'])
-                capabilities = attrs['capabilities']
-                device_node.capabilities = capabilities
-                device_node.status = status
-                device_node.attributes = attrs
+                    device_status.add(device_id)
+                    status = InstanceStatus(attrs['status'])
+                    device_node.status = status
+                    device_node.attributes = attrs
 
         if device_status:
             self.status_update = device_status
@@ -458,7 +457,7 @@ class SystemTree(HasStrictTraits):
             capabilities = attrs['capabilities']
             server_id = attrs['serverId']
             class_id = attrs['classId']
-            status = DeviceStatus(attrs['status'])
+            status = InstanceStatus(attrs['status'])
 
             # A device must have a server added before with host!
             host_node = self.root.child(host)
