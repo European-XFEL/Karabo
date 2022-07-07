@@ -1,7 +1,7 @@
 from unittest import main
 
-from karabo.common.api import ProxyStatus
 from karabo.native import Hash
+from karabogui.binding.api import ProxyStatus
 from karabogui.project.dialog.device_configuration import (
     DeviceConfigurationDialog)
 from karabogui.testing import (

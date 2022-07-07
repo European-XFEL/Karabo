@@ -3,12 +3,12 @@ from unittest import main, mock
 
 from qtpy.QtCore import QItemSelectionModel, QPoint, Qt
 
-from karabo.common.api import AlarmCondition, ProxyStatus, State
+from karabo.common.api import AlarmCondition, State
 from karabo.native import (
     AccessMode, Bool, Configurable, Float, Int32, Slot, String, VectorFloat,
     VectorHash)
 from karabogui.binding.api import (
-    DeviceProxy, ProjectDeviceProxy, apply_default_configuration,
+    DeviceProxy, ProjectDeviceProxy, ProxyStatus, apply_default_configuration,
     build_binding)
 from karabogui.configurator.api import (
     ConfigurationTreeModel, ConfigurationTreeView)

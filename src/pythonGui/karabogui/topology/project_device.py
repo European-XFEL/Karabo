@@ -8,11 +8,10 @@ from traits.api import (
     DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
     on_trait_change)
 
-from karabo.common.api import (
-    KARABO_SCHEMA_DEFAULT_VALUE, DeviceStatus, ProxyStatus)
+from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE, DeviceStatus
 from karabo.native import Hash
 from karabogui.binding.api import (
-    BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
+    BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy, ProxyStatus,
     apply_default_configuration, apply_project_configuration, extract_edits,
     extract_online_edits)
 from karabogui.logger import get_logger

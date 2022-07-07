@@ -10,9 +10,10 @@ from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
 import karabogui.icons as icons
-from karabo.common.api import ProxyStatus, walk_traits_object
+from karabo.common.api import walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.binding.api import ProxyStatus
 from karabogui.dialogs.api import LogDialog
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
@@ -331,7 +332,7 @@ def _get_server_status(server_id):
     topology = get_topology()
     attributes = topology.get_attributes('server.{}'.format(server_id))
     if attributes is not None:
-        return ProxyStatus(attributes.get('status', 'ok'))
+        return ProxyStatus.ONLINE
     return ProxyStatus.OFFLINE
 
 
