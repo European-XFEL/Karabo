@@ -425,7 +425,9 @@ class SystemTopology(HasStrictTraits):
             proxy = self._device_proxies.get(deviceId)
             if proxy is not None:
                 proxy.topology_node = node
+                # Set the fundamental info of the proxy
                 proxy.server_id = node.attributes["serverId"]
+                proxy.binding.class_id = node.attributes["classId"]
                 proxy.status = ProxyStatus.ONLINE
 
         self._request_server_classes(server_hash)
