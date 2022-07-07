@@ -34,7 +34,7 @@ class ProjectDeviceInstance(HasStrictTraits):
 
     # The proxy for this device
     proxy = Property(Instance(BaseDeviceProxy),
-                     depends_on='_online_proxy.online')
+                     depends_on='_online_proxy:online')
     online = DelegatesTo('_online_proxy')
     schema_update = DelegatesTo('_online_proxy')
 
@@ -54,8 +54,8 @@ class ProjectDeviceInstance(HasStrictTraits):
     _monitor_count = Int(0)
 
     # The proxy status
-    status = Property(depends_on=['_online_proxy.online',
-                                  '_offline_proxy.status'])
+    status = Property(depends_on=['_online_proxy:online',
+                                  '_offline_proxy:status'])
 
     # The instance status deliverd by the instance info
     instance_status = Property(
