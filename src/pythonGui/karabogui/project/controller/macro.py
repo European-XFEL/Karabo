@@ -11,10 +11,11 @@ from io import StringIO
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
-from karabo.common.api import ProxyStatus, walk_traits_object
+from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.binding.api import ProxyStatus
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)

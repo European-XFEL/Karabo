@@ -1,10 +1,10 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from karabo.common.enums import ProxyStatus
 from karabo.common.project.device import DeviceInstanceModel
 from karabo.common.project.device_config import DeviceConfigurationModel
 from karabo.native import AccessLevel, Hash
+from karabogui.binding.api import ProxyStatus
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.device_config import (
     DeviceConfigurationController)

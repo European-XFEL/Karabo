@@ -12,15 +12,15 @@ from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
 
 import karabogui.icons as icons
-from karabo.common.api import (
-    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES,
-    Capabilities)
+from karabo.common.api import Capabilities
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
 from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.binding.api import (
+    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES)
 from karabogui.dialogs.api import (
     ConfigComparisonDialog, ConfigurationFromNameDialog,
     ConfigurationFromPastDialog, DeviceCapabilityDialog)
