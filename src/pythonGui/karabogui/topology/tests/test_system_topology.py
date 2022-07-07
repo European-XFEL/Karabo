@@ -2,8 +2,9 @@ from unittest.mock import Mock
 
 from traits.api import pop_exception_handler, push_exception_handler
 
-from karabo.common.api import DeviceStatus, ProxyStatus
+from karabo.common.api import DeviceStatus
 from karabo.native import Configurable, Hash, String
+from karabogui.binding.api import ProxyStatus
 from karabogui.testing import (
     GuiTestCase, get_device_schema, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology
