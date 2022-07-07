@@ -7,11 +7,12 @@ from peewee import DoesNotExist, SqliteDatabase, fn
 
 from .models import ConfigSchema, ConfigSet, DeviceConfig
 from .utils import (
-    CONFIG_DB_DATA, CONFIG_DB_DESCRIPTION, CONFIG_DB_DEVICE_ID,
-    CONFIG_DB_DIFF_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT, CONFIG_DB_MIN_TIMEPOINT,
-    CONFIG_DB_NAME, CONFIG_DB_OVERWRITABLE, CONFIG_DB_PRIORITY,
-    CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER, ISO8601_FORMAT,
-    ConfigurationDBError, create_config_set_id, datetime_from_string)
+    CONFIG_DB_CONFIG_SET_ID, CONFIG_DB_DATA, CONFIG_DB_DESCRIPTION,
+    CONFIG_DB_DEVICE_ID, CONFIG_DB_DIFF_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT,
+    CONFIG_DB_MIN_TIMEPOINT, CONFIG_DB_NAME, CONFIG_DB_OVERWRITABLE,
+    CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER,
+    ISO8601_FORMAT, ConfigurationDBError, create_config_set_id,
+    datetime_from_string)
 
 CONFIGURATION_LIMIT = 300
 
@@ -70,6 +71,16 @@ class ConfigurationDatabase(object):
     # Public Interface
     # --------------------------------------------------------------------
 
+    # TODO: ponder with others and implement, depending on the results of the
+    # pondering process, methods to retrieve all devices, all config sets,
+    # and all the number of saved configs for all devices in the Db. Those
+    # methods would support a ConfigDb Manager application. Also ponder about
+    # adding the most recent timestamp when a configuration has been applied.
+    # That information might be useful for someone with a ConfigDb admin role
+    # that wants to get rid of stale configurations. Also add the corresponding
+    # method to delete a configuration - only accessible to users with admin
+    # role (users might be real people or scheduled maintenance jobs.
+
     def list_configurations(self, deviceId, name_part=''):
         """Retrieves the set of device configurations related to a name part
 
@@ -78,7 +89,12 @@ class ConfigurationDatabase(object):
                           means all the named configurations.
 
         :returns: list of configuration records (can be empty). Each configu-
-                  ration record is a dictionary.
+                  ration record is a dictionary. The value for the key
+                  'config_set_id' os either -1, if the configuration is the
+                  only that has been saved as part of the save operation, or it
+                  is the id of the config_set (and its value can be used to
+                  retrieve the remaining configs that were saved by the same
+                  save operation).
         """
         with self.dbHandle:
             cfgs = (
@@ -86,7 +102,8 @@ class ConfigurationDatabase(object):
                 .select(
                     ConfigSet.config_name, DeviceConfig.timestamp,
                     ConfigSet.description, ConfigSet.priority,
-                    ConfigSet.user, ConfigSet.overwritable
+                    ConfigSet.user, ConfigSet.overwritable,
+                    ConfigSet.device_set_id, ConfigSet.id
                 )
                 .join(ConfigSet)
             )
@@ -104,6 +121,7 @@ class ConfigurationDatabase(object):
             cfgs = cfgs.tuples()
 
             ret_recordings = []
+            device_set_digest = create_config_set_id([deviceId])
             for cfg in cfgs:
                 conf_dict = {}
                 conf_dict[CONFIG_DB_NAME] = cfg[0]
@@ -114,6 +132,59 @@ class ConfigurationDatabase(object):
                 conf_dict[CONFIG_DB_USER] = cfg[4]
                 conf_dict[CONFIG_DB_OVERWRITABLE] = cfg[5]
 
+                # If the config isn't the only config in its device set,
+                # returns the config_set_id (the prim. key of the device set)
+                # for the key CONFIG_DB_CONFIG_SET_ID; Otherwise returns -1 to
+                # flag that the config is the only one saved in its device set.
+                if device_set_digest == cfg[6]:
+                    # the id generated for the device_set based on the
+                    # device_id matches the digest in the database;
+                    # that means the device configuration is the only one
+                    # that has been saved as part of the config_set save.
+                    conf_dict[CONFIG_DB_CONFIG_SET_ID] = -1
+                else:
+                    conf_dict[CONFIG_DB_CONFIG_SET_ID] = cfg[7]
+
+                ret_recordings.append(conf_dict)
+
+            return ret_recordings
+
+    def list_configurations_in_set(self, config_set_id):
+        """Retrieves the set of configurations in a given config set.
+
+        :param config_set_id: the id of the config set
+
+        :returns: list of configuration records (one or more). Each configu-
+                  ration record is a dictionary with the keys:
+                      "deviceId",
+                      "config",
+                      "schema",
+                      "timepoint".
+                  the list of configurations is sorted by "deviceId".
+        """
+        with self.dbHandle:
+            cfgs = (
+                DeviceConfig
+                .select(
+                    DeviceConfig.device_id, DeviceConfig.config_data,
+                    ConfigSchema.schema_data, DeviceConfig.timestamp,
+                )
+                .join(ConfigSchema)
+                .where(
+                    DeviceConfig.config_set_id == config_set_id
+                )
+                .order_by(DeviceConfig.device_id)
+            )
+            cfgs = cfgs.tuples()
+
+            ret_recordings = []
+            for cfg in cfgs:
+                conf_dict = {}
+                conf_dict[CONFIG_DB_DEVICE_ID] = cfg[0]
+                conf_dict[CONFIG_DB_DATA] = cfg[1]
+                conf_dict[CONFIG_DB_SCHEMA] = cfg[2]
+                conf_dict[CONFIG_DB_TIMEPOINT] = (
+                    cfg[3].strftime(ISO8601_FORMAT))
                 ret_recordings.append(conf_dict)
 
             return ret_recordings
@@ -136,25 +207,69 @@ class ConfigurationDatabase(object):
             ret = [dev[0] for dev in devs]
             return ret
 
-    def list_configuration_sets(self, deviceIds):
-        """Retrieves the set of configurations related to a list of devices.
+    # TODO: min_timepoint and max_timepoint have lost their precision since
+    #       the introduction of minSetSize: the gathering of configs in the
+    #       config set is not exhaustive for performance reasons and that
+    #       means that it is not guaranteed that all timestamps for all
+    #       configs in the set have been retrieved. The proposed solution is
+    #       to remove MIN_TIMEPOINT, MAX_TIMEPOINT and DIFF_TIMEPOINT from
+    #       the response records and add REF_TIMEPOINT which should be the
+    #       average timepoint of the timepoints actually retrieved.
+    def list_configuration_sets(self, deviceIds, minSetSize=None):
+        """Retrieves the sets of configurations related to a list of devices.
+        Sets containing configurations for either a subset or a superset of the
+        list of devices can be returned depending on the value of the
+        parameter minSetSize.
+
+        The goal of returning config sets that do not have all the devices in
+        the list (or that have more than the devices in the list) is to support
+        configuration sets for components (sets of devices) whose composition
+        changes through their lifetime.
+
+        If no minSetSize is specified, all configuration sets containing at
+        least the deviceIds specified will be retrieved (supersets). On the
+        other hand, a minSetSize lower than the number of devices specified
+        will allow retrieving subsets of the devices set.
 
         :param deviceIds: list of deviceIds whose configurations should be
                           listed.
 
-        Example: If deviceA has configurations Alice and Bob ...
-                 DeviceB has configurations Bob ...
-                 Only Bob will be returned in this query and only if Bob
-                 been saved in a single save operation for both devices A and B
-                 (in this case, config Bob will be associated to the same
-                 Configuration Set for both devices A and B).
+        :param minSetSize: minimum size of configuration sets to retrieve. If
+                           no value or a value lower than 1 is specified,
+                           len(deviceIds) is used as minSetSize. If a value
+                           greater than the number of devices is specified,
+                           an exception of type ConfigurationDBError is
+                           thrown.
 
         :returns: list of configuration records (can be empty). Each configu-
                   ration record is a dictionary. The configurations timestamps
                   are returned in ISO8601 format (yyyy-mm-ddThh:mm:ss.micro).
+
+        Example: Retrieve configuration sets for devices DevA, DevB and DevC.
+                 Let's assume that in the database, DevA has configurations
+                 named {Nam1, Nam2, Nam3}, DevB has configurations named
+                 {Nam2, Nam3} and DevC has configurations named
+                 {Nam1, Nam3}. If minSetSize is not specified (or is lower
+                 than one), it will assume the value 3 (the number of
+                 deviceIds given). Only one set will be retrieved, as there is
+                 only one set with configurations for all the given devices,
+                 the set with the configuration named Nam3. If a minSetSize of
+                 2 is specified, three sets will be returned: one for the two
+                 configurations Nam1 saved for DevA and DevC, another for the
+                 two configurations Nam2 saved for DevA and DevB and the same
+                 set of size 3 returned when minSetSize was not specified.
+
         """
         if len(deviceIds) == 0:
             raise ConfigurationDBError('Please provide at least one device id')
+
+        if not minSetSize:
+            minSetSize = len(deviceIds)
+        else:
+            if minSetSize < 1 or minSetSize > len(deviceIds):
+                raise ConfigurationDBError(
+                    'minSetSize has to be between 1 and the number of '
+                    f'deviceIds, {len(deviceIds)}.')
 
         with self.dbHandle:
             DevCfgAlias = DeviceConfig.alias()
@@ -162,11 +277,11 @@ class ConfigurationDatabase(object):
                 DevCfgAlias
                 .select(
                     fn.COUNT(DevCfgAlias.device_id).alias('num_cfgs'),
-                    ConfigSet.config_name, ConfigSet.description,
-                    ConfigSet.priority, ConfigSet.user,
+                    ConfigSet.id.alias('config_set_id'), ConfigSet.config_name,
+                    ConfigSet.description, ConfigSet.priority, ConfigSet.user,
                     ConfigSet.overwritable,
                     fn.MIN(DevCfgAlias.timestamp).alias('min_timepoint'),
-                    fn.MAX(DevCfgAlias.timestamp).alias('max_timepoint')
+                    fn.MAX(DevCfgAlias.timestamp).alias('max_timepoint'),
                 )
                 .join(ConfigSet)
                 .where(DevCfgAlias.device_id << deviceIds)
@@ -178,10 +293,11 @@ class ConfigurationDatabase(object):
                     query.c.num_cfgs, query.c.config_name,
                     query.c.description, query.c.priority,
                     query.c.user, query.c.overwritable,
-                    query.c.min_timepoint, query.c.max_timepoint
+                    query.c.min_timepoint, query.c.max_timepoint,
+                    query.c.config_set_id
                 )
                 .from_(query)
-                .where(query.c.num_cfgs == len(deviceIds))
+                .where(query.c.num_cfgs >= minSetSize)
                 .tuples()
             )
 
@@ -206,6 +322,12 @@ class ConfigurationDatabase(object):
                     max_time.strftime(ISO8601_FORMAT))
                 diff_time = max_time - min_time
                 conf_dict[CONFIG_DB_DIFF_TIMEPOINT] = diff_time.total_seconds()
+                # Differently from list_configurations, where -1 is returned
+                # for ConfigSets with only one configuration,
+                # list_configurations_sets always returns the id of the
+                # ConfigSet.
+                conf_dict[CONFIG_DB_CONFIG_SET_ID] = cfg[8]
+
                 ret_recordings.append(conf_dict)
 
             return ret_recordings
@@ -288,8 +410,7 @@ class ConfigurationDatabase(object):
             return self._config_to_dict(cfg[0]) if len(cfg) > 0 else {}
 
     def save_configuration(self, name, configs, description="", user=".",
-                           priority=1, timestamp="", overwritable=False,
-                           setIdDigest=None):
+                           priority=1, timestamp="", overwritable=False):
         """Saves one or more device configurations (and schemas).
 
         The configs and schemas are saved for multiple devices and timepoints
@@ -320,11 +441,6 @@ class ConfigurationDatabase(object):
         :param overwritable: Will the configuration be overwritable?
             Ignored if the named configuration already exists in the database
             for the set of devices in configs.
-
-        :param setIdDigest: the digest to be used for the set of devices whose
-            configurations are being saved. If no value is provided, a digest
-            is generated internally for the set of devices in the method
-            arguments.
         """
         if not 1 <= priority <= 3:
             raise ConfigurationDBError(
@@ -343,9 +459,7 @@ class ConfigurationDatabase(object):
 
         deviceIds = [conf[CONFIG_DB_DEVICE_ID] for conf in configs]
 
-        deviceSetId = (
-            setIdDigest if setIdDigest else create_config_set_id(deviceIds)
-        )
+        deviceSetId = create_config_set_id(deviceIds)
 
         with self.dbHandle as db:
 

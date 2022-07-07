@@ -16,6 +16,7 @@ CONFIG_DB_DIFF_TIMEPOINT = "diff_timepoint"
 CONFIG_DB_TIMEPOINT = "timepoint"
 CONFIG_DB_USER = "user"
 CONFIG_DB_OVERWRITABLE = "overwritable"
+CONFIG_DB_CONFIG_SET_ID = "config_set_id"
 
 ISO8601_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
@@ -81,6 +82,7 @@ def create_config_set_id(deviceIds):
 
     :return: a sha1 hash that is unique for a given set of devices.
     """
+    assert(type(deviceIds) is list)
     uniques = sorted(set([devId.upper() for devId in deviceIds]))
     ids_str = '::'.join(uniques)
     return hashlib.sha1(ids_str.encode('utf-8')).hexdigest()

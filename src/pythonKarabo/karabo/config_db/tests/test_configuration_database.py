@@ -3,7 +3,12 @@ import unittest
 from datetime import datetime
 
 from ..configuration_database import ConfigurationDatabase, DbHandle
-from ..utils import ConfigurationDBError, create_config_set_id
+from ..utils import (
+    CONFIG_DB_CONFIG_SET_ID, CONFIG_DB_DATA, CONFIG_DB_DESCRIPTION,
+    CONFIG_DB_DEVICE_ID, CONFIG_DB_DIFF_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT,
+    CONFIG_DB_MIN_TIMEPOINT, CONFIG_DB_NAME, CONFIG_DB_OVERWRITABLE,
+    CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER,
+    ISO8601_FORMAT, ConfigurationDBError)
 
 TEST_DB_PATH = 'configManagerTest.db'
 
@@ -13,21 +18,26 @@ CFG_NAME_3 = 'ThirdConfig'
 
 CFG_DEVICE_1 = 'SCS/CAM/BASLER'
 CFG_DEVICE_2 = 'CAS_LAB/DIGI/ADQ-12'
+CFG_DEVICE_3 = 'KaraboProjectManager'
 
 TIMESTAMP_1 = '2020-01-30T20:02:02.123000'
 TIMESTAMP_2 = '2019-01-30T09:02:02.123000'
 
 
 def create_config(deviceId):
-    return {'deviceId': deviceId,
-            'config': 'JFDHFYE947AGEUFHFSJDPOWIAKLSIDHD',
-            'schema': 'QREPLCMBab789oeiryJAAHDDBAVDUUWY93948==='}
+    return {CONFIG_DB_DEVICE_ID: deviceId,
+            CONFIG_DB_DATA: 'JFDHFYE947AGEUFHFSJDPOWIAKLSIDHD',
+            CONFIG_DB_SCHEMA: 'QREPLCMBab789oeiryJAAHDDBAVDUUWY93948==='}
 
 
 CFG_1 = [create_config(CFG_DEVICE_1)]
 CFG_2 = [create_config(CFG_DEVICE_2)]
+CFG_3 = [create_config(CFG_DEVICE_3)]
 
 CFG_SET = [create_config(CFG_DEVICE_1), create_config(CFG_DEVICE_2)]
+CFG_SET_2 = [
+    create_config(CFG_DEVICE_1), create_config(CFG_DEVICE_2),
+    create_config(CFG_DEVICE_3)]
 
 
 class TestConfigurationManagerData(unittest.TestCase):
@@ -50,11 +60,11 @@ class TestConfigurationManagerData(unittest.TestCase):
         cfg = self.database.get_configuration(CFG_DEVICE_1, CFG_NAME_1)
 
         self.assertEqual(CFG_NAME_1, cfg['name'])
-        self.assertEqual(CFG_1[0]['config'], cfg['config'])
-        self.assertEqual(CFG_1[0]['schema'], cfg['schema'])
-        self.assertEqual('', cfg['description'])  # Default empty description
-        self.assertEqual('.', cfg['user'])  # Default anonymous user
-        self.assertEqual(1, cfg['priority'])  # Default priority, 1
+        self.assertEqual(CFG_1[0][CONFIG_DB_DATA], cfg[CONFIG_DB_DATA])
+        self.assertEqual(CFG_1[0][CONFIG_DB_SCHEMA], cfg[CONFIG_DB_SCHEMA])
+        self.assertEqual('', cfg[CONFIG_DB_DESCRIPTION])  # Empty default
+        self.assertEqual('.', cfg[CONFIG_DB_USER])  # Default anonymous user
+        self.assertEqual(1, cfg[CONFIG_DB_PRIORITY])  # Default priority, 1
 
         # Trying to retrieve with a non-existing name should return nothing.
         cfg = self.database.get_configuration(CFG_DEVICE_1,
@@ -79,31 +89,34 @@ class TestConfigurationManagerData(unittest.TestCase):
 
         cfg = self.database.list_configurations(CFG_DEVICE_1, CFG_NAME_2[:4])
         self.assertEqual(len(cfg), 1)
-        self.assertEqual(CFG_NAME_2, cfg[0]['name'])
-        self.assertEqual(cfg[0]['timepoint'], TIMESTAMP_2)
-        self.assertEqual('Bla bla', cfg[0]['description'])
-        self.assertEqual('Bob', cfg[0]['user'])
-        self.assertEqual(3, cfg[0]['priority'])
+        self.assertEqual(CFG_NAME_2, cfg[0][CONFIG_DB_NAME])
+        self.assertEqual(cfg[0][CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual('Bla bla', cfg[0][CONFIG_DB_DESCRIPTION])
+        self.assertEqual('Bob', cfg[0][CONFIG_DB_USER])
+        self.assertEqual(3, cfg[0][CONFIG_DB_PRIORITY])
+        # The config wasn't the only one saved by the save config call -
+        # CFG_SET was used.
+        self.assertNotEqual(-1, cfg[0][CONFIG_DB_CONFIG_SET_ID])
 
         devices_ids = [CFG_DEVICE_1, CFG_DEVICE_2]
         cfg = self.database.list_configuration_sets(devices_ids)
         self.assertEqual(len(cfg), 1)
         config_set = cfg[0]
-        self.assertTrue('deviceId' not in config_set)
-        self.assertEqual(config_set['name'], CFG_NAME_2)
-        self.assertEqual(config_set['min_timepoint'], TIMESTAMP_2)
-        self.assertEqual(config_set['max_timepoint'], TIMESTAMP_2)
-        self.assertEqual(config_set['diff_timepoint'], 0.0)
-        self.assertEqual(config_set['description'], 'Bla bla')
-        self.assertEqual(config_set['user'], 'Bob')
-        self.assertEqual(config_set['priority'], 3)
+        self.assertTrue(CONFIG_DB_DEVICE_ID not in config_set)
+        self.assertEqual(config_set[CONFIG_DB_NAME], CFG_NAME_2)
+        self.assertEqual(config_set[CONFIG_DB_MIN_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual(config_set[CONFIG_DB_MAX_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual(config_set[CONFIG_DB_DIFF_TIMEPOINT], 0.0)
+        self.assertEqual(config_set[CONFIG_DB_DESCRIPTION], 'Bla bla')
+        self.assertEqual(config_set[CONFIG_DB_USER], 'Bob')
+        self.assertEqual(config_set[CONFIG_DB_PRIORITY], 3)
 
         cfg = self.database.list_configurations(CFG_DEVICE_1)
         # With an empty name part, all the configs for CFG_DEVICE_1 should be
         # retrieved
         self.assertEqual(len(cfg), 2)
-        self.assertTrue(cfg[0]['name'] in [CFG_NAME_1, CFG_NAME_2])
-        self.assertTrue(cfg[1]['name'] in [CFG_NAME_1, CFG_NAME_2])
+        self.assertTrue(cfg[0][CONFIG_DB_NAME] in [CFG_NAME_1, CFG_NAME_2])
+        self.assertTrue(cfg[1][CONFIG_DB_NAME] in [CFG_NAME_1, CFG_NAME_2])
 
         # A name part known to not happen in the data should retrieve nothing.
         cfg = self.database.list_configurations(CFG_DEVICE_1, 'inv part')
@@ -148,22 +161,22 @@ class TestConfigurationManagerData(unittest.TestCase):
         cfg = self.database.get_last_configuration(CFG_DEVICE_1, priority=1)
         # For priority 1, the last config is the one saved under CFG_NAME_3.
         self.assertEqual(len(cfg), 8)
-        self.assertEqual(CFG_NAME_3, cfg['name'])
-        self.assertEqual(cfg['timepoint'], TIMESTAMP_1)
-        self.assertEqual('Bla bla', cfg['description'])
-        self.assertEqual('Bob', cfg['user'])
-        self.assertEqual(1, cfg['priority'])
-        self.assertEqual(False, cfg['overwritable'])
+        self.assertEqual(CFG_NAME_3, cfg[CONFIG_DB_NAME])
+        self.assertEqual(cfg[CONFIG_DB_TIMEPOINT], TIMESTAMP_1)
+        self.assertEqual('Bla bla', cfg[CONFIG_DB_DESCRIPTION])
+        self.assertEqual('Bob', cfg[CONFIG_DB_USER])
+        self.assertEqual(1, cfg[CONFIG_DB_PRIORITY])
+        self.assertEqual(False, cfg[CONFIG_DB_OVERWRITABLE])
 
         cfg = self.database.get_last_configuration(CFG_DEVICE_1, priority=2)
         # For priority 2, the last config is the one saved under CFG_NAME_1.
         self.assertEqual(len(cfg), 8)
-        self.assertEqual(CFG_NAME_1, cfg['name'])
-        self.assertEqual(cfg['timepoint'], TIMESTAMP_2)
-        self.assertEqual('', cfg['description'])
-        self.assertEqual('.', cfg['user'])
-        self.assertEqual(2, cfg['priority'])
-        self.assertEqual(False, cfg['overwritable'])
+        self.assertEqual(CFG_NAME_1, cfg[CONFIG_DB_NAME])
+        self.assertEqual(cfg[CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual('', cfg[CONFIG_DB_DESCRIPTION])
+        self.assertEqual('.', cfg[CONFIG_DB_USER])
+        self.assertEqual(2, cfg[CONFIG_DB_PRIORITY])
+        self.assertEqual(False, cfg[CONFIG_DB_OVERWRITABLE])
 
         cfg = self.database.get_last_configuration(CFG_DEVICE_1, priority=3)
         # For priority 3, there's no config of CFG_DEVICE_1.
@@ -235,7 +248,7 @@ class TestConfigurationManagerData(unittest.TestCase):
             self.database.save_configuration(config_name, config)
 
         with self.assertRaises(ConfigurationDBError):
-            self.database.save_configuration(f"exceed-crash", config)
+            self.database.save_configuration("exceed-crash", config)
 
     def test_overwritable_conf(self):
         """ Checks that an overwritable configuration can be overwritten,
@@ -260,13 +273,13 @@ class TestConfigurationManagerData(unittest.TestCase):
 
         cfg = self.database.get_configuration(deviceName, overCfgName)
         self.assertEqual(len(cfg), 8)
-        self.assertEqual(overCfgName, cfg['name'])
-        self.assertEqual('', cfg['description'])
-        self.assertEqual('.', cfg['user'])
-        self.assertEqual(1, cfg['priority'])
-        self.assertEqual(True, cfg['overwritable'])
-        timeStamp1 = datetime.strptime(
-            cfg['timepoint'], '%Y-%m-%dT%H:%M:%S.%f')
+        self.assertEqual(overCfgName, cfg[CONFIG_DB_NAME])
+        self.assertEqual('', cfg[CONFIG_DB_DESCRIPTION])
+        self.assertEqual('.', cfg[CONFIG_DB_USER])
+        self.assertEqual(1, cfg[CONFIG_DB_PRIORITY])
+        self.assertEqual(True, cfg[CONFIG_DB_OVERWRITABLE])
+        timeStamp1 = datetime.strptime(cfg[CONFIG_DB_TIMEPOINT],
+                                       ISO8601_FORMAT)
 
         # Ovewrites the configuration at the limit.
         # Overwritable flag must not be updated.
@@ -277,13 +290,13 @@ class TestConfigurationManagerData(unittest.TestCase):
         )
         cfg = self.database.get_configuration(deviceName, overCfgName)
         self.assertEqual(len(cfg), 8)
-        self.assertEqual(overCfgName, cfg['name'])
-        self.assertEqual('BlahBlah', cfg['description'])
-        self.assertEqual('.', cfg['user'])
-        self.assertEqual(3, cfg['priority'])
-        self.assertEqual(True, cfg['overwritable'])
-        timeStamp2 = datetime.strptime(
-            cfg['timepoint'], '%Y-%m-%dT%H:%M:%S.%f')
+        self.assertEqual(overCfgName, cfg[CONFIG_DB_NAME])
+        self.assertEqual('BlahBlah', cfg[CONFIG_DB_DESCRIPTION])
+        self.assertEqual('.', cfg[CONFIG_DB_USER])
+        self.assertEqual(3, cfg[CONFIG_DB_PRIORITY])
+        self.assertEqual(True, cfg[CONFIG_DB_OVERWRITABLE])
+        timeStamp2 = datetime.strptime(cfg[CONFIG_DB_TIMEPOINT],
+                                       ISO8601_FORMAT)
         self.assertGreater(timeStamp2, timeStamp1)
 
         # Overwrite the configuration a second time, to be
@@ -293,13 +306,13 @@ class TestConfigurationManagerData(unittest.TestCase):
             overCfgName, overCfg, description="Bleh-Bleh", priority=2)
         cfg = self.database.get_configuration(deviceName, overCfgName)
         self.assertEqual(len(cfg), 8)
-        self.assertEqual(overCfgName, cfg['name'])
-        self.assertEqual('Bleh-Bleh', cfg['description'])
-        self.assertEqual('.', cfg['user'])
-        self.assertEqual(2, cfg['priority'])
-        self.assertEqual(True, cfg['overwritable'])
-        timeStamp3 = datetime.strptime(
-            cfg['timepoint'], '%Y-%m-%dT%H:%M:%S.%f')
+        self.assertEqual(overCfgName, cfg[CONFIG_DB_NAME])
+        self.assertEqual('Bleh-Bleh', cfg[CONFIG_DB_DESCRIPTION])
+        self.assertEqual('.', cfg[CONFIG_DB_USER])
+        self.assertEqual(2, cfg[CONFIG_DB_PRIORITY])
+        self.assertEqual(True, cfg[CONFIG_DB_OVERWRITABLE])
+        timeStamp3 = datetime.strptime(cfg[CONFIG_DB_TIMEPOINT],
+                                       ISO8601_FORMAT)
         self.assertGreater(timeStamp3, timeStamp2)
 
         # An attempt to save a new configuration, overwritable or not,
@@ -309,46 +322,186 @@ class TestConfigurationManagerData(unittest.TestCase):
                 "exceed-crash",  overCfg, f"{overCfgName}-limit",
                 overwritable=True)
 
-    def test_save_conf_injected_setIdDigest(self):
-        """ Checks that saving configurations, ovewritable or not, with an
-            externally injected setIdDigest works.
+    def test_configSets_minSize(self):
+        """Checks that retrieving configuration sets specifying a minSetSize
+        that is lower than the size of the original configuration sets allows
+        retrieving config sets with a subset of the devices specified. Also
+        checks that retrieving configuration sets omitting the minSetSize
+        retrieves a superset of the devices specified.
         """
-        device_1 = "Device_1"
-        device_2 = "Device_2"
+        # Save with priority 1
+        self.database.save_configuration(CFG_NAME_1, CFG_1,
+                                         user='Alice',
+                                         timestamp=TIMESTAMP_1)
 
-        # Generates a setIdDigest for both devices
-        digest = create_config_set_id([device_1, device_2])
+        # CFG_SET contains one config for CFG_DEVICE_1 and one for CFG_DEVICE_2
+        # in that order.
+        self.database.save_configuration(CFG_NAME_2, CFG_SET,
+                                         description='Bla bla',
+                                         user='Bob',
+                                         priority=3,
+                                         timestamp=TIMESTAMP_2)
 
-        cfg_1 = [create_config(device_1)]
-        cfg_name = 'Config'
-        cfg_2 = [create_config(device_2)]
+        # CFG_SET_2 contains three configs: one for CFG_DEVICE_1, one for
+        # CFG_DEVICE_2 and one for CFG_DEVICE_3.
+        self.database.save_configuration(CFG_NAME_3, CFG_SET_2,
+                                         user='Charlie')
 
-        self.database.save_configuration(cfg_name, cfg_1,
-                                         setIdDigest=digest)
-        self.database.save_configuration(cfg_name, cfg_2,
-                                         setIdDigest=digest)
-        cfg = self.database.get_configuration(device_1, cfg_name)
-        self.assertEqual(False, cfg['overwritable'])
-        self.assertEqual(1, cfg['priority'])
-        self.assertEqual(cfg_name, cfg['name'])
-        cfgs_sets = self.database.list_configuration_sets([device_1, device_2])
-        self.assertEqual(1, len(cfgs_sets))
+        # Retrieval of all sets of size at least 1 containing CFG_DEVICE_1
+        # should return all three saved sets.
+        cfgs = self.database.list_configuration_sets([CFG_DEVICE_1], 1)
 
-        cfg_name_2 = 'Config_2'
-        self.database.save_configuration(cfg_name_2, cfg_1,
-                                         setIdDigest=digest,
-                                         overwritable=True)
-        self.database.save_configuration(cfg_name_2, cfg_2,
-                                         setIdDigest=digest)
-        cfg = self.database.get_configuration(device_2, cfg_name_2)
-        self.assertEqual(True, cfg['overwritable'])
-        self.assertEqual(cfg_name_2, cfg['name'])
-        cfgs_sets = self.database.list_configuration_sets([device_1, device_2])
-        self.assertEqual(2, len(cfgs_sets))
-        self.assertEqual(False, cfgs_sets[0]['overwritable'])
-        self.assertEqual(True, cfgs_sets[1]['overwritable'])
-        self.assertEqual(cfg_name, cfgs_sets[0]['name'])
-        self.assertEqual(cfg_name_2, cfgs_sets[1]['name'])
+        self.assertEqual(len(cfgs), 3)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_1)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Alice')
+        # list_configurations_sets returns the config set id even for single
+        # configuration sets.
+        self.assertNotEqual(cfgs[0][CONFIG_DB_CONFIG_SET_ID], -1)
+
+        self.assertEqual(cfgs[1][CONFIG_DB_NAME], CFG_NAME_2)
+        self.assertEqual(cfgs[1][CONFIG_DB_USER], 'Bob')
+        self.assertNotEqual(cfgs[1][CONFIG_DB_CONFIG_SET_ID], -1)
+
+        self.assertEqual(cfgs[2][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[2][CONFIG_DB_USER], 'Charlie')
+        self.assertNotEqual(cfgs[2][CONFIG_DB_CONFIG_SET_ID], -1)
+
+        # Checks the configs in the config set for CFG_NAME_2
+        cfgs_in_set = self.database.list_configurations_in_set(
+            cfgs[1][CONFIG_DB_CONFIG_SET_ID])
+        self.assertEqual(len(cfgs_in_set), 2)
+        # Config set with CFG_NAME_2 has CFG_DEVICE_1 and CFG_DEVICE_2
+        devs = {CFG_DEVICE_1, CFG_DEVICE_2}
+        self.assertTrue(cfgs_in_set[0][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertTrue(cfgs_in_set[1][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertEqual(cfgs_in_set[0][CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual(cfgs_in_set[1][CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
+
+        # Retrieval of all sets of unspecified size containing CFG_DEVICE_1
+        # should return all three saved sets - when the value is not specified,
+        # the number of devicesIds in the argument list is used; so this is
+        # the same call of the previous case.
+        cfgs = self.database.list_configuration_sets([CFG_DEVICE_1])
+        self.assertEqual(len(cfgs), 3)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_1)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Alice')
+        self.assertEqual(cfgs[1][CONFIG_DB_NAME], CFG_NAME_2)
+        self.assertEqual(cfgs[1][CONFIG_DB_USER], 'Bob')
+        self.assertEqual(cfgs[2][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[2][CONFIG_DB_USER], 'Charlie')
+        # Retrieval of all sets of size at least 2 containing both CFG_DEVICE_1
+        # and CFG_DEVICE_2 should return both config sets that contained both
+        # devices.
+        cfgs = self.database.list_configuration_sets(
+            [CFG_DEVICE_1, CFG_DEVICE_2], 2)
+        self.assertEqual(len(cfgs), 2)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_2)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Bob')
+        self.assertEqual(cfgs[1][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[1][CONFIG_DB_USER], 'Charlie')
+        # Retrieval of all sets of size at least 1 containing at least
+        # CFG_DEVICE_2 or CFG_DEVICE_3 should return the two multi-device set,
+        # one for having CFG_DEVICE_2 and the other for having both devices.
+        cfgs = self.database.list_configuration_sets(
+            [CFG_DEVICE_2, CFG_DEVICE_3], 1)
+        self.assertEqual(len(cfgs), 2)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_2)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Bob')
+        self.assertEqual(cfgs[1][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[1][CONFIG_DB_USER], 'Charlie')
+        # Retrieval of all sets of size at least 2 containing CFG_DEVICE_1,
+        # CFG_DEVICE_2 or CFG_DEVICE_3 should return both config sets that have
+        # more than one device.
+        cfgs = self.database.list_configuration_sets(
+            [CFG_DEVICE_1, CFG_DEVICE_2, CFG_DEVICE_3], 2)
+        self.assertEqual(len(cfgs), 2)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_2)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Bob')
+        self.assertEqual(cfgs[1][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[1][CONFIG_DB_USER], 'Charlie')
+        # Retrieval of all sets of size at least 3 containing CFG_DEVICE_1,
+        # CFG_DEVICE_2 and CFG_DEVICE_3 should return just the config set that
+        # has the three devices (not specifying minSetSize in the same as
+        # specifying len(deviceIds)).
+        cfgs = self.database.list_configuration_sets(
+            [CFG_DEVICE_1, CFG_DEVICE_2, CFG_DEVICE_3])
+        self.assertEqual(len(cfgs), 1)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Charlie')
+        # Retrieval of all sets of size at least 1 containing CFG_DEVICE_3
+        # should return only the device set that had the device and two
+        # more - this is the only device set that has CFG_DEVICE_3.
+        cfgs = self.database.list_configuration_sets([CFG_DEVICE_3], 1)
+        self.assertEqual(len(cfgs), 1)
+        self.assertEqual(cfgs[0][CONFIG_DB_NAME], CFG_NAME_3)
+        self.assertEqual(cfgs[0][CONFIG_DB_USER], 'Charlie')
+        # Retrieval of all sets of size at least 4 containing CFG_DEVICE_3
+        # should throw an exception - minSetSize cannot be greater than the
+        # number of devices in the first argument.
+        with self.assertRaises(ConfigurationDBError):
+            cfgs = self.database.list_configuration_sets([CFG_DEVICE_3], 4)
+        # Retrieval of all sets of size less than 1 should throw an exception -
+        # minSetSize must be between 1 and the number of devices in the
+        # first argument.
+        with self.assertRaises(ConfigurationDBError):
+            cfgs = self.database.list_configuration_sets([CFG_DEVICE_3], 0)
+
+    def test_save_get_configurations_in_set(self):
+        """Checks that list configurations for device (independent of name
+        part specification) returns information about the config set as part
+        of which that configuration has been saved, and that all the configs
+        in the set can be easily retrieved by list configuration for
+        config set.
+        """
+        # Creates a config set with a single configuration for CFG_DEVICE_1
+        self.database.save_configuration(CFG_NAME_1, CFG_1,
+                                         user='Alice',
+                                         timestamp=TIMESTAMP_1)
+
+        # CFG_SET contains one config for CFG_DEVICE_1 and one for CFG_DEVICE_2
+        # in that order.
+        self.database.save_configuration(CFG_NAME_2, CFG_SET,
+                                         description='Bla bla',
+                                         user='Bob',
+                                         priority=3,
+                                         timestamp=TIMESTAMP_1)
+
+        # CFG_SET_2 contains three configs: one for CFG_DEVICE_1, one for
+        # CFG_DEVICE_2 and one for CFG_DEVICE_3.
+        self.database.save_configuration(CFG_NAME_3, CFG_SET_2,
+                                         user='Charlie',
+                                         timestamp=TIMESTAMP_2)
+
+        # Gets all the configs for CFG_DEVICE_1 - all the three generated
+        # config sets have one config for CFG_DEVICE_1.
+        dev1_cfgs = self.database.list_configurations(CFG_DEVICE_1)
+        self.assertEqual(len(dev1_cfgs), 3)
+        # The first CFG_DEVICE_1 config has been saved individually.
+        self.assertEqual(dev1_cfgs[0][CONFIG_DB_CONFIG_SET_ID], -1)
+        # The other two CFG_DEVICE_1 configs have been saved as part of
+        # multi-device config sets
+        self.assertNotEqual(dev1_cfgs[1][CONFIG_DB_CONFIG_SET_ID], -1)
+        self.assertNotEqual(dev1_cfgs[2][CONFIG_DB_CONFIG_SET_ID], -1)
+        # Checks that the configurations in each of the multi-device config
+        # sets are correct.
+        cfgs = self.database.list_configurations_in_set(
+            dev1_cfgs[1][CONFIG_DB_CONFIG_SET_ID])
+        self.assertEqual(len(cfgs), 2)
+        devs = {CFG_DEVICE_1, CFG_DEVICE_2}
+        self.assertTrue(cfgs[0][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertTrue(cfgs[1][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertEqual(cfgs[0][CONFIG_DB_TIMEPOINT], TIMESTAMP_1)
+        self.assertEqual(cfgs[1][CONFIG_DB_TIMEPOINT], TIMESTAMP_1)
+        cfgs = self.database.list_configurations_in_set(
+            dev1_cfgs[2][CONFIG_DB_CONFIG_SET_ID])
+        devs.add(CFG_DEVICE_3)
+        self.assertEqual(len(cfgs), 3)
+        self.assertTrue(cfgs[0][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertTrue(cfgs[1][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertTrue(cfgs[2][CONFIG_DB_DEVICE_ID] in devs)
+        self.assertEqual(cfgs[0][CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual(cfgs[1][CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
+        self.assertEqual(cfgs[2][CONFIG_DB_TIMEPOINT], TIMESTAMP_2)
 
 
 if __name__ == '__main__':
