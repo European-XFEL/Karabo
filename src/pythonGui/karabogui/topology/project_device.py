@@ -8,7 +8,7 @@ from traits.api import (
     DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
     on_trait_change)
 
-from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE, DeviceStatus
+from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE, InstanceStatus
 from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy, ProxyStatus,
@@ -183,7 +183,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         if node is not None:
             return node.status
         # None status is offline
-        return DeviceStatus.NONE
+        return InstanceStatus.NONE
 
     def _get_configuration(self):
         """Return the configured configuration (`offline`) for this device"""
