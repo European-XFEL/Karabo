@@ -263,9 +263,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         self._offline_proxy = topology.get_project_device_proxy(
             device_id, server_id, class_id)
 
-        # Help out, if the online proxy doesn't have its binding yet
-        if self._online_proxy.binding.class_id == '':
-            self._online_proxy.binding.class_id = class_id
+        # Note: Before we were overwriting an empty classId of the online
+        # proxy if needed
 
         # Remember the IDs (also notifies the outside world of changes)
         self.device_id = device_id
