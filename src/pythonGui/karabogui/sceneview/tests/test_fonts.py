@@ -6,13 +6,13 @@ from qtpy.QtCore import QPoint, QSize
 from qtpy.QtGui import QFont, QFontDatabase
 from qtpy.QtWidgets import QWidget
 
-from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import (
     SCENE_DEFAULT_DPI, SCENE_FONT_SIZE, SCENE_MAC_DPI, DeviceSceneLinkModel,
     LabelModel, SceneLinkModel, SceneModel, StickerModel, WebLinkModel)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabo.native import Configurable, VectorString
-from karabogui.binding.api import DeviceProxy, PropertyProxy, build_binding
+from karabogui.binding.api import (
+    DeviceProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.fonts import FONT_FAMILIES, get_font_size_from_dpi, get_qfont
 from karabogui.testing import GuiTestCase
 
