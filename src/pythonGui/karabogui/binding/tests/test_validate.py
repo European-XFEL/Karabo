@@ -109,7 +109,7 @@ def test_validate_value_int8():
     assert_binding(binding, -129, valid=False)
     assert_binding(binding, 128, valid=False)
     assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, np.float64(1.0), valid=False)
     assert_binding(binding, "foo", valid=False)
     assert_binding(binding, [1, 2, 3], valid=False)
     assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
@@ -166,7 +166,7 @@ def test_validate_value_int32():
     assert_binding(binding, -(2 ** 32), valid=False)
     assert_binding(binding, (2 ** 32) - 1, valid=False)
     assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, np.float64(1.0), valid=False)
     assert_binding(binding, "foo", valid=False)
     assert_binding(binding, [1, 2, 3], valid=False)
     assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
@@ -186,7 +186,7 @@ def test_validate_value_uint32():
     assert_binding(binding, -(2 ** 32), valid=False)
     assert_binding(binding, (2 ** 32), valid=False)
     assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, np.float64(1.0), valid=False)
     assert_binding(binding, "foo", valid=False)
     assert_binding(binding, [1, 2, 3], valid=False)
     assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
@@ -206,7 +206,7 @@ def test_validate_value_int64():
     assert_binding(binding, -(2 ** 64), valid=False)
     assert_binding(binding, (2 ** 64) - 1, valid=False)
     assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, np.float64(1.0), valid=False)
     assert_binding(binding, "foo", valid=False)
     assert_binding(binding, [1, 2, 3], valid=False)
     assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
@@ -226,7 +226,7 @@ def test_validate_value_uint64():
     assert_binding(binding, -(2 ** 128), valid=False)
     assert_binding(binding, (2 ** 128) - 1, valid=False)
     assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, np.float64(1.0), valid=False)
     assert_binding(binding, "foo", valid=False)
     assert_binding(binding, [1, 2, 3], valid=False)
     assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
