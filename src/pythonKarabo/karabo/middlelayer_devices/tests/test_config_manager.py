@@ -7,7 +7,6 @@ import os
 from contextlib import contextmanager
 
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER
-from karabo.config_db import create_config_set_id
 from karabo.middlelayer import (
     DaqPolicy, Device, Double, Hash, HashList, KaraboError, Slot, String, call,
     connectDevice, coslot, getConfigurationFromName, getLastConfiguration,
@@ -249,30 +248,6 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(config_set["description"], "")
         self.assertEqual(config_set["user"], ".")
 
-        # Save in chunks but with same setId
-        digest = create_config_set_id(devices)
-        config_name = "testConfig2"
-        h = Hash("name", config_name, "deviceIds", [devices[0]],
-                 "priority", 2, "setIdDigest", digest)
-        r = await call(MANAGER, "slotSaveConfigurationFromName", h)
-        self.assertEqual(r["success"], True)
-
-        config_name = "testConfig2"
-        h = Hash("name", config_name, "deviceIds", [devices[1]],
-                 "priority", 2, "setIdDigest", digest)
-        r = await call(MANAGER, "slotSaveConfigurationFromName", h)
-        self.assertEqual(r["success"], True)
-
-        h = Hash("deviceIds", devices)
-        r = await call(MANAGER, "slotListConfigurationSets", h)
-        items = r["items"]
-        # Just one succesful save for both under same setId
-        self.assertEqual(len(items), 2)
-        config_set = items[0]
-        self.assertEqual(config_set["name"], "testConfig1")
-        config_set = items[1]
-        self.assertEqual(config_set["name"], "testConfig2")
-
     @async_tst
     async def test_zhe_get_last_configuration(self):
         """The typo is intended as order of tests is alphabetically done"""
@@ -280,8 +255,8 @@ class TestConfigurationManager(DeviceTest):
         r = await call(MANAGER,
                        "slotListConfigurationFromName", h)
         items = r["items"]
-        # We stored three configurations!
-        self.assertEqual(len(items), 3)
+        # We stored two configurations!
+        self.assertEqual(len(items), 2)
 
         # Get the last configuration!
         h = Hash("deviceId", "ALICE", "priority", 3, "schema", True)
