@@ -47,9 +47,6 @@ class SystemTopology(HasStrictTraits):
     # Mapping of device_id -> DeviceProxy
     _device_proxies = Dict
 
-    # Mapping of device_id -> Schema
-    _device_schemas = Dict
-
     # Mapping of device_id -> ProjectDeviceInstance
     _project_devices = Dict
 
@@ -73,7 +70,6 @@ class SystemTopology(HasStrictTraits):
         self._class_proxies.clear()
         self._class_schemas.clear()
         self._device_proxies.clear()
-        self._device_schemas.clear()
         self._requested_class_schemas = set()
 
     def clear_project_devices(self):
@@ -352,10 +348,6 @@ class SystemTopology(HasStrictTraits):
             # We used to print 'Unrequested schema for device {} arrived' here
             return None
 
-        self._device_schemas[device_id] = schema
-
-        # XXX: We used to clear the configuration tree widget here
-
         # Rebuild the binding object
         build_binding(schema, existing=proxy.binding)
 
@@ -428,15 +420,13 @@ class SystemTopology(HasStrictTraits):
         new_topology_nodes = self.system_tree.update(server_hash)
         self.device_tree.update(server_hash)
 
-        for proxy in self._device_proxies.values():
-            attrs = self._get_device_attributes(proxy.device_id)
-            if proxy.status is ProxyStatus.OFFLINE and attrs:
+        # Attach topology nodes and set the status
+        for deviceId, node in new_topology_nodes.items():
+            proxy = self._device_proxies.get(deviceId)
+            if proxy is not None:
+                proxy.topology_node = node
+                proxy.server_id = node.attributes["serverId"]
                 proxy.status = ProxyStatus.ONLINE
-            elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
-                proxy.status = ProxyStatus.OFFLINE
-            if proxy.device_id in new_topology_nodes:
-                proxy.topology_node = new_topology_nodes[proxy.device_id]
-                proxy.server_id = attrs['serverId']
 
         self._request_server_classes(server_hash)
 
@@ -452,8 +442,6 @@ class SystemTopology(HasStrictTraits):
         self.system_tree.instance_update(server_hash)
         # And the device tree!
         self.device_tree.instance_update(server_hash)
-        # Note: Check if this is really needed!
-        self._update_online_device_status()
 
         self._request_server_classes(server_hash)
 
@@ -504,11 +492,8 @@ class SystemTopology(HasStrictTraits):
             self._project_device_proxies_server_update(instance_id)
 
             # Note the details of what device is gone
-            host = attributes.get('host', 'UNKNOWN')
+            host = attributes['host']
             servers.append((instance_id, host, 'offline'))
-
-        # Update the status of all online devices (device proxies)
-        self._update_online_device_status()
 
     def _topology_device_gone(self, instance_type, system_hash, devices):
         """Check if devices or macros are gone in the system topology
@@ -530,17 +515,13 @@ class SystemTopology(HasStrictTraits):
             proxy = self._device_proxies.get(instance_id)
             if proxy is not None:
                 proxy.status = ProxyStatus.OFFLINE
-                # XXX: We used to clear the configuration tree widget here
 
             # Update the trees
             self.system_tree.remove_device(instance_id)
             self.device_tree.remove_device(instance_id)
 
-            # Use pop() for removal in case there's nothing there
-            self._device_schemas.pop(instance_id, None)
-
             # Note the details of what device is gone
-            class_id = attributes.get('classId', 'unknown-class')
+            class_id = attributes['classId']
             devices.append((instance_id, class_id, 'offline'))
 
     def _topology_client_gone(self, system_hash):
@@ -579,22 +560,6 @@ class SystemTopology(HasStrictTraits):
             if attrs is not None:
                 break
         return attrs
-
-    def _update_online_device_status(self):
-        """Check all online version of device proxies (DeviceProxy or
-        ProjectDevice) to see if their status should be updated.
-
-        Call this function every time a new system hash is arrived from the
-        GUI server, so we can keep all device presentations up to date
-        """
-        for proxy in self._device_proxies.values():
-            device_id = proxy.device_id
-            # extract this device's information from system hash
-            attrs = self._get_device_attributes(device_id)
-            if proxy.status is ProxyStatus.OFFLINE and attrs:
-                proxy.status = ProxyStatus.ONLINE
-            elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
-                proxy.status = ProxyStatus.OFFLINE
 
     def _project_device_proxies_server_update(self, server_id):
         """Because the server online status has changed , update the project
