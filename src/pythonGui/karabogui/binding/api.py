@@ -19,6 +19,9 @@ from .config import (
     apply_project_configuration, extract_attribute_modifications,
     extract_configuration, extract_edits, extract_init_configuration,
     extract_online_edits, extract_sparse_configurations)
+from .enums import (
+    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES,
+    ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus)
 from .proxy import (
     BaseDeviceProxy, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     PropertyProxy)

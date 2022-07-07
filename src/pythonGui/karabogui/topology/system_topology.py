@@ -6,12 +6,12 @@
 from traits.api import (
     Bool, Dict, HasStrictTraits, Instance, Property, Set, on_trait_change)
 
-from karabo.common.api import NO_CLASS_STATUSES, ProxyStatus
 from karabo.native import Hash
 from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
-    BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
-    apply_configuration, apply_default_configuration, build_binding)
+    NO_CLASS_STATUSES, BindingRoot, DeviceClassProxy, DeviceProxy,
+    ProjectDeviceProxy, ProxyStatus, apply_configuration,
+    apply_default_configuration, build_binding)
 
 from .device_tree import DeviceSystemTree
 from .project_device import ProjectDeviceInstance

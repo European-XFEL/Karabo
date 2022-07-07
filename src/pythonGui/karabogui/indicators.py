@@ -5,7 +5,8 @@
 #############################################################################
 from enum import Enum
 
-from karabo.common.api import DeviceStatus, ProxyStatus, State
+from karabo.common.api import DeviceStatus, State
+from karabogui.binding.api import ProxyStatus
 
 from . import icons
 
@@ -92,17 +93,14 @@ def get_device_status_icon(status):
     """A `QIcon` for the given `status` is returned."""
     status_icons = {
         ProxyStatus.OFFLINE: icons.deviceOffline,
-        ProxyStatus.OK: icons.deviceAlive,
         ProxyStatus.ALIVE: icons.deviceAlive,
         ProxyStatus.REQUESTED: icons.device_requested,
         ProxyStatus.ONLINEREQUESTED: icons.device_requested,
         ProxyStatus.SCHEMA: icons.device_schema,
-        ProxyStatus.DEAD: icons.device_dead,
         ProxyStatus.NOSERVER: icons.deviceOfflineNoServer,
         ProxyStatus.NOPLUGIN: icons.deviceOfflineNoPlugin,
         ProxyStatus.INCOMPATIBLE: icons.deviceIncompatible,
         ProxyStatus.MISSING: icons.propertyMissing,
-        ProxyStatus.ERROR: icons.device_error
     }
 
     if not isinstance(status, ProxyStatus):
@@ -128,7 +126,6 @@ def get_project_device_status_icon(status, error=False):
     NOTE: These icons are for the Project Panel
     """
     status_icons = {
-        ProxyStatus.ERROR: icons.deviceInstanceError,
         ProxyStatus.NOSERVER: icons.deviceOfflineNoServer,
         ProxyStatus.NOPLUGIN: icons.deviceOfflineNoPlugin,
         ProxyStatus.OFFLINE: icons.deviceOffline,
@@ -140,9 +137,6 @@ def get_project_device_status_icon(status, error=False):
     if not isinstance(status, ProxyStatus):
         status = ProxyStatus(status)
 
-    if status != ProxyStatus.OFFLINE and error:
-        return status_icons.get(ProxyStatus.ERROR)
-
     return status_icons.get(status, icons.deviceInstance)
 
 
@@ -153,7 +147,6 @@ def get_project_server_status_icon(status):
     """
     status_icons = {
         ProxyStatus.ONLINE: icons.yes,
-        ProxyStatus.OK: icons.yes,
         ProxyStatus.OFFLINE: icons.no,
     }
 

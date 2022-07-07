@@ -10,7 +10,7 @@ from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication
 
 import karabogui.singletons.api as singletons_mod
-from karabo.common.api import ProxyStatus, State
+from karabo.common.api import State
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit,
     VectorString)
@@ -20,8 +20,8 @@ from karabogui.alarms.api import (
     TIME_OF_OCCURENCE)
 from karabogui.background import create_background_timer
 from karabogui.binding.api import (
-    DeviceClassProxy, DeviceProxy, PropertyProxy, apply_configuration,
-    build_binding)
+    DeviceClassProxy, DeviceProxy, PropertyProxy, ProxyStatus,
+    apply_configuration, build_binding)
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.util import process_qt_events
 

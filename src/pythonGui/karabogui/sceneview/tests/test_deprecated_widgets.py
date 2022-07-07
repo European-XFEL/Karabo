@@ -5,7 +5,6 @@ from unittest import mock, skipIf
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import (
     DetectorGraphModel, ImageGraphModel, MultiCurveGraphModel,
     ScatterGraphModel, TrendGraphModel, VectorGraphModel, VectorXYGraphModel,
@@ -13,7 +12,8 @@ from karabo.common.scenemodel.api import (
 from karabo.native import (
     Configurable, Float, Int32, Node, UInt32, VectorFloat, VectorInt32)
 from karabogui.binding.api import (
-    DeviceProxy, PropertyProxy, apply_configuration, build_binding)
+    DeviceProxy, PropertyProxy, ProxyStatus, apply_configuration,
+    build_binding)
 from karabogui.controllers.display.tests.image import (
     dimX, dimY, get_image_hash, get_output_node)
 from karabogui.testing import GuiTestCase, set_proxy_value

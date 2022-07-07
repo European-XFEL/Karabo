@@ -2,10 +2,9 @@ from unittest.mock import Mock
 
 from traits.api import Undefined
 
-from karabo.common.api import ProxyStatus
 from karabo.native import Hash
 from karabogui.binding.api import (
-    DeviceClassProxy, DeviceProxy, ImageBinding, PropertyProxy,
+    DeviceClassProxy, DeviceProxy, ImageBinding, PropertyProxy, ProxyStatus,
     apply_default_configuration, build_binding, extract_sparse_configurations,
     get_editor_value)
 from karabogui.testing import (

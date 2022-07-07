@@ -2,12 +2,11 @@ from unittest.mock import ANY, Mock, call, patch
 
 from qtpy.QtCore import QSize
 
-from karabo.common.api import ProxyStatus
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
-    build_binding)
+    ProxyStatus, build_binding)
 from karabogui.events import KaraboEvent
 from karabogui.testing import GuiTestCase, alarm_data, singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
