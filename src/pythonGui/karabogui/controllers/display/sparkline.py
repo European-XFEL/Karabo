@@ -55,9 +55,9 @@ class SparkRenderer(QWidget):
 
         self.yvals = np.zeros(self._p_max, np.double)
 
-        self.finfo = np.finfo(np.float)
-        self.ymax = np.ones(self._p_max, np.float) * self.finfo.min
-        self.ymin = np.ones(self._p_max, np.float) * self.finfo.max
+        self.finfo = np.finfo(np.float64)
+        self.ymax = np.ones(self._p_max, np.float64) * self.finfo.min
+        self.ymin = np.ones(self._p_max, np.float64) * self.finfo.max
         self.ycnts = np.zeros(self._p_max, np.int)
 
         self.painter_path = None
@@ -296,8 +296,8 @@ class SparkRenderer(QWidget):
 
         bin_idx = np.digitize(x, bins)
 
-        self.ymin = np.zeros(self.yvals.shape, np.float)
-        self.ymax = np.zeros(self.yvals.shape, np.float)
+        self.ymin = np.zeros(self.yvals.shape, np.float64)
+        self.ymax = np.zeros(self.yvals.shape, np.float64)
 
         for i in range(self._p_max):
             idx = bin_idx == i
