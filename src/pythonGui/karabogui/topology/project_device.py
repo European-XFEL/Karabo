@@ -59,7 +59,7 @@ class ProjectDeviceInstance(HasStrictTraits):
 
     # The instance status deliverd by the instance info
     instance_status = Property(
-        depends_on=['_online_proxy.topology_node.status'])
+        depends_on=['_online_proxy:topology_node.status'])
 
     configuration = Property
 
@@ -240,7 +240,7 @@ class ProjectDeviceInstance(HasStrictTraits):
             # Notify configuration has been applied!
             self._offline_proxy.config_update = True
 
-    @on_trait_change('_offline_proxy.status', post_init=True)
+    @on_trait_change('_offline_proxy:status', post_init=True)
     def _status_changed(self, old, new):
         """Clear the offline proxy binding values when device server goes
         offline
