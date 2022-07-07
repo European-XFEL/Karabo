@@ -11,7 +11,7 @@ from traits.api import (
     WeakRef)
 
 import karabogui.access as krb_access
-from karabo.common.api import DeviceStatus
+from karabo.common.api import InstanceStatus
 from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
@@ -28,7 +28,7 @@ class DeviceTreeNode(HasStrictTraits):
     node_id = String
     server_id = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*DeviceStatus)
+    status = Enum(*InstanceStatus)
     capabilities = Int
     interfaces = Int
     attributes = Dict
@@ -136,7 +136,7 @@ class DeviceSystemTree(HasStrictTraits):
             if device_node is None:
                 continue
 
-            status = DeviceStatus(attrs['status'])
+            status = InstanceStatus(attrs['status'])
             device_node.status = status
             device_node.attributes = attrs
             device_status.add(device_id)
@@ -247,7 +247,7 @@ class DeviceSystemTree(HasStrictTraits):
             visibility = AccessLevel(attrs['visibility'])
             capabilities = attrs['capabilities']
             server_id = attrs['serverId']
-            status = DeviceStatus(attrs['status'])
+            status = InstanceStatus(attrs['status'])
             # Interfaces are optional ...
             interfaces = attrs.get('interfaces', 0)
 
