@@ -10,13 +10,13 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 from qtpy.QtCore import QObject, Slot
 from qtpy.QtWidgets import QMessageBox
 
-from karabo.common.api import ProxyStatus
 from karabo.native import AccessMode, Assignment, Hash, Timestamp
 from karabogui import messagebox
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import Priority, executeLater
 from karabogui.binding.api import (
-    apply_fast_data, extract_attribute_modifications, extract_configuration)
+    ProxyStatus, apply_fast_data, extract_attribute_modifications,
+    extract_configuration)
 from karabogui.const import KARABO_CLIENT_ID
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger

@@ -2,7 +2,8 @@ from qtpy.QtCore import QRect, QSize, Qt
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 import karabogui.access as krb_access
-from karabo.common.api import ProxyStatus, State
+from karabo.common.api import State
+from karabogui.binding.api import ProxyStatus
 from karabogui.indicators import STATE_COLORS, get_device_status_pixmap
 from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName

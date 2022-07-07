@@ -9,10 +9,9 @@ from qtpy import uic
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
-from karabo.common.enums import ProxyStatus
 from karabo.native import Hash, create_html_hash
 from karabogui.binding.api import (
-    extract_init_configuration, validate_binding_configuration)
+    ProxyStatus, extract_init_configuration, validate_binding_configuration)
 
 from .utils import get_dialog_ui
 
