@@ -10,7 +10,7 @@ from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication
 
 import karabogui.singletons.api as singletons_mod
-from karabo.common.api import State
+from karabo.common.api import Capabilities, State
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit,
     VectorString)
@@ -192,6 +192,9 @@ def singletons(**objects):
                 del singletons_dict[key]
 
 
+DEVICE_CAPA = Capabilities.PROVIDES_SCENES + Capabilities.PROVIDES_INTERFACES
+
+
 def system_hash():
     """Generate a system hash which will be built into a system tree
     """
@@ -211,7 +214,7 @@ def system_hash():
         "archive": True,
         "visibility": AccessLevel.OBSERVER,
         "type": "device",
-        "capabilities": 5,
+        "capabilities": DEVICE_CAPA,
         "serverId": "swerver",
         "classId": "FooClass",
         "status": "ok",
@@ -264,7 +267,7 @@ def device_hash():
         "host": "BIG_IRON",
         "archive": False,
         "visibility": AccessLevel.OBSERVER,
-        "capabilities": 5,
+        "capabilities": DEVICE_CAPA,
         "serverId": "swerver",
         "classId": "FooClass",
         "status": "ok",
@@ -276,7 +279,7 @@ def device_hash():
         "host": "BIG_IRON",
         "archive": True,
         "visibility": AccessLevel.OBSERVER,
-        "capabilities": 5,
+        "capabilities": DEVICE_CAPA,
         "serverId": "swerver",
         "classId": "FooClass",
         "status": "ok",
@@ -288,7 +291,7 @@ def device_hash():
         "host": "BIG_IRON",
         "archive": True,
         "visibility": AccessLevel.OBSERVER,
-        "capabilities": 5,
+        "capabilities": DEVICE_CAPA,
         "serverId": "swerver",
         "classId": "BarClass",
         "status": "error",

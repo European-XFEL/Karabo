@@ -24,8 +24,8 @@ class Interfaces(IntEnum):
     # ...
 
 
-class DeviceStatus(Enum):
+class InstanceStatus(Enum):
+    NONE = "none"
     OK = "ok"
     UNKNOWN = "unknown"
     ERROR = "error"
-    NONE = "none"

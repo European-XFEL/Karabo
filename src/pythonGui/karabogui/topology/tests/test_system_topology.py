@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from traits.api import pop_exception_handler, push_exception_handler
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import InstanceStatus
 from karabo.native import Configurable, Hash, String
 from karabogui.binding.api import ProxyStatus
 from karabogui.testing import (
@@ -195,14 +195,14 @@ class TestSystemTopology(GuiTestCase):
 
             assert dev.status is ProxyStatus.ONLINEREQUESTED
             network.onGetDeviceSchema.assert_called_with("divvy")
-            assert dev.topology_node.status is not DeviceStatus.ERROR
+            assert dev.topology_node.status is not InstanceStatus.ERROR
 
             # Instance update device
             changes = Hash("new", Hash(), "update", h, "gone", Hash())
             topology.topology_update(changes)
             attrs = topology.get_attributes("device.divvy")
             assert attrs["status"] == "error"
-            assert dev.topology_node.status is DeviceStatus.ERROR
+            assert dev.topology_node.status is InstanceStatus.ERROR
 
             # A second time to be sure
             h["device.divvy", "status"] = "ok"
@@ -210,7 +210,7 @@ class TestSystemTopology(GuiTestCase):
             topology.topology_update(changes)
             attrs = topology.get_attributes("device.divvy")
             assert attrs["status"] == "ok"
-            assert dev.topology_node.status is DeviceStatus.OK
+            assert dev.topology_node.status is InstanceStatus.OK
 
     def test_visit_system_topology(self):
         topology = SystemTopology()
