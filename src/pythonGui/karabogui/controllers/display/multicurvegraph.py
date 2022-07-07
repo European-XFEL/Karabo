@@ -158,8 +158,8 @@ def _convert_data(xdata, ydata):
     """Convert x y deque array to numpy array for plotting.
     """
     # There might be np.nan in the array
-    npx = np.array(xdata, dtype=np.float)
-    npy = np.array(ydata, dtype=np.float)
+    npx = np.array(xdata, dtype=np.float64)
+    npy = np.array(ydata, dtype=np.float64)
     if npx.size != npy.size:
         # trim npx if necessary, len(npx) >= len(npy) always True
         npx = npx[-npy.size:]

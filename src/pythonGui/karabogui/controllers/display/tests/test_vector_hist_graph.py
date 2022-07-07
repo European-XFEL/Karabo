@@ -73,7 +73,7 @@ class TestsNDArrayHistGraph(GuiTestCase):
         self.controller.model.start = 0
         self.controller.model.stop = 10
         value = np.array([1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 8.1, 9.2, 10.1],
-                         dtype=np.float)
+                         dtype=np.float64)
         array_hash = Hash('type', 20,
                           'data', value.tobytes())
         set_proxy_value(self.proxy, 'prop', array_hash)
