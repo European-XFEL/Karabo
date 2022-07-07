@@ -443,10 +443,6 @@ class ConfigurationManager(DeviceClientBase):
            - overwritable: Will the configuration be overwritable?
                            Ignored if the named configuration already exists
 
-           - setIdDigest: the digest to be used for the set of devices whose
-                          configurations are being saved. If no value is
-                          provided, a digest is generated internally for
-                          the set of devices in the method arguments.
         """
         config_name = info["name"]  # Note: Must be there!
         deviceIds = info["deviceIds"]
@@ -472,7 +468,6 @@ class ConfigurationManager(DeviceClientBase):
         priority = info.get("priority", 1)
         timestamp = info.get("timestamp", Timestamp().toLocal())
         overwritable = info.get("overwritable", False)
-        setIdDigest = info.get("setIdDigest", None)
 
         try:
             async def poll_(device_id):
@@ -495,8 +490,7 @@ class ConfigurationManager(DeviceClientBase):
         # Let it throw here if needed!
         self.db.save_configuration(
             config_name, items, description=description, user=user,
-            priority=priority, overwritable=overwritable,
-            setIdDigest=setIdDigest, timestamp=timestamp)
+            priority=priority, overwritable=overwritable, timestamp=timestamp)
 
         return Hash("success", True)
 
