@@ -410,6 +410,10 @@ class SignalSlotable(Configurable):
                     "onDestruction took longer than 5 seconds")
             except Exception:
                 self.logger.exception("Exception in onDestruction")
+
+        if self.device_server is not None:
+            self.device_server.removeChild(self.deviceId)
+
         if self._ss is not None:
             # Returns success
             return await self._ss.stop_tasks()
