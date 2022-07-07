@@ -5,7 +5,7 @@
 #############################################################################
 from enum import Enum
 
-from karabo.common.api import DeviceStatus, State
+from karabo.common.api import InstanceStatus, State
 from karabogui.binding.api import ProxyStatus
 
 from . import icons
@@ -76,14 +76,14 @@ STATE_COLORS = {
 def get_instance_info_icon(status):
     """Return an instance info icon which reflects the given `DeviceStatus`
     """
-    if not isinstance(status, DeviceStatus):
-        status = DeviceStatus(status)
+    if not isinstance(status, InstanceStatus):
+        status = InstanceStatus(status)
 
-    if status is DeviceStatus.OK:
+    if status is InstanceStatus.OK:
         return icons.statusOk
-    elif status is DeviceStatus.ERROR:
+    elif status is InstanceStatus.ERROR:
         return icons.statusError
-    elif status is DeviceStatus.UNKNOWN:
+    elif status is InstanceStatus.UNKNOWN:
         return icons.statusUnknown
     # No icon!
     return None
