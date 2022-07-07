@@ -28,4 +28,4 @@ def test_proxy_essential_compare():
     # Different classIds
     showing_proxy = topology.get_project_device_proxy("divvy", "swerver",
                                                       "BarClass")
-    assert not compare_proxy_essential(proxy, showing_proxy)
+    assert compare_proxy_essential(proxy, showing_proxy)

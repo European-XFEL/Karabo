@@ -51,14 +51,15 @@ def format_property_details(binding, path, value=''):
 def compare_proxy_essential(old, new):
     """Compare the necessary proxy information and return True if equal
 
-    :returns: Boolean if essentials are equal (classId, serverId, deviceId)
+    Note: Proxies might change their classes, e.g. are different from project
+    and online information. Hence, they are not considered.
+
+    :returns: Boolean if essentials are equal (serverId, deviceId)
     """
     def get_proxy_id(proxy):
-        class_id = proxy.binding.class_id
         server_id = proxy.server_id
-        device_id = ('' if not hasattr(proxy, 'device_id')
-                     else proxy.device_id)
-        return tuple([class_id, server_id, device_id])
+        device_id = getattr(proxy, "device_id", "")
+        return tuple([server_id, device_id])
 
     return get_proxy_id(old) == get_proxy_id(new)
 
