@@ -1,6 +1,7 @@
 from html.parser import HTMLParser
 
 import numpy as np
+import pytest
 
 from ..hash import Hash, HashList
 from ..utils import (
@@ -132,6 +133,17 @@ def test_get_array_data():
     np.testing.assert_array_equal(
         array, np.array([[2], [4], [6]], dtype=np.int64))
     assert array.shape == (3, 1)
+
+    # This method is expected to throw a `KeyError` if not
+    # all information is found!
+    h = Hash('data', Hash())
+    with pytest.raises(KeyError):
+        get_array_data(h, 'data')
+
+    h['data'] = Hash()
+    h['data.data'] = 2.2
+    with pytest.raises(KeyError):
+        get_array_data(h, 'data')
 
 
 def test_create_hash_html():
