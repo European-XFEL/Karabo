@@ -114,7 +114,7 @@ DEFAULT_CONFIG = {"x_grid": False, "y_grid": False,
                   "roi_items": [], "roi_tool": 0,
                   "background": "transparent", "title": ""}
 
-orders = np.arange(-5, 5, dtype=np.float)
+orders = np.arange(-5, 5, dtype=np.float64)
 LOG_ARRAY = 10 ** orders
 RANGE_TOLERANCE = 0.12  # or 12% percent
 

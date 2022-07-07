@@ -25,7 +25,7 @@ def generate_baseline(data, offset=0.0, step=1.0):
     step = step if step else 1.0
     stop = offset + data.size * step
 
-    return np.arange(start=offset, stop=stop, step=step, dtype=np.float)
+    return np.arange(start=offset, stop=stop, step=step, dtype=np.float64)
 
 
 TYPICAL_POINTS = 20000
