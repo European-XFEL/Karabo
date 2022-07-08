@@ -122,9 +122,7 @@ class DeviceSystemTree(HasStrictTraits):
 
     def update(self, system_hash):
         with self.update_context.layout_context():
-            nodes = self._handle_device_data('device', system_hash)
-
-        return nodes
+            self._handle_device_data('device', system_hash)
 
     def instance_update(self, system_hash):
         if "device" not in system_hash:
@@ -270,14 +268,13 @@ class DeviceSystemTree(HasStrictTraits):
                 device_node = DeviceTreeNode(node_id=karabo_name,
                                              parent=type_node,
                                              server_id=server_id,
+                                             status=status,
+                                             attributes=attrs,
+                                             capabilities=capabilities,
+                                             interfaces=interfaces,
                                              visibility=visibility,
                                              level=MEMBER_LEVEL)
                 handler(type_node, device_node)
-
-            device_node.status = status
-            device_node.attributes = attrs
-            device_node.capabilities = capabilities
-            device_node.interfaces = interfaces
 
             self._device_nodes[karabo_name] = device_node
 
