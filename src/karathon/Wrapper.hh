@@ -613,7 +613,11 @@ namespace karathon {
      *  - exceptions in handler calls are properly treated and forwarded,
      *  - handler's destructor is called under GIL.
      *
-     *  Template types are the C++ arguments to be passed to the handler.
+     * Template types are the C++ arguments to be passed to the handler.
+     * Caveat:
+     * For types where the automatic conversion does not work (e.g. boost::any and std:vector<..>,)
+     * a specialised implementation for the operator() might be needed, using e.g. the
+     * Wrapper::toObject or Wrapper::from[...]ToPy[...] methods for conversion, see e.g. class HandlerWrapAny1.
      */
     template <typename... Args> // if needed, could specify return type of operator() as fixed first template argument
     class HandlerWrap {
@@ -706,6 +710,21 @@ namespace karathon {
             : HandlerWrap<const boost::any&, const boost::any&, const boost::any&, const boost::any&>(handler, where) {}
 
         void operator()(const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) const;
+    };
+
+    /**
+     * Specialisation of HandlerWrap for two vector<unsigned long long> arguments
+     *
+     * The arguments are converted to boost::object before passed to the Python handler.
+     */
+    class HandlerWrapVullVull
+        : public HandlerWrap<const std::vector<unsigned long long>&, const std::vector<unsigned long long>&> {
+       public:
+        HandlerWrapVullVull(const bp::object& handler, char const* const where)
+            : HandlerWrap<const std::vector<unsigned long long>&, const std::vector<unsigned long long>&>(handler,
+                                                                                                          where) {}
+
+        void operator()(const std::vector<unsigned long long>& v1, const std::vector<unsigned long long>& v2) const;
     };
 
     /**

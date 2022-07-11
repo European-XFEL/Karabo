@@ -802,6 +802,21 @@ namespace karathon {
         }
     }
 
+    void HandlerWrapVullVull::operator()(const std::vector<unsigned long long>& v1,
+                                         const std::vector<unsigned long long>& v2) const {
+        ScopedGILAcquire gil;
+        try {
+            if (*m_handler) {
+                (*m_handler)(Wrapper::fromStdVectorToPyList(v1), Wrapper::fromStdVectorToPyList(v2));
+            }
+        } catch (const bp::error_already_set& e) {
+            karathon::detail::treatError_already_set(*m_handler, m_where);
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
     std::tuple<std::string, std::string> getPythonExceptionStrings() {
         // Fetch parameters of error indicator ... the error indicator is getting cleared!
         // ... the new references returned!

@@ -111,6 +111,16 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         with self.subTest(msg="Test multiple write with different sources"):
             self._testMultiWrite()
 
+        # Finally check (once) that read and written bytes are published
+        bytesWritten = self.dc.get("p2pTestSender", "output1.bytesWritten")
+        self.assertEqual(len(bytesWritten), 1)
+        self.assertGreater(bytesWritten[0], 0)
+        bytesRead = self.dc.get("p2pTestSender", "output1.bytesRead")
+        self.assertEqual(len(bytesRead), 1)
+        self.assertGreater(bytesRead[0], 0)
+        # More written (data!) than read (just protocol message to get more)
+        self.assertGreater(bytesWritten[0], bytesRead[0])
+
     def _testPipe(self):
         startTimePoint = datetime.now()
         nTotalOnEos = 0
