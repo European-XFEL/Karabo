@@ -1507,6 +1507,16 @@ class PythonDevice(NoFsm):
 
             outputChannel.registerShowConnectionsHandler(connectionsHandler)
 
+            def statsHandler(bytesRead, bytesWritten):
+                with self._stateChangeLock:
+                    if self._fullSchema.has(path):
+                        h = Hash(path + ".bytesRead", bytesRead,
+                                 path + ".bytesWritten", bytesWritten)
+                        self._setNoStateLock(h)
+                    # else might just be removed by self.updateSchema
+
+            outputChannel.registerShowStatisticsHandler(statsHandler)
+
     def _prepareInputChannel(self, path):
         """
         Internal method to create an InputChannel for given path.

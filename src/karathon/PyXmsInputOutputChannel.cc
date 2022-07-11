@@ -228,6 +228,14 @@ namespace karathon {
               std::move(wrappedHandler)); // move for once when handler registration will take rvalue reference...
     }
 
+    void OutputChannelWrap::registerShowStatisticsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
+                                                            const bp::object& handler) {
+        HandlerWrapVullVull wrappedHandler(handler, "show statistics");
+        ScopedGILRelease noGil;
+        // Setting the handler might overwrite and thus destruct a previous handler.
+        // That one's destruction might acquire the GIL via the destructor of HandlerWrap.
+        self->registerShowStatisticsHandler(wrappedHandler);
+    }
 
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data,
                                     const bp::object& meta, bool copyAllData) {
@@ -577,7 +585,16 @@ void exportPyXmsInputOutputChannel() {
                    "      be called concurrently")
 
               .def("registerShowConnectionsHandler", &karathon::OutputChannelWrap().registerShowConnectionsHandlerPy,
-                   (bp::arg("handler")))
+                   (bp::arg("handler")),
+                   "Register a handler to be called when the 'connection' table changes.\n"
+                   "Argument of the handler is a list of Hash as described by the row schema\n"
+                   "of the 'connection' table")
+
+              .def("registerShowStatisticsHandler", &karathon::OutputChannelWrap().registerShowStatisticsHandlerPy,
+                   (bp::arg("handler")),
+                   "Register a handler to be regularly called to update written and read bytes.\n"
+                   "Argument of the handler are two lists of numbers: bytes read from and written to\n"
+                   "connected channels, in the same order as in the connection table.")
 
                     KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::OutputChannel);
     }
