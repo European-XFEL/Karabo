@@ -389,6 +389,12 @@ class TestConfigurationManagerData(unittest.TestCase):
         self.assertEqual(cfgs[1][CONFIG_DB_USER], 'Bob')
         self.assertEqual(cfgs[2][CONFIG_DB_NAME], CFG_NAME_3)
         self.assertEqual(cfgs[2][CONFIG_DB_USER], 'Charlie')
+        # minSetSize=0 or negative mean the same as the default None
+        cfgs2 = self.database.list_configuration_sets([CFG_DEVICE_1], 0)
+        self.assertEqual(cfgs, cfgs2)
+        cfgs2 = self.database.list_configuration_sets([CFG_DEVICE_1], -4)
+        self.assertEqual(cfgs, cfgs2)
+
         # Retrieval of all sets of size at least 2 containing both CFG_DEVICE_1
         # and CFG_DEVICE_2 should return both config sets that contained both
         # devices.
@@ -440,11 +446,9 @@ class TestConfigurationManagerData(unittest.TestCase):
         # number of devices in the first argument.
         with self.assertRaises(ConfigurationDBError):
             cfgs = self.database.list_configuration_sets([CFG_DEVICE_3], 4)
-        # Retrieval of all sets of size less than 1 should throw an exception -
-        # minSetSize must be between 1 and the number of devices in the
-        # first argument.
+        # Empty list of devices throws exceptions.
         with self.assertRaises(ConfigurationDBError):
-            cfgs = self.database.list_configuration_sets([CFG_DEVICE_3], 0)
+            cfgs = self.database.list_configuration_sets([])
 
     def test_save_get_configurations_in_set(self):
         """Checks that list configurations for device (independent of name
