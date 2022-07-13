@@ -1,4 +1,32 @@
 ***************************
+What's New in Karabo 2.15.2
+***************************
+
+This patch release aims to fix a few GUI bugs and a few framework optimizations
+for early adopters.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- GUI: Set focus policy on combobox https://redmine.xfel.eu/issues/131743
+- GUI: Make sure editable controllers have strong focus
+- GUI: Sticker Widget - Make font size in sync https://redmine.xfel.eu/issues/131225
+- TOOLS: fix build system for windows
+- MDL: Fix proxy reconnect on CLI
+- Bound: Do not spam log with warnings for caught exceptions
+
+***************************
+What's New in Karabo 2.15.1
+***************************
+
+This hotfix release aims to fix a day one issue of 2.15.0 on high density screens
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- GUI: check properly QT version !6609
+
+***************************
 What's New in Karabo 2.15.0
 ***************************
 
