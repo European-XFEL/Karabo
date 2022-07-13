@@ -310,8 +310,14 @@ namespace karabo {
            private:
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
-            void onConnect(karabo::net::ErrorCode error, karabo::net::Connection::Pointer connection,
-                           const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel,
+            static void onConnectWrap(WeakPointer self, karabo::net::ErrorCode error,
+                                      karabo::net::Connection::Pointer connection,
+                                      const karabo::util::Hash& outputChannelInfo,
+                                      karabo::net::Channel::Pointer channel, unsigned int connectId,
+                                      const boost::function<void(const karabo::net::ErrorCode&)>& handler);
+
+            void onConnect(karabo::net::ErrorCode error, karabo::net::Connection::Pointer& connection,
+                           const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer& channel,
                            unsigned int connectId, const boost::function<void(const karabo::net::ErrorCode&)>& handler);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
@@ -387,15 +393,14 @@ namespace karabo {
              * Disconnect internals - needs protection by m_outputChannelsMutex
              *
              * @param outputChannelString One of the "connectedOutputChannels" given at construction
-             * @param lock lock of m_outputChannelsMutex, will likely be unlocked during execution
              */
-            void disconnectImpl(const std::string& outputChannelString, boost::mutex::scoped_lock& lock);
+            void disconnectImpl(const std::string& outputChannelString);
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
             void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
 
-            void closeChannelsAndStopConnections();
+            void disconnectAll();
 
             void prepareMetaData();
         };
