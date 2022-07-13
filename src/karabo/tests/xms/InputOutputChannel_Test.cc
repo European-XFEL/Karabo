@@ -167,7 +167,7 @@ void InputOutputChannel_Test::testManyToOne() {
         while (--trials >= 0) {
             registered = outputs[i]->hasRegisteredCopyInputChannel(input->getInstanceId());
             if (registered) break;
-            // Happesn very rarely - seen 6 times in 20,000 local test runs.
+            // Happens very rarely - seen 6 times in 20,000 local test runs.
             boost::this_thread::sleep(boost::posix_time::milliseconds(1));
         }
         CPPUNIT_ASSERT_MESSAGE("Not yet ready: output " + karabo::util::toString(i), registered);
@@ -551,5 +551,39 @@ void InputOutputChannel_Test::testOutputPreparation() {
         output->initialize();
         const std::string address = output->getInitialConfiguration().get<std::string>("address");
         CPPUNIT_ASSERT_EQUAL(address, expectedAddress);
+    }
+}
+
+void InputOutputChannel_Test::testConnectHandler() {
+    // Test that handler for InputChannel::onConnect is called even if InputChannel is destructed shortly afterwards
+
+    // Setup output channel
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
+    output->setInstanceIdAndName("outputChannel", "output");
+    output->initialize(); // needed due to int == 0 argument above
+
+    // Parts of setup of input channel
+    const std::string outputChannelId(output->getInstanceId() + ":output");
+    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId));
+    Hash outputInfo(output->getInformation());
+    outputInfo.set("outputChannelString", outputChannelId);
+    outputInfo.set("memoryLocation", "local");
+
+    // Stress test many times due to different code paths for different thread timing
+    int count = 250;
+    while (--count >= 0) {
+        InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
+        input->setInstanceId("inputChannel");
+
+        auto connectPromise = std::make_shared<std::promise<karabo::net::ErrorCode>>();
+        std::future<karabo::net::ErrorCode> connectFuture = connectPromise->get_future();
+        auto connectHandler = [&connectPromise](const karabo::net::ErrorCode& ec) { connectPromise->set_value(ec); };
+        input->connect(outputInfo, connectHandler);
+        const int sleepMs = count % 4; // i.e. test 0 to 3 ms delay before destruction of InputChannel
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepMs));
+        input.reset();
+        // Now ensure that handler is called
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + karabo::util::toString(count), std::future_status::ready,
+                                     connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
     }
 }
