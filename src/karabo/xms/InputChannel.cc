@@ -128,7 +128,8 @@ namespace karabo {
         InputChannel::InputChannel(const karabo::util::Hash& config)
             : m_strand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
               m_deadline(karabo::net::EventLoop::getIOService()),
-              m_connectStrand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService())),
+              // "guaranteeToRun" = true to ensure handlers are all called under all circumstances
+              m_connectStrand(Configurator<Strand>::create("Strand", Hash("guaranteeToRun", true))),
               m_respondToEndOfStream(true) {
             reconfigure(config, false);
 
@@ -142,7 +143,8 @@ namespace karabo {
 
 
         InputChannel::~InputChannel() {
-            closeChannelsAndStopConnections();
+            // Actively disonnect (i.e. close) all TcpChannels - as safety in case a shared_ptr is dangling somewhere
+            disconnectAll();
             Memory::unregisterChannel(m_channelId);
             KARABO_LOG_FRAMEWORK_DEBUG << "*** InputChannel::~InputChannel DTOR for channelId = " << m_channelId;
         }
@@ -234,7 +236,7 @@ namespace karabo {
                         result[outputChannel] = net::ConnectionStatus::CONNECTED;
                     } else { // How happen?
                         KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " - getConnectionStatus() finds connection to '"
-                                                  << outputChannel << "' having its channel is closed - erase.";
+                                                  << outputChannel << "' having its channel closed - erase.";
                         m_openConnections.erase(itOpenConn);
                         postConnectionTracker(outputChannel, net::ConnectionStatus::DISCONNECTED);
                         result[outputChannel] = net::ConnectionStatus::DISCONNECTED;
@@ -335,7 +337,7 @@ namespace karabo {
                         // Store a random number together with handler - this helps to distinguish whether a call to
                         // onConnect(..) was triggered by a connection attempt that was already cancelled or a following
                         // new connection attempt.
-                        const unsigned int id = m_random();
+                        const unsigned int id = m_random(); // concurrency protection by lock(m_outputChannelsMutex)
                         m_connectionsBeingSetup[outputChannelString] = std::make_pair(id, handler);
                         KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
                         postConnectionTracker(outputChannelString, net::ConnectionStatus::CONNECTING);
@@ -346,8 +348,15 @@ namespace karabo {
                         karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
 
                         // Establish connection (and define sub-type of server)
-                        connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
-                                                                       outputChannelInfo, _2, id, handler));
+                        // Notes:
+                        // 1) To guarantee that handler is called even if 'this' is quickly destructed after the
+                        //    call to connect(..), do not bind_weak(onConnect, this, ...), but implement the protection
+                        //    that bind_weak offers in a wrapper that then calls the handler.
+                        // 2) It may look fishy to bind 'connection' to a handler passed to 'connection' itself. Indeed,
+                        //    this creates circular shared pointers, but we expect the handler to be called by boost
+                        //    (be it with success or failure) and then to be dropped which solves the circularity again.
+                        connection->startAsync(boost::bind(&InputChannel::onConnectWrap, weak_from_this(), _1,
+                                                           connection, outputChannelInfo, _2, id, handler));
                         return; // Do not call handler below
                     }
                 }
@@ -373,7 +382,7 @@ namespace karabo {
                      it != m_configuredOutputChannels.end(); ++it) {
                     if (it->second.get<string>("hostname") != hostname) continue;
                     if (it->second.get<unsigned int>("port") != port) continue;
-                    disconnectImpl(it->first, lock);
+                    disconnectImpl(it->first);
                     return;
                 }
             }
@@ -385,12 +394,12 @@ namespace karabo {
 
         void InputChannel::disconnect(const std::string& outputChannelString) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            disconnectImpl(outputChannelString, lock);
+            disconnectImpl(outputChannelString);
         }
 
 
-        void InputChannel::disconnectImpl(const std::string& outputChannelString, boost::mutex::scoped_lock& lock) {
-            // If someone is still waiting for connection, tell that this was canceled
+        void InputChannel::disconnectImpl(const std::string& outputChannelString) {
+            // If someone is still waiting for connection, tell that this was cancelled
             auto itBeingSetup = m_connectionsBeingSetup.find(outputChannelString);
             if (itBeingSetup != m_connectionsBeingSetup.end()) {
                 const auto handler = std::move(itBeingSetup->second.second);
@@ -414,13 +423,16 @@ namespace karabo {
         }
 
 
-        void InputChannel::closeChannelsAndStopConnections() {
+        void InputChannel::disconnectAll() {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            std::vector<std::string> openConnections;
             for (OpenConnections::iterator it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
-                it->second.second->close();
-                it->second.first->stop();
+                openConnections.push_back(it->first);
             }
-            m_openConnections.clear();
+            // Cannot directly call disconnectImpl in above loop since it manipulates the map which is looped over
+            for (const std::string& connection : openConnections) {
+                disconnectImpl(connection);
+            }
         }
 
 
@@ -433,9 +445,25 @@ namespace karabo {
         }
 
 
-        void InputChannel::onConnect(karabo::net::ErrorCode ec, karabo::net::Connection::Pointer connection,
-                                     const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel,
-                                     unsigned int connectId,
+        void InputChannel::onConnectWrap(InputChannel::WeakPointer weakSelf, karabo::net::ErrorCode ec,
+                                         karabo::net::Connection::Pointer connection,
+                                         const karabo::util::Hash& outputChannelInfo,
+                                         karabo::net::Channel::Pointer channel, unsigned int connectId,
+                                         const boost::function<void(const karabo::net::ErrorCode&)>& handler) {
+            Pointer self = weakSelf.lock();
+            if (self) {
+                self->onConnect(ec, connection, outputChannelInfo, channel, connectId, handler);
+            } else { // Already dead - but do not forget to call handler
+                if (handler) {
+                    handler(boost::system::errc::make_error_code(boost::system::errc::operation_canceled));
+                }
+            }
+        }
+
+
+        void InputChannel::onConnect(karabo::net::ErrorCode ec, karabo::net::Connection::Pointer& connection,
+                                     const karabo::util::Hash& outputChannelInfo,
+                                     karabo::net::Channel::Pointer& channel, unsigned int connectId,
                                      const boost::function<void(const karabo::net::ErrorCode&)>& handler) {
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
             if (!ec) { // succeeded so far
