@@ -263,10 +263,10 @@ class ConfigurationDatabase(object):
         if len(deviceIds) == 0:
             raise ConfigurationDBError('Please provide at least one device id')
 
-        if not minSetSize:
+        if not minSetSize or minSetSize < 0:
             minSetSize = len(deviceIds)
         else:
-            if minSetSize < 1 or minSetSize > len(deviceIds):
+            if minSetSize > len(deviceIds):
                 raise ConfigurationDBError(
                     'minSetSize has to be between 1 and the number of '
                     f'deviceIds, {len(deviceIds)}.')
