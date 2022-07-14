@@ -23,6 +23,7 @@ import aio_pika
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
+from .amqp_cluster import connect_cluster
 from .base import Broker
 
 
@@ -558,7 +559,7 @@ class AmqpBroker(Broker):
         for url in urls:
             try:
                 # Perform connection
-                self.connection = await aio_pika.connect(url, loop=self.loop)
+                self.connection = await connect_cluster(url, loop=self.loop)
                 # Creating a channel
                 self.channel = await self.connection.channel()
                 await self.channel.set_qos(prefetch_count=1)
