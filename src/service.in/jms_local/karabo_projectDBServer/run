@@ -1,0 +1,7 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+
+# a file-based backend for the project manager can be chosen by using the lines below:
+exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' \
+init='{"KaraboProjectDB":{"classId":"ProjectManager", "projectDB":{"protocol": "file_db", "file_db":{"dir": "projectDB"}}}}' 'visibility=4' 2>&1
