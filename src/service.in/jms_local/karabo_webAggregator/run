@@ -1,0 +1,4 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+exec envdir $KARABO/var/environment karabo-webaggregatorserver serverId=karabo/webAggregator --port=8585
