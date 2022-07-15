@@ -8,6 +8,7 @@ Contents:
    gui_cli
    server
    all_local
+   existdb_local
    use_device
    webservers
    :maxdepth: 1

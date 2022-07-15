@@ -1,0 +1,4 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/alarmServer 'deviceClasses=AlarmService' 'autoStart[0]={AlarmService}' 'visibility=4' 'Logger.priority=INFO' 2>&1
