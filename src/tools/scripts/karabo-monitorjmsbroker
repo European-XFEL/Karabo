@@ -1,0 +1,25 @@
+#!/bin/bash
+cd $(dirname $0)
+if [ -z $KARABO ]; then
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
+
+_term() { 
+    $KARABO/extern/bin/imq stop
+}
+# Stop Broker on sigterm
+
+trap _term SIGTERM SIGINT
+
+$KARABO/extern/bin/imq start
+sleep 1
+PID=`ps -ef | grep -w imqbrokerd | grep -v grep | awk '{print $2}'`
+echo $PID
+
+# the imq tool will start the broker but not as a child of this shell
+# for this reason we have to resort to poll the PID
+while [ -e /proc/$PID ]
+do
+    sleep .6
+done
