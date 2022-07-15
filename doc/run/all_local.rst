@@ -4,57 +4,33 @@
 Starting a full Karabo system all local
 ***************************************
 
-Here we describe how you can bring up a basic Karabo system on a single host. 
+Here we describe how you can bring up a basic Karabo system on a single host, including the broker. Both, project manager and data logging, use their file based backend.
+
 Make sure you have understood the fundamental concepts before proceeding here.
 
 Lets go step by step. The only prerequisit is, that you have installed and 
 **activated** Karabo as described :ref:`here <installation/binary>`.
 
-Step 1: Local Message Broker
-============================
+Step 1: Install Services to run locally
+=======================================
 
-The first thing that must run for Karabo to work is the message broker. 
-If you are in the European XFEL GmbH network you can use our always running 
-broker (`tcp://exfl-broker:7777`) and skip to the next step. 
-If you are outside of the European XFEL network you must start the broker
-locally on your computer. 
-To accomplish this type::
+From a freshly installed Karabo system, one needs to install services
+to that will run Karabo's default configuration in the local machine.
 
-  karabo-startbroker
+To install a local service suite including a JMS broker, simply type::
 
-This will start the broker as a background process. 
-It will be reachable under *tcp://localhost:7777* from now on.
+  karabo-create-services jms_local
 
-To stop the broker simply type::
-
-  karabo-stopbroker
-
-Step 2: Edit the run file of the ProjectManager
-===============================================
-
-Starting with Karabo 2.11, you can use a Local Project Database backed by the
-local filesystem, dropping the requirement for an existDB server.
-
-To use the new filesystem backed Project Database, open the ``run`` file in
-``var/service/karabo_projectDBServer``, here
-remove or comment out the lines referring to ``existDB`` and uncomment
-the line after ``a file-based backend ... below:``.
-
-If you wish to use a local existDB server or are using a karabo version
-earlier than 2.11, follow the instructions listed
-:ref:`here. <run/existdb_local>`
-
-Step 3: Edit the environment files
+Step 2: Edit the environment files
 ==================================
 
 In the karabo folder navigate to ``var/environment`` and set the content file
 named ``KARABO_BROKER`` to ``tcp://localhost:7777``
-and the content of the file named ``KARABO_PROJECT_DB`` to ``localhost``
 
-Step 4: Start the karabo backbone
+Step 3: Start the karabo backbone
 =================================
 
-Now you can start an "empty" Karabo by typing::
+Now you can start the Karabo installation by typing::
 
   karabo-start
 
@@ -64,52 +40,3 @@ and stop it with::
 
 If you succeeded up to now you are ready to start additional servers, develop
 you own device plugins etc.
-
-.. _run/existdb_local:
-
-Local ExistDB Project Database
-==============================
-
-Since version 2.6 the Karabo binaries are not shipped with the code necessary
-to run the Configuration Database itself. The consequence of this choice is
-that a completely local system must be able to run
-`docker <https://docs.docker.com/install/linux/docker-ce/binaries/>`_
-containers as the user running Karabo.
-
-This is either achieved by having the Karabo user added to the group ``docker``
-or by installing ``docker`` in 
-`rootless <https://docs.docker.com/engine/security/rootless/>`_ mode
-(which is deemed more secure and available as an experimental feature since
-version 19.03 of the ``docker engine``).
-
-The complexity of how to install docker on any target system exceeds the scope
-of this documentation. Assuming one has the target system set up correctly, 
-to start a local database, one needs to run by typing::
-
-  karabo-startprojectdb
-
-To stop the database type::
-
-  karabo-stopprojectdb
-
-The `karabo-startprojectdb` will attempt to pull the docker image 
-`europeanxfel/existdb:2.2` from `hub.docker.com`. In case the `all local`
-system is isolated from the internet, one needs to provide the image either
-by connecting the host temporarily to the internet, or by using the
-`docker save <https://docs.docker.com/engine/reference/commandline/save/>`_
-and `docker load <https://docs.docker.com/engine/reference/commandline/load/>`_
-commands.
-
-The DB's data resides in the container and will be archived at 00 and 12 hours
-by default. The data saved with such a procedure, is saved in the 
-``var/data/exist_data`` folder. While the runtime data is stored in the
-container storage. To wipe the memory, one needs to remove the container
-using the `docker rm <https://docs.docker.com/engine/reference/commandline/rm/>`_
-command, i.e. stopping the container with `karabo-stopprojectdb` and running
-`docker rm karabo_existdb`.
-
-In case one wishes to change the main username and password for the database,
-one should follow the instructions in the `README.md` of the
-`source <https://git.xfel.eu/gitlab/ITDM/docker_existdb>`_ of the image, and
-update the content of the `KARABO_PROJECT_DB_USER` and
-`KARABO_PROJECT_DB_PASSWORD` accordingly.
