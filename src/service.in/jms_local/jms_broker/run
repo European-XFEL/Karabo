@@ -1,0 +1,6 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+
+# a file-based backend for the project manager can be chosen by using the lines below:
+exec envdir $KARABO/var/environment karabo-monitorjmsbroker 2>&1
