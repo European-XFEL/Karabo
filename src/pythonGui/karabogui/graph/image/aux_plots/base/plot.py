@@ -66,6 +66,10 @@ class AuxPlotViewBox(ViewBox):
         self.prepareForPaint()
         GraphicsWidget.update(self, *args, **kwargs)
 
+    def resizeEvent(self, event):
+        self.updateMatrix()
+        super().resizeEvent(event)
+
 
 class AuxPlotItem(PlotItem):
 
