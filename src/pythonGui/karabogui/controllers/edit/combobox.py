@@ -42,6 +42,7 @@ class EditableComboBox(BaseBindingController):
         with SignalBlocker(self.widget):
             self.widget.clear()
             self.widget.addItems([str(o) for o in proxy.binding.options])
+            self.widget.setCurrentIndex(-1)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy)
