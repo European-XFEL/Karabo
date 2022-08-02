@@ -131,6 +131,13 @@ echo  " unpacking finished successfully"
 KARABO=$(get_abs_path $installDir/karabo)
 sed "s%__VENV_DIR__%$KARABO%g" $KARABO/bin/activate.tmpl > $KARABO/activate
 
+karabo_pkg_conf_file=$KARABO/lib/pkgconfig/karaboDependencies.pc
+
+if [ -f ${karabo_pkg_conf_file} ]; then
+    # Inject the right install prefix needed for karabo cpp library 
+    sed -i s%^prefix=.*%prefix=$KARABO%g ${karabo_pkg_conf_file}
+fi
+
 # Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
 
