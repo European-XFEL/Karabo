@@ -211,6 +211,12 @@ project(
     LANGUAGES C CXX
 )
 
+configure_file(
+    "${CMAKE_CURRENT_LIST_DIR}/cmake/karaboPackageDependencies-GNU-Linux-x86.pc.in"
+    "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
+    @ONLY
+)
+
 # Define the libkarabo target
 set(EXCLUDE_DIR "/tests/")
 
@@ -423,6 +429,12 @@ install(TARGETS ${KARABO_LIB_TARGET_NAME}
 
 install(FILES "../cmake/import_karabo_lib.cmake"
         DESTINATION "lib/cmake")
+
+
+#
+# Custom install for karaboDependencies.pc file. 
+install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
+        DESTINATION "lib/pkgconfig")
 
 file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_VERSION})
 install(FILES "${CMAKE_BINARY_DIR}/VERSION" DESTINATION .)
