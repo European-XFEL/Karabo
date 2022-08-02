@@ -84,9 +84,6 @@ mkdir -p $PACKAGEDIR/var/data
 
 # karabo external dependencies
 cp -rf $EXTERN_DEPS_DIR $PACKAGEDIR/extern
-if [ "$OS" == "Linux" ]; then
-    cp $scriptDir/karaboPackageDependencies-GNU-Linux-x86.pc $PACKAGEDIR/lib/karaboDependencies.pc
-fi
 
 # karathon
 # Use karabo embedded python interpreter
