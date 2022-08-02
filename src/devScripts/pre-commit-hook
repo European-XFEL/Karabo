@@ -42,7 +42,7 @@ __lint_clang_format() {
     fi
 }
 
-# Performs linting of the C++ files in the Framework
+# Performs linting of the staged C++ files in the Framework repository.
 
 # Checks if clang-format is available and its version matches the CI (13.0.0)
 CI_CLANG_FORMAT_VERSION="13.0.0"
