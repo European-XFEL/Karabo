@@ -77,9 +77,7 @@ def entrypoint(func):
 
 
 def supervise():
-    if not osp.isdir(absolute("var", "service")):
-        print("service directory not present."
-              " Please create one with `karabo-create-services`")
+    if not check_service_dir():
         return
     svok = subprocess.call([absolute("extern", "bin", "svok"),
                             absolute("var", "service", ".svscan")])
@@ -119,6 +117,16 @@ def isexecutable(fn):
     return os.path.isfile(fn) and os.access(fn, os.X_OK)
 
 
+def check_service_dir():
+    service_dir = absolute("var", "service")
+    if osp.exists(service_dir) and osp.isdir(service_dir):
+        return True
+    else:
+        print("service directory not present."
+              " Please create one with `karabo-create-services`")
+        return False
+
+
 @entrypoint
 def make_service_dir():
     """karabo-create-services - creates Karabo servers folder
@@ -135,6 +143,12 @@ def make_service_dir():
         empty   - An empty service folder.
                   Services can be added with the
                   `karabo-add-deviceserver` option
+        jms_local
+                - A stand-alone installation.
+                  it will start the JMS broker on the local port
+                  7777. To use this configuration, set the
+                  KARABO_BROKER file in the var/environment folder
+                  to 'tcp://localhost:7777
     """
     if osp.isdir(absolute("var", "service")):
         print("service directory already existing")
@@ -391,6 +405,10 @@ def adddeviceserver():
     assert len(sys.argv) > 2
 
     _, server_id, server_type, *options = sys.argv
+
+    if not check_service_dir():
+        return 3
+
     assert server_type in {
         "cppserver", "macroserver", "middlelayerserver", "pythonserver",
         "webaggregatorserver", "webserver"}
@@ -437,6 +455,9 @@ def removedeviceserver():
     name is the name of the device server to remove.
     """
     assert len(sys.argv) == 2
+    if not check_service_dir():
+        return 3
+
     name = sys.argv[1].replace("/", "_")
     # hide the service from svscan by prefixing with a . so it doesn't restart
     tmppath = absolute("var", "service", ".{}".format(name))
