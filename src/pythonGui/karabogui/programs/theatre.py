@@ -7,10 +7,9 @@ from qtpy.QtCore import QObject, QTimer, Slot
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.programs.base import create_gui_app, init_gui
+from karabogui.programs.utils import close_app
 from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_network, get_topology
-
-from .utils import close_app
 
 DEVSCENE_PROG = re.compile(r"([0-9a-zA-Z/_\-]+)\|(.+)")
 CAPA = Capabilities.PROVIDES_SCENES
