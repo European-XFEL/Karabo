@@ -42,6 +42,12 @@ class TestEditableComboBox(GuiTestCase):
         set_proxy_value(self.proxy, 'prop', 'bar')
         assert self.controller.widget.currentIndex() == 1
 
+        set_proxy_value(self.proxy, 'prop', 'nobar')
+        assert self.controller.widget.currentIndex() == -1
+
+        set_proxy_value(self.proxy, 'prop', 'baz')
+        assert self.controller.widget.currentIndex() == 2
+
     def test_edit_value(self):
         self.controller.widget.setCurrentIndex(3)
         assert self.proxy.edit_value == 'qux'
@@ -50,12 +56,15 @@ class TestEditableComboBox(GuiTestCase):
         proxy = get_class_property_proxy(Other.getClassSchema(), 'prop')
         controller = EditableComboBox(proxy=proxy)
         controller.create(None)
+        assert controller.widget.currentIndex() == -1
+        set_proxy_value(proxy, 'prop', 2)
+        assert controller.widget.currentIndex() == 1
 
         assert controller.widget.count() == 5
 
         build_binding(Object.getClassSchema(),
                       existing=proxy.root_proxy.binding)
-
+        assert controller.widget.currentIndex() == -1
         assert controller.widget.count() == 4
 
     def test_focus(self):
