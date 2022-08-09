@@ -18,8 +18,8 @@ def _is_compatible(binding):
     return len(binding.options) > 0
 
 
-@register_binding_controller(ui_name='Selection Field', can_edit=True,
-                             klassname='EditableComboBox',
+@register_binding_controller(ui_name="Selection Field", can_edit=True,
+                             klassname="EditableComboBox",
                              binding_type=BaseBinding,
                              is_compatible=_is_compatible, priority=20)
 class EditableComboBox(BaseBindingController):
@@ -52,10 +52,10 @@ class EditableComboBox(BaseBindingController):
         try:
             index = next(i for i, v in enumerate(options)
                          if v == value)
-            with SignalBlocker(self.widget):
-                self.widget.setCurrentIndex(index)
         except StopIteration:
-            return
+            index = -1
+        with SignalBlocker(self.widget):
+            self.widget.setCurrentIndex(index)
 
     def _on_user_edit(self, index):
         if self.proxy.binding is None:
