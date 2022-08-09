@@ -25,6 +25,7 @@ class Object(Configurable):
         displayedName="State",
         enum=State,
         displayType="State",
+        defaultValue=State.UNKNOWN,
         accessMode=AccessMode.READONLY)
 
     foo = Bool(
@@ -238,6 +239,7 @@ class TestConfiguratorDevice(GuiTestCase):
             widget().setInfo.assert_called_with(
                 OrderedDict([('Property', 'State'), ('Key', 'state'),
                              ('Value Type', 'String'),
+                             ('Default Value', 'UNKNOWN'),
                              ('Value on device', 'ON'),
                              ('metricPrefixSymbol', ''), ('unitSymbol', ''),
                              ('Warn low', 'n/a'), ('Warn high', 'n/a'),

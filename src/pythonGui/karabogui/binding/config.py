@@ -12,6 +12,8 @@ from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .util import attr_fast_deepcopy
 from .validate import sanitize_table_value
 
+RECURSIVE_NODES = (ChoiceOfNodesBinding, ListOfNodesBinding)
+
 
 def apply_fast_data(config, binding, timestamp):
     """Recursively set values from a fast data Hash object to a binding
@@ -86,7 +88,7 @@ def apply_default_configuration(binding):
             subnode = getattr(namespace, name)
             if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode)
-            if isinstance(subnode, ChoiceOfNodesBinding):
+            elif isinstance(subnode, ChoiceOfNodesBinding):
                 yield subnode
                 for choice in subnode.choices:
                     child = getattr(subnode.choices, choice)
@@ -95,19 +97,16 @@ def apply_default_configuration(binding):
                 yield subnode
                 for lnode in subnode.value:
                     yield from _iter_binding(lnode)
-            elif not isinstance(subnode, SlotBinding):
+            else:
                 yield subnode
 
     for node in _iter_binding(binding):
         default_value = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         if default_value is not None:
             node.value = default_value
-        elif len(node.options) > 0:
-            node.value = node.options[0]
         else:
             # XXX: Nodes either don't have a value or are not designed!
-            if not isinstance(node, (ChoiceOfNodesBinding,
-                                     ListOfNodesBinding, NodeBinding)):
+            if not isinstance(node, RECURSIVE_NODES):
                 node.value = Undefined
 
 
@@ -278,8 +277,6 @@ def extract_edits(schema, binding):
 
     def _get_binding_default(binding):
         val = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
-        if val is None and len(binding.options) > 0:
-            return binding.options[0]
         return val
 
     def _iter_binding(node, base=''):
@@ -364,8 +361,6 @@ def extract_online_edits(schema, binding):
 
     def _get_binding_default(binding):
         value = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
-        if value is None and len(binding.options) > 0:
-            return binding.options[0]
         return value
 
     def _iter_binding(node, base=''):
