@@ -7,9 +7,8 @@ from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.messagebox import show_error
 from karabogui.programs.base import create_gui_app, init_gui
+from karabogui.programs.utils import close_app
 from karabogui.singletons.api import get_db_conn, get_network, get_topology
-
-from .utils import close_app
 
 
 def create_cinema(ns):
