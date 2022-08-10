@@ -1,6 +1,6 @@
 from qtpy.QtCore import Qt
 
-from karabo.common.scenemodel.api import ComboBoxModel
+from karabo.common.scenemodel.api import EditableComboBoxModel
 from karabo.common.states import State
 from karabo.native import Configurable, Int32, String
 from karabogui.binding.api import build_binding
@@ -25,7 +25,7 @@ class TestEditableComboBox(GuiTestCase):
         super(TestEditableComboBox, self).setUp()
         self.proxy = get_class_property_proxy(Object.getClassSchema(), 'prop')
         self.controller = EditableComboBox(proxy=self.proxy,
-                                           model=ComboBoxModel())
+                                           model=EditableComboBoxModel())
         self.controller.create(None)
 
     def tearDown(self):
