@@ -667,8 +667,12 @@ namespace karabo {
                     }
                     KARABO_LOG_FRAMEWORK_INFO << "Login request of user: " << hash.get<string>("username")
                                               << " (version " << clientVersion.getString() << ")." << extraInfo.str();
+                    if (hash.has("one_time_token")) {
+                        KARABO_LOG_FRAMEWORK_INFO << "GUI Client used authenticated login with token '"
+                                                  << hash.get<string>("one_time_token") << "'.";
+                    }
                     registerConnect(clientVersion, channel);
-                    // TODO: Add user authentication and subscribe `onRead` on success
+                    // TODO: Add token validation/user authorization and bind `onRead` on success
                     channel->readAsyncHash(
                           bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
                     sendSystemTopology(weakChannel);
