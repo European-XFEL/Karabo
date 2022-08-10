@@ -38,10 +38,16 @@ class ChoiceElementModel(BaseDisplayEditableWidget):
 
 
 class ComboBoxModel(BaseDisplayEditableWidget):
-    """A model for DisplayComboBox/EditableComboBox"""
+    """DEPRECATED model for DisplayComboBox/EditableComboBox
 
-    # The actual type of the widget
+    This model is deprecated with Karabo 2.16 and stays for backward
+    compatibility
+    """
     klass = Enum("DisplayComboBox", "EditableComboBox")
+
+
+class EditableComboBoxModel(BaseEditWidget):
+    """A model for EditableComboBox"""
 
 
 class DaemonManagerModel(BaseWidgetObjectData):
@@ -516,6 +522,7 @@ def _build_empty_widget_readers_and_writers():
         "DaemonManagerModel",
         "DisplayListModel",
         "DisplayTextLogModel",
+        "EditableComboBoxModel",
         "EditableListModel",
         "EditableRegexListModel",
         "EditableListElementModel",
@@ -555,7 +562,6 @@ def _build_empty_display_editable_readers_and_writers():
     names = (
         "CheckBoxModel",
         "ChoiceElementModel",
-        "ComboBoxModel",
         "LineEditModel",
     )
     for name in names:
