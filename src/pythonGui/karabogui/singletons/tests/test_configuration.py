@@ -33,17 +33,17 @@ class TestConfiguration(GuiTestCase):
         config['device_domain'] = 'CAS_INTERNAL'
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
-        self.assertEqual(len(config), 17)
+        self.assertEqual(len(config), 18)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['device_domain'], 'CAS_INTERNAL')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
         self.assertEqual(list(config.keys()),
                          ['alarm_navigation', 'alarm_project', 'alarm_visible',
-                          'broker_topic', 'console_visible',
-                          'data_dir', 'db_token', 'development',
-                          'device_domain', 'documentation', 'domain',
-                          'gui_servers', 'highDPI', 'log_visible',
+                          'auth_server_base_url', 'broker_topic',
+                          'console_visible', 'data_dir', 'db_token',
+                          'development', 'device_domain', 'documentation',
+                          'domain', 'gui_servers', 'highDPI', 'log_visible',
                           'main_geometry', 'username', 'wizard'])
 
     def test_set_wrong_key(self):
@@ -87,9 +87,10 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('highDPI', user_group)
         self.assertIn('development', user_group)
         network_group = [item.name for item in groups[NETWORK]]
-        self.assertEqual(len(network_group), 2)
+        self.assertEqual(len(network_group), 3)
         self.assertIn('username', network_group)
         self.assertIn('gui_servers', network_group)
+        self.assertIn('auth_server_base_url', network_group)
         project_group = [item.name for item in groups[PROJECT]]
         self.assertEqual(len(project_group), 3)
         self.assertIn('db_token', project_group)
