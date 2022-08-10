@@ -3,6 +3,7 @@
 # Created on September 16, 2018
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os
 from collections import defaultdict
 
 from qtpy.QtCore import QObject, QSettings
@@ -144,6 +145,12 @@ class Configuration(QObject):
 
     username = Item(default='operator', q_set=True, group=NETWORK)
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
+    # The auth server base url should be defined in the environment.
+    # TODO: devise an easy way to generate installation images with the proper
+    #       environment setting.
+    auth_server_base_url = Item(
+        default=os.environ.get("KARABO_AUTH_SERVER_URL", ""),
+        dtype=str, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
