@@ -51,12 +51,13 @@ from .widgets.plot import SparklineModel
 from .widgets.simple import (
     BitfieldModel, CheckBoxModel, ChoiceElementModel, ComboBoxModel,
     DaemonManagerModel, DirectoryModel, DisplayLabelModel, DisplayListModel,
-    DisplayTextLogModel, DisplayTimeModel, EditableListElementModel,
-    EditableListModel, EditableRegexListModel, EditableRegexModel,
-    EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
-    HexadecimalModel, HistoricTextModel, IntLineEditModel, LabelModel,
-    LampModel, LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
-    SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
+    DisplayTextLogModel, DisplayTimeModel, EditableComboBoxModel,
+    EditableListElementModel, EditableListModel, EditableRegexListModel,
+    EditableRegexModel, EditableSpinBoxModel, FileInModel, FileOutModel,
+    GlobalAlarmModel, HexadecimalModel, HistoricTextModel, IntLineEditModel,
+    LabelModel, LampModel, LineEditModel, PopUpModel, RunConfiguratorModel,
+    SceneLinkModel, SliderModel, StickerModel, TickSliderModel, WebLinkModel,
+    WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, convert_from_svg_image, convert_to_svg_image)
