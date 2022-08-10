@@ -322,9 +322,11 @@ class MainWindow(QMainWindow):
     def _set_window_title(self, topic=None):
         if topic is not None:
             title = (f"European XFEL - Karabo GUI {const.GUI_VERSION_LONG} - "
-                     f"TOPIC: {topic}")
+                     f"Topic: {topic}")
         else:
             title = f"European XFEL - Karabo GUI {const.GUI_VERSION_LONG}"
+        if get_network().username and get_network().one_time_token:
+            title = f"{title} - User: {get_network().username}"
         self.setWindowTitle(title)
 
     def readSettings(self):
