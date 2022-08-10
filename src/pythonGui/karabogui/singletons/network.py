@@ -11,6 +11,7 @@ from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
 from karabogui.const import REQUEST_REPLY_TIMEOUT
+from karabogui.dialogs.auth_login_dialog import AuthLoginDialog
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
@@ -54,6 +55,7 @@ class Network(QObject):
         self.hostname = "localhost"
         self.port = "44444"
         self.password = "karabo"
+        self.one_time_token = None
 
         # Check default settings stored in QSettings!
         self._load_login_settings()
@@ -65,6 +67,48 @@ class Network(QObject):
             self.togglePerformanceMonitor()
 
     def connectToServer(self, parent=None) -> bool:
+        """Connection to server via LoginDialog. If an URL is specified for the
+        Karabo Authentication Server, the login with user authentication is
+        used. Otherwise, the legacy login with the visibility levels as the
+        user name is used.
+
+        Returns: Boolean to indicate if the login dialog has been accepted (
+            and that the user has been successfully authenticated when the
+            Authentication Server is defined)
+        """
+        if get_config()["auth_server_base_url"]:
+            return self._connectToServerAuth(parent)
+        return self._connectToServer(parent)
+
+    def _connectToServerAuth(self, parent=None) -> bool:
+        """Connection to server via LoginDialog with authentication.
+
+        Returns: Boolean to indicate if the login dialog has been accepted
+        and that the user has been successfully authenticated.
+        """
+        dialog = AuthLoginDialog(username=self.username,
+                                 hostname=self.hostname,
+                                 port=self.port,
+                                 gui_servers=self.gui_servers,
+                                 parent=parent)
+
+        if dialog.exec() == QDialog.Accepted:
+            self.username = dialog.username
+            self.password = dialog.password
+            self.hostname = dialog.hostname
+            self.port = dialog.port
+            self.gui_servers = dialog.gui_servers
+            self.one_time_token = dialog.one_time_token
+            self.startServerConnection()
+            return True
+
+        # Note: The server connection is not changed and thus we must
+        # notify the main window to untoggle the button
+        self.signalServerConnectionChanged.emit(False)
+
+        return False
+
+    def _connectToServer(self, parent=None) -> bool:
         """Connection to server via LoginDialog
 
         Returns: Boolean to indicate if the login dialog has been accepted
@@ -108,6 +152,7 @@ class Network(QObject):
         """Disconnect from server"""
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
+        self.one_time_token = None
         process_qt_events(timeout=5000)
         self.endServerConnection()
 
@@ -553,6 +598,14 @@ class Network(QObject):
 
     def set_server_information(self, read_only=False, **kwargs):
         """We get the reply from the GUI Server and set the information"""
+        # TODO: if the server info states that the server is in auth mode
+        # (piece of info to be added), postpone the setting of the access
+        # level to the handling of the initial info sent by the server after
+        # it handles the login information sent below.
+
+        # TODO: Stop piggy-backing of AccessLevel on username field. Add an
+        #       AccessLevel field to the network (and probably to the
+        #       Configuration singleton).
         if read_only:
             default = AccessLevel.OBSERVER
             self.username = "observer"
@@ -607,6 +660,8 @@ class Network(QObject):
         login_info = Hash("type", "login")
         login_info["username"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
+        if self.one_time_token:
+            login_info["one_time_token"] = self.one_time_token
         login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
 
