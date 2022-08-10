@@ -55,6 +55,7 @@ class GroupLayout(BaseLayout, QLayout):
         # A double free occurs once the Python item falls out of scope.
         # To avoid this, this method always returns None and the item
         # cleanup is performed by Python, which owns the cpp pointer.
+        del item
         return None
 
     def count(self):
