@@ -265,7 +265,7 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.CheckBoxModel, klass="EditableCheckBox")
         self._assert_geometry(sm.ChoiceElementModel,
                               klass="EditableChoiceElement")
-        self._assert_geometry(sm.ComboBoxModel, klass="EditableComboBox")
+        self._assert_geometry(sm.EditableComboBoxModel)
         self._assert_geometry(sm.DoubleLineEditModel)
         self._assert_geometry(sm.EditableListElementModel)
         self._assert_geometry(sm.EditableListModel)
