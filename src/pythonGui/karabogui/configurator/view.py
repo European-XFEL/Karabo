@@ -127,6 +127,7 @@ class ConfigurationTreeView(QTreeView):
         self.setCurrentIndex(index)
 
     def assign_proxy(self, proxy):
+        self.close_popup_widget()
         model = self.sourceModel()
         model.root = proxy
         if proxy is None:
