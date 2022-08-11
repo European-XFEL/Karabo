@@ -7,7 +7,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox
 from traits.api import Instance
 
-from karabo.common.scenemodel.api import ComboBoxModel
+from karabo.common.scenemodel.api import EditableComboBoxModel
 from karabogui.binding.api import BaseBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, is_proxy_allowed, register_binding_controller)
@@ -24,7 +24,7 @@ def _is_compatible(binding):
                              is_compatible=_is_compatible, priority=20)
 class EditableComboBox(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(ComboBoxModel, args=())
+    model = Instance(EditableComboBoxModel, args=())
     # Internal traits
     _filter = Instance(MouseWheelEventBlocker)
 
