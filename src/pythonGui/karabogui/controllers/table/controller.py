@@ -225,7 +225,32 @@ class BaseTableController(BaseBindingController):
         return self._readonly
 
     # ---------------------------------------------------------------------
-    # Action Slots
+    # Controller and Actions Slots (Public)
+
+    def add_row(self):
+        row = self.currentIndex().row()
+        self._item_model.insertRows(row + 1, 1, QModelIndex())
+
+    def duplicate_row(self):
+        row = self.currentIndex().row()
+        self._item_model.duplicate_row(row)
+
+    def move_row_up(self):
+        row = self.currentIndex().row()
+        self._item_model.move_row_up(row)
+        self._table_widget.selectRow(row - 1)
+
+    def move_row_down(self):
+        row = self.currentIndex().row()
+        self._item_model.move_row_down(row)
+        self._table_widget.selectRow(row + 1)
+
+    def remove_row(self):
+        index = self.currentIndex()
+        self._item_model.removeRows(index.row(), 1, QModelIndex())
+
+    # ---------------------------------------------------------------------
+    # Action Slots - Private
 
     def _set_index_default(self):
         index = self.currentIndex()
@@ -233,28 +258,6 @@ class BaseTableController(BaseBindingController):
         binding = self._bindings[key]
         default_value = get_default_value(binding, force=True)
         self._item_model.setData(index, default_value, role=Qt.EditRole)
-
-    def _add_row(self):
-        row = self.currentIndex().row()
-        self._item_model.insertRows(row + 1, 1, QModelIndex())
-
-    def _duplicate_row(self):
-        row = self.currentIndex().row()
-        self._item_model.duplicate_row(row)
-
-    def _move_row_up(self):
-        row = self.currentIndex().row()
-        self._item_model.move_row_up(row)
-        self._table_widget.selectRow(row - 1)
-
-    def _move_row_down(self):
-        row = self.currentIndex().row()
-        self._item_model.move_row_down(row)
-        self._table_widget.selectRow(row + 1)
-
-    def _remove_row(self):
-        index = self.currentIndex()
-        self._item_model.removeRows(index.row(), 1, QModelIndex())
 
     def _resize_contents(self):
         self.model.resizeToContents = not self.model.resizeToContents
@@ -286,18 +289,18 @@ class BaseTableController(BaseBindingController):
             menu.addSeparator()
 
             up_action = menu.addAction(icons.arrowFancyUp, "Move Row Up")
-            up_action.triggered.connect(self._move_row_up)
+            up_action.triggered.connect(self.move_row_up)
             down_action = menu.addAction(icons.arrowFancyDown, "Move Row Down")
-            down_action.triggered.connect(self._move_row_down)
+            down_action.triggered.connect(self.move_row_down)
             menu.addSeparator()
 
             add_action = menu.addAction(icons.add, "Add Row below")
-            add_action.triggered.connect(self._add_row)
+            add_action.triggered.connect(self.add_row)
             du_action = menu.addAction(icons.editCopy, "Duplicate Row below")
-            du_action.triggered.connect(self._duplicate_row)
+            du_action.triggered.connect(self.duplicate_row)
 
             remove_action = menu.addAction(icons.delete, "Delete Row")
-            remove_action.triggered.connect(self._remove_row)
+            remove_action.triggered.connect(self.remove_row)
 
             # Check for min and max size of the table
             row_count = self._item_model.rowCount()
@@ -308,15 +311,15 @@ class BaseTableController(BaseBindingController):
             rm_row = True if min_size is None else row_count - 1 >= min_size
 
             # Set actions enabled or disabled!
+            num_row = self.tableWidget().model().rowCount() - 1
             up_action.setEnabled(index.row() > 0)
-            down_action.setEnabled(
-                index.row() < self._item_model.rowCount() - 1)
+            down_action.setEnabled(index.row() < num_row)
             add_action.setEnabled(add_row)
             du_action.setEnabled(add_row)
             remove_action.setEnabled(rm_row)
         else:
             add_action = menu.addAction(icons.add, "Add Row below")
-            add_action.triggered.connect(self._add_row)
+            add_action.triggered.connect(self.add_row)
 
         menu.exec(self._table_widget.viewport().mapToGlobal(pos))
 
