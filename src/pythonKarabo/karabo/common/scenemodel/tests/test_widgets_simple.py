@@ -53,6 +53,7 @@ def test_all_empty_widgets():
         api.DisplayLabelModel,
         api.PopUpModel,
         api.WidgetNodeModel,
+        api.EditableComboBoxModel,
     )
     for klass in model_classes:
         _check_empty_widget(klass)
@@ -62,7 +63,6 @@ def test_display_editable_widgets():
     model_classes = (
         api.CheckBoxModel,
         api.ChoiceElementModel,
-        api.ComboBoxModel,
         api.LineEditModel,
     )
     for klass in model_classes:
