@@ -198,6 +198,12 @@ class ConfiguratorSearch(BaseSearchBar):
         header = self.tree_view().header()
         header.resizeSections(QHeaderView.ResizeToContents)
 
+    def on_search(self):
+        self.tree_view().close_popup_widget()
+
+    def on_clear(self):
+        self.tree_view().close_popup_widget()
+
     def post_search(self):
         self.resize_contents()
 
