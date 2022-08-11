@@ -308,6 +308,9 @@ class BaseTableController(BaseBindingController):
             rm_row = True if min_size is None else row_count - 1 >= min_size
 
             # Set actions enabled or disabled!
+            up_action.setEnabled(index.row() > 0)
+            down_action.setEnabled(
+                index.row() < self._item_model.rowCount() - 1)
             add_action.setEnabled(add_row)
             du_action.setEnabled(add_row)
             remove_action.setEnabled(rm_row)
