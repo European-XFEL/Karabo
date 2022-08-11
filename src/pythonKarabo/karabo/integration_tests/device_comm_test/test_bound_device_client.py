@@ -37,6 +37,7 @@ class TestDeviceClientComm(BoundDeviceTestCase):
         config = Hash('onSlowness', 'wait', 'dataDistribution', 'copy')
 
         called_with = {}
+
         # data handler
         @call_counter
         def on_data(data, metadata):
@@ -66,8 +67,9 @@ class TestDeviceClientComm(BoundDeviceTestCase):
         def on_eos(channel):
             called_with["eosIsChannel"] = isinstance(channel, InputChannel)
 
-        # status tracker
         status_list = []
+
+        # status tracker
         @call_counter
         def status_tracker(status):
             status_list.append(status)
@@ -117,10 +119,13 @@ class TestDeviceClientComm(BoundDeviceTestCase):
                 break
             sleep(0.01)
 
-        self.assertEqual(4, status_tracker._calls)
-        # No DISCONNECTING since channel killed when unregisterChannelMonitor
-        self.assertEqual(ConnectionStatus.CONNECTING, status_list[2])
-        self.assertEqual(ConnectionStatus.CONNECTED, status_list[3])
+        self.assertEqual(
+            5,
+            status_tracker._calls,
+            f"wrong calls: {status_list}")
+        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[-3])
+        self.assertEqual(ConnectionStatus.CONNECTING, status_list[-2])
+        self.assertEqual(ConnectionStatus.CONNECTED, status_list[-1])
 
         for i in range(5):
             self.dc.execute(self.data_device, 'writeOutput')
@@ -159,11 +164,19 @@ class TestDeviceClientComm(BoundDeviceTestCase):
                                             statusTracker=status_tracker)
         self.assertTrue(ok)
 
-        # Wait until connected (i.e. two more calls to statusTracker)
+        # Wait until connected (i.e. three more calls to statusTracker
+        # DISCONNECTED, CONNECTING, CONNECTED)
         for i in range(100):
-            if status_tracker._calls >= 6:
+            if status_tracker._calls >= 8:
                 break
             sleep(0.01)
+        self.assertEqual(
+            8,
+            status_tracker._calls,
+            f"wrong calls: {status_list}")
+        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[-3])
+        self.assertEqual(ConnectionStatus.CONNECTING, status_list[-2])
+        self.assertEqual(ConnectionStatus.CONNECTED, status_list[-1])
 
         self.dc.execute(self.data_device, 'writeOutput')
 
