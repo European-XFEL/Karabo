@@ -149,3 +149,7 @@ class KaraboViewBox(ViewBox):
     def update(self, *args, **kwargs):
         self.prepareForPaint()
         GraphicsWidget.update(self, *args, **kwargs)
+
+    def resizeEvent(self, event):
+        self.updateMatrix()
+        super().resizeEvent(event)
