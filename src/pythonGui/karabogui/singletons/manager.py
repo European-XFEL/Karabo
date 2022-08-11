@@ -45,6 +45,7 @@ def project_db_handler(fall_through=False):
                 return handler(self, success, request, reply, reason=reason)
 
         return wrapped
+
     return inner
 
 
@@ -314,8 +315,9 @@ class Manager(QObject):
                 if prop_proxy.path not in paths:
                     pending.append(prop_proxy)
                     continue
-                # revert the edit in the properties.
-                prop_proxy.revert_edit()
+                # Erase the successful configured edit_value and wait for the
+                # config update
+                prop_proxy.trait_setq(edit_value=None)
             if pending:
                 # in case multiple updates are sent, wait for the pending ones
                 self.expect_properties(device_proxy, pending)
