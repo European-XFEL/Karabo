@@ -111,6 +111,7 @@ class TestSetProxyConfiguration(GuiTestCase):
 
     def tearDown(self):
         super(TestSetProxyConfiguration, self).tearDown()
+        self.config_panel._reset_panel()
         self.config_panel.destroy()
         self.config_panel = None
 
