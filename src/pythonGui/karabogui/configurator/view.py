@@ -89,6 +89,7 @@ class ConfigurationTreeView(QTreeView):
 
     def swap_models(self):
         """Swap the models of the tree view between filter and source"""
+        self.close_popup_widget()
         current_index = self.currentIndex()
         if self._filter_model is None:
             model = ConfiguratorFilterModel(self.sourceModel())
@@ -150,6 +151,13 @@ class ConfigurationTreeView(QTreeView):
 
     def clear(self):
         self.assign_proxy(None)
+        self.close_popup_widget()
+
+    def close_popup_widget(self):
+        if self.popup_widget is not None:
+            self.popup_widget.close()
+            self.popup_widget = None
+        self._popup_showing_index = None
 
     # ------------------------------------
     # Private methods
