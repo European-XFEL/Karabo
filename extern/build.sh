@@ -5,7 +5,7 @@
 
 DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack cmake boost hdf5
 log4cpp cppunit openmq nss openmqc patchelf googletest libxml2 libxslt
-daemontools libzmq nlohmann_json pugixml mqtt redisclient amqp libev)
+daemontools libzmq nlohmann_json pugixml mqtt redisclient amqp libev beast-boost)
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
 idna urllib3 requests coverage pytest pytest_runner pytest_cov pytest_mock
