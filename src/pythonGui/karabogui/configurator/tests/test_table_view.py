@@ -35,7 +35,6 @@ class Object(Configurable):
 class TableDialogTest(GuiTestCase):
     def test_basic_dialog(self):
         proxy = get_class_property_proxy(Object.getClassSchema(), "prop")
-
         dialog = TableDialog(proxy, True)
         self.assertIsNotNone(dialog)
         self.assertEqual(dialog.width(), 450)
@@ -49,6 +48,7 @@ class TableDialogTest(GuiTestCase):
 
         # New dialog, with big table schema
         proxy = get_class_property_proxy(Object.getClassSchema(), "bigProp")
+
         dialog = TableDialog(proxy, True)
         self.assertIsNotNone(dialog)
         self.assertEqual(dialog.width(), 600)
@@ -56,3 +56,4 @@ class TableDialogTest(GuiTestCase):
         dialog.done(0)
         self.assertIsNotNone(dialog.controller)
         self.assertIsNone(dialog.controller.widget)
+        self.assertIsNone(dialog.toolbar)
