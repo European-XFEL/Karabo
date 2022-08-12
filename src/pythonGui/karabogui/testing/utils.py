@@ -20,7 +20,7 @@ from karabogui.alarms.api import (
     TIME_OF_OCCURENCE)
 from karabogui.background import create_background_timer
 from karabogui.binding.api import (
-    DeviceClassProxy, DeviceProxy, PropertyProxy, ProxyStatus,
+    BindingRoot, DeviceClassProxy, DeviceProxy, PropertyProxy, ProxyStatus,
     apply_configuration, build_binding)
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.util import process_qt_events
@@ -137,9 +137,11 @@ def get_property_proxy(schema, name, device_id="TestDevice"):
     """Given a device schema and a property name, return a complete
     PropertyProxy object with a `root_proxy` of type `DeviceProxy`.
     """
-    binding = build_binding(schema)
+    binding = BindingRoot() if schema is None else build_binding(schema)
+    status = (ProxyStatus.ONLINEREQUESTED if schema is None
+              else ProxyStatus.SCHEMA)
     root_proxy = DeviceProxy(binding=binding, device_id=device_id)
-    root_proxy.status = ProxyStatus.SCHEMA
+    root_proxy.status = status
     return PropertyProxy(root_proxy=root_proxy, path=name)
 
 
