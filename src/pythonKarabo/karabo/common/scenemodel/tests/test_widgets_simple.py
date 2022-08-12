@@ -71,7 +71,6 @@ def test_display_editable_widgets():
 
 def test_editable_simple_model():
     model_classes = (
-        api.BitfieldModel,
         api.EditableListModel,
         api.EditableListElementModel,
         api.EditableSpinBoxModel,
@@ -89,7 +88,7 @@ def test_editable_simple_model():
 def test_missing_parent_component():
     traits = base_widget_traits()
     traits["parent_component"] = ""  # explicitly empty!
-    model = api.BitfieldModel(**traits)
+    model = api.DisplayLabelModel(**traits)
     assert_raises(api.SceneWriterException, single_model_round_trip, model)
 
 
