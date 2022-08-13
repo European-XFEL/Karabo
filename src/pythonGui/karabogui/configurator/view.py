@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import OrderedDict
+from contextlib import contextmanager
 from functools import partial
 
 from qtpy.QtCore import (
@@ -126,21 +127,37 @@ class ConfigurationTreeView(QTreeView):
                                      QItemSelectionModel.ClearAndSelect)
         self.setCurrentIndex(index)
 
+    @contextmanager
+    def assign_popup(self):
+        """Assign the existing popup index to a new one"""
+        try:
+            index = self._popup_showing_index
+            if index is not None:
+                index = index.row(), index.column(), index.parent()
+                self._popup_showing_index = QModelIndex()
+            yield
+        finally:
+            if index is not None:
+                index = self.model().index(*index)
+                if index.isValid():
+                    self._popup_showing_index = index
+                else:
+                    self.close_popup_widget()
+
     def assign_proxy(self, proxy):
-        self.close_popup_widget()
-        model = self.sourceModel()
-        model.root = proxy
-        if proxy is None:
-            return
+        with self.assign_popup():
+            model = self.sourceModel()
+            model.root = proxy
+            if proxy is None:
+                return
 
-        # Show second column only for devices
-        if isinstance(proxy, DeviceProxy):
-            self.setColumnHidden(1, False)
-        else:
-            self.setColumnHidden(1, True)
-
-        # XXX: This is slightly hacky, but it keeps the buttons consistent
-        model.notify_of_modifications()
+            # Show second column only for devices
+            if isinstance(proxy, DeviceProxy):
+                self.setColumnHidden(1, False)
+            else:
+                self.setColumnHidden(1, True)
+            # XXX: This is slightly hacky, but it keeps the buttons consistent
+            model.notify_of_modifications()
 
     def apply_all(self):
         self.sourceModel().apply_changes()
