@@ -120,7 +120,8 @@ class _UpdateContext(HasStrictTraits):
         """Provide a context for layout change announcements
         """
         try:
-            self.item_model.layoutAboutToBeChanged.emit()
+            self.item_model.layoutAboutToBeChanged.emit(
+                [], QAbstractItemModel.VerticalSortHint)
             yield
         finally:
             self.item_model.layoutChanged.emit()
