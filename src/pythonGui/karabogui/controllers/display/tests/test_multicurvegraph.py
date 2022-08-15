@@ -1,3 +1,4 @@
+from karabo.common.scenemodel.api import build_model_config
 from karabo.native import Bool, Configurable, Int32
 from karabogui.binding.api import PropertyProxy, build_binding
 from karabogui.testing import (
@@ -77,3 +78,12 @@ class TestMultiCurveGraph(GuiTestCase):
         build_binding(Object.getClassSchema(),
                       existing=proxy.root_proxy.binding)
         self.assertEqual(len(self.controller._curves), 2)
+
+    def test_configuration(self):
+        """
+        The controller should have the default and non-empty configuration .
+        """
+        default_config = build_model_config(self.controller.model)
+        configuration = self.controller.widget.configuration
+        assert configuration
+        assert configuration == default_config

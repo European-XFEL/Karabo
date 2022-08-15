@@ -12,7 +12,8 @@ from qtpy.QtWidgets import QWidget
 from traits.api import Bool, Callable, Dict, Instance, List
 
 import karabogui.icons as icons
-from karabo.common.scenemodel.api import MultiCurveGraphModel
+from karabo.common.scenemodel.api import (
+    MultiCurveGraphModel, build_model_config)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, PropertyProxy)
 from karabogui.controllers.api import (
@@ -76,6 +77,7 @@ class DisplayMultiCurveGraph(BaseBindingController):
 
         self._last_values[self.proxy] = None
         self._draw_start = True
+        widget.restore(build_model_config(self.model))
         return widget
 
     def binding_update(self, proxy):
