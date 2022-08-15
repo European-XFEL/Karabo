@@ -103,6 +103,13 @@ class TestDeviceClientComm(BoundDeviceTestCase):
         self.assertEqual(self.msg_counter, called_with["dataInt32"])
 
         assert self.dc.unregisterChannelMonitor(channel)
+        # unregistration triggers a DISCONNECTED status call
+        for i in range(100):
+            if status_tracker._calls >= 3:
+                break
+            sleep(0.01)
+        self.assertEqual(3, status_tracker._calls)
+        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[2])
 
         # Now test with input handler
         called_with.clear()
@@ -115,7 +122,7 @@ class TestDeviceClientComm(BoundDeviceTestCase):
 
         # Now two more calls to connection status tracker
         for i in range(100):
-            if status_tracker._calls >= 4:
+            if status_tracker._calls >= 5:
                 break
             sleep(0.01)
 
@@ -123,7 +130,6 @@ class TestDeviceClientComm(BoundDeviceTestCase):
             5,
             status_tracker._calls,
             f"wrong calls: {status_list}")
-        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[-3])
         self.assertEqual(ConnectionStatus.CONNECTING, status_list[-2])
         self.assertEqual(ConnectionStatus.CONNECTED, status_list[-1])
 
@@ -155,6 +161,12 @@ class TestDeviceClientComm(BoundDeviceTestCase):
 
         assert self.dc.unregisterChannelMonitor(channel)
         assert not self.dc.unregisterChannelMonitor(channel)
+        for i in range(100):
+            if status_tracker._calls >= 6:
+                break
+            sleep(0.01)
+        self.assertEqual(6, status_tracker._calls)
+        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[5])
 
         # Now test simultaneous data and input handlers:
         called_with.clear()
@@ -164,8 +176,8 @@ class TestDeviceClientComm(BoundDeviceTestCase):
                                             statusTracker=status_tracker)
         self.assertTrue(ok)
 
-        # Wait until connected (i.e. three more calls to statusTracker
-        # DISCONNECTED, CONNECTING, CONNECTED)
+        # Wait until connected
+        # (i.e. two more calls to statusTracker: CONNECTING, CONNECTED)
         for i in range(100):
             if status_tracker._calls >= 8:
                 break
@@ -174,7 +186,6 @@ class TestDeviceClientComm(BoundDeviceTestCase):
             8,
             status_tracker._calls,
             f"wrong calls: {status_list}")
-        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[-3])
         self.assertEqual(ConnectionStatus.CONNECTING, status_list[-2])
         self.assertEqual(ConnectionStatus.CONNECTED, status_list[-1])
 
@@ -195,3 +206,9 @@ class TestDeviceClientComm(BoundDeviceTestCase):
         self.assertEqual(9, called_with["inputInt32"])
 
         self.assertTrue(self.dc.unregisterChannelMonitor(channel))
+        for i in range(100):
+            if status_tracker._calls >= 9:
+                break
+            sleep(0.01)
+        self.assertEqual(9, status_tracker._calls)
+        self.assertEqual(ConnectionStatus.DISCONNECTED, status_list[8])
