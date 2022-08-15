@@ -323,6 +323,7 @@ def _time_label_writer(model, parent):
     return element
 
 
+@register_scene_reader("DisplayComboBox")  # DEPRECATED
 @register_scene_reader("DisplayLabel")
 def _display_label_reader(element):
     traits = read_base_widget_data(element)
@@ -457,6 +458,14 @@ class FileOutModel(BaseDisplayEditableWidget):
 
     # The actual type of the widget
     klass = Enum("DisplayFileOut", "EditableFileOut")
+
+
+@register_scene_writer(ComboBoxModel)
+def _editable_combobox_old_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "EditableComboBox")
+
+    return element
 
 
 @register_scene_reader("EditableSpinbox")
