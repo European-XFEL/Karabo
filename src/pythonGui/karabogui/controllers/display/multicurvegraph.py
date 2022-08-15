@@ -24,9 +24,15 @@ NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
 MAXNUMPOINTS = 1000
 
 
+def is_compatible(binding):
+    """Reject a boolean for the x-axis"""
+    return not isinstance(binding, BoolBinding)
+
+
 @register_binding_controller(ui_name='Multi-Curve Graph',
                              klassname='MultiCurveGraph',
                              binding_type=NUMERICAL_BINDINGS,
+                             is_compatible=is_compatible,
                              can_show_nothing=False)
 class DisplayMultiCurveGraph(BaseBindingController):
     # The scene model class used by this controller
@@ -34,7 +40,6 @@ class DisplayMultiCurveGraph(BaseBindingController):
     # Internal traits
     _mpl_widget = Instance(QWidget)
     _reset_proxy = Instance(PropertyProxy)
-    _x_proxy = Instance(PropertyProxy)
     _y_proxies = List(Instance(PropertyProxy))
     _x_values = Instance(deque, kw={'maxlen': MAXNUMPOINTS})
     _y_values = Dict()  # {box.key(): deque of values}
@@ -69,11 +74,19 @@ class DisplayMultiCurveGraph(BaseBindingController):
 
         self._resetbox_linked = _changestyle
 
-        self.add_proxy(self.proxy)
+        self._last_values[self.proxy] = None
+        self._draw_start = True
         return widget
+
+    def binding_update(self, proxy):
+        self.add_proxy(proxy)
 
     def add_proxy(self, proxy):
         binding = proxy.binding
+        if binding is None:
+            # Wait for a new cycle
+            return True
+
         if self._reset_proxy is None and isinstance(binding, BoolBinding):
             # if the resetbox is set, new boolean box goes to yvalues
             self._reset_proxy = proxy
@@ -84,21 +97,16 @@ class DisplayMultiCurveGraph(BaseBindingController):
             return False
 
         self._last_values[proxy] = None
-        # Don't allow boolean type in x axis
-        if self._x_proxy is None and not isinstance(binding, BoolBinding):
-            self._x_proxy = proxy
-        else:
-            self._y_proxies.append(proxy)
-            # request a new curve for each new ybox, use proxy.key for the
-            # curve name as this is unique
-            name = proxy.key
-            self._curves[proxy] = self.widget.add_curve_item(
-                name=name, pen=next(self._pens))
-            self._y_values[proxy] = deque(maxlen=MAXNUMPOINTS)
-            self._draw_start = True
+        self._y_proxies.append(proxy)
+        # request a new curve for each new ybox, use proxy.key for the
+        # curve name as this is unique
+        name = proxy.key
+        self._curves[proxy] = self.widget.add_curve_item(
+            name=name, pen=next(self._pens))
+        self._y_values[proxy] = deque(maxlen=MAXNUMPOINTS)
 
-            # We can show the legend already here!
-            self.widget.set_legend(True)
+        # We can show the legend already here!
+        self.widget.set_legend(True)
 
         return True
 
@@ -134,7 +142,7 @@ class DisplayMultiCurveGraph(BaseBindingController):
         """
         lastvalues = self._last_values
         for proxy, value in lastvalues.items():
-            if proxy is self._x_proxy:
+            if proxy is self.proxy:
                 self._x_values.append(value)
             else:
                 self._y_values[proxy].append(value)
