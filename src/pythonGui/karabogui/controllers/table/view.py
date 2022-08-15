@@ -1,6 +1,11 @@
+#############################################################################
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
 import json
 
 from qtpy.QtCore import QModelIndex, Qt, Slot
+from qtpy.QtGui import QKeySequence
 from qtpy.QtWidgets import QHeaderView, QTableView
 
 from karabogui.binding.api import StringBinding
@@ -21,12 +26,70 @@ class KaraboTableView(QTableView):
     """
 
     def __init__(self, parent=None):
-        super(KaraboTableView, self).__init__(parent)
+        super().__init__(parent)
         self._header = None
         self._bindings = None
         self._drag_column = None
+        self._readonly = True
+
         header = self.horizontalHeader()
         header.sectionDoubleClicked.connect(self._header_resize)
+
+    def set_read_only(self, ro):
+        """Public method to set the readonly status `ro` of the table view
+
+        Note: Method added with Karabo 2.16.X
+        """
+        self._readonly = ro
+
+    def referenceIndex(self):
+        """Convenience function to return the current reference index
+
+        Note: Method added with Karabo 2.16.X
+        """
+        selection = self.selectionModel()
+        if selection is not None and selection.hasSelection():
+            return self.model().index_ref(selection.currentIndex())
+        return QModelIndex()
+
+    def keyPressEvent(self, event):
+        """Reimplemented method of `QTableView`"""
+        if self._readonly:
+            return super().keyPressEvent(event)
+
+        if event.matches(QKeySequence.New):
+            index = self.referenceIndex()
+            model = self.model()
+            if not index.isValid():
+                index = model.index(0, 0)
+            row = index.row()
+            model.add_row(row + 1)
+            self.selectRow(row + 1)
+            event.accept()
+            return
+        elif event.matches(QKeySequence.Delete):
+            index = self.referenceIndex()
+            if index.isValid():
+                row = index.row()
+                self.model().remove_row(row)
+            event.accept()
+            return
+        elif event.modifiers() == Qt.ControlModifier:
+            if event.key() == Qt.Key_Up:
+                index = self.referenceIndex()
+                if index.isValid():
+                    row = index.row()
+                    self.model().move_row_up(row)
+                    self.selectRow(row - 1)
+            elif event.key() == Qt.Key_Down:
+                index = self.referenceIndex()
+                if index.isValid():
+                    row = index.row()
+                    self.model().move_row_down(row)
+                    self.selectRow(row + 1)
+            event.accept()
+            return
+        return super().keyPressEvent(event)
 
     def set_bindings(self, bindings):
         self._bindings = bindings
