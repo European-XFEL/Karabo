@@ -8,6 +8,6 @@ from .delegates import (
 from .filter_model import TableSortFilterModel
 from .model import TableModel
 from .utils import (
-    get_button_attributes, has_confirmation, is_state_display_type,
-    list2string, string2list)
+    create_mime_data, get_button_attributes, has_confirmation,
+    is_state_display_type, list2string, string2list)
 from .view import KaraboTableView

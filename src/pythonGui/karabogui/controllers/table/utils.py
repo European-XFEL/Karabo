@@ -3,13 +3,12 @@
 # Created on March 6, 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from urllib.parse import parse_qs
 
 from qtpy.QtGui import QBrush, QColor
 
 from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE_STATE
-from karabo.native import AccessMode, Hash
+from karabo.native import AccessMode, Hash, encodeBinary
 
 
 def is_writable_binding(binding, binding_type=None):
@@ -123,3 +122,8 @@ def quick_table_copy(hsh):
             return value
 
     return Hash({k: _quick_copy(v) for k, v in hsh.items()})
+
+
+def create_mime_data(**kwargs):
+    """Return byte encoded mime data from kwargs"""
+    return encodeBinary(Hash(kwargs))
