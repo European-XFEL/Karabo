@@ -1,7 +1,7 @@
 from karabo.native import Bool, Configurable, Int32
-from karabogui.binding.api import PropertyProxy
+from karabogui.binding.api import PropertyProxy, build_binding
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+    GuiTestCase, get_class_property_proxy, get_property_proxy, set_proxy_value)
 
 from ..multicurvegraph import DisplayMultiCurveGraph
 
@@ -69,3 +69,11 @@ class TestMultiCurveGraph(GuiTestCase):
         # No data, we have to list the synchronizer first
         set_proxy_value(self.index, 'index', 1)
         self.assertEqual(list(curve.yData), [42.0])
+
+    def test_visualize_additional_nobinding(self):
+        proxy = get_property_proxy(None, 'value', 'TestDevice2')
+        assert self.controller.visualize_additional_property(proxy)
+        self.assertEqual(len(self.controller._curves), 1)
+        build_binding(Object.getClassSchema(),
+                      existing=proxy.root_proxy.binding)
+        self.assertEqual(len(self.controller._curves), 2)
