@@ -357,6 +357,9 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
     std::pair<std::vector<std::string>, std::vector<std::string>> receiversSenders;
 
     if (!serverIn.empty() || !serverOut.empty()) {
+        if (sleepSeconds > 10) { // If waiting is long, give a hint when it started
+            std::cout << "\n" << karabo::util::Timestamp().toFormattedString() << " (UTC):";
+        }
         std::cout << "\nGathering topology to identify devices of servers. . " << std::flush;
         // Instead of the gymnastics below, we could add a slot to the server to query it for all their devices...
 
@@ -381,19 +384,24 @@ std::pair<std::vector<std::string>, std::vector<std::string>> instancesOfServers
             std::vector<std::string>& instances = receiversSenders.first;
             instances.push_back(serverIn);
             const std::vector<std::string> devices(client->getDevices(serverIn));
+            std::cout << "\nFound " << devices.size() << " devices of receiving server " << serverIn;
             if (debug) {
-                std::cout << "\nFound " << devices.size() << " devices of receiving server " << serverIn << ": "
-                          << util::toString(devices) << std::endl;
+                std::cout << ": " << util::toString(devices);
+            } else {
+                std::cout << ".";
             }
+            std::cout << std::endl;
             instances.insert(instances.end(), devices.begin(), devices.end());
         }
         if (!serverOut.empty()) {
             std::vector<std::string>& instances = receiversSenders.second;
             instances.push_back(serverOut);
             const std::vector<std::string> devices(client->getDevices(serverOut));
+            std::cout << "\nFound " << devices.size() << " devices of sending server " << serverOut;
             if (debug) {
-                std::cout << "\nFound " << devices.size() << " devices of sending server " << serverOut << ": "
-                          << util::toString(devices) << std::endl;
+                std::cout << ": " << util::toString(devices) << std::endl;
+            } else {
+                std::cout << ".";
             }
             instances.insert(instances.end(), devices.begin(), devices.end());
         }
