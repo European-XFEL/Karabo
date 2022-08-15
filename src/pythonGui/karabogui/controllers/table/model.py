@@ -178,6 +178,17 @@ class TableModel(QAbstractTableModel):
         last_index = self.index(rows, columns)
         self.dataChanged.emit(first_index, last_index, roles)
 
+    def moveRow(self, source_parent, source_row, parent, row):
+        """Reimplemented function of QAbstractTableModel"""
+        source_last = source_row - 1
+        self.beginMoveRows(source_parent, source_row, source_last, parent, row)
+        try:
+            hsh = self._data.pop(source_row)
+            self._data.insert(row, hsh)
+        finally:
+            self.endMoveRows()
+            self._set_edit_value(self._data)
+
     def insertRows(self, pos, rows, index, *,
                    copy_row=None, from_device=False):
         """Reimplemented function of QAbstractTableModel"""
@@ -257,19 +268,28 @@ class TableModel(QAbstractTableModel):
     # Additional methods
 
     def duplicate_row(self, row):
+        """Duplicate a row element at `row` in the table"""
         copy_row = self._data[row]
-        self.insertRows(row + 1, 1, QModelIndex(), copy_row=copy_row)
+        self.add_row_below(row, copy_row=copy_row)
+
+    def add_row(self, row, copy_row=None):
+        """Insert a row element `copy_row` at `row` in the table"""
+        self.insertRows(row, 1, QModelIndex(), copy_row=copy_row)
+
+    def add_row_below(self, row, copy_row=None):
+        """Add a row element `copy_row` below `row` in the table"""
+        self.add_row(row + 1, copy_row=copy_row)
+
+    def remove_row(self, row):
+        """Remove a `row` element from the table"""
+        self.removeRows(row, 1, QModelIndex())
 
     def move_row_up(self, row):
-        """In a simple two step process move a row element up"""
+        """In a move step process move a row element up"""
         if row > 0:
-            copy_row = self._data[row]
-            self.removeRows(row, 1, QModelIndex())
-            self.insertRows(row - 1, 1, QModelIndex(), copy_row=copy_row)
+            self.moveRow(QModelIndex(), row, QModelIndex(), row - 1)
 
     def move_row_down(self, row):
-        """In a simple two step process move a row element down"""
+        """In a move process move a row element down"""
         if row < self.rowCount() - 1:
-            copy_row = self._data[row]
-            self.removeRows(row, 1, QModelIndex())
-            self.insertRows(row + 1, 1, QModelIndex(), copy_row=copy_row)
+            self.moveRow(QModelIndex(), row, QModelIndex(), row + 1)
