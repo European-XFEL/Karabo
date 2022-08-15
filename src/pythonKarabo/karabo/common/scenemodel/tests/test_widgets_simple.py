@@ -54,6 +54,7 @@ def test_all_empty_widgets():
         api.PopUpModel,
         api.WidgetNodeModel,
         api.EditableComboBoxModel,
+        api.ComboBoxModel,
     )
     for klass in model_classes:
         _check_empty_widget(klass)
@@ -90,6 +91,16 @@ def test_missing_parent_component():
     traits["parent_component"] = ""  # explicitly empty!
     model = api.DisplayLabelModel(**traits)
     assert_raises(api.SceneWriterException, single_model_round_trip, model)
+
+
+def test_combobox_editable_round():
+    """Test that we rewrite the editable combobox"""
+    traits = base_widget_traits()
+    traits["klass"] = "EditableComboBox"
+    model = api.ComboBoxModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert isinstance(read_model, api.EditableComboBoxModel)
 
 
 def test_displaylabel_model():
