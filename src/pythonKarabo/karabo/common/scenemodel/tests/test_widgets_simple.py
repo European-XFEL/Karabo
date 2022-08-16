@@ -51,9 +51,9 @@ def _geometry_traits():
 def test_all_empty_widgets():
     model_classes = (
         api.DisplayLabelModel,
+        api.DisplayListModel,
         api.PopUpModel,
         api.WidgetNodeModel,
-        api.EditableComboBoxModel,
         api.ComboBoxModel,
     )
     for klass in model_classes:
@@ -72,6 +72,7 @@ def test_display_editable_widgets():
 
 def test_editable_simple_model():
     model_classes = (
+        api.EditableComboBoxModel,
         api.EditableListModel,
         api.EditableListElementModel,
         api.EditableSpinBoxModel,

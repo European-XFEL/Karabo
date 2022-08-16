@@ -493,6 +493,34 @@ def _deprecated_filesystem_reader(element):
     return LineEditModel(klass="EditableLineEdit", **traits)
 
 
+@register_scene_reader("DisplayList")
+def _display_list_reader(element):
+    traits = read_base_widget_data(element)
+    return DisplayListModel(**traits)
+
+
+@register_scene_reader("EditableList")
+def _editable_list_reader(element):
+    traits = read_base_widget_data(element)
+    if traits["parent_component"] == "DisplayComponent":
+        # We have been writing this model wrong for around X years.
+        # The correct model is the `DisplayListModel` ...
+        return DisplayListModel(**traits)
+    return EditableListModel(**traits)
+
+
+@register_scene_writer(DisplayListModel)
+def _display_list_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "DisplayList")
+
+
+@register_scene_writer(EditableListModel)
+def _editable_list_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "EditableList")
+
+
 @register_scene_writer(FileInModel)
 @register_scene_writer(FileOutModel)
 @register_scene_writer(DirectoryModel)
@@ -524,10 +552,8 @@ def _build_empty_widget_readers_and_writers():
 
     names = (
         "DaemonManagerModel",
-        "DisplayListModel",
         "DisplayTextLogModel",
         "EditableComboBoxModel",
-        "EditableListModel",
         "EditableRegexListModel",
         "EditableListElementModel",
         "EditableRegexModel",
