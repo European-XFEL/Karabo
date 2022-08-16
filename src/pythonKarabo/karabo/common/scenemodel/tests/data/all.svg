@@ -146,7 +146,7 @@
                 <svg:rect height="83" width="127" x="755" y="405"
                           krb:class="DisplayComponent"
                           krb:keys="p1.vecBoolPropertyDefault"
-                          krb:widget="EditableList"/>
+                          krb:widget="DisplayList"/>
                 <svg:rect height="83" width="235" x="882" y="405"
                           krb:class="EditableApplyLaterComponent"
                           krb:keys="p1.vecBoolPropertyDefault"
@@ -162,7 +162,7 @@
                 <svg:rect height="83" width="160" x="721" y="498"
                           krb:class="DisplayComponent"
                           krb:keys="p1.vecStringPropertyDefault"
-                          krb:widget="EditableList"/>
+                          krb:widget="DisplayList"/>
                 <svg:rect height="83" width="236" x="881" y="498"
                           krb:class="EditableApplyLaterComponent"
                           krb:keys="p1.vecStringPropertyDefault"
