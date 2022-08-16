@@ -133,8 +133,13 @@ class ConfigurationTreeView(QTreeView):
         try:
             index = self._popup_showing_index
             if index is not None:
-                index = index.row(), index.column(), index.parent()
-                self._popup_showing_index = QModelIndex()
+                parent = index.parent()
+                if not parent.isValid():
+                    index = index.row(), index.column(), parent
+                    self._popup_showing_index = QModelIndex()
+                else:
+                    index = None
+                    self.close_popup_widget()
             yield
         finally:
             if index is not None:
