@@ -8,7 +8,7 @@ from traits.api import Instance, Int
 
 from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
-    DisplayListModel, EditableListModel, EditableRegexListModel)
+    EditableListModel, EditableRegexListModel)
 from karabogui import icons
 from karabogui.binding.api import (
     VectorBinding, VectorCharBinding, VectorHashBinding, VectorNoneBinding,
@@ -23,40 +23,31 @@ from karabogui.validators import RegexListValidator
 from karabogui.widgets.hints import LineEdit
 
 
-class _BaseListController(BaseBindingController):
-    last_cursor_position = Int(0)
+class BaseEditableListController(BaseBindingController):
     _internal_widget = Instance(QLineEdit)
-    _validator = Instance(QValidator)
+    last_cursor_position = Int(0)
     layout = Instance(QHBoxLayout)
+
+    # other internal traits
+    _validator = Instance(QValidator)
     _normal_palette = Instance(QPalette)
     _error_palette = Instance(QPalette)
 
     def create_widget(self, parent):
-        composite_widget = QWidget(parent)
-        composite_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self.layout = QHBoxLayout(composite_widget)
+        widget = QWidget(parent)
+        widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self.layout = QHBoxLayout(widget)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self._internal_widget = LineEdit(parent)
         self.layout.addWidget(self._internal_widget)
         self._normal_palette = self._internal_widget.palette()
         self._error_palette = QPalette(self._normal_palette)
         self._error_palette.setColor(QPalette.Text, Qt.red)
-        composite_widget.setFocusProxy(self._internal_widget)
+        widget.setFocusProxy(self._internal_widget)
 
-        return composite_widget
-
-    def binding_update(self, proxy):
-        binding = proxy.binding
-        self._validator = ListValidator(binding=binding, parent=self.widget)
-        self._internal_widget.setValidator(self._validator)
-
-    def set_read_only(self, ro):
-        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
-        self._internal_widget.setFocusPolicy(focus_policy)
-        self._internal_widget.setReadOnly(ro)
-        if ro:
-            return
         self._internal_widget.textChanged.connect(self._on_user_edit)
+        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
+
         text = "Edit"
         tbEdit = QToolButton()
         tbEdit.setStatusTip(text)
@@ -68,17 +59,18 @@ class _BaseListController(BaseBindingController):
         tbEdit.clicked.connect(self._on_edit_clicked)
         self.layout.addWidget(tbEdit)
 
+        return widget
+
+    def binding_update(self, proxy):
+        raise NotImplementedError
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
+
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
         self._set_edit_field_text(value)
-
-    def state_update(self, proxy):
-        # NOTE: Only the editable widget will be disabled depending on state!
-        if self._internal_widget.isReadOnly():
-            return
-
-        enable = is_proxy_allowed(proxy)
-        self.widget.setEnabled(enable)
 
     def _on_user_edit(self, text):
         if self.proxy.binding is None:
@@ -142,17 +134,14 @@ def _is_compatible(binding):
 @register_binding_controller(ui_name='Edit List', is_compatible=_is_compatible,
                              klassname='EditableList', can_edit=True,
                              binding_type=VectorBinding, priority=10)
-class EditableList(_BaseListController):
+class EditableList(BaseEditableListController):
     """The editable version of the list widget"""
     model = Instance(EditableListModel, args=())
 
-
-@register_binding_controller(ui_name='List', is_compatible=_is_compatible,
-                             klassname='DisplayList', priority=10,
-                             binding_type=VectorBinding)
-class DisplayList(_BaseListController):
-    """The display version of the list widget"""
-    model = Instance(DisplayListModel, args=())
+    def binding_update(self, proxy):
+        binding = proxy.binding
+        self._validator = ListValidator(binding=binding, parent=self.widget)
+        self._internal_widget.setValidator(self._validator)
 
 
 def _has_regex_attribute(binding):
@@ -165,7 +154,7 @@ def _has_regex_attribute(binding):
                              klassname='EditableRegexList',
                              binding_type=VectorStringBinding,
                              priority=10)
-class EditableRegexList(_BaseListController):
+class EditableRegexList(BaseEditableListController):
     model = Instance(EditableRegexListModel, args=())
 
     def binding_update(self, proxy):

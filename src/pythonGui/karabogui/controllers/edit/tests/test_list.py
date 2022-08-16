@@ -90,11 +90,6 @@ class TestEditableList(GuiTestCase):
         value = self.proxy.edit_value
         assert len(value) == 0 and all(value == [])
 
-    def test_no_edit_value(self):
-        self.controller.set_read_only(True)
-        self.controller._internal_widget.setText('3,4')
-        assert self.proxy.edit_value is None
-
     def test_edit_dialog(self):
         target = 'karabogui.controllers.edit.list.ListEditDialog'
         with patch(target, new=ListEditMock):
