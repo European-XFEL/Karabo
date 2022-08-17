@@ -1418,9 +1418,18 @@ void Hash_Test::testGetPaths() {
         h.set("a", 1);
         h.set("b.c", "foo");
         h.set("b.array", NDArray(Dims(10, 10)));
+        h.set("emptyhash", Hash());
         std::vector<std::string> paths;
         h.getDeepPaths(paths);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(paths) += "\n" + toString(h), 6ul, paths.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(paths) += "\n" + toString(h), 7ul, paths.size());
+        std::vector<std::string>::const_iterator it = paths.begin();
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("a"));
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.c"));
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.data"));
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.type"));
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.shape"));
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("b.array.isBigEndian"));
+        CPPUNIT_ASSERT_EQUAL(*it++, std::string("emptyhash"));
     }
 }
 
