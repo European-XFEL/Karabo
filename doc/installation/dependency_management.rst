@@ -159,7 +159,6 @@ backcall             0.2.0             BSD-3                                    
 backports-abc        0.4               PSFL                                                        no                    no
 backports.ssl-match  3.5.0.1           PSFL                                                        no                    no
 boost                1.68              Boost License                                               yes                   no
-boost.beast          1.79 (329)        Boost License                                               yes                   no
 bzip2                1.0.6             BSD                                                         yes                   yes
 certifi              2018.4.16         MPL2.0                                                      no                    no
 chardet              3.0.4             LGPL                                                        yes                   no
