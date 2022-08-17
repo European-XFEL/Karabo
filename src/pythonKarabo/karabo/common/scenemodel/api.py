@@ -55,7 +55,7 @@ from .widgets.simple import (
     EditableListModel, EditableRegexListModel, EditableRegexModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
     HexadecimalModel, HistoricTextModel, IntLineEditModel, LabelModel,
-    LampModel, LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
+    LampModel, LineEditModel, RunConfiguratorModel, SceneLinkModel,
     SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
