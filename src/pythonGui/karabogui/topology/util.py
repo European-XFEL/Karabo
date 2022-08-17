@@ -4,7 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import Counter
+from copy import deepcopy
 
+from karabo.native import Hash
 from karabogui.singletons.api import get_topology
 
 
@@ -55,3 +57,9 @@ def get_macro_servers():
     return [server
             for server in sorted(macro_servers, key=macro_servers.get)
             if server in macro_servers_set]
+
+
+def getTopology():
+    """Return a deepcopy of the system topology hash"""
+    topology = get_topology()._system_hash or Hash()
+    return deepcopy(topology)
