@@ -9,7 +9,7 @@ from karabogui.testing import (
     GuiTestCase, get_device_schema, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology
 from karabogui.topology.util import (
-    get_macro_servers, is_device_online, is_server_online)
+    get_macro_servers, getTopology, is_device_online, is_server_online)
 
 
 class FooClass(Configurable):
@@ -30,8 +30,11 @@ class TestSystemTopology(GuiTestCase):
         topology = SystemTopology()
         topology.initialize(system_hash())
         assert topology.online
+        topo = getTopology()
+        assert isinstance(topo, Hash)
         topology.clear()
         assert not topology.online
+        assert isinstance(topo, Hash)
 
     def test_get_class_simple(self):
         network = Mock()
