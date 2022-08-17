@@ -51,7 +51,7 @@ from karabogui.singletons.api import (
     get_config, get_manager, get_mediator, get_network, get_panel_wrangler,
     get_project_model, get_topology)
 from karabogui.topology.api import (
-    SystemTopology, SystemTree, SystemTreeNode, get_macro_servers,
+    SystemTopology, SystemTree, SystemTreeNode, get_macro_servers, getTopology,
     is_device_online, is_server_online)
 from karabogui.util import (
     SignalBlocker, generateObjectName, get_reason_parts, get_spin_widget,
