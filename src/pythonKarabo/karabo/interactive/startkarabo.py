@@ -78,7 +78,7 @@ def entrypoint(func):
 
 def supervise():
     if not check_service_dir():
-        return
+        return False
     svok = subprocess.call([absolute("extern", "bin", "svok"),
                             absolute("var", "service", ".svscan")])
     if svok != 0:
@@ -108,7 +108,8 @@ def defaultall():
 
 
 def exec_defaultall(cmd, *args):
-    supervise()
+    if not supervise():
+        return
     path = absolute("extern", "bin", cmd)
     os.execv(path, [cmd] + list(args) + defaultall())
 
@@ -318,7 +319,8 @@ def checkkarabo():
 
     If no device server is given, show the status of all device servers.
     """
-    supervise()
+    if not supervise():
+        return
     svstat = subprocess.run(
         [absolute("extern", "bin", "svstat")] + defaultall(),
         stdout=subprocess.PIPE, encoding="utf8")
