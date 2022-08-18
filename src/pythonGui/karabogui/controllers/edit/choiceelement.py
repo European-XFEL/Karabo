@@ -7,7 +7,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QComboBox
 from traits.api import Instance
 
-from karabo.common.scenemodel.api import ChoiceElementModel
+from karabo.common.scenemodel.api import EditableChoiceElementModel
 from karabogui.binding.api import ChoiceOfNodesBinding
 from karabogui.controllers.api import (
     BaseBindingController, is_proxy_allowed, register_binding_controller)
@@ -19,7 +19,7 @@ from karabogui.util import MouseWheelEventBlocker, SignalBlocker
                              binding_type=ChoiceOfNodesBinding)
 class EditableChoiceElement(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(ChoiceElementModel, args=())
+    model = Instance(EditableChoiceElementModel, args=())
     # Internal traits
     _blocker = Instance(MouseWheelEventBlocker)
 
