@@ -214,7 +214,7 @@ void ImageData_Test::testSetAndGetMethods() {
 }
 
 
-void ImageData_Test::testImageDataElementMaxSize() {
+void ImageData_Test::testImageDataElement() {
     // Testing if the shape, maximum size and data type was set correctly in the schema (required for DAQ)
     Schema sch;
     IMAGEDATA_ELEMENT(sch)
@@ -226,15 +226,17 @@ void ImageData_Test::testImageDataElementMaxSize() {
 
     {
         // Testing max size
-        CPPUNIT_ASSERT_EQUAL((int)sch.getMaxSize("ide.pixels.shape"), 3);
-        CPPUNIT_ASSERT_EQUAL((int)sch.getMaxSize("ide.dims"), 3);
-        CPPUNIT_ASSERT_EQUAL((int)sch.getMaxSize("ide.dimTypes"), 3);
-        CPPUNIT_ASSERT_EQUAL((int)sch.getMaxSize("ide.roiOffsets"), 3);
-        CPPUNIT_ASSERT_EQUAL((int)sch.getMaxSize("ide.binning"), 3);
+        CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.pixels.shape"));
+        CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.dims"));
+        CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.dimTypes"));
+        CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.roiOffsets"));
+        CPPUNIT_ASSERT_EQUAL(3u, sch.getMaxSize("ide.binning"));
 
         // Testing shapes
         CPPUNIT_ASSERT(sch.getDefaultValueAs<std::string>("ide.pixels.shape") == "480,640,3");
         CPPUNIT_ASSERT(sch.getDefaultValueAs<std::string>("ide.dims") == "480,640,3");
+        CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long>>("ide.dims") ==
+                       std::vector<unsigned long long>({480, 640, 3}));
 
         // Testing datatypes
         CPPUNIT_ASSERT_EQUAL(static_cast<int>(EncodingType::RGB), sch.getDefaultValueAs<int>("ide.encoding"));
@@ -244,4 +246,8 @@ void ImageData_Test::testImageDataElementMaxSize() {
     // Test default data type
     IMAGEDATA_ELEMENT(sch).key("ide2").commit();
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::UNKNOWN), sch.getDefaultValue<int>("ide2.pixels.type"));
+
+    IMAGEDATA_ELEMENT(sch).key("ide3").setDimensions(std::vector<unsigned long long>({480ull, 640ull})).commit();
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long>>("ide3.dims") ==
+                   std::vector<unsigned long long>({480ull, 640ull}));
 }
