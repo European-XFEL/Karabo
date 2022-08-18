@@ -205,8 +205,8 @@ class Tests(TestCase):
     def test_topology(self):
         loop = setEventLoop()
         with closing(loop):
-            dc = DeviceClient(dict(_deviceId_="ikarabo-test"))
-            dc.startInstance()
+            dc = DeviceClient(dict(_deviceId_="ikarabo-test2"))
+            loop.run_until_complete(dc.startInstance())
             task = loop.create_task(self.init_topo(dc), dc)
             loop.run_until_complete(task)
             loop.run_until_complete(dc.slotKillDevice())

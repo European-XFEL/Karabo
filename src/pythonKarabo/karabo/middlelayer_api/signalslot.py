@@ -393,14 +393,17 @@ class SignalSlotable(Configurable):
             raise
         self.__initialized = True
 
-    @coslot
-    async def slotKillDevice(self):
+    async def slotKillDevice(self, message=None):
         """Kill the device on shutdown
 
         :returns: success boolean if all tasks related to the device
                   are gone.
         """
         if self.__initialized:
+            instanceId = (self._ss.get_property(message, "signalInstanceId")
+                          if message is not None else "OS signal")
+            self.logger.info("Received request to shutdown SignalSlotable"
+                             f"from {instanceId}.")
             self.__initialized = False
             try:
                 await wait_for(get_event_loop().run_coroutine_or_thread(
@@ -420,6 +423,8 @@ class SignalSlotable(Configurable):
 
         # No tasks are running
         return True
+
+    slotKillDevice = coslot(slotKillDevice, passMessage=True)
 
     def __del__(self):
         if self._ss is not None and self._ss.loop.is_running():

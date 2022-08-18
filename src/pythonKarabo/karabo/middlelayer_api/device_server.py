@@ -511,7 +511,6 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         await task
         return True, deviceId
 
-    @coslot
     async def slotKillServer(self, message=None):
         instanceId = (self._ss.get_property(message, "signalInstanceId")
                       if message is not None else "OS signal")
