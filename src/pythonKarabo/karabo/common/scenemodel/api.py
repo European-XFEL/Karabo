@@ -49,13 +49,13 @@ from .widgets.icon import (
     SelectionIconsModel, TextIconsModel)
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
-    CheckBoxModel, ChoiceElementModel, ComboBoxModel, DaemonManagerModel,
-    DirectoryModel, DisplayLabelModel, DisplayListModel, DisplayTextLogModel,
-    DisplayTimeModel, EditableComboBoxModel, EditableListElementModel,
-    EditableListModel, EditableRegexListModel, EditableRegexModel,
-    EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
-    HexadecimalModel, HistoricTextModel, IntLineEditModel, LabelModel,
-    LampModel, LineEditModel, RunConfiguratorModel, SceneLinkModel,
+    CheckBoxModel, ComboBoxModel, DaemonManagerModel, DirectoryModel,
+    DisplayLabelModel, DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
+    EditableChoiceElementModel, EditableComboBoxModel,
+    EditableListElementModel, EditableListModel, EditableRegexListModel,
+    EditableRegexModel, EditableSpinBoxModel, FileInModel, FileOutModel,
+    GlobalAlarmModel, HexadecimalModel, HistoricTextModel, IntLineEditModel,
+    LabelModel, LampModel, LineEditModel, RunConfiguratorModel, SceneLinkModel,
     SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (

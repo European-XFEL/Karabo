@@ -62,7 +62,6 @@ def test_all_empty_widgets():
 def test_display_editable_widgets():
     model_classes = (
         api.CheckBoxModel,
-        api.ChoiceElementModel,
         api.LineEditModel,
     )
     for klass in model_classes:
@@ -72,6 +71,7 @@ def test_display_editable_widgets():
 def test_editable_simple_model():
     model_classes = (
         api.EditableComboBoxModel,
+        api.EditableChoiceElementModel,
         api.EditableListModel,
         api.EditableListElementModel,
         api.EditableSpinBoxModel,
