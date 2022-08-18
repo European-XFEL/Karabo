@@ -16,7 +16,7 @@ class ImageData_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(ImageData_Test);
     CPPUNIT_TEST(testConstructor);
     CPPUNIT_TEST(testSetAndGetMethods);
-    CPPUNIT_TEST(testImageDataElementMaxSize);
+    CPPUNIT_TEST(testImageDataElement);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -30,7 +30,7 @@ class ImageData_Test : public CPPUNIT_NS::TestFixture {
 
     void testSetAndGetMethods();
 
-    void testImageDataElementMaxSize();
+    void testImageDataElement();
 };
 
 #endif /* IMAGEDATA_TEST_HH */
