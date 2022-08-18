@@ -36,13 +36,14 @@ class DeviceClient(Macro, DeviceClientBase):
         info["type"] = "client"
         return info
 
-    @coslot
-    async def slotKillDevice(self):
+    async def slotKillDevice(self, message=None):
         """Subclass the `slotKillDevice` to exit the IPython console"""
-        await super().slotKillDevice()
+        await super().slotKillDevice(message)
         ip = IPython.get_ipython()
         if ip is not None:
             ip.ask_exit()
+
+    slotKillDevice = coslot(slotKillDevice, passMessage=True)
 
 
 @functools.wraps(device_client.connectDevice)
