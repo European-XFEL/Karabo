@@ -13,7 +13,7 @@ class Object(Configurable):
 
 class TestDisplayVectorFill(GuiTestCase):
     def setUp(self):
-        super(TestDisplayVectorFill, self).setUp()
+        super().setUp()
 
         schema = Object.getClassSchema()
         self.value = get_class_property_proxy(schema, 'value')
@@ -22,7 +22,7 @@ class TestDisplayVectorFill(GuiTestCase):
         self.assertIsNotNone(self.controller.widget)
 
     def tearDown(self):
-        super(TestDisplayVectorFill, self).tearDown()
+        super().tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
@@ -30,6 +30,5 @@ class TestDisplayVectorFill(GuiTestCase):
         value = [2, 4, 6]
         set_proxy_value(self.value, 'value', value)
         curve = self.controller._plot
-        self.assertIsNotNone(curve.curves)
-        np.testing.assert_array_equal(
-            curve.curves[0], (np.array([0, 1, 2]), np.array([0., 0., 0.])))
+        self.assertIsNotNone(curve)
+        np.testing.assert_array_equal(curve.yData, value)
