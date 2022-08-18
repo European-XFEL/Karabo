@@ -78,20 +78,16 @@ namespace karathon {
 
         static karabo::xms::ImageDataElement& setDimensions(karabo::xms::ImageDataElement& self,
                                                             const bp::object& obj) {
-            std::string dimStr("{0,0}");
-
-            // If image dimensions were given as string
             if (PyUnicode_Check(obj.ptr())) {
-                dimStr = bp::extract<std::string>(obj);
-                // If image dimensions were given as list
+                // If image dimensions were given as string
+                return self.setDimensions(bp::extract<std::string>(obj));
             } else if (PyList_Check(obj.ptr())) {
-                const std::vector<long long> v = karathon::Wrapper::fromPyListToStdVector<long long>(obj);
-                dimStr = karabo::util::toString<long long>(v);
+                // If image dimensions were given as list
+                return self.setDimensions(karathon::Wrapper::fromPyListToStdVector<unsigned long long>(obj));
             } else {
                 throw KARABO_PYTHON_EXCEPTION(
                       "Python type of setDimensions() of ImageDataElement must be a list or a string");
             }
-            return self.setDimensions(dimStr);
         }
 
         static karabo::xms::ImageDataElement& setEncoding(karabo::xms::ImageDataElement& self, const bp::object& obj) {
