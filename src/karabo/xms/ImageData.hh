@@ -253,21 +253,23 @@ namespace karabo {
             }
 
             ImageDataElement& setDimensions(const std::string& dimensions) {
+                return setDimensions(karabo::util::fromString<unsigned long long, std::vector>(dimensions));
+            }
+
+            ImageDataElement& setDimensions(const std::vector<unsigned long long>& dimensions) {
                 // It is up to the user to explicitly specify the number of channels for RGB cameras.
                 // i.e. for monochrome image it's "480,640" and for color image it must be "480,640,3"
                 // Encoding should be set accordingly (but not necessary)
-                std::vector<unsigned long long> tmp =
-                      karabo::util::fromString<unsigned long long, std::vector>(dimensions);
 
                 // Setting shapes
-                ImageDataElement& ret = ParentType::setDefaultValue("dims", tmp);
-                ret.setDefaultValue("pixels.shape", tmp);
+                ImageDataElement& ret = ParentType::setDefaultValue("dims", dimensions);
+                ret.setDefaultValue("pixels.shape", dimensions);
                 // Setting maximum number of dimensions for all vectors for the DAQ
-                ret.setMaxSize("dims", tmp.size());
-                ret.setMaxSize("pixels.shape", tmp.size());
-                ret.setMaxSize("dimTypes", tmp.size());
-                ret.setMaxSize("roiOffsets", tmp.size());
-                ret.setMaxSize("binning", tmp.size());
+                ret.setMaxSize("dims", dimensions.size());
+                ret.setMaxSize("pixels.shape", dimensions.size());
+                ret.setMaxSize("dimTypes", dimensions.size());
+                ret.setMaxSize("roiOffsets", dimensions.size());
+                ret.setMaxSize("binning", dimensions.size());
                 return ret;
             }
 
