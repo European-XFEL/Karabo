@@ -152,10 +152,6 @@ class LineEditModel(BaseDisplayEditableWidget):
     klass = Enum("DisplayLineEdit", "EditableLineEdit")
 
 
-class PopUpModel(BaseWidgetObjectData):
-    """A model for a pop up window"""
-
-
 class RunConfiguratorModel(BaseEditWidget):
     """A model for RunConfigurator ListOfNodes editor"""
 
@@ -561,7 +557,6 @@ def _build_empty_widget_readers_and_writers():
         "HexadecimalModel",
         "IntLineEditModel",
         "LampModel",
-        "PopUpModel",
         "RunConfiguratorModel",
         "WidgetNodeModel",
     )
