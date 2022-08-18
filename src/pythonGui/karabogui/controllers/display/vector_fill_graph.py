@@ -40,7 +40,7 @@ class DisplayVectorFillGraph(BaseBindingController):
     def value_update(self, proxy):
         value = proxy.value
         # This plotItem is special!
-        _, y = generate_down_sample(value, threshold=1400, rect=None)
+        _, y = generate_down_sample(value, threshold=2000, rect=None)
         self._plot.setData(y)
 
     # ----------------------------------------------------------------
