@@ -95,6 +95,8 @@ def supervise():
 
 
 def defaultall():
+    if not check_service_dir():
+        return []
     os.chdir(absolute("var", "service"))
     existing = {d for d in os.listdir() if not d.startswith(".")}
     argv = [arg.replace("/", "_") for arg in sys.argv[1:]
