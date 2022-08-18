@@ -5,13 +5,16 @@
 #############################################################################
 
 from qtpy.QtCore import QSize, Qt
-from qtpy.QtWidgets import QLabel, QSizePolicy, QStackedLayout, QWidget
+from qtpy.QtWidgets import (
+    QLabel, QSizePolicy, QStackedLayout, QVBoxLayout, QWidget)
 
 from karabogui.controllers.api import get_model_controller
 from karabogui.indicators import get_device_status_pixmap
 from karabogui.sceneview.api import get_proxy
 
 from .base import BasePanelWidget
+
+QPADDING = 20
 
 
 class WidgetControllerPanel(BasePanelWidget):
@@ -25,8 +28,9 @@ class WidgetControllerPanel(BasePanelWidget):
     def sizeHint(self):
         """Provide an appropriate `sizeHint` for this widget controller panel
         """
-        height = self.toolbar.height() + self.model.height
-        return QSize(self.model.width, height)
+        width = self.model.width + QPADDING
+        height = self.toolbar.height() + self.model.height + QPADDING
+        return QSize(width, height)
 
     def _setup_model_controller(self, model):
         """Setup the proxy and widget controller for this panels"""
@@ -47,14 +51,18 @@ class WidgetControllerPanel(BasePanelWidget):
         self.controller.finish_initialization()
         self.controller.show()
 
+        padding = QPADDING // 2
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(padding, padding, padding, padding)
+
         self.status_symbol = QLabel("", self)
         self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
 
-        layout = QStackedLayout()
-        layout.setStackingMode(QStackedLayout.StackAll)
-        layout.addWidget(self.controller.widget)
-        layout.addWidget(self.status_symbol)
-        widget.setLayout(layout)
+        stack_layout = QStackedLayout()
+        stack_layout.setStackingMode(QStackedLayout.StackAll)
+        stack_layout.addWidget(self.controller.widget)
+        stack_layout.addWidget(self.status_symbol)
+        layout.addLayout(stack_layout)
 
         proxy = self.controller.proxy.root_proxy
         proxy.on_trait_change(self._proxy_status_changed, "status")
