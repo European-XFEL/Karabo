@@ -915,6 +915,15 @@ class Schema_TestCase(unittest.TestCase):
                              "myImage")
             self.assertEqual(schema.getDescription("myImageElement"),
                              "Image Element")
+            self.assertEqual(schema.getDefaultValue("myImageElement.dims"),
+                             [100, 200])
+            schema2 = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(schema2.getDefaultValue("myImageElement.dims"),
+                             [110, 210])
+            ide = IMAGEDATA_ELEMENT(schema2).key("myImageElement2")
+            with self.assertRaises(RuntimeError):
+                ide.setDimensions(123)  # only list ans str are allowed
+
             # Hijack this test to test correct false result of isCustomNode,
             # but here just one type, excessive test is done for
             # underlying C++ code

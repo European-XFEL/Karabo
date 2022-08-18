@@ -495,6 +495,7 @@ class TestStruct1(object):
             IMAGEDATA_ELEMENT(expected).key("myImageElement")
             .displayedName("myImage")
             .description("Image Element")
+            .setDimensions("100, 200")
             .operatorAccess()
             .commit(),
         )
@@ -570,6 +571,7 @@ class SomeClass(object):
             IMAGEDATA_ELEMENT(expected).key("myImageElement")
             .displayedName("myImage")
             .description("Image Element")
+            .setDimensions([110, 210])
             .operatorAccess()
             .commit(),
         )
