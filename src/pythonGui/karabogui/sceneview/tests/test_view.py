@@ -231,7 +231,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
     def test_display_widgets(self):
         """Testing the loading of display widgets"""
         self._assert_geometry(sm.CheckBoxModel)
-        self._assert_geometry(sm.ChoiceElementModel)
         self._assert_geometry(sm.ColorBoolModel)
         self._assert_geometry(sm.DaemonManagerModel)
         self._assert_geometry(sm.DeviceSceneLinkModel)
@@ -257,8 +256,7 @@ class TestLoadSceneModel(BaseSceneViewTest):
     def test_editable_widgets(self):
         """Testing the geometry loading of editable widgets"""
         self._assert_geometry(sm.CheckBoxModel, klass="EditableCheckBox")
-        self._assert_geometry(sm.ChoiceElementModel,
-                              klass="EditableChoiceElement")
+        self._assert_geometry(sm.EditableChoiceElementModel)
         self._assert_geometry(sm.EditableComboBoxModel)
         self._assert_geometry(sm.DoubleLineEditModel)
         self._assert_geometry(sm.EditableListElementModel)
