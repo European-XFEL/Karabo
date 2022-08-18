@@ -52,7 +52,6 @@ def test_all_empty_widgets():
     model_classes = (
         api.DisplayLabelModel,
         api.DisplayListModel,
-        api.PopUpModel,
         api.WidgetNodeModel,
         api.ComboBoxModel,
     )

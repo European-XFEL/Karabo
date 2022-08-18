@@ -18,9 +18,9 @@ from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabogui.binding.api import (
     DeviceProxy, ImageBinding, Int8Binding, IntBinding, NDArrayBinding,
     NodeBinding, PipelineOutputBinding, PropertyProxy, ProxyStatus,
-    SignedIntBinding, StringBinding, TableBinding, Uint8Binding,
-    UnsignedIntBinding, VectorBinding, VectorHashBinding, VectorNoneBinding,
-    VectorNumberBinding, VectorUint8Binding, WidgetNodeBinding, build_binding)
+    SignedIntBinding, TableBinding, Uint8Binding, UnsignedIntBinding,
+    VectorBinding, VectorHashBinding, VectorNoneBinding, VectorNumberBinding,
+    VectorUint8Binding, WidgetNodeBinding, build_binding)
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import (
@@ -147,14 +147,9 @@ class BaseSceneViewTest(GuiTestCase):
         if controller is None:
             return None
 
-        # Specify the binding of the flaky model
-        exceptions = {sm.PopUpModel: StringBinding}
-        if type(model) in exceptions:
-            binding = exceptions[type(model)]
-        else:
-            # Use a compatible binding
-            ctrait = controller.class_traits().get("_binding_type")
-            binding = self._get_binding(ctrait.default_value()[1])
+        # Use a compatible binding
+        ctrait = controller.class_traits().get("_binding_type")
+        binding = self._get_binding(ctrait.default_value()[1])
 
         model.keys = [f"{DEVICE_NAME}.{ALL_PROPS_BINDINGS[binding]}"]
 
@@ -254,7 +249,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.HexadecimalModel)
         self._assert_geometry(sm.LampModel)
         self._assert_geometry(sm.LineEditModel)
-        self._assert_geometry(sm.PopUpModel)
         self._assert_geometry(sm.RunConfiguratorModel)
         self._assert_geometry(sm.SingleBitModel)
         self._assert_geometry(sm.TableElementModel)
