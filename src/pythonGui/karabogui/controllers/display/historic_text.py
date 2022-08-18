@@ -155,7 +155,9 @@ class DisplayHistoricText(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        value = get_binding_value(proxy, "")
+        value = get_binding_value(proxy)
+        if value is None:
+            return
         timestamp = proxy.binding.timestamp
         dt = datetime.fromtimestamp(timestamp.toTimestamp())
         stamp = dt.strftime(TIME_FORMAT)
