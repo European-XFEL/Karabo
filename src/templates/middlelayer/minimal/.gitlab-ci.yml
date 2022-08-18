@@ -10,11 +10,27 @@
     - curl http://exflserv05.desy.de/karabo/karaboFramework/tags/$KARABO_TAG/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
     - bash karabo.sh --prefix=/root
     - source /root/karabo/activate
+    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
     - karabo -g https://$XFEL_TOKEN@git.xfel.eu/gitlab install $REL_PROJECT_NAME $REL_TAG
     - pushd $CI_PROJECT_DIR
+    - pip install pytest-cov
     - pip install -e .
     - python -m isort --check .
-    - pytest .
+    - pytest . --junitxml=junit.py.xml --cov=$CI_PROJECT_NAME --cov-report term
+
+# to have gitlab extract code coverage for your project
+#   1) goto Settings->CI/CD->General piplines->Test coverage parsing
+#   2) copy/paste this regex and save:  ^TOTAL.+?([\d\.]+\%)$
+
+.test_report_template: &test_report
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - junit.*.xml
+    paths:
+      - junit.*.xml
+    expire_in: 8 weeks
 
 test:centos7:release:
   image: europeanxfel/karabo-ci:centos-7gcc7
@@ -22,6 +38,7 @@ test:centos7:release:
     - source /opt/rh/devtoolset-7/enable
     - export KARABO_TAG="latest_build"
   <<: *test_build
+  <<: *test_report
 
 test:centos7:prerelease:
   image: europeanxfel/karabo-ci:centos-7gcc7
