@@ -11,9 +11,10 @@ from qtpy.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 class PopupWidget(QWidget):
     def __init__(self, can_freeze=False, parent=None):
-        super(PopupWidget, self).__init__(parent, Qt.Tool)
+        super().__init__(parent=parent, flags=Qt.Dialog)
         flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint
         self.setWindowFlags(self.windowFlags() | flags)
+        self.setWindowModality(Qt.NonModal)
         self._ui_info = TextEdit(self)
         self._ui_info.setReadOnly(True)
 
