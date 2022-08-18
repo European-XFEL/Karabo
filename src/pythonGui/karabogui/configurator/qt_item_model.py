@@ -177,7 +177,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _schema_update(self):
         """Notify the view of a schema update"""
-        self.layoutAboutToBeChanged.emit()
+        self.layoutAboutToBeChanged.emit(
+            [], QAbstractItemModel.VerticalSortHint)
         self.layoutChanged.emit()
         self.notify_of_modifications()
 
