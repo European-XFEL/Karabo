@@ -17,8 +17,7 @@ from karabogui.graph.common.const import (
     EMPTY_SYMBOL_OPTIONS, SYMBOL_SIZE, WIDGET_HEIGHT_HINT, WIDGET_MIN_HEIGHT,
     WIDGET_MIN_WIDTH, WIDGET_WIDTH_HINT)
 from karabogui.graph.plots.dialogs import GraphViewDialog, RangeDialog
-from karabogui.graph.plots.items import (
-    ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
+from karabogui.graph.plots.items import ScatterGraphPlot, VectorBarGraphPlot
 from karabogui.graph.plots.tools import CrossTargetController
 
 ALPHA_GRID = 30 / 255
@@ -508,13 +507,12 @@ class KaraboPlotView(QWidget):
         for item in plot_item.dataItems[:]:
             item.clear()
 
-    def add_curve_fill(self, pen=get_default_pen(), brush=get_default_brush()):
-        """Adds two curves which are filled inbetween"""
-        item = VectorFillGraphPlot(
-            viewbox=self.plotItem.vb, pen=pen, brush=brush)
-
-        self.plotItem.addItem(item)
-
+    def add_curve_fill(self, name=None, pen=get_default_pen(),
+                       brush=get_default_brush()):
+        item = self.plotItem.plot(name=name, pen=pen, fillLevel=0,
+                                  fillBrush=brush)
+        if hasattr(item, 'setDynamicRangeLimit'):
+            item.setDynamicRangeLimit(None)
         return item
 
     def add_curve_item(self, name=None, pen=get_default_pen(), **options):
