@@ -1,50 +1,10 @@
-import weakref
-
 import numpy as np
 from pyqtgraph import (
-    BarGraphItem, ScatterPlotItem, arrayToQPath, functions as fn,
-    getConfigOption)
+    BarGraphItem, ScatterPlotItem, functions as fn, getConfigOption)
 from qtpy.QtCore import QRectF
-from qtpy.QtGui import QPainter, QPainterPath, QPicture, QTransform
-from qtpy.QtWidgets import QGraphicsPathItem
+from qtpy.QtGui import QPainter, QPainterPath, QPicture
 
 from karabogui.graph.common.api import make_brush, safe_log10
-
-
-class VectorFillGraphPlot(QGraphicsPathItem):
-    """QGraphicsPathItem filling the space between a zero baseline and data
-    """
-
-    def __init__(self, viewbox=None, brush=None, pen=None):
-        super(VectorFillGraphPlot, self).__init__()
-        self._viewBox = weakref.ref(viewbox)
-        if brush is not None:
-            self.setBrush(brush)
-        if pen is not None:
-            self.setPen(pen)
-        self.curves = None
-
-    def setData(self, data):
-        """Sets the data for the top and bottom curves"""
-        size = len(data)
-        zeros = np.zeros(size)
-        baseline = np.arange(size)
-        self.curves = [(baseline, zeros), (baseline, data)]
-        self.updatePath()
-        self._viewBox().itemBoundsChanged(self)
-
-    def updatePath(self):
-        if self.curves is None:
-            return
-        paths = [arrayToQPath(x, y) for x, y in self.curves]
-        transform = QTransform()
-        sub_path_base = paths[0].toSubpathPolygons(transform)
-        sub_path_data = paths[1].toReversed().toSubpathPolygons(transform)
-        sub_path_data.reverse()
-        path = QPainterPath()
-        for base_ele, data_ele in zip(sub_path_base, sub_path_data):
-            path.addPolygon(base_ele + data_ele)
-        self.setPath(path)
 
 
 class VectorBarGraphPlot(BarGraphItem):
