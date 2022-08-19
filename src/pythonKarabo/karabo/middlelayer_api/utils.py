@@ -5,6 +5,7 @@ from time import perf_counter
 
 import numpy as np
 
+from karabo.middlelayer_api.eventloop import ensure_coroutine
 from karabo.native import MetricPrefix, NumpyVector, QuantityValue, Unit
 
 
@@ -177,3 +178,74 @@ class profiler:
                 return ret
 
         return wrapper
+
+
+class AsyncTimer:
+    """AsyncTimer class to periodically execute callbacks
+
+    :param callback: Callable function to execute
+    :param timeout: Interval in seconds after which the callback is put on
+                    the eventloop
+    :param single_shot: Boolean to set if the timer only does a single call
+    :param flush_interval: The "ultimate" interval in seconds after which the
+                           `callback` will be called even if the timer is
+                           restarted (i.e. "snoozed").
+                           Default is `None` and implies that a timer can
+                           be snoozed indefinitely.
+
+    The timer starts and always defers if started again (snooze behavior)
+    """
+
+    def __init__(self, callback, timeout=0, single_shot=False,
+                 flush_interval=None, loop=None):
+        self.loop = loop or asyncio.get_event_loop()
+
+        assert callable(callback)
+        self._callback = callback
+        self._timeout = timeout
+        self._single_shot = single_shot
+        msg = f"Unexpected flush_interval: {flush_interval}"
+        assert flush_interval is None or flush_interval > 0, msg
+        self._flush_interval = flush_interval
+
+        # Internally used variables
+        self._handle = None
+        self._time = None
+
+    def start(self):
+        """Start the async timer
+
+        If the timer was already started, the callback is postponed by a
+        timeout interval.
+        """
+        if self._handle is None:
+            self._time = self.loop.time()
+            self._handle = self.loop.call_later(
+                self._timeout,
+                callback=self._channel_callback)
+        else:
+            if (self._flush_interval is not None and
+                    self.loop.time() - self._time >=
+                    self._flush_interval):
+                # We don't allow postponing the callback anymore
+                return
+            self._handle.cancel()
+            self._handle = self.loop.call_later(
+                self._timeout,
+                callback=self._channel_callback)
+
+    def _channel_callback(self):
+        """Private method to launch the callback as a task on the eventloop"""
+        coro = ensure_coroutine(self._callback)
+        self.loop.call_soon_threadsafe(self.loop.create_task, coro())
+        self._handle = None
+        self._time = None
+        if not self._single_shot:
+            self.start()
+
+    def stop(self):
+        """Stop the execution of an asynchronous timer"""
+        if self._handle is not None:
+            self._time = None
+            self._handle.cancel()
+            self._handle = None
