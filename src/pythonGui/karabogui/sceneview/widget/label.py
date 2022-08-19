@@ -23,8 +23,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text,
                                           model=model, parent=parent)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.Minimum)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setFrameShape(QFrame.Box)
         self.fm = None
         self.set_model(model)
@@ -103,8 +102,13 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         display = self.text()
         text = self.model.text
         text_width = self.text_width
-        if self.fm.width(text) > text_width:
+        elided = self.fm.width(text) > text_width
+        if elided:
             text = self.fm.elidedText(text, Qt.ElideRight, text_width)
+            self.setSizePolicy(QSizePolicy.MinimumExpanding,
+                               QSizePolicy.Minimum)
+        else:
+            self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         if display != text:
             self.setText(text)
 
