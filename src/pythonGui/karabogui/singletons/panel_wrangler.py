@@ -11,12 +11,15 @@ from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.controllers.util import load_extensions
-from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.events import (
+    KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.logger import get_logger
-from karabogui.mainwindow import MainWindow, PanelAreaEnum
-from karabogui.panels.api import MacroPanel, ScenePanel, WidgetControllerPanel
+from karabogui.mainwindow import CONFIGURATOR_TITLE, MainWindow, PanelAreaEnum
+from karabogui.panels.api import (
+    ConfigurationPanel, MacroPanel, ScenePanel, WidgetControllerPanel)
+from karabogui.programs.utils import close_app
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model
-from karabogui.util import process_qt_events
+from karabogui.util import move_to_cursor, process_qt_events
 from karabogui.wizards import TipsTricksWizard
 
 
@@ -33,7 +36,7 @@ class PanelWrangler(QObject):
         self.main_window = None
         self.splash = None
         self.connected_to_server = False
-
+        self._editor = None
         # Panel containers
         # Project items (scenes, macros) {model: panel}
         self._project_item_panels = {}
@@ -59,6 +62,7 @@ class PanelWrangler(QObject):
             KaraboEvent.ShowMacroView: self._event_show_macro,
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.CreateMainWindow: self._event_mainwindow,
+            KaraboEvent.RaiseEditor: self._event_raise_editor,
             KaraboEvent.AccessLevelChanged: self._event_access_level
         }
         register_for_broadcasts(event_map)
@@ -156,6 +160,12 @@ class PanelWrangler(QObject):
         elif model in self._widget_controller_panels:
             self._widget_controller_panels.pop(model)
 
+        # We don't have a main window, but are either running in cinema or
+        # theatre. Hence, we can close the application if no panel has been
+        # opened
+        if self.main_window is None and not self._unattached_scene_panels:
+            close_app()
+
     def _event_show_macro(self, data):
         self._open_macro(data['model'])
 
@@ -172,6 +182,9 @@ class PanelWrangler(QObject):
     def _event_mainwindow(self, data):
         self._create_main_window()
 
+    def _event_raise_editor(self, data):
+        self._raise_editor(data)
+
     def _event_access_level(self, data):
         """React on the access level changes and modify scene and macro panel
         """
@@ -185,6 +198,25 @@ class PanelWrangler(QObject):
 
     # -------------------------------------------------------------------
     # private interface
+
+    def _raise_editor(self, data):
+        """Raise the main window or editor if existent and move to cursor"""
+        if self.main_window is not None:
+            self.main_window.dockPanel(CONFIGURATOR_TITLE)
+            self.main_window.activateWindow()
+            self.main_window.raise_()
+            move_to_cursor(self.main_window)
+        else:
+            if self._editor is None:
+                self._editor = ConfigurationPanel(allow_closing=True)
+                self._editor.signalPanelClosed.connect(self._editor_closed)
+                self._editor.resize(600, 800)
+                self._editor.show()
+            self._editor.activateWindow()
+            self._editor.raise_()
+            move_to_cursor(self._editor)
+
+        broadcast_event(KaraboEvent.ShowConfiguration, data)
 
     def _open_instance_panel(self, instance_id, klass, area_enum):
         """Add a panel to main window, hide the QAction button if necessary
@@ -208,6 +240,11 @@ class PanelWrangler(QObject):
         if instance_id in self._instance_panels:
             panel, area_enum = self._instance_panels.pop(instance_id)
             main_win.removePanel(panel, area_enum)
+
+    @Slot(str)
+    def _editor_closed(self, panel):
+        """The dedicated editor singleton has been closed"""
+        self._editor = None
 
     @Slot(str)
     def _on_tab_close(self, instance_id):
