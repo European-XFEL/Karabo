@@ -20,7 +20,8 @@ from karabogui.binding.api import (
     validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
-from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.events import (
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
@@ -41,13 +42,13 @@ RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 
 
 class ConfigurationPanel(BasePanelWidget):
-    def __init__(self):
-        super(ConfigurationPanel, self).__init__("Configuration Editor")
+    def __init__(self, allow_closing=False):
+        super().__init__("Configuration Editor", allow_closing)
         self._showing_proxy = None
         self._awaiting_schema = None
 
         # Register for broadcast events.
-        event_map = {
+        self.event_map = {
             KaraboEvent.ShowConfiguration: self._event_show_configuration,
             KaraboEvent.UpdateDeviceConfigurator: self._event_update_config,
             KaraboEvent.UpdateValueConfigurator: self._event_display_update,
@@ -58,7 +59,7 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
-        register_for_broadcasts(event_map)
+        register_for_broadcasts(self.event_map)
 
     # -----------------------------------------------------------------------
     # Karabo Events
@@ -166,6 +167,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.acKillInstance.setToolTip(text)
         self.acKillInstance.triggered.connect(self._on_kill_device)
         self.pbKillInstance.clicked.connect(self.acKillInstance.triggered)
+        self.pbKillInstance.setEnabled(not self.allow_closing)
         hLayout.addWidget(self.pbKillInstance)
 
         text = "Apply all"
@@ -671,6 +673,12 @@ class ConfigurationPanel(BasePanelWidget):
                 proxy.ensure_class_schema()
 
             self._show_configuration(proxy)
+
+    def closeEvent(self, event):
+        super().closeEvent(event)
+        if event.isAccepted():
+            self.signalPanelClosed.emit(self.windowTitle())
+            unregister_from_broadcasts(self.event_map)
 
     # -----------------------------------------------------------------------
     # slots

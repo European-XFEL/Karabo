@@ -407,6 +407,13 @@ class MainWindow(QMainWindow):
             panel.activateWindow()
             panel.raise_()
 
+    def dockPanel(self, name):
+        """Public method to ensure that a panel by `name` is docked"""
+        if name in self._active_panels:
+            panel = self._active_panels[name]
+            if not panel.is_docked:
+                panel.onDock()
+
     # --------------------------------------
     # private methods
 

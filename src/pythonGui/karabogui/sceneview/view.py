@@ -7,13 +7,14 @@ import time
 from contextlib import contextmanager
 
 from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, QTimer, Signal, Slot
-from qtpy.QtGui import QBrush, QColor, QPainter, QPalette, QPen
+from qtpy.QtGui import QBrush, QColor, QCursor, QPainter, QPalette, QPen
 from qtpy.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 import karabogui.access as krb_access
 from karabo.common.api import set_initialized_flag
 from karabo.common.scenemodel.api import (
     SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, FixedLayoutModel)
+from karabogui.binding.api import DeviceProxy
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
@@ -235,6 +236,16 @@ class SceneView(QWidget):
             self.set_cursor('none')
             self.enable_mouse_event_handling(False)
             self.set_tool(None)
+            if event.modifiers() & Qt.ControlModifier:
+                pos = self.mapFromGlobal(QCursor.pos())
+                device = None
+                controller = self.controller_at_position(pos)
+                if controller is not None:
+                    proxy = controller.widget_controller.proxy.root_proxy
+                    if isinstance(proxy, DeviceProxy) and proxy.online:
+                        device = proxy
+
+                broadcast_event(KaraboEvent.RaiseEditor, {"proxy": device})
 
     def dragEnterEvent(self, event):
         if not self.design_mode:
