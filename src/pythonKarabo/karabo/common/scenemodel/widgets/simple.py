@@ -26,11 +26,8 @@ class CheckBoxModel(BaseDisplayEditableWidget):
     klass = Enum("DisplayCheckBox", "EditableCheckBox")
 
 
-class ChoiceElementModel(BaseDisplayEditableWidget):
+class EditableChoiceElementModel(BaseEditWidget):
     """A model for DisplayChoiceElement/EditableChoiceElement"""
-
-    # The actual type of the widget
-    klass = Enum("DisplayChoiceElement", "EditableChoiceElement")
 
 
 class ComboBoxModel(BaseDisplayEditableWidget):
@@ -553,6 +550,7 @@ def _build_empty_widget_readers_and_writers():
         "EditableRegexListModel",
         "EditableListElementModel",
         "EditableRegexModel",
+        "EditableChoiceElementModel",
         "GlobalAlarmModel",
         "HexadecimalModel",
         "IntLineEditModel",
@@ -586,7 +584,6 @@ def _build_empty_display_editable_readers_and_writers():
 
     names = (
         "CheckBoxModel",
-        "ChoiceElementModel",
         "LineEditModel",
     )
     for name in names:
