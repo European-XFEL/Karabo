@@ -18,6 +18,7 @@
 #include "karabo/core/Device.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
+#include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
 
@@ -136,6 +137,8 @@ namespace karabo {
 
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
 
+            karabo::net::UserAuthClient m_authClient;
+
            public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
 
@@ -210,6 +213,19 @@ namespace karabo {
              * @param prio
              */
             void safeAllClientsWrite(const karabo::util::Hash& message, int prio = LOSSLESS);
+
+
+            /**
+             * @brief Sends a login error message to the client currently connected and
+             * closes the connection after a time interval elapses.
+             *
+             * @param channel the channel the client to be notified and disconnected is connected.
+             * @param userId the id of the user whose login attempt failed.
+             * @param cliVersion the version of the GUI client attempting to login.
+             * @param errorMsg the error message to be sent to the client.
+             */
+            void sendLoginErrorAndDisconnect(const karabo::net::Channel::Pointer& channel, const std::string& userId,
+                                             const std::string& cliVersion, const std::string& errorMsg);
 
             /**
              * an error specified by ErrorCode e occurred on the given channel.
@@ -287,6 +303,19 @@ namespace karabo {
              * @param info
              */
             void onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& info);
+
+            /**
+             * @brief Handles the result of the authorize one-time token operation performed as part of a GUI client
+             * login on behalf of an authenticated user.
+             *
+             * @param channel the communication channel established with the GUI client logging in.
+             * @param userId the ID of the user on whose behalf the login is being made.
+             * @param cliVersion the version of the GUI client logging in.
+             * @param authResult the result of the one-time token authorization operation to be handled.
+             */
+            void onTokenAuthorizeResult(const WeakChannelPointer& channel, const std::string& userId,
+                                        const karabo::util::Version& cliVersion,
+                                        const karabo::net::OneTimeTokenAuthorizeResult& authResult);
 
             /**
              * handles incoming data in the Hash  ``info`` from ``channel``.
