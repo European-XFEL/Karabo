@@ -3,11 +3,13 @@ import time
 from unittest import TestCase, main
 
 import numpy as np
+import pytest
 
 from karabo.common.states import State
 from karabo.middlelayer_api.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
-from karabo.middlelayer_api.utils import build_karabo_value, profiler
+from karabo.middlelayer_api.utils import (
+    AsyncTimer, build_karabo_value, profiler)
 from karabo.native import (
     Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
     String, StringValue, Timestamp, Unit, VectorDouble, unit_registry as unit)
@@ -337,6 +339,77 @@ class UtilsTests(TestCase):
                 self.assertIsNotNone(p.t_start)
 
         run_coro(inner())
+
+    def test_async_timer(self):
+        """Test the async timer class"""
+        called = 0
+
+        def call():
+            nonlocal called
+            called += 1
+
+        timer = AsyncTimer(timeout=0.2, callback=call)
+        # 1. Test the snoozing by always starting the timer
+        for _ in range(5):
+            timer.start()
+            assert not called
+            run_coro(asyncio.sleep(0.1))
+        run_coro(asyncio.sleep(0.2))
+
+        assert called == 1
+
+        # 2. Test continue timer
+        run_coro(asyncio.sleep(0.3))
+        assert called >= 1
+
+        called = 0
+        # 3. Test that stop does not call
+        timer.start()
+        run_coro(asyncio.sleep(0.1))
+        timer.stop()
+        run_coro(asyncio.sleep(0.2))
+        assert not called
+        # 4. Multiple stop does not hurt
+        for _ in range(5):
+            timer.stop()
+
+        # 5. Test singleshot
+
+        timer = AsyncTimer(timeout=0.2, callback=call, single_shot=True)
+        timer.start()
+        run_coro(asyncio.sleep(1))
+        assert called == 1
+
+        # 6. Test async callback
+        called = 0
+
+        async def call():
+            nonlocal called
+            called += 1
+
+        timer = AsyncTimer(timeout=0.2, callback=call)
+        for _ in range(5):
+            timer.start()
+            assert not called
+            run_coro(asyncio.sleep(0.1))
+        run_coro(asyncio.sleep(0.2))
+        assert called == 1
+
+        # 7. Test the must flush
+        called = 0
+
+        timer = AsyncTimer(timeout=0.2, callback=call,
+                           flush_interval=3)
+        # We try to snooze here, but after 3 times timeout
+        # the timer will call the callback
+        with pytest.raises(AssertionError):
+            for _ in range(5):
+                timer.start()
+                assert not called
+                run_coro(asyncio.sleep(0.2))
+
+        assert called > 0
+        run_coro(asyncio.sleep(0.2))
 
 
 if __name__ == "__main__":
