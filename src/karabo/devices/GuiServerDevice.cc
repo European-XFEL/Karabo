@@ -11,6 +11,7 @@
 #include "karabo/core/InstanceChangeThrottler.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/SimpleElement.hh"
@@ -58,6 +59,15 @@ namespace karabo {
                   .description("Local port for this server")
                   .assignmentOptional()
                   .defaultValue(44444)
+                  .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("authServer")
+                  .displayedName("Auth Server")
+                  .description("URL for the Authentication Server")
+                  .assignmentOptional()
+                  .defaultValue("")
+                  .init()
                   .commit();
 
             OVERWRITE_ELEMENT(expected).key("deviceId").setNewDefaultValue("Karabo_GuiServer_0").commit();
@@ -310,7 +320,8 @@ namespace karabo {
               m_networkStatsTimer(EventLoop::getIOService()),
               m_forwardLogsTimer(EventLoop::getIOService()),
               m_checkConnectionTimer(EventLoop::getIOService()),
-              m_timeout(config.get<int>("timeout")) {
+              m_timeout(config.get<int>("timeout")),
+              m_authClient(config.get<std::string>("authServer")) {
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
@@ -412,6 +423,10 @@ namespace karabo {
 
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
+                if (!get<std::string>("authServer").empty()) {
+                    KARABO_LOG_INFO << "Using the Karabo Authentication Server at '" << get<std::string>("authServer")
+                                    << "'";
+                }
 
             } catch (const std::exception& e) {
                 updateState(State::ERROR);
@@ -589,6 +604,7 @@ namespace karabo {
                 systemInfo.set("deviceId", getInstanceId());
                 systemInfo.set("readOnly", m_isReadOnly);
                 systemInfo.set("version", version);
+                systemInfo.set("authServer", get<std::string>("authServer"));
 
                 channel->writeAsync(systemInfo);
 
@@ -654,41 +670,102 @@ namespace karabo {
             channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onLoginMessage, this, _1, channel, _2));
         }
 
+        void GuiServerDevice::sendLoginErrorAndDisconnect(const Channel::Pointer& channel, const string& userId,
+                                                          const string& cliVersion, const string& errorMsg) {
+            auto weakChannel = WeakChannelPointer(channel);
+            const Hash h("type", "notification", "message", errorMsg);
+            safeClientWrite(weakChannel, h);
+            KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << userId << "' using GUI client version "
+                                      << cliVersion << " (from " << getChannelAddress(channel) << "): " + errorMsg;
+            auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
+            timer->expires_from_now(boost::posix_time::milliseconds(500));
+            timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this, boost::asio::placeholders::error,
+                                        weakChannel, timer));
+        }
+
+        void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& userId,
+                                                     const karabo::util::Version& clientVersion,
+                                                     const karabo::net::OneTimeTokenAuthorizeResult& authResult) {
+            karabo::net::Channel::Pointer channel = weakChannel.lock();
+            if (channel) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "One-time token validation results:\nSuccess: " << authResult.success
+                                           << "\nUserId: " << authResult.userId
+                                           << "\nAccess Level: " << authResult.accessLevel
+                                           << "\nErrMsg: " << authResult.errMsg;
+                if (!authResult.success) {
+                    const string errorMsg = "Error validating token: " + authResult.errMsg;
+                    sendLoginErrorAndDisconnect(channel, userId, clientVersion.getString(), errorMsg);
+                    return;
+                } else {
+                    // TODO: a new message, "LoginAccepted" will be sent to communicate the
+                    // resolved visibility level. A successfuly authenticated client will then
+                    // request the topology after processing the received "LoginAccepted".
+                    registerConnect(clientVersion, channel);
+
+                    // TODO send "LoginAccepted" with res.accessLevel instead of the system topology
+                    sendSystemTopology(weakChannel);
+                }
+            }
+        }
+
         void GuiServerDevice::onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
-                // Check valid login
+
+                // Check valid login.
                 const Version clientVersion(hash.get<string>("version"));
-                auto weakChannel = WeakChannelPointer(channel);
-                if (clientVersion >= Version(get<std::string>("minClientVersion"))) {
-                    std::stringstream extraInfo;
-                    if (hash.has("info")) {
-                        extraInfo << "\nDetails: " << hash.get<Hash>("info");
-                    }
-                    KARABO_LOG_FRAMEWORK_INFO << "Login request of user: " << hash.get<string>("username")
-                                              << " (version " << clientVersion.getString() << ")." << extraInfo.str();
-                    if (hash.has("one_time_token")) {
-                        KARABO_LOG_FRAMEWORK_INFO << "GUI Client used authenticated login with token '"
-                                                  << hash.get<string>("one_time_token") << "'.";
-                    }
-                    registerConnect(clientVersion, channel);
-                    // TODO: Add token validation/user authorization and bind `onRead` on success
-                    channel->readAsyncHash(
-                          bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
-                    sendSystemTopology(weakChannel);
+                const bool userAuthActive = !get<string>("authServer").empty();
+                const string userId = hash.get<string>("username");
+                const string cliVersion = clientVersion.getString();
+
+                if (clientVersion < Version(get<std::string>("minClientVersion"))) {
+                    const string errorMsg = "Your GUI client has version '" + cliVersion +
+                                            "', but the minimum required is: " + get<std::string>("minClientVersion");
+                    sendLoginErrorAndDisconnect(channel, userId, cliVersion, errorMsg);
                     return;
                 }
-                const std::string message("Your GUI client has version '" + hash.get<string>("version") +
-                                          "', but the minimum required is: " + get<std::string>("minClientVersion"));
-                const Hash h("type", "notification", "message", message);
-                safeClientWrite(weakChannel, h);
-                KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << hash.get<string>("username")
-                                          << "' using GUI client version " << clientVersion.getString() << " (from "
-                                          << getChannelAddress(channel) << ")";
-                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
-                timer->expires_from_now(boost::posix_time::milliseconds(500));
-                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
-                                            boost::asio::placeholders::error, weakChannel, timer));
+                if (userAuthActive && !hash.has("oneTimeToken")) {
+                    const string errorMsg = "Refused non-user-authenticated login.\n\nGUI server at '" +
+                                            get<string>("hostName") + ":" + toString(get<unsigned int>("port")) +
+                                            "' only accepts authenticated logins.\nPlease update your GUI client.";
+                    sendLoginErrorAndDisconnect(channel, userId, cliVersion, errorMsg);
+                    return;
+                }
+
+                auto weakChannel = WeakChannelPointer(channel);
+                // Handles token validation, if needed.
+                if (userAuthActive) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "One-time token to be validated/authorized: "
+                                               << hash.get<string>("oneTimeToken");
+
+                    m_authClient.authorizeOneTimeToken(
+                          hash.get<string>("oneTimeToken"), m_topic,
+                          bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
+                                    userId, clientVersion, _1));
+                } else {
+                    // No authentication involved; send the topology right away.
+                    registerConnect(clientVersion, channel);
+
+                    sendSystemTopology(weakChannel);
+                }
+
+                std::stringstream extraInfo;
+                if (hash.has("info")) {
+                    extraInfo << "\nDetails: " << hash.get<Hash>("info");
+                }
+                if (hash.has("clientId")) {
+                    KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << hash.get<string>("clientId")
+                                              << " (version " << cliVersion << ")." << extraInfo.str();
+                } else {
+                    // Older versions of the GUI client used "userName" as the key for host_id concatenated with the
+                    // GUI client pid - renamed to "client_id" after the addition of user authentication support to the
+                    // GUI protocol.
+                    KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << userId << " (version " << cliVersion
+                                              << ")." << extraInfo.str();
+                }
+
+                channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
+
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.what();
             }
