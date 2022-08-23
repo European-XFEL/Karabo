@@ -661,7 +661,7 @@ class Network(QObject):
         login_info["username"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
         if self.one_time_token:
-            login_info["one_time_token"] = self.one_time_token
+            login_info["oneTimeToken"] = self.one_time_token
         login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
 
