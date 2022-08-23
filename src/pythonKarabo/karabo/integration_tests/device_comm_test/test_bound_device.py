@@ -159,7 +159,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         class_ids = ['CommTestDevice', 'UnstoppedThreadDevice',
                      'RaiseInitializationDevice']
         self.start_server("bound", SERVER_ID, class_ids,
-                          namespace="karabo.bound_device_test")
+                          namespace="karabo.bound_device_test"
+                          )  #,logLevel='ERROR')
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 
@@ -398,7 +399,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertTrue(not ok, msg)
 
             # Now let the device fall into coma, i.e. it does not react anymore
-            # karabo wise, put its process is still alive:
+            # karabo wise, but its process is still alive:
             self.dc.execute('deviceNotGoingDownCleanly', 'slotPutToComa')
             # Device needs time to enter the bad state, i.e. at least the 1 s
             # that the signal handler in C++ Eventloop::work() sleeps:
@@ -416,31 +417,41 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         with self.subTest(msg="Test exception in initialisation()"):
             devId = "raiseInInitDevice"
+
+            # Monitor our device:
+            # Does its 'status' get updated with the expected last words?
+            cfgUpdates = []
+
+            def onDeviceChange(_, cfgUpdate):
+                cfgUpdates.append(cfgUpdate)
+
+            self.dc.registerDeviceMonitor(devId, onDeviceChange)
+
             classConfig = Hash("classId", "RaiseInitializationDevice",
                                "deviceId", devId, "configuration", Hash())
-            # Device with failing initialisation() could be started:
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig, instTimeout)
+            # Device is supposed to kill itself due to the exception in
+            # initialisation. Avoid usage of self.dc.instantiate since that
+            # waits for the device to appear in the topology and might miss it
+            # (i.e. already gone again when checking),
+            # see https://git.xfel.eu/Karabo/Framework/-/jobs/319489.
+            req = sigSlotA.request(SERVER_ID, "slotStartDevice", classConfig)
+            ok, msg = req.waitForReply(instTimeout * 1000)
             self.assertTrue(ok, msg)
 
-            # Problem is tracked in "status" field
+            # Check that device appears in topology before it goes again
+            isAlive = self.waitUntil(lambda: devId in self.dc.getDevices())
+            self.assertTrue(isAlive)
+
+            isGone = self.waitUntil(lambda: devId not in self.dc.getDevices())
+            self.assertTrue(isGone)
+
+            # Now verify that the device's last words are as expected
             status = ("RuntimeError('Stupidly failed in initialise') "
                       "in initialisation")
-            self.waitUntilEqual(devId, "status", status, instTimeout)
-            self.assertEqual(self.dc.get(devId, "status"), status)
-
-            # But device is not anymore in the topology
-            device_down = False
-
-            def check_device():
-                nonlocal device_down
-
-                topo = self.dc.getSystemTopology()
-                devices = topo["device"]
-                device_down = devId not in devices
-                return device_down
-
-            self.waitUntil(check_device, timeout=10)
-            self.assertFalse(device_down)
+            self.assertTrue(len(cfgUpdates) >= 1)
+            self.assertTrue(cfgUpdates[-1].has("status"), str(cfgUpdates))
+            self.assertEqual(status, cfgUpdates[-1].get("status"))
+            self.dc.unregisterDeviceMonitor(devId)  # clean up
 
         with self.subTest(msg="Test slotGetTime"):
             ret = sigSlotA.request("testComm1", "slotGetTime", Hash()
@@ -473,16 +484,18 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def waitUntil(self, condition, timeout=10):
         """Wait until a condition is met
 
-        A minimum sleep_time of 0.1 seconds is taken into account
-        between the condition checks.
+        Check every 0.1 seconds up to the given timeout
 
+        :param condition: callable representing the condition
         :param timeout: The timeout in seconds
         """
         total_time = timeout
-        sleep_time = max(total_time // 20, 0.1)
+        sleep_time = 0.1
         while total_time > 0:
             if condition():
-                break
+                return True
             else:
                 total_time -= sleep_time
-                sleep(timeout)
+                sleep(sleep_time)
+
+        return False
