@@ -49,7 +49,7 @@ from karabo.middlelayer_api.synchronization import (
 from karabo.middlelayer_api.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
 from karabo.middlelayer_api.utils import (
-    build_karabo_value, get_property, profiler, set_property)
+    AsyncTimer, build_karabo_value, get_property, profiler, set_property)
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
     BoolValue, ByteArray, Char, ChoiceOfNodes, ComplexDouble, ComplexFloat,
