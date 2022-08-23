@@ -4,6 +4,8 @@ What's New in Karabo 2.15.3
 
 This patch release aims to fix a few GUI client issues found in operation
 and test.
+Resize of plot panels will properly align the data https://redmine.xfel.eu/issues/132113
+and PopUp dialogs from the configurator will not cause a segmentation fault on corner cases.
 
 Detailed Merge-Log
 ++++++++++++++++++
