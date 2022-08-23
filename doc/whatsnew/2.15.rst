@@ -1,4 +1,21 @@
 ***************************
+What's New in Karabo 2.15.3
+***************************
+
+This patch release aims to fix a few GUI client issues found in operation
+and test.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- GUI: Another popup precaution for the configurator
+- GUI: Fix stacked widget layout of icons dialog
+- GUI: Keep popup after schema injection
+- GUI: Call updateMatrix on resizing plot https://redmine.xfel.eu/issues/132113
+- GUI: Close configurator popup on assigning new proxies
+- GUI: Close popup in index changes in the configurator view
+
+***************************
 What's New in Karabo 2.15.2
 ***************************
 
