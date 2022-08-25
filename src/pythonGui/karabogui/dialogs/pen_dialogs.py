@@ -32,7 +32,7 @@ class PenDialog(QDialog):
         if pen.style() == Qt.NoPen:
             self.sbStrokeWidth.setValue(0)
         else:
-            self.sbStrokeWidth.setValue(pen.widthF())
+            self.sbStrokeWidth.setValue(pen.width())
 
         self.wDashType = PenStyleComboBox()
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.wDashType)
@@ -176,8 +176,8 @@ class PenStyleComboBox(QComboBox):
         pen.setWidth(2)
         p.setPen(pen)
 
-        mid = self.iconSize().height() / 2.0
-        p.drawLine(0, mid, self.iconSize().width(), mid)
+        mid = int(self.iconSize().height() / 2)
+        p.drawLine(0, mid, int(self.iconSize().width()), mid)
         p.end()
 
         return QIcon(pix)

@@ -58,7 +58,7 @@ class SparkRenderer(QWidget):
         self.finfo = np.finfo(np.float64)
         self.ymax = np.ones(self._p_max, np.float64) * self.finfo.min
         self.ymin = np.ones(self._p_max, np.float64) * self.finfo.max
-        self.ycnts = np.zeros(self._p_max, np.int)
+        self.ycnts = np.zeros(self._p_max, int)
 
         self.painter_path = None
         self.painter_path_min = None
@@ -174,9 +174,9 @@ class SparkRenderer(QWidget):
             font.setPointSize(8)
             font.setFamily("Monospace")
             painter.setFont(font)
-            painter.drawText(QPoint(width + 5, 10),
+            painter.drawText(QPoint(int(width) + 5, 10),
                              self._returnFormatted(self.yrange[1]))
-            painter.drawText(QPoint(width + 5, height + 2),
+            painter.drawText(QPoint(int(width) + 5, int(height) + 2),
                              self._returnFormatted(self.yrange[0]))
 
             #  add tendency indicator
