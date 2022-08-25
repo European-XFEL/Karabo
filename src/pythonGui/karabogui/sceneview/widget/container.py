@@ -46,14 +46,15 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
 
         :returns: `True` if successful, otherwise `False`
         """
-        if self.model.parent_component != "DisplayComponent":
-            return False
-
         controller = self.widget_controller
         proxies_added = []
         for proxy in proxies:
-            if controller.visualize_additional_property(proxy):
-                proxies_added.append(proxy)
+            if not controller.visualize_additional_property(proxy):
+                continue
+            proxies_added.append(proxy)
+            if self.is_editable:
+                proxy.on_trait_change(
+                    self._on_user_edit, "edit_value,binding.config_update")
         self.setToolTip(", ".join(self.model.keys))
         return len(proxies_added) == len(proxies)
 
@@ -65,8 +66,13 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         controller = self.widget_controller
         proxies_removed = []
         for proxy in proxies:
-            if controller.remove_additional_property(proxy):
-                proxies_removed.append(proxy)
+            if not controller.remove_additional_property(proxy):
+                continue
+            proxies_removed.append(proxy)
+            if self.is_editable:
+                proxy.on_trait_change(
+                    self._on_user_edit, "edit_value,binding.config_update",
+                    remove=True)
         self.setToolTip(", ".join(self.model.keys))
         return len(proxies_removed) == len(proxies)
 
@@ -96,14 +102,15 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
                               remove=True)
         proxy.root_proxy.on_trait_change(self._proxy_status_changed, "status",
                                          remove=True)
-        if self.is_editable:
-            proxy.on_trait_change(
-                self._on_user_edit, "edit_value,binding.config_update",
-                remove=True)
         if proxy.binding is None:
             proxy.on_trait_change(
                 self._proxy_binding_changed, "binding.schema_update",
                 remove=True)
+        if self.is_editable:
+            for proxy in self.widget_controller.proxies:
+                proxy.on_trait_change(
+                    self._on_user_edit, "edit_value,binding.config_update",
+                    remove=True)
         self.widget_controller.destroy()
         self.widget_controller = None
 
@@ -224,8 +231,9 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
 
         if self.model.parent_component == "EditableApplyLaterComponent":
             self.is_editable = True
-            controller.proxy.on_trait_change(
-                self._on_user_edit, "edit_value,binding.config_update")
+            for proxy in controller.proxies:
+                proxy.on_trait_change(
+                    self._on_user_edit, "edit_value,binding.config_update")
             layout.setContentsMargins(2, 1, 2, 1)
         else:
             layout.setContentsMargins(0, 0, 1, 1)
@@ -247,6 +255,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         # Do some trait name filtering
         if name not in ("edit_value", "config_update"):
             return
+
         self._update_background_color()
 
     def _update_background_color(self):
@@ -254,7 +263,8 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         if not self.is_editable or proxy.binding is None:
             return
 
-        if proxy.edit_value is not None:
+        proxies = self.widget_controller.proxies
+        if any(proxy.edit_value is not None for proxy in proxies):
             color = STATE_COLORS[State.CHANGING] + (128,)
         else:
             # XXX: We make sure not to lose our stylesheet and apply a
