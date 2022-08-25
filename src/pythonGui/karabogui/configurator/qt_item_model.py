@@ -20,15 +20,15 @@ from karabogui.binding.api import (
     WidgetNodeBinding, get_binding_value)
 from karabogui.fonts import get_qfont
 from karabogui.indicators import (
-    ERROR_COLOR_ALPHA, LOCKED_COLOR, OK_COLOR, PROPERTY_ALARM_COLOR,
-    PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR,
-    STATE_COLORS, get_state_color)
+    LOCKED_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_ALARM_COLOR_MAP,
+    PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR, STATE_COLORS,
+    get_state_color)
 from karabogui.request import send_property_changes
 
 from .utils import (
     dragged_configurator_items, get_attr_icon, get_child_names,
     get_device_locked_string, get_device_state_string, get_icon,
-    get_proxy_value, is_mandatory, threshold_triggered)
+    get_proxy_value, get_qcolor_state, is_mandatory, threshold_triggered)
 
 SPECIAL_BINDINGS = (SlotBinding, ImageBinding,
                     NDArrayBinding, WidgetNodeBinding)
@@ -248,15 +248,16 @@ class ConfigurationTreeModel(QAbstractItemModel):
             # Properties have a color depending on alarm/warn
             color = (self._proxy_color(obj)
                      if isinstance(obj, PropertyProxy) else None)
-            if color is None:
-                # Use device state and locking information for color
-                is_locked = get_device_locked_string(self.root)
-                if is_locked:
-                    color = LOCKED_COLOR
-                else:
-                    in_error = State(state) == State.ERROR
-                    color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
-            return QBrush(QColor(*color))
+            if color is not None:
+                return QBrush(QColor(*color))
+
+            # Use device state and locking information for color
+            is_locked = get_device_locked_string(self.root)
+            if is_locked:
+                color = QColor(*LOCKED_COLOR)
+            else:
+                color = get_qcolor_state(state)
+            return QBrush(color)
 
         if isinstance(obj, BaseBinding):
             return self._attribute_data(obj, role, column, index.row())
