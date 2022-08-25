@@ -43,7 +43,7 @@ class StickerDialog(QDialog):
 
     def update_plain_widget(self):
         model = self.model
-        self.leText.setFixedSize(QSize(model.width, model.height))
+        self.leText.setFixedSize(QSize(int(model.width), int(model.height)))
         self.leText.setPlainText(model.text)
         sheet = []
         font_string = get_qfont(model.font, adjust_size=True).toString()

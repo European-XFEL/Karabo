@@ -188,8 +188,8 @@ class BaseSeriesGraph(BaseBindingController):
         """Set a new time interval and request historic data"""
         x_axis = self._plot.plotItem.getAxis("bottom")
         x_min, x_max = x_axis.range
-        start = QDateTime.fromMSecsSinceEpoch(x_min * 1000)
-        end = QDateTime.fromMSecsSinceEpoch(x_max * 1000)
+        start = QDateTime.fromSecsSinceEpoch(int(x_min))
+        end = QDateTime.fromSecsSinceEpoch(int(x_max))
 
         dialog = RequestTimeDialog(start=start, end=end, parent=self.widget)
         if dialog.exec() == QDialog.Accepted:
@@ -232,8 +232,8 @@ class BaseSeriesGraph(BaseBindingController):
         """This slot is called whenever the xRange changes"""
         # Note that the range comes in seconds (float)
         x_min, x_max = x_range
-        start = QDateTime.fromMSecsSinceEpoch(x_min * 1000)
-        end = QDateTime.fromMSecsSinceEpoch(x_max * 1000)
+        start = QDateTime.fromSecsSinceEpoch(int(x_min))
+        end = QDateTime.fromSecsSinceEpoch(int(x_max))
 
         # We change our QDateTime widgets
         self.widget.dt_start.setDateTime(start)
