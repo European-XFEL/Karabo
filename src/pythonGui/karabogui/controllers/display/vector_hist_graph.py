@@ -86,8 +86,8 @@ class VectorHistogramGraph(BaseBindingController):
             self._plot.setData([], stepMode=None)
             return
 
-        # NOTE: WE cast boolean as int!
-        if value.dtype == np.bool:
-            value = value.astype(np.int)
+        # NOTE: We cast boolean as int!
+        if value.dtype == bool:
+            value = value.astype(int)
 
         self._plot_histogram(value)
