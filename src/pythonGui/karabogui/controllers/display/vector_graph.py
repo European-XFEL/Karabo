@@ -5,7 +5,6 @@
 from itertools import cycle
 from weakref import WeakValueDictionary
 
-import numpy as np
 from qtpy.QtWidgets import QAction
 from traits.api import Instance
 
@@ -111,8 +110,8 @@ class BaseArrayGraph(BaseBindingController):
             return
 
         # NOTE: WE cast boolean as int, as numpy method is deprecated
-        if y.dtype == np.bool:
-            y = y.astype(np.int)
+        if y.dtype == bool:
+            y = y.astype(int)
 
         model = self.model
         # Generate the baseline for the x-axis

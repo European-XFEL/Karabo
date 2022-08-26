@@ -37,8 +37,8 @@ class TestSlider(GuiTestCase):
         self.assertEqual(self.controller.label.text(), "1.9")
 
     def test_edit_value(self):
-        self.controller.slider.valueChanged.emit(3.0)
-        self.assertEqual(self.proxy.edit_value, 3.0)
+        self.controller.slider.valueChanged.emit(3)
+        self.assertEqual(self.proxy.edit_value, 3)
         self.assertEqual(self.controller.label.text(), "3.0")
 
     def test_schema_update(self):
