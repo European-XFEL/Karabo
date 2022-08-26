@@ -54,8 +54,8 @@ class _Generation(object):
 
     def __init__(self):
         self.fill = 0
-        self.xs = numpy.empty(self.size, dtype=numpy.float)
-        self.ys = numpy.empty(self.size, dtype=numpy.float)
+        self.xs = numpy.empty(self.size, dtype=float)
+        self.ys = numpy.empty(self.size, dtype=float)
 
     def add_point(self, x, y):
         self.xs[self.fill] = x
@@ -97,8 +97,8 @@ class Curve(HasStrictTraits):
     histsize = Int(0)
     fill = Int(0)
 
-    x = Array(dtype=numpy.float)
-    y = Array(dtype=numpy.float)
+    x = Array(dtype=float)
+    y = Array(dtype=float)
 
     t0 = Float(0)
     t1 = Float(0)
@@ -119,11 +119,11 @@ class Curve(HasStrictTraits):
 
     def _x_default(self):
         arraysize = self.spare + sum([g.size for g in self.generations], 0)
-        return numpy.empty(arraysize, dtype=numpy.float)
+        return numpy.empty(arraysize, dtype=float)
 
     def _y_default(self):
         arraysize = self.spare + sum([g.size for g in self.generations], 0)
-        return numpy.empty(arraysize, dtype=numpy.float)
+        return numpy.empty(arraysize, dtype=float)
 
     def purge(self):
         """Purge the curve by resetting all values to their default"""
@@ -216,8 +216,8 @@ class Curve(HasStrictTraits):
         datasize = len(data)
         gensize = sum([g.size for g in self.generations], 0)
         arraysize = datasize + gensize + self.spare
-        x = numpy.empty(arraysize, dtype=numpy.float)
-        y = numpy.empty(arraysize, dtype=numpy.float)
+        x = numpy.empty(arraysize, dtype=float)
+        y = numpy.empty(arraysize, dtype=float)
 
         for i, d in enumerate(data):
             # Protect against inf by setting numpy.NaN which is not shown
