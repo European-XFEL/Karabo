@@ -35,13 +35,13 @@ def extract_alarms_data(instanceId, rows):
             # Time of first occurence
             params[TIME_OF_FIRST_OCCURENCE] = Timestamp(
                 params[TIME_OF_FIRST_OCCURENCE]).toTimestamp()
-            params[TIME_OF_FIRST_OCCURENCE] = QDateTime.fromMSecsSinceEpoch(
-                params[TIME_OF_FIRST_OCCURENCE] * 1000)
+            params[TIME_OF_FIRST_OCCURENCE] = QDateTime.fromSecsSinceEpoch(
+                int(params[TIME_OF_FIRST_OCCURENCE]))
             # Time of occurence
             params[TIME_OF_OCCURENCE] = Timestamp(
                 params[TIME_OF_OCCURENCE]).toTimestamp()
-            params[TIME_OF_OCCURENCE] = QDateTime.fromMSecsSinceEpoch(
-                params[TIME_OF_OCCURENCE] * 1000)
+            params[TIME_OF_OCCURENCE] = QDateTime.fromSecsSinceEpoch(
+                int(params[TIME_OF_OCCURENCE]))
             needs_ack = alarm_hsh.get(NEEDS_ACKNOWLEDGING)
             ack = alarm_hsh.get(ACKNOWLEDGEABLE)
             # Create namedtuple
