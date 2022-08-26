@@ -6,7 +6,7 @@ from karabogui.sceneview.const import GRID_STEP
 
 GRID_COLOR = (200, 200, 200, 100)
 RESIZE_THROTTLE = 100
-PEN_SIZE = 0.5
+PEN_SIZE = 1
 
 
 class GridView(QWidget):
