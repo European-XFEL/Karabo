@@ -4,10 +4,9 @@
 #############################################################################
 
 from collections import deque
-from functools import partial
 
 from qtpy.QtWidgets import QAction, QInputDialog
-from traits.api import Any, Callable, Instance, WeakRef
+from traits.api import Any, Instance, WeakRef
 
 from karabo.common.scenemodel.api import ScatterGraphModel, build_model_config
 from karabo.native import Timestamp
@@ -27,7 +26,7 @@ MIN_POINT_SIZE = 0.1
 MAX_POINT_SIZE = 10.0
 
 
-@register_binding_controller(ui_name='Scatter Graph', klassname='ScatterGraph',
+@register_binding_controller(ui_name="Scatter Graph", klassname="ScatterGraph",
                              binding_type=NUMERICAL_BINDINGS,
                              can_show_nothing=False)
 class DisplayScatterGraph(BaseBindingController):
@@ -39,14 +38,11 @@ class DisplayScatterGraph(BaseBindingController):
     model = Instance(ScatterGraphModel, args=())
 
     # Internal traits
-    _x_proxy = Instance(PropertyProxy)
     _y_proxy = Instance(PropertyProxy)
-    _reset_proxy = Instance(PropertyProxy)
     _x_values = Instance(deque)
     _y_values = Instance(deque)
     _last_x_value = Any
     _plot = WeakRef(ScatterGraphPlot)
-    _resetbox_linked = Callable
 
     _timestamp = Instance(Timestamp, args=())
 
@@ -59,7 +55,7 @@ class DisplayScatterGraph(BaseBindingController):
         _btn_reset = create_button(checkable=False,
                                    icon=icons.reset,
                                    tooltip="Reset the plot",
-                                   on_clicked=partial(self._reset_plot, True))
+                                   on_clicked=self._reset_plot)
         toolbar.add_button(_btn_reset)
         widget.stateChanged.connect(self._change_model)
 
@@ -70,7 +66,6 @@ class DisplayScatterGraph(BaseBindingController):
         self._plot = widget.add_scatter_item()
 
         # assigning proxy is safe and wanted here!
-        self._x_proxy = self.proxy
         self._last_x_value = get_binding_value(self.proxy)
 
         widget.restore(build_model_config(self.model))
@@ -85,22 +80,11 @@ class DisplayScatterGraph(BaseBindingController):
         point_size_action.setIcon(icons.scatter)
         widget.addAction(point_size_action)
 
-        # A closure to change the button style once a boolean is linked
-        def _changestyle():
-            _btn_reset.setIcon(icons.resetTilted)
-
-        self._resetbox_linked = _changestyle
-
         return widget
 
     # ----------------------------------------------------------------
 
     def add_proxy(self, proxy):
-        binding = proxy.binding
-        if self._reset_proxy is None and isinstance(binding, BoolBinding):
-            self._reset_proxy = proxy
-            self._resetbox_linked()
-            return True
         if self._y_proxy is None:
             self._y_proxy = proxy
             return True
@@ -109,9 +93,7 @@ class DisplayScatterGraph(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
-        if proxy is self._reset_proxy:
-            self._reset_plot(reset=value)
-        elif proxy is self._x_proxy:
+        if proxy is self.proxy:
             self._last_x_value = value
         elif proxy is self._y_proxy and self._last_x_value is not None:
             timestamp = proxy.binding.timestamp
@@ -127,18 +109,15 @@ class DisplayScatterGraph(BaseBindingController):
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    def _reset_plot(self, reset=True):
-        if not reset:
-            # when adding a boolean as resetbox, it may send a False value
-            return
+    def _reset_plot(self):
         self._last_x_value = None
         self._x_values.clear()
         self._y_values.clear()
         self._plot.clear()
 
     def _configure_deque(self):
-        maxlen, ok = QInputDialog.getInt(self.widget, 'Number of Values',
-                                         'Maxlen:', self.model.maxlen, 5,
+        maxlen, ok = QInputDialog.getInt(self.widget, "Number of Values",
+                                         "Maxlen:", self.model.maxlen, 5,
                                          MAX_NUM_POINTS)
         if ok:
             self._last_x_value = None
@@ -148,8 +127,8 @@ class DisplayScatterGraph(BaseBindingController):
             self.model.maxlen = maxlen
 
     def _configure_point_size(self):
-        psize, ok = QInputDialog.getDouble(self.widget, 'Size of points',
-                                           'Pointsize:', self.model.psize,
+        psize, ok = QInputDialog.getDouble(self.widget, "Size of points",
+                                           "Pointsize:", self.model.psize,
                                            MIN_POINT_SIZE, MAX_POINT_SIZE)
         if ok:
             self._plot.setSize(psize)
