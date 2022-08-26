@@ -2,13 +2,13 @@ import json
 from enum import Enum
 
 from qtpy.QtCore import QMimeData, Qt
-from qtpy.QtGui import QPalette
+from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QStyle
 
 import karabogui.access as krb_access
 from karabo.common.api import (
     KARABO_EDITABLE_ATTRIBUTES, KARABO_SCHEMA_DAQ_POLICY,
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL)
+    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL, State)
 from karabo.native import AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
@@ -16,6 +16,8 @@ from karabogui.binding.api import (
     ImageBinding, IntBinding, ListOfNodesBinding, NodeBinding, StringBinding,
     VectorHashBinding, WidgetNodeBinding, get_binding_value, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
+from karabogui.indicators import (
+    ERROR_COLOR_ALPHA, OK_COLOR, UNKNOWN_COLOR_ALPHA)
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30
@@ -279,3 +281,18 @@ def threshold_triggered(value, limit_low, limit_high):
             (limit_high is not None and value > limit_high)):
         return True
     return False
+
+
+_STATE_QCOLOR_ALPHA = {
+    State.ERROR.name: QColor(*ERROR_COLOR_ALPHA),
+    State.UNKNOWN.name: QColor(*UNKNOWN_COLOR_ALPHA)
+}
+
+_STATE_QCOLOR_DEFAULT = QColor(*OK_COLOR)
+
+
+def get_qcolor_state(state):
+    """Get the opague background color according to a `state` string
+    for the configurator
+    """
+    return _STATE_QCOLOR_ALPHA.get(state, _STATE_QCOLOR_DEFAULT)

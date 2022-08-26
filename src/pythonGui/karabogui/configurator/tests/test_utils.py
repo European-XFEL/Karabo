@@ -1,13 +1,15 @@
 import json
 
+from qtpy.QtGui import QColor
+
 from karabo.native import (
     AccessMode, Assignment, Configurable, Int8, Node, String, Unit)
 from karabogui import icons
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import get_class_property_proxy
 
 from ..utils import (
-    dragged_configurator_items, get_child_names, get_icon, is_mandatory,
-    threshold_triggered)
+    dragged_configurator_items, get_child_names, get_icon, get_qcolor_state,
+    is_mandatory, threshold_triggered)
 
 
 class MandatoryNode(Configurable):
@@ -38,79 +40,93 @@ class Object(Configurable):
     nodeOfNode = Node(NodeOfNode)
 
 
-class TestConfiguratorUtils(GuiTestCase):
-    def test_dragged_configurator_items(self):
-        schema = Object.getClassSchema()
-        proxy = get_class_property_proxy(schema, 'string')
-        mime_data = dragged_configurator_items([proxy])
-        items_data = mime_data.data('tree_items').data()
-        drop = json.loads(items_data.decode())
+def test_dragged_configurator_items(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, 'string')
+    mime_data = dragged_configurator_items([proxy])
+    items_data = mime_data.data('tree_items').data()
+    drop = json.loads(items_data.decode())
 
-        expected = {
-            'label': 'String',
-            'key': 'string',
-            'display_widget_class': 'DisplayLabel',
-            'edit_widget_class': 'EditableLineEdit'
-        }
-        assert drop == [expected]
+    expected = {
+        'label': 'String',
+        'key': 'string',
+        'display_widget_class': 'DisplayLabel',
+        'edit_widget_class': 'EditableLineEdit'
+    }
+    assert drop == [expected]
 
-    def test_get_child_names(self):
-        schema = Object.getClassSchema()
-        proxy = get_class_property_proxy(schema, 'integer')
 
-        property_names = get_child_names(proxy)
-        # Attributes are empty for this proxy
-        assert property_names == ()
+def test_get_child_names(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, 'integer')
 
-        device_names = get_child_names(proxy.root_proxy)
-        self.assertEqual(device_names,
-                         ['string', 'integer', 'nodeMandatory',
-                          'nodeNormal', 'nodeOfNode'])
+    property_names = get_child_names(proxy)
+    # Attributes are empty for this proxy
+    assert property_names == ()
 
-    def test_get_mandatory(self):
-        schema = Object.getClassSchema()
-        proxy = get_class_property_proxy(schema, 'integer')
-        assert is_mandatory(proxy.binding) is False
+    device_names = get_child_names(proxy.root_proxy)
+    assert device_names == ['string', 'integer', 'nodeMandatory',
+                            'nodeNormal', 'nodeOfNode']
 
-        proxy = get_class_property_proxy(schema, 'nodeNormal.integer')
-        assert is_mandatory(proxy.binding) is False
 
-        proxy = get_class_property_proxy(schema, 'nodeMandatory.integer')
-        assert is_mandatory(proxy.binding) is True
+def test_get_mandatory(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, 'integer')
+    assert is_mandatory(proxy.binding) is False
 
-        proxy = get_class_property_proxy(schema, 'nodeOfNode')
-        assert is_mandatory(proxy.binding) is True
+    proxy = get_class_property_proxy(schema, 'nodeNormal.integer')
+    assert is_mandatory(proxy.binding) is False
 
-        proxy = get_class_property_proxy(schema, 'nodeMandatory')
-        assert is_mandatory(proxy.binding) is True
+    proxy = get_class_property_proxy(schema, 'nodeMandatory.integer')
+    assert is_mandatory(proxy.binding) is True
 
-    def test_get_icon(self):
-        schema = Object.getClassSchema()
-        proxy = get_class_property_proxy(schema, 'integer')
-        assert get_icon(proxy.binding) == icons.int
+    proxy = get_class_property_proxy(schema, 'nodeOfNode')
+    assert is_mandatory(proxy.binding) is True
 
-        schema = Object.getClassSchema()
-        proxy = get_class_property_proxy(schema, 'string')
-        assert get_icon(proxy.binding) == icons.string
+    proxy = get_class_property_proxy(schema, 'nodeMandatory')
+    assert is_mandatory(proxy.binding) is True
 
-    def test_threshold_triggered(self):
-        # check the low limit
-        value = 1
-        high_limit = None
-        low_limit = 2
-        assert threshold_triggered(value, low_limit, high_limit) is True
-        value = 3
-        assert threshold_triggered(value, low_limit, high_limit) is False
-        low_limit = None
-        assert threshold_triggered(value, low_limit, high_limit) is False
 
-        # check the high limit
-        value = 3
-        high_limit = 2
-        low_limit = 1
-        assert threshold_triggered(value, low_limit, high_limit) is True
+def test_get_icon(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, 'integer')
+    assert get_icon(proxy.binding) == icons.int
 
-        high_limit = 3
-        assert threshold_triggered(value, low_limit, high_limit) is False
-        low_limit = None
-        assert threshold_triggered(value, low_limit, high_limit) is False
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, 'string')
+    assert get_icon(proxy.binding) == icons.string
+
+
+def test_threshold_triggered(gui_app):
+    # check the low limit
+    value = 1
+    high_limit = None
+    low_limit = 2
+    assert threshold_triggered(value, low_limit, high_limit) is True
+    value = 3
+    assert threshold_triggered(value, low_limit, high_limit) is False
+    low_limit = None
+    assert threshold_triggered(value, low_limit, high_limit) is False
+
+    # check the high limit
+    value = 3
+    high_limit = 2
+    low_limit = 1
+    assert threshold_triggered(value, low_limit, high_limit) is True
+
+    high_limit = 3
+    assert threshold_triggered(value, low_limit, high_limit) is False
+    low_limit = None
+    assert threshold_triggered(value, low_limit, high_limit) is False
+
+
+def test_stateq_color():
+    color = get_qcolor_state("UNKNOWN")
+    assert isinstance(color, QColor)
+    assert color.getRgb() == (255, 200, 150, 128)
+
+    color = get_qcolor_state("banana")
+    assert color.getRgb() == (225, 242, 225, 128)
+
+    color = get_qcolor_state("ERROR")
+    assert color.getRgb() == (255, 155, 155, 128)
