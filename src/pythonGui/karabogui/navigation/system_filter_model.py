@@ -24,10 +24,10 @@ class TopologyFilterModel(QSortFilterProxyModel):
     def __init__(self, source_model=None, parent=None):
         super().__init__(parent)
         self._filter_status = None
-        self.setSourceModel(source_model)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.setFilterKeyColumn(0)
+        self.setSourceModel(source_model)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
         event_map = {
