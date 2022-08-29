@@ -181,7 +181,8 @@ namespace karabo {
                                   const karabo::util::Hash& serviceDeviceIds = karabo::util::Hash());
 
             /**
-             * Constructor using instantiated signalSlotable class (shared communication)
+             * Constructor using instantiated signalSlotable object (shared communication - take care that the
+             * signalSlotable is kept alive since the DeviceClient will only keep a weak pointer)
              * @param signalSlotable An instance of the SignalSlotable lass
              * @param implicitInit If true (default for backward compatibility - but NOT recommended!), the constructor
              *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
@@ -211,9 +212,10 @@ namespace karabo {
             DeviceClient(const std::string& instanceId, const karabo::util::Hash& serviceDeviceIds);
 
             /**
-             * Constructor using instantiated signalSlotable class (shared communication) and aimed at
-             * cases where a specific DataLoggerManagerId is required.
-             * Requires an explicit call to DeviceClient::initialize() after the construction takes place.
+             * Constructor using instantiated signalSlotable object (shared communication - take care that the
+             * signalSlotable is kept alive since the DeviceClient will only keep a weak pointer) and aimed at cases
+             * where a specific DataLoggerManagerId is required. Requires an explicit call to DeviceClient::initialize()
+             * after the construction takes place.
              *
              * @param signalSlotable An instance of the SignalSlotable lass
              * @param serviceDeviceIds A hash with ids of core service devices; e.g, "dataLoggerManagerId" key and the
