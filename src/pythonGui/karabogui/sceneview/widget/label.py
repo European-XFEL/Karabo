@@ -46,7 +46,6 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         self.fm = QFontMetrics(font)
         self.setLineWidth(model.frame_width)
         self.setToolTip(model.text)
-        self.create_display_text()
 
         # Set the stylesheet for background and foreground color
         sheet = []
@@ -56,6 +55,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
                 model.background))
         self.setStyleSheet("QLabel {{ {} }}".format("".join(sheet)))
         self.setGeometry(model.x, model.y, model.width, model.height)
+        self.create_display_text()
 
     def minimumSizeHint(self):
         """Reimplemented `sizeHint` of KaraboSceneWidget"""
