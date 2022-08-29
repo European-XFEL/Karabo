@@ -381,7 +381,8 @@ namespace karabo {
 
             /**
              * Calls a (remote) function.
-             * Calling a remote function is a fire-and-forget activity. The function returns immediately.
+             * Calling a remote function is a fire-and-forget activity. The function returns immediately after sending
+             * the message.
              * @param instanceId Instance to be called
              * @param functionName Function on instance to be called (must be a registered slot)
              * @param args Arguments with which to call the slot
@@ -398,7 +399,21 @@ namespace karabo {
                                                     const std::string& requestFunctionName,
                                                     const std::string& replyInstanceId,
                                                     const std::string& replyFunctionName, const Args&... args);
-
+            /**
+             * Place the reply of a slot call
+             *
+             * To be used inside a method registered as a slot. The reply is not directly sent, but it is registered
+             * to be sent once all methods registered to the slot (usually only one) have finished execution.
+             * So if called several times in a slot, the last call defines the actual reply.
+             *
+             * If this method is not called inside a slot, an "empty" reply will be send without arguments.
+             * But note that Device::updateState(const State s, ...) implicitly calls reply(s.name()).
+             *
+             * See about AsyncReply to avoid blocking the thread in case reply values are known only later, e.g. after
+             * some IO operations.
+             *
+             * @param args 0 to 4 objects of the types known to serialisation, e.g. float, vector<long long>, Hash,...
+             */
             template <typename... Args>
             void reply(const Args&... args);
 
@@ -591,6 +606,8 @@ namespace karabo {
                  * Place the reply - almost like using SignalSlotable::reply in the synchronous case.
                  * The difference is that here the reply is immediately sent and cannot be overwritten
                  * by a following call.
+                 *
+                 * @param args 0-4 objects of the types known to serialisation, e.g. float, vector<long long>, Hash,...
                  */
                 template <typename... Args>
                 void operator()(const Args&... args) const;
