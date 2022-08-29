@@ -4,7 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy import uic
-from qtpy.QtWidgets import QDialog, QDialogButtonBox
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem
 from traits.api import Undefined
 
 from karabo.common.api import Capabilities
@@ -33,9 +34,12 @@ class DeviceCapabilityDialog(QDialog):
             # Add a single device and select it
             self.deviceNames.addItem(device_id)
             self.deviceNames.setCurrentItem(self.deviceNames.item(0))
+            self.device_filter.setVisible(False)
+            self.clear_button.setVisible(False)
         else:
             # Fill in the available devices
-            self.deviceNames.addItems(self._find_devices_with_capability())
+            self.topology = self._find_devices_with_capability()
+            self.deviceNames.addItems(self.topology)
 
         # Initialize the Ok button
         self._enable_ok_button()
@@ -59,6 +63,17 @@ class DeviceCapabilityDialog(QDialog):
         self._clean_up()
         super(DeviceCapabilityDialog, self).done(result)
 
+    @Slot(str)
+    def on_device_filter_textChanged(self, text):
+        """Perform a case insensitive filtering on the topology"""
+        topo = [device for device in self.topology if text.lower()
+                in device.lower()]
+        self.deviceNames.clearSelection()
+        self.deviceNames.clear()
+        self.deviceNames.addItems(topo)
+        self.capaNames.clear()
+
+    @Slot()
     def on_deviceNames_itemSelectionChanged(self):
         """A device was selected. Update the available capabilities.
         """
@@ -69,14 +84,15 @@ class DeviceCapabilityDialog(QDialog):
             provided_item = self._get_device_items(item.text())
             self.capaNames.addItems(provided_item)
 
+    @Slot()
     def on_capaNames_itemSelectionChanged(self):
         """Synchronize the Ok button with the capability selection
         """
         self._enable_ok_button()
 
+    @Slot(QListWidgetItem)
     def on_capaNames_itemDoubleClicked(self, item):
-        """Just accept immediately when a capability is double-clicked
-        """
+        """Just accept immediately when a capability is double-clicked"""
         self.accept()
 
     def _clean_up(self):
