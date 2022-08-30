@@ -40,7 +40,7 @@ class Object(Configurable):
     nodeOfNode = Node(NodeOfNode)
 
 
-def test_dragged_configurator_items(gui_app):
+def test_dragged_configurator_items():
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, 'string')
     mime_data = dragged_configurator_items([proxy])
@@ -56,7 +56,7 @@ def test_dragged_configurator_items(gui_app):
     assert drop == [expected]
 
 
-def test_get_child_names(gui_app):
+def test_get_child_names():
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, 'integer')
 
@@ -69,7 +69,7 @@ def test_get_child_names(gui_app):
                             'nodeNormal', 'nodeOfNode']
 
 
-def test_get_mandatory(gui_app):
+def test_get_mandatory():
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, 'integer')
     assert is_mandatory(proxy.binding) is False
@@ -87,7 +87,7 @@ def test_get_mandatory(gui_app):
     assert is_mandatory(proxy.binding) is True
 
 
-def test_get_icon(gui_app):
+def test_get_icon():
     schema = Object.getClassSchema()
     proxy = get_class_property_proxy(schema, 'integer')
     assert get_icon(proxy.binding) == icons.int
@@ -97,7 +97,7 @@ def test_get_icon(gui_app):
     assert get_icon(proxy.binding) == icons.string
 
 
-def test_threshold_triggered(gui_app):
+def test_threshold_triggered():
     # check the low limit
     value = 1
     high_limit = None
