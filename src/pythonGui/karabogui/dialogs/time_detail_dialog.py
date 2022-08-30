@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QDialog
 from qtpy import uic
+from qtpy.QtWidgets import QDialog
 
 from .utils import get_dialog_ui
 
