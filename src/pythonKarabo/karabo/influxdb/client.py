@@ -157,8 +157,7 @@ class Results():
 
 class InfluxDbClient():
     def __init__(self, host, port, protocol="http", db="",
-                 user="", password="", request_timeout=20,
-                 max_clients=10):
+                 user="", password="", request_timeout=20):
         self.protocol = protocol
         self.host = host
         self.port = int(port)
@@ -169,8 +168,7 @@ class InfluxDbClient():
         if hasattr(AsyncIOMainLoop, "initialized"):
             if not AsyncIOMainLoop.initialized():
                 AsyncIOMainLoop().install()
-        self.client = AsyncHTTPClient(
-            force_instance=False, max_clients=max_clients)
+        self.client = AsyncHTTPClient(force_instance=False)
         self.basic_auth_header = self._get_basic_auth_header()
 
     def get_url(self, path):
