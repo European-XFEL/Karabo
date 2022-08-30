@@ -54,7 +54,7 @@ class SystemTopology(HasStrictTraits):
     _project_device_proxies = Dict
 
     # A Hash instance holding the entire current topology
-    _system_hash = Instance(Hash, allow_none=True)
+    _system_hash = Instance(Hash, args=())
 
     # Required by the singleton system (see ``karabogui.singleton.api``)
     def __init__(self, parent=None):
@@ -66,7 +66,7 @@ class SystemTopology(HasStrictTraits):
         self.system_tree.clear_all()
         self.device_tree.clear_all()
 
-        self._system_hash = None
+        self._system_hash.clear()
         self._class_proxies.clear()
         self._class_schemas.clear()
         self._device_proxies.clear()
@@ -79,8 +79,6 @@ class SystemTopology(HasStrictTraits):
 
     def get_attributes(self, topology_path):
         """Return the attributes of a given node in the `_system_hash`"""
-        if self._system_hash is None:
-            return None
         try:
             return self._system_hash[topology_path, ...]
         except KeyError:
@@ -243,9 +241,9 @@ class SystemTopology(HasStrictTraits):
     # Traits Handlers
 
     def _get_online(self):
-        """The topology is considered to be online if `_system_hash` exists.
+        """The topology is considered online if `_system_hash` is not empty.
         """
-        return self._system_hash is not None
+        return not self._system_hash.empty()
 
     def _system_tree_default(self):
         """We must provide a default initializer since the singleton system
