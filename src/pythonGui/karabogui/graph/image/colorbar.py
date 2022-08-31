@@ -67,6 +67,8 @@ class ColorBarWidget(GraphicsWidget):
     @Slot()
     def _show_levels_dialog(self):
         levels = self.imageItem.levels
+        if levels is None:
+            return  # `None` protection
         image_range = self.imageItem.image.min(), self.imageItem.image.max()
         auto_levels = self.imageItem.auto_levels
         default = None if auto_levels else levels
@@ -92,9 +94,7 @@ class ColorBarWidget(GraphicsWidget):
     # Qt Events
 
     def mouseDoubleClickEvent(self, event):
-        if (event.button() == Qt.LeftButton
-                and self.imageItem.levels is not None):
-            # Note: Protect against `None` levels at the beginning
+        if event.button() == Qt.LeftButton:
             self._show_levels_dialog()
             event.accept()
             return
