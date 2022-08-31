@@ -29,7 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Edit Axes Details..</string>
+   <string>Edit Axes Details</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
