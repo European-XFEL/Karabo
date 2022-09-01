@@ -461,7 +461,8 @@ def _editable_combobox_old_writer(model, parent):
     return element
 
 
-@register_scene_reader("EditableSpinbox")
+@register_scene_reader("EditableSpinbox")  # Deprecated, falsely in 2.15.X
+@register_scene_reader("EditableSpinBox")
 def _editable_spinbox_reader(element):
     traits = read_base_widget_data(element)
     traits.update(read_font_format_data(element))
@@ -471,7 +472,7 @@ def _editable_spinbox_reader(element):
 @register_scene_writer(EditableSpinBoxModel)
 def _editable_spinbox_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, "EditableSpinbox")
+    write_base_widget_data(model, element, "EditableSpinBox")
     write_font_format_data(model, element)
 
     return element
