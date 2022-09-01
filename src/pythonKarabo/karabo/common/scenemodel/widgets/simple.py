@@ -554,6 +554,7 @@ def _build_empty_widget_readers_and_writers():
         "EditableChoiceElementModel",
         "GlobalAlarmModel",
         "HexadecimalModel",
+        "HistoricTextModel",
         "IntLineEditModel",
         "LampModel",
         "RunConfiguratorModel",
