@@ -45,6 +45,32 @@ class NodedSender(Device):
     def __init__(self, configuration):
         super().__init__(configuration)
 
+
+class InjectedSender(Device):
+    """A device that does not have an Output Channel in the static schema
+    """
+    state = Overwrite(options=[State.ON])
+
+    @Slot()
+    async def injectOutput(self):
+        self.__class__.output =  OutputChannel(
+            get_channel_node(),
+            assignment=Assignment.OPTIONAL,
+            requiredAccessLevel=AccessLevel.OPERATOR,
+            accessMode=AccessMode.READONLY)
+        await self.publishInjectedParameters()
+
+    outputCounter = UInt32(
+        defaultValue=0,
+        displayedName="Output Counter")
+
+    @Slot()
+    async def sendData(self):
+        self.output.schema.data = self.output.schema.data.value + 1
+        self.outputCounter = self.outputCounter.value + 1
+        await self.output.writeData()
+
+
 class Sender(Device):
     # The state is explicitly overwritten, State.UNKNOWN is always possible by
     # default! We test that a proxy can reach State.UNKNOWN even if it is
@@ -577,6 +603,72 @@ class RemotePipelineTest(DeviceTest):
                 self.assertEqual(received, True)
         finally:
             await output_device.slotKillDevice()
+
+    @async_tst
+    async def test_injected_output_channel_connection(self):
+        """Test the re/connect to an injected output channel"""
+        NUM_DATA = 5
+        output_device = InjectedSender({"_deviceId_": "InjectedSender"})
+        receiver = Receiver({"_deviceId_": "ReceiverInjectedSender"})
+        await output_device.startInstance()
+        await receiver.startInstance()
+        await receiver.connectInputChannel("InjectedSender")
+        try:
+            with (await getDevice("InjectedSender")) as sender_proxy, \
+                await getDevice("ReceiverInjectedSender") as input_proxy:
+                    self.assertTrue(isAlive(sender_proxy))
+                    self.assertTrue(isAlive(input_proxy))
+
+                    self.assertEqual(receiver.received, 0)
+                    self.assertEqual(input_proxy.received, 0)
+
+                    # Sender and receiver are online, but no output
+                    await sender_proxy.injectOutput()
+                    # output is injected, wait for connection
+                    await sleep(3)
+                    received = False
+
+                    def handler(data, meta):
+                        """Output handler to see if we received data
+                        """
+                        nonlocal received
+                        received = True
+
+                    self.assertEqual(received, False)
+                    sender_proxy.output.setDataHandler(handler)
+                    sender_proxy.output.connect()
+                    for _ in range(NUM_DATA):
+                        await sender_proxy.sendData()
+                    self.assertEqual(received, True)
+
+                    # Receiver device
+                    self.assertTrue(receiver.connected)
+                    self.assertGreater(receiver.received, 0)
+                    self.assertGreater(input_proxy.received, 0)
+
+                    # Kill the device and bring up again
+                    await output_device.slotKillDevice()
+
+                    # Have to start a fresh device object for inject
+                    output_device = InjectedSender({"_deviceId_": "InjectedSender"})
+                    await output_device.startInstance()
+                    await waitUntil(lambda: isAlive(sender_proxy) is True)
+                    # Sender and receiver are online, but no output
+                    await sender_proxy.injectOutput()
+                    # output is injected, wait for connection
+                    await sleep(3)
+
+                    # Send data again
+                    received = False
+                    await receiver.resetCounter()
+                    for _ in range(NUM_DATA):
+                        await sender_proxy.sendData()
+                    self.assertEqual(received, True)
+                    self.assertGreater(receiver.received, 0)
+                    self.assertGreater(input_proxy.received, 0)
+        finally:
+            await output_device.slotKillDevice()
+            await receiver.slotKillDevice()
 
 
 if __name__ == "__main__":
