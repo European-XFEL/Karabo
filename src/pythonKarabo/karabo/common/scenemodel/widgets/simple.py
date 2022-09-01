@@ -523,6 +523,7 @@ def _build_empty_widget_readers_and_writers():
         "EditableRegexModel",
         "GlobalAlarmModel",
         "HexadecimalModel",
+        "HistoricTextModel",
         "IntLineEditModel",
         "LampModel",
         "PopUpModel",
