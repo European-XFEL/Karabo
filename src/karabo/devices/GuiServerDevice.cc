@@ -14,6 +14,7 @@
 #include "karabo/net/UserAuthClient.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/VectorElement.hh"
@@ -697,12 +698,17 @@ namespace karabo {
                     sendLoginErrorAndDisconnect(channel, userId, clientVersion.getString(), errorMsg);
                     return;
                 } else {
-                    // TODO: a new message, "LoginAccepted" will be sent to communicate the
-                    // resolved visibility level. A successfuly authenticated client will then
-                    // request the topology after processing the received "LoginAccepted".
                     registerConnect(clientVersion, channel);
 
-                    // TODO send "LoginAccepted" with res.accessLevel instead of the system topology
+                    // For read-only servers the access level is not sent - the
+                    // client internally enforces OBSERVER when connected to a
+                    // read-only server.
+                    Hash h("type", "loginInformation", "userId", authResult.userId);
+                    if (!m_isReadOnly) {
+                        h.set("accessLevel", static_cast<int>(authResult.accessLevel));
+                    }
+                    safeClientWrite(channel, h);
+
                     sendSystemTopology(weakChannel);
                 }
             }
