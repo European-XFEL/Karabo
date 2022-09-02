@@ -10,7 +10,8 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 from qtpy.QtCore import QObject, Slot
 from qtpy.QtWidgets import QMessageBox
 
-from karabo.native import AccessMode, Assignment, Hash, Timestamp
+import karabogui.access as krb_access
+from karabo.native import AccessLevel, AccessMode, Assignment, Hash, Timestamp
 from karabogui import messagebox
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import Priority, executeLater
@@ -383,6 +384,22 @@ class Manager(QObject):
 
     def handle_serverInformation(self, **info):
         self._set_server_information(info)
+
+    def handle_loginInformation(self, **info):
+        # Sets the AccessLevel to the value resulting from the one-time token
+        # validation, unless the server is in read-only mode. If the server is
+        # in read_only mode, the AccessLevel has already been set to OBSERVER
+        # upon handling of a previously sent ServerInformation, and must stay
+        # as OBSERVER.
+        #
+        # Note: this handler is only activated for valid one-time tokens. Upon
+        #       receiving an invalid (or already validated) one-time token,
+        #       the GUI server immediately sends a notification error to the
+        #       client and closes the connection.
+        if not get_network().read_only_server:
+            krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel(
+                info.get("accessLevel", krb_access.GLOBAL_ACCESS_LEVEL))
+            broadcast_event(KaraboEvent.LoginUserChanged, {})
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
