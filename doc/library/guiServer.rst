@@ -11,7 +11,7 @@ Concept
 ^^^^^^^
 
 * The GuiServerDevice on the one hand is connected to one broker (under specific host, port and topic) and on the other hand to zero or more clients
-* Hence, clients can connect to Karabo only indirectly via the server 
+* Hence, clients can connect to Karabo only indirectly via the server
 * Communication is entirely event-driven
 * The server is powered by a DeviceClient, it thus performs caching
 * Communication overhead is reduced by informing the server about actually "visible" devices who only receive updates
@@ -32,6 +32,17 @@ topic (string)
 
 *systemTopology*
 systemTopology (Hash)
+
+[2.17.0]_ *loginInformation*
+userId (string)
+accessLevel (int) [sent by non read-only GUI servers]
+
+* Message sent upon successful validation of a one-time token sent by a GUI client as part of the authenticated login process.
+* As its name states, a one-time token can only be validated once. Any further attempt to validate an already validated one-time token will result in a validation error.
+* Upon receival of an invalid one-time token, the GUI Server immediately sends an error notification message to the
+client and closes the connection.
+* The value of the ``accessLevel`` key is one of the values of the ``karabo::util::Schema::AccessLevel``
+enumeration.
 
 [repl_2.8.0]_ *configurationChanged (deviceConfiguration)*
 deviceId (string)
@@ -121,11 +132,11 @@ provider (string)
 *reconfigure*
 deviceId (string)
 configuration (Hash)
-  
+
 *execute*
 deviceId (string)
 command (string)
-  
+
 *refreshInstance (getDeviceConfiguration)*
 deviceId (string)
 
@@ -169,4 +180,4 @@ traceback (string)
 .. [2.5.0] Introduced in Karabo 2.5.0 to replace *instanceNew*, *instanceUpdated* and *instanceGone*.
 .. [repl_2.8.0] Last used in Karabo 2.7.X - replaced by *deviceConfigurations* (note below).
 .. [2.8.0] Introduced in Karabo 2.8.0 to enable bulk updates of device configurations in the client.
-
+.. [2.17.0] Introduced in Karabo 2.17.0 to support User authentication.
