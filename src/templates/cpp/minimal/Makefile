@@ -22,4 +22,7 @@ clean:
 	rm -fr build
 
 test: install
-	cd build/__PACKAGE_NAME__; CTEST_OUTPUT_ON_FAILURE=1 ctest -vv
+	@cd build && \
+	cmake .. -DBUILD_TESTS=1 && \
+	cmake --build . && \
+	cd __PACKAGE_NAME__ && CTEST_OUTPUT_ON_FAILURE=1 ctest -VV
