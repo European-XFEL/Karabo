@@ -25,11 +25,16 @@ BUILD_DIR=$SCRIPTPATH/build
 mkdir -p $TARGET_DIR
 mkdir -p $BUILD_DIR
 
-# handle the make -j option from the caller.
 BUILD_OPT="--build ."
 unset MAKEFLAGS
+# handle the make -j option from the caller.
 if [[ "${2}" != "" ]]; then
   BUILD_OPT="--build . -j ${2}"
+# or use all but 4 procs on system
+# (minimum nproc is always 1)
+elif command -v nproc &> /dev/null; then
+  NPROC=$(nproc --all --ignore=4)
+  BUILD_OPT="--build . -j${NPROC}"
 fi
 
 
@@ -39,6 +44,7 @@ safeRunCommand cmake \
     -DBoost_NO_SYSTEM_PATHS=ON \
     -DCMAKE_PREFIX_PATH=$KARABO/extern \
     -DCMAKE_INSTALL_PREFIX=$TARGET_DIR \
+    -DBUILD_TESTS=0 \
     -B $BUILD_DIR .
 cd $BUILD_DIR
 safeRunCommand cmake $BUILD_OPT
