@@ -403,7 +403,7 @@ class SignalSlotable(Configurable):
             instanceId = (self._ss.get_property(message, "signalInstanceId")
                           if message is not None else "OS signal")
             self.logger.info("Received request to shutdown SignalSlotable"
-                             f"from {instanceId}.")
+                             f" from {instanceId}.")
             self.__initialized = False
             try:
                 await wait_for(get_event_loop().run_coroutine_or_thread(
