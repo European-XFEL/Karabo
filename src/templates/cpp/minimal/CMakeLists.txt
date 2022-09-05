@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Creates file "compile_commands.json" in the build directory. It is useful
 # for integrating with external tools such as "clangd". Some IDEs, like
