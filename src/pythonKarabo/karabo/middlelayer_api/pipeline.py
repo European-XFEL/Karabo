@@ -2,8 +2,8 @@ import os
 import socket
 import warnings
 from asyncio import (
-    CancelledError, Future, IncompleteReadError, Lock, Queue, gather,
-    get_event_loop, open_connection, shield, start_server)
+    CancelledError, Future, IncompleteReadError, Lock, Queue, TimeoutError,
+    gather, get_event_loop, open_connection, shield, start_server, wait_for)
 from collections import deque
 from contextlib import closing
 from ipaddress import ip_address, ip_network
@@ -24,6 +24,11 @@ from .synchronization import background, firstCompleted
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
 IPTOS_LOWDELAY = 0x10
+RECONNECT_TIMEOUT = 2
+
+
+class ChannelException(Exception):
+    """Desired output channel is not available"""
 
 
 def get_hostname_from_interface(address_range):
@@ -304,24 +309,35 @@ class NetworkInput(Configurable):
         """Call a network input handler under mutex and error protection"""
         async with self.handler_lock:
             try:
-                await get_event_loop().run_coroutine_or_thread(
-                    func, *args)
+                await wait_for(get_event_loop().run_coroutine_or_thread(
+                    func, *args), timeout=5)
             except CancelledError:
                 # Cancelled Error is handled in the `start_channel` method
                 pass
+            except TimeoutError:
+                self.device_logger.error(
+                    f"timeout in handler {func.__name__} in stream")
             except Exception:
-                self.parent.logger.exception("error in stream")
+                self.device_logger.exception("error in stream")
+
+    @property
+    def device_logger(self):
+        """Convenience method to retrieve device logger"""
+        return self.parent.get_root().logger
 
     async def start_channel(self, output):
         """Connect to the output channel with Id 'output' """
         try:
+            root = self.parent.get_root()
+            logger = root.logger
+            logger.info(f"Trying to connect to channel {output}")
             instance, name = output.split(":")
             # success, configuration
-            root = self.parent.get_root()
             ok, info = await root._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             if not ok:
-                return
+                raise ChannelException(
+                    f"Connecting to channel that was not there {output}")
 
             if self.raw:
                 cls = None
@@ -360,26 +376,35 @@ class NetworkInput(Configurable):
                     # We still inform when the connection has been closed!
                     await shield(self.call_handler(self.close_handler, output))
                     # Start a new roundtrip, but don't create a new task!
-                    await sleep(2)
+                    await sleep(RECONNECT_TIMEOUT)
                     await self.start_channel(output)
         except CancelledError:
             # Note: Happens when we are destroyed or disconnected!
             await shield(self.call_handler(self.close_handler, output))
-            self.connected.pop(output)
-            self.connectedOutputChannels = list(self.connected)
-        except Exception as e:
-            # Provide a print log for developers! Don't use the logger
-            # for exceptions. This should not happen!
-            print(f"Experienced unexpected exception {e} in input channel "
-                  f"of device {self.parent.deviceId} for {output}")
+            self._update_connected(output)
+        except ChannelException:
+            try:
+                logger = self.device_logger
+                logger.exception("Channel exception ...")
+                await sleep(RECONNECT_TIMEOUT)
+                await self.start_channel(output)
+            except CancelledError:
+                self._update_connected(output)
+        except Exception:
+            logger = self.device_logger
+            logger.info(f"Channel `{output}` did not close gracefully.")
             await shield(self.call_handler(self.close_handler, output))
             # We might get cancelled during sleeping!
             try:
-                await sleep(2)
+                await sleep(RECONNECT_TIMEOUT)
                 await self.start_channel(output)
             except CancelledError:
-                self.connected.pop(output)
-                self.connectedOutputChannels = list(self.connected)
+                self._update_connected(output)
+
+    def _update_connected(self, output):
+        """Update and remove channel `output` from connected"""
+        self.connected.pop(output)
+        self.connectedOutputChannels = list(self.connected)
 
     async def processChunk(self, channel, cls, output_id=""):
         try:
