@@ -27,10 +27,6 @@ IPTOS_LOWDELAY = 0x10
 RECONNECT_TIMEOUT = 2
 
 
-class ChannelException(Exception):
-    """Desired output channel is not available"""
-
-
 def get_hostname_from_interface(address_range):
     """returns the ip address of the local interfaces
 
@@ -336,8 +332,11 @@ class NetworkInput(Configurable):
             ok, info = await root._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             if not ok:
-                raise ChannelException(
+                logger.info(
                     f"Connecting to channel that was not there {output}")
+                # Start fresh!
+                await sleep(RECONNECT_TIMEOUT)
+                return (await self.start_channel(output))
 
             if self.raw:
                 cls = None
@@ -382,14 +381,6 @@ class NetworkInput(Configurable):
             # Note: Happens when we are destroyed or disconnected!
             await shield(self.call_handler(self.close_handler, output))
             self._update_connected(output)
-        except ChannelException:
-            try:
-                logger = self.device_logger
-                logger.exception("Channel exception ...")
-                await sleep(RECONNECT_TIMEOUT)
-                await self.start_channel(output)
-            except CancelledError:
-                self._update_connected(output)
         except Exception:
             logger = self.device_logger
             logger.info(f"Channel `{output}` did not close gracefully.")
