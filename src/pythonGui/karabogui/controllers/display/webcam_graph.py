@@ -1,9 +1,12 @@
+from qtpy.QtWidgets import QAction, QMenu
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import WebCamGraphModel
+from karabogui import icons
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.graph.image.api import (
     KaraboImageNode, KaraboImagePlot, KaraboImageView)
 
@@ -25,11 +28,19 @@ class DisplayWebCamGraph(BaseBindingController):
         self._plot = widget.plot()
 
         # Disable ViewBox Menu!
-        self._plot.enable_viewbox_menu(False)
+        self._plot.set_viewbox_menu(None)
 
         # Disable mouse and axis!
         self._plot.setMouseEnabled(False, False)
         self._plot.hide_all_axis()
+
+        # Undock - Transient model data
+        if not self.model.undock:
+            menu = QMenu(widget)
+            undock_action = QAction(icons.undock, "Undock", widget)
+            undock_action.triggered.connect(self._undock_graph)
+            menu.addAction(undock_action)
+            self._plot.set_viewbox_menu(menu)
 
         # Colormap
         widget.add_colormap_action()
@@ -39,6 +50,13 @@ class DisplayWebCamGraph(BaseBindingController):
 
     # -----------------------------------------------------------------------
     # Qt Slots
+
+    def _undock_graph(self):
+        """Undock the graph image but don't offer roi option"""
+        model = self.model.clone_traits()
+        model.undock = True
+        broadcast_event(KaraboEvent.ShowUnattachedController,
+                        {"model": model})
 
     def _change_model(self, content):
         self.model.trait_set(**content)
