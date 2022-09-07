@@ -387,11 +387,12 @@ class SignalSlotable(Configurable):
             #
             # NOTE: Initializers for device nodes might still be active and the
             # Cancellation is caught here.
-            return
+            pass
         except Exception:
+            self.logger.exception("Error in onInitialization")
             await self.slotKillDevice()
-            raise
-        self.__initialized = True
+        else:
+            self.__initialized = True
 
     async def slotKillDevice(self, message=None):
         """Kill the device on shutdown
