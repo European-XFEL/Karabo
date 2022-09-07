@@ -178,8 +178,8 @@ class DeviceServerBase(SignalSlotable):
         try:
             return (await self.startDevice(classId, deviceId, config))
         except BaseException as e:
-            e.logmessage = ('could not start device "%s" of class "%s"',
-                            deviceId, classId)
+            text = f"Could not start device '{deviceId}' of class '{classId}'"
+            e.logmessage = text
             raise
 
     async def startDevice(self, classId, deviceId, config):
