@@ -1,195 +1,182 @@
 import json
 import uuid
-from asyncio import get_event_loop, set_event_loop, wait
-from contextlib import ExitStack, contextmanager
-from unittest import TestCase, main
+from asyncio import wait
 
+import pytest
+
+from karabo.middlelayer.testing import (
+    AsyncDeviceContext, create_device_server, event_loop)
+from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, getClassSchema, getInstanceInfo, waitUntil)
 from karabo.middlelayer_api.device_server import DeviceServer
-from karabo.middlelayer_api.eventloop import EventLoop
-from karabo.middlelayer_api.signalslot import SignalSlotable
-from karabo.middlelayer_api.tests.eventloop import async_tst
+from karabo.middlelayer_api.tests.eventloop import create_instanceId
 from karabo.native import Hash, Schema, Timestamp
 
 
-class ServerTest(TestCase):
+class FaultyDevice(Device):
 
-    @classmethod
-    def setUpClass(cls):
-        with ExitStack() as cls.exit_stack:
-            cls.loop = EventLoop()
-            cls.old_event_loop = get_event_loop()
-            cls.exit_stack.enter_context(cls.createComm())
-            set_event_loop(cls.loop)
-            cls.exit_stack = cls.exit_stack.pop_all()
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            with cls.exit_stack:
-                pass
-        finally:
-            del cls.lead
-            cls.loop.stop()
-            cls.loop.close()
-            set_event_loop(cls.old_event_loop)
-
-    @classmethod
-    @contextmanager
-    def createComm(cls):
-
-        loop = cls.loop
-        sigslot = SignalSlotable(
-            {"_deviceId_": "test-mdlserver-{}".format(uuid.uuid4())})
-        sigslot.startInstance(loop=loop)
-        cls.lead = sigslot
-
-        loop.instance = lambda: sigslot
-        yield
-        loop.run_until_complete(sigslot.slotKillDevice())
-
-    @async_tst
-    async def test_device_server_noplugins_time(self):
-        """Test that we can instantiate a server without plugins"""
-        serverId = f"testMDLServer-{uuid.uuid4()}"
-        configuration = {"serverId": serverId,
-                         "timeServerId": "KaraboTimeServer",
-                         "scanPlugins": False}
-        server = DeviceServer(configuration)
-        self.assertIsNotNone(server)
-        try:
-            server.is_server = True
-            await server.startInstance(broadcast=True)
-            th = server.slotGetTime(Hash())
-            keys = list(th.keys())
-            self.assertIn("reference", keys)
-            ts_ref = Timestamp.fromHashAttributes(th["reference", ...])
-            self.assertEqual(ts_ref.tid, 0)
-
-            self.assertIn("time", keys)
-            self.assertIn("timeServerId", keys)
-            self.assertEqual(th["timeServerId"], "KaraboTimeServer")
-
-            t = Timestamp()
-            server.slotTimeTick(100, t.time_sec, t.time_frac, 200)
-            th = server.slotGetTime(Hash())
-            ts_ref = Timestamp.fromHashAttributes(th["reference", ...])
-            self.assertEqual(ts_ref.tid, 100)
-            self.assertEqual(ts_ref.time_sec, t.time_sec)
-            self.assertEqual(ts_ref.time_frac, t.time_frac)
-
-            # Remove start ticks again
-            server.slotTimeTick(0, t.time_sec, t.time_frac, 200)
-
-        finally:
-            await self._shutdown_server(server)
-
-    @async_tst
-    async def test_device_server_plugin_device_logs(self):
-        """Test to instantiate a server with plugins and instantiate"""
-        serverId = f"testMDLServer-{uuid.uuid4()}"
-        configuration = {"serverId": serverId,
-                         "deviceClasses": ["PropertyTestMDL"],
-                         "timeServerId": "KaraboTimeServer",
-                         "scanPlugins": False}
-        server = DeviceServer(configuration)
-        self.assertIsNotNone(server)
-        try:
-            server.is_server = True
-            await server.startInstance(broadcast=True)
-            self.assertEqual(server.deviceClasses, ["PropertyTestMDL"])
-
-            self.assertEqual(len(server.deviceInstanceMap.keys()), 0)
-            # Test instantiate a device
-            deviceId = "test-mdlfake-{}".format(uuid.uuid4())
-            await server.startDevice("PropertyTestMDL", deviceId,
-                                     Hash())
-            self.assertEqual(len(server.deviceInstanceMap.keys()), 1)
-            vis = server.getVisibilities()
-            self.assertEqual(vis, {"PropertyTestMDL": 3})
-
-            schema, classId, serv_id = server.slotGetClassSchema(
-                "PropertyTestMDL")
-            self.assertEqual(serv_id, serverId)
-            self.assertEqual(classId, "PropertyTestMDL")
-            self.assertIsInstance(schema, Schema)
-
-            info = await getInstanceInfo(serverId)
-            self.assertEqual(info["log"], "INFO")
-            self.assertEqual(server.log.level, "INFO")
-            device = list(server.deviceInstanceMap.values())[0]
-            self.assertEqual(device.log.level, "INFO")
-            # Change log level
-            server.slotLoggerPriority("ERROR")
-            self.assertEqual(server.log.level, "ERROR")
-            self.assertEqual(device.log.level, "ERROR")
-
-            info = await getInstanceInfo(serverId)
-            self.assertEqual(info["log"], "ERROR")
-
-            logs = await call(serverId, "slotLoggerContent", Hash())
-            self.assertEqual(logs["serverId"], serverId)
-            self.assertIsInstance(logs["content"], list)
-            logs = await call(serverId, "slotLoggerContent", Hash("logs", 20))
-            self.assertIsInstance(logs["content"], list)
-
-            schema = await getClassSchema(serverId, "PropertyTestMDL")
-            self.assertIsNotNone(schema)
-            self.assertIsInstance(schema, Schema)
-        finally:
-            await self._shutdown_server(server)
-
-    @async_tst
-    async def test_device_server_autostart_with_shortcut(self):
-        """Test that we can autostart a server"""
-        deviceId_1 = "test-prop-{}".format(uuid.uuid4())
-        deviceId_2 = "test-prop-{}".format(uuid.uuid4())
-        serverId = f"testMDLServer-{uuid.uuid4()}"
-
-        init = {deviceId_1: {"classId": "PropertyTestMDL"},
-                deviceId_2: {"classId": "PropertyTestMDL"}}
-        init = json.dumps(init)
-
-        configuration = {"serverId": serverId,
-                         "deviceClasses": ["PropertyTestMDL"],
-                         "timeServerId": "KaraboTimeServer"}
-        server = DeviceServer(configuration)
-        self.assertIsNotNone(server)
-        try:
-            server.is_server = True
-            server._device_initializer = json.loads(init)
-            await server.startInstance(broadcast=True)
-            # Wait until a device has been registered in this server
-            await waitUntil(lambda: len(server.deviceInstanceMap) == 2)
-            self.assertEqual(server.deviceClasses, ["PropertyTestMDL"])
-            self.assertEqual(len(server.deviceInstanceMap.keys()), 2)
-            self.assertIn(deviceId_1, server.deviceInstanceMap)
-            self.assertIn(deviceId_2, server.deviceInstanceMap)
-            vis = server.getVisibilities()
-            self.assertEqual(vis, {"PropertyTestMDL": 3})
-            device = server.deviceInstanceMap[deviceId_1]
-            self.assertEqual(server, device.device_server)
-            local = device.getLocalDevice(deviceId_2)
-            self.assertIsNotNone(local)
-            self.assertEqual(local.classId, "PropertyTestMDL")
-            local = device.getLocalDevice("Notthere")
-            self.assertIsNone(local)
-        finally:
-            await self._shutdown_server(server)
-
-    async def _shutdown_server(self, server):
-        """Helper function to stop the device server
-
-        Note: Stop the server with slotKillDevice, but not the eventloop
-        Make sure all children devices are shutdown!
-        """
-        futures = [d.slotKillDevice()
-                   for d in server.deviceInstanceMap.values()]
-        if futures:
-            await wait(futures, timeout=10)
-        await server.slotKillDevice()
+    async def onInitialization(self):
+        raise RuntimeError("Not allowed to start")
 
 
-if __name__ == '__main__':
-    main()
+@pytest.mark.asyncio
+@pytest.mark.timeout(90)
+async def test_device_server(event_loop: event_loop, subtests):
+    async with AsyncDeviceContext():
+        with subtests.test("Test that we can instantiate a server without plugins"):
+            serverId = f"testMDLServer-{uuid.uuid4()}"
+            configuration = {"serverId": serverId,
+                             "timeServerId": "KaraboTimeServer",
+                             "scanPlugins": False}
+            server = DeviceServer(configuration)
+            assert server is not None
+            try:
+                server.is_server = True
+                await server.startInstance(broadcast=True)
+                th = server.slotGetTime(Hash())
+                keys = list(th.keys())
+                assert "reference" in keys
+                ts_ref = Timestamp.fromHashAttributes(th["reference", ...])
+                assert ts_ref.tid == 0
+
+                assert "time" in keys
+                assert "timeServerId" in keys
+                assert th["timeServerId"] == "KaraboTimeServer"
+
+                t = Timestamp()
+                server.slotTimeTick(100, t.time_sec, t.time_frac, 200)
+                th = server.slotGetTime(Hash())
+                ts_ref = Timestamp.fromHashAttributes(th["reference", ...])
+                assert ts_ref.tid == 100
+                assert ts_ref.time_sec == t.time_sec
+                assert ts_ref.time_frac == t.time_frac
+
+                # Remove start ticks again
+                server.slotTimeTick(0, t.time_sec, t.time_frac, 200)
+            finally:
+                await finalize_server(server)
+
+        with subtests.test("Test to instantiate a server with "
+                           "plugins and instantiate"):
+            serverId = f"testMDLServer-{uuid.uuid4()}"
+            configuration = {"serverId": serverId,
+                             "deviceClasses": ["PropertyTestMDL"],
+                             "timeServerId": "KaraboTimeServer",
+                             "scanPlugins": False}
+            server = DeviceServer(configuration)
+            assert server is not None
+            try:
+                server.is_server = True
+                await server.startInstance(broadcast=True)
+                assert server.deviceClasses == ["PropertyTestMDL"]
+
+                assert len(server.deviceInstanceMap.keys()) == 0
+                # Test instantiate a device
+                deviceId = "test-mdlfake-{}".format(uuid.uuid4())
+                await server.startDevice("PropertyTestMDL", deviceId,
+                                         Hash())
+                assert len(server.deviceInstanceMap.keys()) == 1
+                vis = server.getVisibilities()
+                assert vis == {"PropertyTestMDL": 3}
+
+                schema, classId, serv_id = server.slotGetClassSchema(
+                    "PropertyTestMDL")
+                assert serv_id == serverId
+                assert classId == "PropertyTestMDL"
+                assert isinstance(schema, Schema)
+
+                info = await getInstanceInfo(serverId)
+                assert info["log"] == "INFO"
+                assert server.log.level == "INFO"
+                device = list(server.deviceInstanceMap.values())[0]
+                assert device.log.level == "INFO"
+                # Change log level
+                server.slotLoggerPriority("ERROR")
+                assert server.log.level == "ERROR"
+                assert device.log.level == "ERROR"
+
+                info = await getInstanceInfo(serverId)
+                assert info["log"] == "ERROR"
+
+                logs = await call(serverId, "slotLoggerContent", Hash())
+                assert logs["serverId"] == serverId
+                assert isinstance(logs["content"], list)
+                logs = await call(serverId, "slotLoggerContent", Hash("logs", 20))
+                assert isinstance(logs["content"], list)
+
+                schema = await getClassSchema(serverId, "PropertyTestMDL")
+                assert schema is not None
+                assert isinstance(schema, Schema)
+            finally:
+                await finalize_server(server)
+
+        with subtests.test("Test that we can autostart a server"):
+            deviceId_1 = "test-prop-{}".format(uuid.uuid4())
+            deviceId_2 = "test-prop-{}".format(uuid.uuid4())
+            serverId = f"testMDLServer-{uuid.uuid4()}"
+
+            init = {deviceId_1: {"classId": "PropertyTestMDL"},
+                    deviceId_2: {"classId": "PropertyTestMDL"}}
+            init = json.dumps(init)
+
+            configuration = {"serverId": serverId,
+                             "deviceClasses": ["PropertyTestMDL"],
+                             "timeServerId": "KaraboTimeServer"}
+            server = DeviceServer(configuration)
+            assert server is not None
+            try:
+                server.is_server = True
+                server._device_initializer = json.loads(init)
+                await server.startInstance(broadcast=True)
+                # Wait until a device has been registered in this server
+                await waitUntil(lambda: len(server.deviceInstanceMap) == 2)
+                assert server.deviceClasses == ["PropertyTestMDL"]
+                assert len(server.deviceInstanceMap.keys()) == 2
+                assert deviceId_1 in server.deviceInstanceMap
+                assert deviceId_2 in server.deviceInstanceMap
+                vis = server.getVisibilities()
+                assert vis == {"PropertyTestMDL": 3}
+                device = server.deviceInstanceMap[deviceId_1]
+                assert server == device.device_server
+                local = device.getLocalDevice(deviceId_2)
+                assert local is not None
+                assert local.classId == "PropertyTestMDL"
+                local = device.getLocalDevice("Notthere")
+                assert local is None
+            finally:
+                await finalize_server(server)
+
+        with subtests.test("Test that we start a faulty "
+                           "device via the server"):
+            try:
+                server = create_device_server(create_instanceId(),
+                                              plugins=[FaultyDevice])
+                await server.startInstance()
+                await waitUntil(lambda: server.is_initialized)
+                deviceId = create_instanceId()
+                hsh = Hash(
+                    "classId", "FaultyDevice",
+                    "deviceId", deviceId,
+                    "configuration", Hash())
+
+                # Succesful instantiation although broken device
+                ok, *_ = await server.slotStartDevice(hsh)
+                assert ok is True
+                # Device is not there in server map
+                assert deviceId not in server.deviceInstanceMap
+            finally:
+                await finalize_server(server)
+
+
+async def finalize_server(server):
+    """Helper function to stop the device server
+
+    Note: Stop the server with slotKillDevice, but not the eventloop
+    Make sure all children devices are shutdown!
+    """
+    futures = [d.slotKillDevice()
+               for d in server.deviceInstanceMap.values()]
+    if futures:
+        await wait(futures, timeout=10)
+    await server.slotKillDevice()
