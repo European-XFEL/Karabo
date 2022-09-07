@@ -84,8 +84,8 @@ class VectorRollGraphModel(BaseWidgetObjectData):
 
 class WebCamGraphModel(BaseWidgetObjectData):
     """A model of the WebCam Graph"""
-
     colormap = String("none")
+    undock = Bool(False, transient=True)
 
 
 class DeprecatedBaseWebCamModel(WebCamGraphModel):

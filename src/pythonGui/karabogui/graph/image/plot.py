@@ -223,8 +223,11 @@ class KaraboImagePlot(PlotItem):
     def flip_axis(self, axis):
         raise NotImplementedError()
 
-    def enable_viewbox_menu(self, enable=False):
-        self.vb.setMenuEnabled(enable)
+    def set_viewbox_menu(self, menu=None):
+        enabled = menu is not None
+        if menu is not None:
+            self.vb.menu = menu
+        self.vb.setMenuEnabled(enabled)
 
     def set_range(self, x_range, y_range, padding=0):
         self.vb.setXRange(*x_range, padding=padding)
