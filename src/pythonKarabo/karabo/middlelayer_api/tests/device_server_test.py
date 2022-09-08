@@ -9,7 +9,6 @@ from karabo.middlelayer.testing import (
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, getClassSchema, getInstanceInfo, waitUntil)
-from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.tests.eventloop import create_instanceId
 from karabo.native import Hash, Schema, Timestamp
 
@@ -26,10 +25,9 @@ async def test_device_server(event_loop: event_loop, subtests):
     async with AsyncDeviceContext():
         with subtests.test("Test that we can instantiate a server without plugins"):
             serverId = f"testMDLServer-{uuid.uuid4()}"
-            configuration = {"serverId": serverId,
-                             "timeServerId": "KaraboTimeServer",
+            configuration = {"timeServerId": "KaraboTimeServer",
                              "scanPlugins": False}
-            server = DeviceServer(configuration)
+            server = create_device_server(serverId, config=configuration)
             assert server is not None
             try:
                 server.is_server = True
@@ -60,11 +58,11 @@ async def test_device_server(event_loop: event_loop, subtests):
         with subtests.test("Test to instantiate a server with "
                            "plugins and instantiate"):
             serverId = f"testMDLServer-{uuid.uuid4()}"
-            configuration = {"serverId": serverId,
-                             "deviceClasses": ["PropertyTestMDL"],
+
+            configuration = {"deviceClasses": ["PropertyTestMDL"],
                              "timeServerId": "KaraboTimeServer",
                              "scanPlugins": False}
-            server = DeviceServer(configuration)
+            server = create_device_server(serverId, config=configuration)
             assert server is not None
             try:
                 server.is_server = True
@@ -120,10 +118,9 @@ async def test_device_server(event_loop: event_loop, subtests):
                     deviceId_2: {"classId": "PropertyTestMDL"}}
             init = json.dumps(init)
 
-            configuration = {"serverId": serverId,
-                             "deviceClasses": ["PropertyTestMDL"],
+            configuration = {"deviceClasses": ["PropertyTestMDL"],
                              "timeServerId": "KaraboTimeServer"}
-            server = DeviceServer(configuration)
+            server = create_device_server(serverId, config=configuration)
             assert server is not None
             try:
                 server.is_server = True
