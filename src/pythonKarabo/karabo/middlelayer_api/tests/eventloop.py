@@ -124,20 +124,25 @@ def event_loop():
     loop.close()
 
 
-def create_device_server(serverId, plugins=[]):
+def create_device_server(serverId, plugins=[], config={}):
     """Create a device server instance with `plugins`
 
     :param serverId: the serverId of the server
-    :param plugins: the plugins list of device classes
+    :param config: The server configuration
+    :param plugins: Optional plugins list of device classes
     """
-    server = MiddleLayerDeviceServer({"serverId": serverId,
-                                      "heartbeatInterval": 20})
+    config.update({"serverId": serverId,
+                   "heartbeatInterval": 20})
 
-    async def scanPluginsOnce():
-        return False
+    server = MiddleLayerDeviceServer(config)
 
-    server.scanPluginsOnce = scanPluginsOnce
-    server.plugins = {klass.__name__: klass for klass in plugins}
+    if plugins:
+
+        async def scanPluginsOnce():
+            return False
+
+        server.scanPluginsOnce = scanPluginsOnce
+        server.plugins = {klass.__name__: klass for klass in plugins}
     return server
 
 
