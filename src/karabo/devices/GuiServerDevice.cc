@@ -700,13 +700,10 @@ namespace karabo {
                 } else {
                     registerConnect(clientVersion, channel);
 
-                    // For read-only servers the access level is not sent - the
-                    // client internally enforces OBSERVER when connected to a
-                    // read-only server.
-                    Hash h("type", "loginInformation", "userId", authResult.userId);
-                    if (!m_isReadOnly) {
-                        h.set("accessLevel", static_cast<int>(authResult.accessLevel));
-                    }
+                    // For read-only servers, the access level is always OBSERVER.
+                    Hash h("type", "loginInformation");
+                    h.set("accessLevel", m_isReadOnly ? static_cast<int>(Schema::AccessLevel::OBSERVER)
+                                                      : static_cast<int>(authResult.accessLevel));
                     safeClientWrite(channel, h);
 
                     sendSystemTopology(weakChannel);
