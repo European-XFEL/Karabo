@@ -270,15 +270,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
-        # All items have these properties
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-
         obj = self.index_ref(index)
         if obj is None:
-            return flags
+            return Qt.NoItemFlags
 
-        # NOTE: `obj` can be a `PropertyProxy` or a `BaseBinding`
-
+        # Note: `obj` can be a `PropertyProxy` or a `BaseBinding`
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         # Check for draggable rows
         binding = getattr(obj, 'binding', None)
         is_node = isinstance(binding, (ChoiceOfNodesBinding, NodeBinding))
