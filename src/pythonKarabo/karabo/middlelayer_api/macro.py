@@ -200,8 +200,7 @@ class Macro(Device):
     abstractPassiveState = State.PASSIVE
     abstractActiveState = State.ACTIVE
 
-    abstract = True
-    subclasses = []
+    klass = None
     _has_server = True
     _last_action = None
 
@@ -252,7 +251,6 @@ class Macro(Device):
     @classmethod
     def register(cls, name, dict):
         # configurable subclasses
-        Macro._subclasses = {}
         for k, v in dict.items():
             # patch slots for macro state machine behavior
             if isinstance(v, Slot) and not isinstance(v, MacroSlot):
@@ -260,9 +258,8 @@ class Macro(Device):
                 active_state = cls.abstractActiveState
                 _wrapslot(v, k, passive_state, active_state)
         super().register(name, dict)
-        # every macro cls is appended to the subclasses for the macro server
-        # to instantiate
-        Macro.subclasses.append(cls)
+        # Overwrite to provide the top-level class
+        Macro.klass = cls
         cls.__monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
                           if hasattr(m, "monitor")]
 
@@ -408,11 +405,7 @@ class Macro(Device):
         displayedName="Available Macros",
         description="Provides the macro's own code",
         accessMode=AccessMode.READONLY,
-        defaultValue=[])
-
-    def store_macro_code(self, code):
-        self.code = code
-        self.availableMacros = ["macro"]
+        defaultValue=["macro"])
 
     @slot
     def requestMacro(self, params):
