@@ -11,8 +11,30 @@ To create bundle,
 import importlib
 import os
 import shutil
-
+from collections import defaultdict
 from pathlib import Path
+
+import pkg_resources
+
+HOOK_FILE_CONTENT = """# hookup file to define gui_extensions entry points.
+ep_packages = {}
+
+if ep_packages:
+    import pkg_resources
+    default_iter_entry_points = pkg_resources.iter_entry_points
+
+    def hook_iter_entry_points(group, name=None):
+        if group in ep_packages and ep_packages[group]:
+            eps = ep_packages[group]
+            for ep in eps:
+                parsedEp = pkg_resources.EntryPoint.parse(ep)
+                parsedEp.dist = pkg_resources.Distribution()
+                yield parsedEp
+        else:
+            return default_iter_entry_points(group, name)
+
+    pkg_resources.iter_entry_points = hook_iter_entry_points
+"""
 
 
 def get_karabo_gui_dir():
@@ -80,6 +102,38 @@ def get_controllers_modules():
     return controllers_modules
 
 
+def get_gui_extensions():
+    """
+    Get the modules in the gui_extensions and write a hook file to import them
+    in the bundle.
+
+    Return the list of modules in the gui_extensions
+    """
+    gui_extensions = []
+    hook_ep_packages = defaultdict(list)
+
+    ep_package = "karabogui.gui_extensions"
+
+    for ep in pkg_resources.iter_entry_points(ep_package):
+        package_entry_point = hook_ep_packages[ep_package]
+        package_entry_point.append(f"{ep.name} = {ep.module_name}")
+        gui_extensions.append(ep.module_name)
+    write_gui_extensions_hook(hook_ep_packages)
+    return gui_extensions
+
+
+def write_gui_extensions_hook(hook_ep_packages):
+    """
+    Write a hook up file for modules in gui_extension as they are imported
+    as entry points.
+    """
+
+    hook_file = Path("extensions_hook/pkg_resources_hook.py")
+    hook_file.parent.mkdir(exist_ok=True)
+    with hook_file.open("w") as f:
+        f.write(HOOK_FILE_CONTENT.format(dict(hook_ep_packages)))
+
+
 # Other modules that are imported on runtime.
 hiddenimports = get_controllers_modules() + [
     'karabogui.alarms.api',
@@ -92,7 +146,8 @@ hiddenimports = get_controllers_modules() + [
     'karabogui.singletons.selection_tracker',
     'karabogui.singletons.project_model',
     'karabogui.topology.api',
-]
+] + get_gui_extensions()
+
 
 block_cipher = None
 
@@ -101,17 +156,17 @@ karabo_gui = Analysis(
     pathex=[],
     binaries=[],
     datas=get_ui_icon_data() + [
-        (f'{KARABO_GUI_DIR}/fonts', 'karabogui/fonts'),
         # TODO : Copying 'display' and 'edit' can be avoided after
         # 'karabogui.controls.utils.populate_controller_registry' is modified.
         (f'{KARABO_GUI_DIR}/controllers/display',
          'karabogui/controllers/display'),
-        (f'{KARABO_GUI_DIR}/controllers/edit', 'karabogui/controllers/edit')
+        (f'{KARABO_GUI_DIR}/controllers/edit', 'karabogui/controllers/edit'),
+        (f'{KARABO_GUI_DIR}/fonts', 'karabogui/fonts'),
     ],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=["./extensions_hook/pkg_resources_hook.py"],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
