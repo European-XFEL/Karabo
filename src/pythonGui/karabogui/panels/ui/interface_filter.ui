@@ -87,7 +87,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Case sensitive</string>
+        <string>Filter</string>
        </property>
        <property name="text">
         <string>Filter</string>
@@ -106,7 +106,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Regular expression</string>
+        <string>Clear Filter</string>
        </property>
        <property name="text">
         <string>Clear Filter</string>
