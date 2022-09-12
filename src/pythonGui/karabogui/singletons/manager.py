@@ -396,9 +396,9 @@ class Manager(QObject):
         #       receiving an invalid (or already validated) one-time token,
         #       the GUI server immediately sends a notification error to the
         #       client and closes the connection.
-        if not get_network().read_only_server:
-            krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel(
-                info.get("accessLevel", krb_access.GLOBAL_ACCESS_LEVEL))
+        access = AccessLevel(info["accessLevel"])
+        if krb_access.GLOBAL_ACCESS_LEVEL != access:
+            krb_access.GLOBAL_ACCESS_LEVEL = access
             broadcast_event(KaraboEvent.LoginUserChanged, {})
 
     @show_wait_cursor
