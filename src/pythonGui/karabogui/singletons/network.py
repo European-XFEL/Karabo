@@ -56,7 +56,6 @@ class Network(QObject):
         self.port = "44444"
         self.password = "karabo"
         self.one_time_token = None
-        self.read_only_server = False
 
         # Check default settings stored in QSettings!
         self._load_login_settings()
@@ -154,7 +153,6 @@ class Network(QObject):
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
         self.one_time_token = None
-        self.read_only_server = False
         process_qt_events(timeout=5000)
         self.endServerConnection()
 
@@ -600,7 +598,6 @@ class Network(QObject):
 
     def set_server_information(self, read_only=False, **kwargs):
         """We get the reply from the GUI Server and set the information"""
-        self.read_only_server = read_only
         if read_only:
             default = AccessLevel.OBSERVER
             self.username = "observer"
