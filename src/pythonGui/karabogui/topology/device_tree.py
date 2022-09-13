@@ -15,8 +15,6 @@ from karabo.common.api import InstanceStatus
 from karabo.native import AccessLevel
 from karabogui.itemtypes import NavigationItemTypes
 
-BLACKLIST_CLASSES = ('DataLogger', 'DataLogReader', 'GuiServerDevice',
-                     'LogAggregator', 'ProjectManager')
 DOMAIN_LEVEL = 0
 TYPE_LEVEL = 1
 MEMBER_LEVEL = 2
@@ -233,9 +231,8 @@ class DeviceSystemTree(HasStrictTraits):
             return
 
         for karabo_name, _, attrs in system_hash[device_type].iterall():
-            if attrs['classId'] in BLACKLIST_CLASSES:
+            if len(attrs) == 0:
                 continue
-
             # If we don't follow karabo naming convention, we are out!
             device = karabo_name.split('/')
             if not len(device) == 3:
