@@ -347,21 +347,23 @@ class SignalSlotable(Configurable):
 
     async def _run(self, server=None, **kwargs):
         try:
+            # add ourselves to the server immediately.
+            if server is not None:
+                # add deviceId to the instance map of the server
+                server.addChild(self.deviceId, self)
+                self.__deviceServer = server
             await self._ss.ensure_connection()
             self._register_slots()
             ensure_future(self._ss.main(self))
             await self._assert_name_unique()
             self._ss.notify_network(self._initInfo())
-            if server is not None:
-                # add deviceId to the instance map of the server
-                server.addChild(self.deviceId, self)
-                self.__deviceServer = server
             await super(SignalSlotable, self)._run(**kwargs)
             await wait_for(get_event_loop().run_coroutine_or_thread(
                 self.preInitialization), timeout=5)
         except CancelledError:
-            # Cancellation is caught here.
-            pass
+            # Cancellation is caught here, remove ourselves
+            if server is not None:
+                server.removeChild(self.deviceId)
         except (TimeoutError, Exception):
             # TimeoutError accounts the preInitialization
             await self.slotKillDevice()
