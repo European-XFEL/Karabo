@@ -175,6 +175,10 @@ class DeviceServerBase(SignalSlotable):
     @coslot
     async def slotStartDevice(self, hash):
         classId, deviceId, config = self.parse(hash)
+        if deviceId in self.deviceInstanceMap:
+            raise KaraboError(
+                f"Device {deviceId} is already running/starting "
+                "on this server")
         try:
             return (await self.startDevice(classId, deviceId, config))
         except BaseException as e:
