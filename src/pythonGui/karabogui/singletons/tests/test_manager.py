@@ -3,7 +3,7 @@ from unittest.mock import ANY, Mock, call, patch
 from qtpy.QtCore import QSize
 
 from karabo.native import (
-    AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
+    AccessLevel, AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     ProxyStatus, build_binding)
@@ -525,6 +525,27 @@ class TestManager(GuiTestCase):
             manager.handle_brokerInformation(readOnly=True)
             network.set_server_information.assert_called_once_with(
                 read_only=True)
+
+    def test_handle_login_information(self):
+        network = Mock()
+        mediator = Mediator()
+        path = 'karabogui.singletons.manager.broadcast_event'
+        with patch(path) as broad:
+            with singletons(network=network, mediator=mediator):
+                manager = Manager()
+                manager.handle_loginInformation(
+                    accessLevel=AccessLevel.ADMIN.value)
+                broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
+                broad.reset_mock()
+                # Try again downgrade
+                manager.handle_loginInformation(
+                    accessLevel=AccessLevel.OBSERVER.value)
+                broad.assert_called_with(KaraboEvent.LoginUserChanged, {})
+                broad.reset_mock()
+                # Read Only, but since we are observer, it is not chnaged
+                manager.handle_loginInformation(
+                    accessLevel=AccessLevel.OBSERVER.value)
+                broad.assert_not_called()
 
     def test_handle_alarm_update(self):
         topology = Mock()
