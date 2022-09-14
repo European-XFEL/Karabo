@@ -5,6 +5,7 @@
 #############################################################################
 import uuid
 from functools import wraps
+from inspect import signature
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from qtpy.QtCore import QObject, Slot
@@ -335,14 +336,18 @@ class Manager(QObject):
 
         """
         token = request["token"]
-        handler = self._request_handlers.pop(
-            token, lambda success, reply: None)
+        handler = self._request_handlers.pop(token, None)
+        if handler is None:
+            return
         reply = reply if success is True else reason
         # Wrap the handler invocation in an exception swallower
         try:
-            handler(success, reply)
+            sig = signature(handler)
+            if len(sig.parameters) == 2:
+                handler(success, reply)
+            else:
+                handler(success, reply, request)
         except Exception as ex:
-            print(ex)
             # But at least show something when exceptions are being swallowed
             msg = ('Exception of type "{}" caught in callback handler "{}" '
                    'with reply:\n{}')
