@@ -1,4 +1,5 @@
 import weakref
+from inspect import signature
 from types import MethodType
 
 
@@ -18,6 +19,10 @@ class WeakMethodRef:
         if obj is not None:
             self.obj = weakref.ref(obj, self._owner_deleted)
             self.name = bound_method.__name__
+
+        sig = signature(bound_method.__func__)
+        # Replace the signature!
+        self.__call__.__func__.__signature__ = sig
 
     def __call__(self, *args, **kwargs):
         if self.obj is not None:
