@@ -57,6 +57,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         super(ConfigurationTreeModel, self).__init__(parent)
         self._root_proxy = None
         self._property_proxies = {}
+        self._model_index_refs = WeakValueDictionary()
         self._attr_backreferences = WeakValueDictionary()
         self._header_labels = ('Property', 'Current value on device', 'Value')
 
@@ -82,6 +83,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         try:
             self.beginResetModel()
             self._property_proxies.clear()
+            self._model_index_refs.clear()
             self._attr_backreferences.clear()
             self._root_proxy = proxy
         finally:
@@ -135,7 +137,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 self.setData(index, proxy.edit_value, Qt.EditRole)
 
     def index_ref(self, index):
-        return index.internalPointer()
+        key = index.internalId()
+        return self._model_index_refs.get(key)
 
     def property_proxy(self, path):
         """Get an existing PropertyProxy or create one if needed.
@@ -214,6 +217,14 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     # ----------------------------
     # Qt methods
+
+    def createIndex(self, row, col, obj):
+        """Reimplemented function of QAbstractItemModel.
+        """
+        key = id(obj)
+        if key not in self._model_index_refs:
+            self._model_index_refs[key] = obj
+        return super().createIndex(row, col, key)
 
     def columnCount(self, parentIndex=None):
         """Reimplemented function of QAbstractItemModel.
