@@ -74,6 +74,7 @@ class SceneWidgetHandler(ABCHasStrictTraits):
             offset = QPoint(x_coord, y_coord)
             for c in selection_model:
                 c.translate(offset)
+            scene_view.update()
 
     def _resize_dialog(self, scene_view):
         """Resize the given layout selection in the scene view"""
@@ -89,6 +90,7 @@ class SceneWidgetHandler(ABCHasStrictTraits):
                              dialog.x, dialog.y)
             for c in selection_model:
                 c.set_geometry(new_rect)
+            scene_view.update()
 
     def _to_back(self, scene_view):
         send_to_back(scene_view)
