@@ -40,7 +40,7 @@ class ConfiguratorFilterModel(QSortFilterProxyModel):
         source_index = self.mapToSource(index)
         if not source_index.isValid():
             return None
-        return source_index.internalPointer()
+        return self.sourceModel().index_ref(source_index)
 
     def indexInfo(self, index):
         source_index = self.mapToSource(index)
