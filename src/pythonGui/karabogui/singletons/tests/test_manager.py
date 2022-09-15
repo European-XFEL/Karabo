@@ -1,7 +1,9 @@
+from inspect import signature
 from unittest.mock import ANY, Mock, call, patch
 
 from qtpy.QtCore import QSize
 
+from karabo.common.api import WeakMethodRef
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import (
@@ -106,9 +108,13 @@ class TestManager(GuiTestCase):
     def test_call_device_slot(self):
         handler_args = None
 
-        def handler(*args):
+        def handler(success, reply):
             nonlocal handler_args
-            handler_args = args
+            handler_args = success, reply
+
+        def request_handler(success, reply, request):
+            nonlocal handler_args
+            handler_args = success, reply, request
 
         params = Hash('arg0', 0, 'arg1', 1)
         reply = Hash('result', 'yer dumb')
@@ -117,7 +123,7 @@ class TestManager(GuiTestCase):
         with singletons(network=network):
             manager = Manager()
 
-            # Call the slot of the 'remote device'
+            # 1. Call the slot of the 'remote device'
             token = manager.callDeviceSlot(handler, 'dev', 'slot', params)
 
             assert token in manager._request_handlers
@@ -129,6 +135,42 @@ class TestManager(GuiTestCase):
                                           request=Hash("token", token),
                                           reply=reply)
             assert handler_args == (True, reply)
+
+            # 2. Different signature, we receive request
+            token = manager.callDeviceSlot(request_handler,
+                                           'dev', 'slot', params)
+
+            assert token in manager._request_handlers
+            network.onExecuteGeneric.assert_called_with(
+                'dev', 'slot', params, token=token)
+
+            manager.handle_requestGeneric(success=True,
+                                          request=Hash("token", token),
+                                          reply=reply)
+            assert handler_args == (True, reply, Hash("token", token))
+
+            # 3. Test with WeakMethod
+
+            class TestObject():
+                def handler(self, success, reply, request):
+                    nonlocal handler_args
+                    handler_args = success, reply, request
+
+            obj = TestObject()
+            weak_handler = WeakMethodRef(obj.handler, num_args=3)
+            sig = signature(weak_handler)
+            assert len(sig.parameters) == 3
+
+            token = manager.callDeviceSlot(weak_handler,
+                                           'dev', 'slot', params)
+
+            assert token in manager._request_handlers
+            network.onExecuteGeneric.assert_called_with(
+                'dev', 'slot', params, token=token)
+            manager.handle_requestGeneric(success=True,
+                                          request=Hash("token", token),
+                                          reply=reply)
+            assert handler_args == (True, reply, Hash("token", token))
 
     def test_handle_system_topology(self):
         topo_hash = system_hash()
