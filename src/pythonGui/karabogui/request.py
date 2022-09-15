@@ -28,15 +28,22 @@ def call_device_slot(handler, instance_id, slot_name, **kwargs):
     """Call a device slot via the GUI server. This works with slots which
     take a single `Hash` as an argument and reply with a `Hash`.
 
-    :param handler: Callable with the signature handler(success, reply)
+    :param handler: Callable with the signature
+
+                    - handler(success, reply)
+                    - handler(success, reply, request)
+
                     where:
                         success - a bool indicating whether the call succeeded
                         reply - a Hash containing the slot reply
+                        request - the initial request
+
                     This handler can be called when the GUI server connection
                     is lost. In that case, `success` is False, and `reply`
                     is the `reason` of failure (string).
                     In case the call fails or times out, `success` is also
                     False.
+                    The request Hash can only include the `token` on failure
 
     :param instance_id: Device ID of the device whose slot will be called
     :param slot_name: Name of the slot which will be called
@@ -50,8 +57,9 @@ def call_device_slot(handler, instance_id, slot_name, **kwargs):
     """
     # Verify that the handler takes the correct number of arguments
     sig = signature(handler)
-    if len(sig.parameters) != 2:
-        raise ValueError('A slot callback handler must take two arguments')
+    if len(sig.parameters) not in (2, 3):
+        raise ValueError(
+            'A slot callback handler must take either two or three arguments')
 
     # Prepare the parameters Hash
     params = Hash()
