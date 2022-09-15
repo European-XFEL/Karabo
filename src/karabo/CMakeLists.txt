@@ -435,7 +435,7 @@ install(FILES "../cmake/import_karabo_lib.cmake"
 # Custom install for karaboDependencies.pc file. 
 install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
         DESTINATION "lib/pkgconfig")
-
+# install here for backwards compatibility.
 install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
         DESTINATION "lib")
 
