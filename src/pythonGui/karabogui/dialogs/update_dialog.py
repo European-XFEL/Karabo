@@ -15,8 +15,7 @@ from qtpy.QtWidgets import QDialog
 
 from karabogui import icons
 from karabogui.controllers.util import load_extensions
-
-from .utils import get_dialog_ui
+from karabogui.dialogs.utils import get_dialog_ui
 
 _TIMEOUT = 0.5
 _TAG_REGEX = r'^\d+.\d+.\d+$'
