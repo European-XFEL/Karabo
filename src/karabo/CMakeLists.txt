@@ -436,5 +436,8 @@ install(FILES "../cmake/import_karabo_lib.cmake"
 install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
         DESTINATION "lib/pkgconfig")
 
+install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
+        DESTINATION "lib")
+
 file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_VERSION})
 install(FILES "${CMAKE_BINARY_DIR}/VERSION" DESTINATION .)
