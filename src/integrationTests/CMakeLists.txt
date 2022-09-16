@@ -99,6 +99,7 @@ set(deviceLockingIntegrTestRunner_FILES
 
 set(guiServerIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/GuiServer_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestKaraboAuthServer.cc
     $<TARGET_OBJECTS:TCP_ADAPTER>
     $<TARGET_OBJECTS:INTEGRATION_RUNNER>
 )
