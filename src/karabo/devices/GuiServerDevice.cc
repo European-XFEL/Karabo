@@ -684,7 +684,7 @@ namespace karabo {
                                         weakChannel, timer));
         }
 
-        void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& userId,
+        void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
                                                      const karabo::util::Version& clientVersion,
                                                      const karabo::net::OneTimeTokenAuthorizeResult& authResult) {
             karabo::net::Channel::Pointer channel = weakChannel.lock();
@@ -695,7 +695,7 @@ namespace karabo {
                                            << "\nErrMsg: " << authResult.errMsg;
                 if (!authResult.success) {
                     const string errorMsg = "Error validating token: " + authResult.errMsg;
-                    sendLoginErrorAndDisconnect(channel, userId, clientVersion.getString(), errorMsg);
+                    sendLoginErrorAndDisconnect(channel, clientId, clientVersion.getString(), errorMsg);
                     return;
                 } else {
                     registerConnect(clientVersion, channel);
@@ -718,20 +718,23 @@ namespace karabo {
                 // Check valid login.
                 const Version clientVersion(hash.get<string>("version"));
                 const bool userAuthActive = !get<string>("authServer").empty();
-                const string userId = hash.get<string>("username");
+                // The GUI client currently sends the clientId (clientHostname-clientPID) under the "username" key.
+                // TODO: modify the key to "clientId" or similar (note: the server must support both or bump
+                // minClientVersion).
+                const string clientId = hash.get<string>("username");
                 const string cliVersion = clientVersion.getString();
 
                 if (clientVersion < Version(get<std::string>("minClientVersion"))) {
                     const string errorMsg = "Your GUI client has version '" + cliVersion +
                                             "', but the minimum required is: " + get<std::string>("minClientVersion");
-                    sendLoginErrorAndDisconnect(channel, userId, cliVersion, errorMsg);
+                    sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                     return;
                 }
                 if (userAuthActive && !hash.has("oneTimeToken")) {
                     const string errorMsg = "Refused non-user-authenticated login.\n\nGUI server at '" +
                                             get<string>("hostName") + ":" + toString(get<unsigned int>("port")) +
                                             "' only accepts authenticated logins.\nPlease update your GUI client.";
-                    sendLoginErrorAndDisconnect(channel, userId, cliVersion, errorMsg);
+                    sendLoginErrorAndDisconnect(channel, clientId, cliVersion, errorMsg);
                     return;
                 }
 
@@ -744,7 +747,7 @@ namespace karabo {
                     m_authClient.authorizeOneTimeToken(
                           hash.get<string>("oneTimeToken"), m_topic,
                           bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
-                                    userId, clientVersion, _1));
+                                    clientId, clientVersion, _1));
                 } else {
                     // No authentication involved; send the topology right away.
                     registerConnect(clientVersion, channel);
@@ -756,16 +759,8 @@ namespace karabo {
                 if (hash.has("info")) {
                     extraInfo << "\nDetails: " << hash.get<Hash>("info");
                 }
-                if (hash.has("clientId")) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << hash.get<string>("clientId")
-                                              << " (version " << cliVersion << ")." << extraInfo.str();
-                } else {
-                    // Older versions of the GUI client used "userName" as the key for host_id concatenated with the
-                    // GUI client pid - renamed to "client_id" after the addition of user authentication support to the
-                    // GUI protocol.
-                    KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << userId << " (version " << cliVersion
-                                              << ")." << extraInfo.str();
-                }
+                KARABO_LOG_FRAMEWORK_INFO << "Login request of client_id: " << clientId << " (version " << cliVersion
+                                          << ")." << extraInfo.str();
 
                 channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
 

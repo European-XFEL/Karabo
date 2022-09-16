@@ -55,6 +55,27 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
      */
     void testDeviceConfigUpdates();
 
+    /**
+     * @brief Checks that a "login" message with no "oneTimeToken" is refused by a GUI Server configured to require
+     * authentication and an error notification is returned to the GUI Client.
+     *
+     */
+    void testMissingTokenOnLogin();
+
+    /**
+     * @brief Checks that when a "login" message with an invalid "oneTimeToken" is received by the GUI Server, it
+     * returns a corresponding error notification to the GUI Client.
+     *
+     */
+    void testInvalidTokenOnLogin();
+
+    /**
+     * @brief Checks that when a "login" message with a valid "oneTimeToken" is received by the GUI Server, it returns
+     * the resolved user's access level for the server's topic to the client.
+     *
+     */
+    void testValidTokenOnLogin();
+
     void testDisconnect();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
