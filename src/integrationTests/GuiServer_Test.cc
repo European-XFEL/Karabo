@@ -9,7 +9,9 @@
 
 #include <cstdlib>
 #include <karabo/net/EventLoop.hh>
+#include <karabo/util/StringTools.hh>
 
+#include "TestKaraboAuthServer.hh"
 
 using namespace std;
 
@@ -17,6 +19,8 @@ using namespace std;
 #define KRB_TEST_MAX_TIMEOUT 5
 // Next line must be kept in sync with DeviceClient.hh:
 #define CONNECTION_KEEP_ALIVE 15
+
+#define TEST_GUI_SERVER_ID "testGuiServerDevice"
 
 USING_KARABO_NAMESPACES
 
@@ -66,14 +70,14 @@ void GuiServer_Test::appTestRunner() {
     // bring up a GUI server
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
-                                      Hash("deviceId", "testGuiServerDevice", "port", 44450, "minClientVersion",
-                                           "2.2.3", "forwardLogInterval", 500, "timeout", 0),
+                                      Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.2.3",
+                                           "forwardLogInterval", 500, "timeout", 0),
                                       KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     waitForCondition(
           [this]() {
-              auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
+              auto state = m_deviceClient->get<State>(TEST_GUI_SERVER_ID, "state");
               return state == State::ON;
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
@@ -96,24 +100,57 @@ void GuiServer_Test::appTestRunner() {
         m_tcpAdapter->disconnect();
     }
     // Shutdown GUI Server device to reconfigure for readOnly
-    success = m_deviceClient->killDevice("testGuiServerDevice", KRB_TEST_MAX_TIMEOUT);
+    success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // bring up a GUI server and a tcp adapter to it
     std::pair<bool, std::string> success_n =
           m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
-                                      Hash("deviceId", "testGuiServerDevice", "port", 44450, "minClientVersion",
-                                           "2.2.3", "isReadOnly", true, "timeout", 0),
+                                      Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.2.3",
+                                           "isReadOnly", true, "timeout", 0),
                                       KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
     waitForCondition(
           [this]() {
-              auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
+              auto state = m_deviceClient->get<State>(TEST_GUI_SERVER_ID, "state");
               return state == State::ON;
           },
           KRB_TEST_MAX_TIMEOUT * 1000);
 
     testReadOnly();
+
+    if (m_tcpAdapter->connected()) {
+        m_tcpAdapter->disconnect();
+    }
+
+
+    // Shutsdown the GUI Server device and brings it up again as an instance that requires user authentication.
+    success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    const std::string authServerAddr = "127.0.0.1";
+    const int authServerPort = 8052;
+
+    // Instantiates the testing authentication server
+    TestKaraboAuthServer tstAuthServer(authServerAddr, authServerPort);
+    boost::thread srvRunner = boost::thread([&tstAuthServer]() { tstAuthServer.run(); });
+
+    success_n = m_deviceClient->instantiate(
+          "testGuiVersionServer", "GuiServerDevice",
+          Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.16", "authServer",
+               "http://" + authServerAddr + ":" + toString(authServerPort), "timeout", 0),
+          KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
+    waitForCondition(
+          [this]() {
+              auto state = m_deviceClient->get<State>(TEST_GUI_SERVER_ID, "state");
+              return state == State::ON;
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
+
+    testMissingTokenOnLogin();
+    testInvalidTokenOnLogin();
+    testValidTokenOnLogin();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -175,7 +212,7 @@ void GuiServer_Test::testVersionControl() {
         const std::string& serverMinVersion = std::get<2>(test);
         const bool connected = std::get<3>(test);
         // set server minimum version
-        m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", serverMinVersion);
+        m_deviceClient->set<std::string>(TEST_GUI_SERVER_ID, "minClientVersion", serverMinVersion);
         resetTcpConnection();
         loginInfo.set("version", version);
         Hash lastMessage;
@@ -338,7 +375,7 @@ void GuiServer_Test::testExecute() {
     // Request execution of non-existing slot of existing device (the GuiServerDevice itself...)
     //
     {
-        const Hash h("type", "execute", "deviceId", "testGuiServerDevice", "command", "not.existing", "reply", true,
+        const Hash h("type", "execute", "deviceId", TEST_GUI_SERVER_ID, "command", "not.existing", "reply", true,
                      "timeout", 1);
         karabo::TcpAdapter::QueuePtr messageQ =
               m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
@@ -366,7 +403,7 @@ void GuiServer_Test::testExecute() {
         // with the deviceId - but that does not matter, they are ignored.
         // Also, "execute" is meant for slots listed as SLOT_ELEMENTS - but it works for any argument less slot
         // as slotGetConfiguration is one...
-        const Hash h("type", "execute", "deviceId", "testGuiServerDevice", "command", "slotGetConfiguration", "reply",
+        const Hash h("type", "execute", "deviceId", TEST_GUI_SERVER_ID, "command", "slotGetConfiguration", "reply",
                      true, "timeout", 1);
         karabo::TcpAdapter::QueuePtr messageQ =
               m_tcpAdapter->getNextMessages("executeReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
@@ -385,20 +422,19 @@ void GuiServer_Test::testExecute() {
     //
     {
         // We set the "lockedBy" property that is cleared by slotClearLock
-        m_deviceClient->set("testGuiServerDevice", "lockedBy", "someone");
-        CPPUNIT_ASSERT_EQUAL(std::string("someone"),
-                             m_deviceClient->get<std::string>("testGuiServerDevice", "lockedBy"));
-        const Hash h("type", "execute", "deviceId", "testGuiServerDevice", "command", "slotClearLock");
+        m_deviceClient->set(TEST_GUI_SERVER_ID, "lockedBy", "someone");
+        CPPUNIT_ASSERT_EQUAL(std::string("someone"), m_deviceClient->get<std::string>(TEST_GUI_SERVER_ID, "lockedBy"));
+        const Hash h("type", "execute", "deviceId", TEST_GUI_SERVER_ID, "command", "slotClearLock");
         // "reply", false); is default
         m_tcpAdapter->sendMessage(h);
 
         // Just make sure that it really happened - we have to wait a bit for it:
         int timeout = 1500;
-        while (!m_deviceClient->get<std::string>("testGuiServerDevice", "lockedBy").empty()) {
+        while (!m_deviceClient->get<std::string>(TEST_GUI_SERVER_ID, "lockedBy").empty()) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             timeout -= 5;
         }
-        CPPUNIT_ASSERT(m_deviceClient->get<std::string>("testGuiServerDevice", "lockedBy").empty());
+        CPPUNIT_ASSERT(m_deviceClient->get<std::string>(TEST_GUI_SERVER_ID, "lockedBy").empty());
     }
 
     std::clog << "OK" << std::endl;
@@ -414,7 +450,7 @@ void GuiServer_Test::testRequestFailProtocol() {
         const std::string type = "GuiServerDoesNotHaveThisType";
         Hash h("type", type);
 
-        const Hash conf = m_deviceClient->get("testGuiServerDevice");
+        const Hash conf = m_deviceClient->get(TEST_GUI_SERVER_ID);
         const std::string& classVersion = conf.get<string>("classVersion");
 
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
@@ -435,7 +471,7 @@ void GuiServer_Test::testRequestFailOldVersion() {
     // independently from the minimum Client version configured,
     // we want to block certain actions to be performed.
     // for example: `projectSaveItems` can be poisonous for the database.
-    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.9.1");
+    m_deviceClient->set<std::string>(TEST_GUI_SERVER_ID, "minClientVersion", "2.9.1");
     std::clog << "testRequestFailOldVersion: " << std::flush;
     // connect again
     resetClientConnection(Hash("type", "login", "username", "mrusp", "password", "12345", "version", "2.9.1"));
@@ -498,8 +534,8 @@ void GuiServer_Test::testRequestGeneric() {
         std::clog << "requestGeneric: OK different replyType" << std::endl;
     }
     {
-        Hash h("type", "requestGeneric", "instanceId", "testGuiServerDevice", "timeout", 1, "replyType", "debug",
-               "empty", true, "slot", "slotDumpDebugInfo");
+        Hash h("type", "requestGeneric", "instanceId", TEST_GUI_SERVER_ID, "timeout", 1, "replyType", "debug", "empty",
+               true, "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
@@ -517,8 +553,8 @@ void GuiServer_Test::testRequestGeneric() {
         std::clog << "requestGeneric: OK with online device and empty request" << std::endl;
     }
     {
-        Hash h("type", "requestGeneric", "instanceId", "testGuiServerDevice", "timeout", 1, "replyType", "debug",
-               "empty", true, "token", "here is a token of my appreciation", "slot", "slotDumpDebugInfo");
+        Hash h("type", "requestGeneric", "instanceId", TEST_GUI_SERVER_ID, "timeout", 1, "replyType", "debug", "empty",
+               true, "token", "here is a token of my appreciation", "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
@@ -573,7 +609,7 @@ void GuiServer_Test::testSlowSlots() {
     // Request execution of existing slot of the PropertyTest device `testGuiServerDevicePropertyTest`
     // After setting the `ignoreTimeoutClasses` the call will succeed.
     //
-    m_deviceClient->set("testGuiServerDevice", "ignoreTimeoutClasses", std::vector<std::string>({"PropertyTest"}));
+    m_deviceClient->set(TEST_GUI_SERVER_ID, "ignoreTimeoutClasses", std::vector<std::string>({"PropertyTest"}));
     {
         const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
                      true, "timeout", 1);
@@ -590,7 +626,7 @@ void GuiServer_Test::testSlowSlots() {
     // Test that the server will handle timeout after removing "PropertyTest" from the list of bad guys
     // before shutting down the test device.
     //
-    m_deviceClient->set("testGuiServerDevice", "ignoreTimeoutClasses", std::vector<std::string>());
+    m_deviceClient->set(TEST_GUI_SERVER_ID, "ignoreTimeoutClasses", std::vector<std::string>());
     {
         const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
                      true, "timeout", 1);
@@ -611,8 +647,8 @@ void GuiServer_Test::testSlowSlots() {
     // Request execution of existing slot of the PropertyTest device `testGuiServerDevicePropertyTest`
     // After setting the a larger`"timeout" the call will succeed.
     //
-    const int previousTimeout = m_deviceClient->get<int>("testGuiServerDevice", "timeout");
-    m_deviceClient->set("testGuiServerDevice", "timeout", 30);
+    const int previousTimeout = m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "timeout");
+    m_deviceClient->set(TEST_GUI_SERVER_ID, "timeout", 30);
     {
         const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
                      true, "timeout", 1); // smaller than the "timeout" property of the server, so gets ignored
@@ -628,7 +664,7 @@ void GuiServer_Test::testSlowSlots() {
     //
     // Test that the server will handle timeout after  resetting the "timeout" property.
     //
-    m_deviceClient->set("testGuiServerDevice", "timeout", previousTimeout);
+    m_deviceClient->set(TEST_GUI_SERVER_ID, "timeout", previousTimeout);
     {
         const Hash h("type", "execute", "deviceId", "testGuiServerDevicePropertyTest", "command", "slowSlot", "reply",
                      true, "timeout", 1); // now this rules again, so the 2s slow slowSlot will timeout again
@@ -682,7 +718,7 @@ void GuiServer_Test::testReconfigure() {
     // Request invalid reconfiguration of existing device (the GuiServerDevice itself...)
     //
     {
-        const Hash h("type", "reconfigure", "deviceId", "testGuiServerDevice", "configuration", Hash("whatever", 1),
+        const Hash h("type", "reconfigure", "deviceId", TEST_GUI_SERVER_ID, "configuration", Hash("whatever", 1),
                      "reply", true, "timeout", 1);
         karabo::TcpAdapter::QueuePtr messageQ =
               m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
@@ -709,8 +745,8 @@ void GuiServer_Test::testReconfigure() {
     // Request valid reconfiguration of existing device (the GuiServerDevice itself...)
     //
     {
-        const int newTarget = m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") * 2;
-        const Hash h("type", "reconfigure", "deviceId", "testGuiServerDevice", "configuration",
+        const int newTarget = m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval") * 2;
+        const Hash h("type", "reconfigure", "deviceId", TEST_GUI_SERVER_ID, "configuration",
                      Hash("networkPerformance.sampleInterval", 10), "reply", true, "timeout", 1);
         karabo::TcpAdapter::QueuePtr messageQ =
               m_tcpAdapter->getNextMessages("reconfigureReply", 1, [&] { m_tcpAdapter->sendMessage(h); });
@@ -723,7 +759,7 @@ void GuiServer_Test::testReconfigure() {
         CPPUNIT_ASSERT(!replyMessage.has("reason"));
         // Just assure that it really happened:
         CPPUNIT_ASSERT_EQUAL(newTarget,
-                             m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
+                             m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval"));
     }
 
     //
@@ -731,21 +767,21 @@ void GuiServer_Test::testReconfigure() {
     // but this time do not request for a reply.
     //
     {
-        const int newTarget = m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") + 2;
-        const Hash h("type", "reconfigure", "deviceId", "testGuiServerDevice", "configuration",
+        const int newTarget = m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval") + 2;
+        const Hash h("type", "reconfigure", "deviceId", TEST_GUI_SERVER_ID, "configuration",
                      Hash("networkPerformance.sampleInterval", newTarget));
         // "reply", false); is default
         m_tcpAdapter->sendMessage(h);
 
         // Just make sure that it really happened - we have to wait a bit for it:
         int timeout = 1500;
-        while (m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval") != newTarget &&
+        while (m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval") != newTarget &&
                timeout > 0) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             timeout -= 5;
         }
         CPPUNIT_ASSERT_EQUAL(newTarget,
-                             m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
+                             m_deviceClient->get<int>(TEST_GUI_SERVER_ID, "networkPerformance.sampleInterval"));
     }
 
     std::clog << "testReconfigure: OK" << std::endl;
@@ -774,7 +810,7 @@ void GuiServer_Test::testDeviceConfigUpdates() {
     // de smaller than the interval duration - (with 1500 we are allowing that
     // distance to be up to 150 ms, which is quite reasonable even in situations
     // where the running system is under a heavy load).
-    m_deviceClient->set<int>("testGuiServerDevice", "propertyUpdateInterval", propertyUpdateInterval);
+    m_deviceClient->set<int>(TEST_GUI_SERVER_ID, "propertyUpdateInterval", propertyUpdateInterval);
     const unsigned int nextMessageTimeout = propertyUpdateInterval + 500u;
 
     // Instantiate two property test devices
@@ -1017,7 +1053,7 @@ void GuiServer_Test::testDisconnect() {
     // Test bad client identifier
     //
     bool disconnected = true;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", "BLAnoPORT")
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(TEST_GUI_SERVER_ID, "slotDisconnectClient", "BLAnoPORT")
                                   .timeout(timeoutMs)
                                   .receive(disconnected));
     CPPUNIT_ASSERT(!disconnected);
@@ -1027,7 +1063,7 @@ void GuiServer_Test::testDisconnect() {
     // Test valid client identifier
     //
     Hash result;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", 0))
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(TEST_GUI_SERVER_ID, "slotDumpDebugInfo", Hash("clients", 0))
                                   .timeout(timeoutMs)
                                   .receive(result));
     std::vector<std::string> keys;
@@ -1035,7 +1071,7 @@ void GuiServer_Test::testDisconnect() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Expected single key for one client only, but there are " + toString(keys), 1ul,
                                  result.size()); // Just a single client
     std::string clientIdentifier = result.begin()->getKey();
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", clientIdentifier)
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(TEST_GUI_SERVER_ID, "slotDisconnectClient", clientIdentifier)
                                   .timeout(timeoutMs)
                                   .receive(disconnected));
     CPPUNIT_ASSERT_MESSAGE("Failed to disconnect '" + clientIdentifier + "'", disconnected);
@@ -1152,7 +1188,7 @@ void GuiServer_Test::testSlotNotify() {
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
           "notification", 1,
           [&reply, &arg, timeoutMs, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(timeoutMs).receive(reply);
+              m_deviceServer->request(TEST_GUI_SERVER_ID, "slotNotify", arg).timeout(timeoutMs).receive(reply);
           },
           timeoutMs);
     CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
@@ -1172,11 +1208,11 @@ void GuiServer_Test::testSlotNotify() {
     // Note: Better wait to ensure that deviceClient received update - no guarantee since server sent the message...
     waitForCondition(
           [this, &messageToSend]() {
-              return 3ul == m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size();
+              return 3ul == m_deviceClient->get<std::vector<std::string>>(TEST_GUI_SERVER_ID, "bannerData").size();
           },
           timeoutMs);
     const std::vector<std::string> messageData(
-          m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData"));
+          m_deviceClient->get<std::vector<std::string>>(TEST_GUI_SERVER_ID, "bannerData"));
     CPPUNIT_ASSERT_EQUAL(expectedMessageData.size(), messageData.size());
     for (int i = 0; i < 3; i++) {
         CPPUNIT_ASSERT_EQUAL(expectedMessageData[i], messageData[i]);
@@ -1207,13 +1243,12 @@ void GuiServer_Test::testSlotNotify() {
     messageQ = m_tcpAdapter->getNextMessages(
           "notification", 1,
           [&reply, &clear_arg, timeoutMs, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotNotify", clear_arg).timeout(timeoutMs).receive(reply);
+              m_deviceServer->request(TEST_GUI_SERVER_ID, "slotNotify", clear_arg).timeout(timeoutMs).receive(reply);
           },
           timeoutMs);
     CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
     // Banner data is cleared
-    CPPUNIT_ASSERT_EQUAL(0ul,
-                         m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size());
+    CPPUNIT_ASSERT_EQUAL(0ul, m_deviceClient->get<std::vector<std::string>>(TEST_GUI_SERVER_ID, "bannerData").size());
 
     messageQ->pop(messageReceived);
     CPPUNIT_ASSERT(messageReceived.has("message"));
@@ -1249,7 +1284,7 @@ void GuiServer_Test::testSlotBroadcast() {
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
           "unimplementedDangerousCall", 1,
           [&reply, &arg, timeoutMs, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", arg).timeout(timeoutMs).receive(reply);
+              m_deviceServer->request(TEST_GUI_SERVER_ID, "slotBroadcast", arg).timeout(timeoutMs).receive(reply);
           },
           timeoutMs);
     CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
@@ -1264,14 +1299,14 @@ void GuiServer_Test::testSlotBroadcast() {
     // A message should have a type
     const Hash bad_arg("isSkookum", false);
     CPPUNIT_ASSERT_THROW(
-          m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_arg).timeout(timeoutMs).receive(reply),
+          m_deviceServer->request(TEST_GUI_SERVER_ID, "slotBroadcast", bad_arg).timeout(timeoutMs).receive(reply),
           std::exception);
     std::clog << "." << std::flush;
 
     const Hash bad_msg("isSkookum", false, "type", "unimplementedDangerousCall");
     const Hash bad_client_arg("message", bad_msg, "clientAddress", "pinneberg");
 
-    m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_client_arg).timeout(timeoutMs).receive(reply);
+    m_deviceServer->request(TEST_GUI_SERVER_ID, "slotBroadcast", bad_client_arg).timeout(timeoutMs).receive(reply);
 
     // success is false since we did not send the message to anybody
     CPPUNIT_ASSERT_EQUAL(false, reply.get<bool>("success"));
@@ -1282,7 +1317,7 @@ void GuiServer_Test::testSlotBroadcast() {
 
     std::string clientAddress;
     Hash debugInfo;
-    m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", true))
+    m_deviceServer->request(TEST_GUI_SERVER_ID, "slotDumpDebugInfo", Hash("clients", true))
           .timeout(timeoutMs)
           .receive(debugInfo);
     // Failed with timeout(1000) for above request in https://git.xfel.eu/Karabo/Framework/-/jobs/290411
@@ -1296,7 +1331,7 @@ void GuiServer_Test::testSlotBroadcast() {
     messageQ = m_tcpAdapter->getNextMessages(
           "unimplementedDangerousCall", 1,
           [&reply, &client_arg, timeoutMs, this] {
-              m_deviceServer->request("testGuiServerDevice", "slotBroadcast", client_arg)
+              m_deviceServer->request(TEST_GUI_SERVER_ID, "slotBroadcast", client_arg)
                     .timeout(timeoutMs)
                     .receive(reply);
           },
@@ -1310,4 +1345,83 @@ void GuiServer_Test::testSlotBroadcast() {
     std::clog << "." << std::flush;
 
     std::clog << " OK" << std::endl;
+}
+
+
+void GuiServer_Test::testMissingTokenOnLogin() {
+    std::clog << "testMissingTokenOnLogin: " << std::flush;
+
+    Hash loginInfo("type", "login", "username", "bob", "password", "12345", "version", "2.16.0");
+
+    resetTcpConnection();
+
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    const std::string& message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT_MESSAGE(
+          "Expected notification message starting with 'Refused non-user-authenticated login'. Got '" + message + "'",
+          message.find("Refused non-user-authenticated login") == 0u);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+
+    std::clog << "OK" << std::endl;
+}
+
+void GuiServer_Test::testInvalidTokenOnLogin() {
+    std::clog << "testInvalidTokenOnLogin: " << std::flush;
+
+    Hash loginInfo("type", "login", "username", "bob", "oneTimeToken", "abcd", "version", "2.16.0");
+
+    resetTcpConnection();
+
+    Hash lastMessage;
+    const string expectedMsg = "Error validating token: " + TestKaraboAuthServer::INVALID_TOKEN_MSG;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("notification", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    const std::string& message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT_MESSAGE("Expected notification message '" + expectedMsg + "'. Got '" + message + "'",
+                           message == expectedMsg);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+
+    std::clog << "OK" << std::endl;
+}
+
+void GuiServer_Test::testValidTokenOnLogin() {
+    std::clog << "testInvalidTokenOnLogin: " << std::flush;
+
+    Hash loginInfo("type", "login", "username", "bob", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                   "2.16.0");
+
+    resetTcpConnection();
+
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    const int accessLevel = lastMessage.get<int>("accessLevel");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("AccessLevel differs from expected", TestKaraboAuthServer::VALID_ACCESS_LEVEL,
+                                 accessLevel);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+
+    std::clog << "OK" << std::endl;
 }
