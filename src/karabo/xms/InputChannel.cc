@@ -413,8 +413,17 @@ namespace karabo {
                                      const boost::function<void (const karabo::net::ErrorCode&)>& handler) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
+            // NOTE: Locking this mutex here before a synchronous write is not ideal.
+            //       However, we subscribe a read operation before a write to make sure the connection status
+            //       is properly caught and there is no race condition. In case the handler is called asynchronously
+            //       with an error code while we register the channel, connection pair in the `m_openConnections`
+            //       set, it will wait for the mutex to be unlocked and properly deregister the channels.
+            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             if (!ec) { // succeeded so far
                 try {
+                    channel->readAsyncHashVectorBufferSetPointer(
+                          util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1,
+                                          net::Channel::WeakPointer(channel), _2, _3));
                     // synchronous write could throw if connection already broken again
                     channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(),
                                                       "memoryLocation", outputChannelInfo.get<std::string > ("memoryLocation"),
@@ -428,7 +437,6 @@ namespace karabo {
             }
 
             const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             auto itSetup = m_connectionsBeingSetup.find(outputChannelString);
             if (itSetup == m_connectionsBeingSetup.end()) {
                 // TODO: In case of success so far, we should not have tried to write hello above!
@@ -448,8 +456,6 @@ namespace karabo {
 
             if (!ec) {
                 KARABO_LOG_FRAMEWORK_INFO << "'" << m_instanceId << "' connected to '" << outputChannelString << "'";
-                channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
-                                                                             _1, net::Channel::WeakPointer(channel), _2, _3));
                 m_openConnections[outputChannelString] = std::make_pair(connection, channel);
             }
 
@@ -509,10 +515,12 @@ namespace karabo {
                 }
             }
 
-            // Should never come here:
-            KARABO_LOG_FRAMEWORK_ERROR << "onTcpChannelError on \"" << m_instanceId << "\"  for untracked connection: "
-                    << "code #" << error.value() << " -- \"" << error.message() << "\".  Stop connection.";
+            // Should come here only if the hello message failed before the connection is registered in
+            // `m_openConnections` on connect.
             auto connectionPtr = channel->getConnection();
+            KARABO_LOG_FRAMEWORK_ERROR << "onTcpChannelError on \"" << m_instanceId << "\"  for untracked connection: "
+                                       << "code #" << error.value() << " -- \"" << error.message() << "\""
+                                       << ((connectionPtr) ? "." : ". Stop connection.");
             if (connectionPtr) connectionPtr->stop();
         }
 
