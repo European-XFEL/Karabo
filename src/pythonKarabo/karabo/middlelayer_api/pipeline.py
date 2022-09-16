@@ -1,8 +1,8 @@
 import os
 import socket
 from asyncio import (
-    CancelledError, Future, IncompleteReadError, Lock, Queue, gather,
-    get_event_loop, open_connection, shield, start_server)
+    CancelledError, Future, IncompleteReadError, Lock, Queue, TimeoutError,
+    gather, get_event_loop, open_connection, shield, start_server, wait_for)
 from collections import deque
 from contextlib import closing
 from struct import calcsize, pack, unpack
@@ -20,6 +20,7 @@ from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
+RECONNECT_TIMEOUT = 2
 
 
 class CancelQueue(Queue):
@@ -213,7 +214,7 @@ class NetworkInput(Configurable):
         # Make sure to always set the instance correctly!
         loop = get_event_loop()
         task = loop.create_task(self.start_channel(channel),
-                                instance=self.parent)
+                                instance=self.parent.get_root())
         self.connected[channel] = task
         self.connectedOutputChannels = list(self.connected)
 
@@ -271,23 +272,38 @@ class NetworkInput(Configurable):
         """Call a network input handler under mutex and error protection"""
         async with self.handler_lock:
             try:
-                await get_event_loop().run_coroutine_or_thread(
-                    func, *args)
+                await wait_for(get_event_loop().run_coroutine_or_thread(
+                    func, *args), timeout=5)
             except CancelledError:
                 # Cancelled Error is handled in the `start_channel` method
                 pass
+            except TimeoutError:
+                self.device_logger.error(
+                    f"timeout in handler {func.__name__} in stream")
             except Exception:
-                self.parent.logger.exception("error in stream")
+                self.device_logger.exception("error in stream")
+
+    @property
+    def device_logger(self):
+        """Convenience method to retrieve device logger"""
+        return self.parent.get_root().logger
 
     async def start_channel(self, output):
         """Connect to the output channel with Id 'output' """
         try:
+            root = self.parent.get_root()
+            logger = self.device_logger
+            logger.info(f"Trying to connect to channel {output}")
             instance, name = output.split(":")
             # success, configuration
-            ok, info = await self.parent._call_once_alive(
+            ok, info = await root._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             if not ok:
-                return
+                logger.info(
+                    f"Connecting to channel that was not there {output}")
+                # Start fresh!
+                await sleep(RECONNECT_TIMEOUT)
+                return (await self.start_channel(output))
 
             if self.raw:
                 cls = None
@@ -295,7 +311,7 @@ class NetworkInput(Configurable):
                 # schema from output channel we are talking with
                 schema = info.get("schema", None)
                 if schema is None:
-                    schema, _ = await self.parent.call(
+                    schema, _ = await root.call(
                         instance, "slotGetSchema", False)
                 cls = ProxyFactory.createProxy(
                     Schema(name=name, hash=schema.hash[name]["schema"]))
@@ -307,8 +323,7 @@ class NetworkInput(Configurable):
                 # Tell the world we are connected before we start
                 # requesting data
                 await shield(self.call_handler(self.connect_handler, output))
-                instance_id = "{}:{}".format(self.parent.deviceId,
-                                             self._name)
+                instance_id = "{}:{}".format(root.deviceId, self._name)
                 cmd = Hash("reason", "hello",
                            "instanceId", instance_id,
                            "memoryLocation", "remote",
@@ -325,26 +340,27 @@ class NetworkInput(Configurable):
                     # We still inform when the connection has been closed!
                     await shield(self.call_handler(self.close_handler, output))
                     # Start a new roundtrip, but don't create a new task!
-                    await sleep(2)
+                    await sleep(RECONNECT_TIMEOUT)
                     await self.start_channel(output)
         except CancelledError:
             # Note: Happens when we are destroyed or disconnected!
             await shield(self.call_handler(self.close_handler, output))
-            self.connected.pop(output)
-            self.connectedOutputChannels = list(self.connected)
-        except Exception as e:
-            # Provide a print log for developers! Don't use the logger
-            # for exceptions. This should not happen!
-            print(f"Experienced unexpected exception {e} in input channel "
-                  f"of device {self.parent.deviceId} for {output}")
+            self._update_connected(output)
+        except Exception:
+            logger = self.device_logger
+            logger.info(f"Channel `{output}` did not close gracefully.")
             await shield(self.call_handler(self.close_handler, output))
             # We might get cancelled during sleeping!
             try:
-                await sleep(2)
+                await sleep(RECONNECT_TIMEOUT)
                 await self.start_channel(output)
             except CancelledError:
-                self.connected.pop(output)
-                self.connectedOutputChannels = list(self.connected)
+                self._update_connected(output)
+
+    def _update_connected(self, output):
+        """Update and remove channel `output` from connected"""
+        self.connected.pop(output)
+        self.connectedOutputChannels = list(self.connected)
 
     async def readChunk(self, channel, cls):
         try:
@@ -353,8 +369,8 @@ class NetworkInput(Configurable):
             if e.partial:
                 raise
             else:
-                self.parent.logger.info("stream %s finished",
-                                        channel.channelName)
+                self.device_logger.info(
+                    "stream %s finished", channel.channelName)
                 return False
         data = await channel.readBytes()
         if "endOfStream" in header:
