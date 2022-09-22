@@ -1,10 +1,10 @@
-from platform import system
 from unittest import skipIf
 from unittest.mock import patch
 
 from karabo.common.scenemodel.api import ScatterGraphModel
 from karabo.native import Configurable, Double, Hash, Timestamp
 from karabogui.binding.proxy import PropertyProxy
+from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
@@ -34,7 +34,7 @@ class TestScatterGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
-    @skipIf(system() == "Windows",
+    @skipIf(IS_WINDOWS_SYSTEM,
             reason="curve.getData returns empty arrays in Windows")
     def test_scatter_graph_basics(self):
         set_proxy_value(self.x, 'x', 2.1)
@@ -42,7 +42,7 @@ class TestScatterGraph(GuiTestCase):
         curve = self.controller._plot
         self.assertEqual(list(curve.getData()), [2.1, 3.2])
 
-    @skipIf(system() == "Windows",
+    @skipIf(IS_WINDOWS_SYSTEM,
             reason="curve.getData returns empty arrays in Windows")
     def test_scatter_timestamp(self):
         timestamp = Timestamp()
@@ -85,3 +85,27 @@ class TestScatterGraph(GuiTestCase):
             self.assertEqual(controller.model.psize, 2.7)
             self.assertEqual(controller._plot.opts['size'], 2.7)
         controller.destroy()
+
+    def test_removal_property(self):
+        controller = DisplayScatterGraph(proxy=self.x,
+                                         model=ScatterGraphModel())
+        controller.create(None)
+        controller.visualize_additional_property(self.y)
+        # Put a few values
+        set_proxy_value(self.x, 'x', 2.1)
+        set_proxy_value(self.y, 'y', 3.2)
+        set_proxy_value(self.x, 'x', 5.3)
+        set_proxy_value(self.y, 'y', 4.6)
+
+        if not IS_WINDOWS_SYSTEM:
+            self.assertIsNotNone(controller._last_x_value)
+            self.assertGreater(len(controller._x_values), 0)
+            self.assertGreater(len(controller._y_values), 0)
+
+        self.assertTrue(controller.remove_additional_property(self.y))
+        self.assertIsNone(controller._y_proxy)
+        self.assertIsNone(controller._last_x_value)
+        self.assertEqual(len(controller._x_values), 0)
+        self.assertEqual(len(controller._y_values), 0)
+
+        self.assertFalse(controller.remove_additional_property(self.y))
