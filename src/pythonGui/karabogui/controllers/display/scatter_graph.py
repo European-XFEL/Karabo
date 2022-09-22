@@ -91,6 +91,14 @@ class DisplayScatterGraph(BaseBindingController):
 
         return False
 
+    def remove_proxy(self, proxy):
+        if self._y_proxy is not None:
+            self._y_proxy = None
+            self._reset_plot()
+            return True
+
+        return False
+
     def value_update(self, proxy):
         value = proxy.value
         if proxy is self.proxy:
