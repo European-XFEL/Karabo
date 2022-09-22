@@ -213,6 +213,9 @@ class TableModel(QAbstractTableModel):
     # Public Interface
     # -----------------------------------------------------------------------
 
+    def index_ref(self, index):
+        return index
+
     def get_model_data(self, row, column):
         """Retrieve the validated model data for `row` and `column`"""
         key = self._header[column]
