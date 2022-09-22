@@ -5,18 +5,20 @@
 
 from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
 from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QHBoxLayout, QHeaderView, QInputDialog,
-    QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
+    QAbstractItemView, QAction, QDialog, QHBoxLayout, QHeaderView,
+    QInputDialog, QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
 from traits.api import Bool, Dict, Instance, Type, Undefined, WeakRef
 
 import karabogui.icons as icons
 from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
 from karabogui.binding.api import get_default_value, get_editor_value
 from karabogui.controllers.api import BaseBindingController
+from karabogui.dialogs.api import TableDeviceDialog
 
 from .delegates import (
     TableButtonDelegate, get_display_delegate, get_table_delegate)
 from .model import TableModel
+from .utils import is_writable_string
 from .view import KaraboTableView
 
 
@@ -252,6 +254,14 @@ class BaseTableController(BaseBindingController):
     # ---------------------------------------------------------------------
     # Action Slots - Private
 
+    def _device_action(self):
+        model = self.tableWidget().model()
+        index = model.index_ref(self.currentIndex())
+        dialog = TableDeviceDialog(parent=self.widget)
+        if dialog.exec() == QDialog.Accepted:
+            device = dialog.device_id
+            self.sourceModel().setData(index, device)
+
     def _set_index_default(self):
         index = self.currentIndex()
         key = list(self._bindings.keys())[index.column()]
@@ -317,6 +327,16 @@ class BaseTableController(BaseBindingController):
             add_action.setEnabled(add_row)
             du_action.setEnabled(add_row)
             remove_action.setEnabled(rm_row)
+
+            # Binding specific actions
+            key = list(self._bindings.keys())[index.column()]
+            binding = self._bindings[key]
+            if is_writable_string(binding):
+                menu.addSeparator()
+                device_action = menu.addAction(
+                    icons.deviceInstance, "Set Topology DeviceId")
+                device_action.triggered.connect(self._device_action)
+
         else:
             add_action = menu.addAction(icons.add, "Add Row below")
             add_action.triggered.connect(self.add_row)
@@ -373,6 +393,10 @@ class SortFilterModel(QSortFilterProxyModel):
         source_index = self.mapToSource(index)
         return self.sourceModel().get_model_data(source_index.row(),
                                                  source_index.column())
+
+    def index_ref(self, index):
+        source_index = self.mapToSource(index)
+        return source_index
 
     def get_header_key(self, section):
         """Relay the request of header data to the source model"""
