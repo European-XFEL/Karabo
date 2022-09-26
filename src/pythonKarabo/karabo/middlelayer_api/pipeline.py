@@ -20,7 +20,7 @@ from karabo.native import (
     decodeBinary, encodeBinary, get_timestamp, isSet)
 
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
-from .synchronization import background, firstCompleted
+from .synchronization import background, firstCompleted, synchronize
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
 IPTOS_LOWDELAY = 0x10
@@ -445,6 +445,127 @@ class NetworkInput(Configurable):
         """
 
 
+class PipelineContext(NetworkInput):
+    """This represents a context specifc input channel connection to a karabo
+        device. The context is not connected automatically, but may be
+        connected using :meth:`async with` or :meth:`with`::
+
+            channel = PipelineContext("deviceId:output")
+            async with channel:
+                data, meta = await channel.get_data()
+
+            with channel:
+                await channel.get_data()
+
+        It is possible to ask for the connection of the context using::
+
+            async with channel:
+                if not channel.is_alive():
+                    await channel.wait_connected()
+    """
+
+    def __init__(self, output, configuration={}):
+        configuration.update(dict(dataDistribution="copy", onSlowness="drop"))
+        super().__init__(configuration)
+        self.raw = True
+        self.parent = self
+
+        self._task = None
+        self._output = output
+        self._initialized = False
+
+        self._connected = False
+        self._futures = set()
+        self._connect_futures = set()
+
+    # Public interface
+    # ----------------------------------------------------------------------
+
+    @synchronize
+    async def wait_connected(self):
+        """Wait for the pipeline context to be connect
+
+        with PipelineContext(output) as ctx:
+            await ctx.wait_connected()
+
+            # do something ...
+        """
+        if self._connected:
+            return True
+
+        future = Future()
+        self._connect_futures.add(future)
+        return await future
+
+    def is_alive(self):
+        """Public method to provide information if we are connected and alive
+        """
+        return self._connected
+
+    def __enter__(self):
+        self._task = background(self._connect())
+        return self
+
+    def __exit__(self, exc, value, tb):
+        self._disconnect()
+
+    async def __aenter__(self):
+        return self.__enter__()
+
+    async def __aexit__(self, exc, value, tb):
+        return self.__exit__(exc, value, tb)
+
+    @synchronize
+    async def get_data(self):
+        future = Future()
+        self._futures.add(future)
+        return await future
+
+    # Private interface
+    # ----------------------------------------------------------------------
+
+    def get_root(self):
+        """Reimplemented function of `Configurable`"""
+        return get_event_loop().instance()
+
+    async def connect_handler(self, output):
+        """Reimplemented function of `NetworkInput`"""
+        self._connected = True
+        for future in self._connect_futures:
+            future.set_result(True)
+
+        self._connect_futures = set()
+
+    async def close_handler(self, output):
+        """Reimplemented function of `NetworkInput`"""
+        self._connected = False
+
+    async def handler(self, data, meta):
+        """Reimplemented function of `NetworkInput`"""
+        for future in self._futures:
+            future.set_result((data, meta))
+        self._futures = set()
+
+    async def _connect(self):
+        output = self._output
+        # Similar to the `OutputProxy`, we _run the Configurable and
+        # attach the task.
+        try:
+            if not self._initialized:
+                await self._run()
+                self._initialized = True
+            self.connected[output] = self._task
+            await self.start_channel(output)
+        finally:
+            self._task = None
+
+    def _disconnect(self):
+        """Disconnect from the output channel"""
+        if self._task is not None and not self._task.done():
+            self._task.cancel()
+        self._connected = False
+
+
 class InputChannel(Node):
     """Declare an input channel in a device
 
@@ -811,8 +932,8 @@ class NetworkOutput(Configurable):
         self.active_channels = WeakSet()
         self.has_shared = 0
         self.channelName = ""
-        self.shared_queue = CancelQueue(0 if self.noInputShared
-                                        in ["queue", "queueDrop"] else 1)
+        self.shared_queue = CancelQueue(0 if self.noInputShared in [
+                                        "queue", "queueDrop"] else 1)
 
     async def getInformation(self, channelName):
         self.channelName = channelName
