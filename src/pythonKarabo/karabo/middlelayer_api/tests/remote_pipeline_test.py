@@ -1,11 +1,12 @@
-from asyncio import Future, sleep
+from asyncio import Future, TimeoutError, sleep, wait_for
 from contextlib import contextmanager
 from unittest import main
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
-    InputChannel, Int32, Node, OutputChannel, Overwrite, Slot, State,
-    Timestamp, UInt32, call, coslot, getDevice, isAlive, setWait, waitUntil)
+    InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext, Slot,
+    State, Timestamp, UInt32, background, call, coslot, getDevice, isAlive,
+    setWait, waitUntil)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -18,6 +19,7 @@ def get_channel_node(displayed_name=""):
             defaultValue=0)
 
     return ChannelNode
+
 
 class NodeOutput(Configurable):
     output = OutputChannel(
@@ -53,7 +55,7 @@ class InjectedSender(Device):
 
     @Slot()
     async def injectOutput(self):
-        self.__class__.output =  OutputChannel(
+        self.__class__.output = OutputChannel(
             get_channel_node(),
             assignment=Assignment.OPTIONAL,
             requiredAccessLevel=AccessLevel.OPERATOR,
@@ -75,6 +77,7 @@ class Sender(Device):
     # The state is explicitly overwritten, State.UNKNOWN is always possible by
     # default! We test that a proxy can reach State.UNKNOWN even if it is
     # removed from the allowed options.
+    running = False
 
     state = Overwrite(options=[State.ON])
     useTimestamp = Bool(
@@ -89,6 +92,20 @@ class Sender(Device):
     outputCounter = UInt32(
         defaultValue=0,
         displayedName="Output Counter")
+
+    @Slot()
+    async def startSending(self):
+        background(self._keep_sending())
+
+    async def _keep_sending(self):
+        self.running = True
+        while self.running:
+            await self.sendData()
+            await sleep(0.1)
+
+    @Slot()
+    async def stopSending(self):
+        self.running = False
 
     @Slot()
     async def sendData(self):
@@ -579,6 +596,64 @@ class RemotePipelineTest(DeviceTest):
         self.assertEqual(len(self.alice.output.active_channels), 0)
 
     @async_tst
+    async def test_pipeline_context(self):
+        """Test the operation of a pipeline context channel"""
+        output_device = Sender({"_deviceId_": "ContextSender"})
+        await output_device.startInstance()
+        try:
+            proxy = await getDevice("ContextSender")
+            self.assertTrue(isAlive(proxy))
+            await proxy.startSending()
+            channel = PipelineContext("ContextSender:output")
+            data = None
+            async with channel:
+                data = await wait_for(channel.get_data(), timeout=5)
+                self.assertIsNotNone(data)
+                self.assertTrue(channel.is_alive())
+                await proxy.stopSending()
+
+                # Start fresh to reconnect
+                await output_device.slotKillDevice()
+
+                self.assertFalse(channel.is_alive())
+                output_device = Sender({"_deviceId_": "ContextSender"})
+                await output_device.startInstance()
+                # Wait for connection
+                # NOTE: `proxy` is not being updated here. But it is fine,
+                #       since we are awaiting the connection and the device
+                #       will be implicitly online.
+                await channel.wait_connected()
+                self.assertTrue(channel.is_alive())
+
+                # Get data again
+                data = None
+                await proxy.startSending()
+                data = await wait_for(channel.get_data(), timeout=5)
+                self.assertIsNotNone(data)
+
+            # Leave context and get data again
+            data = None
+            async with channel:
+                data = await wait_for(channel.get_data(), timeout=5)
+                self.assertIsNotNone(data)
+            await proxy.stopSending()
+            self.assertFalse(channel.is_alive())
+        finally:
+            await output_device.slotKillDevice()
+
+    @async_tst
+    async def test_pipeline_context_no_output(self):
+        """Test that connecting to a channel is not blocking"""
+        channel = PipelineContext("NoDeviceOnline:output")
+        async with channel:
+            try:
+                await wait_for(channel.wait_connected(), timeout=2)
+            except TimeoutError:
+                pass
+            else:
+                self.fail("Channel did not timeout correctly on connection")
+
+    @async_tst
     async def test_noded_output_channel(self):
         """Test the operation of a noded output channel sending"""
         NUM_DATA = 5
@@ -615,57 +690,58 @@ class RemotePipelineTest(DeviceTest):
         await receiver.connectInputChannel("InjectedSender")
         try:
             with (await getDevice("InjectedSender")) as sender_proxy, \
-                await getDevice("ReceiverInjectedSender") as input_proxy:
-                    self.assertTrue(isAlive(sender_proxy))
-                    self.assertTrue(isAlive(input_proxy))
+                    await getDevice("ReceiverInjectedSender") as input_proxy:
+                self.assertTrue(isAlive(sender_proxy))
+                self.assertTrue(isAlive(input_proxy))
 
-                    self.assertEqual(receiver.received, 0)
-                    self.assertEqual(input_proxy.received, 0)
+                self.assertEqual(receiver.received, 0)
+                self.assertEqual(input_proxy.received, 0)
 
-                    # Sender and receiver are online, but no output
-                    await sender_proxy.injectOutput()
-                    # output is injected, wait for connection
-                    await sleep(3)
-                    received = False
+                # Sender and receiver are online, but no output
+                await sender_proxy.injectOutput()
+                # output is injected, wait for connection
+                await sleep(3)
+                received = False
 
-                    def handler(data, meta):
-                        """Output handler to see if we received data
-                        """
-                        nonlocal received
-                        received = True
+                def handler(data, meta):
+                    """Output handler to see if we received data
+                    """
+                    nonlocal received
+                    received = True
 
-                    self.assertEqual(received, False)
-                    sender_proxy.output.setDataHandler(handler)
-                    sender_proxy.output.connect()
-                    for _ in range(NUM_DATA):
-                        await sender_proxy.sendData()
-                    self.assertEqual(received, True)
+                self.assertEqual(received, False)
+                sender_proxy.output.setDataHandler(handler)
+                sender_proxy.output.connect()
+                for _ in range(NUM_DATA):
+                    await sender_proxy.sendData()
+                self.assertEqual(received, True)
 
-                    # Receiver device
-                    self.assertTrue(receiver.connected)
-                    self.assertGreater(receiver.received, 0)
-                    self.assertGreater(input_proxy.received, 0)
+                # Receiver device
+                self.assertTrue(receiver.connected)
+                self.assertGreater(receiver.received, 0)
+                self.assertGreater(input_proxy.received, 0)
 
-                    # Kill the device and bring up again
-                    await output_device.slotKillDevice()
+                # Kill the device and bring up again
+                await output_device.slotKillDevice()
 
-                    # Have to start a fresh device object for inject
-                    output_device = InjectedSender({"_deviceId_": "InjectedSender"})
-                    await output_device.startInstance()
-                    await waitUntil(lambda: isAlive(sender_proxy) is True)
-                    # Sender and receiver are online, but no output
-                    await sender_proxy.injectOutput()
-                    # output is injected, wait for connection
-                    await sleep(3)
+                # Have to start a fresh device object for inject
+                output_device = InjectedSender(
+                    {"_deviceId_": "InjectedSender"})
+                await output_device.startInstance()
+                await waitUntil(lambda: isAlive(sender_proxy) is True)
+                # Sender and receiver are online, but no output
+                await sender_proxy.injectOutput()
+                # output is injected, wait for connection
+                await sleep(3)
 
-                    # Send data again
-                    received = False
-                    await receiver.resetCounter()
-                    for _ in range(NUM_DATA):
-                        await sender_proxy.sendData()
-                    self.assertEqual(received, True)
-                    self.assertGreater(receiver.received, 0)
-                    self.assertGreater(input_proxy.received, 0)
+                # Send data again
+                received = False
+                await receiver.resetCounter()
+                for _ in range(NUM_DATA):
+                    await sender_proxy.sendData()
+                self.assertEqual(received, True)
+                self.assertGreater(receiver.received, 0)
+                self.assertGreater(input_proxy.received, 0)
         finally:
             await output_device.slotKillDevice()
             await receiver.slotKillDevice()
