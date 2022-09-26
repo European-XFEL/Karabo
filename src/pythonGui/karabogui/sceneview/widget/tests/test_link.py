@@ -15,9 +15,10 @@ class TestSceneLink(GuiTestCase):
 
     def setUp(self):
         super().setUp()
+        false_font = "Times New Roman,10,-1,5,50,0,0,0,0,0"
         self.model = SceneLinkModel(
             text="SceneLink Text", foreground='black',
-            x=0, y=0, width=100, height=100,
+            x=0, y=0, width=100, height=100, font=false_font,
             target="name:122345677")
 
         self.main_widget = QWidget()
@@ -32,6 +33,10 @@ class TestSceneLink(GuiTestCase):
 
     # -----------------------------------------------------------------------
     # Actual tests
+
+    def test_font_replacement(self):
+        font = self.widget.model.font
+        self.assertEqual(font, "Source Sans Pro,10,-1,5,50,0,0,0,0,0")
 
     def test_basics(self):
         model_rect = QRect(self.model.x, self.model.y,
