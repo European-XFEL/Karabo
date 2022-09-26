@@ -148,6 +148,10 @@ hiddenimports = get_controllers_modules() + [
     'karabogui.topology.api',
 ] + get_gui_extensions()
 
+modules_to_exclude = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-qt',
+                      'pytest-subtests', 'conda-package-handling', 'conda',
+                      'flake8', 'isort', 'pre-commit', 'pyflakes']
+
 
 block_cipher = None
 
@@ -167,7 +171,7 @@ karabo_gui = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=["./extensions_hook/pkg_resources_hook.py"],
-    excludes=[],
+    excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -183,7 +187,7 @@ alarm_gui = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -199,7 +203,7 @@ karabo_cinema = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -215,7 +219,7 @@ karabo_theatre = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=modules_to_exclude,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
