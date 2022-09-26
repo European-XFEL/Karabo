@@ -9,6 +9,14 @@ from urllib.parse import parse_qs
 from qtpy.QtGui import QBrush, QColor
 
 from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE_STATE
+from karabo.native import AccessMode
+from karabogui.binding.api import StringBinding
+
+
+def is_writable_string(binding):
+    """Return if the `binding` is a writable string binding"""
+    writable = binding.access_mode is AccessMode.RECONFIGURABLE
+    return isinstance(binding, StringBinding) and writable
 
 
 def is_state_display_type(binding):
