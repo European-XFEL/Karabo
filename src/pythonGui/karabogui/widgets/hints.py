@@ -26,10 +26,10 @@ LOCALE = QLocale("en_US")
 class KaraboSceneWidget:
 
     def __init__(self, *args, model=None, **kwargs):
-        super(KaraboSceneWidget, self).__init__(*args, **kwargs)
+        """Check and substitute the font with the application fonts"""
         self.model = model
-        # Check and substitute the font with the application fonts
         substitute_font(model)
+        super().__init__(*args, **kwargs)
 
     def sizeHint(self):
         """On old GUI, the geometry of the widgets in a layout are saved
@@ -39,7 +39,7 @@ class KaraboSceneWidget:
         if self._has_model_pos():
             size = QSize(self.model.width, self.model.height)
         if size.isEmpty():
-            size = super(KaraboSceneWidget, self).sizeHint()
+            size = super().sizeHint()
         return size
 
     def minimumSizeHint(self):
@@ -50,7 +50,7 @@ class KaraboSceneWidget:
         if self._has_model_pos():
             size = QSize(self.model.width, self.model.height)
         if size.isEmpty():
-            size = super(KaraboSceneWidget, self).minimumSizeHint()
+            size = super().minimumSizeHint()
         return size
 
     def _has_model_pos(self):
