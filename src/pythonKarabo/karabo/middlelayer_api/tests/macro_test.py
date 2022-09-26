@@ -16,6 +16,7 @@ from karabo.middlelayer_api.device_client import (
     updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.macro import Macro, MacroSlot
+from karabo.middlelayer_api.pipeline import OutputChannel, PipelineContext
 from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
 from karabo.middlelayer_api.tests.eventloop import (
@@ -36,6 +37,42 @@ class Superslot(Slot):
 class MyNode(Configurable):
     value = Int(defaultValue=7)
     counter = Int(defaultValue=-1)
+
+
+def get_channel_node(displayed_name=""):
+    class ChannelNode(Configurable):
+        data = Int(
+            displayedName=displayed_name,
+            defaultValue=0)
+
+    return ChannelNode
+
+
+class RemotePipeline(Device):
+    running = False
+
+    output = OutputChannel(
+        get_channel_node(),
+        accessMode=AccessMode.READONLY)
+
+    @Slot()
+    async def startSending(self):
+        background(self._keep_sending())
+
+    @Slot()
+    async def stopSending(self):
+        self.running = False
+
+    async def _keep_sending(self):
+        self.running = True
+        while self.running:
+            await self.sendData()
+            await sleep(0.1)
+
+    @Slot()
+    async def sendData(self):
+        self.output.schema.data = self.output.schema.data.value + 1
+        await self.output.writeData()
 
 
 class Remote(Device):
@@ -171,6 +208,7 @@ class NodeSlow(Configurable):
         """Just sleep a bit for state change"""
         sleep(0.1)
 
+
 class LocalMacroSlot(Macro):
 
     exc_slot = None
@@ -224,9 +262,11 @@ class Tests(DeviceTest):
         cls.local = Local(_deviceId_="local", project="test", module="test",
                           may_start_thread=False)
         cls.remote = Remote(dict(_deviceId_="remote"))
+        cls.pipe_remote = RemotePipeline(dict(_deviceId_="piperemote"))
         cls.localMacro = LocalMacroSlot(_deviceId_="localMacroSlot",
                                         project="no", module="test")
-        with cls.deviceManager(cls.remote, cls.localMacro, lead=cls.local):
+        with cls.deviceManager(cls.remote, cls.localMacro, cls.pipe_remote,
+                               lead=cls.local):
             yield
 
     @async_tst
@@ -255,6 +295,25 @@ class Tests(DeviceTest):
         finally:
             await localMacro.set_state(State.PASSIVE)
             await localMacro.slotKillDevice()
+
+    @sync_tst
+    def test_macro_pipeline_context(self):
+        """Test the sync operation of a pipeline context channel
+
+        Note: The reconnection of the context is tested in the remote
+        pipeline test.
+        """
+        proxy = getDevice("piperemote")
+        proxy.startSending()
+        channel = PipelineContext("piperemote:output")
+        data = None
+        with channel:
+            channel.wait_connected()
+            data = channel.get_data()
+            self.assertIsNotNone(data)
+            self.assertTrue(channel.is_alive())
+            proxy.stopSending()
+        self.assertFalse(channel.is_alive())
 
     @sync_tst
     def test_macro_slotter_sync(self):
