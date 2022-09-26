@@ -7,16 +7,16 @@ from pint import DimensionalityError
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Attribute, Bool, ByteArray, Char,
-    ComplexFloat, Configurable, Double, Float, Hash, HashList, Image,
-    ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
-    NDArray, NoneValue, NumpyVector, QuantityValue, RegexString, Schema, Slot,
-    String, TableValue, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
-    UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorComplexFloat,
-    VectorDouble, VectorFloat, VectorHash, VectorInt8, VectorInt16,
-    VectorInt32, VectorInt64, VectorRegexString, VectorString, VectorUInt8,
-    VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary, encodeBinary,
-    get_descriptor_from_data, unit_registry as unit)
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
+    ByteArray, Char, ComplexFloat, Configurable, Double, Float, Hash, HashList,
+    Image, ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType,
+    MetricPrefix, NDArray, NoneValue, NumpyVector, QuantityValue, RegexString,
+    Schema, Slot, String, TableValue, Timestamp, Type, TypeHash, TypeNone,
+    TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar,
+    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
+    VectorInt16, VectorInt32, VectorInt64, VectorRegexString, VectorString,
+    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary,
+    encodeBinary, get_descriptor_from_data, unit_registry as unit)
 
 
 class ArrayTestDevice(Configurable):
@@ -1149,9 +1149,8 @@ class Tests(TestCase):
         d = Int16(strict=False, defaultValue=2, requiredAccessLevel=2)
         self.assertEqual(d.requiredAccessLevel, AccessLevel.OPERATOR)
 
-        # ArchivePolicy is deprecated
         d = Int16(strict=False, defaultValue=2, archivePolicy=2)
-        self.assertEqual(d.archivePolicy, None)
+        self.assertEqual(d.archivePolicy, ArchivePolicy.EVERY_1S)
 
     def test_descriptor_from_data(self):
         data = [
