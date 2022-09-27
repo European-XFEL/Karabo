@@ -1,6 +1,7 @@
 # flake8: noqa
 from .button_delegate import TableButtonDelegate
-from .controller import BaseFilterTableController, BaseTableController
+from .controller import (
+    BaseFilterTableController, BaseTableController, TableSortFilterModel)
 from .delegates import (
     BoolButtonDelegate, ColorBindingDelegate, ColorNumberDelegate,
     ProgressBarDelegate, StringButtonDelegate, get_display_delegate,
