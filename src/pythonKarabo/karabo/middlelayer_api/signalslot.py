@@ -301,7 +301,7 @@ class SignalSlotable(Configurable):
             ch = get_property(self, ioChannelId)
         except AttributeError:
             ch = None
-        if isinstance(ch, NetworkOutput):
+        if isinstance(ch, NetworkOutput) and ch.alive:
             ret = await ch.getInformation("{}:{}".format(
                 self.deviceId, ioChannelId))
             ret["memoryLocation"] = "remote"
