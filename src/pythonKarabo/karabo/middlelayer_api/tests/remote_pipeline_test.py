@@ -591,8 +591,18 @@ class RemotePipelineTest(DeviceTest):
         """This test must be executed last"""
         self.assertIsNotNone(self.alice.output.server.sockets)
         self.assertGreater(len(self.alice.output.active_channels), 0)
+        self.assertTrue(self.alice.output.alive)
+        success, h = await self.alice.slotGetOutputChannelInformation(
+            "output", None)
+        self.assertTrue(success)
+        self.assertFalse(h.empty())
         await self.alice.output.close()
         self.assertEqual(self.alice.output.server.sockets, ())
+        self.assertFalse(self.alice.output.alive)
+        success, h = await self.alice.slotGetOutputChannelInformation(
+            "output", None)
+        self.assertFalse(success)
+        self.assertTrue(h.empty())
         self.assertEqual(len(self.alice.output.active_channels), 0)
 
     @async_tst
