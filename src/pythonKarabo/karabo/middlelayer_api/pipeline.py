@@ -855,6 +855,8 @@ class NetworkOutput(Configurable):
     displayType = 'OutputChannel'
     classId = 'OutputChannel'
     server = None
+    # By default, an output is considered alive until closed
+    alive = True
 
     port = UInt32(
         displayedName="Port",
@@ -1095,8 +1097,9 @@ class NetworkOutput(Configurable):
 
     async def close(self):
         """ Cancel all channels and close the server sockets"""
+        self.alive = False
         for channel in self.active_channels:
-            if channel and not channel.done():
+            if channel:
                 channel.cancel()
         self.active_channels = WeakSet()
         # Finally close the async server and the sockets
