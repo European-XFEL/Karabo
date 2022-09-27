@@ -363,7 +363,7 @@ class BaseTableController(BaseBindingController):
 # Filter Table Controller
 
 
-class SortFilterModel(QSortFilterProxyModel):
+class TableSortFilterModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -431,7 +431,7 @@ class BaseFilterTableController(BaseTableController):
 
     def createFilterModel(self, item_model):
         """Create the filter model for the table"""
-        filter_model = SortFilterModel(self.tableWidget())
+        filter_model = TableSortFilterModel(self.tableWidget())
         filter_model.setSourceModel(item_model)
         key = self.model.filterKeyColumn
         filter_model.setFilterKeyColumn(key)
