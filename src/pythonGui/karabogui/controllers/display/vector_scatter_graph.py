@@ -64,6 +64,13 @@ class DisplayVectorScatterGraph(BaseBindingController):
 
         return False
 
+    def remove_proxy(self, proxy):
+        if self._y_proxy is not None:
+            self._y_proxy = None
+            return True
+
+        return False
+
     def value_update(self, proxy):
         value = proxy.value
         if proxy is self._x_proxy:

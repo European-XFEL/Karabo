@@ -58,3 +58,21 @@ class TestVectorScatterGraph(GuiTestCase):
             self.assertEqual(controller._plot.opts['size'], 2.7)
 
         controller.destroy()
+
+    def test_removal_property(self):
+        controller = DisplayVectorScatterGraph(proxy=self.x,
+                                               model=VectorScatterGraphModel())
+        controller.create(None)
+        controller.visualize_additional_property(self.y)
+        set_proxy_value(self.x, 'x', [2.3, 4.5, 7.9])
+        set_proxy_value(self.y, 'y', [1, 2, 3])
+
+        curve = self.controller._plot
+        x, y = curve.getData()
+        np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
+        np.testing.assert_array_almost_equal(y, [1, 2, 3])
+
+        self.assertTrue(controller.remove_additional_property(self.y))
+        self.assertIsNone(controller._y_proxy)
+        # Removing more does not hurt
+        self.assertFalse(controller.remove_additional_property(self.y))
