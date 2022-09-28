@@ -33,7 +33,7 @@ from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.eventloop import (
     EventLoop, KaraboFuture, NoEventLoop, synchronize, synchronize_notimeout)
 from karabo.middlelayer_api.injectable import Injectable
-from karabo.middlelayer_api.json import KaraboJSONEncoder
+from karabo.middlelayer_api.jsonencoder import KaraboJSONEncoder
 from karabo.middlelayer_api.macro import (
     EventThread, Macro, MacroSlot, Monitor, RemoteDevice)
 from karabo.middlelayer_api.pipeline import (
