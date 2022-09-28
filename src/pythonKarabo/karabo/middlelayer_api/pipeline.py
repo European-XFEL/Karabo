@@ -25,6 +25,7 @@ from .synchronization import background, firstCompleted, synchronize
 DEFAULT_MAX_QUEUE_LENGTH = 2
 IPTOS_LOWDELAY = 0x10
 RECONNECT_TIMEOUT = 2
+SERVER_WAIT_ONLINE = 5
 
 
 def get_hostname_from_interface(address_range):
@@ -937,12 +938,21 @@ class NetworkOutput(Configurable):
         self.shared_queue = CancelQueue(0 if self.noInputShared in [
                                         "queue", "queueDrop"] else 1)
 
+    async def wait_server_online(self):
+        """Wait until the serving tcp server comes online"""
+        total_time = SERVER_WAIT_ONLINE
+        interval_time = 0.05  # [s]
+        while self.server is None:
+            await sleep(interval_time)
+            total_time -= interval_time
+            if total_time <= 0:
+                break
+        assert self.server is not None, "Server should be available"
+
     async def getInformation(self, channelName):
         self.channelName = channelName
-        # We are called when we just started, hence we wait for our
-        # server to come online!
-        while self.server is None:
-            await sleep(0.05)
+        # We might be called when we just started, hence we wait
+        await self.wait_server_online()
         host, port = self.server.sockets[0].getsockname()
         return Hash("connectionType", "tcp", "hostname", host,
                     "port", numpy.uint32(port))
@@ -1097,15 +1107,17 @@ class NetworkOutput(Configurable):
 
     async def close(self):
         """ Cancel all channels and close the server sockets"""
+        if not self.alive:
+            return
+
         self.alive = False
         for channel in self.active_channels:
             if channel:
                 channel.cancel()
         self.active_channels = WeakSet()
-        # Finally close the async server and the sockets
-        if self.server is not None:
-            self.server.close()
-            await self.server.wait_closed()
+        await self.wait_server_online()
+        self.server.close()
+        await self.server.wait_closed()
 
 
 class SchemaNode(Node):
