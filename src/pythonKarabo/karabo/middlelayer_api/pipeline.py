@@ -718,7 +718,7 @@ class OutputProxy(SubProxyBase):
 
         NOTE: The handler must take two arguments ``data`` and ``meta``.
         """
-        if self.initialized:
+        if self.task is not None:
             raise RuntimeError("Setting a data handler must happen before "
                                "connecting to the output channel!")
         self._data_handler = handler
@@ -728,7 +728,7 @@ class OutputProxy(SubProxyBase):
 
         NOTE: The handler must take one argument ``channelname``.
         """
-        if self.initialized:
+        if self.task is not None:
             raise RuntimeError("Setting an endOfStream handler must happen "
                                "before connecting to the output channel!")
         self._eos_handler = handler
@@ -738,7 +738,7 @@ class OutputProxy(SubProxyBase):
 
         NOTE: The handler must take one argument ``channelname``.
         """
-        if self.initialized:
+        if self.task is not None:
             raise RuntimeError("Setting a connected handler must happen "
                                "before connecting to the output channel!")
         self._connect_handler = handler
@@ -748,7 +748,7 @@ class OutputProxy(SubProxyBase):
 
         NOTE: The handler must take one argument ``channelname``.
         """
-        if self.initialized:
+        if self.task is not None:
             raise RuntimeError("Setting a close handler must happen "
                                "before connecting to the output channel!")
         self._close_handler = handler
@@ -814,6 +814,7 @@ class OutputProxy(SubProxyBase):
             self._parent._remote_output_channel.remove(self)
         if self.task is not None and not self.task.done():
             self.task.cancel()
+            self.task = None
 
 
 class ConnectionTable(Configurable):
