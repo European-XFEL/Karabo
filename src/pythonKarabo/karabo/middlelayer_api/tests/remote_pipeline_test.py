@@ -605,6 +605,9 @@ class RemotePipelineTest(DeviceTest):
         self.assertTrue(h.empty())
         self.assertEqual(len(self.alice.output.active_channels), 0)
 
+        # Closing multiple times does not hurt
+        await self.alice.output.close()
+
     @async_tst
     async def test_pipeline_context(self):
         """Test the operation of a pipeline context channel"""
