@@ -14,8 +14,9 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import KaraboError
 from karabo.native.data import (
-    AccessLevel, AccessMode, Assignment, DaqPolicy, Hash, HashByte, HashList,
-    LeafType, MetricPrefix, NodeType, Schema, Unit, hashtype_from_string)
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy, Hash,
+    HashByte, HashList, LeafType, MetricPrefix, NodeType, Schema, Unit,
+    hashtype_from_string)
 
 from .basetypes import (
     BoolValue, EnumValue, KaraboValue, NoneValue, QuantityValue, StringValue,
@@ -389,14 +390,14 @@ class Descriptor(object):
     assignment = Attribute(Assignment.OPTIONAL, dtype=Assignment)
     displayType = Attribute(dtype=str)
     requiredAccessLevel = Attribute(dtype=AccessLevel)
+    archivePolicy = Attribute(dtype=ArchivePolicy)
     allowedStates = None
-    archivePolicy = None
     tags = None
     classId = None
 
     def __init__(self, strict=True, key="(unknown key)",
                  allowedStates=None, tags=None, requiredAccessLevel=None,
-                 classId=None, archivePolicy=None, **kwargs):
+                 classId=None, **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -466,6 +467,8 @@ class Descriptor(object):
             attrs["allowedStates"] = [s.value for s in self.allowedStates]
         if self.tags is not None:
             attrs["tags"] = list(self.tags)
+        if self.archivePolicy is not None:
+            attrs["archivePolicy"] = self.archivePolicy
         if self.classId is not None:
             attrs["classId"] = self.classId
 
