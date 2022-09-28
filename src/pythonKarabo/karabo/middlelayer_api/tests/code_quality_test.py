@@ -1,37 +1,12 @@
-"""
-Test the middle layer code against PEP8
-
-There are two exception lists which list the number of expected
-warnings per file. Update as needed.
-"""
-import os
+import os.path as op
+import subprocess
 import sys
-from unittest import TestCase, main
 
-from pycodestyle import Checker
-
-from karabo import middlelayer
-
-pep8_exceptions = {
-}
+import karabo.middlelayer_api as middlelayer_api
 
 
-class Tests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        mods = (obj.__module__ for obj in middlelayer.__dict__.values()
-                if hasattr(obj, "__module__") and
-                obj.__module__.startswith("karabo"))
-        cls.modules = {sys.modules[m].__file__ for m in mods}
-
-    def test_pep8(self):
-        for mod in self.modules:
-            base = os.path.basename(mod)
-            with self.subTest(module=base):
-                checker = Checker(mod)
-                errs = checker.check_all()
-                self.assertEqual(errs, pep8_exceptions.get(base, 0))
-
-
-if __name__ == "__main__":
-    main()
+def test_code_quality_flake8():
+    # Just run flake8 as if from the commandline
+    command = [sys.executable, '-m', 'flake8',
+               op.dirname(op.abspath(middlelayer_api.__file__))]
+    subprocess.check_call(command)
