@@ -53,6 +53,7 @@ class Nested(Configurable):
 class ChannelNode(Configurable):
     data = Int32(defaultValue=0)
 
+
 class CrazyRemote(Device):
 
     counter = 0
@@ -1376,7 +1377,7 @@ class Tests(DeviceTest):
 
     @async_tst
     async def test_crazy_injection_destruction(self):
-        deviceId =  "crazy-test-device"
+        deviceId = "crazy-test-device"
         d = CrazyRemote({"_deviceId_": deviceId})
         await d.startInstance()
         self.assertFalse(d.destructed)
@@ -1398,7 +1399,7 @@ class Tests(DeviceTest):
     @coroutine
     def test_async_yield_from_connectDevice(self):
         """Test the old syntax for connectDevice"""
-        deviceId =  "yield_from_remote-device"
+        deviceId = "yield_from_remote-device"
         remote = Remote({"_deviceId_": deviceId})
         try:
             yield from remote.startInstance()
@@ -1417,7 +1418,7 @@ class Tests(DeviceTest):
     @coroutine
     def test_async_yield_from_getDevice(self):
         """Test the old syntax for getDevice"""
-        deviceId =  "another_yield_from_remote-device"
+        deviceId = "another_yield_from_remote-device"
         remote = Remote({"_deviceId_": deviceId})
         try:
             yield from remote.startInstance()
@@ -1441,7 +1442,7 @@ class Tests(DeviceTest):
     @coroutine
     def test_async_with_yield_from_getDevice(self):
         """Test the old syntax for getDevice"""
-        deviceId =  "another_with_yield_from_remote-device"
+        deviceId = "another_with_yield_from_remote-device"
         remote = Remote({"_deviceId_": deviceId})
         try:
             yield from remote.startInstance()
