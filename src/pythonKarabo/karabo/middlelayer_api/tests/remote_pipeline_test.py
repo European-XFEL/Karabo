@@ -2,6 +2,8 @@ from asyncio import Future, TimeoutError, sleep, wait_for
 from contextlib import contextmanager
 from unittest import main
 
+import pytest
+
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext, Slot,
@@ -516,7 +518,7 @@ class RemotePipelineTest(DeviceTest):
             self.assertGreater(ts2, ts1)
 
         del proxy
-        # No we kill the sender and verify our closed handler is called
+        # Now we kill the sender and verify our closed handler is called
         await output_device.slotKillDevice()
         self.assertEqual(closed, True)
         self.assertEqual(closed_name, "outputdevice:output")
@@ -725,6 +727,19 @@ class RemotePipelineTest(DeviceTest):
                 for _ in range(NUM_DATA):
                     await sender_proxy.sendData()
                 self.assertEqual(received, True)
+
+                with pytest.raises(RuntimeError):
+                    sender_proxy.output.setDataHandler(handler)
+
+                def new_handler(data, meta):
+                    nonlocal received
+                    received = True
+
+                # Disconnect and reattach a handler
+                sender_proxy.output.disconnect()
+                assert sender_proxy.output.task is None
+                sender_proxy.output.setDataHandler(new_handler)
+                sender_proxy.output.connect()
 
                 # Receiver device
                 self.assertTrue(receiver.connected)
