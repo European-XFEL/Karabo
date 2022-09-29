@@ -4,9 +4,9 @@ from unittest import main
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
-    InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext, Slot,
-    State, Timestamp, UInt32, background, call, coslot, getDevice, isAlive,
-    setWait, waitUntil)
+    InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
+    PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
+    getDevice, isAlive, setWait, waitUntil)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -651,6 +651,12 @@ class RemotePipelineTest(DeviceTest):
                 self.assertIsNotNone(data)
             await proxy.stopSending()
             self.assertFalse(channel.is_alive())
+
+            # Make sure we can show a repr in karabo!
+            data, meta = data
+            self.assertIsNotNone(repr(data))
+            self.assertIsNotNone(repr(meta))
+            self.assertIsInstance(meta, PipelineMetaData)
         finally:
             await output_device.slotKillDevice()
 
