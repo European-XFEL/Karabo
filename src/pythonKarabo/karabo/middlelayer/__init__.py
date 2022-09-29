@@ -38,7 +38,7 @@ from karabo.middlelayer_api.macro import (
     EventThread, Macro, MacroSlot, Monitor, RemoteDevice)
 from karabo.middlelayer_api.pipeline import (
     InputChannel, NetworkInput, NetworkOutput, OutputChannel, OutputProxy,
-    PipelineContext)
+    PipelineContext, PipelineMetaData)
 from karabo.middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxyNodeBase as ProxyNode, ProxySlotBase as ProxySlot,
     SubProxyBase as SubProxy)
