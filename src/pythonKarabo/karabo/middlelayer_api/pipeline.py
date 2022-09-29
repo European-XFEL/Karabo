@@ -88,6 +88,9 @@ class RingQueue(CancelQueue):
 
 
 class PipelineMetaData(ProxyBase):
+    # Abstract interface configurable
+    _allattrs = ["source", "timestamp"]
+
     source = String(key="source")
     timestamp = Bool(key="timestamp")
 
