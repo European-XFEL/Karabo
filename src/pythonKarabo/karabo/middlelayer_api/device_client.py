@@ -432,13 +432,15 @@ def getHistory(prop, begin,
                        timeout=timeout, verbose=verbose)
 
 
-def printHistory(prop, begin, end=None, maxNumData=100):
+@synchronize
+async def printHistory(prop, begin, end=None, maxNumData=100):
     """
     Print the history of a device property.
 
     See getHistory about arguments and their meaning and format
     """
-    res = getHistory(prop, begin, end, maxNumData=maxNumData, verbose=True)
+    res = await getHistory(prop, begin, end, maxNumData=maxNumData,
+                           verbose=True)
 
     def create_lines():
         for tup in res:
