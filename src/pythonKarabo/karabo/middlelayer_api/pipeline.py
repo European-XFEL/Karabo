@@ -1115,11 +1115,13 @@ class NetworkOutput(Configurable):
             return
 
         self.alive = False
-        for channel in self.active_channels:
-            if channel:
-                channel.cancel()
-        self.active_channels = WeakSet()
         await self.wait_server_online()
+        # Perform cleanup only after server is online
+        for channel_task in list(self.active_channels):
+            channel_task.cancel()
+            await channel_task
+
+        self.active_channels = WeakSet()
         self.server.close()
         await self.server.wait_closed()
 
