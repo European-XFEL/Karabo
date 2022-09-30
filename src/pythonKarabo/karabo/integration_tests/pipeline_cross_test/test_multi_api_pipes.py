@@ -355,10 +355,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
         #       'outputCounter' update, so out_count may rarely appear too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
-        # Test that duration and frequency match by +/-25%:
+        # Test that duration and frequency match by +25/-50%:
         cycle_time = max(1.0/sender_freq, processing_time/1000.0)  # for wait, processing_time "holds" the sender.
         expected_out_count = elapsed_time / cycle_time
-        min_expected = 0.75 * expected_out_count
+        # 0.75 * expected_out_count fails sometimes,
+        # e.g. in https://git.xfel.eu/Karabo/Framework/-/jobs/329889
+        min_expected = 0.5 * expected_out_count
         max_expected = 1.25 * expected_out_count
         self.assertTrue(min_expected < out_count < max_expected,
                         "# of output data items, {}, is not in the expected interval, ({:.2f}, {:.2f})."
