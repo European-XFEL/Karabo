@@ -114,7 +114,8 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+        flags = (Qt.ItemIsEnabled | Qt.ItemIsSelectable |
+                 Qt.ItemIsEditable | Qt.ItemNeverHasChildren)
         key = self._header[index.column()]
         # Get an enum for the AccessMode
         binding = self._bindings[key]
