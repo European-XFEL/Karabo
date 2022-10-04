@@ -906,35 +906,40 @@ class Tests(DeviceTest):
         # at first the code is missing in the tests.
         self.assertEqual(self.local.code, "")
         request = Hash("name", "macro")
-        bad_request = Hash("name", "non existing macro")
 
-        # check that we can handle a non existing macro correctly
-        result = self.local.requestMacro(bad_request)
-        self.assertIn("payload", result)
-        self.assertIn("success", result["payload"])
-        self.assertFalse(result["payload.success"])
-
-        # check that we can handle an existing macro correctly
-        # when the code is not set
+        # No code attached
         result = self.local.requestMacro(request)
-        self.assertIn("payload", result)
-        self.assertIn("success", result["payload"])
-        self.assertFalse(result["payload.success"])
+        self.assertTrue(result["payload.success"])
+        self.assertEqual(result["payload.data"], "")
 
         # check that we can handle an existing macro correctly
         example_code = "The macro's own code."
-        self.local.store_macro_code(example_code)
+        self.local.code = example_code
         self.assertIn("macro", self.local.availableMacros.value)
         self.assertEqual(self.local.code, example_code)
+
+        # Check for both correct and wrong name
         result = self.local.requestMacro(request)
         self.assertTrue(result["payload.success"])
         self.assertEqual(result["payload.data"], example_code)
 
-        # check that we can handle a non existing macro correctly
+        bad_request = Hash("name", "nomacro")
         result = self.local.requestMacro(bad_request)
-        self.assertIn("payload", result)
-        self.assertIn("success", result["payload"])
         self.assertFalse(result["payload.success"])
+        self.assertEqual(result["payload.data"], example_code)
+
+    @sync_tst
+    def test_macro_klass_inheritance(self):
+        """Test that we always have the correct macro instance"""
+        class B(Macro):
+            """Lower level macro base class"""
+
+        class A(B):
+            """Top level macro class"""
+
+        macro = A()
+        self.assertTrue(issubclass(macro.klass, A))
+        self.assertTrue(issubclass(macro.klass, B))
 
 
 class AbstractMacroTest(DeviceTest):
