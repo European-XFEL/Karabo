@@ -7,7 +7,7 @@ from karabogui.binding.api import BoolBinding, StringBinding
 
 from ..utils import (
     create_brushes, get_button_attributes, has_confirmation,
-    is_state_display_type, is_writable_string, list2string, parse_table_link,
+    is_state_display_type, is_writable_binding, list2string, parse_table_link,
     string2list)
 
 
@@ -21,15 +21,16 @@ def test_display_type_state():
 def test_is_writable_string():
     string = StringBinding(
         attributes={KARABO_SCHEMA_ACCESS_MODE: AccessMode.RECONFIGURABLE})
-    assert is_writable_string(string)
+    assert is_writable_binding(string)
 
     string = StringBinding(
         attributes={KARABO_SCHEMA_ACCESS_MODE: AccessMode.READONLY})
-    assert not is_writable_string(string)
+    assert not is_writable_binding(string)
 
     boolean = BoolBinding(
         attributes={KARABO_SCHEMA_ACCESS_MODE: AccessMode.RECONFIGURABLE})
-    assert not is_writable_string(boolean)
+    assert is_writable_binding(boolean)
+    assert not is_writable_binding(boolean, StringBinding)
 
 
 def test_convert_string_list():
