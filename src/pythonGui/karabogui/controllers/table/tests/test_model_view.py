@@ -122,6 +122,9 @@ class TestTableModelView(GuiTestCase):
         if size is not None:
             self.assertEqual(data, size)
 
+    def test_focuspolicy(self):
+        self.assertEqual(self.controller.widget.focusPolicy(), Qt.StrongFocus)
+
     def test_deviceId(self):
         deviceId = self.controller.getInstanceId()
         self.assertEqual(deviceId, "TestDevice")
