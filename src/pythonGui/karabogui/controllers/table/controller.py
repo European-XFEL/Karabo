@@ -95,7 +95,7 @@ class BaseTableController(BaseBindingController):
                        else self._context_menu)
             widget.customContextMenuRequested.connect(handler)
             widget.setAcceptDrops(True)
-        widget.setFocusPolicy(Qt.NoFocus if ro else Qt.ClickFocus)
+        widget.setFocusPolicy(Qt.NoFocus if ro else Qt.StrongFocus)
         if self._item_model is not None:
             self._item_model.set_readonly(self._readonly)
             # We must set the delegates firstly on readOnly information!
