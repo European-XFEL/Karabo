@@ -110,10 +110,11 @@ def test_default_values():
     # Make sure the extracted default conversion is minimal
     # It should include properties with default values, options, or node types
     config = extract_configuration(binding)
-    default_props = ('a', 'b', 'm', 'h1', 'i1', 'j1')
+    default_props = ('a', 'b', 'h1', 'i1', 'j1')
     for prop in default_props:
         assert prop in config, '{!r} missing from config'.format(prop)
-
+    assert "k1" not in config
+    assert 'm' not in config
     # Since no user edits, an empty Hash should have been extracted
     # XXX: ListOfNodeBinding is always extracted
     config = extract_edits(schema, binding)
