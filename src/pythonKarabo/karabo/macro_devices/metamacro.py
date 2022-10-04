@@ -1,5 +1,3 @@
-from asyncio import gather
-
 from karabo.common.sanity_check import validate_macro
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Device, Macro, Overwrite, String)
@@ -28,8 +26,7 @@ class MetaMacro(Device):
 
     def __init__(self, config):
         super().__init__(config)
-        Macro.subclasses = []
-
+        Macro.klass = None
         not_valid = validate_macro(self.code)
         if not_valid:
             msg = ("The macro cannot be started.\n"
@@ -39,31 +36,24 @@ class MetaMacro(Device):
         try:
             code = compile(self.code, self.module, "exec")
             exec(code, {})
-            self.classes = Macro.subclasses
+            # Get the macro top level class
+            self.klass = Macro.klass
         finally:
-            Macro.subclasses = []
+            Macro.klass = None
 
     def startInstance(self, server=None, broadcast=True):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
+        deviceId = self.deviceId.value
+        klass = self.klass
         parameters = {
-            '_serverId_': self.serverId.value,
-            'hostName': self.hostName.value,
-            'uuid': self.uuid.value,
-            'module': self.module.value,
-            'visibility': self.visibility.value,
+            "_deviceId_":  f"{deviceId}-{klass.__name__}",
+            "_serverId_": self.serverId.value,
+            "hostName": self.hostName.value,
+            "uuid": self.uuid.value,
+            "module": self.module.value,
+            "visibility": self.visibility.value,
+            "code": self.code.value,
         }
-        objs = []
-        for klass in self.classes:
-            # The extraction of the value attribute is not strictly needed
-            # since we format `self.deviceId` in a string.
-            # By using the value attribute we isolate this code from the
-            # representation of a `String`
-            deviceId = self.deviceId.value
-            parameters["_deviceId_"] = f"{deviceId}-{klass.__name__}"
-            macro = klass(parameters)
-            macro.store_macro_code(self.code.value)
-            objs.append(macro)
-
-        return gather(*(o.startInstance(server,
-                                        broadcast=broadcast) for o in objs))
+        macro = klass(parameters)
+        return macro.startInstance(server, broadcast=broadcast)
