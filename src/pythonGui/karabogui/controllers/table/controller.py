@@ -11,14 +11,15 @@ from traits.api import Bool, Dict, Instance, Type, Undefined, WeakRef
 
 import karabogui.icons as icons
 from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
-from karabogui.binding.api import get_default_value, get_editor_value
+from karabogui.binding.api import (
+    StringBinding, get_default_value, get_editor_value)
 from karabogui.controllers.api import BaseBindingController
 from karabogui.dialogs.api import TableDeviceDialog
 
 from .delegates import (
     TableButtonDelegate, get_display_delegate, get_table_delegate)
 from .model import TableModel
-from .utils import is_writable_string
+from .utils import is_writable_binding
 from .view import KaraboTableView
 
 
@@ -294,9 +295,13 @@ class BaseTableController(BaseBindingController):
         index = selection_model.currentIndex()
         menu = QMenu(parent=self._table_widget)
         if index.isValid():
-            set_default_action = menu.addAction("Set Cell Default")
-            set_default_action.triggered.connect(self._set_index_default)
-            menu.addSeparator()
+
+            key = list(self._bindings.keys())[index.column()]
+            binding = self._bindings[key]
+            if is_writable_binding(binding):
+                set_default_action = menu.addAction("Set Cell Default")
+                set_default_action.triggered.connect(self._set_index_default)
+                menu.addSeparator()
 
             up_action = menu.addAction(icons.arrowFancyUp, "Move Row Up")
             up_action.triggered.connect(self.move_row_up)
@@ -328,10 +333,7 @@ class BaseTableController(BaseBindingController):
             du_action.setEnabled(add_row)
             remove_action.setEnabled(rm_row)
 
-            # Binding specific actions
-            key = list(self._bindings.keys())[index.column()]
-            binding = self._bindings[key]
-            if is_writable_string(binding):
+            if is_writable_binding(binding, StringBinding):
                 menu.addSeparator()
                 device_action = menu.addAction(
                     icons.deviceInstance, "Set Topology DeviceId")
