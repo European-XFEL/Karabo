@@ -1062,13 +1062,16 @@ namespace karabo {
             const Hash vectors(get<Hash>("vectors"));
             std::set<std::string> keys;
             vectors.getKeys(keys);
-            size_t counter = 0;
             for (const std::string& key : keys) {
                 const std::string path("vectors." + key);
-                // Only for last key send update:
-                const bool sendUpdate = (++counter >= keys.size());
-                appendSchemaMaxSize(path, schema.getMaxSize(path) * 2, sendUpdate);
+                // false: Do not yet send the update
+                appendSchemaMaxSize(path, schema.getMaxSize(path) * 2, false);
             }
+
+            // Touch output channel (to trigger its recreation) and publish new schema
+            Schema schema2;
+            OUTPUT_CHANNEL(schema2).key("output").commit();
+            appendSchema(schema2); // will publish also the previous changes
         }
 
 
