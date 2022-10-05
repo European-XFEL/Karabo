@@ -15,10 +15,10 @@ class KaraboROI(ROI):
     def __init__(self, pos=(0, 0), size=Point(1, 1), name='',
                  scaleSnap=False, translateSnap=False, pen=None,
                  parent=None):
-        super(KaraboROI, self).__init__(pos, size,
-                                        scaleSnap=scaleSnap,
-                                        translateSnap=translateSnap,
-                                        pen=pen, removable=True, parent=parent)
+        super().__init__(pos, size,
+                         scaleSnap=scaleSnap,
+                         translateSnap=translateSnap,
+                         pen=pen, removable=True, parent=parent)
         self.name = name
         self.setZValue(100)
         self._selected = False
@@ -41,7 +41,7 @@ class KaraboROI(ROI):
         pass
 
     def mouseClickEvent(self, event):
-        super(KaraboROI, self).mouseClickEvent(event)
+        super().mouseClickEvent(event)
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -203,12 +203,15 @@ class KaraboROI(ROI):
             self.translate(newPos - self.pos(), snap=snap, finish=False)
 
     def viewRangeChanged(self):
-        super(KaraboROI, self).viewRangeChanged()
+        super().viewRangeChanged()
         self.maxBounds = self.getViewBox().viewRect()
 
-    def movePoint(self, handle, pos, modifiers=Qt.KeyboardModifier(),
-                  finish=True, coords='parent'):
-        """Patching to support snapping based on scaling"""
+    def movePoint(self, handle, pos, modifiers=None, finish=True,
+                  coords='parent'):
+        # pos is the new position of the handle in scene coords,
+        # as requested by the handle.
+        if modifiers is None:
+            modifiers = Qt.NoModifier
         newState = self.stateCopy()
         index = self.indexOfHandle(handle)
         h = self.handles[index]
@@ -220,11 +223,10 @@ class KaraboROI(ROI):
         elif coords == 'scene':
             p1 = self.mapSceneToParent(p1)
         else:
-            raise Exception("New point location must be given in either "
-                            "'parent' or 'scene' coordinates.")
+            raise Exception(
+                "New point location must be given in either 'parent' or"
+                " 'scene' coordinates.")
 
-        # Handles with a 'center' need to know their local position
-        # relative to the center point (lp0, lp1)
         if 'center' in h:
             c = h['center']
             cs = c * self.state['size']
@@ -233,8 +235,6 @@ class KaraboROI(ROI):
 
         if h['type'] == 't':
             snap = True if (modifiers & Qt.ControlModifier) else None
-            # if self.translateSnap or ():
-            # snap = Point(self.snapSize, self.snapSize)
             self.translate(p1 - p0, snap=snap, update=False)
 
         elif h['type'] == 'f':
@@ -251,10 +251,13 @@ class KaraboROI(ROI):
             if h['center'][1] == h['pos'][1]:
                 lp1[1] = 0
 
+            # ---- Patch ----
             # snap
             if self.scaleSnap or (modifiers & Qt.ControlModifier):
                 lp1[0] = np.floor(lp1[0] / self._scaling[0]) * self._scaling[0]
                 lp1[1] = np.floor(lp1[1] / self._scaling[1]) * self._scaling[1]
+
+            # ---- Patch End ----
 
             # preserve aspect ratio (this can override snapping)
             if h['lockAspect'] or (modifiers & Qt.AltModifier):
@@ -299,14 +302,53 @@ class KaraboROI(ROI):
             self.setPos(newState['pos'], update=False)
             self.setSize(newState['size'], update=False)
 
-        elif h['type'] == 'sr':
-            if h['center'][0] == h['pos'][0]:
-                scaleAxis = 1
-                nonScaleAxis = 0
-            else:
-                scaleAxis = 0
-                nonScaleAxis = 1
+        elif h['type'] in ['r', 'rf']:
+            if h['type'] == 'rf':
+                self.freeHandleMoved = True
 
+            if not self.rotatable:
+                return
+            # If the handle is directly over its center point, we can't
+            # compute an angle.
+            try:
+                if lp1.length() == 0 or lp0.length() == 0:
+                    return
+            except OverflowError:
+                return
+
+            # determine new rotation angle, constrained if necessary
+            ang = newState['angle'] - lp0.angle(lp1)
+            if ang is None:  # this should never happen..
+                return
+            if self.rotateSnap or (modifiers & Qt.ControlModifier):
+                ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
+
+            # create rotation transform
+            tr = QTransform()
+            tr.rotate(ang)
+
+            # move ROI so that center point remains stationary after rotate
+            cc = self.mapToParent(cs) - (tr.map(cs) + self.state['pos'])
+            newState['angle'] = ang
+            newState['pos'] = newState['pos'] + cc
+
+            # check boundaries, update
+            if self.maxBounds is not None:
+                r = self.stateRect(newState)
+                if not self.maxBounds.contains(r):
+                    return
+            self.setPos(newState['pos'], update=False)
+            self.setAngle(ang, update=False)
+
+            # If this is a free-rotate handle, its distance from the center
+            # may change.
+
+            if h['type'] == 'rf':
+                h['item'].setPos(self.mapFromScene(
+                    p1))  # changes ROI coordinates of handle
+                h['pos'] = self.mapFromParent(p1)
+
+        elif h['type'] == 'sr':
             try:
                 if lp1.length() == 0 or lp0.length() == 0:
                     return
@@ -317,22 +359,34 @@ class KaraboROI(ROI):
             if ang is None:
                 return
             if self.rotateSnap or (modifiers & Qt.ControlModifier):
-                # ang = round(ang / (np.pi/12.)) * (np.pi/12.)
-                ang = round(ang / 15.) * 15.
+                ang = round(ang / self.rotateSnapAngle) * self.rotateSnapAngle
 
-            hs = abs(h['pos'][scaleAxis] - c[scaleAxis])
-            newState['size'][scaleAxis] = lp1.length() / hs
+            # --- Patch ---
 
-            # if self.scaleSnap or (modifiers & Qt.ControlModifier):
-            if self.scaleSnap:  # use CTRL only for angular snap here.
-                newState['size'][scaleAxis] = (
-                        np.floor(newState['size'][scaleAxis]
-                                 / self._scaling[scaleAxis])
-                        * self._scaling[scaleAxis])
-            if newState['size'][scaleAxis] == 0:
-                newState['size'][scaleAxis] = 1
-            if self.aspectLocked:
-                newState['size'][nonScaleAxis] = newState['size'][scaleAxis]
+            if self.aspectLocked or h['center'][0] != h['pos'][0]:
+                newState['size'][0] = self.state['size'][
+                                          0] * lp1.length() / lp0.length()
+                if self.scaleSnap:  # use CTRL only for angular snap here.
+                    newState['size'][0] = (
+                            np.floor(newState['size'][0]
+                                     / self._scaling[0])
+                            * self._scaling[0])
+
+            if self.aspectLocked or h['center'][1] != h['pos'][1]:
+                newState['size'][1] = self.state['size'][
+                                          1] * lp1.length() / lp0.length()
+                if self.scaleSnap:  # use CTRL only for angular snap here.
+                    newState['size'][1] = (
+                            np.floor(newState['size'][1]
+                                     / self._scaling[1])
+                            * self._scaling[0])
+
+            # --- Patch End ---
+
+            if newState['size'][0] == 0:
+                newState['size'][0] = 1
+            if newState['size'][1] == 0:
+                newState['size'][1] = 1
 
             c1 = c * newState['size']
             tr = QTransform()
