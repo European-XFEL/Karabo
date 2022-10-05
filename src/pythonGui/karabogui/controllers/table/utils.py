@@ -17,7 +17,7 @@ def is_writable_binding(binding, binding_type=None):
     writable = binding.access_mode is AccessMode.RECONFIGURABLE
     if binding_type is None:
         return writable
-    return isinstance(binding_type, binding_type) and writable
+    return isinstance(binding, binding_type) and writable
 
 
 def is_state_display_type(binding):
