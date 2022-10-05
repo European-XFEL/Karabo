@@ -70,8 +70,9 @@ class DisplayMultiCurveGraph(BaseBindingController):
         widget.stateChanged.connect(self._change_model)
 
         # A closure to change the button style once a boolean is linked
-        def _changestyle():
-            _btn_reset.setIcon(icons.resetTilted)
+        def _changestyle(default=False):
+            icon = icons.reset if default else icons.resetTilted
+            _btn_reset.setIcon(icon)
 
         self._resetbox_linked = _changestyle
 
@@ -111,6 +112,23 @@ class DisplayMultiCurveGraph(BaseBindingController):
         self.widget.set_legend(True)
 
         return True
+
+    def remove_proxy(self, proxy):
+        if proxy is self._reset_proxy:
+            self._reset_proxy = None
+            self._resetbox_linked(default=True)
+            return True
+        if proxy in self._y_proxies:
+            self._y_proxies.remove(proxy)
+
+            item = self._curves.pop(proxy)
+            self.widget.remove_item(item)
+            self._y_values.pop(proxy)
+            self._last_values.pop(proxy)
+            if not self._curves:
+                self.widget.set_legend(False)
+            return True
+        return False
 
     def value_update(self, proxy):
         value = proxy.value
