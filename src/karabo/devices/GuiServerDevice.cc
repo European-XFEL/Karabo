@@ -633,9 +633,10 @@ namespace karabo {
         }
 
         void GuiServerDevice::registerConnect(const karabo::util::Version& version,
-                                              const karabo::net::Channel::Pointer& channel) {
+                                              const karabo::net::Channel::Pointer& channel, const std::string& userId,
+                                              const std::string& oneTimeToken) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            m_channels[channel] = ChannelData(version); // keeps channel information
+            m_channels[channel] = ChannelData(version, userId, oneTimeToken); // keeps channel information
             // Update the number of clients connected
             set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
         }
@@ -686,6 +687,7 @@ namespace karabo {
 
         void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
                                                      const karabo::util::Version& clientVersion,
+                                                     const std::string& oneTimeToken,
                                                      const karabo::net::OneTimeTokenAuthorizeResult& authResult) {
             karabo::net::Channel::Pointer channel = weakChannel.lock();
             if (channel) {
@@ -698,7 +700,7 @@ namespace karabo {
                     sendLoginErrorAndDisconnect(channel, clientId, clientVersion.getString(), errorMsg);
                     return;
                 } else {
-                    registerConnect(clientVersion, channel);
+                    registerConnect(clientVersion, channel, authResult.userId, oneTimeToken);
 
                     // For read-only servers, the access level is always OBSERVER.
                     Hash h("type", "loginInformation");
@@ -718,10 +720,11 @@ namespace karabo {
                 // Check valid login.
                 const Version clientVersion(hash.get<string>("version"));
                 const bool userAuthActive = !get<string>("authServer").empty();
-                // The GUI client currently sends the clientId (clientHostname-clientPID) under the "username" key.
-                // TODO: modify the key to "clientId" or similar (note: the server must support both or bump
-                // minClientVersion).
-                const string clientId = hash.get<string>("username");
+                // Before version 2.16 of the Framework, the  GUI client sends the clientId (clientHostname-clientPID)
+                // under the "username" key. Since version 2.16, that key name is being deprecated in favor or the
+                // "clientId" key. For backward compatibility, both keys will be kept during the deprecation period.
+                const string clientId =
+                      hash.has("clientId") ? hash.get<string>("clientId") : hash.get<string>("username");
                 const string cliVersion = clientVersion.getString();
 
                 if (clientVersion < Version(get<std::string>("minClientVersion"))) {
@@ -744,13 +747,19 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "One-time token to be validated/authorized: "
                                                << hash.get<string>("oneTimeToken");
 
+                    const std::string oneTimeToken = hash.get<string>("oneTimeToken");
                     m_authClient.authorizeOneTimeToken(
-                          hash.get<string>("oneTimeToken"), m_topic,
+                          oneTimeToken, m_topic,
                           bind_weak(&karabo::devices::GuiServerDevice::onTokenAuthorizeResult, this, weakChannel,
-                                    clientId, clientVersion, _1));
+                                    clientId, clientVersion, oneTimeToken, _1));
                 } else {
-                    // No authentication involved; send the topology right away.
-                    registerConnect(clientVersion, channel);
+                    // No authentication involved
+                    // Use the value of the key "clientUserId" (introduced in 2.16) for logging and auditing purposes.
+                    if (hash.has("clientUserId")) {
+                        registerConnect(clientVersion, channel, hash.get<string>("clientUserId"));
+                    } else {
+                        registerConnect(clientVersion, channel);
+                    }
 
                     sendSystemTopology(weakChannel);
                 }
