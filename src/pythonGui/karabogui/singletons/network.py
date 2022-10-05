@@ -1,3 +1,4 @@
+import getpass
 from functools import partial
 from struct import calcsize, pack, unpack
 
@@ -650,10 +651,24 @@ class Network(QObject):
 
     def _send_login_information(self):
         login_info = Hash("type", "login")
+        # username to transport ClientID is deprecated - remove it after a
+        # couple of new versions of the GUI Server.
         login_info["username"] = const.KARABO_CLIENT_ID
+        # Redundantly send, during the above key deprecation period, the
+        # the ClientID with its new key.
+        login_info["clientId"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
         if self.one_time_token:
             login_info["oneTimeToken"] = self.one_time_token
+            # For authenticated logins, don't set the "clientUserId" - the
+            # authenticated userId and the authorized AccessLevel will
+            # be returned later as a result of the token validation.
+        else:
+            # Non authenticated logins:
+            # Send the OS id of the user running the process to the server for
+            # logging/auditing purposes.
+            login_info["clientUserId"] = getpass.getuser()
+
         login_info["info"] = dictToHash(get_config().info())
         self._write_hash(login_info)
 
