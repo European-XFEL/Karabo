@@ -22,6 +22,8 @@ def test_is_writable_string():
     string = StringBinding(
         attributes={KARABO_SCHEMA_ACCESS_MODE: AccessMode.RECONFIGURABLE})
     assert is_writable_binding(string)
+    # Test that is works also by specificing a string binding
+    assert is_writable_binding(string, StringBinding)
 
     string = StringBinding(
         attributes={KARABO_SCHEMA_ACCESS_MODE: AccessMode.READONLY})
