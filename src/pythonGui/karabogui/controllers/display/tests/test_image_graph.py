@@ -225,5 +225,4 @@ class TestImageGraph(GuiTestCase):
             self.assertEqual(button.isChecked(), tool == expected_plot)
 
     def _calc_cmap_lut(self, cmap):
-        return (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
-                .getLookupTable(alpha=False, mode="RGB"))
+        return ColorMap(*zip(*COLORMAPS[cmap])).getLookupTable(alpha=False)
