@@ -87,3 +87,19 @@ class TestMultiCurveGraph(GuiTestCase):
         configuration = self.controller.widget.configuration
         assert configuration
         assert configuration == default_config
+
+    def test_remove_proxy(self):
+        controller = self.controller
+        # Remove reset proxy
+        assert controller.remove_additional_property(self.reset)
+        assert controller._reset_proxy is None
+
+        legend = controller.widget._legend
+        assert legend.isVisible()
+
+        # Remove the last additional proxy
+        assert controller._curves.get(self.value)
+        assert controller.remove_additional_property(self.value)
+        # Check if the curve is removed
+        assert controller._curves.get(self.value) is None
+        assert not legend.isVisible()
