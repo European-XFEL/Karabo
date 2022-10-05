@@ -1,5 +1,5 @@
 import numpy as np
-from pyqtgraph import GraphicsWidget, ViewBox
+from pyqtgraph import ViewBox
 from qtpy.QtCore import QPoint, Qt, Signal
 from qtpy.QtWidgets import QMenu
 
@@ -13,7 +13,7 @@ class KaraboViewBox(ViewBox):
     middleButtonClicked = Signal()
 
     def __init__(self, parent=None):
-        super(KaraboViewBox, self).__init__(parent, enableMenu=False)
+        super().__init__(parent, enableMenu=False)
         self.mouse_mode = MouseMode.Pointer
         self.setBackgroundColor('w')
 
@@ -37,14 +37,14 @@ class KaraboViewBox(ViewBox):
             elif event.button() == Qt.RightButton:
                 self._click_zoom_mode(event, ZOOM_OUT)
         else:
-            super(KaraboViewBox, self).mouseClickEvent(event)
+            super().mouseClickEvent(event)
 
     def mouseDragEvent(self, event, axis=None):
         button = event.buttons()
 
         # Restore original MouseMode (and cursor) when dragEvent is finished
         if event.isFinish():
-            super(KaraboViewBox, self).mouseDragEvent(event, axis)
+            super().mouseDragEvent(event, axis)
             self.set_mouse_mode(self.mouse_mode)
             return
 
@@ -62,7 +62,7 @@ class KaraboViewBox(ViewBox):
                 # Change cursor on right button as well
                 self.setCursor(Qt.ClosedHandCursor)
 
-        super(KaraboViewBox, self).mouseDragEvent(event, axis)
+        super().mouseDragEvent(event, axis)
 
     def wheelEvent(self, event, axis=None):
         """Ignore mouse scroll since it also catches scene scroll"""
@@ -103,7 +103,7 @@ class KaraboViewBox(ViewBox):
 
     def removeItem(self, item):
         if item in self.allChildItems():
-            super(KaraboViewBox, self).removeItem(item)
+            super().removeItem(item)
 
     def menuEnabled(self):
         return self.menu is not None
@@ -129,27 +129,3 @@ class KaraboViewBox(ViewBox):
         self.scaleBy(s, center)
         self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
         event.accept()
-
-    # ------------ Patch PyQtGraph > 0.11.0 ----------------
-
-    # The following lines revert changes done in PR!1435
-    # https://github.com/pyqtgraph/pyqtgraph/pull/1435/
-    # These changes lead to a peformance decrease of a factor of two (2)
-    # which are reverted here, until pyqtgraph comes up with a different
-    # fix.
-    # Issue - https://github.com/pyqtgraph/pyqtgraph/issues/1602
-    # Failed fix: https://github.com/pyqtgraph/pyqtgraph/pull/1610
-
-    def paint(self, p, opt, widget):
-        if self.border is not None:
-            bounds = self.shape()
-            p.setPen(self.border)
-            p.drawPath(bounds)
-
-    def update(self, *args, **kwargs):
-        self.prepareForPaint()
-        GraphicsWidget.update(self, *args, **kwargs)
-
-    def resizeEvent(self, event):
-        self.updateMatrix()
-        super().resizeEvent(event)
