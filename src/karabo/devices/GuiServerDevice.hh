@@ -51,11 +51,24 @@ namespace karabo {
                 std::map<std::string, std::set<std::string>> requestedClassSchemas;
                 karabo::util::Version clientVersion;
                 bool sendLogs;
+                // The userId for a GUI Client session. If the client session
+                // uses user authentication this will be the authenticated
+                // user; otherwise it will be the user running the GUI client
+                // on the remote host.
+                std::string userId;
+                // The one-time token for an authenticated GUI Client session -
+                // might be used for logs if GDPR requirements forbid using the
+                // userId directly in the logs.
+                std::string oneTimeToken;
 
                 ChannelData() : clientVersion("0.0.0"), sendLogs(true){};
 
-                ChannelData(const karabo::util::Version& version)
-                    : clientVersion(version), sendLogs(clientVersion <= karabo::util::Version("2.11.1")){};
+                ChannelData(const karabo::util::Version& version, const std::string& userId = "",
+                            const std::string& oneTimeToken = "")
+                    : clientVersion(version),
+                      sendLogs(clientVersion <= karabo::util::Version("2.11.1")),
+                      userId(userId),
+                      oneTimeToken(oneTimeToken){};
             };
 
             enum NewInstanceAttributeUpdateEvents {
@@ -275,7 +288,8 @@ namespace karabo {
 
             /** Creates the internal ChannelData entry and update the device Configuration
              */
-            void registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer& channel);
+            void registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer& channel,
+                                 const std::string& userId = "", const std::string& oneTimeToken = "");
 
             /** handles incoming data in the Hash  ``info`` from ``channel``
              *
@@ -311,10 +325,11 @@ namespace karabo {
              * @param channel the communication channel established with the GUI client logging in.
              * @param userId the ID of the user on whose behalf the login is being made.
              * @param cliVersion the version of the GUI client logging in.
+             * @param oneTimeToken the one-time token sent by the GUI client logging in.
              * @param authResult the result of the one-time token authorization operation to be handled.
              */
             void onTokenAuthorizeResult(const WeakChannelPointer& channel, const std::string& userId,
-                                        const karabo::util::Version& cliVersion,
+                                        const karabo::util::Version& cliVersion, const std::string& oneTimeToken,
                                         const karabo::net::OneTimeTokenAuthorizeResult& authResult);
 
             /**
