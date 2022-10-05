@@ -33,7 +33,7 @@ topic (string)
 *systemTopology*
 systemTopology (Hash)
 
-[2.17.0]_ *loginInformation*
+[2.16.0]_ *loginInformation*
 userId (string)
 accessLevel (int) [sent by non read-only GUI servers]
 
@@ -125,9 +125,11 @@ message (string)
 **Message types IN (send from the client to the server):**
 
 *login*
-username (string)
-sessionToken (string)
-provider (string)
+[depr_2.16.0]_ username (string)
+[2.16.0]_ clientId (string) (GUI Client Hostname and PID)
+[2.16.0]_ oneTimeToken (string) (Sent for authenticated logins)
+version (string) (GUI Client version)
+[2.16.0]_ clientUserId (string) (Sent for non-authenticated logins)
 
 *reconfigure*
 deviceId (string)
@@ -180,4 +182,5 @@ traceback (string)
 .. [2.5.0] Introduced in Karabo 2.5.0 to replace *instanceNew*, *instanceUpdated* and *instanceGone*.
 .. [repl_2.8.0] Last used in Karabo 2.7.X - replaced by *deviceConfigurations* (note below).
 .. [2.8.0] Introduced in Karabo 2.8.0 to enable bulk updates of device configurations in the client.
-.. [2.17.0] Introduced in Karabo 2.17.0 to support User authentication.
+.. [2.16.0] Introduced in Karabo 2.16.0 to support User authentication.
+.. [depr_2.16.0] Deprecated in Karabo 2.16.0: "username" transporting the "clientId" of the GUI Client instance deprecated.  "clientId" and "clientUserId" used to send the id of the GUI Client (host and PID) and the Id of the user running the GUI Client (for non-authenticated logins). Access Level only transmitted from the server to the client as a result of token validation; otherwise the GUI Client adopts the access level selected by the user at login time.
