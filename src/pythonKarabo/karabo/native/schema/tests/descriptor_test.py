@@ -785,6 +785,13 @@ class Tests(TestCase):
         index = v.columnIndex("string")
         self.assertEqual(index, 1)
 
+        h = v.default_row()
+        self.assertIsInstance(h, Hash)
+        n = v.default_row()
+        self.assertIsNot(h, n)
+        h["int"] = 27
+        self.assertFalse(h.fullyEqual(n))
+
     def test_general(self):
         d = UInt64(accessMode=AccessMode.READONLY)
         self.assertIs(d.accessMode, AccessMode.READONLY)
