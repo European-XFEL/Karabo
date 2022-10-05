@@ -29,7 +29,7 @@ class ColorBarWidget(GraphicsWidget):
         self.grid_layout.setSpacing(0)
         self.grid_layout.setContentsMargins(0, 40, 0, 0)
 
-        self.vb = ColorViewBox(parent=self)
+        self.vb = ColorViewBox()
         self.vb.menu = self._create_menu()
 
         self.barItem = ImageItem(parent=self)
@@ -45,7 +45,6 @@ class ColorBarWidget(GraphicsWidget):
         self.axisItem.setStyle(tickFont=font)
         self.axisItem.linkToView(self.vb)
         self.grid_layout.addItem(self.axisItem, 0, 1)
-
         self.setLayout(self.grid_layout)
 
     # ---------------------------------------------------------------------
@@ -105,8 +104,8 @@ class ColorBarWidget(GraphicsWidget):
     # Public methods
 
     def set_colormap(self, cmap):
-        lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
-               .getLookupTable(alpha=False, mode="RGB"))
+        lut = ColorMap(*zip(*COLORMAPS[cmap])).getLookupTable(
+            alpha=False)
         self.barItem.setLookupTable(lut)
 
     def set_margins(self, top=None, bottom=None):
@@ -153,8 +152,7 @@ class ColorBarWidget(GraphicsWidget):
 class ColorViewBox(ViewBox):
 
     def __init__(self, parent=None):
-        super(ColorViewBox, self).__init__(
-            parent=parent, enableMenu=False, enableMouse=False)
+        super().__init__(parent=parent, enableMenu=False, enableMouse=False)
         self.setFixedWidth(15)
         self.setLimits(xMin=0, xMax=1)
         self.enableAutoRange(enable=False)
