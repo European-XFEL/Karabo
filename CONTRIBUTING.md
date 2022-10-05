@@ -90,9 +90,12 @@ Python
 General - Tools
 ---------------
 
+- First and foremost, programming should be done *PEP8* conform.
+  Additionally, if *PEP8* is undefined and for further examples, the
+  `google style guide <https://google.github.io/styleguide/pyguide.html>`_
+  can be looked up.
 - Per convention, `strings` should be created with `"`.
 - Per convention, `lists` and `dicts` should should be created with [], {}, respectively.
-- First and foremost, programming should be done *PEP8* conform. 
   Tools like *flake8* can help in writing clean code.
 - Import ordering is done using *isort -m4*. A corresponding *isort* configuration file
   is provided in `src/pythonKarabo` and `src/pythonGui`
