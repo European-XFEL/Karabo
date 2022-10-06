@@ -84,11 +84,14 @@ class TableToolBar(QWidget):
         self._set_button_states()
 
     def _set_button_states(self):
+        model = self.controller.sourceModel()
+        if model is None:
+            # Note: This happens when the dialog is closed.
+            return
+
         selection_model = self.controller.tableWidget().selectionModel()
         has_selection = selection_model.hasSelection()
         current_row = self.controller.currentIndex().row()
-
-        model = self.controller.sourceModel()
         self._move_up_button.setEnabled(has_selection and current_row > 0)
         self._move_down_button.setEnabled(has_selection and current_row <
                                           model.rowCount() - 1)
