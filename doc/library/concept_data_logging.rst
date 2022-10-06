@@ -92,7 +92,7 @@ information
 
 In iKarabo the *getHistory* proxy object may be used:
 
-.. function:: getHistory(device, "2009-09-01", "2009-09-02").someProperty
+.. function:: getHistory(device.someProperty, "2009-09-01", "2009-09-02")
 
     returns a list of tuples, which contain all changes of *someProperty*
     between the two given dates. The tuple contains four fields, the
@@ -100,17 +100,39 @@ In iKarabo the *getHistory* proxy object may be used:
     the last row in a set (typically, the device has been switched off
     afterwards), and the value of the property at that time.
 
+    The second date is optional. If missing, the current time will be
+    used as an end time.
+
     The dates of the timespan are parsed using
     :func:`dateutil.parser.parse`, allowing many ways to write the date.
     The most precise way is to write "2009-09-01T15:32:12 UTC", but you may
     omit any part, like "10:32", only giving the time, where we assume
     the current day.  Unless specified otherwise, your local timezone is
-    assumed.
+    assumed. See below for helper functions such as ``minutesAgo``.
 
     Another parameter, *maxNumData*, may be given, which gives the maximum
-    number of data points to be returned. It defaults to 10000. The returned
-    data will be reduced appropriately to still span the full timespan."""
+    number of data points to be returned. It defaults to 10000, the current
+    maximum
 
+.. function:: getHistory("device.someProperty", "2009-09-01", "2009-09-02")
+
+    alternative implementation of ``getHistory`` without needing to create
+    a proxy
+
+.. function:: minutesAgo(n)
+
+    returns a string containing the timepoint of ``n`` minutes ago in a format
+    compatible with the expectations of ``getHistory``.
+
+.. function:: hoursAgo(n)
+
+    returns a string containing the timepoint of ``n`` hours ago in a format
+    compatible with the expectations of ``getHistory``.
+
+.. function:: daysAgo(n)
+
+    returns a string containing the timepoint of ``n`` days ago in a format
+    compatible with the expectations of ``getHistory``.
 
 Text-File based Backend
 =======================
