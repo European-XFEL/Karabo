@@ -580,8 +580,11 @@ class TableValue(KaraboValue):
         return TableValue(value, self.units, timestamp=self.timestamp)
 
     def default_row(self):
-        """Return the row Hash with default values of the `TableValue`"""
-        return self.descriptor.default_row
+        """Return a row Hash with default values of the `TableValue`
+
+        Added in 2.16.X: This method safely returns a quick deepcopy!
+        """
+        return self.descriptor.default_row.deepcopy()
 
     def clear(self):
         """Clear the table element with a single message"""
