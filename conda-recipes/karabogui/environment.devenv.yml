@@ -32,8 +32,8 @@ dependencies:
   - ipython=7.13.0
   - ipykernel=5.2.0
   # Plotting and utils
-  - numpy=1.22.*
-  - scipy=1.6.0
+  - numpy=1.23.*
+  - scipy=1.9.*
   - lttbc=0.2.1
   - natsort=6.2.0
   # Other
