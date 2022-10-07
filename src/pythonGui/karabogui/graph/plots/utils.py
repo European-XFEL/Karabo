@@ -1,8 +1,6 @@
 import lttbc
 import numpy as np
 
-from karabogui.graph.common.api import clip_array
-
 
 def get_view_range(plot_item):
     """Get the viewing rect of a plot item for the X-Axis"""
@@ -82,8 +80,8 @@ def generate_down_sample(y, x=None, threshold=None, rect=None,
         if rect is not None:
             sizec = (size - 1)
             dx = float(x[-1] - x[0]) / sizec
-            x_min = clip_array(int((rect[0] - x[0]) / dx), 0, sizec)
-            x_max = clip_array(int((rect[1] - x[0]) / dx), 0, sizec)
+            x_min = np.clip(int((rect[0] - x[0]) / dx), 0, sizec)
+            x_max = np.clip(int((rect[1] - x[0]) / dx), 0, sizec)
             x = x[x_min:x_max]
             y = y[x_min:x_max]
             if not initial:

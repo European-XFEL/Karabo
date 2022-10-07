@@ -25,17 +25,3 @@ def safe_log10(value):
     result[~index] = np.nan
 
     return result
-
-
-CLIP_SLOW = list(map(int, np.__version__.split("."))) >= [1, 17, 0]
-
-
-def clip_array(value, vmin, vmax):
-    """This is a temporal workaround for numpy `clip` performance regression
-
-    See https://github.com/numpy/numpy/issues/14281 for discussion ...
-    """
-    if CLIP_SLOW:
-        return np.core.umath.maximum(np.core.umath.minimum(value, vmax), vmin)
-
-    return np.clip(value, vmin, vmax)
