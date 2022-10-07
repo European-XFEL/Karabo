@@ -608,6 +608,18 @@ class TableValue(KaraboValue):
         for row in self.value:
             yield TableValue(row, self.units, timestamp=self.timestamp)
 
+    def iter_hashes(self):
+        """Iterate over the table by providing the Hash elements
+
+        This method does NOT provide a copy!
+
+        Note: Added in Karabo 2.16.X
+        """
+        names = self.value.dtype.names
+        for row in self.value:
+            yield Hash({key: value for key, value in
+                        zip(names, row)})
+
     def __repr__(self):
         table = [{key: value for key, value in
                  zip(self.value.dtype.names, row)}

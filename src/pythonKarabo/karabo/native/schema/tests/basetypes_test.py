@@ -341,6 +341,24 @@ class Tests(TestCase):
         self.assertEqual(len(hl), 0)
         self.assertIsInstance(hl, HashList)
 
+        # Iterate hashes
+        t = TableValue(numpy.array([(3, []), (2, []),
+                                    (4, []), (5, [])],
+                                   dtype=dtype), units, timestamp=self.t2)
+        # Iterate over list of hashes and change the integer
+        for h in t.iter_hashes():
+            self.assertIsInstance(h, Hash)
+            self.assertIn("object", h)
+            self.assertIn("integer", h)
+            h["integer"] = 25
+            # Change mutable object
+            h["object"].append(25)
+
+        # Check that the integer hasn't been changed
+        for h in t.iter_hashes():
+            self.assertNotEqual(h["integer"], 25)
+            self.assertEqual(h["object"], [25])
+
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
             if u is not Unit.NOT_ASSIGNED:
