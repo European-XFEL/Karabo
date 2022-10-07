@@ -22,5 +22,5 @@ from .toolbar.controller import ToolbarController
 from .toolbar.toolsets import (
     BaseToolsetController, ExportToolset, MouseMode, ROIToolset)
 from .toolbar.widgets import create_button, create_tool_button
-from .utils import clip_array, float_to_string, safe_log10
+from .utils import float_to_string, safe_log10
 from .viewbox import KaraboViewBox
