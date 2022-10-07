@@ -112,7 +112,7 @@ class DoubleLineEdit(BaseLineEdit):
     def create_widget(self, parent):
         self._validator = NumberValidator()
         self._validator.decimals = self.model.decimals
-        widget = super(DoubleLineEdit, self).create_widget(parent)
+        widget = super().create_widget(parent)
         decimal_action = QAction("Change number of decimals", widget)
         decimal_action.triggered.connect(self._pick_decimals)
         widget.addAction(decimal_action)
@@ -151,7 +151,7 @@ class DoubleLineEdit(BaseLineEdit):
             self.model.decimals = num_decimals
 
     def _validate_value(self):
-        ret = super(DoubleLineEdit, self)._validate_value()
+        ret = super()._validate_value()
         return float(ret) if ret is not None else None
 
 
@@ -164,11 +164,10 @@ class IntLineEdit(BaseLineEdit):
 
     def create_widget(self, parent):
         self._validator = IntValidator()
-        return super(IntLineEdit, self).create_widget(parent)
+        return super().create_widget(parent)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
-        self.widget.update_label(proxy)
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
             self._display_value = "{}".format(value)
@@ -176,7 +175,7 @@ class IntLineEdit(BaseLineEdit):
         self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
     def _validate_value(self):
-        ret = super(IntLineEdit, self)._validate_value()
+        ret = super()._validate_value()
         return int(ret) if ret is not None else None
 
 
@@ -187,7 +186,7 @@ class Hexadecimal(BaseLineEdit):
 
     def create_widget(self, parent):
         self._validator = HexValidator()
-        return super(Hexadecimal, self).create_widget(parent)
+        return super().create_widget(parent)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
@@ -200,7 +199,7 @@ class Hexadecimal(BaseLineEdit):
         self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
     def _validate_value(self):
-        ret = super(Hexadecimal, self)._validate_value()
+        ret = super()._validate_value()
         return int(ret, base=16) if ret is not None else None
 
 
