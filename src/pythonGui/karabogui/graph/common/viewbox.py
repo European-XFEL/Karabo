@@ -15,7 +15,7 @@ class KaraboViewBox(ViewBox):
     def __init__(self, parent=None):
         super().__init__(parent, enableMenu=False)
         self.mouse_mode = MouseMode.Pointer
-        self.setBackgroundColor('w')
+        self.setBackgroundColor("w")
 
         # Build a menu!
         self.menu = QMenu(parent)
@@ -55,7 +55,7 @@ class KaraboViewBox(ViewBox):
         elif self.mouse_mode is MouseMode.Move or button == Qt.MiddleButton:
             if event.isStart():
                 # Enable panning regardless of MouseMode
-                self.state['mouseMode'] = ViewBox.PanMode
+                self.state["mouseMode"] = ViewBox.PanMode
                 self.setCursor(Qt.ClosedHandCursor)
         elif button == Qt.RightButton:
             if event.isStart():
@@ -82,11 +82,11 @@ class KaraboViewBox(ViewBox):
             vb_mode = ViewBox.PanMode
             cursor = Qt.OpenHandCursor
         else:
-            raise LookupError("Invalid mouse mode.")
+            raise ValueError(f"Invalid mouse mode: {mode}")
 
         # Using self.state to assign vb mouse mode to avoid emitting
         # sigStateChanged
-        self.state['mouseMode'] = vb_mode
+        self.state["mouseMode"] = vb_mode
         self.setCursor(cursor)
         self.mouse_mode = mode
 
@@ -122,10 +122,10 @@ class KaraboViewBox(ViewBox):
         # increased for larger scale/zoom
         mask = np.array([1, 1])
         s = ((mask * 0.02) + 1) ** \
-            (120 * direction * self.state['wheelScaleFactor'])
+            (120 * direction * self.state["wheelScaleFactor"])
 
         center = self.mapToView(event.pos())
         self._resetTarget()
         self.scaleBy(s, center)
-        self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+        self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
         event.accept()
