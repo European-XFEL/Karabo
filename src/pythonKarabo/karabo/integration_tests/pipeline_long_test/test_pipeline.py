@@ -8,8 +8,8 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device,
     InputChannel, Int32, OutputChannel, Slot, State, UInt32, background,
     coslot, sleep)
-from karabo.middlelayer_api.tests.eventloop import (
-    AsyncDeviceContext, event_loop)
+from karabo.middlelayer.testing import (
+    AsyncDeviceContext, event_loop, sleepUntil)
 
 
 def get_channel_node(displayed_name=""):
@@ -89,7 +89,6 @@ class CrazyInjector(Device):
 @pytest.mark.timeout(90)
 async def test_crazy_injected_channel_connection(event_loop: event_loop):
     """Test the crazy injected output channel"""
-    NUM_DATA = 5
     INJECTING_TIME = 20
 
     output_device = CrazyInjector({"_deviceId_": "CrazyInjectedSender"})
@@ -104,10 +103,9 @@ async def test_crazy_injected_channel_connection(event_loop: event_loop):
         await sleep(3)
         assert receiver.connected
 
-        # Start checking data
+        # Start send a data
         await receiver.resetCounter()
-        # Send multiple times to spin the eventloop
-        for _ in range(NUM_DATA):
-            await output_device.sendData()
-        assert receiver.received > 0
+        await output_device.sendData()
+        await sleepUntil(lambda: receiver.received > 0)
+        assert receiver.received == 1
     assert not receiver.connected
