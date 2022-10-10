@@ -35,6 +35,7 @@ class RunConfiguratorEdit(BaseBindingController):
 
     def create_widget(self, parent):
         widget = QTreeView(parent=parent)
+        widget.setFocusPolicy(Qt.StrongFocus)
         widget.setUniformRowHeights(True)
         item_model = QStandardItemModel(parent=widget)
         item_model.setHorizontalHeaderLabels(HEADER_LABELS)
