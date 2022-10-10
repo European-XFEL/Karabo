@@ -69,6 +69,9 @@ class TestRunConfiguratorEdit(GuiTestCase):
         self.controller.destroy()
         assert self.controller.widget is None
 
+    def test_focus_policy(self):
+        assert self.controller.widget.focusPolicy() == Qt.StrongFocus
+
     def test_set_value(self):
         item_model = self.controller.widget.model()
         assert item_model.rowCount() == 0
