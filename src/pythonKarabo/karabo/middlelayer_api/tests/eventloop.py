@@ -214,3 +214,16 @@ class AsyncDeviceContext:
         self.instances.update(devices)
         await gather(*(d.startInstance() for d in devices.values()))
         await self.wait_online(devices)
+
+
+async def sleepUntil(condition, timeout=None):
+    """Sleep until some condition is valid
+
+    :param timeout: The timeout parameter, defaults to `None`. (no timeout)
+    """
+
+    async def internal_wait():
+        while not condition():
+            await sleep(0.05)
+
+    return await wait_for(internal_wait(), timeout=timeout)
