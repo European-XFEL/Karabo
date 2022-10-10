@@ -5,12 +5,11 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import DisplayListModel
 from karabogui.binding.api import (
     VectorBinding, VectorCharBinding, VectorHashBinding, get_binding_value)
-from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
-from karabogui.widgets.hints import Label
+from karabogui.widgets.hints import ElidingLabel
 
 
 def _is_compatible(binding):
@@ -24,12 +23,9 @@ class DisplayList(BaseBindingController):
     model = Instance(DisplayListModel, args=())
 
     def create_widget(self, parent):
-        widget = Label(parent)
-        widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        widget = ElidingLabel(parent)
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
         widget.setFocusPolicy(Qt.NoFocus)
-        # XXX: Next step is elided text for the controller
-        widget.setWordWrap(True)
         objectName = generateObjectName(self)
         style_sheet = ("QWidget#{}".format(objectName) +
                        " {{ background-color : rgba{}; }}")
