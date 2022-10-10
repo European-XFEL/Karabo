@@ -35,6 +35,7 @@ class KaraboImageItem(GraphicsObject):
         self.image = None
         self.qimage = None
 
+        self.clickModes = (MouseMode.Picker,)
         self.levels = None
         # We have row-major
         self.axisOrder = getConfigOption("imageAxisOrder")
@@ -150,7 +151,7 @@ class KaraboImageItem(GraphicsObject):
     # Events
 
     def mouseClickEvent(self, event):
-        if (self.getViewBox().mouse_mode is MouseMode.Picker
+        if (self.getViewBox().mouse_mode in self.clickModes
                 and event.button() == Qt.LeftButton):
             image_pos, view_pos = self._get_mouse_positions(event.pos())
             self.clicked.emit(image_pos.x(), image_pos.y())
