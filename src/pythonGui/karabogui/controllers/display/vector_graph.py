@@ -124,7 +124,7 @@ class BaseArrayGraph(BaseBindingController):
 
 @register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
                              binding_type=VectorNumberBinding,
-                             priority=90,
+                             priority=0,
                              can_show_nothing=False)
 class DisplayVectorGraph(BaseArrayGraph):
     """The VectorGraph controller for display basic vector data
