@@ -266,37 +266,31 @@ class DaemonManager(Device):
 
     @coslot
     async def requestAction(self, params):
-        payload = Hash("success", False, "reason", "Unknown")
-        try:
-            action = params.get("action", "missing")
-            # only TableButton Action is implemented
-            assert action == "TableButton", f"unexpected action {action}"
-            path = params["path"]
-            assert path == "services", f"unexpected path '{path}'"
-            data = params["table"]
-            row = data["rowData"]
-            server_id = row["name"]
-            host_id = [_row["host_name"]
-                       for _row in self.services_info.values()
-                       if _row["karabo_name"] == server_id][0]
-            header = data["header"]
-            command = COMMAND_MAP[header]
-            success, text = await self._action_service(
-                server_id, host_id, command, post_action=header)
-            payload.set("success", success)
-            payload.set("reason", text)
-            # The first entry is the found row, must be there
-            index = self.services.where("name", server_id)[0]
-            self.services[index] = Hash(
-                "name", server_id,
-                "status", "CHANGING",
-                "start", False,
-                "restart", False,
-                "stop", False)
-        except (IndexError, KeyError, AssertionError) as e:
-            payload.set("success", False)
-            payload.set("reason", str(e))
+        action = params.get("action", "missing")
+        # only TableButton Action is implemented
+        assert action == "TableButton", f"unexpected action {action}"
+        path = params["path"]
+        assert path == "services", f"unexpected path '{path}'"
+        data = params["table"]
+        row = data["rowData"]
+        server_id = row["name"]
+        host_id = [_row["host_name"]
+                   for _row in self.services_info.values()
+                   if _row["karabo_name"] == server_id][0]
+        header = data["header"]
+        command = COMMAND_MAP[header]
+        success, text = await self._action_service(
+            server_id, host_id, command, post_action=header)
+        # The first entry is the found row, must be there
+        index = self.services.where("name", server_id)[0]
+        self.services[index] = Hash(
+            "name", server_id,
+            "status", "CHANGING",
+            "start", False,
+            "restart", False,
+            "stop", False)
 
+        payload = Hash("success", success, "reason", text)
         return Hash("type", "requestAction",
                     "origin", self.deviceId,
                     "payload", payload)
