@@ -60,7 +60,7 @@ class KaraboSceneWidget:
 
 class Label(QLabel):
     def __init__(self, parent=None):
-        super(Label, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumWidth(WIDGET_MIN_WIDTH)
         self.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.setAlignment(Qt.AlignCenter)
@@ -71,6 +71,51 @@ class Label(QLabel):
         width = fm.width(self.text()) + CONTENT_MARGIN
 
         return QSize(width, DEFAULT_SIZE_HINT)
+
+
+class ElidingLabel(QLabel):
+    """A label that elides if the text and margins are larger than the width
+    """
+
+    def __init__(self, parent=None):
+        self._text = ""
+        self._elided = False
+        super().__init__(self._text, parent=parent)
+        self.setMinimumWidth(WIDGET_MIN_WIDTH)
+        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self.setAlignment(Qt.AlignCenter)
+
+    def isElided(self):
+        """Return if the text is elided or not"""
+        return self._elided
+
+    def sizeHint(self):
+        """Reimplemented function of `QLabel` for the size hint calculation"""
+        fm = QFontMetrics(self.font())
+        width = fm.width(self.text()) + CONTENT_MARGIN
+        return QSize(width, WIDGET_MIN_HEIGHT)
+
+    @property
+    def text_width(self):
+        return self.width() - CONTENT_MARGIN
+
+    def setText(self, text):
+        """Reimplemented function of `QLabel` to adjust the display text"""
+        self._text = text
+        text_width = self.text_width
+        fm = QFontMetrics(self.font())
+        elided = False
+        if fm.width(text) > text_width:
+            text = fm.elidedText(text, Qt.ElideRight, text_width)
+            elided = True
+        self._elided = elided
+        if text != self.text():
+            super().setText(text)
+
+    def resizeEvent(self, event):
+        """Reimplemented function of `QLabel` to adjust the display text"""
+        super().resizeEvent(event)
+        self.setText(self._text)
 
 
 class LineEdit(QLineEdit):
