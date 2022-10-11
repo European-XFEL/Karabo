@@ -1,13 +1,10 @@
-from platform import system
-from unittest import skipIf
 from unittest.mock import patch
 
 import numpy as np
 from qtpy.QtCore import Qt
 
 from karabo.common.scenemodel.api import (
-    DoubleLineEditModel, EditableRegexModel)
-from karabo.common.scenemodel.widgets.simple import IntLineEditModel
+    DoubleLineEditModel, EditableRegexModel, IntLineEditModel)
 from karabo.common.states import State
 from karabo.native import (
     Configurable, Double, Float, Int32, RegexString, String, UInt8)
@@ -47,23 +44,22 @@ class StringObject(Configurable):
 class TestRegexEdit(GuiTestCase):
 
     def setUp(self):
-        super(TestRegexEdit, self).setUp()
+        super().setUp()
         self.proxy = get_class_property_proxy(StringObject.getClassSchema(),
-                                              'prop')
+                                              "prop")
         self.controller = EditRegex(proxy=self.proxy,
                                     model=EditableRegexModel())
         self.controller.create(None)
         self.controller.set_read_only(False)
         build_binding(StringObject.getClassSchema(),
                       existing=self.proxy.root_proxy.binding)
-
         self.controller.binding_update(self.proxy)
-        self.normal_palette = self.controller._normal_palette
-        self.error_palette = self.controller._error_palette
+        self.normal_sheet = self.controller._style_sheet.format("black")
+        self.error_sheet = self.controller._style_sheet.format("red")
 
     @property
-    def palette(self):
-        return self.controller._internal_widget.palette()
+    def sheet(self):
+        return self.controller._internal_widget.styleSheet()
 
     @property
     def text(self):
@@ -74,7 +70,7 @@ class TestRegexEdit(GuiTestCase):
         return self.controller._internal_widget.setText(value)
 
     def tearDown(self):
-        super(TestRegexEdit, self).tearDown()
+        super().tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
@@ -82,177 +78,195 @@ class TestRegexEdit(GuiTestCase):
         assert self.controller._internal_widget.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
-        set_proxy_value(self.proxy, 'prop', '1')
-        self.assertEqual(self.text, '1')
+        set_proxy_value(self.proxy, "prop", "1")
+        self.assertEqual(self.text, "1")
 
-        set_proxy_value(self.proxy, 'prop', '2')
-        self.assertEqual(self.text, '2')
+        set_proxy_value(self.proxy, "prop", "2")
+        self.assertEqual(self.text, "2")
 
-        set_proxy_value(self.proxy, 'prop', 'False')
-        self.assertEqual(self.text, 'False')
+        set_proxy_value(self.proxy, "prop", "False")
+        self.assertEqual(self.text, "False")
 
     def test_edit_value(self):
-        self.text = '2'
+        self.text = "2"
         self.assertIsNone(self.proxy.edit_value)
-        self.text = '1'
+        self.text = "1"
         self.assertIsNotNone(self.proxy.edit_value)
 
-    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
     def test_decline_color(self):
-        self.text = '2.0'
+        self.text = "2.0"
         self.assertIsNone(self.proxy.edit_value)
-        self.assertEqual(self.palette, self.error_palette)
+        self.assertEqual(self.sheet, self.error_sheet)
         self.controller.on_decline()
-        self.assertEqual(self.palette, self.normal_palette)
+        self.assertEqual(self.sheet, self.normal_sheet)
 
 
 class TestNumberLineEdit(GuiTestCase):
     def setUp(self):
-        super(TestNumberLineEdit, self).setUp()
-        self.d_proxy = get_class_property_proxy(DoubleObject.getClassSchema(),
-                                                'prop')
-        self.d_controller = DoubleLineEdit(proxy=self.d_proxy,
-                                           model=DoubleLineEditModel())
-        self.d_controller.create(None)
-        self.d_controller.set_read_only(False)
+        super().setUp()
+        self.double_proxy = get_class_property_proxy(
+            DoubleObject.getClassSchema(), "prop")
+        self.double_controller = DoubleLineEdit(proxy=self.double_proxy,
+                                                model=DoubleLineEditModel())
+        self.double_controller.create(None)
+        self.double_controller.set_read_only(False)
 
-        self.f_proxy = get_class_property_proxy(FloatObject.getClassSchema(),
-                                                'prop')
-        self.f_controller = DoubleLineEdit(proxy=self.f_proxy,
-                                           model=DoubleLineEditModel())
-        self.f_controller.create(None)
-        self.f_controller.set_read_only(False)
+        self.float_proxy = get_class_property_proxy(
+            FloatObject.getClassSchema(), "prop")
+        self.float_controller = DoubleLineEdit(proxy=self.float_proxy,
+                                               model=DoubleLineEditModel())
+        self.float_controller.create(None)
+        self.float_controller.set_read_only(False)
 
-        self.i_proxy = get_class_property_proxy(IntObject.getClassSchema(),
-                                                'prop')
-        self.i_controller = IntLineEdit(proxy=self.i_proxy,
-                                        model=IntLineEditModel())
-        self.i_controller.create(None)
-        self.i_controller.set_read_only(False)
+        self.int_proxy = get_class_property_proxy(
+            IntObject.getClassSchema(), "prop")
+        self.int_controller = IntLineEdit(proxy=self.int_proxy,
+                                          model=IntLineEditModel())
+        self.int_controller.create(None)
+        self.int_controller.set_read_only(False)
 
     def tearDown(self):
-        super(TestNumberLineEdit, self).tearDown()
-        self.d_controller.destroy()
-        self.assertIsNone(self.d_controller.widget)
-        self.f_controller.destroy()
-        self.assertIsNone(self.f_controller.widget)
-        self.i_controller.destroy()
-        self.assertIsNone(self.i_controller.widget)
+        super().tearDown()
+        self.double_controller.destroy()
+        self.assertIsNone(self.double_controller.widget)
+        self.float_controller.destroy()
+        self.assertIsNone(self.float_controller.widget)
+        self.int_controller.destroy()
+        self.assertIsNone(self.int_controller.widget)
+
+    @property
+    def float_text(self):
+        return self.float_controller._internal_widget.text()
+
+    @float_text.setter
+    def float_text(self, text):
+        self.float_controller._internal_widget.setText(text)
+
+    @property
+    def double_text(self):
+        return self.double_controller._internal_widget.text()
+
+    @double_text.setter
+    def double_text(self, text):
+        self.double_controller._internal_widget.setText(text)
+
+    @property
+    def int_text(self):
+        return self.int_controller._internal_widget.text()
+
+    @int_text.setter
+    def int_text(self, text):
+        self.int_controller._internal_widget.setText(text)
 
     def test_set_value(self):
-        set_proxy_value(self.d_proxy, 'prop', np.float32(0.00123))
-        self.assertEqual(self.d_controller._internal_widget.text(), '0.00123')
-        set_proxy_value(self.d_proxy, 'prop', 5.4)
-        self.assertEqual(self.d_controller._internal_widget.text(), '5.4')
-        set_proxy_value(self.d_proxy, 'prop', np.float64(0.0088))
-        self.assertEqual(self.d_controller._internal_widget.text(), '0.0088')
+        set_proxy_value(self.double_proxy, "prop", np.float32(0.00123))
+        self.assertEqual(self.double_text, "0.00123")
+        set_proxy_value(self.double_proxy, "prop", 5.4)
+        self.assertEqual(self.double_text, "5.4")
+        set_proxy_value(self.double_proxy, "prop", np.float64(0.0088))
+        self.assertEqual(self.double_text, "0.0088")
 
-        set_proxy_value(self.f_proxy, 'prop', np.float32(0.00123))
-        self.assertEqual(self.f_controller._internal_widget.text(), '0.00123')
-        set_proxy_value(self.f_proxy, 'prop', np.float64(0.0088))
-        self.assertEqual(self.f_controller._internal_widget.text(), '0.0088')
-
-        set_proxy_value(self.i_proxy, 'prop', 5)
-        self.assertEqual(self.i_controller._internal_widget.text(), '5')
+        set_proxy_value(self.float_proxy, "prop", np.float32(0.00123))
+        self.assertEqual(self.float_text, "0.00123")
+        set_proxy_value(self.float_proxy, "prop", np.float64(0.0088))
+        self.assertEqual(self.float_text, "0.0088")
 
     def test_state_update(self):
-        set_proxy_value(self.i_proxy, 'state', 'CHANGING')
-        self.assertFalse(self.i_controller._internal_widget.isEnabled())
-        set_proxy_value(self.i_proxy, 'state', 'INIT')
-        self.assertTrue(self.i_controller._internal_widget.isEnabled())
-
-        set_proxy_value(self.d_proxy, 'state', 'CHANGING')
-        self.assertFalse(self.d_controller._internal_widget.isEnabled())
-        set_proxy_value(self.d_proxy, 'state', 'INIT')
-        self.assertTrue(self.d_controller._internal_widget.isEnabled())
+        set_proxy_value(self.double_proxy, "state", "CHANGING")
+        self.assertFalse(self.double_controller._internal_widget.isEnabled())
+        set_proxy_value(self.double_proxy, "state", "INIT")
+        self.assertTrue(self.double_controller._internal_widget.isEnabled())
 
     def test_edit_value(self):
-        self.d_controller._internal_widget.setText('3.14')
-        self.assertLess(abs(self.d_proxy.edit_value - 3.14), 0.0001)
-        self.d_controller._internal_widget.setText('3.14e-2')
-        self.assertLess(abs(self.d_proxy.edit_value - 0.0314), 0.00001)
-        # Since `maxInc=1000`, then the following shouldn't be accepted,
+        self.double_text = "3.14"
+        self.assertLess(abs(self.double_proxy.edit_value - 3.14), 0.0001)
+        self.double_text = "3.14e-2"
+        self.assertLess(abs(self.double_proxy.edit_value - 0.0314), 0.00001)
+        # Since `maxInc=1000`, then the following shouldn"t be accepted,
         # so the value is still 0.0314
-        self.d_controller._internal_widget.setText('3.14e9')
-        self.assertLess(abs(self.d_proxy._edit_binding.value - 0.0314),
+        self.double_text = "3.14e9"
+        self.assertLess(abs(self.double_proxy._edit_binding.value - 0.0314),
                         0.00001)
-        self.assertIsNone(self.d_proxy.edit_value)
-        self.i_controller._internal_widget.setText('3')
-        self.assertEqual(self.i_proxy.edit_value, 3)
+        self.assertIsNone(self.double_proxy.edit_value)
+        # Integers
+        self.int_text = "3"
+        self.assertEqual(self.int_proxy.edit_value, 3)
+        self.assertEqual(self.int_text, "3")
+
         # Since 12 is greater than `maxInc=10`, then it shouldn't be accepted,
         # so the value is still 3
-        self.i_controller._internal_widget.setText('12')
-        self.assertNotEqual(self.i_proxy.edit_value, '12')
-        self.assertIsNone(self.i_proxy.edit_value)
-        self.assertEqual(self.i_controller._internal_value, '3')
+        self.int_text = "12"
+        self.assertNotEqual(self.int_proxy.edit_value, "12")
+        self.assertIsNone(self.int_proxy.edit_value)
+        self.assertEqual(self.int_text, "12")
+        self.assertEqual(self.int_controller._internal_value, '3')
 
     def test_scientific_notation(self):
-        test_strings = ['3.141592e0', '1.23e2', '1.23e+2', '1.23e-1']
+        test_strings = ["3.141592e0", "1.23e2", "1.23e+2", "1.23e-1"]
         results = [3.141592, 123., 123., 0.123]
         for i, test_string in enumerate(test_strings):
-            self.d_controller._internal_widget.setText(test_string)
-            self.assertEqual(self.d_proxy.edit_value, results[i])
-            self.f_controller._internal_widget.setText(test_string)
-            self.assertEqual(self.f_proxy.edit_value, results[i])
+            self.double_text = test_string
+            self.assertEqual(self.double_proxy.edit_value, results[i])
+            self.float_controller._internal_widget.setText(test_string)
+            self.assertEqual(self.float_proxy.edit_value, results[i])
 
-        last_accepted_value = '1.2'
-        self.d_controller._internal_widget.setText(last_accepted_value)
-        test_out_of_range = ['1.0e5', '-1.0e5']
+        last_accepted_value = "1.2"
+        self.double_text = last_accepted_value
+        test_out_of_range = ["1.0e5", "-1.0e5"]
         results = [100000, -100000]
         for i, test_string in enumerate(test_out_of_range):
             # shouldn't be accepted, the edit value is None:
-            self.d_controller._internal_widget.setText(test_string)
-            self.assertNotEqual(self.d_proxy.edit_value, results[i])
-            self.assertIsNone(self.d_proxy.edit_value)
+            self.double_text = test_string
+            self.assertNotEqual(self.double_proxy.edit_value, results[i])
+            self.assertIsNone(self.double_proxy.edit_value)
 
     def test_change_decimals(self):
-        action = self.d_controller.widget.actions()[0]
-        self.assertIn('decimals', action.text().lower())
+        action = self.double_controller.widget.actions()[0]
+        self.assertIn("decimals", action.text().lower())
 
-        sym = 'karabogui.controllers.edit.lineedit.QInputDialog'
+        sym = "karabogui.controllers.edit.lineedit.QInputDialog"
         with patch(sym) as QInputDialog:
             QInputDialog.getInt.return_value = 4, True
             action.trigger()
 
-        self.assertEqual(self.d_controller.model.decimals, 4)
+        self.assertEqual(self.double_controller.model.decimals, 4)
 
     def test_decimal_validation(self):
-        self.d_controller._internal_widget.setText('1.0')
-        self.assertEqual(self.d_proxy.edit_value, 1.0)
-        self.d_controller.model.decimals = 3
+        self.double_text = "1.0"
+        self.assertEqual(self.double_proxy.edit_value, 1.0)
+        self.double_controller.model.decimals = 3
         # invalid input for floating decimals
-        self.d_controller._internal_widget.setText('1.0003')
-        self.assertIsNone(self.d_proxy.edit_value)
-        self.d_controller._internal_widget.setText('1.231')
-        self.assertEqual(self.d_proxy.edit_value, 1.231)
-        self.d_controller._internal_widget.setText('1e-1')
-        self.assertEqual(self.d_proxy.edit_value, 0.1)
+        self.double_text = "1.0003"
+        self.assertIsNone(self.double_proxy.edit_value)
+        self.double_text = "1.231"
+        self.assertEqual(self.double_proxy.edit_value, 1.231)
+        self.double_text = "1e-1"
+        self.assertEqual(self.double_proxy.edit_value, 0.1)
         # try to trick decimals fails!
-        self.d_controller._internal_widget.setText('1.278e-2')
-        self.assertIsNone(self.d_proxy.edit_value)
+        self.double_text = "1.278e-2"
+        self.assertIsNone(self.double_proxy.edit_value)
         # follow user input, we are only allowed to set 3 digits
-        self.d_controller._internal_widget.setText('1')
-        self.assertEqual(self.d_proxy.edit_value, 1.0)
-        self.d_controller._internal_widget.setText('1.1')
-        self.assertEqual(self.d_proxy.edit_value, 1.1)
-        self.d_controller._internal_widget.setText('1.12')
-        self.assertEqual(self.d_proxy.edit_value, 1.12)
-        self.d_controller._internal_widget.setText('1.124')
-        self.assertEqual(self.d_proxy.edit_value, 1.124)
-        self.d_controller._internal_widget.setText('1.1244')
-        self.assertIsNone(self.d_proxy.edit_value)
+        self.double_text = "1"
+        self.assertEqual(self.double_proxy.edit_value, 1.0)
+        self.double_text = "1.1"
+        self.assertEqual(self.double_proxy.edit_value, 1.1)
+        self.double_text = "1.12"
+        self.assertEqual(self.double_proxy.edit_value, 1.12)
+        self.double_text = "1.124"
+        self.assertEqual(self.double_proxy.edit_value, 1.124)
+        self.double_text = "1.1244"
+        self.assertIsNone(self.double_proxy.edit_value)
 
-    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
     def test_decline_color(self):
-        self.d_controller._internal_widget.setText('10000.0')
-        self.assertIsNone(self.d_proxy.edit_value)
-        error_pal = self.d_controller._error_palette
-        self.assertEqual(self.d_controller._internal_widget.palette(),
-                         error_pal)
-        self.d_controller.on_decline()
-        normal_pal = self.d_controller._normal_palette
-        self.assertEqual(self.d_controller._internal_widget.palette(),
-                         normal_pal)
+        self.double_text = "10000.0"
+        self.assertIsNone(self.double_proxy.edit_value)
+        error_sheet = self.double_controller._style_sheet.format("red")
+        self.assertEqual(self.double_controller._internal_widget.styleSheet(),
+                         error_sheet)
+        self.double_controller.on_decline()
+        normal_sheet = self.double_controller._style_sheet.format("black")
+        self.assertEqual(self.double_controller._internal_widget.styleSheet(),
+                         normal_sheet)
 
 
 class IntObject24(Configurable):
@@ -262,59 +276,19 @@ class IntObject24(Configurable):
 
 class TestNumberIntEdit(GuiTestCase):
     def setUp(self):
-        super(TestNumberIntEdit, self).setUp()
-        self.i_proxy = get_class_property_proxy(IntObject24.getClassSchema(),
-                                                'prop')
-        self.i_controller = IntLineEdit(proxy=self.i_proxy,
-                                        model=IntLineEditModel())
-        self.i_controller.create(None)
-        self.i_controller.set_read_only(False)
-        self.normal_palette = self.i_controller._normal_palette
-        self.error_palette = self.i_controller._error_palette
-
-    @property
-    def palette(self):
-        return self.i_controller._internal_widget.palette()
-
-    def tearDown(self):
-        super(TestNumberIntEdit, self).tearDown()
-        self.i_controller.destroy()
-        self.assertIsNone(self.i_controller.widget)
-
-    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
-    def test_property_proxy_edit_values_from_text_input(self):
-        set_proxy_value(self.i_proxy, 'prop', 1234)
-
-        self.i_controller._internal_widget.setText("12345")
-        self.i_controller._internal_widget.setText("123456")
-        self.i_controller._internal_widget.setText("1234567")
-        self.i_controller._internal_widget.setText("12345678")
-        self.assertEqual(self.palette, self.normal_palette)
-        self.i_controller._internal_widget.setText("123456789")
-        self.assertEqual(self.palette, self.error_palette)
-        self.assertNotEqual(get_editor_value(self.i_proxy), 12345678)
-        self.assertEqual(get_editor_value(self.i_proxy), 1234)
-
-
-class TestHexadecimal(GuiTestCase):
-    def setUp(self):
-        super(TestHexadecimal, self).setUp()
-        self.proxy = get_class_property_proxy(Uint8Object.getClassSchema(),
-                                              'prop')
-        self.controller = Hexadecimal(proxy=self.proxy)
+        super().setUp()
+        self.proxy = get_class_property_proxy(
+            IntObject24.getClassSchema(), "prop")
+        self.controller = IntLineEdit(proxy=self.proxy,
+                                      model=IntLineEditModel())
         self.controller.create(None)
         self.controller.set_read_only(False)
-        self.normal_palette = self.controller._normal_palette
-        self.error_palette = self.controller._error_palette
-
-    def tearDown(self):
-        super(TestHexadecimal, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+        self.normal_sheet = self.controller._style_sheet.format("black")
+        self.error_sheet = self.controller._style_sheet.format("red")
 
     @property
-    def palette(self):
-        return self.controller._internal_widget.palette()
+    def sheet(self):
+        return self.controller._internal_widget.styleSheet()
 
     @property
     def text(self):
@@ -324,21 +298,67 @@ class TestHexadecimal(GuiTestCase):
     def text(self, value):
         return self.controller._internal_widget.setText(value)
 
-    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
+    def tearDown(self):
+        super().tearDown()
+        self.controller.destroy()
+        self.assertIsNone(self.controller.widget)
+
+    def test_property_proxy_edit_values_from_text_input(self):
+        set_proxy_value(self.proxy, "prop", 1234)
+
+        self.controller._internal_widget.setText("12345")
+        self.controller._internal_widget.setText("123456")
+        self.controller._internal_widget.setText("1234567")
+        self.controller._internal_widget.setText("12345678")
+        self.assertEqual(self.sheet, self.normal_sheet)
+        self.controller._internal_widget.setText("123456789")
+        self.assertEqual(self.sheet, self.error_sheet)
+        self.assertNotEqual(get_editor_value(self.proxy), 12345678)
+        self.assertEqual(get_editor_value(self.proxy), 1234)
+
+
+class TestHexadecimal(GuiTestCase):
+    def setUp(self):
+        super().setUp()
+        self.proxy = get_class_property_proxy(Uint8Object.getClassSchema(),
+                                              "prop")
+        self.controller = Hexadecimal(proxy=self.proxy)
+        self.controller.create(None)
+        self.controller.set_read_only(False)
+        self.normal_sheet = self.controller._style_sheet.format("black")
+        self.error_sheet = self.controller._style_sheet.format("red")
+
+    def tearDown(self):
+        super().tearDown()
+        self.controller.destroy()
+        self.assertIsNone(self.controller.widget)
+
+    @property
+    def sheet(self):
+        return self.controller._internal_widget.styleSheet()
+
+    @property
+    def text(self):
+        return self.controller._internal_widget.text()
+
+    @text.setter
+    def text(self, value):
+        return self.controller._internal_widget.setText(value)
+
     def test_set_value(self):
-        set_proxy_value(self.proxy, 'prop', 0x40)
+        set_proxy_value(self.proxy, "prop", 0x40)
         self.text = ""
-        self.assertEqual(self.palette, self.error_palette)
+        self.assertEqual(self.sheet, self.error_sheet)
 
-        self.text = '40'
-        self.assertEqual(self.text, '40')
-        self.assertEqual(self.palette, self.normal_palette)
+        self.text = "40"
+        self.assertEqual(self.text, "40")
+        self.assertEqual(self.sheet, self.normal_sheet)
 
-        self.text = '-40'
-        self.assertEqual(self.text, '-40')
+        self.text = "-40"
+        self.assertEqual(self.text, "-40")
         self.assertNotEqual(get_editor_value(self.proxy), -0x40)
-        self.assertEqual(self.palette, self.error_palette)
+        self.assertEqual(self.sheet, self.error_sheet)
 
-        self.text = '8F'
-        self.assertEqual(self.palette, self.normal_palette)
+        self.text = "8F"
+        self.assertEqual(self.sheet, self.normal_sheet)
         self.assertEqual(get_editor_value(self.proxy), 0x8F)
