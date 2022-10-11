@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QPalette, QValidator
+from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QAction, QInputDialog, QLineEdit
-from traits.api import Instance, Int, Str, on_trait_change
+from traits.api import Instance, Int, String, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
@@ -17,29 +17,35 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, is_proxy_allowed,
     register_binding_controller)
-from karabogui.util import SignalBlocker
+from karabogui.util import SignalBlocker, generateObjectName
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexValidator)
 from karabogui.widgets.hints import LineEdit
 
 MAX_FLOATING_PRECISION = 12
 
+FINE_COLOR = "black"
+ERROR_COLOR = "red"
+
 
 class BaseLineEdit(BaseBindingController):
+
     _validator = Instance(QValidator)
     _internal_widget = Instance(QLineEdit)
-    _normal_palette = Instance(QPalette)
-    _error_palette = Instance(QPalette)
-    _display_value = Str("")
-    _internal_value = Str("")
+    _style_sheet = String("")
+    _display_value = String("")
+    _internal_value = String("")
     _last_cursor_pos = Int(0)
 
     def create_widget(self, parent):
         self._internal_widget = LineEdit(parent)
         self._internal_widget.setValidator(self._validator)
-        self._normal_palette = self._internal_widget.palette()
-        self._error_palette = QPalette(self._normal_palette)
-        self._error_palette.setColor(QPalette.Text, Qt.red)
+        objectName = generateObjectName(self)
+        self._style_sheet = ("QWidget#{}".format(objectName) +
+                             " {{ color: {}; }}")
+        self._internal_widget.setObjectName(objectName)
+        sheet = self._style_sheet.format(FINE_COLOR)
+        self._internal_widget.setStyleSheet(sheet)
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
         widget.setFocusProxy(self._internal_widget)
@@ -66,7 +72,8 @@ class BaseLineEdit(BaseBindingController):
     def _on_text_changed(self, text):
         acceptable_input = self._internal_widget.hasAcceptableInput()
         if self.proxy.binding is None:
-            self._internal_widget.setPalette(self._normal_palette)
+            sheet = self._style_sheet.format(FINE_COLOR)
+            self._internal_widget.setStyleSheet(sheet)
             return
         if acceptable_input:
             self._internal_value = text
@@ -77,9 +84,9 @@ class BaseLineEdit(BaseBindingController):
             # erase the edit value
             self.proxy.edit_value = None
         # update color after text change!
-        palette = (self._normal_palette if acceptable_input
-                   else self._error_palette)
-        self._internal_widget.setPalette(palette)
+        color = FINE_COLOR if acceptable_input else ERROR_COLOR
+        sheet = self._style_sheet.format(color)
+        self._internal_widget.setStyleSheet(sheet)
 
     def _validate_value(self):
         """This method validates the current value of the widget and returns
@@ -95,11 +102,9 @@ class BaseLineEdit(BaseBindingController):
         return value
 
     def on_decline(self):
-        """When the input was declined, this method is executed
-        """
-        # we know that after we are in valid range, hence we reset the
-        # background
-        self._internal_widget.setPalette(self._normal_palette)
+        """When the input was declined, this method is executed"""
+        sheet = self._style_sheet.format(FINE_COLOR)
+        self._internal_widget.setStyleSheet(sheet)
 
 
 @register_binding_controller(ui_name="Float Field", can_edit=True,
