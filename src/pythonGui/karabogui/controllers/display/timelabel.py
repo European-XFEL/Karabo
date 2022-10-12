@@ -7,7 +7,7 @@ import traceback
 from datetime import datetime
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QAction, QFrame, QInputDialog, QLabel
+from qtpy.QtWidgets import QAction, QDialog, QFrame, QInputDialog, QLabel
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import DisplayTimeModel
@@ -17,6 +17,8 @@ from karabogui.binding.api import (
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.dialogs.format_label import FormatLabelDialog
+from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
@@ -52,6 +54,11 @@ class DisplayTimeLabel(BaseBindingController):
         widget.addAction(action)
         action.triggered.connect(self._change_time_format)
 
+        action = QAction("Format field...", widget)
+        action.triggered.connect(self._format_field)
+        widget.addAction(action)
+
+        self._apply_format(widget)
         return widget
 
     def value_update(self, proxy):
@@ -91,3 +98,25 @@ class DisplayTimeLabel(BaseBindingController):
         self.model.time_format = text
         if get_binding_value(self.proxy) is not None:
             self.value_update(self.proxy)
+
+    # -----------------------------------------------------------------------
+    # Formatting methods
+
+    def _format_field(self):
+        dialog = FormatLabelDialog(font_size=self.model.font_size,
+                                   font_weight=self.model.font_weight,
+                                   parent=self.widget)
+        if dialog.exec() == QDialog.Accepted:
+            self.model.trait_set(font_size=dialog.font_size,
+                                 font_weight=dialog.font_weight)
+            self._apply_format()
+
+    def _apply_format(self, widget=None):
+        if widget is None:
+            widget = self.widget
+
+        # Apply font formatting
+        font = widget.font()
+        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
+        font.setBold(self.model.font_weight == "bold")
+        widget.setFont(font)
