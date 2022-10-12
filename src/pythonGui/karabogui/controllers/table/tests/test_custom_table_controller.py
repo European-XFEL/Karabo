@@ -104,6 +104,16 @@ class TestCustomBaseController(GuiTestCase):
         self.assertTrue(controller.isReadOnly())
         self.assertTrue(legacy_model)
 
+        # Check the menu
+        menu = controller.get_basic_menu()
+        self.assertIsNotNone(menu)
+        # Readonly does not have an action
+        self.assertEqual(len(menu.actions()), 0)
+        controller.set_read_only(False)
+        menu = controller.get_basic_menu()
+        self.assertIsNotNone(menu)
+        self.assertEqual(len(menu.actions()), 1)
+
 
 if __name__ == "__main__":
     main()
