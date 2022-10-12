@@ -1,5 +1,7 @@
 from unittest import main
 
+from qtpy.QtWidgets import QStyledItemDelegate
+
 from karabo.common.scenemodel.api import TableElementModel
 from karabo.native import (
     AccessMode, Bool, Configurable, Double, Hash, Int32, String, VectorHash)
@@ -7,7 +9,7 @@ from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import (
     BaseTableController, BoolButtonDelegate, ColorBindingDelegate,
     ColorNumberDelegate, ProgressBarDelegate)
-from karabogui.testing import GuiTestCase, get_property_proxy
+from karabogui.testing import get_property_proxy
 
 
 class TableSchema(Configurable):
@@ -36,39 +38,64 @@ class Object(Configurable):
     prop = VectorHash(rows=TableSchema)
 
 
-class TestDelegateModelView(GuiTestCase):
-    def setUp(self):
-        super().setUp()
-        self.proxy = get_property_proxy(Object.getClassSchema(), "prop")
-        self.model = TableElementModel()
-        self.controller = BaseTableController(proxy=self.proxy,
-                                              model=self.model)
-        self.controller.create(None)
-        self.assertTrue(self.controller.isReadOnly())
-        self.controller.set_read_only(False)
-        self.table_hash = Hash(
-            "prop",
-            [Hash("boolButton", True, "colorText", "ginger",
-                  "colorNumber", 10, "progress", 75.0)])
-        apply_configuration(self.table_hash, self.proxy.root_proxy.binding)
+class KaraboDelegate(QStyledItemDelegate):
+    """A delegate class for testing"""
 
-    def tearDown(self):
-        self.controller.destroy()
 
-    def test_has_delegates(self):
-        widget = self.controller.tableWidget()
-        delegate = widget.itemDelegateForColumn(0)
-        self.assertNotIsInstance(delegate, BoolButtonDelegate)
-        delegate = widget.itemDelegateForColumn(1)
-        self.assertIsInstance(delegate, ColorBindingDelegate)
-        delegate = widget.itemDelegateForColumn(2)
-        self.assertIsInstance(delegate, ColorNumberDelegate)
-        delegate = widget.itemDelegateForColumn(3)
-        self.assertIsInstance(delegate, ProgressBarDelegate)
+class TableDelegateController(BaseTableController):
+    def create_delegates(self):
+        delegate = KaraboDelegate(parent=self.tableWidget())
+        self.setTableDelegates({0: delegate})
 
-        self.controller.set_read_only(True)
-        delegate = widget.itemDelegateForColumn(0)
-        self.assertIsInstance(delegate, BoolButtonDelegate)
+
+def test_table_delegate_model_view(gui_app):
+    """Test the table controller with delegates"""
+    proxy = get_property_proxy(Object.getClassSchema(), "prop")
+    model = TableElementModel()
+    controller = BaseTableController(proxy=proxy,
+                                     model=model)
+    controller.create(None)
+    assert controller.isReadOnly()
+    controller.set_read_only(False)
+    table_hash = Hash(
+        "prop",
+        [Hash("boolButton", True, "colorText", "ginger",
+              "colorNumber", 10, "progress", 75.0)])
+    apply_configuration(table_hash, proxy.root_proxy.binding)
+
+    widget = controller.tableWidget()
+    delegate = widget.itemDelegateForColumn(0)
+    assert not isinstance(delegate, BoolButtonDelegate)
+    delegate = widget.itemDelegateForColumn(1)
+    assert isinstance(delegate, ColorBindingDelegate)
+    delegate = widget.itemDelegateForColumn(2)
+    assert isinstance(delegate, ColorNumberDelegate)
+    delegate = widget.itemDelegateForColumn(3)
+    assert isinstance(delegate, ProgressBarDelegate)
+
+    controller.set_read_only(True)
+    delegate = widget.itemDelegateForColumn(0)
+    assert isinstance(delegate, BoolButtonDelegate)
+
+
+def test_custom_delegates_controller(gui_app):
+    proxy = get_property_proxy(Object.getClassSchema(), "prop")
+    model = TableElementModel()
+    controller = TableDelegateController(proxy=proxy,
+                                         model=model)
+    controller.create(None)
+    controller.set_read_only(False)
+    widget = controller.tableWidget()
+    # First column changed
+    delegate = widget.itemDelegateForColumn(0)
+    assert isinstance(delegate, KaraboDelegate)
+    # Others remain have been created as expected
+    delegate = widget.itemDelegateForColumn(1)
+    assert isinstance(delegate, ColorBindingDelegate)
+    delegate = widget.itemDelegateForColumn(2)
+    assert isinstance(delegate, ColorNumberDelegate)
+    delegate = widget.itemDelegateForColumn(3)
+    assert isinstance(delegate, ProgressBarDelegate)
 
 
 if __name__ == "__main__":
