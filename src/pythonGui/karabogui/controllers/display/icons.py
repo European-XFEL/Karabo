@@ -21,8 +21,9 @@ class _BaseIcons(BaseBindingController):
     def create_widget(self, parent):
         widget = IconLabel(parent)
         action = QAction('Change Icons...', widget)
-        widget.addAction(action)
         action.triggered.connect(self._on_change_icons)
+        widget.addAction(action)
+
         return widget
 
     def value_update(self, proxy):
