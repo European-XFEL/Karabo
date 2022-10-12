@@ -18,6 +18,8 @@ from karabogui.singletons.api import get_config
 from karabogui.util import getOpenFileName, temp_file
 
 ICON_FILE_SIZE_LIMIT = 102400  # 100 KB
+MIN_SIZE = 24
+DEFAULT_SIZE = 100
 
 
 class IconError(Exception):
@@ -31,8 +33,39 @@ class IconFileSizeLimitError(Exception):
 class IconLabel(QLabel):
 
     def __init__(self, parent=None):
-        super(IconLabel, self).__init__(parent=parent)
-        self.setMinimumSize(24, 24)
+        super().__init__(parent=parent)
+        self.setMinimumSize(MIN_SIZE, MIN_SIZE)
+        self._pixmap = icons.no.pixmap(100)
+
+    # Qt Overrides
+    # ---------------------------------------------------------------------
+
+    def resizeEvent(self, event):
+        """Reimplemented method to scale the QPixmap"""
+        super().resizeEvent(event)
+        self.setPixmap(self._pixmap)
+
+    def setPixmap(self, pixmap):
+        """Reimplemented method to store the input pixmap and use the
+           scaled version"""
+        self._pixmap = pixmap
+        size = self.size()
+        pixmap = pixmap.scaled(size, Qt.KeepAspectRatio,
+                               Qt.SmoothTransformation)
+        super().setPixmap(pixmap)
+
+
+class Label(QLabel):
+    """A Custom QLabel subclass which is referenced by the 'icons.ui' file
+
+    This Label shrinks a Pixmap if necessary to the size, but by default
+    does not enlarge a label if there is more space.
+    """
+    newMime = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setAcceptDrops(True)
         self._pixmap = self._default_pixmap = icons.no.pixmap(100)
 
     # Qt Overrides
@@ -42,15 +75,21 @@ class IconLabel(QLabel):
         """Reimplemented method to reset the pixmap scale with the
            widget resize"""
         if self._pixmap is not None:
-            super(IconLabel, self).setPixmap(self._scaled_pixmap)
+            super().setPixmap(self._scaled_pixmap)
 
-        super(IconLabel, self).resizeEvent(event)
+        super().resizeEvent(event)
 
     def setPixmap(self, pixmap):
         """Reimplemented method to store the input pixmap and use the
            scaled version internally"""
         self._pixmap = pixmap
-        super(IconLabel, self).setPixmap(self._scaled_pixmap)
+        super().setPixmap(self._scaled_pixmap)
+
+    def dragEnterEvent(self, event):
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        self.newMime.emit(event.mimeData())
 
     # Properties
     # ---------------------------------------------------------------------
@@ -59,14 +98,14 @@ class IconLabel(QLabel):
     def _scaled_pixmap(self):
         """Scales the pixmap only if the pixmap is larger than the widget"""
         pixmap = self._pixmap
-        if self._is_pixmap_big:
+        if self.needs_shrink:
             pixmap = pixmap.scaled(self.size(),
                                    Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
         return pixmap
 
     @property
-    def _is_pixmap_big(self):
+    def needs_shrink(self):
         """Checks if the pixmap is larger than the widget by comparing
            the widths and heights"""
         pixmap_size = self._pixmap.size()
@@ -77,22 +116,6 @@ class IconLabel(QLabel):
 
     def setDefaultPixmap(self):
         self.setPixmap(self._default_pixmap)
-
-
-class Label(IconLabel):
-    """A Custom QLabel subclass which is referenced by the 'icons.ui' file
-    """
-    newMime = Signal(str)
-
-    def __init__(self, parent):
-        super(Label, self).__init__(parent)
-        self.setAcceptDrops(True)
-
-    def dragEnterEvent(self, event):
-        event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        self.newMime.emit(event.mimeData())
 
 
 class IconItem(IconData):
@@ -106,7 +129,7 @@ class IconItem(IconData):
         # If no data is added, we use the default pixmap
         if not self.data:
             # If the default pixmap url is not yet existing, we add the pixmap
-            pixmap = icons.no.pixmap(100)
+            pixmap = icons.no.pixmap(DEFAULT_SIZE, DEFAULT_SIZE)
             self._cache_pixmap(pixmap, update=True)
             return pixmap
 
@@ -172,7 +195,7 @@ class IconItem(IconData):
                 raise IconError
         except (KeyError, IconError):
             messagebox.show_error("Could not read image.")
-            pixmap = icons.no.pixmap(100)
+            pixmap = icons.no.pixmap(DEFAULT_SIZE, DEFAULT_SIZE)
 
         return pixmap
 
