@@ -198,10 +198,14 @@ def test_tickslider():
 def test_timelabel():
     traits = _geometry_traits()
     traits["time_format"] = "%H:%M:%S"
+    traits['font_size'] = 18
+    traits['font_weight'] = "bold"
     model = api.DisplayTimeModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.time_format == "%H:%M:%S"
+    assert read_model.font_size == 18
+    assert read_model.font_weight == "bold"
 
 
 def test_web_link_model():
