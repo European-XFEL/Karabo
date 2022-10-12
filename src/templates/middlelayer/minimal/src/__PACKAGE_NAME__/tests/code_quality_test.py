@@ -12,7 +12,7 @@ import subprocess
 
 import __PACKAGE_NAME__
 
-BLACKLIST = ['setup.py', '__init__.py']
+IGNORE_LIST = ["setup.py", "__init__.py"]
 
 
 def get_python_files():
@@ -22,7 +22,7 @@ def get_python_files():
     flake_check = []
     for dirpath, _, filenames in os.walk(common_dir):
         for fn in filenames:
-            if op.splitext(fn)[-1].lower() == '.py' and fn not in BLACKLIST:
+            if op.splitext(fn)[-1].lower() == ".py" and fn not in IGNORE_LIST:
                 path = op.join(dirpath, fn)
                 flake_check.append(path)
 
@@ -31,5 +31,5 @@ def get_python_files():
 
 def test_code_quality_flake8():
     files = get_python_files()
-    command = ['flake8', *[op.abspath(py_file) for py_file in files]]
+    command = ["flake8", *[op.abspath(py_file) for py_file in files]]
     subprocess.check_call(command)
