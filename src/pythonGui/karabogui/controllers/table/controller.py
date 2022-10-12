@@ -154,18 +154,8 @@ class BaseTableController(BaseBindingController):
     # Subclass Methods
 
     def create_delegates(self):
-        """Create all the table delegates in the table element"""
-        bindings = self._bindings
-        keys = bindings.keys()
-        get_delegate = (get_display_delegate if self._readonly
-                        else get_table_delegate)
-        self._table_buttons = False
-        for column, key in enumerate(keys):
-            binding = bindings[key]
-            delegate = get_delegate(self.proxy, binding, self._table_widget)
-            if isinstance(delegate, TableButtonDelegate):
-                self._table_buttons = True
-            self._table_widget.setItemDelegateForColumn(column, delegate)
+        """Subclass method to set the table delegates in the table element"""
+        self.setTableDelegates({})
 
     def custom_menu(self, pos):
         """Subclass method for own custom menu if ``hasCustomMenu`` is `True`
@@ -189,6 +179,33 @@ class BaseTableController(BaseBindingController):
 
     # ---------------------------------------------------------------------
     # Public interface
+
+    def setTableDelegates(self, delegates):
+        """Set all table delegates on the table controller
+
+        If no delegates are specified for a column, a delegate is derived
+        from the column binding. Use this method in `create_delegates`.
+
+        :param delegates: Dictionary {column: delegate}
+
+        Note: This method was added with Karabo 2.16.X
+        """
+        assert isinstance(delegates, dict)
+
+        bindings = self._bindings
+        keys = bindings.keys()
+        get_delegate = (get_display_delegate if self._readonly
+                        else get_table_delegate)
+        self._table_buttons = False
+        for column, key in enumerate(keys):
+            delegate = delegates.get(column)
+            if delegate is None:
+                binding = bindings[key]
+                delegate = get_delegate(self.proxy, binding,
+                                        self._table_widget)
+            if isinstance(delegate, TableButtonDelegate):
+                self._table_buttons = True
+            self._table_widget.setItemDelegateForColumn(column, delegate)
 
     def getModelData(self, row, column):
         """Get data from the sourceModel with `row` and `column`
