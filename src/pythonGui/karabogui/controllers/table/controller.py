@@ -252,50 +252,17 @@ class BaseTableController(BaseBindingController):
         index = self.currentIndex()
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
-    # ---------------------------------------------------------------------
-    # Action Slots - Private
+    def get_basic_menu(self):
+        """Used by subclassed controller to get the basic menu
 
-    def _device_action(self):
-        model = self.tableWidget().model()
-        index = model.index_ref(self.currentIndex())
-        dialog = TableDeviceDialog(parent=self.widget)
-        if dialog.exec() == QDialog.Accepted:
-            device = dialog.device_id
-            self.sourceModel().setData(index, device)
-
-    def _set_index_default(self):
-        index = self.currentIndex()
-        key = list(self._bindings.keys())[index.column()]
-        binding = self._bindings[key]
-        default_value = get_default_value(binding, force=True)
-        self._item_model.setData(index, default_value, role=Qt.EditRole)
-
-    def _resize_contents(self):
-        self.model.resizeToContents = not self.model.resizeToContents
-        self._set_table_resize_mode(self.model)
-
-    def _set_table_resize_mode(self, model):
-        mode = (QHeaderView.ResizeToContents if model.resizeToContents
-                else QHeaderView.Interactive)
-
-        length = len(self.getBindings().keys())
-        for index in range(length - 1):
-            self._table_widget.horizontalHeader().setSectionResizeMode(
-                index, mode)
-        self._table_widget.horizontalHeader().setStretchLastSection(True)
-
-    def _context_menu(self, pos):
-        """The custom context menu of a reconfigurable table element"""
-        selection_model = self._table_widget.selectionModel()
-        if selection_model is None:
-            # Note: We did not yet receive a schema and thus have no table and
-            # selection model!
-            return
-
-        index = selection_model.currentIndex()
+        Note: Added in Karabo 2.16.X
+        """
         menu = QMenu(parent=self._table_widget)
-        if index.isValid():
+        if self.isReadOnly():
+            return menu
 
+        index = self.currentIndex()
+        if index.isValid():
             key = list(self._bindings.keys())[index.column()]
             binding = self._bindings[key]
             if is_writable_binding(binding):
@@ -343,6 +310,49 @@ class BaseTableController(BaseBindingController):
             add_action = menu.addAction(icons.add, "Add Row below")
             add_action.triggered.connect(self.add_row)
 
+        return menu
+
+    # ---------------------------------------------------------------------
+    # Action Slots - Private
+
+    def _device_action(self):
+        model = self.tableWidget().model()
+        index = model.index_ref(self.currentIndex())
+        dialog = TableDeviceDialog(parent=self.widget)
+        if dialog.exec() == QDialog.Accepted:
+            device = dialog.device_id
+            self.sourceModel().setData(index, device)
+
+    def _set_index_default(self):
+        index = self.currentIndex()
+        key = list(self._bindings.keys())[index.column()]
+        binding = self._bindings[key]
+        default_value = get_default_value(binding, force=True)
+        self._item_model.setData(index, default_value, role=Qt.EditRole)
+
+    def _resize_contents(self):
+        self.model.resizeToContents = not self.model.resizeToContents
+        self._set_table_resize_mode(self.model)
+
+    def _set_table_resize_mode(self, model):
+        mode = (QHeaderView.ResizeToContents if model.resizeToContents
+                else QHeaderView.Interactive)
+
+        length = len(self.getBindings().keys())
+        for index in range(length - 1):
+            self._table_widget.horizontalHeader().setSectionResizeMode(
+                index, mode)
+        self._table_widget.horizontalHeader().setStretchLastSection(True)
+
+    def _context_menu(self, pos):
+        """The custom context menu of a reconfigurable table element"""
+        selection_model = self._table_widget.selectionModel()
+        if selection_model is None:
+            # Note: We did not yet receive a schema and thus have no table and
+            # selection model!
+            return
+
+        menu = self.get_basic_menu()
         menu.exec(self._table_widget.viewport().mapToGlobal(pos))
 
     # Private interface
