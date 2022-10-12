@@ -68,9 +68,8 @@ class DisplayLabelModel(BaseWidgetObjectData):
             **traits
     ):
         # We set the default values as Enum doesn't set this straightforwardly
-        super(DisplayLabelModel, self).__init__(
-            font_size=font_size, font_weight=font_weight, **traits
-        )
+        super().__init__(font_size=font_size, font_weight=font_weight,
+                         **traits)
 
 
 class DisplayListModel(BaseWidgetObjectData):
@@ -213,7 +212,7 @@ class TickSliderModel(BaseEditWidget):
     show_value = Bool(True)
 
 
-class DisplayTimeModel(BaseWidgetObjectData):
+class DisplayTimeModel(DisplayLabelModel):
     """A model for the time widget"""
 
     time_format = String("%H:%M:%S")
@@ -303,7 +302,7 @@ def _time_label_reader(element):
     traits = read_base_widget_data(element)
     time_format = element.get(NS_KARABO + "time_format", "%H:%M:%S")
     traits["time_format"] = time_format
-
+    traits.update(read_font_format_data(element))
     return DisplayTimeModel(**traits)
 
 
@@ -312,6 +311,7 @@ def _time_label_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "TimeLabel")
     element.set(NS_KARABO + "time_format", str(model.time_format))
+    write_font_format_data(model, element)
 
     return element
 
