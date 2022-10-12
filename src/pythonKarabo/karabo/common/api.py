@@ -54,5 +54,4 @@ from .services import (
     KARABO_ALARM_SERVICE, KARABO_CONFIG_MANAGER, KARABO_DAEMON_MANAGER,
     KARABO_PROJECT_MANAGER)
 from .states import State, StateSignifier
-from .traits import walk_traits_object
-from .utils import WeakMethodRef
+from .utils import WeakMethodRef, walk_traits_object
