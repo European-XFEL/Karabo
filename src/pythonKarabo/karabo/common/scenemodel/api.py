@@ -12,11 +12,11 @@ from .exceptions import SceneReaderException, SceneWriterException
 from .generic_scenes import (
     get_alarm_graph_scene, get_image_scene, get_state_graph_scene,
     get_text_history_scene, get_trendline_scene, get_vector_scene)
-from .io import read_scene, write_scene, write_single_model
 from .layouts import (
     BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
     GridLayoutChildData, GridLayoutModel)
 from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
+from .modelio import read_scene, write_scene, write_single_model
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import (
     ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)

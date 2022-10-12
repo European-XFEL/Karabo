@@ -1,7 +1,7 @@
 from karabo.testing.utils import temp_xml_file
 
-from ..io import read_scene, write_scene
 from ..model import SceneModel
+from ..modelio import read_scene, write_scene
 
 
 def assert_base_traits(model):
