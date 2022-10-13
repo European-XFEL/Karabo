@@ -91,6 +91,22 @@ class TestCustomBaseController(GuiTestCase):
         # Calls custom_menu
         self.assertEqual(count, 1)
 
+    def test_column_index_key(self):
+        index = self.controller.columnIndex("foo")
+        self.assertEqual(index, 1)
+        index = self.controller.columnIndex("arch")
+        self.assertEqual(index, 0)
+        # Schema evolution! Return `None` index
+        index = self.controller.columnIndex("nothere")
+        self.assertIsNone(index)
+
+        key = self.controller.columnKey(0)
+        self.assertEqual(key, "arch")
+        key = self.controller.columnKey(1)
+        self.assertEqual(key, "foo")
+        key = self.controller.columnKey(2)
+        self.assertIsNone(key)
+
     def test_stretch_last_section(self):
         table_widget = self.controller.tableWidget()
         self.assertTrue(table_widget.horizontalHeader().stretchLastSection())
