@@ -13,6 +13,6 @@ from .trendmodel import (
     Curve, get_start_end_date_time)
 from .unitlabel import add_unit_label
 from .util import (
-    axis_label, get_class_const_trait, has_options, is_proxy_allowed,
-    populate_controller_registry, with_display_type)
+    axis_label, get_class_const_trait, get_regex, has_options, has_regex,
+    is_proxy_allowed, populate_controller_registry, with_display_type)
 from .validators import BindingValidator, ListValidator, SimpleValidator
