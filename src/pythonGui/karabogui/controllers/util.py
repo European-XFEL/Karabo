@@ -5,6 +5,7 @@ import pkg_resources
 from traits.api import Undefined
 
 import karabogui.access as krb_access
+from karabo.common.api import KARABO_SCHEMA_REGEX
 
 
 def axis_label(proxy):
@@ -30,6 +31,16 @@ def get_class_const_trait(klass, name):
 def has_options(binding):
     """Returns True if a binding has any `options` defined."""
     return len(binding.options) > 0
+
+
+def has_regex(binding):
+    """Returns True if the binding has any `regex` defined."""
+    return binding.attributes.get(KARABO_SCHEMA_REGEX) is not None
+
+
+def get_regex(binding, default=None):
+    """Returns the `regex` of a binding, if not present takes the `default`"""
+    return binding.attributes.get(KARABO_SCHEMA_REGEX, default)
 
 
 def populate_controller_registry():
@@ -73,6 +84,7 @@ def with_display_type(display_type):
     `register_binding_controller` which looks for a specific display type
     of property.
     """
+
     def is_compatible(binding):
         dt = binding.display_type
         return dt == display_type
