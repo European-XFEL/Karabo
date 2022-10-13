@@ -3,120 +3,34 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtCore import Qt
 from qtpy.QtGui import QValidator
-from qtpy.QtWidgets import QAction, QInputDialog, QLineEdit
-from traits.api import Instance, Int, String, on_trait_change
+from qtpy.QtWidgets import QAction, QInputDialog
+from traits.api import Instance, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel, HexadecimalModel,
     IntLineEditModel)
 from karabogui.binding.api import (
-    FloatBinding, IntBinding, StringBinding, get_editor_value, get_min_max)
+    FloatBinding, IntBinding, StringBinding, get_editor_value)
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, is_proxy_allowed,
-    register_binding_controller)
-from karabogui.util import SignalBlocker, generateObjectName
+    BaseLineEditController, register_binding_controller)
+from karabogui.util import SignalBlocker
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexValidator)
-from karabogui.widgets.hints import LineEdit
 
 MAX_FLOATING_PRECISION = 12
-
-FINE_COLOR = "black"
-ERROR_COLOR = "red"
-
-
-class BaseLineEdit(BaseBindingController):
-
-    _validator = Instance(QValidator)
-    _internal_widget = Instance(QLineEdit)
-    _style_sheet = String("")
-    _display_value = String("")
-    _internal_value = String("")
-    _last_cursor_pos = Int(0)
-
-    def create_widget(self, parent):
-        self._internal_widget = LineEdit(parent)
-        self._internal_widget.setValidator(self._validator)
-        objectName = generateObjectName(self)
-        self._style_sheet = ("QWidget#{}".format(objectName) +
-                             " {{ color: {}; }}")
-        self._internal_widget.setObjectName(objectName)
-        sheet = self._style_sheet.format(FINE_COLOR)
-        self._internal_widget.setStyleSheet(sheet)
-        widget = add_unit_label(self.proxy, self._internal_widget,
-                                parent=parent)
-        widget.setFocusProxy(self._internal_widget)
-        return widget
-
-    def set_read_only(self, ro):
-        self._internal_widget.setReadOnly(ro)
-        if not ro:
-            self._internal_widget.textChanged.connect(self._on_text_changed)
-
-        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
-        self._internal_widget.setFocusPolicy(focus_policy)
-
-    def state_update(self, proxy):
-        enable = is_proxy_allowed(proxy)
-        self._internal_widget.setEnabled(enable)
-
-    def binding_update(self, proxy):
-        low, high = get_min_max(proxy.binding)
-        self._validator.setBottom(low)
-        self._validator.setTop(high)
-        self.widget.update_unit_label(proxy)
-
-    def _on_text_changed(self, text):
-        acceptable_input = self._internal_widget.hasAcceptableInput()
-        if self.proxy.binding is None:
-            sheet = self._style_sheet.format(FINE_COLOR)
-            self._internal_widget.setStyleSheet(sheet)
-            return
-        if acceptable_input:
-            self._internal_value = text
-            self._last_cursor_pos = self._internal_widget.cursorPosition()
-            # proxy.edit_value is set to None if the user input is not valid
-            self.proxy.edit_value = self._validate_value()
-        else:
-            # erase the edit value
-            self.proxy.edit_value = None
-        # update color after text change!
-        color = FINE_COLOR if acceptable_input else ERROR_COLOR
-        sheet = self._style_sheet.format(color)
-        self._internal_widget.setStyleSheet(sheet)
-
-    def _validate_value(self):
-        """This method validates the current value of the widget and returns
-        on success the value or in failure None.
-        """
-        if not self._internal_value:
-            return None
-
-        value = self._internal_value
-        state, _, _ = self._validator.validate(value, 0)
-        if state == QValidator.Invalid:
-            value = None
-        return value
-
-    def on_decline(self):
-        """When the input was declined, this method is executed"""
-        sheet = self._style_sheet.format(FINE_COLOR)
-        self._internal_widget.setStyleSheet(sheet)
 
 
 @register_binding_controller(ui_name="Float Field", can_edit=True,
                              klassname="DoubleLineEdit",
                              binding_type=FloatBinding, priority=10)
-class DoubleLineEdit(BaseLineEdit):
-    # The scene model class used by this controller
+class DoubleLineEdit(BaseLineEditController):
     model = Instance(DoubleLineEditModel, args=())
 
     def create_widget(self, parent):
-        self._validator = NumberValidator()
-        self._validator.decimals = self.model.decimals
+        self.validator = NumberValidator()
+        self.validator.decimals = self.model.decimals
         widget = super().create_widget(parent)
         decimal_action = QAction("Change number of decimals", widget)
         decimal_action.triggered.connect(self._pick_decimals)
@@ -125,7 +39,7 @@ class DoubleLineEdit(BaseLineEdit):
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
-        self._internal_value = str(value)
+        self.internal_value = str(value)
         if value == "":
             displayed = ""
         else:
@@ -133,20 +47,20 @@ class DoubleLineEdit(BaseLineEdit):
             format_str = ("{}" if self.model.decimals == -1
                           else "{{:.{}f}}".format(self.model.decimals))
             try:
-                displayed = format_str.format(float(self._internal_value))
+                displayed = format_str.format(float(self.internal_value))
             except ValueError:
-                # Note: This can happen for example if a float becomes a
+                # This can happen for example if a float becomes a
                 # vector but controller was not mutated
-                displayed = self._internal_value
-        with SignalBlocker(self._internal_widget):
-            self._display_value = displayed
-            self._internal_widget.setText(self._display_value)
-        self._internal_widget.setCursorPosition(self._last_cursor_pos)
+                displayed = self.internal_value
+        with SignalBlocker(self.internal_widget):
+            self.display_value = displayed
+            self.internal_widget.setText(self.display_value)
+        self.internal_widget.setCursorPosition(self.last_cursor_pos)
 
     @on_trait_change("model.decimals", post_init=True)
     def _decimals_update(self):
         self.value_update(self.proxy)
-        self._validator.decimals = self.model.decimals
+        self.validator.decimals = self.model.decimals
 
     def _pick_decimals(self, checked):
         num_decimals, ok = QInputDialog.getInt(
@@ -155,56 +69,57 @@ class DoubleLineEdit(BaseLineEdit):
         if ok:
             self.model.decimals = num_decimals
 
-    def _validate_value(self):
-        ret = super()._validate_value()
+    def validate_value(self):
+        ret = super().validate_value()
         return float(ret) if ret is not None else None
 
 
 @register_binding_controller(ui_name="Integer Field", can_edit=True,
                              klassname="IntLineEdit", binding_type=IntBinding,
                              priority=10)
-class IntLineEdit(BaseLineEdit):
-    # The scene model class used by this controller
+class IntLineEdit(BaseLineEditController):
     model = Instance(IntLineEditModel, args=())
 
     def create_widget(self, parent):
-        self._validator = IntValidator()
+        self.validator = IntValidator()
         return super().create_widget(parent)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
-        self._internal_value = str(value)
-        with SignalBlocker(self._internal_widget):
-            self._display_value = "{}".format(value)
-            self._internal_widget.setText(self._display_value)
-        self._internal_widget.setCursorPosition(self._last_cursor_pos)
+        self.internal_value = str(value)
+        with SignalBlocker(self.internal_widget):
+            self.display_value = "{}".format(value)
+            self.internal_widget.setText(self.display_value)
+        self.internal_widget.setCursorPosition(self.last_cursor_pos)
 
-    def _validate_value(self):
-        ret = super()._validate_value()
+    def validate_value(self):
+        """Reimplemented method of `BaseLineEditController`"""
+        ret = super().validate_value()
         return int(ret) if ret is not None else None
 
 
 @register_binding_controller(ui_name="Hexadecimal", can_edit=True,
                              klassname="Hexadecimal", binding_type=IntBinding)
-class Hexadecimal(BaseLineEdit):
+class Hexadecimal(BaseLineEditController):
     model = Instance(HexadecimalModel, args=())
 
     def create_widget(self, parent):
-        self._validator = HexValidator()
+        self.validator = HexValidator()
         return super().create_widget(parent)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
         if value == "":
             return
-        self._internal_value = str(value)
-        with SignalBlocker(self._internal_widget):
-            self._display_value = "{:x}".format(value)
-            self._internal_widget.setText(self._display_value)
-        self._internal_widget.setCursorPosition(self._last_cursor_pos)
+        self.internal_value = str(value)
+        with SignalBlocker(self.internal_widget):
+            self.display_value = "{:x}".format(value)
+            self.internal_widget.setText(self.display_value)
+        self.internal_widget.setCursorPosition(self.last_cursor_pos)
 
-    def _validate_value(self):
-        ret = super()._validate_value()
+    def validate_value(self):
+        """Reimplemented method of `BaseLineEditController`"""
+        ret = super().validate_value()
         return int(ret, base=16) if ret is not None else None
 
 
@@ -216,30 +131,31 @@ def _is_regex_compatible(binding):
                              is_compatible=_is_regex_compatible,
                              klassname="RegexEdit", binding_type=StringBinding,
                              priority=90)
-class EditRegex(BaseLineEdit):
+class EditRegex(BaseLineEditController):
     model = Instance(EditableRegexModel, args=())
 
     def create_widget(self, parent):
-        self._validator = RegexValidator()
+        self.validator = RegexValidator()
         return super().create_widget(parent)
 
     def binding_update(self, proxy):
         binding = proxy.binding
         regex = binding.attributes.get(KARABO_SCHEMA_REGEX, "")
-        self._validator.setRegex(regex)
+        self.validator.setRegex(regex)
         self.widget.update_unit_label(proxy)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
-        self._internal_value = str(value)
-        with SignalBlocker(self._internal_widget):
-            self._display_value = "{}".format(value)
-            self._internal_widget.setText(self._display_value)
-        self._internal_widget.setCursorPosition(self._last_cursor_pos)
+        self.internal_value = str(value)
+        with SignalBlocker(self.internal_widget):
+            self.display_value = "{}".format(value)
+            self.internal_widget.setText(self.display_value)
+        self.internal_widget.setCursorPosition(self.last_cursor_pos)
 
-    def _validate_value(self):
-        value = self._internal_value
-        state, _, _ = self._validator.validate(value, 0)
+    def validate_value(self):
+        """Reimplemented method of `BaseLineEditController`"""
+        value = self.internal_value
+        state, _, _ = self.validator.validate(value, 0)
         if state == QValidator.Invalid:
             value = None
         return str(value) if value is not None else None
