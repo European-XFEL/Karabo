@@ -3,11 +3,11 @@ from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QLineEdit
 from traits.api import Instance, Int, String, Undefined
 
-from karabogui.binding.api import get_min_max
+from karabogui.binding.api import get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.unitlabel import add_unit_label
 from karabogui.controllers.util import is_proxy_allowed
-from karabogui.util import generateObjectName
+from karabogui.util import SignalBlocker, generateObjectName
 from karabogui.widgets.hints import LineEdit
 
 FINE_COLOR = "black"
@@ -23,7 +23,7 @@ class BaseLineEditController(BaseBindingController):
     # The line edit widget instance
     internal_widget = Instance(QLineEdit)
     # The validator instance
-    validator = Instance(QValidator)
+    validator = Instance(QValidator, allow_none=True)
     # The last updated value from the device
     internal_value = String("")
     # The displayed value
@@ -36,6 +36,7 @@ class BaseLineEditController(BaseBindingController):
 
     def create_widget(self, parent):
         self.internal_widget = LineEdit(parent)
+        self.validator = self.create_validator()
         self.internal_widget.setValidator(self.validator)
         objectName = generateObjectName(self)
         self._style_sheet = ("QWidget#{}".format(objectName) +
@@ -61,10 +62,23 @@ class BaseLineEditController(BaseBindingController):
         self.internal_widget.setEnabled(enable)
 
     def binding_update(self, proxy):
-        low, high = get_min_max(proxy.binding)
-        self.validator.setBottom(low)
-        self.validator.setTop(high)
+        self.binding_validator(proxy)
         self.widget.update_unit_label(proxy)
+
+    def value_update(self, proxy):
+        value = get_editor_value(proxy, "")
+        if value == "":
+            displayed = ""
+        else:
+            try:
+                displayed = self.toString(value)
+            except Exception:
+                displayed = str(value)
+        self.internal_value = str(value)
+        with SignalBlocker(self.internal_widget):
+            self.display_value = displayed
+            self.internal_widget.setText(self.display_value)
+        self.internal_widget.setCursorPosition(self.last_cursor_pos)
 
     def on_decline(self):
         """When the input was declined, this method is executed"""
@@ -80,38 +94,24 @@ class BaseLineEditController(BaseBindingController):
             sheet = self._style_sheet.format(FINE_COLOR)
             self.internal_widget.setStyleSheet(sheet)
             return
+
+        color = FINE_COLOR
         if acceptable_input:
             self.internal_value = text
             self.last_cursor_pos = self.internal_widget.cursorPosition()
             # proxy.edit_value is set to None if the user input is not valid
-            self.proxy.edit_value = self.validate_value()
+            self.proxy.edit_value = self._validate_value()
         else:
+            color = ERROR_COLOR
             # erase the edit value
             self.proxy.edit_value = None
-        # update color after text change!
-        color = FINE_COLOR if acceptable_input else ERROR_COLOR
         sheet = self._style_sheet.format(color)
         self.internal_widget.setStyleSheet(sheet)
 
-    # Public interface
-    # ---------------------------------------------------------------------
+    def _validate_value(self):
+        """This method validates the internal value of the widget
 
-    def validate_text_color(self):
-        """Public method to validate the text color"""
-        acceptable_input = self.internal_widget.hasAcceptableInput()
-        if self.proxy.binding is None:
-            sheet = self._style_sheet.format(FINE_COLOR)
-            self.internal_widget.setStyleSheet(sheet)
-            return
-        color = FINE_COLOR if acceptable_input else ERROR_COLOR
-        sheet = self._style_sheet.format(color)
-        self.internal_widget.setStyleSheet(sheet)
-
-    def validate_value(self):
-        """Subclass method for controller to validate the internal value
-
-        Note: This method validates the internal value of the widget
-        and returns the value (success) or `None` (failure).
+        Returns the value (success) or `None` (failure).
         """
         if not self.internal_value:
             return None
@@ -120,4 +120,33 @@ class BaseLineEditController(BaseBindingController):
         state, _, _ = self.validator.validate(value, 0)
         if state == QValidator.Invalid:
             value = None
+        else:
+            value = self.fromString(value)
+        return value
+
+    # Public interface
+    # ---------------------------------------------------------------------
+
+    def validate_text_color(self):
+        """Public method to validate the text color"""
+        acceptable_input = self.internal_widget.hasAcceptableInput()
+        color = FINE_COLOR if acceptable_input else ERROR_COLOR
+        sheet = self._style_sheet.format(color)
+        self.internal_widget.setStyleSheet(sheet)
+
+    # Abstract interface
+    # ----------------------------------------------------------------------
+
+    def create_validator(self):
+        """Subclass method to specify a validator instance of `QValidator`"""
+
+    def binding_validator(self, proxy):
+        """Subclass method to update a validator on binding update"""
+
+    def toString(self, value):
+        """Subclass method to convert a value to string"""
+        return str(value)
+
+    def fromString(self, value):
+        """Subclass method to convert a value from a string"""
         return value
