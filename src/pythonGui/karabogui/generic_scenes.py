@@ -8,7 +8,8 @@ from karabo.common.scenemodel.api import (
     get_vector_scene)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, ImageBinding, IntBinding, NDArrayBinding,
-    NodeBinding, PipelineOutputBinding, StringBinding, VectorNumberBinding)
+    NodeBinding, PipelineOutputBinding, StringBinding, VectorNumberBinding,
+    VectorStringBinding)
 
 
 def _iter_binding(node, base=""):
@@ -106,7 +107,7 @@ def get_property_proxy_model(proxy, include_images=True):
     elif display_type == KARABO_SCHEMA_DISPLAY_TYPE_ALARM:
         return AlarmGraphModel(**_get_plot_attributes(proxy))
 
-    if isinstance(binding, StringBinding):
+    if isinstance(binding, (StringBinding, VectorStringBinding)):
         return HistoricTextModel(**_get_widget_attributes(proxy.key))
 
     elif isinstance(binding, (BoolBinding, FloatBinding, IntBinding)):
