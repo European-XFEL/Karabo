@@ -18,6 +18,7 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import get_compatible_controllers
 from karabogui.indicators import (
     ERROR_COLOR_ALPHA, OK_COLOR, UNKNOWN_COLOR_ALPHA)
+from karabogui.itemtypes import ConfiguratorItemType
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30
@@ -30,6 +31,16 @@ class ButtonState(Enum):
     DISABLED = QStyle.State_On
 
 
+def _get_item_type(binding):
+    """Get the item type for a `binding`
+
+    We can only drag nodes and leaf elements
+    """
+    if isinstance(binding, NodeBinding):
+        return ConfiguratorItemType.NODE
+    return ConfiguratorItemType.LEAF
+
+
 def dragged_configurator_items(proxies):
     """Create a QMimeData object containing items dragged from the configurator
     """
@@ -40,10 +51,12 @@ def dragged_configurator_items(proxies):
 
         # Collect the relevant information
         binding = proxy.binding
+        item_type = _get_item_type(binding)
         default_name = proxy.path.split('.')[-1]
         data = {
             'key': proxy.key,
-            'label': binding.displayed_name or default_name
+            'label': binding.displayed_name or default_name,
+            'type': item_type,
         }
 
         factories = get_compatible_controllers(binding, can_edit=False)
