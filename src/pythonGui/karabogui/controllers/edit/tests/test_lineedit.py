@@ -199,7 +199,6 @@ class TestNumberLineEdit(GuiTestCase):
         self.assertNotEqual(self.int_proxy.edit_value, "12")
         self.assertIsNone(self.int_proxy.edit_value)
         self.assertEqual(self.int_text, "12")
-        self.assertEqual(self.int_controller.internal_value, '3')
 
     def test_scientific_notation(self):
         test_strings = ["3.141592e0", "1.23e2", "1.23e+2", "1.23e-1"]
