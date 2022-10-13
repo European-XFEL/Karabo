@@ -24,10 +24,6 @@ class BaseLineEditController(BaseBindingController):
     internal_widget = Instance(QLineEdit)
     # The validator instance
     validator = Instance(QValidator, allow_none=True)
-    # The last updated value from the device
-    internal_value = String("")
-    # The displayed value
-    display_value = String("")
     # The last cursor position
     last_cursor_pos = Int(0)
 
@@ -67,17 +63,13 @@ class BaseLineEditController(BaseBindingController):
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, "")
-        if value == "":
-            displayed = ""
-        else:
+        if value != "":
             try:
-                displayed = self.toString(value)
+                value = self.toString(value)
             except Exception:
-                displayed = str(value)
-        self.internal_value = str(value)
+                value = str(value)
         with SignalBlocker(self.internal_widget):
-            self.display_value = displayed
-            self.internal_widget.setText(self.display_value)
+            self.internal_widget.setText(value)
         self.internal_widget.setCursorPosition(self.last_cursor_pos)
 
     def on_decline(self):
@@ -89,40 +81,22 @@ class BaseLineEditController(BaseBindingController):
     # ---------------------------------------------------------------------
 
     def _on_text_changed(self, text):
-        acceptable_input = self.internal_widget.hasAcceptableInput()
         if self.proxy.binding is None:
             sheet = self._style_sheet.format(FINE_COLOR)
             self.internal_widget.setStyleSheet(sheet)
             return
 
         color = FINE_COLOR
+        acceptable_input = self.internal_widget.hasAcceptableInput()
         if acceptable_input:
-            self.internal_value = text
             self.last_cursor_pos = self.internal_widget.cursorPosition()
-            # proxy.edit_value is set to None if the user input is not valid
-            self.proxy.edit_value = self._validate_value()
+            self.proxy.edit_value = self.fromString(text)
         else:
             color = ERROR_COLOR
-            # erase the edit value
+            # Erase the edit value by setting it to `None`
             self.proxy.edit_value = None
         sheet = self._style_sheet.format(color)
         self.internal_widget.setStyleSheet(sheet)
-
-    def _validate_value(self):
-        """This method validates the internal value of the widget
-
-        Returns the value (success) or `None` (failure).
-        """
-        if not self.internal_value:
-            return None
-
-        value = self.internal_value
-        state, _, _ = self.validator.validate(value, 0)
-        if state == QValidator.Invalid:
-            value = None
-        else:
-            value = self.fromString(value)
-        return value
 
     # Public interface
     # ---------------------------------------------------------------------
