@@ -207,6 +207,28 @@ class BaseTableController(BaseBindingController):
         """
         return self.proxy.root_proxy.device_id
 
+    def columnIndex(self, key):
+        """Retrieve the column index for a `key` in the schema
+
+        Note: Function added with Karabo 2.16.X
+        """
+        bindings = list(self._bindings.keys())
+        try:
+            return bindings.index(key)
+        except ValueError:
+            return None
+
+    def columnKey(self, column):
+        """Retrieve the schema key for a `column` index
+
+        Note: Function added with Karabo 2.16.X
+        """
+        bindings = list(self._bindings.keys())
+        try:
+            return bindings[column]
+        except IndexError:
+            return None
+
     def currentIndex(self):
         """Convenience method to get the currentIndex of the selection"""
         return self._table_widget.selectionModel().currentIndex()
