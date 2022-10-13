@@ -10,7 +10,7 @@ from qtpy.QtGui import QValidator
 
 class HexValidator(QValidator):
     def __init__(self, min=None, max=None, parent=None):
-        QValidator.__init__(self, parent)
+        super().__init__(parent)
         self.min = min
         self.max = max
 
@@ -18,24 +18,25 @@ class HexValidator(QValidator):
         return all(i in "0123456789abcdefABCDEF" for i in input)
 
     def validate(self, input, pos):
-        if input in ('+', '-', ''):
+        """Reimplemented function of `QValidator`"""
+        if input in ("+", "-", ""):
             return self.Intermediate, input, pos
 
         if not (self.is_hex(input) or
-                input[0] in '+-' and self.is_hex(input[1:])):
+                input[0] in "+-" and self.is_hex(input[1:])):
             return self.Invalid, input, pos
 
-        if self.min is not None and self.min >= 0 and input.startswith('-'):
+        if self.min is not None and self.min >= 0 and input.startswith("-"):
             return self.Invalid, input, pos
 
-        if self.max is not None and self.max < 0 and input.startswith('+'):
+        if self.max is not None and self.max < 0 and input.startswith("+"):
             return self.Invalid, input, pos
 
         if ((self.min is None or self.min <= int(input, base=16)) and
                 (self.max is None or int(input, base=16) <= self.max)):
             return self.Acceptable, input, pos
-        else:
-            return self.Intermediate, input, pos
+
+        return self.Intermediate, input, pos
 
     def setBottom(self, min):
         self.min = min
@@ -46,21 +47,22 @@ class HexValidator(QValidator):
 
 class IntValidator(QValidator):
     def __init__(self, min=None, max=None, parent=None):
-        QValidator.__init__(self, parent)
+        super().__init__(parent)
         self.min = min
         self.max = max
 
     def validate(self, input, pos):
-        if input in ('+', '-', ''):
+        """Reimplemented function of `QValidator`"""
+        if input in ("+", "-", ""):
             return self.Intermediate, input, pos
 
-        if not (input.isdigit() or input[0] in '+-' and input[1:].isdigit()):
+        if not (input.isdigit() or input[0] in "+-" and input[1:].isdigit()):
             return self.Invalid, input, pos
 
-        if self.min is not None and self.min >= 0 and input.startswith('-'):
+        if self.min is not None and self.min >= 0 and input.startswith("-"):
             return self.Invalid, input, pos
 
-        if self.max is not None and self.max < 0 and input.startswith('+'):
+        if self.max is not None and self.max < 0 and input.startswith("+"):
             return self.Invalid, input, pos
 
         if ((self.min is None or self.min <= int(input)) and
@@ -70,34 +72,36 @@ class IntValidator(QValidator):
             return self.Intermediate, input, pos
 
     def setBottom(self, min):
+        """Reimplemented function of `QValidator`"""
         self.min = min
 
     def setTop(self, max):
+        """Reimplemented function of `QValidator`"""
         self.max = max
 
 
 class NumberValidator(QValidator):
     def __init__(self, min=None, max=None, decimals=-1, parent=None):
-        QValidator.__init__(self, parent)
+        super().__init__(parent)
         self.min = min
         self.max = max
         self.decimals = decimals
 
     def validate(self, input, pos):
-        # start input check
-        if input in ('+', '-', ''):
+        """Reimplemented function of `QValidator`"""
+        if input in ("+", "-", ""):
             return self.Intermediate, input, pos
 
         # we might not have standard notation
-        if input[-1] in ('+', '-', 'e'):
+        if input[-1] in ("+", "-", "e"):
             return self.Intermediate, input, pos
         # we might not have standard notation
-        elif input[-1] in (' '):
+        elif input[-1] in (" "):
             return self.Invalid, input, pos
 
         # check for floating point precision
         if self.decimals != -1:
-            input_split = input.split('.')
+            input_split = input.split(".")
             if len(input_split) > 1 and len(input_split[1]) > self.decimals:
                 return self.Invalid, input, pos
 
@@ -114,9 +118,11 @@ class NumberValidator(QValidator):
             return self.Intermediate, input, pos
 
     def setBottom(self, min):
+        """Reimplemented function of `QValidator`"""
         self.min = min
 
     def setTop(self, max):
+        """Reimplemented function of `QValidator`"""
         self.max = max
 
 
@@ -129,7 +135,7 @@ class RegexValidator(QValidator):
     pattern = None
 
     def __init__(self, pattern="", parent=None):
-        super(RegexValidator, self).__init__(parent)
+        super().__init__(parent)
         self.pattern = re.compile(pattern)
 
     def setRegex(self, pattern):
@@ -137,7 +143,7 @@ class RegexValidator(QValidator):
         self.pattern = re.compile(pattern)
 
     def validate(self, input, pos):
-        """The main validate function checking to match the regex pattern"""
+        """Reimplemented function of `QValidator`"""
         if not self.pattern.match(input):
             return self.Intermediate, input, pos
 
@@ -158,7 +164,7 @@ class RegexListValidator(QValidator):
 
     def __init__(self, pattern="", delimiter=",", min_size=None, max_size=None,
                  parent=None):
-        super(RegexListValidator, self).__init__(parent)
+        super().__init__(parent)
         self.pattern = re.compile(pattern)
         self.delimiter = delimiter
         self.min_size = min_size
@@ -169,7 +175,7 @@ class RegexListValidator(QValidator):
         self.pattern = re.compile(pattern)
 
     def validate(self, input, pos):
-        """The main validate function checking to match the regex pattern"""
+        """Reimplemented function of `QValidator`"""
         if not input and (self.min_size is None or self.min_size == 0):
             return self.Acceptable, input, pos
         elif not input and self.min_size is not None and self.min_size > 0:

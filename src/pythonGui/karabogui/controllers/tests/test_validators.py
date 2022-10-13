@@ -10,6 +10,8 @@ from ..validators import BindingValidator, ListValidator, SimpleValidator
 def test_generic_binding_validator():
     binding = FloatBinding()
     validator = BindingValidator(binding=binding)
+    result, _, _ = validator.validate("", None)
+    assert result == QValidator.Intermediate
     result, _, _ = validator.validate("2.12", None)
     assert result == QValidator.Acceptable
     result, _, _ = validator.validate("2....", None)
@@ -42,6 +44,9 @@ def test_generic_binding_validator():
 def test_list_binding_unsigned_validator():
     binding = VectorUint8Binding()
     validator = ListValidator(binding=binding)
+    result, _, _ = validator.validate("", None)
+    assert result == QValidator.Acceptable
+
     result, _, _ = validator.validate("1", None)
     assert result == QValidator.Acceptable
 
@@ -81,6 +86,8 @@ def test_list_binding_unsigned_validator():
 def test_list_binding_float_validator():
     binding = VectorFloatBinding()
     validator = ListValidator(binding=binding)
+    result, _, _ = validator.validate("", None)
+    assert result == QValidator.Acceptable
 
     # A double regex can have integer input
     result, _, _ = validator.validate("1", None)
@@ -171,6 +178,8 @@ def test_list_integer_limits():
 def test_simple_validator():
     binding = Uint8Binding()
     validator = SimpleValidator(binding=binding)
+    result, _, _ = validator.validate("", None)
+    assert result == QValidator.Intermediate
     result, _, _ = validator.validate("1", None)
     assert result == QValidator.Acceptable
     result, _, _ = validator.validate("-1", None)
@@ -188,6 +197,8 @@ def test_simple_validator():
     attributes = {KARABO_SCHEMA_MIN_INC: 2, KARABO_SCHEMA_MAX_EXC: 128}
     binding = Uint8Binding(attributes=attributes)
     validator = SimpleValidator(binding=binding)
+    result, _, _ = validator.validate("", None)
+    assert result == QValidator.Intermediate
     result, _, _ = validator.validate("1", None)
     assert result == QValidator.Intermediate
     result, _, _ = validator.validate("2", None)
