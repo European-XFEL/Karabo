@@ -71,6 +71,9 @@ def class_completer(self, line):
 
 first_param = re.compile("\"[^\"]*\"|'[^']*'")
 
+global devices
+devices = None
+
 
 def start_device_client():
     global devices
@@ -86,7 +89,8 @@ def start_device_client():
 
     def shutdown_hook():
         global devices
-        del devices
+        if devices is not None:
+            del devices
 
     atexit.register(shutdown_hook)
 
