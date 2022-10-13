@@ -5,7 +5,7 @@
 #############################################################################
 
 
-class NavigationItemTypes(object):
+class NavigationItemTypes:
     UNDEFINED = -1
     HOST = 0
     SERVER = 1
@@ -13,7 +13,12 @@ class NavigationItemTypes(object):
     DEVICE = 3
 
 
-class ProjectItemTypes(object):
+class ConfiguratorItemType:
+    LEAF = "Leaf"
+    NODE = "Node"
+
+
+class ProjectItemTypes:
     UNDEFINED = "Undefined"
     PROJECT = "Project"
     PROJECT_GROUP = "ProjectGroup"
