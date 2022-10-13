@@ -59,15 +59,15 @@ class TestRegexEdit(GuiTestCase):
 
     @property
     def sheet(self):
-        return self.controller._internal_widget.styleSheet()
+        return self.controller.internal_widget.styleSheet()
 
     @property
     def text(self):
-        return self.controller._internal_widget.text()
+        return self.controller.internal_widget.text()
 
     @text.setter
     def text(self, value):
-        return self.controller._internal_widget.setText(value)
+        return self.controller.internal_widget.setText(value)
 
     def tearDown(self):
         super().tearDown()
@@ -75,7 +75,7 @@ class TestRegexEdit(GuiTestCase):
         self.assertIsNone(self.controller.widget)
 
     def test_focus_policy(self):
-        assert self.controller._internal_widget.focusPolicy() == Qt.StrongFocus
+        assert self.controller.internal_widget.focusPolicy() == Qt.StrongFocus
 
     def test_set_value(self):
         set_proxy_value(self.proxy, "prop", "1")
@@ -136,27 +136,27 @@ class TestNumberLineEdit(GuiTestCase):
 
     @property
     def float_text(self):
-        return self.float_controller._internal_widget.text()
+        return self.float_controller.internal_widget.text()
 
     @float_text.setter
     def float_text(self, text):
-        self.float_controller._internal_widget.setText(text)
+        self.float_controller.internal_widget.setText(text)
 
     @property
     def double_text(self):
-        return self.double_controller._internal_widget.text()
+        return self.double_controller.internal_widget.text()
 
     @double_text.setter
     def double_text(self, text):
-        self.double_controller._internal_widget.setText(text)
+        self.double_controller.internal_widget.setText(text)
 
     @property
     def int_text(self):
-        return self.int_controller._internal_widget.text()
+        return self.int_controller.internal_widget.text()
 
     @int_text.setter
     def int_text(self, text):
-        self.int_controller._internal_widget.setText(text)
+        self.int_controller.internal_widget.setText(text)
 
     def test_set_value(self):
         set_proxy_value(self.double_proxy, "prop", np.float32(0.00123))
@@ -173,9 +173,9 @@ class TestNumberLineEdit(GuiTestCase):
 
     def test_state_update(self):
         set_proxy_value(self.double_proxy, "state", "CHANGING")
-        self.assertFalse(self.double_controller._internal_widget.isEnabled())
+        self.assertFalse(self.double_controller.internal_widget.isEnabled())
         set_proxy_value(self.double_proxy, "state", "INIT")
-        self.assertTrue(self.double_controller._internal_widget.isEnabled())
+        self.assertTrue(self.double_controller.internal_widget.isEnabled())
 
     def test_edit_value(self):
         self.double_text = "3.14"
@@ -199,7 +199,7 @@ class TestNumberLineEdit(GuiTestCase):
         self.assertNotEqual(self.int_proxy.edit_value, "12")
         self.assertIsNone(self.int_proxy.edit_value)
         self.assertEqual(self.int_text, "12")
-        self.assertEqual(self.int_controller._internal_value, '3')
+        self.assertEqual(self.int_controller.internal_value, '3')
 
     def test_scientific_notation(self):
         test_strings = ["3.141592e0", "1.23e2", "1.23e+2", "1.23e-1"]
@@ -207,7 +207,7 @@ class TestNumberLineEdit(GuiTestCase):
         for i, test_string in enumerate(test_strings):
             self.double_text = test_string
             self.assertEqual(self.double_proxy.edit_value, results[i])
-            self.float_controller._internal_widget.setText(test_string)
+            self.float_controller.internal_widget.setText(test_string)
             self.assertEqual(self.float_proxy.edit_value, results[i])
 
         last_accepted_value = "1.2"
@@ -261,11 +261,11 @@ class TestNumberLineEdit(GuiTestCase):
         self.double_text = "10000.0"
         self.assertIsNone(self.double_proxy.edit_value)
         error_sheet = self.double_controller._style_sheet.format("red")
-        self.assertEqual(self.double_controller._internal_widget.styleSheet(),
+        self.assertEqual(self.double_controller.internal_widget.styleSheet(),
                          error_sheet)
         self.double_controller.on_decline()
         normal_sheet = self.double_controller._style_sheet.format("black")
-        self.assertEqual(self.double_controller._internal_widget.styleSheet(),
+        self.assertEqual(self.double_controller.internal_widget.styleSheet(),
                          normal_sheet)
 
 
@@ -288,15 +288,15 @@ class TestNumberIntEdit(GuiTestCase):
 
     @property
     def sheet(self):
-        return self.controller._internal_widget.styleSheet()
+        return self.controller.internal_widget.styleSheet()
 
     @property
     def text(self):
-        return self.controller._internal_widget.text()
+        return self.controller.internal_widget.text()
 
     @text.setter
     def text(self, value):
-        return self.controller._internal_widget.setText(value)
+        return self.controller.internal_widget.setText(value)
 
     def tearDown(self):
         super().tearDown()
@@ -305,13 +305,12 @@ class TestNumberIntEdit(GuiTestCase):
 
     def test_property_proxy_edit_values_from_text_input(self):
         set_proxy_value(self.proxy, "prop", 1234)
-
-        self.controller._internal_widget.setText("12345")
-        self.controller._internal_widget.setText("123456")
-        self.controller._internal_widget.setText("1234567")
-        self.controller._internal_widget.setText("12345678")
+        self.text = "12345"
+        self.text = "123456"
+        self.text = "1234567"
+        self.text = "12345678"
         self.assertEqual(self.sheet, self.normal_sheet)
-        self.controller._internal_widget.setText("123456789")
+        self.text = "123456789"
         self.assertEqual(self.sheet, self.error_sheet)
         self.assertNotEqual(get_editor_value(self.proxy), 12345678)
         self.assertEqual(get_editor_value(self.proxy), 1234)
@@ -335,15 +334,15 @@ class TestHexadecimal(GuiTestCase):
 
     @property
     def sheet(self):
-        return self.controller._internal_widget.styleSheet()
+        return self.controller.internal_widget.styleSheet()
 
     @property
     def text(self):
-        return self.controller._internal_widget.text()
+        return self.controller.internal_widget.text()
 
     @text.setter
     def text(self, value):
-        return self.controller._internal_widget.setText(value)
+        return self.controller.internal_widget.setText(value)
 
     def test_set_value(self):
         set_proxy_value(self.proxy, "prop", 0x40)

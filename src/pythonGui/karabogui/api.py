@@ -19,10 +19,11 @@ from karabogui.binding.api import (
     get_native_min_max, has_min_max_attributes)
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.controllers.api import (
-    DIMENSIONS, BaseBindingController, BindingValidator, ListValidator,
-    SimpleValidator, add_unit_label, axis_label, get_array_data,
-    get_dimensions_and_encoding, get_image_data, has_options, is_proxy_allowed,
-    register_binding_controller, with_display_type)
+    DIMENSIONS, BaseBindingController, BaseLineEditController,
+    BindingValidator, ListValidator, SimpleValidator, add_unit_label,
+    axis_label, get_array_data, get_dimensions_and_encoding, get_image_data,
+    has_options, is_proxy_allowed, register_binding_controller,
+    with_display_type)
 from karabogui.controllers.table.api import (
     BaseFilterTableController, BaseTableController, KaraboTableView,
     TableButtonDelegate, TableModel, TableSortFilterModel,
