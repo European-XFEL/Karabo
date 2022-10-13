@@ -3,7 +3,6 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, on_trait_change
 
@@ -12,10 +11,9 @@ from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel, HexadecimalModel,
     IntLineEditModel)
 from karabogui.binding.api import (
-    FloatBinding, IntBinding, StringBinding, get_editor_value)
+    FloatBinding, IntBinding, StringBinding, get_min_max)
 from karabogui.controllers.api import (
     BaseLineEditController, register_binding_controller)
-from karabogui.util import SignalBlocker
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexValidator)
 
@@ -29,33 +27,36 @@ class DoubleLineEdit(BaseLineEditController):
     model = Instance(DoubleLineEditModel, args=())
 
     def create_widget(self, parent):
-        self.validator = NumberValidator()
-        self.validator.decimals = self.model.decimals
         widget = super().create_widget(parent)
         decimal_action = QAction("Change number of decimals", widget)
         decimal_action.triggered.connect(self._pick_decimals)
         widget.addAction(decimal_action)
         return widget
 
-    def value_update(self, proxy):
-        value = get_editor_value(proxy, "")
-        self.internal_value = str(value)
-        if value == "":
-            displayed = ""
-        else:
-            # Note: Avoid numpy to float casting here using the str value
-            format_str = ("{}" if self.model.decimals == -1
-                          else "{{:.{}f}}".format(self.model.decimals))
-            try:
-                displayed = format_str.format(float(self.internal_value))
-            except ValueError:
-                # This can happen for example if a float becomes a
-                # vector but controller was not mutated
-                displayed = self.internal_value
-        with SignalBlocker(self.internal_widget):
-            self.display_value = displayed
-            self.internal_widget.setText(self.display_value)
-        self.internal_widget.setCursorPosition(self.last_cursor_pos)
+    # ----------------------------------------------------------------------
+    # Abstract Interface
+
+    def create_validator(self):
+        """Reimplemented function of `BaseLineEditController`"""
+        return NumberValidator(self.model.decimals)
+
+    def binding_validator(self, proxy):
+        """Reimplemented method of `BaseLineEditController`"""
+        low, high = get_min_max(proxy.binding)
+        self.validator.setBottom(low)
+        self.validator.setTop(high)
+
+    def toString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        format_str = ("{}" if self.model.decimals == -1
+                      else "{{:.{}f}}".format(self.model.decimals))
+        return format_str.format(float(str(value)))
+
+    def fromString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        return float(value)
+
+    # ----------------------------------------------------------------------
 
     @on_trait_change("model.decimals", post_init=True)
     def _decimals_update(self):
@@ -69,10 +70,6 @@ class DoubleLineEdit(BaseLineEditController):
         if ok:
             self.model.decimals = num_decimals
 
-    def validate_value(self):
-        ret = super().validate_value()
-        return float(ret) if ret is not None else None
-
 
 @register_binding_controller(ui_name="Integer Field", can_edit=True,
                              klassname="IntLineEdit", binding_type=IntBinding,
@@ -80,22 +77,22 @@ class DoubleLineEdit(BaseLineEditController):
 class IntLineEdit(BaseLineEditController):
     model = Instance(IntLineEditModel, args=())
 
-    def create_widget(self, parent):
-        self.validator = IntValidator()
-        return super().create_widget(parent)
+    # ----------------------------------------------------------------------
+    # Abstract Interface
 
-    def value_update(self, proxy):
-        value = get_editor_value(proxy, "")
-        self.internal_value = str(value)
-        with SignalBlocker(self.internal_widget):
-            self.display_value = "{}".format(value)
-            self.internal_widget.setText(self.display_value)
-        self.internal_widget.setCursorPosition(self.last_cursor_pos)
-
-    def validate_value(self):
+    def create_validator(self):
         """Reimplemented method of `BaseLineEditController`"""
-        ret = super().validate_value()
-        return int(ret) if ret is not None else None
+        return IntValidator()
+
+    def binding_validator(self, proxy):
+        """Reimplemented method of `BaseLineEditController`"""
+        low, high = get_min_max(proxy.binding)
+        self.validator.setBottom(low)
+        self.validator.setTop(high)
+
+    def fromString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        return int(value)
 
 
 @register_binding_controller(ui_name="Hexadecimal", can_edit=True,
@@ -103,24 +100,26 @@ class IntLineEdit(BaseLineEditController):
 class Hexadecimal(BaseLineEditController):
     model = Instance(HexadecimalModel, args=())
 
-    def create_widget(self, parent):
-        self.validator = HexValidator()
-        return super().create_widget(parent)
+    # ----------------------------------------------------------------------
+    # Abstract Interface
 
-    def value_update(self, proxy):
-        value = get_editor_value(proxy, "")
-        if value == "":
-            return
-        self.internal_value = str(value)
-        with SignalBlocker(self.internal_widget):
-            self.display_value = "{:x}".format(value)
-            self.internal_widget.setText(self.display_value)
-        self.internal_widget.setCursorPosition(self.last_cursor_pos)
-
-    def validate_value(self):
+    def create_validator(self):
         """Reimplemented method of `BaseLineEditController`"""
-        ret = super().validate_value()
-        return int(ret, base=16) if ret is not None else None
+        return HexValidator()
+
+    def binding_validator(self, proxy):
+        """Reimplemented method of `BaseLineEditController`"""
+        low, high = get_min_max(proxy.binding)
+        self.validator.setBottom(low)
+        self.validator.setTop(high)
+
+    def toString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        return "{:x}".format(value)
+
+    def fromString(self, value):
+        """Reimplemented method of `BaseLineEditController`"""
+        return int(value, base=16)
 
 
 def _is_regex_compatible(binding):
@@ -134,28 +133,14 @@ def _is_regex_compatible(binding):
 class EditRegex(BaseLineEditController):
     model = Instance(EditableRegexModel, args=())
 
-    def create_widget(self, parent):
-        self.validator = RegexValidator()
-        return super().create_widget(parent)
+    # ----------------------------------------------------------------------
+    # Abstract Interface
 
-    def binding_update(self, proxy):
-        binding = proxy.binding
-        regex = binding.attributes.get(KARABO_SCHEMA_REGEX, "")
-        self.validator.setRegex(regex)
-        self.widget.update_unit_label(proxy)
-
-    def value_update(self, proxy):
-        value = get_editor_value(proxy, "")
-        self.internal_value = str(value)
-        with SignalBlocker(self.internal_widget):
-            self.display_value = "{}".format(value)
-            self.internal_widget.setText(self.display_value)
-        self.internal_widget.setCursorPosition(self.last_cursor_pos)
-
-    def validate_value(self):
+    def create_validator(self):
         """Reimplemented method of `BaseLineEditController`"""
-        value = self.internal_value
-        state, _, _ = self.validator.validate(value, 0)
-        if state == QValidator.Invalid:
-            value = None
-        return str(value) if value is not None else None
+        return RegexValidator()
+
+    def binding_validator(self, proxy):
+        """Reimplemented method of `BaseLineEditController`"""
+        regex = proxy.binding.attributes.get(KARABO_SCHEMA_REGEX, "")
+        self.validator.setRegex(regex)
