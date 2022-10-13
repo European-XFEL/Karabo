@@ -16,7 +16,8 @@ from traits.api import Instance, Int, WeakRef, on_trait_change
 from karabo.common.scenemodel.api import HistoricTextModel
 from karabo.native import Timestamp
 from karabogui import icons
-from karabogui.binding.api import StringBinding, get_binding_value
+from karabogui.binding.api import (
+    StringBinding, VectorStringBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.dialogs.api import RequestTimeDialog
@@ -58,9 +59,13 @@ def get_start_end_date_time(time_span):
 
 @register_binding_controller(ui_name="Historic Text Data", can_edit=False,
                              klassname="HistoricText",
-                             binding_type=StringBinding, priority=-10)
+                             binding_type=(StringBinding, VectorStringBinding),
+                             priority=-10)
 class DisplayHistoricText(BaseBindingController):
-    """The HistoricText Controller for viewing historic data of strings"""
+    """
+    The HistoricText Controller for viewing historic data of strings and
+    vectors of strings
+    """
     model = Instance(HistoricTextModel, args=())
 
     list_model = WeakRef(QStringListModel)
