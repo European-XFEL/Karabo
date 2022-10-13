@@ -35,7 +35,7 @@ class IconLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setMinimumSize(MIN_SIZE, MIN_SIZE)
-        self._pixmap = icons.no.pixmap(100)
+        self._pixmap = self._default_pixmap = icons.no.pixmap(100)
 
     # Qt Overrides
     # ---------------------------------------------------------------------
@@ -53,6 +53,9 @@ class IconLabel(QLabel):
         pixmap = pixmap.scaled(size, Qt.KeepAspectRatio,
                                Qt.SmoothTransformation)
         super().setPixmap(pixmap)
+
+    def setDefaultPixmap(self):
+        self.setPixmap(self._default_pixmap)
 
 
 class Label(QLabel):
