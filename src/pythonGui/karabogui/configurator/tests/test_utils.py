@@ -50,6 +50,7 @@ def test_dragged_configurator_items():
     expected = {
         'label': 'String',
         'key': 'string',
+        'type': 'Leaf',
         'display_widget_class': 'DisplayLabel',
         'edit_widget_class': 'EditableLineEdit'
     }
