@@ -6,14 +6,13 @@
 from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, on_trait_change
 
-from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel, HexadecimalModel,
     IntLineEditModel)
 from karabogui.binding.api import (
     FloatBinding, IntBinding, StringBinding, get_min_max)
 from karabogui.controllers.api import (
-    BaseLineEditController, register_binding_controller)
+    BaseLineEditController, get_regex, has_regex, register_binding_controller)
 from karabogui.validators import (
     HexValidator, IntValidator, NumberValidator, RegexValidator)
 
@@ -122,12 +121,8 @@ class Hexadecimal(BaseLineEditController):
         return int(value, base=16)
 
 
-def _is_regex_compatible(binding):
-    return binding.attributes.get(KARABO_SCHEMA_REGEX, None) is not None
-
-
 @register_binding_controller(ui_name="Regex Field", can_edit=True,
-                             is_compatible=_is_regex_compatible,
+                             is_compatible=has_regex,
                              klassname="RegexEdit", binding_type=StringBinding,
                              priority=90)
 class EditRegex(BaseLineEditController):
@@ -142,5 +137,4 @@ class EditRegex(BaseLineEditController):
 
     def binding_validator(self, proxy):
         """Reimplemented method of `BaseLineEditController`"""
-        regex = proxy.binding.attributes.get(KARABO_SCHEMA_REGEX, "")
-        self.validator.setRegex(regex)
+        self.validator.setRegex(get_regex(proxy.binding, ""))
