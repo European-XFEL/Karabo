@@ -1,6 +1,6 @@
 from karabogui import icons
 
-from ..enums import ExportTool, MouseMode, ROITool
+from ..enums import ExportTool, MouseTool, ROITool
 from .widgets import create_action, create_button, create_dropdown_button
 
 
@@ -15,19 +15,19 @@ def tool_factory(tool):
 def mouse_mode_factory(tool):
     """Add optional buttons"""
     button = None
-    if tool is MouseMode.Pointer:
+    if tool is MouseTool.Pointer:
         button = create_button(icon=icons.pointer,
                                checkable=True,
                                tooltip="Pointer Mode")
-    elif tool is MouseMode.Zoom:
+    elif tool is MouseTool.Zoom:
         button = create_button(icon=icons.zoomImage,
                                checkable=True,
                                tooltip="Zoom Mode")
-    elif tool is MouseMode.Move:
+    elif tool is MouseTool.Move:
         button = create_button(icon=icons.move,
                                checkable=True,
                                tooltip="Move Mode")
-    elif tool is MouseMode.Picker:
+    elif tool is MouseTool.Picker:
         button = create_button(icon=icons.picker,
                                checkable=True,
                                tooltip="Picker Mode")
@@ -85,6 +85,6 @@ def export_factory(tool):
 
 FACTORY_MAP = {
     ExportTool: export_factory,
-    MouseMode: mouse_mode_factory,
+    MouseTool: mouse_mode_factory,
     ROITool: roi_factory
 }
