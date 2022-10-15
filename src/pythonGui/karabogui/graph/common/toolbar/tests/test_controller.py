@@ -1,4 +1,4 @@
-from karabogui.graph.common.enums import MouseMode, ROITool
+from karabogui.graph.common.enums import MouseTool, ROITool
 from karabogui.testing import GuiTestCase
 
 from ..controller import ToolbarController
@@ -14,15 +14,15 @@ class TestToolbarController(GuiTestCase):
     def test_basics(self):
         # Check if toolset contains only MouseMode
         self.assertEqual(len(self.toolbar.toolsets), 1)
-        self.assertTrue(MouseMode in self.toolbar.toolsets)
+        self.assertTrue(MouseTool in self.toolbar.toolsets)
 
         # Check if default mouse mode toolset contains three buttons
-        controller = self.toolbar.toolsets[MouseMode]
+        controller = self.toolbar.toolsets[MouseTool]
         self.assertTrue(isinstance(controller, MouseModeToolset))
         buttons = controller.buttons
         self.assertEqual(len(buttons), 3)
         self.assertEqual(set(buttons.keys()),
-                         {MouseMode.Pointer, MouseMode.Zoom, MouseMode.Move})
+                         {MouseTool.Pointer, MouseTool.Zoom, MouseTool.Move})
 
         # Check if toolbar contains the buttons
         actions = self.toolbar.widget.actions()
@@ -32,18 +32,18 @@ class TestToolbarController(GuiTestCase):
                          set(controller.buttons.values()))
 
         # Check mouse mode buttons default checked state
-        self.assertTrue(buttons[MouseMode.Pointer].isChecked())
-        self.assertFalse(buttons[MouseMode.Zoom].isChecked())
-        self.assertFalse(buttons[MouseMode.Move].isChecked())
+        self.assertTrue(buttons[MouseTool.Pointer].isChecked())
+        self.assertFalse(buttons[MouseTool.Zoom].isChecked())
+        self.assertFalse(buttons[MouseTool.Move].isChecked())
 
     def test_add_toolset(self):
         widget = self.toolbar.widget
 
         # Add existing toolset
-        self.toolbar.add_toolset(MouseMode)
+        self.toolbar.add_toolset(MouseTool)
         self.assertEqual(len(self.toolbar.toolsets), 1)
         # Count the number of buttons in the toolbar
-        mouse_mode = self.toolbar.toolsets[MouseMode]
+        mouse_mode = self.toolbar.toolsets[MouseTool]
         self.assertEqual(len(widget.actions()), len(mouse_mode.buttons))
         self.assertEqual(len(self.toolbar.buttons), 3)
         self.assertIn("Pointer", self.toolbar.buttons)
@@ -70,16 +70,16 @@ class TestToolbarController(GuiTestCase):
 
     def test_add_optional_tool(self):
         # Add optional tool to toolbar with MouseMode toolset
-        self.toolbar.add_tool(MouseMode.Picker)
+        self.toolbar.add_tool(MouseTool.Picker)
         self.assertEqual(len(self.toolbar.toolsets), 1)
         # Count the number of buttons in the toolbar
-        controller = self.toolbar.toolsets[MouseMode]
+        controller = self.toolbar.toolsets[MouseTool]
         self.assertTrue(isinstance(controller, MouseModeToolset))
         buttons = controller.buttons
         self.assertEqual(len(buttons), 4)
         self.assertEqual(set(buttons.keys()),
-                         {MouseMode.Pointer, MouseMode.Zoom, MouseMode.Move,
-                          MouseMode.Picker})
+                         {MouseTool.Pointer, MouseTool.Zoom, MouseTool.Move,
+                          MouseTool.Picker})
         self.assertIn("Picker", self.toolbar.buttons)
         self.assertIn("Pointer", self.toolbar.buttons)
         self.assertIn("Zoom", self.toolbar.buttons)

@@ -15,7 +15,7 @@ class AxisType(Enum):
     Time = "Time"
 
 
-class MouseMode(IntEnum):
+class MouseTool(IntEnum):
     # Default
     Pointer = 0
     Zoom = 1
@@ -23,6 +23,10 @@ class MouseMode(IntEnum):
 
     # Optional
     Picker = 3
+
+
+# Backward compatibility
+MouseMode = MouseTool
 
 
 class ExportTool(Enum):
