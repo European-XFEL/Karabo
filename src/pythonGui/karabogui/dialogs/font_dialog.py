@@ -35,7 +35,7 @@ class FontDialog(QDialog):
         font_size = qfont.pointSize()
         font_size_cb.setCurrentText(str(font_size))
 
-        self._font_validator = IntValidator(min=6, max=300)
+        self._font_validator = IntValidator(minInc=6, maxInc=300)
         self._normal_palette = self.font_size_combobox.palette()
         self._error_palette = QPalette(self._normal_palette)
         self._error_palette.setColor(QPalette.Text, Qt.red)
