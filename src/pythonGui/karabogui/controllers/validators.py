@@ -49,20 +49,20 @@ _REGEX = {
 }
 
 _INTERMEDIATE = {
-    VectorBoolBinding: ('T', 't', 'r', 'u', 'F', 'a', 'l', 's', ','),
-    VectorComplexDoubleBinding: ('+', '-', 'j', ','),  # X
-    VectorComplexFloatBinding: ('+', '-', 'j', ','),  # X
-    VectorDoubleBinding: ('+', '-', ',', 'e'),
-    VectorFloatBinding: ('+', '-', ',', '.', 'e'),
-    VectorInt8Binding: ('+', '-', ','),
-    VectorInt16Binding: ('+', '-', ','),
-    VectorInt32Binding: ('+', '-', ','),
-    VectorInt64Binding: ('+', '-', ','),
-    VectorStringBinding: (',',),
-    VectorUint8Binding: ('+', ','),
-    VectorUint16Binding: ('+', ','),
-    VectorUint32Binding: ('+', ','),
-    VectorUint64Binding: ('+', ','),
+    VectorBoolBinding: ("T", "t", "r", "u", "F", "a", "l", "s", ","),
+    VectorComplexDoubleBinding: ("+", "-", "j", ","),  # X
+    VectorComplexFloatBinding: ("+", "-", "j", ","),  # X
+    VectorDoubleBinding: ("+", "-", ",", "e"),
+    VectorFloatBinding: ("+", "-", ",", ".", "e"),
+    VectorInt8Binding: ("+", "-", ","),
+    VectorInt16Binding: ("+", "-", ","),
+    VectorInt32Binding: ("+", "-", ","),
+    VectorInt64Binding: ("+", "-", ","),
+    VectorStringBinding: (",",),
+    VectorUint8Binding: ("+", ","),
+    VectorUint16Binding: ("+", ","),
+    VectorUint32Binding: ("+", ","),
+    VectorUint64Binding: ("+", ","),
 }
 
 
@@ -74,7 +74,7 @@ class ListValidator(QValidator):
         super().__init__(parent=parent)
         self._binding = binding
         binding_type = type(self._binding)
-        self.pattern = re.compile(_REGEX.get(binding_type, ''))
+        self.pattern = re.compile(_REGEX.get(binding_type, ""))
         self.intermediate = _INTERMEDIATE.get(binding_type, ())
         self.literal = (str if binding_type == VectorStringBinding
                         else literal_eval)
@@ -82,25 +82,25 @@ class ListValidator(QValidator):
         # to validate that the user input matches the casted value
         self.cast = _CAST_MAP.get(binding_type, self.literal)
 
-        min_size, max_size = get_min_max_size(binding)
-        self.min_size = min_size
-        self.max_size = max_size
+        minSize, maxSize = get_min_max_size(binding)
+        self.minSize = minSize
+        self.maxSize = maxSize
 
     def validate(self, input, pos):
         """The main validate function of the ListValidator"""
         # 1. Basic empty input check. Empty input might be acceptable!
-        if input == "" and (self.min_size is None or not self.min_size):
+        if input == "" and (self.minSize is None or not self.minSize):
             return self.Acceptable, input, pos
-        elif input == "" and self.min_size is not None and self.min_size > 0:
+        elif input == "" and self.minSize is not None and self.minSize > 0:
             return self.Intermediate, input, pos
-        elif input.startswith(','):
+        elif input.startswith(","):
             return self.Intermediate, input, pos
 
         # 2. Check for size of list first
-        values = [val for val in input.split(',')]
-        if self.min_size is not None and len(values) < self.min_size:
+        values = [val for val in input.split(",")]
+        if self.minSize is not None and len(values) < self.minSize:
             return self.Intermediate, input, pos
-        if self.max_size is not None and len(values) > self.max_size:
+        if self.maxSize is not None and len(values) > self.maxSize:
             return self.Intermediate, input, pos
 
         # 3. Intermediate positions
@@ -131,7 +131,7 @@ class BindingValidator(QValidator):
     """
 
     def __init__(self, binding, parent=None):
-        super(BindingValidator, self).__init__(parent)
+        super().__init__(parent)
         self._binding = binding
 
     def validate(self, input, pos):
@@ -151,15 +151,15 @@ class SimpleValidator(QValidator):
     def __init__(self, binding, parent=None):
         super().__init__(parent=parent)
         self._binding = binding
-        self.low, self.high = get_min_max(binding)
+        self.minInc, self.maxInc = get_min_max(binding)
 
     def validate(self, input, pos):
         """Reimplemented function of QValidator to validate numeric input"""
-        if input in ('+', '-', ''):
+        if input in ("+", "-", ""):
             return self.Intermediate, input, pos
-        elif input[-1] in (' '):
+        elif input[-1] in (" "):
             return self.Invalid, input, pos
-        elif input[-1] in ('+', '-', 'e'):
+        elif input[-1] in ("+", "-", "e"):
             return self.Intermediate, input, pos
 
         # Use the fast path validation
@@ -176,7 +176,7 @@ class SimpleValidator(QValidator):
     def inside_limits(self, value):
         """Check if a value is within limits"""
         value = convert_string(value)
-        if value < self.low or value > self.high:
+        if value < self.minInc or value > self.maxInc:
             return False
 
         # Check passed!
