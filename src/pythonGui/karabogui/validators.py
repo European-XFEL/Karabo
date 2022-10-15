@@ -9,10 +9,10 @@ from qtpy.QtGui import QValidator
 
 
 class HexValidator(QValidator):
-    def __init__(self, min=None, max=None, parent=None):
+    def __init__(self, minInc=None, maxInc=None, parent=None):
         super().__init__(parent)
-        self.min = min
-        self.max = max
+        self.minInc = minInc
+        self.maxInc = maxInc
 
     def is_hex(self, input):
         return all(i in "0123456789abcdefABCDEF" for i in input)
@@ -26,30 +26,32 @@ class HexValidator(QValidator):
                 input[0] in "+-" and self.is_hex(input[1:])):
             return self.Invalid, input, pos
 
-        if self.min is not None and self.min >= 0 and input.startswith("-"):
+        minInc = self.minInc
+        if minInc is not None and minInc >= 0 and input.startswith("-"):
             return self.Invalid, input, pos
 
-        if self.max is not None and self.max < 0 and input.startswith("+"):
+        maxInc = self.maxInc
+        if maxInc is not None and maxInc < 0 and input.startswith("+"):
             return self.Invalid, input, pos
 
-        if ((self.min is None or self.min <= int(input, base=16)) and
-                (self.max is None or int(input, base=16) <= self.max)):
+        if ((minInc is None or minInc <= int(input, base=16)) and
+                (maxInc is None or int(input, base=16) <= maxInc)):
             return self.Acceptable, input, pos
 
         return self.Intermediate, input, pos
 
-    def setBottom(self, min):
-        self.min = min
+    def setBottom(self, minInc):
+        self.minInc = minInc
 
-    def setTop(self, max):
-        self.max = max
+    def setTop(self, maxInc):
+        self.maxInc = maxInc
 
 
 class IntValidator(QValidator):
-    def __init__(self, min=None, max=None, parent=None):
+    def __init__(self, minInc=None, maxInc=None, parent=None):
         super().__init__(parent)
-        self.min = min
-        self.max = max
+        self.minInc = minInc
+        self.maxInc = maxInc
 
     def validate(self, input, pos):
         """Reimplemented function of `QValidator`"""
@@ -59,32 +61,34 @@ class IntValidator(QValidator):
         if not (input.isdigit() or input[0] in "+-" and input[1:].isdigit()):
             return self.Invalid, input, pos
 
-        if self.min is not None and self.min >= 0 and input.startswith("-"):
+        minInc = self.minInc
+        if minInc is not None and minInc >= 0 and input.startswith("-"):
             return self.Invalid, input, pos
 
-        if self.max is not None and self.max < 0 and input.startswith("+"):
+        maxInc = self.maxInc
+        if maxInc is not None and maxInc < 0 and input.startswith("+"):
             return self.Invalid, input, pos
 
-        if ((self.min is None or self.min <= int(input)) and
-                (self.max is None or int(input) <= self.max)):
+        if ((minInc is None or minInc <= int(input)) and
+                (maxInc is None or int(input) <= maxInc)):
             return self.Acceptable, input, pos
         else:
             return self.Intermediate, input, pos
 
-    def setBottom(self, min):
+    def setBottom(self, minInc):
         """Reimplemented function of `QValidator`"""
-        self.min = min
+        self.minInc = minInc
 
-    def setTop(self, max):
+    def setTop(self, maxInc):
         """Reimplemented function of `QValidator`"""
-        self.max = max
+        self.maxInc = maxInc
 
 
 class NumberValidator(QValidator):
-    def __init__(self, min=None, max=None, decimals=-1, parent=None):
+    def __init__(self, minInc=None, maxInc=None, decimals=-1, parent=None):
         super().__init__(parent)
-        self.min = min
-        self.max = max
+        self.minInc = minInc
+        self.maxInc = maxInc
         self.decimals = decimals
 
     def validate(self, input, pos):
@@ -111,19 +115,19 @@ class NumberValidator(QValidator):
         except ValueError:
             return self.Invalid, input, pos
         # then check for limits
-        if ((self.min is None or self.min <= value) and
-                (self.max is None or value <= self.max)):
+        if ((self.minInc is None or self.minInc <= value) and
+                (self.maxInc is None or value <= self.maxInc)):
             return self.Acceptable, input, pos
-        else:
-            return self.Intermediate, input, pos
 
-    def setBottom(self, min):
-        """Reimplemented function of `QValidator`"""
-        self.min = min
+        return self.Intermediate, input, pos
 
-    def setTop(self, max):
+    def setBottom(self, minInc):
         """Reimplemented function of `QValidator`"""
-        self.max = max
+        self.minInc = minInc
+
+    def setTop(self, maxInc):
+        """Reimplemented function of `QValidator`"""
+        self.maxInc = maxInc
 
 
 class RegexValidator(QValidator):
@@ -151,24 +155,23 @@ class RegexValidator(QValidator):
 
 
 class RegexListValidator(QValidator):
-    """This is a list generic regex validator that accepts a regex pattern
+    """This is a generic list regex validator that accepts a regex pattern
 
     Every element is validated against the regex pattern
 
     :param regex: the regex expression
     :param delimiter: the delimiter (default: ".") which splits the input
-    :param min_size: The minimum size of the list (default: None)
-    :param max_size: The maximum size of the list (default: None)
+    :param minSize: The min size of the list (default: None)
+    :param maxSize: The max size of the list (default: None)
     """
-    pattern = None
 
-    def __init__(self, pattern="", delimiter=",", min_size=None, max_size=None,
+    def __init__(self, pattern="", delimiter=",", minSize=None, maxSize=None,
                  parent=None):
         super().__init__(parent)
         self.pattern = re.compile(pattern)
         self.delimiter = delimiter
-        self.min_size = min_size
-        self.max_size = max_size
+        self.minSize = minSize
+        self.maxSize = maxSize
 
     def setRegex(self, pattern):
         """Set a new regex pattern"""
@@ -176,18 +179,18 @@ class RegexListValidator(QValidator):
 
     def validate(self, input, pos):
         """Reimplemented function of `QValidator`"""
-        if not input and (self.min_size is None or self.min_size == 0):
+        if not input and (self.minSize is None or self.minSize == 0):
             return self.Acceptable, input, pos
-        elif not input and self.min_size is not None and self.min_size > 0:
+        elif not input and self.minSize is not None and self.minSize > 0:
             return self.Intermediate, input, pos
         elif input.startswith(self.delimiter):
             return self.Intermediate, input, pos
 
         # check for size first
         values = input.split(self.delimiter)
-        if self.min_size is not None and len(values) < self.min_size:
+        if self.minSize is not None and len(values) < self.minSize:
             return self.Intermediate, input, pos
-        if self.max_size is not None and len(values) > self.max_size:
+        if self.maxSize is not None and len(values) > self.maxSize:
             return self.Intermediate, input, pos
 
         if input.endswith(self.delimiter):
