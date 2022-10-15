@@ -9,7 +9,7 @@ from urllib.parse import parse_qs
 from qtpy.QtGui import QBrush, QColor
 
 from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE_STATE
-from karabo.native import AccessMode
+from karabo.native import AccessMode, Hash
 
 
 def is_writable_binding(binding, binding_type=None):
@@ -105,3 +105,21 @@ def parse_table_link(string):
     else:
         options = {}
     return action_type, options
+
+
+def quick_table_copy(hsh):
+    """Return a quick deepcopy of a table hash
+
+    This only works with elements that are supported in a table element
+    """
+
+    def _quick_copy(value):
+        """Internal function to quickly provide a quick value copy"""
+        try:
+            # lists, tuples, unicode, arrays
+            return value.copy()
+        except AttributeError:
+            # Simple types
+            return value
+
+    return Hash({k: _quick_copy(v) for k, v in hsh.items()})
