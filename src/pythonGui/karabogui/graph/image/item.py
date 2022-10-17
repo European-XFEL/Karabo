@@ -4,7 +4,7 @@ from qtpy.QtCore import QPointF, QRectF, Qt, Signal, Slot
 from qtpy.QtGui import QColor, QImage, QTransform, qRgb
 from scipy.ndimage import zoom
 
-from karabogui.graph.common.api import MouseMode
+from karabogui.graph.common.api import MouseTool
 
 from .utils import bytescale, map_rect_to_transform
 
@@ -35,7 +35,7 @@ class KaraboImageItem(GraphicsObject):
         self.image = None
         self.qimage = None
 
-        self.clickModes = (MouseMode.Picker,)
+        self.clickTools = (MouseTool.Picker,)
         self.levels = None
         # We have row-major
         self.axisOrder = getConfigOption("imageAxisOrder")
@@ -151,13 +151,13 @@ class KaraboImageItem(GraphicsObject):
     # Events
 
     def mouseClickEvent(self, event):
-        if (self.getViewBox().mouse_mode in self.clickModes
+        if (self.getViewBox().mouse_tool in self.clickTools
                 and event.button() == Qt.LeftButton):
             image_pos, view_pos = self._get_mouse_positions(event.pos())
             self.clicked.emit(image_pos.x(), image_pos.y())
 
     def hoverEvent(self, event):
-        if self.getViewBox().mouse_mode is MouseMode.Picker:
+        if self.getViewBox().mouse_tool is MouseTool.Picker:
             self._hover_pointer_mode(event)
 
     def mouseDragEvent(self, event):
@@ -522,7 +522,7 @@ class KaraboImageItem(GraphicsObject):
         self.updateImage()
 
     def informViewBoundsChanged(self):
-        super(KaraboImageItem, self).informViewBoundsChanged()
+        super().informViewBoundsChanged()
         self.reset_downsampling(update=False)
         self._slice_rect = None
 
