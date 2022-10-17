@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QAction, QGridLayout, QWidget
 from karabogui import icons
 from karabogui.graph.common.api import (
     COLORMAPS, AuxPlots, AxesLabelsDialog, ExportTool, ImageROIController,
-    MouseMode, PointCanvas, RectCanvas, ROITool, ToolbarController)
+    MouseTool, PointCanvas, RectCanvas, ROITool, ToolbarController)
 from karabogui.graph.common.const import TF_SCALING, X_AXIS_HEIGHT
 
 from .aux_plots.controller import AuxPlotsController
@@ -92,12 +92,12 @@ class KaraboImageView(QWidget):
 
         # Instantiate toolbar, has a default mouse mode toolset
         self.toolbar = tb = ToolbarController(parent=self)
-        tb.toolsets[MouseMode].on_trait_change(self.set_mouse_mode,
-                                               "current_tool")
+        tb.toolsets[MouseTool].on_trait_change(
+            self.set_mouse_mode, "current_tool")
 
         # Add the optional mouse mode: picker tool
         if self._picker is not None:
-            tb.add_tool(MouseMode.Picker)
+            tb.add_tool(MouseTool.Picker)
 
         # Add Aux Plots toolset
         if self._aux_plots is not None:
@@ -450,11 +450,11 @@ class KaraboImageView(QWidget):
             levels = levels if levels is not None else self._colorbar.levels
             self._aux_plots.set_config(plot=AuxPlots.Histogram, levels=levels)
 
-    @Slot(MouseMode)
+    @Slot(MouseTool)
     def set_mouse_mode(self, mode):
-        self.plotItem.vb.set_mouse_mode(mode)
+        self.plotItem.vb.set_mouse_tool(mode)
         if self._picker is not None:
-            self._picker.activate(mode is MouseMode.Picker)
+            self._picker.activate(mode is MouseTool.Picker)
 
     @Slot(AuxPlots)
     def show_aux_plots(self, plot_type):

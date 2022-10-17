@@ -9,7 +9,8 @@ from .colors import (
 from .const import get_alarm_string, get_state_string
 from .dialogs.axes_labels import AxesLabelsDialog
 from .enums import (
-    AspectRatio, AuxPlots, Axes, AxisType, ExportTool, MouseMode, ROITool)
+    AspectRatio, AuxPlots, Axes, AxisType, ExportTool, MouseMode, MouseTool,
+    ROITool)
 from .exporters import ArrayExporter, ImageExporter, PlotDataExporter
 from .legend import CoordsLegend, KaraboLegend
 from .roi.base import KaraboROI
@@ -19,8 +20,7 @@ from .roi.crosshair import CrosshairROI
 from .roi.rect import RectROI
 from .roi.utils import ImageRegion
 from .toolbar.controller import ToolbarController
-from .toolbar.toolsets import (
-    BaseToolsetController, ExportToolset, MouseMode, ROIToolset)
+from .toolbar.toolsets import BaseToolsetController, ExportToolset, ROIToolset
 from .toolbar.widgets import create_button, create_tool_button
 from .utils import float_to_string, safe_log10
 from .viewbox import KaraboViewBox
