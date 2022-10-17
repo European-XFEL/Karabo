@@ -1,4 +1,4 @@
-from karabogui.graph.common.enums import MouseMode, ROITool
+from karabogui.graph.common.enums import MouseTool, ROITool
 from karabogui.testing import GuiTestCase
 
 from ..toolsets import MouseModeToolset, ROIToolset
@@ -19,42 +19,42 @@ class TestMouseModeToolset(GuiTestCase):
         toolset.on_trait_change(set_tool, "current_tool")
 
         # Check if mouse pointer is checked by default
-        self.assertEqual(toolset.current_tool, MouseMode.Pointer)
-        self.assertTrue(toolset.buttons[MouseMode.Pointer].isChecked())
+        self.assertEqual(toolset.current_tool, MouseTool.Pointer)
+        self.assertTrue(toolset.buttons[MouseTool.Pointer].isChecked())
 
         # Click pointer for the first time
-        toolset.buttons[MouseMode.Pointer].click()
+        toolset.buttons[MouseTool.Pointer].click()
         self.assertIsNone(tool)  # no changes
-        self.assertTrue(toolset.buttons[MouseMode.Pointer].isChecked())
+        self.assertTrue(toolset.buttons[MouseTool.Pointer].isChecked())
 
         # Click zoom for the first time, see if it's checked and
         # the pointer is unchecked
-        toolset.buttons[MouseMode.Zoom].click()
-        self.assertTrue(tool is MouseMode.Zoom)
-        self.assertTrue(toolset.buttons[MouseMode.Zoom].isChecked())
-        self.assertFalse(toolset.buttons[MouseMode.Pointer].isChecked())
+        toolset.buttons[MouseTool.Zoom].click()
+        self.assertTrue(tool is MouseTool.Zoom)
+        self.assertTrue(toolset.buttons[MouseTool.Zoom].isChecked())
+        self.assertFalse(toolset.buttons[MouseTool.Pointer].isChecked())
 
         # Click zoom for again, see if it's unchecked and
         # the pointer is checked as default
-        toolset.buttons[MouseMode.Zoom].click()
-        self.assertEqual(tool, MouseMode.Pointer)
-        self.assertFalse(toolset.buttons[MouseMode.Zoom].isChecked())
-        self.assertTrue(toolset.buttons[MouseMode.Pointer].isChecked())
+        toolset.buttons[MouseTool.Zoom].click()
+        self.assertEqual(tool, MouseTool.Pointer)
+        self.assertFalse(toolset.buttons[MouseTool.Zoom].isChecked())
+        self.assertTrue(toolset.buttons[MouseTool.Pointer].isChecked())
 
     def test_init_tool(self):
         # Setup toolset with desired tools
-        tools = [MouseMode.Picker, MouseMode.Zoom]
+        tools = [MouseTool.Picker, MouseTool.Zoom]
         toolset = MouseModeToolset(tools=tools)
 
         self.assertEqual(len(toolset.buttons), 2)
         self.assertEqual(set(toolset.buttons), set(tools))
 
         # Check toolset with invalid tool
-        tools = [MouseMode.Picker, 'foo']
+        tools = [MouseTool.Picker, 'foo']
         toolset = MouseModeToolset(tools=tools)
 
         self.assertEqual(len(toolset.buttons), 1)
-        self.assertIn(MouseMode.Picker, toolset.buttons)
+        self.assertIn(MouseTool.Picker, toolset.buttons)
         self.assertNotIn('foo', toolset.buttons)
 
     def test_add_tool(self):
@@ -62,7 +62,7 @@ class TestMouseModeToolset(GuiTestCase):
         toolset = MouseModeToolset()
 
         # Add a valid tool
-        tool = MouseMode.Picker
+        tool = MouseTool.Picker
         toolset.add(tool)
         self.assertIn(tool, toolset.buttons)
         self.assertEqual(len(toolset.buttons), 4)

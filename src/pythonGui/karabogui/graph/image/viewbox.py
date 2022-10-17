@@ -1,7 +1,7 @@
 from pyqtgraph import ViewBox
 from qtpy.QtCore import Qt
 
-from karabogui.graph.common.api import KaraboViewBox, MouseMode
+from karabogui.graph.common.api import KaraboViewBox, MouseTool
 
 
 class KaraboImageViewBox(KaraboViewBox):
@@ -13,7 +13,7 @@ class KaraboImageViewBox(KaraboViewBox):
     # mouse events
 
     def mouseDragEvent(self, event, axis=None):
-        if (self.mouse_mode is MouseMode.Picker
+        if (self.mouse_mode is MouseTool.Picker
                 and event.buttons() == Qt.LeftButton):
             event.ignore()
         else:
@@ -22,12 +22,12 @@ class KaraboImageViewBox(KaraboViewBox):
     # ---------------------------------------------------------------------
     # Public methods
 
-    def set_mouse_mode(self, mode):
-        if mode is MouseMode.Picker:
+    def set_mouse_tool(self, mode):
+        if mode is MouseTool.Picker:
             vb_mode = ViewBox.RectMode
             cursor = Qt.PointingHandCursor
         else:
-            super(KaraboImageViewBox, self).set_mouse_mode(mode)
+            super(KaraboImageViewBox, self).set_mouse_tool(mode)
             return
 
         self.setMouseMode(vb_mode)
