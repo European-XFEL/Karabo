@@ -3,7 +3,7 @@ from functools import partial
 from traits.api import (
     Any, Callable, Constant, Dict, Enum, Event, HasStrictTraits, List)
 
-from ..enums import ExportTool, MouseMode, ROITool
+from ..enums import ExportTool, MouseTool, ROITool
 from .factory import export_factory, mouse_mode_factory, roi_factory
 
 
@@ -63,11 +63,11 @@ class BaseToolsetController(HasStrictTraits):
 
 
 class MouseModeToolset(BaseToolsetController):
-    tools = List([MouseMode.Pointer, MouseMode.Zoom, MouseMode.Move])
+    tools = List([MouseTool.Pointer, MouseTool.Zoom, MouseTool.Move])
     factory = Callable(mouse_mode_factory)
 
-    current_tool = Enum(*MouseMode)
-    default_tool = Constant(MouseMode.Pointer)
+    current_tool = Enum(*MouseTool)
+    default_tool = Constant(MouseTool.Pointer)
 
     def select(self, tool):
         """Sets the selected mouse mode and uncheck any previously tool"""
@@ -153,7 +153,7 @@ class ExportToolset(BaseToolsetController):
 
 TOOLSET_MAP = {
     ExportTool: ExportToolset,
-    MouseMode: MouseModeToolset,
+    MouseTool: MouseModeToolset,
     ROITool: ROIToolset}
 
 

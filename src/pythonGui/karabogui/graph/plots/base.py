@@ -9,7 +9,7 @@ from karabogui import icons
 from karabogui.actions import KaraboAction, build_qaction
 from karabogui.graph.common.api import (
     AxesLabelsDialog, AxisType, BaseROIController, ExportTool, ImageExporter,
-    KaraboLegend, KaraboViewBox, MouseMode, PlotDataExporter, PointCanvas,
+    KaraboLegend, KaraboViewBox, MouseTool, PlotDataExporter, PointCanvas,
     ROITool, ToolbarController, create_axis_items, get_default_brush,
     get_default_pen, make_pen, safe_log10)
 from karabogui.graph.common.const import (
@@ -458,8 +458,9 @@ class KaraboPlotView(QWidget):
 
         # Instantiate toolbar, has a default mouse mode toolset
         self._toolbar = tb = ToolbarController(parent=self)
-        tb.toolsets[MouseMode].on_trait_change(self.plotItem.vb.set_mouse_mode,
-                                               "current_tool")
+        tb.toolsets[MouseTool].on_trait_change(
+            self.plotItem.vb.set_mouse_tool,
+            "current_tool")
 
         # Add ROI toolset
         if self._roi is not None:

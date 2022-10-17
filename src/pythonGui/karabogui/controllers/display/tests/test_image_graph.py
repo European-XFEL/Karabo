@@ -13,7 +13,7 @@ from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.graph.common.api import COLORMAPS
-from karabogui.graph.common.enums import AuxPlots, MouseMode, ROITool
+from karabogui.graph.common.enums import AuxPlots, MouseTool, ROITool
 from karabogui.testing import GuiTestCase
 
 from ..image_graph import DisplayImageGraph
@@ -60,7 +60,7 @@ class TestImageGraph(GuiTestCase):
 
         # Toolbar configuration
         self._click_toolbar(AuxPlots.ProfilePlot)
-        self._click_toolbar(MouseMode.Picker)
+        self._click_toolbar(MouseTool.Picker)
 
         # Add some ROIs
         roi_controller = self.controller.widget.roi

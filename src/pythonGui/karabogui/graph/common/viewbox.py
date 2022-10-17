@@ -3,7 +3,7 @@ from pyqtgraph import ViewBox
 from qtpy.QtCore import QPoint, Qt, Signal
 from qtpy.QtWidgets import QMenu
 
-from .enums import MouseMode
+from .enums import MouseTool
 
 ZOOM_IN = 1
 ZOOM_OUT = -1
@@ -14,7 +14,7 @@ class KaraboViewBox(ViewBox):
 
     def __init__(self, parent=None):
         super().__init__(parent, enableMenu=False)
-        self.mouse_mode = MouseMode.Pointer
+        self.mouse_tool = MouseTool.Pointer
         self.setBackgroundColor("w")
 
         # Build a menu!
@@ -31,7 +31,7 @@ class KaraboViewBox(ViewBox):
                 self.enableAutoRange()
             self.middleButtonClicked.emit()
 
-        if self.mouse_mode is MouseMode.Zoom:
+        if self.mouse_tool is MouseTool.Zoom:
             if event.button() == Qt.LeftButton:
                 self._click_zoom_mode(event, ZOOM_IN)
             elif event.button() == Qt.RightButton:
@@ -45,16 +45,16 @@ class KaraboViewBox(ViewBox):
         # Restore original MouseMode (and cursor) when dragEvent is finished
         if event.isFinish():
             super().mouseDragEvent(event, axis)
-            self.set_mouse_mode(self.mouse_mode)
+            self.set_mouse_tool(self.mouse_tool)
             return
 
         # Check on how the drag will commence
-        if self.mouse_mode is MouseMode.Pointer and button == Qt.LeftButton:
+        if self.mouse_tool is MouseTool.Pointer and button == Qt.LeftButton:
             event.ignore()
             return
-        elif self.mouse_mode is MouseMode.Move or button == Qt.MiddleButton:
+        elif self.mouse_tool is MouseTool.Move or button == Qt.MiddleButton:
             if event.isStart():
-                # Enable panning regardless of MouseMode
+                # Enable panning regardless of MouseTool
                 self.state["mouseMode"] = ViewBox.PanMode
                 self.setCursor(Qt.ClosedHandCursor)
         elif button == Qt.RightButton:
@@ -71,24 +71,24 @@ class KaraboViewBox(ViewBox):
     # ---------------------------------------------------------------------
     # Public methods
 
-    def set_mouse_mode(self, mode):
-        if mode is MouseMode.Pointer:
-            vb_mode = ViewBox.PanMode
+    def set_mouse_tool(self, mode):
+        if mode is MouseTool.Pointer:
+            mouseMode = ViewBox.PanMode
             cursor = Qt.ArrowCursor
-        elif mode is MouseMode.Zoom:
-            vb_mode = ViewBox.RectMode
+        elif mode is MouseTool.Zoom:
+            mouseMode = ViewBox.RectMode
             cursor = Qt.CrossCursor
-        elif mode is MouseMode.Move:
-            vb_mode = ViewBox.PanMode
+        elif mode is MouseTool.Move:
+            mouseMode = ViewBox.PanMode
             cursor = Qt.OpenHandCursor
         else:
-            raise ValueError(f"Invalid mouse mode: {mode}")
+            raise ValueError(f"Invalid mouseTool: {mode}")
 
         # Using self.state to assign vb mouse mode to avoid emitting
         # sigStateChanged
-        self.state["mouseMode"] = vb_mode
+        self.state["mouseMode"] = mouseMode
         self.setCursor(cursor)
-        self.mouse_mode = mode
+        self.mouse_tool = mode
 
     def add_action(self, action, separator=True):
         if self.menu is None:
@@ -97,6 +97,19 @@ class KaraboViewBox(ViewBox):
         if separator:
             self.menu.addSeparator()
         self.menu.addAction(action)
+
+    # ---------------------------------------------------------------------
+    # Backward compatibility
+
+    set_mouse_mode = set_mouse_tool
+
+    @property
+    def mouse_mode(self):
+        return self.mouse_tool
+
+    @mouse_mode.setter
+    def mouse_mode(self, value):
+        self.mouse_tool = value
 
     # ---------------------------------------------------------------------
     # Reimplemented `PyQtGraph` methods

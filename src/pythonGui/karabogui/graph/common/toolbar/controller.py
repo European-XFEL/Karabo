@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QToolBar
 from traits.api import Dict, HasStrictTraits, Instance
 
-from ..enums import MouseMode
+from ..enums import MouseTool
 from .factory import tool_factory
 from .toolsets import get_toolset, register_toolset
 from .widgets import ToolBar
@@ -17,7 +17,7 @@ class ToolbarController(HasStrictTraits):
         super().__init__(**traits)
         self.widget = ToolBar(parent=parent)
 
-        default_tool_type = MouseMode
+        default_tool_type = MouseTool
         controller = get_toolset(default_tool_type)
         self.toolsets[default_tool_type] = controller
 
