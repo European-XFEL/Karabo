@@ -272,3 +272,35 @@ def get_dtype_format(binding):
                 fmt = "{:.1f}"
 
     return fmt
+
+
+# Binding class utils
+# ---------------------------------------------------------------------------
+
+_SIGNED_VECTOR_INTEGER = (
+    types.VectorInt8Binding,
+    types.VectorInt16Binding,
+    types.VectorInt32Binding,
+    types.VectorInt64Binding)
+
+_UNSIGNED_VECTOR_INTEGER = (
+    types.VectorUint8Binding,
+    types.VectorUint16Binding,
+    types.VectorUint32Binding,
+    types.VectorUint64Binding)
+
+
+def is_signed_vector_integer(binding):
+    """Return if the `binding` is a signed vector int binding"""
+    return isinstance(binding, _SIGNED_VECTOR_INTEGER)
+
+
+def is_unsigned_vector_integer(binding):
+    """Return if the `binding` is an unsigned vector int binding"""
+    return isinstance(binding, _UNSIGNED_VECTOR_INTEGER)
+
+
+def is_vector_integer(binding):
+    """Return if the `binding` belongs to vector int binding"""
+    return (is_unsigned_vector_integer(binding) or
+            is_signed_vector_integer(binding))
