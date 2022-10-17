@@ -49,10 +49,10 @@ class InstanceFilterModel(QSortFilterProxyModel):
         return (mask & bit) == bit
 
 
-class TableDeviceDialog(QDialog):
+class TopologyDeviceDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        uic.loadUi(get_dialog_ui("table_device_dialog.ui"), self)
+        uic.loadUi(get_dialog_ui("topology_device_dialog.ui"), self)
         self.setModal(False)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.device_id = ""
