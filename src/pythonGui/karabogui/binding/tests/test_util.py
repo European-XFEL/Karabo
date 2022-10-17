@@ -12,11 +12,14 @@ from karabo.native import Hash, Schema
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, StringBinding, Uint8Binding, Uint16Binding, Uint32Binding,
-    Uint64Binding, VectorBoolBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    Uint64Binding, VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
+    VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
+    VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding, attr_fast_deepcopy, get_dtype_format, get_min_max,
-    get_min_max_size, get_native_min_max, has_min_max_attributes, realign_hash)
+    get_min_max_size, get_native_min_max, has_min_max_attributes,
+    is_signed_vector_integer, is_unsigned_vector_integer, is_vector_integer,
+    realign_hash)
 
 
 def test_simple_int_min_max():
@@ -234,3 +237,32 @@ def test_display_format():
 
     binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 20.000})
     assert get_dtype_format(binding) == "{:.1f}"
+
+
+def test_integer_binding():
+    # Signed bindings
+    assert is_signed_vector_integer(VectorInt8Binding())
+    assert is_signed_vector_integer(VectorInt16Binding())
+    assert is_signed_vector_integer(VectorInt32Binding())
+    assert is_signed_vector_integer(VectorInt64Binding())
+
+    # Unsigned bindings
+    assert is_unsigned_vector_integer(VectorUint8Binding())
+    assert is_unsigned_vector_integer(VectorUint16Binding())
+    assert is_unsigned_vector_integer(VectorUint32Binding())
+    assert is_unsigned_vector_integer(VectorUint64Binding())
+
+    # All int bindings
+    assert is_vector_integer(VectorInt8Binding())
+    assert is_vector_integer(VectorInt16Binding())
+    assert is_vector_integer(VectorInt32Binding())
+    assert is_vector_integer(VectorInt64Binding())
+    assert is_vector_integer(VectorUint8Binding())
+    assert is_vector_integer(VectorUint16Binding())
+    assert is_vector_integer(VectorUint32Binding())
+    assert is_vector_integer(VectorUint64Binding())
+
+    assert not is_vector_integer(VectorBoolBinding())
+    assert not is_vector_integer(VectorStringBinding())
+    assert not is_vector_integer(VectorHashBinding())
+    assert not is_vector_integer(VectorDoubleBinding())
