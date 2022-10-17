@@ -9,11 +9,9 @@ from io import StringIO
 
 from traits.api import Undefined
 
-from karabo.common.enums import Capabilities
-from karabo.common.project.macro import read_macro
-from karabo.common.scenemodel.const import SceneTargetWindow
-from karabo.common.scenemodel.io import read_scene
-from karabo.common.traits import walk_traits_object
+from karabo.common.api import Capabilities, walk_traits_object
+from karabo.common.project.api import read_macro
+from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
 from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import DeviceProxy, extract_sparse_configurations

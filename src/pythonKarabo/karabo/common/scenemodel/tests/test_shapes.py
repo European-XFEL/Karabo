@@ -1,7 +1,7 @@
 from karabo.testing.utils import temp_xml_file
 
-from ..io import read_scene
 from ..model import UnknownXMLDataModel
+from ..modelio import read_scene
 from ..shapes import ArrowModel, LineModel, PathModel, RectangleModel
 from .utils import single_model_round_trip
 
