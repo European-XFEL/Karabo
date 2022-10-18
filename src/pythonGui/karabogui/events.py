@@ -13,6 +13,7 @@ class KaraboEvent(Enum):
     ClearConfigurator = "Clear configurator"
     ConnectMacroInstance = "Connect macro instance"
     CreateMainWindow = "Create the main window"
+    CustomEvent = "Custom Event"  # Generic event
     DatabaseIsBusy = "Database is busy"
     DeviceInitReply = "Device instantiate reply"
     DeviceStateChanged = "Device state changed"
