@@ -1,14 +1,16 @@
+from copy import deepcopy
+
+import numpy as np
 from qtpy.QtGui import QBrush
 
 from karabo.common.const import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_DISPLAY_TYPE)
-from karabo.native import AccessMode
+from karabo.native import AccessMode, Hash
 from karabogui.binding.api import BoolBinding, StringBinding
-
-from ..utils import (
+from karabogui.controllers.table.utils import (
     create_brushes, get_button_attributes, has_confirmation,
     is_state_display_type, is_writable_binding, list2string, parse_table_link,
-    string2list)
+    quick_table_copy, string2list)
 
 
 def test_display_type_state():
@@ -126,3 +128,34 @@ def test_table_scheme_parsing():
     action, options = parse_table_link("url|https://www.xfel.eu")
     assert action == "url"
     assert options == "https://www.xfel.eu"
+
+
+def test_copy_hash():
+    h = Hash("boolean", False, "string", "ginger", "int", 1, "float", 2.1,
+             "list", [1, 2], "array", np.array([1, 2, 3]), "emptylist", [],
+             "emptyarray", np.array([]))
+
+    SIMPLES = ["string", "float", "boolean"]
+
+    for func in (quick_table_copy, deepcopy):
+        r = func(h)
+        assert r.fullyEqual(h)
+        hv = h["list"]
+        rv = r["list"]
+        assert id(hv) != id(rv)
+        # Same id, but immutable objects
+        assert id(hv[0]) == id(rv[0])
+        hv = h["array"]
+        rv = r["array"]
+        assert id(hv) != id(rv)
+        hv = h["emptylist"]
+        rv = r["emptylist"]
+        assert id(hv) != id(rv)
+        hv = h["emptyarray"]
+        rv = r["emptyarray"]
+        assert id(hv) != id(rv)
+
+        for simple in SIMPLES:
+            hv = h[simple]
+            rv = r[simple]
+            assert id(hv) == id(rv)
