@@ -41,6 +41,7 @@ class RangeSlider(QSlider):
         self.clickOffset = 0
         self.pressedHandle = None
         self.setTickPosition(self.NoTicks)
+        self.setFocusPolicy(Qt.ClickFocus)
 
     def initStyleOption(self, option):
         super().initStyleOption(option)
