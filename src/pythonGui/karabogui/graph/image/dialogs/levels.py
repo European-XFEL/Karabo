@@ -14,8 +14,8 @@ class LevelsDialog(QDialog):
 
     def __init__(self, levels, image_range, auto_levels, limits=None,
                  parent=None):
-        super(LevelsDialog, self).__init__(parent)
-        ui_path = str(Path(__file__).parent / "levels_dialog.ui")
+        super().__init__(parent)
+        ui_path = Path(__file__).parent.joinpath("levels_dialog.ui")
         uic.loadUi(ui_path, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.values_widget.setEnabled(not auto_levels)
@@ -55,6 +55,11 @@ class LevelsDialog(QDialog):
         self.min_spinbox.valueChanged.connect(self.levelChanged)
         self.max_spinbox.valueChanged.connect(self.levelChanged)
 
+        # Finally select the spinbox
+        if not auto_levels:
+            self.min_spinbox.setFocus()
+            self.min_spinbox.selectAll()
+
     def _set_editor_default(self, levels):
         """Set the default values of the editor widgets and the slider"""
         min_level, max_level = levels
@@ -82,13 +87,18 @@ class LevelsDialog(QDialog):
 
     @Slot(int)
     def set_automatic_levels(self, state):
-        self.values_widget.setEnabled(state == Qt.Unchecked)
+        auto_levels = state == Qt.Checked
+        self.values_widget.setEnabled(not auto_levels)
         low, high = self._image_range
         with SignalBlocker(self.min_spinbox, self.max_spinbox, self.slider):
             self.min_spinbox.setValue(low)
             self.max_spinbox.setValue(high)
             self.slider.setValue(low, high)
-        levels = None if state == Qt.Checked else [low, high]
+            if not auto_levels:
+                self.min_spinbox.setFocus()
+                self.min_spinbox.selectAll()
+
+        levels = None if auto_levels else [low, high]
         self.levelsPreview.emit(levels)
 
     @property
