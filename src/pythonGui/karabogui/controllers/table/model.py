@@ -19,8 +19,20 @@ class TableModel(QAbstractTableModel):
         self._set_edit_value = set_edit_value
         self._readonly = False
         self._data = []
-        self._bindings = binding.bindings
-        self._header = list(binding.bindings.keys())
+
+        # Set the bindings and the default row hash
+        bindings = binding.bindings
+        header = list(bindings.keys())
+        default_row = Hash()
+        for key in header:
+            binding = bindings[key]
+            value = get_default_value(binding, force=True)
+            value = binding.validate_trait("value", value)
+            default_row[key] = value
+
+        self._bindings = bindings
+        self._header = header
+        self.default_row = default_row
 
     # Qt Methods
     # ----------------------------------------------------------------------
@@ -45,7 +57,7 @@ class TableModel(QAbstractTableModel):
             binding = self._bindings[key]
             if isinstance(binding, BoolBinding):
                 return Qt.Checked if value else Qt.Unchecked
-        elif role in (Qt.DisplayRole, Qt.EditRole):
+        elif role in (Qt.DisplayRole, Qt.ToolTipRole, Qt.EditRole):
             key = self._header[column]
             value = self._data[row][key]
             binding = self._bindings[key]
@@ -61,13 +73,6 @@ class TableModel(QAbstractTableModel):
                 except ValueError:
                     return None
                 return QBrush(QColor(*color))
-        elif role == Qt.ToolTipRole:
-            key = self._header[column]
-            value = self._data[row][key]
-            binding = self._bindings[key]
-            if isinstance(binding, VectorBinding):
-                value = list2string(value)
-            return str(value)
 
         return None
 
@@ -251,8 +256,9 @@ class TableModel(QAbstractTableModel):
     # ------------------------------------------------------------------------
     # Additional methods
 
-    def duplicate_row(self, pos):
-        self.insertRows(pos + 1, 1, QModelIndex(), copy_row=self._data[pos])
+    def duplicate_row(self, row):
+        copy_row = self._data[row]
+        self.insertRows(row + 1, 1, QModelIndex(), copy_row=copy_row)
 
     def move_row_up(self, row):
         """In a simple two step process move a row element up"""
