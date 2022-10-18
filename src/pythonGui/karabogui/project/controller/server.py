@@ -251,6 +251,7 @@ class DeviceServerController(BaseProjectGroupController):
         if msg_box.exec() == QMessageBox.Yes:
             project = project_controller.model
             if server in project.servers:
+                del server.devices[:]
                 project.servers.remove(server)
 
     def _edit_server(self, parent=None):
