@@ -73,7 +73,7 @@ class TestLevelsDialog(GuiTestCase):
         self.assertEqual(received, [2.0, 55.0])
 
         # For now, `slider.setValue` does not emit
-        dialog.slider.setValue((13, 44))
+        dialog.slider.setValue(13, 44)
         self.assertEqual(count, 2)
 
         # Finally disconnect
