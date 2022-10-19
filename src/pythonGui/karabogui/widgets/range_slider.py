@@ -21,6 +21,16 @@ class SliderHandle(IntEnum):
     SCROLL_BAR = -1
 
 
+def integer(func):
+    """Decorate a function to ensure integer input of the parameters"""
+
+    def wrapper(self, *args):
+        args = [int(v) for v in args]
+        return func(self, *args)
+
+    return wrapper
+
+
 class RangeSlider(QSlider):
     """The RangeSlider that can have low and high handle
 
@@ -48,6 +58,7 @@ class RangeSlider(QSlider):
         option.subControls = QStyle.SC_None
         option.activeSubControls = QStyle.SC_None
 
+    @integer
     def initialize(self, low, high):
         """Initialize the Slider with a low and high position and a new range
         """
@@ -63,6 +74,7 @@ class RangeSlider(QSlider):
         self.high_handle_pos = high
         self.setRange(low, high)
 
+    @integer
     def setMinimum(self, value):
         """Reimplemented method of QSlider"""
         super().setMinimum(value)
@@ -70,6 +82,7 @@ class RangeSlider(QSlider):
             self.low_handle_pos = value
             self.update()
 
+    @integer
     def setMaximum(self, value):
         """Reimplemented method of QSlider"""
         super().setMaximum(value)
@@ -77,14 +90,12 @@ class RangeSlider(QSlider):
             self.high_handle_pos = value
             self.update()
 
-    def setValue(self, *value):
+    @integer
+    def setValue(self, low, high):
         """Reimplemented method of QSlider
 
         This method safely accounts for the minimum and maximum.
         """
-        # Check for tuple or value input
-        low, high = value if len(value) > 1 else value[0]
-
         # Basic level order validation
         low_position = min(low, high)
         high_position = max(low, high)
@@ -149,7 +160,7 @@ class RangeSlider(QSlider):
 
     @property
     def offset_position(self):
-        return self.minimum() - 1e6
+        return int(self.minimum() - 1e6)
 
     def paintEvent(self, event):
         """Reimplemented method of QSlider"""
