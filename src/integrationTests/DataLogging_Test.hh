@@ -18,6 +18,7 @@ class DataLogging_Test : public BaseLogging_Test {
     CPPUNIT_TEST(testNoInfluxServerHandling);
     CPPUNIT_TEST(testInfluxMaxPerDevicePropLogRate);
     CPPUNIT_TEST(testInfluxMaxSchemaLogRate);
+    CPPUNIT_TEST(testInfluxPropHistoryAveraging);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -58,6 +59,16 @@ class DataLogging_Test : public BaseLogging_Test {
      * run in isolation because a smaller threshold could easily interfere with the other tests.
      */
     void testInfluxMaxSchemaLogRate();
+
+
+    /**
+     * @brief Checks that the InfluxLogReader does averaging properly during the execution of slotPropertyHistory when
+     * the number of data points available is larger than the maximum number of data points to be retrieved.
+     *
+     * This test is motivated by the bug fixed in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6805.
+     */
+    void testInfluxPropHistoryAveraging();
+
 
     /**
      * Test that manager goes to ERROR if server list and loggermap.xml are inconsistent
