@@ -1,160 +1,174 @@
-from unittest import main
-
 from qtpy.QtCore import QEvent, QPoint, Qt, Slot
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QStyle
 
-from karabogui.testing import GuiTestCase
 from karabogui.widgets.range_slider import RangeSlider, SliderHandle
 
 
-class TestConst(GuiTestCase):
+def test_range_slider_widget(gui_app):
+    """Test the basic slider range widget"""
 
-    def test_basic_widget(self):
-        """Test the basic slider range widget"""
-        low = None
-        high = None
+    # Test slider goofy protection
+    widget = RangeSlider()
+    widget.initialize(0.2, 99.8)
+    widget.show()
 
-        @Slot(int, int)
-        def sliderMoved(low_value, high_value):
-            nonlocal low, high
-            low = low_value
-            high = high_value
+    assert widget.minimum() == 0
+    assert widget.maximum() == 99
 
-        widget = RangeSlider()
-        widget.sliderMoved.connect(sliderMoved)
-        widget.initialize(0, 100)
-        widget.show()
+    widget.setValue(0.12, 47.5)
+    assert widget.minimum() == 0
+    assert widget.maximum() == 99
+    assert widget.value() == (0, 47)
 
-        self.assertEqual(widget.minimum(), 0)
-        self.assertEqual(widget.maximum(), 100)
-        self.assertEqual(widget.sliderPosition(), (0, 100))
-        self.assertEqual(widget.value(), (0, 100))
+    widget.setMaximum(67.123)
+    assert widget.maximum() == 67
 
-        widget.setMaximum(120)
-        self.assertEqual(widget.sliderPosition(), (0, 100))
-        widget.setMinimum(-20)
-        self.assertEqual(widget.sliderPosition(), (0, 100))
+    widget.setMinimum(1.56)
+    assert widget.minimum() == 1
+    assert widget.value() == (1, 47)
+    widget.destroy()
 
-        # Set extremes wrong
-        widget.setMaximum(90)
-        self.assertEqual(widget.sliderPosition(), (0, 90))
-        widget.setMinimum(20)
-        self.assertEqual(widget.sliderPosition(), (20, 90))
+    # Round trip test
+    low = None
+    high = None
 
-        widget.setSliderPosition(30, 40)
-        self.assertEqual(widget.sliderPosition(), (30, 40))
+    @Slot(int, int)
+    def sliderMoved(low_value, high_value):
+        nonlocal low, high
+        low = low_value
+        high = high_value
 
-        widget.setValue(40, 50)
-        self.assertEqual(widget.sliderPosition(), (40, 50))
+    widget = RangeSlider()
+    widget.sliderMoved.connect(sliderMoved)
+    widget.initialize(0, 100)
+    widget.show()
 
-        move_event = QMouseEvent(
-            QEvent.MouseMove,
-            QPoint(20, 0),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
+    assert widget.minimum() == 0
+    assert widget.maximum() == 100
+    assert widget.sliderPosition() == (0, 100)
+    assert widget.value() == (0, 100)
 
-        # We need to click before this is active
-        widget.mouseMoveEvent(move_event)
-        self.assertEqual(widget.sliderPosition(), (40, 50))
+    widget.setMaximum(120)
+    assert widget.sliderPosition() == (0, 100)
+    widget.setMinimum(-20)
+    assert widget.sliderPosition() == (0, 100)
 
-        self.assertEqual(widget.pressedHandle, None)
-        self.assertEqual(widget.pressedControl, QStyle.SC_None)
-        press_event = QMouseEvent(
-            QEvent.MouseButtonPress,
-            QPoint(80, 0),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
-        widget.mousePressEvent(press_event)
-        self.assertEqual(widget.pressedControl, QStyle.SC_SliderHandle)
-        self.assertEqual(widget.pressedHandle, SliderHandle.HIGH)
+    # Set extremes wrong
+    widget.setMaximum(90)
+    assert widget.sliderPosition() == (0, 90)
+    widget.setMinimum(20)
+    assert widget.sliderPosition() == (20, 90)
 
-        move_event = QMouseEvent(
-            QEvent.MouseMove,
-            QPoint(35, 45),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
+    widget.setSliderPosition(30, 40)
+    assert widget.sliderPosition() == (30, 40)
 
-        # Protection, moving from high to low
-        widget.mouseMoveEvent(move_event)
-        self.process_qt_events()
-        self.assertEqual(widget.sliderPosition(), (33, 33))
-        self.assertEqual(widget.pressedHandle, SliderHandle.HIGH)
-        self.assertEqual(low, 33)
-        self.assertEqual(high, 33)
+    widget.setValue(40, 50)
+    assert widget.sliderPosition() == (40, 50)
 
-        # Spawn a groove
-        widget.setValue((30, 50))
-        widget.update()
+    move_event = QMouseEvent(
+        QEvent.MouseMove,
+        QPoint(20, 0),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
 
-        # Release event triggers unclicked
-        release_event = QMouseEvent(
-            QEvent.MouseButtonRelease,
-            QPoint(80, 0),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
-        widget.mouseReleaseEvent(release_event)
-        self.assertEqual(widget.pressedControl, QStyle.SC_None)
-        self.assertEqual(widget.pressedHandle, None)
+    # We need to click before this is active
+    widget.mouseMoveEvent(move_event)
+    assert widget.sliderPosition() == (40, 50)
 
-        press_event = QMouseEvent(
-            QEvent.MouseButtonPress,
-            QPoint(30, 0),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
-        widget.mousePressEvent(press_event)
-        self.assertEqual(widget.pressedControl, QStyle.SC_SliderHandle)
-        self.assertEqual(widget.pressedHandle, SliderHandle.LOW)
+    assert widget.pressedHandle is None
+    assert widget.pressedControl == QStyle.SC_None
+    press_event = QMouseEvent(
+        QEvent.MouseButtonPress,
+        QPoint(80, 0),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
 
-        move_event = QMouseEvent(
-            QEvent.MouseMove,
-            QPoint(35, 45),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
+    widget.mousePressEvent(press_event)
+    assert widget.pressedControl == QStyle.SC_SliderHandle
+    assert widget.pressedHandle == SliderHandle.HIGH
 
-        # Protection, moving from low to high
-        widget.mouseMoveEvent(move_event)
-        self.process_qt_events()
-        self.assertEqual(widget.sliderPosition(), (33, 50))
-        self.assertEqual(widget.pressedHandle, SliderHandle.LOW)
-        self.assertEqual(low, 33)
-        self.assertEqual(high, 50)
+    move_event = QMouseEvent(
+        QEvent.MouseMove,
+        QPoint(35, 45),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
 
-        # Release event triggers unclicked
-        release_event = QMouseEvent(
-            QEvent.MouseButtonRelease,
-            QPoint(80, 0),
-            Qt.LeftButton,
-            Qt.LeftButton,
-            Qt.NoModifier)
-        widget.mouseReleaseEvent(release_event)
-        self.assertEqual(widget.pressedControl, QStyle.SC_None)
-        self.assertEqual(widget.pressedHandle, None)
+    # Protection, moving from high to low
+    widget.mouseMoveEvent(move_event)
 
-        widget.setValue(0, 100)
-        # Limits
-        self.assertEqual(widget.value(), (20, 90))
+    assert widget.sliderPosition() == (33, 33)
+    assert widget.pressedHandle == SliderHandle.HIGH
+    assert low == 33
+    assert high == 33
 
-        # Test goofy values
-        widget.initialize(-999999999999999999999999999999999, 0)
-        self.assertFalse(widget.isEnabled())
-        self.assertFalse(widget.isVisible())
+    # Spawn a groove
+    widget.setValue(30, 50)
+    widget.update()
 
-        widget.setEnabled(True)
-        widget.setVisible(True)
-        widget.initialize(0, 9999999999999999999999999999999999999999)
-        self.assertFalse(widget.isEnabled())
-        self.assertFalse(widget.isVisible())
+    # Release event triggers unclicked
+    release_event = QMouseEvent(
+        QEvent.MouseButtonRelease,
+        QPoint(80, 0),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
+    widget.mouseReleaseEvent(release_event)
+    assert widget.pressedControl == QStyle.SC_None
+    assert widget.pressedHandle is None
 
-        widget.close()
-        widget.destroy()
+    press_event = QMouseEvent(
+        QEvent.MouseButtonPress,
+        QPoint(30, 0),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
+    widget.mousePressEvent(press_event)
+    assert widget.pressedControl == QStyle.SC_SliderHandle
+    assert widget.pressedHandle == SliderHandle.LOW
 
+    move_event = QMouseEvent(
+        QEvent.MouseMove,
+        QPoint(35, 45),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
 
-if __name__ == "__main__":
-    main()
+    # Protection, moving from low to high
+    widget.mouseMoveEvent(move_event)
+    assert widget.sliderPosition() == (33, 50)
+    assert widget.pressedHandle == SliderHandle.LOW
+    assert low == 33
+    assert high == 50
+
+    # Release event triggers unclicked
+    release_event = QMouseEvent(
+        QEvent.MouseButtonRelease,
+        QPoint(80, 0),
+        Qt.LeftButton,
+        Qt.LeftButton,
+        Qt.NoModifier)
+    widget.mouseReleaseEvent(release_event)
+    assert widget.pressedControl == QStyle.SC_None
+    assert widget.pressedHandle is None
+
+    widget.setValue(0, 100)
+    # Limits
+    assert widget.value() == (20, 90)
+
+    # Test goofy values
+    widget.initialize(-999999999999999999999999999999999, 0)
+    assert not widget.isEnabled()
+    assert not widget.isVisible()
+
+    widget.setEnabled(True)
+    widget.setVisible(True)
+    widget.initialize(0, 9999999999999999999999999999999999999999)
+    assert not widget.isEnabled()
+    assert not widget.isVisible()
+
+    widget.close()
+    widget.destroy()
