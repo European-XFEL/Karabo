@@ -623,6 +623,68 @@ void DataLogging_Test::testNoInfluxServerHandling() {
 }
 
 
+void DataLogging_Test::testInfluxPropHistoryAveraging() {
+    std::clog << "Testing InfluxLogReader averaging when the requested Property History has too many points ..."
+              << std::flush;
+
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const int maxPropHistorySize = 40;
+    const int numWrites = maxPropHistorySize + 20;
+
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    success = startDataLoggerManager("InfluxDataLogger");
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated();
+
+    Epochstamp beforePropWrites;
+    for (size_t i = 0; i < numWrites; i++) {
+        double propValue = i * 2.0;
+        if (i % 9 == 0) {
+            // Insert some NaNs values - that, along with the number of data points in the history being above the
+            // maxNumData parameter, were the trigger for the bug fixed in
+            // https://git.xfel.eu/Karabo/Framework/-/merge_requests/6805.
+            propValue = std::numeric_limits<double>::signaling_NaN();
+        }
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<double>(m_deviceId, "doubleProperty", propValue));
+    }
+    Epochstamp afterPropWrites;
+
+    // Make sure that data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+
+    // Checks that slotGetPropertyHistory gets the averages consistently - the same number of data points and the same
+    // values - when invoked multiple times with the same parameters. This test systematically fails if the fix
+    // submitted in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6805 is not present.
+    std::vector<Hash> hist1, hist2;
+    std::string replyDevice, replyProperty;
+    Hash historyParams("from", beforePropWrites.toIso8601Ext(), "to", afterPropWrites.toIso8601Ext(), "maxNumData",
+                       maxPropHistorySize);
+
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, "doubleProperty", historyParams)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(replyDevice, replyProperty, hist1));
+
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, "doubleProperty", historyParams)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(replyDevice, replyProperty, hist2));
+
+    CPPUNIT_ASSERT_EQUAL(hist1.size(), hist2.size());
+    for (size_t i = 0; i < hist1.size(); i++) {
+        CPPUNIT_ASSERT_MESSAGE("History items at position " + toString(i) + " differ.", hist1[i].fullyEquals(hist2[i]));
+    }
+
+    std::clog << "OK" << std::endl;
+}
+
+
 void DataLogging_Test::testFailingManager() {
     std::clog << "Testing logger manager goes to ERROR with inconsistent config ..." << std::flush;
     const std::string dataLogManagerId("loggerManager");

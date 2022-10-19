@@ -130,7 +130,14 @@ namespace karabo {
                             // Warning! this is dangerous, arithmetic operators will be performed
                             // server side on the INT64 cast of the UINT64 value.
                             Types::to<ToLiteral>(Types::UINT64), Types::to<ToLiteral>(Types::FLOAT),
-                            Types::to<ToLiteral>(Types::DOUBLE)}) {
+                            Types::to<ToLiteral>(Types::DOUBLE),
+                            // _INF columns, despite storing string values, have to be among the numerical columns so
+                            // the reader can use MEAN instead of SAMPLE when reducing the data points. As it can be
+                            // seen from the MEAN function documentation at
+                            // https://docs.influxdata.com/influxdb/v1.8/query_language/functions/#mean,
+                            // non-numerical values are skipped during the averaging.
+                            Types::to<ToLiteral>(Types::FLOAT) + "_INF",
+                            Types::to<ToLiteral>(Types::DOUBLE) + "_INF"}) {
             KARABO_SLOT(slotGetBadData, std::string /*from*/, std::string /*to*/);
 
             std::string dbUser;
