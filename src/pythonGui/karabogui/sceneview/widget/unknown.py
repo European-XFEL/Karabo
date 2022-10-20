@@ -20,6 +20,7 @@ class UnknownSvgWidget(QWidget):
         super(UnknownSvgWidget, self).__init__(parent)
         self.renderer = renderer
         self.setGeometry(renderer.viewBox())
+        self.setToolTip("External SVG Element")
 
     def minimumSizeHint(self):
         return self.renderer.defaultSize()
