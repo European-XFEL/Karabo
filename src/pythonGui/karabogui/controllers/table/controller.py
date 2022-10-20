@@ -3,7 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import QModelIndex, QSortFilterProxyModel, Qt
+from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QHBoxLayout, QHeaderView,
     QInputDialog, QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
@@ -18,6 +18,7 @@ from karabogui.dialogs.api import TableDeviceDialog
 
 from .delegates import (
     TableButtonDelegate, get_display_delegate, get_table_delegate)
+from .filter_model import TableSortFilterModel
 from .model import TableModel
 from .utils import is_writable_binding
 from .view import KaraboTableView
@@ -86,6 +87,7 @@ class BaseTableController(BaseBindingController):
         else:
             self._readonly = False
             widget.setSelectionMode(QAbstractItemView.SingleSelection)
+            widget.setSelectionBehavior(QAbstractItemView.SelectRows)
             flags = (QAbstractItemView.DoubleClicked
                      | QAbstractItemView.AnyKeyPressed
                      | QAbstractItemView.SelectedClicked)
@@ -96,6 +98,7 @@ class BaseTableController(BaseBindingController):
                        else self._context_menu)
             widget.customContextMenuRequested.connect(handler)
             widget.setAcceptDrops(True)
+        widget.set_read_only(self._readonly)
         widget.setFocusPolicy(Qt.NoFocus if ro else Qt.StrongFocus)
         if self._item_model is not None:
             self._item_model.set_readonly(self._readonly)
@@ -271,7 +274,11 @@ class BaseTableController(BaseBindingController):
 
     def add_row(self):
         row = self.currentIndex().row()
-        self._item_model.insertRows(row + 1, 1, QModelIndex())
+        self._item_model.add_row(row)
+
+    def add_row_below(self):
+        row = self.currentIndex().row() + 1
+        self._item_model.add_row(row)
 
     def duplicate_row(self):
         row = self.currentIndex().row()
@@ -316,7 +323,7 @@ class BaseTableController(BaseBindingController):
             menu.addSeparator()
 
             add_action = menu.addAction(icons.add, "Add Row below")
-            add_action.triggered.connect(self.add_row)
+            add_action.triggered.connect(self.add_row_below)
             du_action = menu.addAction(icons.editCopy, "Duplicate Row below")
             du_action.triggered.connect(self.duplicate_row)
 
@@ -347,7 +354,7 @@ class BaseTableController(BaseBindingController):
 
         else:
             add_action = menu.addAction(icons.add, "Add Row below")
-            add_action.triggered.connect(self.add_row)
+            add_action.triggered.connect(self.add_row_below)
 
         return menu
 
@@ -432,26 +439,6 @@ class BaseTableController(BaseBindingController):
 
 # --------------------------------------------------------------------------
 # Filter Table Controller
-
-
-class TableSortFilterModel(QSortFilterProxyModel):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def get_model_data(self, row, column):
-        """Relay the request of model data to the source model"""
-        index = self.index(row, column)
-        source_index = self.mapToSource(index)
-        return self.sourceModel().get_model_data(source_index.row(),
-                                                 source_index.column())
-
-    def index_ref(self, index):
-        source_index = self.mapToSource(index)
-        return source_index
-
-    def get_header_key(self, section):
-        """Relay the request of header data to the source model"""
-        return self.sourceModel().get_header_key(section)
 
 
 class BaseFilterTableController(BaseTableController):
