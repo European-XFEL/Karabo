@@ -1,7 +1,6 @@
 #############################################################################
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import copy
 
 from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, Qt
 from qtpy.QtGui import QBrush, QColor
@@ -11,7 +10,8 @@ from karabogui.binding.api import BoolBinding, VectorBinding, get_default_value
 from karabogui.indicators import get_state_color
 
 from .utils import (
-    create_mime_data, is_state_display_type, list2string, string2list)
+    create_mime_data, is_state_display_type, list2string, quick_table_copy,
+    string2list)
 
 
 class TableModel(QAbstractTableModel):
@@ -203,15 +203,10 @@ class TableModel(QAbstractTableModel):
         """Reimplemented function of QAbstractTableModel"""
         self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
         try:
+            if copy_row is None:
+                copy_row = self.default_row
             for row_nr in range(rows):
-                column_hash = copy.copy(copy_row)
-                if column_hash is None:
-                    column_hash = Hash()
-                    for key in self._header:
-                        binding = self._bindings[key]
-                        value = get_default_value(binding, force=True)
-                        value = binding.validate_trait("value", value)
-                        column_hash[key] = value
+                column_hash = quick_table_copy(copy_row)
                 if pos + row_nr < len(self._data):
                     self._data.insert(pos + row_nr, column_hash)
                 else:
