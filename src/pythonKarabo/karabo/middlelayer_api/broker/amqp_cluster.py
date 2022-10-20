@@ -51,6 +51,11 @@ class ClusterConnection(Connection):
 
         urls = os.environ.get("KARABO_BROKER",
                               "amqp://localhost:5672").split(',')
+        # url is part of urls
+        assert url in urls
+        # position url in urls
+        while url != urls[0]:
+            urls.append(urls.pop(0))
         self.urls = [URL(u) for u in urls]
         assert all(url.scheme == "amqp" for url in self.urls)
 
@@ -72,6 +77,9 @@ class ClusterConnection(Connection):
         )
 
     def _on_connection_close(self, connection, closing, *args, **kwargs):
+        if closing.exception() is not None:
+            log.warning(f'Connection to "{self.connection}" is closing: '
+                        f'"{closing.exception()}"')
         if self.reconnecting:
             return
 
@@ -128,7 +136,10 @@ class ClusterConnection(Connection):
 
         async with self._connect_lock:
             while True:
-                for url in self.urls:
+                countdown = 12
+                while countdown > 0:
+                    countdown -= 1
+                    url = self.urls[0]
                     if self.fail_fast and url != self.url:
                         continue
                     self.url = url
@@ -144,17 +155,20 @@ class ClusterConnection(Connection):
                         self.connected.set()
                         return result
                     except CONNECTION_EXCEPTIONS as e:
+                        # Put 1st url to the end
+                        self.urls.append(self.urls.pop(0))
                         if self.fail_fast:
                             raise
 
                         await self.__cleanup_connection(e)
 
                         log.warning(
-                            'Connection attempt to "%s" failed. %s.',
+                            'Connection to "%s" failed. %s.',
                             self,
                             e,
                         )
                     except asyncio.CancelledError as e:
+                        self.urls.append(self.urls.pop(0))
                         await self.__cleanup_connection(e)
                         raise
 
@@ -165,6 +179,8 @@ class ClusterConnection(Connection):
                 await asyncio.sleep(self.reconnect_interval)
 
     async def reconnect(self):
+        # Try next url ...
+        self.urls.append(self.urls.pop(0))
         await self.connect()
         self._reconnect_callbacks(self)
 
