@@ -3,14 +3,15 @@
 #############################################################################
 import copy
 
-from qtpy.QtCore import QAbstractTableModel, QModelIndex, Qt
+from qtpy.QtCore import QAbstractTableModel, QMimeData, QModelIndex, Qt
 from qtpy.QtGui import QBrush, QColor
 
 from karabo.native import AccessMode, Hash
 from karabogui.binding.api import BoolBinding, VectorBinding, get_default_value
 from karabogui.indicators import get_state_color
 
-from .utils import is_state_display_type, list2string, string2list
+from .utils import (
+    create_mime_data, is_state_display_type, list2string, string2list)
 
 
 class TableModel(QAbstractTableModel):
@@ -120,7 +121,8 @@ class TableModel(QAbstractTableModel):
             return Qt.NoItemFlags
 
         flags = (Qt.ItemIsEnabled | Qt.ItemIsSelectable |
-                 Qt.ItemIsEditable | Qt.ItemNeverHasChildren)
+                 Qt.ItemIsDragEnabled | Qt.ItemIsEditable |
+                 Qt.ItemNeverHasChildren)
         key = self._header[index.column()]
         # Get an enum for the AccessMode
         binding = self._bindings[key]
@@ -164,6 +166,13 @@ class TableModel(QAbstractTableModel):
             return True
 
         return False
+
+    def mimeData(self, indices):
+        """Reimplemented function of QAbstractTableModel"""
+        row = indices[0].row()
+        mime = QMimeData()
+        mime.setData("tableData", create_mime_data(row=row))
+        return mime
 
     def updateData(self, data):
         """External quick update of the table data"""
