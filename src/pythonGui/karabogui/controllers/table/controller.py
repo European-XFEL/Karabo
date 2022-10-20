@@ -425,7 +425,6 @@ class BaseTableController(BaseBindingController):
         self._item_model.set_readonly(self._readonly)
         model = self.createModel(self._item_model)
         self._table_widget.setModel(model)
-        self._table_widget.set_bindings(binding.bindings)
         self.create_delegates()
 
     def _custom_menu(self, pos):

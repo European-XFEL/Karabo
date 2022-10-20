@@ -1,4 +1,3 @@
-import json
 from unittest import main, mock
 
 import pytest
@@ -15,8 +14,7 @@ from karabo.native import (
 from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import (
     BaseFilterTableController, BaseTableController, KaraboTableView,
-    StringButtonDelegate, TableButtonDelegate, list2string)
-from karabogui.itemtypes import NavigationItemTypes
+    StringButtonDelegate, TableButtonDelegate, create_mime_data, list2string)
 from karabogui.testing import GuiTestCase, get_property_proxy, singletons
 from karabogui.topology.api import SystemTopology
 
@@ -377,20 +375,12 @@ class TestTableModelView(GuiTestCase):
             self.controller._context_menu(pos)
             menu.assert_called_once()
 
-    def test_view_drag_data(self):
+    def test_drag_drop_view(self):
         """Test the drag & drop of the table view"""
-        info = {'type': NavigationItemTypes.DEVICE,
-                'classId': "DataGenerator",
-                'deviceId': "XFEL/SIM/DG",
-                'archive': True,
-                'capabilities': 0}
-        data = [info]
         items = QMimeData()
-        items.setData('treeItems', bytearray(json.dumps(data),
-                                             encoding='UTF-8'))
+        items.setData("tableData", create_mime_data(row=1))
 
         view = self.controller.widget
-        self.assertEqual(view._drag_column, 0)
 
         model = self.controller.sourceModel()
         index = model.index(0, 0)
@@ -398,17 +388,25 @@ class TestTableModelView(GuiTestCase):
 
         event = QDropEvent(QPoint(0, 0), Qt.CopyAction, items,
                            Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
-        view.dropEvent(event)
-        self.assertEqual(index.data(), "XFEL/SIM/DG")
+        # Patch the source
+        event.source = lambda: self.controller.widget
 
+        view.dropEvent(event)
+        self.assertEqual(index.data(), "b")
+        index = model.index(1, 0)
+        self.assertEqual(index.data(), "a")
+
+        self.assertModelRow(3, "d", True, "CHANGING", 1, 5.0, ["d"])
         self.assertEqual(self.controller.sourceModel().rowCount(None), 4)
-        # Drag somewhere to outer regions, add a row
+
+        items.setData("tableData", create_mime_data(row=2))
+        # Drag somewhere to outer regions, it will modify last row
         event = QDropEvent(QPoint(0, 1000), Qt.CopyAction, items,
                            Qt.LeftButton, Qt.NoModifier, QEvent.Drop)
+        event.source = lambda: self.controller.widget
         view.dropEvent(event)
-        self.assertEqual(self.controller.sourceModel().rowCount(None), 5)
-        # Row is added with defaults and forced
-        self.assertModelRow(4, "XFEL/SIM/DG", False, "ON", 1, 2.0, [])
+        self.assertEqual(self.controller.sourceModel().rowCount(None), 4)
+        self.assertModelRow(3, "c", False, "UNKNOWN", 2, 1.0, ["c"])
 
     def test_button_delegate(self):
         """Test the table button delegate of the karabo table view"""
