@@ -1,7 +1,7 @@
 from qtpy.QtCore import QRect
 from traits.api import HasStrictTraits, List
 
-from .tools.api import is_resizable
+from .tools.api import is_resizable, is_selectable
 from .utils import calc_bounding_rect
 
 
@@ -48,9 +48,9 @@ class SceneSelectionModel(HasStrictTraits):
         return len(self._selection) > 1
 
     def select_object(self, obj):
-        """Select an object.
-        """
-        self._selection.append(obj)
+        """Select an object that can be handled by the scene tools"""
+        if is_selectable(obj):
+            self._selection.append(obj)
 
     def child_in_rect(self, rect):
         for child in self._selection:
