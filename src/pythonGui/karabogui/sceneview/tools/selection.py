@@ -9,14 +9,17 @@ from karabogui.sceneview.const import HOVER_COLOR
 from karabogui.sceneview.layout.layouts import GroupLayout
 from karabogui.sceneview.utils import (
     round_down_to_grid, round_up_to_grid, save_painter_state)
+from karabogui.sceneview.widget.unknown import UnknownSvgWidget
 
-NONRESIZABLE_OBJECTS = (GroupLayout, )
+NONRESIZABLE_OBJECTS = (GroupLayout,)
+NONSELECTABLE_OBJECTS = (UnknownSvgWidget,)
 
 
 class ProxySelectionTool(BaseSceneTool):
     """A tool for the selection of widgets in the SceneView which are derived
     from ``ControllerContainer`` and bound to proxies.
     """
+
     def mouse_down(self, scene_view, event):
         # Only controller might have proxies
         controller = scene_view.controller_at_position(event.pos())
@@ -308,3 +311,7 @@ def _round_func(direction):
 
 def is_resizable(gui_obj):
     return not isinstance(gui_obj, NONRESIZABLE_OBJECTS)
+
+
+def is_selectable(gui_obj):
+    return not isinstance(gui_obj, NONSELECTABLE_OBJECTS)
