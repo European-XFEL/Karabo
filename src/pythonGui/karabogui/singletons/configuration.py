@@ -144,13 +144,13 @@ class Configuration(QObject):
     # GUI Server network connection
 
     username = Item(default='operator', q_set=True, group=NETWORK)
+    access_level = Item(default='operator', q_set=True, group=NETWORK)
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
-    # The auth server base url should be defined in the environment.
-    # TODO: devise an easy way to generate installation images with the proper
-    #       environment setting.
-    auth_server_base_url = Item(
-        default=os.environ.get("KARABO_AUTH_SERVER_URL", ""),
-        dtype=str, group=NETWORK)
+    # Should use login dialog that configures itself dynamically based on
+    # information sent by the GUI Server being connected to?
+    use_reactive_login = Item(
+        default=os.environ.get("USE_REACTIVE_LOGIN", False),
+        dtype=bool, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
