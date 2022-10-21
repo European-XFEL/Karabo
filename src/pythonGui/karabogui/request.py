@@ -243,12 +243,8 @@ def get_macro_from_server(device_id, macro_name, project):
                             name=macro_name)
 
 
-def retrieve_default_scene(device_id, request=False):
-    """Retrieve a default scene from device with `device_id`
-
-    :param request: Boolean to actively request configuration and schema.
-                    The default is `False`.
-    """
+def retrieve_default_scene(device_id):
+    """Retrieve a default scene from device with `device_id`"""
     attrs = get_topology().get_attributes(f"device.{device_id}")
     if attrs is None:
         msg = f"The device <b>{device_id}</b> is not online."
@@ -263,43 +259,24 @@ def retrieve_default_scene(device_id, request=False):
         get_logger().info(msg)
         return
 
-    def _config_handler():
-        """Act on the arrival of the configuration"""
-        scenes = proxy["availableScenes"].value
-        if scenes is Undefined or not len(scenes):
-            messagebox.show_warning(
-                "The device <b>{}</b> does not specify a scene "
-                "name!".format(device_id))
-        else:
-            scene_name = scenes[0]
-            get_scene_from_server(device_id, scene_name)
-
-    def _schema_handler():
-        """Act on the arrival of the schema"""
-        scenes = proxy["availableScenes"].value
-        if scenes is Undefined:
-            onConfigurationUpdate(proxy, _config_handler, request=request)
-        elif not len(scenes):
-            messagebox.show_warning(
-                "The device <b>{}</b> does not specify a scene "
-                "name!".format(device_id))
-        else:
-            scene_name = scenes[0]
-            get_scene_from_server(device_id, scene_name)
-
     proxy = get_topology().get_device(device_id)
-    if not len(proxy.binding.value):
-        # We completely miss our schema and wait for it.
-        onSchemaUpdate(proxy, _schema_handler, request=request)
-    elif proxy["availableScenes"].value is Undefined:
-        onConfigurationUpdate(proxy, _config_handler, request=request)
-    else:
-        scenes = proxy["availableScenes"].value
-        if not len(scenes):
-            # The device might not have a scene name in property
-            messagebox.show_warning(
+
+    def config_update():
+        proxy.on_trait_change(config_update, "config_update", remove=True)
+        proxy.remove_monitor()
+        get_proxy_scene(proxy, request=False)
+
+    def get_proxy_scene(proxy, request=True):
+        scenes = proxy["availableScenes"]
+        if request and (scenes is None or scenes.value is Undefined):
+            proxy.on_trait_change(config_update, "config_update")
+            proxy.add_monitor()
+        elif not len(scenes.value):
+            get_logger().info(
                 "The device <b>{}</b> does not specify a scene "
                 "name!".format(device_id))
         else:
-            scene_name = scenes[0]
+            scene_name = scenes.value[0]
             get_scene_from_server(device_id, scene_name)
+
+    get_proxy_scene(proxy)
