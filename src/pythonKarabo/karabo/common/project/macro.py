@@ -17,6 +17,8 @@ class MacroModel(BaseProjectObjectModel):
     instances = List(String, transient=True)
     # The actual macro source
     code = String()
+    # The project name this macro is living in
+    project_name = String(transient=True)
 
     @cached_property
     def _get_instance_id(self):

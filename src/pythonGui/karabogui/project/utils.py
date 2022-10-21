@@ -19,8 +19,9 @@ from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import (
-    get_config, get_db_conn, get_network, get_project_model)
+    get_config, get_db_conn, get_network, get_project_model, get_topology)
 from karabogui.topology.util import get_macro_servers
+from karabogui.util import version_compatible
 
 
 def add_device_to_server(server, class_id='', parent=None):
@@ -459,4 +460,11 @@ def run_macro(macro_model):
         messagebox.show_error(html, title="The Macro cannot be started")
         return
 
-    get_network().onInitDevice(macro_servers[0], "MetaMacro", instance_id, h)
+    # Backward compatibility, only servers with `MetaMacro` class of 2.16.X
+    # have the project property
+    serverId = macro_servers[0]
+    attrs = get_topology().get_attributes(f"server.{serverId}")
+    version = attrs.get("karaboVersion", "0.0.0")
+    if version_compatible(version, 2, 16):
+        h["project"] = macro_model.project_name
+    get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)
