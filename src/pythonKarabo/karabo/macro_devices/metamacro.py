@@ -1,6 +1,6 @@
 from karabo.common.sanity_check import validate_macro
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Device, Macro, Overwrite, String)
+    AccessLevel, AccessMode, Device, Macro, Overwrite, String, isSet)
 
 
 class MetaMacro(Device):
@@ -8,18 +8,26 @@ class MetaMacro(Device):
 
     It doesn't actually get instantiated itself, but when it is started will
     execute the code it is given and start the macros therein."""
+    project = String(
+        displayedName="Project Name",
+        description="The project name of the macro it lives in.",
+        accessMode=AccessMode.INITONLY)
+
     code = String(
         displayedName="Python Code",
         description="The code to be executed. It typically defines Macros",
         accessMode=AccessMode.INITONLY)
+
     module = String(
         displayedName="Name of Module",
         description="The name of the module within the project",
         accessMode=AccessMode.INITONLY)
+
     uuid = String(
         displayedName="Project DB UUID",
         description="The UUID for this macro",
         accessMode=AccessMode.INITONLY)
+
     visibility = Overwrite(
         options=[level for level in AccessLevel],
         defaultValue=AccessLevel.ADMIN)
@@ -53,7 +61,9 @@ class MetaMacro(Device):
             "uuid": self.uuid.value,
             "module": self.module.value,
             "visibility": self.visibility.value,
-            "code": self.code.value,
         }
+        if isSet(self.project):
+            parameters["project"] = self.project.value
         macro = klass(parameters)
+        macro.store_code(self.code.value)
         return macro.startInstance(server, broadcast=broadcast)
