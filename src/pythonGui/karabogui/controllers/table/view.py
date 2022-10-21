@@ -3,7 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import QModelIndex, Qt, Slot
+from qtpy.QtCore import QModelIndex, Slot
 from qtpy.QtGui import QKeySequence
 from qtpy.QtWidgets import QHeaderView, QTableView
 
@@ -64,19 +64,20 @@ class KaraboTableView(QTableView):
                 self.model().remove_row(row)
             event.accept()
             return
-        elif event.modifiers() == Qt.ControlModifier:
-            if event.key() == Qt.Key_Up:
-                index = self.referenceIndex()
-                if index.isValid():
-                    row = index.row()
-                    self.model().move_row_up(row)
-                    self.selectRow(row - 1)
-            elif event.key() == Qt.Key_Down:
-                index = self.referenceIndex()
-                if index.isValid():
-                    row = index.row()
-                    self.model().move_row_down(row)
-                    self.selectRow(row + 1)
+        elif event.matches(QKeySequence.SelectPreviousLine):
+            index = self.referenceIndex()
+            if index.isValid():
+                row = index.row()
+                self.model().move_row_up(row)
+                self.selectRow(row - 1)
+            event.accept()
+            return
+        elif event.matches(QKeySequence.SelectNextLine):
+            index = self.referenceIndex()
+            if index.isValid():
+                row = index.row()
+                self.model().move_row_down(row)
+                self.selectRow(row + 1)
             event.accept()
             return
         return super().keyPressEvent(event)
