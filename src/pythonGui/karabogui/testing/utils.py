@@ -61,6 +61,10 @@ def click_button(button_widget, button=Qt.LeftButton):
     QTest.mouseClick(button_widget, button)
 
 
+def keySequence(widget, sequence):
+    QTest.keySequence(widget, sequence)
+
+
 def alarm_data():
     data = OrderedDict()
     data["entry1"] = {"uptype1": {
