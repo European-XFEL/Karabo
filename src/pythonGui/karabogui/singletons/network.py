@@ -12,8 +12,8 @@ from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
 from karabogui.const import REQUEST_REPLY_TIMEOUT
-from karabogui.dialogs.auth_login_dialog import AuthLoginDialog
 from karabogui.dialogs.logindialog import LoginDialog
+from karabogui.dialogs.reactive_login_dialog import ReactiveLoginDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_config
@@ -57,6 +57,7 @@ class Network(QObject):
         self.port = "44444"
         self.password = "karabo"
         self.one_time_token = None
+        self.requested_level = "observer"
 
         # Check default settings stored in QSettings!
         self._load_login_settings()
@@ -77,29 +78,31 @@ class Network(QObject):
             and that the user has been successfully authenticated when the
             Authentication Server is defined)
         """
-        if get_config()["auth_server_base_url"]:
-            return self._connectToServerAuth(parent)
+        if get_config()["use_reactive_login"]:
+            return self._connectToServerReactive(parent)
         return self._connectToServer(parent)
 
-    def _connectToServerAuth(self, parent=None) -> bool:
-        """Connection to server via LoginDialog with authentication.
+    def _connectToServerReactive(self, parent=None) -> bool:
+        """Connection to server via reactive LoginDialog.
 
         Returns: Boolean to indicate if the login dialog has been accepted
         and that the user has been successfully authenticated.
         """
-        dialog = AuthLoginDialog(username=self.username,
-                                 hostname=self.hostname,
-                                 port=self.port,
-                                 gui_servers=self.gui_servers,
-                                 parent=parent)
+        dialog = ReactiveLoginDialog(
+            username=self.username,
+            access_level=self.requested_level,
+            hostname=self.hostname,
+            port=self.port,
+            gui_servers=self.gui_servers,
+            parent=parent)
 
         if dialog.exec() == QDialog.Accepted:
             self.username = dialog.username
-            self.password = dialog.password
             self.hostname = dialog.hostname
             self.port = dialog.port
             self.gui_servers = dialog.gui_servers
             self.one_time_token = dialog.one_time_token
+            self.requested_level = dialog.access_level
             self.startServerConnection()
             return True
 
@@ -114,6 +117,7 @@ class Network(QObject):
 
         Returns: Boolean to indicate if the login dialog has been accepted
         """
+
         dialog = LoginDialog(username=self.username,
                              password=self.password,
                              hostname=self.hostname,
@@ -123,6 +127,7 @@ class Network(QObject):
 
         if dialog.exec() == QDialog.Accepted:
             self.username = dialog.username
+            self.requested_level = dialog.username
             self.password = dialog.password
             self.hostname = dialog.hostname
             self.port = dialog.port
@@ -333,6 +338,7 @@ class Network(QObject):
 
         # Save to singleton!
         get_config()['username'] = self.username
+        get_config()['access_level'] = self.requested_level
         get_config()['gui_servers'] = self.gui_servers
         self._data_reader = self._network_generator()
 
@@ -601,10 +607,9 @@ class Network(QObject):
         """We get the reply from the GUI Server and set the information"""
         if read_only:
             default = AccessLevel.OBSERVER
-            self.username = "observer"
         else:
-            default = AccessLevel(ACCESS_LEVEL_MAP.get(
-                self.username, AccessLevel.ADMIN))
+            default = AccessLevel(
+                ACCESS_LEVEL_MAP.get(self.requested_level, AccessLevel.ADMIN))
 
         krb_access.GLOBAL_ACCESS_LEVEL = default
         # Inform the GUI to change correspondingly the allowed
@@ -623,6 +628,7 @@ class Network(QObject):
         """
         config = get_config()
         self.username = config['username']
+        self.requested_level = config['access_level']
         self.gui_servers = config['gui_servers']
 
         if self.gui_servers:
