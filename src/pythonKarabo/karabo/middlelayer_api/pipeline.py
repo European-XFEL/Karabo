@@ -231,12 +231,16 @@ class NetworkInput(Configurable):
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
                     "<instance ID>:<channel name>",
-        assignment=Assignment.OPTIONAL, accessMode=AccessMode.RECONFIGURABLE,
+        assignment=Assignment.OPTIONAL, accessMode=AccessMode.INITONLY,
         regex=r"^[a-zA-Z0-9\.\-\:\/\_]+$",
         defaultValue=[])
     async def connectedOutputChannels(self, value):
         # Basic name protection is implemented here, as it can cause hickups!
         outputs = set(output.strip() for output in value)
+        if not outputs:
+            self.connectedOutputChannels = []
+            return
+
         close = self.connected.keys() - outputs
         for k in close:
             self.connected[k].cancel()
