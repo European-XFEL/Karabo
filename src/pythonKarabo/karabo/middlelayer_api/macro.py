@@ -275,8 +275,8 @@ class Macro(Device):
         if configuration is None:
             configuration = {}
         configuration.update(kwargs)
-        self.code = ""
         super().__init__(configuration)
+        self.code = ""
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
 
@@ -406,6 +406,10 @@ class Macro(Device):
         description="Provides the macro's own code",
         accessMode=AccessMode.READONLY,
         defaultValue=["macro"])
+
+    def store_code(self, code):
+        """Store the macro code apart from the descriptor mechanism"""
+        self.code = code
 
     @slot
     def requestMacro(self, params):
