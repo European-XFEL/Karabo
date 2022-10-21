@@ -3,7 +3,7 @@ from unittest import main, mock
 import pytest
 from qtpy.QtCore import (
     QEvent, QItemSelectionModel, QMimeData, QModelIndex, QPoint, Qt)
-from qtpy.QtGui import QDropEvent
+from qtpy.QtGui import QDropEvent, QKeySequence
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import (
@@ -15,7 +15,8 @@ from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import (
     BaseFilterTableController, BaseTableController, KaraboTableView,
     StringButtonDelegate, TableButtonDelegate, create_mime_data, list2string)
-from karabogui.testing import GuiTestCase, get_property_proxy, singletons
+from karabogui.testing import (
+    GuiTestCase, get_property_proxy, keySequence, singletons)
 from karabogui.topology.api import SystemTopology
 
 
@@ -649,6 +650,46 @@ class TestFilterTableModelView(GuiTestCase):
         self.assertEqual(value, ("bar", "ACTIVE"))
         value = self.controller.getModelData(1, 0)
         self.assertEqual(value, ("arch", "b"))
+
+    def test_view_key_events(self):
+        model = self.controller.tableWidget().model()
+
+        h = Hash(
+            "prop",
+            [Hash("arch", "a", "foo", True, "bar", "ACTIVE", "cat", 1,
+                  "dog", 2.0, "eagle", ["a"]),
+             Hash("arch", "b", "foo", False, "bar", "ERROR", "cat", 3,
+                  "dog", 4.0, "eagle", ["b"]),
+             Hash("arch", "c", "foo", False, "bar", "UNKNOWN", "cat", 2,
+                  "dog", 1.0, "eagle", ["c"])])
+        apply_configuration(h, self.proxy.root_proxy.binding)
+        self.assertEqual(model.rowCount(QModelIndex()), 3)
+
+        assert not self.controller.isReadOnly()
+        self.controller.tableWidget().selectRow(3)
+        # 1. Add a row
+        keySequence(self.controller.tableWidget(), QKeySequence.New)
+        self.assertEqual(model.rowCount(QModelIndex()), 4)
+
+        # 2. Select last row and delete a row
+        self.controller.tableWidget().selectRow(4)
+        keySequence(self.controller.tableWidget(), QKeySequence.Delete)
+        self.assertEqual(model.rowCount(QModelIndex()), 3)
+
+        # 3. Move row up and down
+        model = self.controller.sourceModel()
+        assert model.index(0, 0).data() == "a"
+        assert model.index(1, 0).data() == "b"
+        self.controller.tableWidget().selectRow(1)
+        keySequence(self.controller.tableWidget(),
+                    QKeySequence.SelectPreviousLine)
+        assert model.index(0, 0).data() == "b"
+        assert model.index(1, 0).data() == "a"
+        self.controller.tableWidget().selectRow(0)
+        keySequence(self.controller.tableWidget(),
+                    QKeySequence.SelectNextLine)
+        assert model.index(0, 0).data() == "a"
+        assert model.index(1, 0).data() == "b"
 
     def test_table_controller_extras(self):
         proxy = get_property_proxy(Object.getClassSchema(), "prop")
