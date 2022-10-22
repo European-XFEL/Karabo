@@ -124,9 +124,6 @@ The dialog helps to set custom icons on the widget based on the defined formulas
           </property>
           <widget class="QWidget" name="floatPage">
            <layout class="QGridLayout" name="gridLayout_2">
-            <property name="spacing">
-             <number>6</number>
-            </property>
             <item row="0" column="0">
              <widget class="QRadioButton" name="lessEqual">
               <property name="text">
@@ -137,24 +134,10 @@ The dialog helps to set custom icons on the widget based on the defined formulas
               </property>
              </widget>
             </item>
-            <item row="0" column="1" rowspan="2">
-             <widget class="QDoubleSpinBox" name="floatValue">
-              <property name="minimumSize">
-               <size>
-                <width>100</width>
-                <height>0</height>
-               </size>
-              </property>
-             </widget>
+            <item row="1" column="1">
+             <layout class="QHBoxLayout" name="float_layout"/>
             </item>
-            <item row="1" column="0">
-             <widget class="QRadioButton" name="less">
-              <property name="text">
-               <string>&lt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
+            <item row="1" column="2">
              <spacer name="horizontalSpacer_3">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -167,60 +150,38 @@ The dialog helps to set custom icons on the widget based on the defined formulas
               </property>
              </spacer>
             </item>
+            <item row="2" column="0">
+             <widget class="QRadioButton" name="less">
+              <property name="text">
+               <string>&lt;</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="intPage">
-           <layout class="QGridLayout" name="gridLayout_5">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item row="0" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,5">
-              <property name="spacing">
-               <number>6</number>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
               </property>
-              <property name="leftMargin">
-               <number>0</number>
+              <property name="text">
+               <string>≤</string>
               </property>
-              <property name="rightMargin">
-               <number>0</number>
+              <property name="textFormat">
+               <enum>Qt::AutoText</enum>
               </property>
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-                <property name="text">
-                 <string>≤</string>
-                </property>
-                <property name="textFormat">
-                 <enum>Qt::AutoText</enum>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="indent">
-                 <number>-1</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="intValue">
-                <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-             </layout>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="indent">
+               <number>-1</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="int_layout"/>
             </item>
            </layout>
           </widget>
@@ -239,7 +200,14 @@ The dialog helps to set custom icons on the widget based on the defined formulas
              <number>0</number>
             </property>
             <item>
-             <widget class="QLineEdit" name="textValue"/>
+             <widget class="QLineEdit" name="textValue">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>23</height>
+               </size>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QLabel" name="infoMessage">
