@@ -73,7 +73,7 @@ class KaraboImageNode(HasStrictTraits):
 
     @property
     def is_valid(self):
-        if self.dim_x < 1 or self.dim_y < 1:
+        if self._data is None or self.dim_x < 1 or self.dim_y < 1:
             return False
 
         # Handle YUV encoding type
