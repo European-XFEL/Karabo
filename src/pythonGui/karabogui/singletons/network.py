@@ -57,7 +57,7 @@ class Network(QObject):
         self.port = "44444"
         self.password = "karabo"
         self.one_time_token = None
-        self.requested_level = "observer"
+        self.access_level = "observer"
 
         # Check default settings stored in QSettings!
         self._load_login_settings()
@@ -78,7 +78,7 @@ class Network(QObject):
             and that the user has been successfully authenticated when the
             Authentication Server is defined)
         """
-        if get_config()["use_reactive_login"]:
+        if get_config()["reactive_login"]:
             return self._connectToServerReactive(parent)
         return self._connectToServer(parent)
 
@@ -90,7 +90,7 @@ class Network(QObject):
         """
         dialog = ReactiveLoginDialog(
             username=self.username,
-            access_level=self.requested_level,
+            access_level=self.access_level,
             hostname=self.hostname,
             port=self.port,
             gui_servers=self.gui_servers,
@@ -102,7 +102,7 @@ class Network(QObject):
             self.port = dialog.port
             self.gui_servers = dialog.gui_servers
             self.one_time_token = dialog.one_time_token
-            self.requested_level = dialog.access_level
+            self.access_level = dialog.access_level
             self.startServerConnection()
             return True
 
@@ -127,7 +127,7 @@ class Network(QObject):
 
         if dialog.exec() == QDialog.Accepted:
             self.username = dialog.username
-            self.requested_level = dialog.username
+            self.access_level = dialog.username
             self.password = dialog.password
             self.hostname = dialog.hostname
             self.port = dialog.port
@@ -338,7 +338,7 @@ class Network(QObject):
 
         # Save to singleton!
         get_config()['username'] = self.username
-        get_config()['access_level'] = self.requested_level
+        get_config()['access_level'] = self.access_level
         get_config()['gui_servers'] = self.gui_servers
         self._data_reader = self._network_generator()
 
@@ -609,7 +609,7 @@ class Network(QObject):
             default = AccessLevel.OBSERVER
         else:
             default = AccessLevel(
-                ACCESS_LEVEL_MAP.get(self.requested_level, AccessLevel.ADMIN))
+                ACCESS_LEVEL_MAP.get(self.access_level, AccessLevel.ADMIN))
 
         krb_access.GLOBAL_ACCESS_LEVEL = default
         # Inform the GUI to change correspondingly the allowed
@@ -628,7 +628,7 @@ class Network(QObject):
         """
         config = get_config()
         self.username = config['username']
-        self.requested_level = config['access_level']
+        self.access_level = config['access_level']
         self.gui_servers = config['gui_servers']
 
         if self.gui_servers:
