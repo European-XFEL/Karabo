@@ -3,7 +3,6 @@
 # Created on September 16, 2018
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os
 from collections import defaultdict
 
 from qtpy.QtCore import QObject, QSettings
@@ -146,11 +145,8 @@ class Configuration(QObject):
     username = Item(default='operator', q_set=True, group=NETWORK)
     access_level = Item(default='operator', q_set=True, group=NETWORK)
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
-    # Should use login dialog that configures itself dynamically based on
-    # information sent by the GUI Server being connected to?
-    use_reactive_login = Item(
-        default=os.environ.get("USE_REACTIVE_LOGIN", False),
-        dtype=bool, group=NETWORK)
+    reactive_login = Item(
+        default=False, q_set=True, dtype=bool, editable=True, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
