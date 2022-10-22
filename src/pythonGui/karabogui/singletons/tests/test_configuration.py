@@ -44,7 +44,7 @@ class TestConfiguration(GuiTestCase):
                           'data_dir', 'db_token', 'development',
                           'device_domain', 'documentation', 'domain',
                           'gui_servers', 'highDPI', 'log_visible',
-                          'main_geometry', 'use_reactive_login',
+                          'main_geometry', 'reactive_login',
                           'username', 'wizard'])
 
     def test_set_wrong_key(self):
@@ -92,7 +92,7 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('access_level', network_group)
         self.assertIn('username', network_group)
         self.assertIn('gui_servers', network_group)
-        self.assertIn('use_reactive_login', network_group)
+        self.assertIn('reactive_login', network_group)
         project_group = [item.name for item in groups[PROJECT]]
         self.assertEqual(len(project_group), 3)
         self.assertIn('db_token', project_group)
