@@ -304,3 +304,8 @@ def is_vector_integer(binding):
     """Return if the `binding` belongs to vector int binding"""
     return (is_unsigned_vector_integer(binding) or
             is_signed_vector_integer(binding))
+
+
+def is_vector_floating(binding):
+    return isinstance(binding, (types.VectorFloatBinding,
+                                types.VectorDoubleBinding))
