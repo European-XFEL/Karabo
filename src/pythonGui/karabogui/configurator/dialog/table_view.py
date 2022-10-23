@@ -34,7 +34,7 @@ class TableToolBar(QWidget):
 
         self._move_up_button.clicked.connect(self._move_row_up)
         self._move_down_button.clicked.connect(self._move_row_down)
-        self._add_button.clicked.connect(self._add_row)
+        self._add_button.clicked.connect(self._add_row_below)
         self._du_button.clicked.connect(self._duplicate_row)
         self._remove_button.clicked.connect(self._remove_row)
 
@@ -56,8 +56,8 @@ class TableToolBar(QWidget):
         return self._controller()
 
     @Slot()
-    def _add_row(self):
-        self.controller.add_row()
+    def _add_row_below(self):
+        self.controller.add_row_below()
         self._set_button_states()
 
     @Slot()
@@ -108,7 +108,7 @@ class TableDialog(QDialog):
         :param parent: The parent of the dialog
         """
         super().__init__(parent)
-        filepath = Path(__file__).parent / 'table_view.ui'
+        filepath = Path(__file__).parent / "table_view.ui"
         uic.loadUi(filepath, self)
         # XXX: Do not change the name of this variable since the
         # `EditDelegate` method `setModelData` refers to this dialog as the
@@ -139,7 +139,7 @@ class TableDialog(QDialog):
         binding = proxy.binding
         if binding is not None:
             columns = len(binding.bindings)
-            # minimum width of 480, but can go up to `MAX_WIDTH`
+            # minimum width of 450, but can go up to `MAX_WIDTH`
             width = min(max(columns * COLUMN_FACTOR, width), MAX_WIDTH)
         self.resize(width, height)
 
