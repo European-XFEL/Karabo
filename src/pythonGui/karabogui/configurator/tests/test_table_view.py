@@ -1,7 +1,7 @@
 from karabo.native import Configurable, Hash, String, VectorHash
 from karabogui.configurator.api import TableDialog
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_hash)
+    click_button, get_class_property_proxy, set_proxy_hash)
 
 
 class TableSchema(Configurable):
@@ -32,28 +32,67 @@ class Object(Configurable):
     bigProp = VectorHash(rows=BigTableSchema)
 
 
-class TableDialogTest(GuiTestCase):
-    def test_basic_dialog(self):
+def test_table_view_dialog(gui_app, subtests):
+    proxy = get_class_property_proxy(Object.getClassSchema(), "prop")
+    dialog = TableDialog(proxy, True)
+    assert dialog is not None
+    assert dialog.width() == 450
+    set_proxy_hash(proxy, TABLE_HASH)
+
+    assert dialog.width() == 450
+    # Finish dialog, destroy widget
+    dialog.done(1)
+    assert dialog.controller is not None
+    assert dialog.controller.widget is None
+
+    # New dialog, with big table schema
+    proxy = get_class_property_proxy(Object.getClassSchema(), "bigProp")
+    dialog = TableDialog(proxy, True)
+    assert dialog is not None
+    assert dialog.width() == 600
+    # Finish dialog without success
+    dialog.done(0)
+    assert dialog.controller is not None
+    assert dialog.controller.widget is None
+    assert dialog.toolbar is None
+
+    # New dialog, launch actions
+    with subtests.test("Test the table view action buttons"):
         proxy = get_class_property_proxy(Object.getClassSchema(), "prop")
         dialog = TableDialog(proxy, True)
-        self.assertIsNotNone(dialog)
-        self.assertEqual(dialog.width(), 450)
+        assert dialog is not None
+        assert dialog.width() == 450
         set_proxy_hash(proxy, TABLE_HASH)
+        assert dialog.controller.sourceModel() is not None
 
-        self.assertEqual(dialog.width(), 450)
-        # Finish dialog, destroy widget
-        dialog.done(1)
-        self.assertIsNotNone(dialog.controller)
-        self.assertIsNone(dialog.controller.widget)
+        data = dialog.controller.sourceModel().index(0, 0).data()
+        assert data == "1"
+        dialog.controller.tableWidget().selectRow(0)
+        click_button(dialog.toolbar._move_down_button)
+        data = dialog.controller.sourceModel().index(0, 0).data()
+        assert data == "2"
+        dialog.controller.tableWidget().selectRow(1)
+        click_button(dialog.toolbar._move_up_button)
+        data = dialog.controller.sourceModel().index(0, 0).data()
+        assert data == "1"
 
-        # New dialog, with big table schema
-        proxy = get_class_property_proxy(Object.getClassSchema(), "bigProp")
+        click_button(dialog.toolbar._remove_button)
+        data = dialog.controller.sourceModel().index(0, 0).data()
+        assert data == "2"
 
-        dialog = TableDialog(proxy, True)
-        self.assertIsNotNone(dialog)
-        self.assertEqual(dialog.width(), 600)
-        # Finish dialog without success
-        dialog.done(0)
-        self.assertIsNotNone(dialog.controller)
-        self.assertIsNone(dialog.controller.widget)
-        self.assertIsNone(dialog.toolbar)
+        assert dialog.controller.sourceModel().rowCount() == 3
+        dialog.controller.tableWidget().selectRow(2)
+        data = dialog.controller.sourceModel().index(2, 0).data()
+        assert data == "4"
+        # Adding adds a default value
+        click_button(dialog.toolbar._add_button)
+        assert dialog.controller.sourceModel().rowCount() == 4
+        data = dialog.controller.sourceModel().index(3, 0).data()
+        assert data == "NoString"
+
+        # Duplicate copies
+        dialog.controller.tableWidget().selectRow(2)
+        click_button(dialog.toolbar._du_button)
+        assert dialog.controller.sourceModel().rowCount() == 5
+        data = dialog.controller.sourceModel().index(3, 0).data()
+        assert data == "4"
