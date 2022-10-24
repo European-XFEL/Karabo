@@ -992,7 +992,7 @@ namespace karabo {
              *
              * In order to receive notifications about configuration changes for any of the monitored devices, one
              * must connect a handler for those changes by calling DeviceClient::connectDevicesMonitor.
-s             *
+             *
              * @param deviceId of the device to be added to the set of monitored devices.
              */
             void registerDeviceForMonitoring(const std::string& deviceId);
@@ -1106,7 +1106,8 @@ s             *
              *                 - statusTracker boost::function<void(karabo::net::ConnectionStatus)> called whenever
              *                                 the connection status of the underlying InputChannel changes
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are
-             * doing for the expert: "connectedOutputChannels" will be overwritten
+             *                        doing.
+             *                        For the expert: "connectedOutputChannels" will be overwritten
              *
              * @return false if channel is already registered
              */
