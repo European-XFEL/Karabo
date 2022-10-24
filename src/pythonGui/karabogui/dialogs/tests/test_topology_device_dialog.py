@@ -3,14 +3,14 @@ from qtpy.QtCore import QItemSelectionModel
 from karabogui.testing import click_button, singletons, system_hash
 from karabogui.topology.api import SystemTopology
 
-from ..table_device_dialog import TableDeviceDialog
+from ..topology_device_dialog import TopologyDeviceDialog
 
 
 def test_device_dialog(gui_app):
     topology = SystemTopology()
     topology.initialize(system_hash())
     with singletons(topology=topology):
-        dialog = TableDeviceDialog()
+        dialog = TopologyDeviceDialog()
         assert dialog.device_id == ""
         assert dialog.filter_model.rowCount() == 2
         selection = dialog.ui_devices_view.selectionModel()
