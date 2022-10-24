@@ -113,9 +113,9 @@ class BaseEditableListController(BaseBindingController):
         if self.proxy.binding is None:
             return
 
-        list_edit = ListEditDialog(self.proxy, duplicates_ok=True,
+        list_edit = ListEditDialog(self.proxy.binding, duplicates_ok=True,
                                    parent=self.widget)
-        list_edit.set_texts("Add", "&Value", "Edit")
+        list_edit.set_list(get_editor_value(self.proxy, []))
         if list_edit.exec() == QDialog.Accepted:
             edit_value = ','.join(str(v) for v in list_edit.values)
             self._internal_widget.setText(edit_value)
