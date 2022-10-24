@@ -174,6 +174,9 @@ class MacroController(BaseProjectGroupController):
         """ Whenever the object is modified it should be visible to the user
         """
         self.model.instances = _get_macro_instances(self.model.instance_id)
+        project = self.parent
+        if project is not None:
+            self.model.project_name = project.model.simple_name
 
     # ----------------------------------------------------------------------
     # traits notification handlers
@@ -224,7 +227,6 @@ class MacroController(BaseProjectGroupController):
             broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [macro]})
 
-    # @Slot()
     def _edit_macro(self, parent=None):
         dialog = ObjectEditDialog(object_type='macro', model=self.model,
                                   parent=parent)
@@ -245,7 +247,6 @@ class MacroController(BaseProjectGroupController):
                 dupe_macro.simple_name = simple_name
                 project.macros.append(dupe_macro)
 
-    # @Slot()
     def _save_macro_to_file(self, parent=None):
         config = get_config()
         path = config['data_dir']
@@ -271,7 +272,6 @@ class MacroController(BaseProjectGroupController):
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
 
-    # @Slot()
     def run_macro(self, parent=None):
         """Action handler to instantiate the macro
 
