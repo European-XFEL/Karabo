@@ -3,275 +3,257 @@
 # Created on March 12, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import OrderedDict
 
-import numpy as np
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtGui import QFontMetrics
+from qtpy.QtGui import QKeySequence
 from qtpy.QtWidgets import (
-    QApplication, QDialog, QHBoxLayout, QInputDialog, QListWidget,
-    QListWidgetItem, QPushButton, QVBoxLayout)
+    QDialog, QHBoxLayout, QInputDialog, QListWidget, QListWidgetItem,
+    QPushButton, QVBoxLayout)
 
-from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
-from karabogui import messagebox
+from karabogui import icons, messagebox
 from karabogui.binding.api import (
-    VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding, get_editor_value)
-
-FLOAT_BINDINGS = (VectorDoubleBinding, VectorFloatBinding)
-INT_BINDINGS = (VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-                VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
-                VectorUint32Binding, VectorUint64Binding)
+    VectorBoolBinding, get_min_max_size, is_vector_floating, is_vector_integer)
 
 
 class ListEditDialog(QDialog):
-    def __init__(self, proxy, duplicates_ok=True, parent=None):
-        super(ListEditDialog, self).__init__(parent)
+    def __init__(self, binding, duplicates_ok=True, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Edit list")
+        self.binding = binding
+        self.duplicates_ok = duplicates_ok
 
-        self._proxy = proxy
-        self._duplicates_ok = duplicates_ok
-
-        self._allowed_choices = OrderedDict()
-        if isinstance(self._proxy.binding, VectorBoolBinding):
-            self._allowed_choices['0'] = 0
-            self._allowed_choices['1'] = 1
+        self._allowed_choices = {}
+        if isinstance(self.binding, VectorBoolBinding):
+            self._allowed_choices["0"] = 0
+            self._allowed_choices["1"] = 1
 
         # Check for possible size limitations!
-        attrs = proxy.binding.attributes
-        self._minSize = attrs.get(KARABO_SCHEMA_MIN_SIZE, None)
-        self._maxSize = attrs.get(KARABO_SCHEMA_MAX_SIZE, None)
+        self.minSize, self.maxSize = get_min_max_size(binding)
 
-        self.setWindowTitle('Edit list')
+        h_layout = QHBoxLayout(self)
+        list_widget = QListWidget(self)
+        slot = list_widget.currentItemChanged[QListWidgetItem, QListWidgetItem]
+        slot.connect(self._update_buttons)
+        list_widget.itemDoubleClicked.connect(self.itemDoubleClicked)
+        h_layout.addWidget(list_widget)
+        self.list_widget = list_widget
+        self.list_widget.setDragDropMode(QListWidget.InternalMove)
 
-        self._add_caption = 'Add String'
-        self._add_label = 'String:'
-        self._edit_caption = 'Edit String'
-        self._edit_label = self._add_label
+        # Button Actions
+        v_layout = QVBoxLayout()
+        button = QPushButton(icons.add, "", self)
+        button.clicked.connect(self._add_clicked)
+        v_layout.addWidget(button)
 
-        hbox = QHBoxLayout(self)
-        self._list_widget = QListWidget(self)
-        lw = self._list_widget
-        slot = lw.currentItemChanged[QListWidgetItem, QListWidgetItem]
-        slot.connect(self._on_update_buttons)
-        hbox.addWidget(self._list_widget)
+        self.edit_button = QPushButton(icons.edit, "", self)
+        self.edit_button.clicked.connect(self._edit_clicked)
+        v_layout.addWidget(self.edit_button)
 
-        vbox = QVBoxLayout()
-        button = QPushButton('&Add...', self)
-        button.clicked.connect(self._on_add_clicked)
-        vbox.addWidget(button)
+        self.remove_button = QPushButton(icons.delete, "", self)
+        self.remove_button.clicked.connect(self._remove_clicked)
+        v_layout.addWidget(self.remove_button)
 
-        self._edit_button = QPushButton('&Edit...', self)
-        self._edit_button.clicked.connect(self._on_edit_clicked)
-        vbox.addWidget(self._edit_button)
+        self.move_up_button = QPushButton(icons.arrowFancyUp, "", self)
+        self.move_up_button.clicked.connect(self._move_up_clicked)
+        v_layout.addWidget(self.move_up_button)
 
-        self._remove_button = QPushButton('&Delete', self)
-        self._remove_button.clicked.connect(self._on_remove_clicked)
-        vbox.addWidget(self._remove_button)
+        self.move_down_button = QPushButton(icons.arrowFancyDown, "", self)
+        self.move_down_button.clicked.connect(self._move_down_clicked)
+        v_layout.addWidget(self.move_down_button)
+        v_layout.addStretch(1)
 
-        self._up_button = QPushButton('&Up', self)
-        self._up_button.clicked.connect(self._on_moveup_clicked)
-        vbox.addWidget(self._up_button)
-
-        self._down_button = QPushButton('&Down', self)
-        self._down_button.clicked.connect(self._on_movedown_clicked)
-        vbox.addWidget(self._down_button)
-        vbox.addStretch(1)
-
-        button = QPushButton('OK', self)
+        button = QPushButton("OK", self)
         button.clicked.connect(self.accept)
-        vbox.addWidget(button)
+        v_layout.addWidget(button)
 
-        button = QPushButton('Cancel', self)
+        button = QPushButton("Cancel", self)
         button.clicked.connect(self.reject)
-        vbox.addWidget(button)
-        hbox.addLayout(vbox)
-
-        values = get_editor_value(proxy, [])
-        self.set_list(values)
+        v_layout.addWidget(button)
+        h_layout.addLayout(v_layout)
 
     # ----------------------------------------------------------------------
     # Public interface
 
     def set_list(self, values):
-        self._list_widget.clear()
+        self.list_widget.clear()
+        for value in values:
+            if isinstance(value, bool):
+                value = int(value)
+            self._add_item(value)
 
-        fm = QFontMetrics(self._list_widget.font())
-        width = 0
-        for index in values:
-            # Insert item
-            if isinstance(index, np.bool_):
-                index = int(index)
-            self._add_item(index)
-
-            w = fm.width(str(index))
-            if w > width:
-                width = w
-
-        if self._list_widget.verticalScrollBar() is not None:
-            width += self._list_widget.verticalScrollBar().width()
-
-        desktop = QApplication.desktop()
-        min_width = min(width, desktop.screenGeometry().width() * 4 / 5)
-        self._list_widget.setMinimumWidth(min_width)
-        self._on_update_buttons()
-
-    def set_texts(self, add_caption, add_label, edit_caption, edit_label=''):
-        self._add_caption = add_caption
-        self._add_label = add_label
-        self._edit_caption = edit_caption
-        self._edit_label = edit_label if edit_label else add_label
+        self._update_buttons()
 
     @property
     def values(self):
-        return [self._list_widget.item(index).editable_value
-                for index in range(self._list_widget.count())]
+        return [self.list_widget.item(index).edit_value
+                for index in range(self.list_widget.count())]
+
+    @property
+    def string_values(self):
+        return ",".join(self.list_widget.item(index).text()
+                        for index in range(self.list_widget.count()))
+
+    # ----------------------------------------------------------------------
+
+    def keyPressEvent(self, event):
+        """Reimplemented method of `QDialog`"""
+        if event.matches(QKeySequence.New):
+            item = self.list_widget.currentItem()
+            if item is None:
+                event.accept()
+                return
+            index = self.list_widget.currentRow()
+            value = item.edit_value
+            self._insert_item(index + 1, value)
+            event.accept()
+            return
+        elif event.matches(QKeySequence.Delete):
+            self._remove_clicked()
+            event.accept()
+            return
+        return super().keyPressEvent(event)
 
     # ----------------------------------------------------------------------
     # Private interface
 
-    def _add_item(self, value):
+    def _insert_item(self, index, value):
+        """Insert and item at `index` with `value`"""
         item = QListWidgetItem(str(value))
-        item.editable_value = value
-        self._list_widget.addItem(item)
+        item.edit_value = value
+        self.list_widget.insertItem(index, item)
+        self.list_widget.setCurrentItem(item)
 
-    def _retrieve_any_string(self, caption, label):
-        currentItem = self._list_widget.currentItem()
-        if currentItem is None:
-            currentValue = None
-        else:
-            currentValue = currentItem.editable_value
+    def _add_item(self, value):
+        """Add an item to the list widget with `value`"""
+        item = QListWidgetItem(str(value))
+        item.edit_value = value
+        self.list_widget.addItem(item)
+
+    def _retrieve_value(self, mode=None):
+        item = self.list_widget.currentItem()
+        value = item.edit_value if item is not None else None
 
         dialog = QInputDialog.getText
-        if isinstance(self._proxy.binding, FLOAT_BINDINGS):
+        if is_vector_floating(self.binding):
             dialog = QInputDialog.getDouble
-        elif isinstance(self._proxy.binding, INT_BINDINGS):
+        elif is_vector_integer(self.binding):
             dialog = QInputDialog.getInt
 
-        if currentValue is None:
-            currentValue, ok = dialog(self, caption, label)
+        if value is None:
+            value, ok = dialog(self, "", "")
         elif dialog == QInputDialog.getText:
-            currentValue, ok = dialog(self, caption, label, text=currentValue)
+            value, ok = dialog(self, "Text", mode, text=value)
         elif dialog == QInputDialog.getInt:
-            value = int(currentValue)
-            currentValue, ok = dialog(self, caption, label, value)
+            value = int(value)
+            value, ok = dialog(self, "Integer", mode, value)
         elif dialog == QInputDialog.getDouble:
-            value = float(currentValue)
-            currentValue, ok = dialog(self, caption, label, value)
+            value = float(value)
+            value, ok = dialog(self, "Float", mode, value, decimals=3)
 
         if ok:
-            return currentValue
-        else:
-            return None
+            return value
 
-    def _retrieve_choice(self, title, label):
-        ok = False
-        currentText = ''
-        if self._list_widget.currentItem() is not None:
-            currentText = self._list_widget.currentItem().text()
+    def _retrieve_choice(self, mode):
+        text = ""
+        if self.list_widget.currentItem() is not None:
+            text = self.list_widget.currentItem().text()
 
         keys = list(self._allowed_choices.keys())
-        if currentText in keys:
-            index = keys.index(currentText)
+        if text in keys:
+            index = keys.index(text)
         else:
             index = 0
-        text, ok = QInputDialog.getItem(self, title, label, keys, index, False)
 
+        text, ok = QInputDialog.getItem(self, mode, "", keys, index, False)
         if ok:
             return self._allowed_choices[text]
 
     # ----------------------------------------------------------------------
     # Slots
 
+    @Slot(QListWidgetItem)
+    def itemDoubleClicked(self, item):
+        """If an item is double clicked on the widget, relay editing"""
+        self._edit_clicked()
+
     @Slot()
-    def _on_add_clicked(self):
-        if (self._maxSize is not None
-                and self._list_widget.count() == self._maxSize):
+    def _add_clicked(self):
+        if (self.maxSize is not None
+                and self.list_widget.count() == self.maxSize):
             messagebox.show_error("The vector size cannot be greater than {}!"
-                                  .format(self._maxSize), parent=self)
+                                  .format(self.maxSize), parent=self)
             return
 
         if len(self._allowed_choices) < 1:
-            value = self._retrieve_any_string(
-                self._add_caption, self._add_label)
+            value = self._retrieve_value("Add")
         else:
-            value = self._retrieve_choice(self._add_caption, self._add_label)
+            value = self._retrieve_choice("Add")
 
-        if (value is None or not self._duplicates_ok and
-                self._list_widget.findItems(str(value),
-                                            Qt.MatchCaseSensitive)):
+        if (value is None or not self.duplicates_ok and
+                self.list_widget.findItems(str(value),
+                                           Qt.MatchCaseSensitive)):
             return
 
         self._add_item(value)
-        self._list_widget.setCurrentRow(self._list_widget.count() - 1)
-        self._on_update_buttons()
+        self.list_widget.setCurrentRow(self.list_widget.count() - 1)
+        self._update_buttons()
 
     @Slot()
-    def _on_edit_clicked(self):
+    def _edit_clicked(self):
         if len(self._allowed_choices) < 1:
-            value = self._retrieve_any_string(
-                self._edit_caption, self._edit_label)
+            value = self._retrieve_value("Edit")
         else:
-            value = self._retrieve_choice(self._edit_caption, self._edit_label)
+            value = self._retrieve_choice("Edit")
 
-        if (value is None or not self._duplicates_ok and
-                self._list_widget.findItems(str(value),
-                                            Qt.MatchCaseSensitive)):
+        if (value is None or not self.duplicates_ok and
+                self.list_widget.findItems(str(value),
+                                           Qt.MatchCaseSensitive)):
             return
 
-        currentItem = self._list_widget.currentItem()
-        currentItem.editable_value = value
-        currentItem.setText(str(value))
-        self._on_update_buttons()
+        item = self.list_widget.currentItem()
+        item.edit_value = value
+        item.setText(str(value))
+        self._update_buttons()
 
     @Slot()
-    def _on_remove_clicked(self):
-        if (self._minSize is not None
-                and self._list_widget.count() == self._minSize):
+    def _remove_clicked(self):
+        if (self.minSize is not None
+                and self.list_widget.count() == self.minSize):
             messagebox.show_error("The vector size cannot be smaller than {}!"
-                                  .format(self._minSize), parent=self)
+                                  .format(self.minSize), parent=self)
             return
-        self._list_widget.takeItem(self._list_widget.currentRow())
-        self._on_update_buttons()
+        self.list_widget.takeItem(self.list_widget.currentRow())
+        self._update_buttons()
 
     @Slot()
-    def _on_moveup_clicked(self):
-        row = self._list_widget.currentRow()
-        widget = self._list_widget
+    def _move_up_clicked(self):
+        row = self.list_widget.currentRow()
+        widget = self.list_widget
         if row > 0:
-            from_item, to_item = widget.item(row), widget.item(row - 1)
-            tmp_text = to_item.text()
-            to_item.setText(from_item.text())
-            from_item.setText(tmp_text)
-
-            from_item.editable_value, to_item.editable_value = (
-                to_item.editable_value, from_item.editable_value
-            )
+            item = widget.takeItem(row)
+            widget.insertItem(row - 1, item)
             widget.setCurrentRow(row - 1)
-            self._on_update_buttons()
+            self._update_buttons()
 
     @Slot()
-    def _on_movedown_clicked(self):
-        row = self._list_widget.currentRow()
-        widget = self._list_widget
+    def _move_down_clicked(self):
+        row = self.list_widget.currentRow()
+        widget = self.list_widget
         if row < widget.count() - 1:
-            from_item, to_item = widget.item(row), widget.item(row + 1)
-            tmp_text = to_item.text()
-            to_item.setText(from_item.text())
-            from_item.setText(tmp_text)
-            from_item.editable_value, to_item.editable_value = (
-                to_item.editable_value, from_item.editable_value
-            )
+            item = widget.takeItem(row)
+            widget.insertItem(row + 1, item)
             widget.setCurrentRow(row + 1)
-            self._on_update_buttons()
+            self._update_buttons()
 
     @Slot()
-    def _on_update_buttons(self):
-        hasItems = self._list_widget.count() > 0
-        self._edit_button.setEnabled(hasItems)
-        self._remove_button.setEnabled(hasItems)
-        i = self._list_widget.currentRow()
-        self._up_button.setEnabled(hasItems and i > 0)
-        self._down_button.setEnabled(hasItems and
-                                     i < self._list_widget.count() - 1)
+    def _update_buttons(self):
+        """Enable or disable the `Edit`, `Delete` and `Move` buttons"""
+        has_items = self.list_widget.count() > 0
+        self.edit_button.setEnabled(has_items)
+        self.remove_button.setEnabled(has_items)
+
+        row = self.list_widget.currentRow()
+        enable_up = has_items and row > 0
+        self.move_up_button.setEnabled(enable_up)
+        enable_down = has_items and row < self.list_widget.count() - 1
+        self.move_down_button.setEnabled(enable_down)
