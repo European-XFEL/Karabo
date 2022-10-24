@@ -95,6 +95,8 @@ class ReactiveLoginDialog(QDialog):
 
         # Authenticated login
         self.edit_username.setText(username)
+        self.edit_username.textEdited.connect(self._on_username_changed)
+        self.edit_password.textEdited.connect(self._on_password_changed)
 
         # Access Level and Read-Only login
         shell_user = getpass.getuser()
@@ -170,6 +172,14 @@ class ReactiveLoginDialog(QDialog):
     def on_port_changed(self):
         if self.hasAcceptableInput():
             self._timer.start()
+
+    @Slot()
+    def _on_username_changed(self):
+        self._update_dialog_state()
+
+    @Slot()
+    def _on_password_changed(self):
+        self._update_dialog_state()
 
     @Slot()
     def connect_clicked(self):
@@ -286,7 +296,7 @@ class ReactiveLoginDialog(QDialog):
         elif self.login_type is LoginType.USER_AUTHENTICATED:
             username = self.edit_username.text()
             password = self.edit_password.text()
-            self.connect_button.setEnabled(username and password)
+            self.connect_button.setEnabled(bool(username and password))
 
     def _update_status_label(self):
         """Status message and processing indicator"""
