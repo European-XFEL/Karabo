@@ -8,7 +8,8 @@ from urllib.error import URLError
 from qtpy import uic
 from qtpy.QtCore import QBuffer, QByteArray, Qt, Signal, Slot
 from qtpy.QtGui import QPalette, QPixmap, QPixmapCache
-from qtpy.QtWidgets import QApplication, QDialog, QLabel, QLineEdit
+from qtpy.QtWidgets import (
+    QApplication, QDialog, QLabel, QLineEdit, QSizePolicy)
 from traits.api import Instance, Property
 
 from karabo.common.scenemodel.api import IconData
@@ -36,6 +37,8 @@ class IconLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setMinimumSize(MIN_SIZE, MIN_SIZE)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding,
+                           QSizePolicy.MinimumExpanding)
         self._pixmap = self._default_pixmap = icons.no.pixmap(100)
 
     # Qt Overrides
