@@ -684,15 +684,14 @@ namespace karabo {
                   .key("node.ndarray")
                   .description("A multi dimensional array of floats sent via the pipeline")
                   .dtype(Types::FLOAT)
-                  .shape("100,200")
+                  .shape(std::vector<unsigned long long>({100, 200}))
                   .commit();
 
             IMAGEDATA_ELEMENT(pipeData)
                   .key("node.image")
-                  .description("An image with pixels as 16-bit unsigned integers sent via the pipeline")
-                  .setDimensions("400,500")
+                  .setDimensions(std::vector<unsigned long long>({400, 500}))
                   .setEncoding(Encoding::GRAY)
-                  // guess that DAQ needs more...
+                  .setType(Types::UINT16)
                   .commit();
 
             OUTPUT_CHANNEL(expected).key("output").displayedName("Output").dataSchema(pipeData).commit();
