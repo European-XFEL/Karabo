@@ -568,14 +568,16 @@ namespace configurationTest {
                   .assignmentMandatory()
                   .commit();
 
-            NDARRAY_ELEMENT(expected).key("arrBool").dtype(karabo::util::Types::BOOL).shape("3,2").commit();
+            const std::vector<unsigned long long> shape32({3, 2});
+            NDARRAY_ELEMENT(expected).key("arrBool").dtype(karabo::util::Types::BOOL).shape(shape32).commit();
 
-            NDARRAY_ELEMENT(expected).key("arrInt8").dtype(karabo::util::Types::INT8).shape("3,2").commit();
+            NDARRAY_ELEMENT(expected).key("arrInt8").dtype(karabo::util::Types::INT8).shape(shape32).commit();
 
-            NDARRAY_ELEMENT(expected).key("arrUInt16").dtype(karabo::util::Types::UINT16).shape("3,2").commit();
+            NDARRAY_ELEMENT(expected).key("arrUInt16").dtype(karabo::util::Types::UINT16).shape(shape32).commit();
 
-            NDARRAY_ELEMENT(expected).key("arrFloat").dtype(karabo::util::Types::FLOAT).shape("3,2").commit();
+            NDARRAY_ELEMENT(expected).key("arrFloat").dtype(karabo::util::Types::FLOAT).shape(shape32).commit();
 
+            // Keep shape as string to also test that
             NDARRAY_ELEMENT(expected).key("arrDouble").dtype(karabo::util::Types::DOUBLE).shape("3,2,-1").commit();
 
             NDARRAY_ELEMENT(expected)
