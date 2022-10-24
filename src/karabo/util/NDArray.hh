@@ -323,7 +323,11 @@ namespace karabo {
 
             NDArrayElement& shape(const std::string& shp) {
                 std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(shp);
-                return setDefaultValue("shape", tmp);
+                return shape(tmp);
+            }
+
+            NDArrayElement& shape(const std::vector<unsigned long long>& shp) {
+                return setDefaultValue("shape", shp);
             }
 
             NDArrayElement& unit(const UnitType& unit) {
