@@ -106,7 +106,6 @@ namespace karabo {
              * Non-templated no-copy construction.
              * @param ptr Shared_ptr to external memory location
              * @param type Type of provided data
-             * @param itemSize Item size (element size)
              * @param numElems Number of elements of provided type
              * @param shape Shape information
              * @param isBigEndian Endianess flag
