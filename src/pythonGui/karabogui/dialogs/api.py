@@ -20,9 +20,9 @@ from .proxies_dialog import ProxiesDialog
 from .scene_dialogs import ReplaceDialog, ResizeSceneDialog, SceneItemDialog
 from .scene_link_dialog import SceneLinkDialog
 from .sticker_dialog import GREY, StickerDialog
-from .table_device_dialog import TableDeviceDialog
 from .textdialog import TextDialog
 from .time_detail_dialog import RequestTimeDialog
+from .topology_device_dialog import TopologyDeviceDialog
 from .update_dialog import UpdateDialog
 from .utils import get_dialog_ui
 from .webdialog import WebDialog, WebValidator
