@@ -13,8 +13,8 @@ import karabogui.icons as icons
 from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
 from karabogui.binding.api import (
     StringBinding, get_default_value, get_editor_value)
-from karabogui.controllers.api import BaseBindingController
-from karabogui.dialogs.api import TableDeviceDialog
+from karabogui.controllers.api import BaseBindingController, has_options
+from karabogui.dialogs.api import TopologyDeviceDialog
 
 from .delegates import (
     TableButtonDelegate, get_display_delegate, get_table_delegate)
@@ -346,7 +346,8 @@ class BaseTableController(BaseBindingController):
             du_action.setEnabled(add_row)
             remove_action.setEnabled(rm_row)
 
-            if is_writable_binding(binding, StringBinding):
+            if (is_writable_binding(binding, StringBinding)
+                    and not has_options(binding)):
                 menu.addSeparator()
                 device_action = menu.addAction(
                     icons.deviceInstance, "Set Topology DeviceId")
@@ -364,7 +365,7 @@ class BaseTableController(BaseBindingController):
     def _device_action(self):
         model = self.tableWidget().model()
         index = model.index_ref(self.currentIndex())
-        dialog = TableDeviceDialog(parent=self.widget)
+        dialog = TopologyDeviceDialog(parent=self.widget)
         if dialog.exec() == QDialog.Accepted:
             device = dialog.device_id
             self.sourceModel().setData(index, device)
