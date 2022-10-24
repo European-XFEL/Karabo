@@ -187,7 +187,8 @@ def _add_macro(project_controller, parent=None):
         if check_macro_exists(macro_name):
             return
         macro = MacroModel(simple_name=macro_name,
-                           code=_macro_template.format(classname))
+                           code=_macro_template.format(classname),
+                           project_name=project.simple_name)
         # Set initialized and modified last
         macro.initialized = macro.modified = True
         project.macros.append(macro)
