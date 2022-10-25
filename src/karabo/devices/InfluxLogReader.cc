@@ -89,6 +89,7 @@ namespace karabo {
         const unsigned long InfluxLogReader::kSecConversionFactor = 1000000;
         const unsigned long InfluxLogReader::kFracConversionFactor = 1000000000000;
         const int InfluxLogReader::kMaxHistorySize = 10000;
+        const TimeValue InfluxLogReader::kMaxInfluxDataDelaySecs = 300ull;
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
             STRING_ELEMENT(expected)
@@ -646,7 +647,19 @@ namespace karabo {
                 auto value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (value.is_null()) {
                     // No digest has been found - it's not possible to go ahead.
-                    const std::string errMsg = "Failed to query schema digest";
+                    std::ostringstream oss;
+                    oss << "No active schema could be found for device '" << ctxt->deviceId << "' at (or before) '"
+                        << ctxt->atTime.toIso8601Ext() << "'.";
+                    Epochstamp currTime;
+                    TimeDuration elapsed = currTime - ctxt->atTime;
+                    const TimeValue atTimeSecsAgo = elapsed.getTotalSeconds();
+                    if (atTimeSecsAgo <= kMaxInfluxDataDelaySecs && currTime > ctxt->atTime) {
+                        // The requested timepoint is not "old" enough - there's a chance that the schema will be
+                        // available soon in the InfluxDB.
+                        oss << " As the requested time point is " << atTimeSecsAgo
+                            << " secs. ago, the schema may soon be available.";
+                    }
+                    const std::string errMsg = oss.str();
                     KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                     ctxt->aReply.error(errMsg);
                     return;
@@ -720,9 +733,9 @@ namespace karabo {
             // then iterating over it to capture all the properties keys and their types for further processing.
             try {
                 // The use of the specialized method loadLastFromSequence is needed because schemas saved in Influx
-                // prior to the fix in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6470 can have multiple (and
-                // different) versions of a device's schema. When that happens, the version that must be retrieved is
-                // the last one (the most recent at the time the schema was saved in Influx).
+                // prior to the fix in https://git.xfel.eu/Karabo/Framework/-/merge_requests/6470 can have multiple
+                // (and different) versions of a device's schema. When that happens, the version that must be
+                // retrieved is the last one (the most recent at the time the schema was saved in Influx).
                 std::vector<unsigned char> decodedSch;
                 base64Decode(encodedSch, decodedSch);
                 const char *decoded = reinterpret_cast<const char *>(decodedSch.data());
@@ -915,12 +928,13 @@ namespace karabo {
                     if (static_cast<int>(col) == tidCol) continue; // Skips the trainId column
                     try {
                         if (!valuesRow[col]) {
-                            // Skips any null value in the result set - any row returned by Influx will have at least
-                            // one non null value (may be an empty string).
+                            // Skips any null value in the result set - any row returned by Influx will have at
+                            // least one non null value (may be an empty string).
                             continue;
                         }
                         // Figure out the real Karabo type:
-                        // For nan/inf floating points we added "_INF" when writing to influxDB (and stored as strings).
+                        // For nan/inf floating points we added "_INF" when writing to influxDB (and stored as
+                        // strings).
                         const std::string &typeNameInflux = colTypeNames[col];
                         const size_t posInf = typeNameInflux.rfind("_INF");
                         const std::string &typeName =
@@ -987,8 +1001,9 @@ namespace karabo {
                     break;
                 }
                 case Types::VECTOR_UINT8: {
-                    // The fromString specialisation for vector<unsigned char> as used in the HANDLE_VECTOR_TYPE below
-                    // erroneously does base64 decoding. We do not dare to fix that now, but workaround it here:
+                    // The fromString specialisation for vector<unsigned char> as used in the HANDLE_VECTOR_TYPE
+                    // below erroneously does base64 decoding. We do not dare to fix that now, but workaround it
+                    // here:
                     node = &hash.set(path, std::vector<unsigned char>());
                     node->getValue<std::vector<unsigned char>>() =
                           fromStringForSchemaOptions<unsigned char>(valueAsString, ",");
@@ -1023,7 +1038,8 @@ namespace karabo {
                     break;
                 }
                 case Types::UINT64: {
-                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the results
+                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the
+                    // results
                     unsigned long long uv;
                     long long sv = std::move(fromString<long long>(valueAsString));
                     memcpy(&uv, &sv, sizeof(unsigned long long));
