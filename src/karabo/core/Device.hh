@@ -1595,6 +1595,8 @@ namespace karabo {
              *
              * This is similar to the more general appendSchema, but dedicated to a common use case.
              *
+             * Caveat: This does not recreate an output channel if its schema is changed
+             *
              * @param path  indicates the parameter which should be a Vector- or TableElement
              * @param value is the new maximum size of the parameter
              * @param emitFlag indicates if others should be informed about this Schema update.
