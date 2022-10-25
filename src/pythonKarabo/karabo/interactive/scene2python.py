@@ -86,8 +86,11 @@ def main():
             print(f"# WARNING from scene2py: "
                   f"no occurrences of '{ns.deviceId}' found")
 
-        print(output_scene.replace(f"keys=['{ns.deviceId}",
-                                   "keys=[f'{deviceId}"))
+        output = output_scene.replace(f"keys=['{ns.deviceId}",
+                                      "keys=[f'{deviceId}")
+        output = output.replace(f"'{ns.deviceId}",  "f'{deviceId}")
+        output = output.replace(f"{ns.deviceId}",  "{deviceId}")
+        print(output)
     else:
         print(output_scene)
 
