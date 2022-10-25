@@ -1,3 +1,5 @@
+from collections import Counter
+
 from traits.api import Instance, List
 
 from karabo.common.api import walk_traits_object
@@ -112,8 +114,8 @@ def device_config_exists(project, instance_id, config_names):
     def visitor(obj):
         nonlocal found
         if (
-            isinstance(obj, DeviceInstanceModel)
-            and obj.instance_id == instance_id
+                isinstance(obj, DeviceInstanceModel)
+                and obj.instance_id == instance_id
         ):
             existing = set(conf.simple_name for conf in obj.configs)
             if not existing.isdisjoint(config_names):
@@ -177,3 +179,28 @@ def get_project_models(root):
     models = [model for model in _iter_project_model(root)]
 
     return models
+
+
+def check_instance_duplicates(root):
+    """Check the number of instances in `root`` and the duplicates."""
+
+    devices = Counter()
+    servers = Counter()
+
+    def visitor(obj):
+        if isinstance(obj, DeviceInstanceModel):
+            devices[obj.instance_id] += 1
+        elif isinstance(obj, DeviceServerModel):
+            servers[obj.server_id] += 1
+
+    walk_traits_object(root, visitor)
+
+    instances = {"devices": len(devices), "servers": len(servers)}
+
+    duplicates = {
+        "devices": {k: v for k, v in devices.items() if v > 1},
+        "servers": {k: v for k, v in servers.items() if v > 1}
+    }
+    ret = {"Instances": instances, "Duplicates": duplicates}
+
+    return ret
