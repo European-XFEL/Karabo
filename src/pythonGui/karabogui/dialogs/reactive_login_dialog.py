@@ -74,19 +74,17 @@ class ReactiveLoginDialog(QDialog):
         self._timer.timeout.connect(self.connectToServer)
 
         hostname = hostname if hostname else "localhost"
-        self.combo_hostname.editTextChanged.connect(self.on_hostname_changed)
-        self.edit_port.textEdited.connect(self.on_port_changed)
-
         if gui_servers is None:
             gui_servers = []
         for server in gui_servers:
             self.combo_hostname.addItem(server)
         self.combo_hostname.setEditText(hostname)
+        self.combo_hostname.editTextChanged.connect(self.on_hostname_changed)
 
         port = str(port) if port else "44444"
         self.edit_port.setText(port)
-        self.edit_port.setValidator(QIntValidator(1, 65535))
-        self.edit_port.textEdited.connect(self._timer.start)
+        self.edit_port.setValidator(QIntValidator(1, 65535, parent=self))
+        self.edit_port.textEdited.connect(self.on_port_changed)
 
         for level in ["admin", "expert", "operator", "user", "observer"]:
             self.combo_access_level.addItem(level)
@@ -105,6 +103,9 @@ class ReactiveLoginDialog(QDialog):
 
         self.connect_button.clicked.connect(self.connect_clicked)
         self._update_dialog_state()
+
+        if self.hasAcceptableInput():
+            self._timer.start()
 
     # --------------------------------------------------------------------
     # Dialog Public Properties
@@ -192,8 +193,7 @@ class ReactiveLoginDialog(QDialog):
     @Slot()
     def connectToServer(self):
         """Connect to the server"""
-        abort_states = (QTcpSocket.HostLookupState, QTcpSocket.ConnectingState)
-        if self._tcp_socket.state() in abort_states:
+        if self._tcp_socket.state() != QTcpSocket.UnconnectedState:
             self._tcp_socket.abort()
 
         self._requesting = True
