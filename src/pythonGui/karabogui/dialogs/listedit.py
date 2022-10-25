@@ -14,6 +14,8 @@ from karabogui import icons, messagebox
 from karabogui.binding.api import (
     VectorBoolBinding, get_min_max_size, is_vector_floating, is_vector_integer)
 
+USER_ROLE = Qt.UserRole
+
 
 class ListEditDialog(QDialog):
     def __init__(self, binding, duplicates_ok=True, parent=None):
@@ -85,7 +87,7 @@ class ListEditDialog(QDialog):
 
     @property
     def values(self):
-        return [self.list_widget.item(index).edit_value
+        return [self.list_widget.item(index).data(USER_ROLE)
                 for index in range(self.list_widget.count())]
 
     @property
@@ -103,7 +105,7 @@ class ListEditDialog(QDialog):
                 event.accept()
                 return
             index = self.list_widget.currentRow()
-            value = item.edit_value
+            value = item.data(USER_ROLE)
             self._insert_item(index + 1, value)
             event.accept()
             return
@@ -119,36 +121,39 @@ class ListEditDialog(QDialog):
     def _insert_item(self, index, value):
         """Insert and item at `index` with `value`"""
         item = QListWidgetItem(str(value))
-        item.edit_value = value
+        item.setData(USER_ROLE, value)
         self.list_widget.insertItem(index, item)
         self.list_widget.setCurrentItem(item)
 
     def _add_item(self, value):
         """Add an item to the list widget with `value`"""
         item = QListWidgetItem(str(value))
-        item.edit_value = value
+        item.setData(USER_ROLE, value)
         self.list_widget.addItem(item)
 
     def _retrieve_value(self, mode=None):
         item = self.list_widget.currentItem()
-        value = item.edit_value if item is not None else None
+        value = item.data(USER_ROLE) if item is not None else None
 
         dialog = QInputDialog.getText
+        title = "Text"
         if is_vector_floating(self.binding):
             dialog = QInputDialog.getDouble
+            title = "Float"
         elif is_vector_integer(self.binding):
             dialog = QInputDialog.getInt
+            title = "Integer"
 
         if value is None:
-            value, ok = dialog(self, "", "")
+            value, ok = dialog(self, title, "Add")
         elif dialog == QInputDialog.getText:
-            value, ok = dialog(self, "Text", mode, text=value)
+            value, ok = dialog(self, title, mode, text=value)
         elif dialog == QInputDialog.getInt:
             value = int(value)
-            value, ok = dialog(self, "Integer", mode, value)
+            value, ok = dialog(self, title, mode, value)
         elif dialog == QInputDialog.getDouble:
             value = float(value)
-            value, ok = dialog(self, "Float", mode, value, decimals=3)
+            value, ok = dialog(self, title, mode, value, decimals=3)
 
         if ok:
             return value
@@ -211,7 +216,7 @@ class ListEditDialog(QDialog):
             return
 
         item = self.list_widget.currentItem()
-        item.edit_value = value
+        item.setData(USER_ROLE, value)
         item.setText(str(value))
         self._update_buttons()
 
