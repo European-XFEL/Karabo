@@ -463,7 +463,7 @@ class TestChannel(DeviceTest):
         self.assertIsNotNone(ip_address)
         output = NetworkOutput({"hostname": net_segment})
         await output._run()
-        response = await output.getInformation('channelName')
+        response = output.getInformation('channelName')
         self.assertIn("connectionType", response)
         self.assertIn("port", response)
         self.assertEqual(response["hostname"], ip_address)
