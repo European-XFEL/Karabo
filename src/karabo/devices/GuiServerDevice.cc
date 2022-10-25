@@ -885,6 +885,11 @@ namespace karabo {
             }
         }
 
+        bool GuiServerDevice::isProjectLoadingReplyType(const std::string& replyType) {
+            return replyType == "projectListDomains" || replyType == "projectListItems" ||
+                   replyType == "projectLoadItems" || replyType == "projectBeginUserSession" ||
+                   replyType == "projectEndUserSession";
+        }
 
         bool GuiServerDevice::violatesReadOnly(const std::string& type, const karabo::util::Hash& info) {
             KARABO_LOG_FRAMEWORK_DEBUG << "violatesReadOnly " << info;
@@ -894,6 +899,11 @@ namespace karabo {
                        info.get<string>("slot") != "slotGetScene") {
                 // requestFromSlot must have a 'slot' argument. If not, it should fail somewhere else.
                 return true;
+            } else if (type == "requestGeneric" && info.has("replyType") &&
+                       isProjectLoadingReplyType(info.get<string>("replyType"))) {
+                // Request involved in the loading of projects are allowed in read-only mode.
+                KARABO_LOG_FRAMEWORK_INFO << "ProjectManager related request:\n" << info;
+                return false;
             } else if (type == "requestGeneric" && info.has("slot") && info.get<string>("slot") != "requestScene" &&
                        info.get<string>("slot") != "slotGetScene") {
                 // Requesting scenes are allowed in read-only mode. Configuration Management is not

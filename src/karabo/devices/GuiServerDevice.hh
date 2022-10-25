@@ -257,6 +257,15 @@ namespace karabo {
             bool violatesReadOnly(const std::string& type, const karabo::util::Hash& info);
 
             /**
+             * @brief Checks whether a given reply type requested by a GUI Client is for a request involved in the Load
+             * Project operation.
+             *
+             * @param replyType the string that specifies the reply type.
+             * @return bool is the reply type involved in the Load Project operation?
+             */
+            bool isProjectLoadingReplyType(const std::string& replyType);
+
+            /**
              * validates the client configuration
              *
              * currently only validating the type versus the client version.
