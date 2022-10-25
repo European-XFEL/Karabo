@@ -286,23 +286,23 @@ class SignalSlotable(Configurable):
     def slotStopTrackingExistenceOfConnection(self, *args):
         print('received stopTracking...', args)
 
-    @coslot
-    async def slotGetOutputChannelInformationFromHash(self, info):
+    @slot
+    def slotGetOutputChannelInformationFromHash(self, info):
         """This is the hash implementation of the output channel information"""
         channelId = info['channelId']
-        success, info = await self.slotGetOutputChannelInformation(
+        success, info = self.slotGetOutputChannelInformation(
             channelId, None)
 
         return Hash('success', success, 'info', info)
 
-    @coslot
-    async def slotGetOutputChannelInformation(self, ioChannelId, processId):
+    @slot
+    def slotGetOutputChannelInformation(self, ioChannelId, processId):
         try:
             ch = get_property(self, ioChannelId)
         except AttributeError:
             ch = None
-        if isinstance(ch, NetworkOutput) and ch.alive:
-            ret = await ch.getInformation("{}:{}".format(
+        if isinstance(ch, NetworkOutput) and ch.is_serving():
+            ret = ch.getInformation("{}:{}".format(
                 self.deviceId, ioChannelId))
             ret["memoryLocation"] = "remote"
             return True, ret
