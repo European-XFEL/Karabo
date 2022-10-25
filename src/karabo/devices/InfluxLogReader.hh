@@ -25,6 +25,7 @@
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/TimeDuration.hh"
 #include "karabo/util/Types.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/SignalSlotable.hh"
@@ -254,6 +255,8 @@ namespace karabo {
             static const unsigned long kSecConversionFactor;
             static const unsigned long kFracConversionFactor;
             static const int kMaxHistorySize;
+            // Maximum delay, in seconds, assumed for data written to Influx to be available for reading.
+            static const karabo::util::TimeValue kMaxInfluxDataDelaySecs;
             const std::unordered_set<std::string> kNumberTypes;
         };
 
