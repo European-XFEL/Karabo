@@ -15,9 +15,9 @@ from psutil import net_if_addrs
 
 from karabo.middlelayer_api.synchronization import sleep
 from karabo.native import (
-    AccessMode, Assignment, Bool, Configurable, Hash, MetricPrefix, Node,
-    Schema, String, UInt16, UInt32, Unit, VectorHash, VectorRegexString,
-    decodeBinary, encodeBinary, get_timestamp, isSet)
+    AccessMode, Assignment, Bool, Configurable, Hash, KaraboError,
+    MetricPrefix, Node, Schema, String, UInt16, UInt32, Unit, VectorHash,
+    VectorRegexString, decodeBinary, encodeBinary, get_timestamp, isSet)
 
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted, synchronize
@@ -863,9 +863,6 @@ class ConnectionTable(Configurable):
 class NetworkOutput(Configurable):
     displayType = 'OutputChannel'
     classId = 'OutputChannel'
-    server = None
-    # By default, an output is considered alive until closed
-    alive = True
 
     port = UInt32(
         displayedName="Port",
@@ -905,8 +902,12 @@ class NetworkOutput(Configurable):
                We need to pass the instance in order to cancel all the tasks
                related to that instance once the instance dies.
             """
+            if not self.alive:
+                ts = get_timestamp().toLocal()
+                print(f"{ts}: Connecting although going down as instructed.")
+
             channel_task = get_event_loop().create_task(
-                self.serve(reader, writer), instance)
+                self.serve(reader, writer), instance=instance)
             self.active_channels.add(channel_task)
 
         port = int(self.port) if isSet(self.port) else 0
@@ -945,6 +946,13 @@ class NetworkOutput(Configurable):
         self.channelName = ""
         self.shared_queue = CancelQueue(0 if self.noInputShared in [
                                         "queue", "queueDrop"] else 1)
+        self.server = None
+        # By default, an output is considered alive until closed
+        self.alive = True
+
+    def is_serving(self):
+        """Return if the output channel can serve data"""
+        return self.alive and self.server is not None
 
     async def wait_server_online(self):
         """Wait until the serving tcp server comes online"""
@@ -955,12 +963,15 @@ class NetworkOutput(Configurable):
             total_time -= interval_time
             if total_time <= 0:
                 break
-        assert self.server is not None, "Server should be available"
+        if self.server is None:
+            raise KaraboError("Tcp server of output should be available ...")
 
-    async def getInformation(self, channelName):
+    def getInformation(self, channelName):
         self.channelName = channelName
-        # We might be called when we just started, hence we wait
-        await self.wait_server_online()
+        if self.server is None:
+            raise KaraboError(
+                f"Trying to get output information for {channelName}, "
+                "but output server not available.")
         host, port = self.server.sockets[0].getsockname()
         return Hash("connectionType", "tcp", "hostname", host,
                     "port", numpy.uint32(port))
@@ -1127,7 +1138,9 @@ class NetworkOutput(Configurable):
 
         self.active_channels = WeakSet()
         self.server.close()
-        await self.server.wait_closed()
+        server = self.server
+        self.server = None
+        await server.wait_closed()
 
 
 class SchemaNode(Node):
