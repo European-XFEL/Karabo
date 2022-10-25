@@ -12,6 +12,6 @@ from .macro import MacroModel, read_macro, write_macro
 from .model import ProjectModel
 from .server import DeviceServerModel, read_device_server, write_device_server
 from .utils import (
-    device_config_exists, device_instance_exists, device_server_exists,
-    find_parent_object, get_project_models, macro_exists,
+    check_instance_duplicates, device_config_exists, device_instance_exists,
+    device_server_exists, find_parent_object, get_project_models, macro_exists,
     recursive_save_object)
