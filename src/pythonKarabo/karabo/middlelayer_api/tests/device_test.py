@@ -324,14 +324,14 @@ class Tests(DeviceTest):
     async def test_output_information(self):
         device = self.myDevice
         # Second argument processId is not used in MDL
-        success, data = await device.slotGetOutputChannelInformation(
+        success, data = device.slotGetOutputChannelInformation(
             "output", None)
         self.assertEqual(success, True)
         self.assertEqual(data["connectionType"], "tcp")
         self.assertEqual(data["memoryLocation"], "remote")
         self.assertIsInstance(data["port"], np.uint32)
 
-        success, data = await device.slotGetOutputChannelInformation(
+        success, data = device.slotGetOutputChannelInformation(
             "doesNotExist", None)
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
@@ -341,7 +341,7 @@ class Tests(DeviceTest):
         # tests the version that the GUI can generically call
         device = self.myDevice
         info = Hash('channelId', 'output')
-        h = await device.slotGetOutputChannelInformationFromHash(info)
+        h = device.slotGetOutputChannelInformationFromHash(info)
         success, data = h["success"], h["info"]
         self.assertEqual(success, True)
         self.assertEqual(data["connectionType"], "tcp")
@@ -349,14 +349,14 @@ class Tests(DeviceTest):
         self.assertIsInstance(data["port"], np.uint32)
 
         info = Hash('channelId', 'doesNotExist')
-        h = await device.slotGetOutputChannelInformationFromHash(info)
+        h = device.slotGetOutputChannelInformationFromHash(info)
         success, data = h["success"], h["info"]
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
 
         info = Hash('NoChannelId', 'NotImportant')
         with self.assertRaises(KeyError):
-            await device.slotGetOutputChannelInformationFromHash(info)
+            device.slotGetOutputChannelInformationFromHash(info)
 
     @async_tst
     async def test_applyRunTimeUpdates(self):
