@@ -8,7 +8,7 @@ import webbrowser
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import (
-    QApplication, QComboBox, QLineEdit, QMessageBox, QStyle,
+    QApplication, QComboBox, QDialog, QLineEdit, QMessageBox, QStyle,
     QStyledItemDelegate, QStyleOptionFrame, QStyleOptionProgressBar)
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
@@ -19,6 +19,7 @@ from karabogui.binding.api import (
     get_default_value, get_min_max)
 from karabogui.controllers.validators import (
     BindingValidator as GenericValidator, ListValidator, SimpleValidator)
+from karabogui.dialogs.api import ListEditDialog
 from karabogui.logger import get_logger
 from karabogui.request import call_device_slot, get_scene_from_server
 from karabogui.topology.api import is_device_online
@@ -75,9 +76,37 @@ def get_table_delegate(proxy, binding, parent):
     elif isinstance(binding, (FloatBinding, IntBinding)):
         return NumberDelegate(binding, parent)
     elif isinstance(binding, VectorBinding):
+        if binding.display_type.split("|")[0] == "TableVectorButton":
+            return VectorButtonDelegate(binding, parent)
         return VectorDelegate(binding, parent)
     else:
         return BindingDelegate(binding, parent)
+
+
+class VectorButtonDelegate(TableButtonDelegate):
+    def __init__(self, binding, parent=None):
+        super().__init__(parent)
+        self.text = binding.displayed_name
+        self.binding = binding
+
+    def get_button_text(self, index):
+        """Reimplemented function of TableButtonDelegate"""
+        return self.text
+
+    def click_action(self, index):
+        """Reimplemented function of TableButtonDelegate"""
+        if not index.isValid():
+            return
+
+        old = index.data()
+        model = index.model()
+        _, data = model.get_model_data(index.row(), index.column())
+        dialog = ListEditDialog(binding=self.binding, parent=self.parent())
+        dialog.set_list(data)
+        if dialog.exec() == QDialog.Accepted:
+            new = dialog.string_values
+            if not is_equal(old, new):
+                model.setData(index, new, Qt.EditRole)
 
 
 class BoolButtonDelegate(TableButtonDelegate):
