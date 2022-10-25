@@ -2,8 +2,9 @@ from pytest import raises as assert_raises
 
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    MacroModel, ProjectModel, device_config_exists, device_instance_exists,
-    device_server_exists, find_parent_object, get_project_models, macro_exists)
+    MacroModel, ProjectModel, check_instance_duplicates, device_config_exists,
+    device_instance_exists, device_server_exists, find_parent_object,
+    get_project_models, macro_exists)
 
 
 def test_find_parent_object():
@@ -112,6 +113,29 @@ def test_device_instance_exists():
     proj.subprojects.append(sub_proj)
     assert device_instance_exists(sub_proj, "blahDevice")
     assert device_instance_exists(proj, "blahDevice")
+
+    # Test for duplicates, bar device lost its configuration
+    bar2 = DeviceInstanceModel(
+        class_id="NotQuxClass", instance_id="barDevice", configs=[]
+    )
+    serv0.devices.append(bar2)
+    data = check_instance_duplicates(proj)
+    assert data["Instances"] == {"devices": 3, "servers": 3}
+    assert data["Duplicates"] == {
+        "devices": {"barDevice": 2},
+        "servers": {}
+    }
+    # And a new server
+    serv1 = DeviceServerModel(
+        server_id="blahServer", host="differenthost", devices=[]
+    )
+    proj.servers.append(serv1)
+    data = check_instance_duplicates(proj)
+    assert data["Instances"] == {"devices": 3, "servers": 3}
+    assert data["Duplicates"] == {
+        "devices": {"barDevice": 2},
+        "servers": {"blahServer": 2}
+    }
 
 
 def test_device_config_exists():
