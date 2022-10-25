@@ -594,14 +594,14 @@ class RemotePipelineTest(DeviceTest):
         self.assertIsNotNone(self.alice.output.server.sockets)
         self.assertGreater(len(self.alice.output.active_channels), 0)
         self.assertTrue(self.alice.output.alive)
-        success, h = await self.alice.slotGetOutputChannelInformation(
+        success, h = self.alice.slotGetOutputChannelInformation(
             "output", None)
         self.assertTrue(success)
         self.assertFalse(h.empty())
         await self.alice.output.close()
-        self.assertEqual(self.alice.output.server.sockets, ())
+        self.assertIsNone(self.alice.output.server)
         self.assertFalse(self.alice.output.alive)
-        success, h = await self.alice.slotGetOutputChannelInformation(
+        success, h = self.alice.slotGetOutputChannelInformation(
             "output", None)
         self.assertFalse(success)
         self.assertTrue(h.empty())
