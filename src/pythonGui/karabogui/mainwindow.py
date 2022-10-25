@@ -16,11 +16,13 @@ from qtpy.QtWidgets import (
 
 import karabogui.access as krb_access
 from karabo.common.project.api import get_project_models
+from karabo.common.project.utils import check_instance_duplicates
 from karabo.native import AccessLevel
 from karabogui import const, icons, messagebox
 from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.dialogs.api import (
-    AboutDialog, ClientTopologyDialog, ConfigurationDialog, UpdateDialog)
+    AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
+    UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -478,6 +480,9 @@ class MainWindow(QMainWindow):
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
 
+        self.acCheckProject = QAction("Check for Project Duplicates", self)
+        self.acCheckProject.triggered.connect(self.onInvestigateProject)
+
         self.acGrafana = QAction(icons.grafana, "Grafana", self)
         self.acGrafana.triggered.connect(self.onGrafana)
         self.acGrafana.setCheckable(False)
@@ -558,6 +563,7 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
+        mHelpMenu.addAction(self.acCheckProject)
 
     def _setupToolBar(self):
 
@@ -782,6 +788,23 @@ class MainWindow(QMainWindow):
     def onCheckUpdates(self):
         dialog = UpdateDialog(parent=self)
         dialog.open()
+
+    @Slot()
+    def onInvestigateProject(self):
+        root = get_project_model().root_model
+        if root is None:
+            return
+        if get_db_conn().is_reading():
+            messagebox.show_information(
+                "Please wait until project loading has finished.", parent=self)
+            return
+        data = check_instance_duplicates(root)
+        text = ("The view shows the number of instances for both servers and "
+                "devices and their occurrence as duplicates.\n"
+                "Duplicates can lead to configuration conflicts.")
+        dialog = DataViewDialog(
+            "Project Instance Conflicts", text, data, parent=self)
+        dialog.show()
 
     @Slot()
     def onGrafana(self):
