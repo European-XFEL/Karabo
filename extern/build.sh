@@ -8,22 +8,16 @@ log4cpp cppunit openmq nss openmqc patchelf googletest libxml2 libxslt
 daemontools libzmq nlohmann_json pugixml mqtt redisclient amqp libev belle-Cpp14)
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
-idna urllib3 requests coverage pytest pytest_runner pytest_cov pytest_mock
-pytest_asyncio pytest_subtests pytest_timeout
-six nose py pyparsing packaging toml more-itertools importlib-metadata zipp pluggy
-importlib-resources cffi entrypoints nest_asyncio argon2-cffi-bindings argon2-cffi
-asttokens soupsieve bleach beautifulsoup4 debugpy defusedxml webencodings
-executing jsonschema fastjsonschema psutil
-fonttools attrs colorama iniconfig atomicwrites pillow sip backports backports_abc tornado
-jupyter_packaging jupyterlab_pygments cppy kiwisolver matplotlib-inline
-mistune nbclient prometheus_client Send2Trash
-pure_eval pycparser pyrsistent stack_data terminado
-dateutil ptyprocess pytz pexpect pyzmq markupsafe Jinja2 pygments decorator traitlets parso
+six nose py pyparsing packaging toml more-itertools zipp importlib-metadata pluggy
+attrs colorama iniconfig atomicwrites pytest pytest_runner pytest_cov pytest_mock
+pytest_asyncio pytest_subtests pytest_timeout pillow sip backports backports_abc tornado
+dateutil ptyprocess pytz pexpect pyzmq markupsafe jinja2 pygments decorator traitlets parso
 ipython_genutils jedi pickleshare wcwidth backcall prompt_toolkit ipython tabulate
 jupyter_core jupyter_client ipykernel simplegeneric dill pkgconfig h5py pyusb
-ecdsa tzlocal httplib2 traits pint pandocfilters nbconvert nbformat isort notebook ipyparallel ipcluster_tools
-cycler pyelftools rpathology lxml certifi chardet ply pycodestyle
-pyflakes flake8 msgpack msgpack-numpy flaky pyyaml matplotlib eulxml eulexist
+parse jsonschema ecdsa tzlocal httplib2 traits pint nbformat isort
+notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
+chardet idna urllib3 requests ply psutil pycodestyle pyflakes flake8
+msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist
 mqtt_python peewee async-timeout hiredis aioredis multidict yarl pamqp aiormq aio-pika
 pg8000 )
 
