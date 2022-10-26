@@ -104,6 +104,8 @@ class JmsBroker(Broker):
                         first = False
                     await sleep(sleepInterval)
                     self.heartbeat(interval)
+            except CancelledError:
+                pass
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
