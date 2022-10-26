@@ -617,6 +617,8 @@ class TestManager(GuiTestCase):
     def test_handle_notification(self):
         m_path = 'karabogui.singletons.manager.messagebox'
         b_path = 'karabogui.singletons.manager.broadcast_event'
+        l_path = 'karabogui.singletons.manager.get_logger'
+
         with patch(m_path) as mbox, patch(b_path) as broadcast:
             info = {'message': 'hello'}
             manager = Manager()
@@ -634,6 +636,31 @@ class TestManager(GuiTestCase):
             mbox.show_warning.assert_not_called()
             broadcast.assert_called_with(
                 KaraboEvent.ServerNotification, info)
+
+            mbox.reset_mock()
+            broadcast.reset_mock()
+            with patch(l_path) as logger:
+                info = {'message': 'hello', 'contentType': 'logger'}
+                manager.handle_notification(**info)
+                mbox.show_warning.assert_not_called()
+                broadcast.assert_not_called()
+                logger().log.assert_called_with(20, 'hello')
+
+                asserts = [
+                    ('DEBUG', 10),
+                    ('INFO', 20),
+                    ('WARNING', 30),
+                    ('WARN', 30),
+                    ('ERROR', 40),
+                    ('FATAL', 50),
+                    ('CRITICAL', 50),
+                ]
+                for level, integer in asserts:
+                    logger().reset_mock()
+                    info = {'message': 'hello', 'contentType': 'logger',
+                            'level': level}
+                    manager.handle_notification(**info)
+                    logger().log.assert_called_with(integer, 'hello')
 
     def test_handle_executeReply(self):
         target = 'karabogui.singletons.manager.messagebox'
