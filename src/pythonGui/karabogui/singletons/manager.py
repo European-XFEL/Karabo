@@ -3,6 +3,7 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import logging
 import uuid
 from functools import wraps
 from inspect import signature
@@ -49,6 +50,11 @@ def project_db_handler(fall_through=False):
         return wrapped
 
     return inner
+
+
+def getLevelName(level):
+    """Convert a logging level from the gui server to an integer"""
+    return logging.getLevelName(level.upper())
 
 
 class Manager(QObject):
@@ -678,10 +684,14 @@ class Manager(QObject):
     def handle_notification(self, **info):
         """Handle notification events from the GUI server
         """
-        message = info.get('message', '')
-        content_type = info.get('contentType', '')
+        message = info.get("message", "")
+        content_type = info.get("contentType", "")
         if content_type == "banner":
             broadcast_event(KaraboEvent.ServerNotification, info)
+        elif content_type == "logger":
+            text = info.get("message", "")
+            level = getLevelName(info.get("level", "INFO"))
+            get_logger().log(level, text)
         elif message:
             messagebox.show_warning(message)
 
