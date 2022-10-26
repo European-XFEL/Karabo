@@ -1,19 +1,12 @@
-import os
+import os.path as op
 import subprocess
-import unittest
+import sys
 
-import karabo.interactive
-
-
-def get_python_files():
-    module = karabo.interactive.__file__
-    dirlist = os.listdir(os.path.dirname(module))
-    return dirlist
+import karabo.interactive as interactive_pkg
 
 
-@unittest.skip(reason="New flake8 version")
 def test_code_quality_flake8():
-    file_list = get_python_files()
-    command = ['flake8', *[os.path.abspath(py_file) for py_file in file_list]]
-    print(command)
+    # Just run flake8 as if from the commandline
+    command = [sys.executable, '-m', 'flake8',
+               op.dirname(op.abspath(interactive_pkg.__file__))]
     subprocess.check_call(command)
