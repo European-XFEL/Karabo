@@ -13,14 +13,14 @@ from weakref import WeakSet
 import numpy
 from psutil import net_if_addrs
 
-from karabo.middlelayer_api.synchronization import sleep
 from karabo.native import (
     AccessMode, Assignment, Bool, Configurable, Hash, KaraboError,
     MetricPrefix, Node, Schema, String, UInt16, UInt32, Unit, VectorHash,
-    VectorRegexString, decodeBinary, encodeBinary, get_timestamp, isSet)
+    VectorRegexString, VectorString, decodeBinary, encodeBinary, get_timestamp,
+    isSet)
 
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
-from .synchronization import background, firstCompleted, synchronize
+from .synchronization import background, firstCompleted, sleep, synchronize
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
 IPTOS_LOWDELAY = 0x10
@@ -227,8 +227,15 @@ class NetworkInput(Configurable):
     # Internal name to be set by the input channel
     _name = None
 
+    missingConnections = VectorString(
+        displayedName="Missing Connections",
+        description="Output channels from 'Configured Connections' "
+                    "that are not connected",
+        defaultValue=[],
+        accessMode=AccessMode.READONLY)
+
     @VectorRegexString(
-        displayedName="Connected Output Channels",
+        displayedName="Configured Connections",
         description="A list of output channels to receive data from, format: "
                     "<instance ID>:<channel name>",
         assignment=Assignment.OPTIONAL, accessMode=AccessMode.INITONLY,
@@ -252,6 +259,7 @@ class NetworkInput(Configurable):
         """
         if channel in self.connected and not self.connected[channel].done():
             return
+        self._update_missing_connections(channel, missing=True)
         # Make sure to always set the instance correctly!
         loop = get_event_loop()
         task = loop.create_task(self.start_channel(channel),
@@ -360,6 +368,8 @@ class NetworkInput(Configurable):
             reader, writer = await open_connection(
                 info["hostname"], int(info["port"]), limit=2 ** 22)
 
+            # Inform about exiting connection
+            self._update_missing_connections(output, missing=False)
             sock = writer.get_extra_info("socket")
             assert sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY)
             # Set low delay according to unix manual IPTOS_LOWDELAY 0x10
@@ -381,6 +391,7 @@ class NetworkInput(Configurable):
                     await sleep(self.delayOnInput)
                 else:
                     # We still inform when the connection has been closed!
+                    self._update_missing_connections(output, missing=True)
                     await shield(self.call_handler(self.close_handler, output))
                     # Start a new roundtrip, but don't create a new task!
                     await sleep(RECONNECT_TIMEOUT)
@@ -388,22 +399,36 @@ class NetworkInput(Configurable):
         except CancelledError:
             # Note: Happens when we are destroyed or disconnected!
             await shield(self.call_handler(self.close_handler, output))
-            self._update_connected(output)
+            self._update_configured_connections(output)
         except Exception:
             logger = self.device_logger
             logger.info(f"Channel `{output}` did not close gracefully.")
+            self._update_missing_connections(output, missing=True)
             await shield(self.call_handler(self.close_handler, output))
             # We might get cancelled during sleeping!
             try:
                 await sleep(RECONNECT_TIMEOUT)
                 await self.start_channel(output)
             except CancelledError:
-                self._update_connected(output)
+                self._update_configured_connections(output)
+                # Already missing output, no need to update missing
 
-    def _update_connected(self, output):
+    def _update_configured_connections(self, output):
         """Update and remove channel `output` from connected"""
         self.connected.pop(output)
         self.connectedOutputChannels = list(self.connected)
+
+    def _update_missing_connections(self, output, missing):
+        """Update the missing connections of the `InputChannel`
+
+        :param missing: Boolean if the connection is missing.
+        """
+        connections = set(self.missingConnections.value)
+        if missing:
+            connections.add(output)
+        else:
+            connections.discard(output)
+        self.missingConnections = list(connections)
 
     async def processChunk(self, channel, cls, output_id=""):
         try:

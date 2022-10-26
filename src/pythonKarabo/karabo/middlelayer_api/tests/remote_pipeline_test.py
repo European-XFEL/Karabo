@@ -9,7 +9,8 @@ from karabo.middlelayer import (
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
     getDevice, isAlive, setWait, waitUntil)
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer_api.tests.eventloop import (
+    DeviceTest, async_tst, sleepUntil)
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
@@ -363,6 +364,8 @@ class RemotePipelineTest(DeviceTest):
         await receiver.startInstance()
         await receiver.connectInputChannel("outputdevice", True)
 
+        name = "outputdevice:output"
+
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
             self.assertTrue(isAlive(proxy))
@@ -373,11 +376,13 @@ class RemotePipelineTest(DeviceTest):
             self.assertGreater(receiver.received, 0)
             self.assertGreater(receiver.node.received, 0)
             # We received data and now kill the device
+            self.assertNotIn(name, receiver.input.missingConnections)
             await output_device.slotKillDevice()
             await waitUntil(lambda: not isAlive(proxy))  # noqa
             self.assertFalse(isAlive(proxy))
             # The device is gone, now we instantiate the device with same
             # deviceId to see if the output automatically reconnects
+            self.assertIn(name, receiver.input.missingConnections)
             output_device = Sender({"_deviceId_": "outputdevice"})
             await output_device.startInstance()
             await waitUntil(lambda: isAlive(proxy))  # noqa
@@ -385,15 +390,20 @@ class RemotePipelineTest(DeviceTest):
             # We set the counter to zero!
             await receiver.resetCounter()
             await receiver.node.resetCounter()
+
+            await sleepUntil(
+                lambda: name not in receiver.input.missingConnections,
+                timeout=5)
+            self.assertNotIn(name, receiver.input.missingConnections)
             self.assertEqual(receiver.received, 0)
             self.assertEqual(receiver.node.received, 0)
             # Wait a few seconds because the reconnect will wait seconds
             # as well before attempt
             await sleep(2)
-            for data in range(NUM_DATA):
-                await proxy.sendData()
+            await proxy.sendData()
             # Our reconnect was successful, we are receiving data via the
             # output channel
+            await sleepUntil(lambda: receiver.received > 0, timeout=5)
             self.assertGreater(receiver.received, 0)
             self.assertGreater(receiver.node.received, 0)
             connections = output_device.output.connections
