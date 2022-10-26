@@ -240,6 +240,7 @@ class TestConfiguratorDevice(GuiTestCase):
                 OrderedDict([('Property', 'State'), ('Key', 'state'),
                              ('Value Type', 'String'),
                              ('Default Value', 'UNKNOWN'),
+                             ('Assignment', 'OPTIONAL'),
                              ('Value on device', 'ON'),
                              ('metricPrefixSymbol', ''), ('unitSymbol', ''),
                              ('Warn low', 'n/a'), ('Warn high', 'n/a'),
@@ -247,7 +248,8 @@ class TestConfiguratorDevice(GuiTestCase):
                              ('minExc', 'n/a'), ('maxExc', 'n/a'),
                              ('minInc', 'n/a'), ('maxInc', 'n/a'),
                              ('minSize', 'n/a'), ('maxSize', 'n/a'),
-                             ('DAQ Policy', -1)]))
+                             ('DAQ Policy', -1), ('ArchivePolicy', 'n/a'),
+                             ]))
             assert self.view.popup_widget is not None
 
     def test_modeltester_qt(self):
