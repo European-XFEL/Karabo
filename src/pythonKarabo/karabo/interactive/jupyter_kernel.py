@@ -1,14 +1,15 @@
 import os
 import socket
+import sys
 from asyncio import get_event_loop, set_event_loop
 
 from ipykernel.ipkernel import IPythonKernel
+from ipykernel.jsonutil import json_clean
 from ipykernel.kernelapp import IPKernelApp
 from tornado.platform.asyncio import AsyncIOMainLoop
 from zmq.asyncio import ZMQEventLoop
 
-from karabo._version import version
-from karabo.middlelayer import Device, DeviceClientBase
+from karabo.middlelayer import Device, DeviceClientBase, background
 from karabo.middlelayer_api import eventloop
 
 
@@ -17,25 +18,57 @@ class EventLoop(eventloop.EventLoop, ZMQEventLoop):
 
 
 class KaraboKernel(IPythonKernel):
-    banner = f"IKarabo Version {version}\n        Type karabo? for help\n"
+    def execute_request(self, stream, ident, parent):
+        """ handle an execute_request
 
-    async def do_execute(self, code, silent, store_history=True,
-                         user_expressions=None, allow_stdin=False):
-        """Runs the IPythonKernel do_execute as a karabo device
+        This is effectively a copy from ipykernel.kernelbase.Kernel.
+        The original version however blocks the event loop, which we cannot
+        do as Karabo functions still need to be connected to the broker.
 
-        passing self.device as the instance in the loop"""
-        coro = super().do_execute(
-            code, silent, store_history, user_expressions, allow_stdin)
-        return await get_event_loop().create_task(coro, self.device)
+        So we offload every command into a thread.
+        """
+        try:
+            content = parent['content']
+            code = content['code']
+            silent = content['silent']
+            store_history = content.get('store_history', not silent)
+            user_expressions = content.get('user_expressions', {})
+            allow_stdin = content.get('allow_stdin', False)
+        except Exception as e:
+            self.device.logger.exception(f"Got bad msg: {parent} - {e}")
+            return
 
-    def do_shutdown(self, restart):
-        ret = super().do_shutdown(restart)
+        stop_on_error = content.get('stop_on_error', True)
 
-        async def die():
-            await self.device.slotKillDevice()
+        metadata = self.init_metadata(parent)
 
-        get_event_loop().create_task(die())
-        return ret
+        # Re-broadcast our input for the benefit of listening clients, and
+        # start computing output
+        if not silent:
+            self.execution_count += 1
+            self._publish_execute_input(code, parent, self.execution_count)
+
+        async def execute():
+            reply_future = await background(
+                self.do_execute, code, silent, store_history, user_expressions,
+                allow_stdin)
+
+            # Flush output before sending the reply.
+            sys.stdout.flush()
+            sys.stderr.flush()
+
+            # Send the reply.
+            reply_content = json_clean(reply_future.result())
+            finished = self.finish_metadata(parent, metadata, reply_content)
+
+            reply_msg = self.session.send(
+                stream, 'execute_reply', reply_content, parent,
+                metadata=finished, ident=ident)
+
+            if (not silent and reply_msg['content']['status'] == 'error'
+                    and stop_on_error):
+                self._abort_queues()
+        get_event_loop().create_task(execute(), self.device)
 
 
 class JupyterDevice(DeviceClientBase, Device):
@@ -52,10 +85,9 @@ class JupyterDevice(DeviceClientBase, Device):
 class KaraboKernelApp(IPKernelApp):
     name = "karabo-kernel"
     kernel_class = KaraboKernel
-    exec_lines = ["%matplotlib inline",
+    exec_lines = ["%pylab inline",
                   "from karabo.middlelayer import *",
-                  "from karabo.middlelayer_api.numeric import *",
-                  "import karabo"]
+                  "from karabo.middlelayer_api.numeric import *"]
 
     def start(self):
         hostname = socket.gethostname().split(".", 1)[0]
@@ -67,10 +99,6 @@ class KaraboKernelApp(IPKernelApp):
             self.kernel.device.startInstance())
         self.kernel.start()
         loop.run_forever()
-
-    def close(self):
-        get_event_loop().close()
-        super().close()
 
 
 if __name__ == "__main__":
