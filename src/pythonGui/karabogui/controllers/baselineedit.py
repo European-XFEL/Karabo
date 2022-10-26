@@ -86,17 +86,7 @@ class BaseLineEditController(BaseBindingController):
             self.internal_widget.setStyleSheet(sheet)
             return
 
-        color = FINE_COLOR
-        acceptable_input = self.internal_widget.hasAcceptableInput()
-        if acceptable_input:
-            self.last_cursor_pos = self.internal_widget.cursorPosition()
-            self.proxy.edit_value = self.fromString(text)
-        else:
-            color = ERROR_COLOR
-            # Erase the edit value by setting it to `None`
-            self.proxy.edit_value = None
-        sheet = self._style_sheet.format(color)
-        self.internal_widget.setStyleSheet(sheet)
+        self.onText(text)
 
     # Public interface
     # ---------------------------------------------------------------------
@@ -110,6 +100,20 @@ class BaseLineEditController(BaseBindingController):
 
     # Abstract interface
     # ----------------------------------------------------------------------
+
+    def onText(self, text):
+        """Subclass method to react on the update of the internal widget"""
+        color = FINE_COLOR
+        acceptable_input = self.internal_widget.hasAcceptableInput()
+        if acceptable_input:
+            self.last_cursor_pos = self.internal_widget.cursorPosition()
+            self.proxy.edit_value = self.fromString(text)
+        else:
+            color = ERROR_COLOR
+            # Erase the edit value by setting it to `None`
+            self.proxy.edit_value = None
+        sheet = self._style_sheet.format(color)
+        self.internal_widget.setStyleSheet(sheet)
 
     def create_validator(self):
         """Subclass method to specify a validator instance of `QValidator`"""
