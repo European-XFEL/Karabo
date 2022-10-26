@@ -88,8 +88,8 @@ def main():
 
         output = output_scene.replace(f"keys=['{ns.deviceId}",
                                       "keys=[f'{deviceId}")
-        output = output.replace(f"'{ns.deviceId}",  "f'{deviceId}")
-        output = output.replace(f"{ns.deviceId}",  "{deviceId}")
+        output = output.replace(f"'{ns.deviceId}", "f'{deviceId}")
+        output = output.replace(f"{ns.deviceId}", "{deviceId}")
         print(output)
     else:
         print(output_scene)
