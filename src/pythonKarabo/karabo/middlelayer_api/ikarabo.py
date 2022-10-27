@@ -98,11 +98,12 @@ def start_device_client():
 
 
 def start_ikarabo():
-    print(f"""IKarabo Version {version}
+    print("""IKarabo Version {}
     Type karabo? for help
-    """)
+    """.format(version))
 
     start_device_client()
+
     ip = IPython.get_ipython()
     ip.set_hook("complete_command", device_completer,
                 re_key=".*((get|connect)Device|execute(NoWait)?|"
