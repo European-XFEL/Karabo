@@ -3,6 +3,7 @@ import functools
 import os
 import re
 import socket
+import weakref
 from asyncio import set_event_loop
 
 import IPython
@@ -71,9 +72,6 @@ def class_completer(self, line):
 
 first_param = re.compile("\"[^\"]*\"|'[^']*'")
 
-global devices
-devices = None
-
 
 def start_device_client():
     global devices
@@ -87,12 +85,13 @@ def start_device_client():
 
     set_event_loop(NoEventLoop(devices))
 
-    def shutdown_hook():
-        global devices
-        if devices is not None:
-            del devices
+    def shutdown_hook(device):
+        device = device()
+        if device is not None:
+            del device
 
-    atexit.register(shutdown_hook)
+    weak = weakref.ref(devices)
+    atexit.register(shutdown_hook, weak)
 
     return thread
 
