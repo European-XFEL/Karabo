@@ -24,6 +24,7 @@ from karabogui.project.controller.device_config import (
     DeviceConfigurationController)
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
+from karabogui.util import create_table_string
 
 TABLE_HEADER_LABELS = ["Projects", "", ""]
 
@@ -286,9 +287,8 @@ class ProjectViewItemModel(QAbstractItemModel):
             if role == Qt.DisplayRole:
                 return controller.ui_item_text()
             elif (role == Qt.ToolTipRole and not isinstance(
-                    controller, (DeviceConfigurationController,
-                                 DeviceInstanceController))):
-                return controller.model.uuid
+                    controller, DeviceInstanceController)):
+                return self._create_tool_tip(controller.model)
             elif role == Qt.DecorationRole:
                 return ui_data.icon
             elif role == Qt.ForegroundRole:
@@ -304,6 +304,16 @@ class ProjectViewItemModel(QAbstractItemModel):
         elif column == STATUS_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
                 return get_instance_info_icon(ui_data.instance_status)
+
+    def _create_tool_tip(self, model):
+        selection = ["uuid", "date"]
+        info = {}
+        for akey in selection:
+            avalue = getattr(model, akey)
+            if avalue is not None:
+                info.update({akey: str(avalue)})
+
+        return create_table_string(info)
 
     def setData(self, index, value, role):
         """Reimplemented function of QAbstractItemModel.
