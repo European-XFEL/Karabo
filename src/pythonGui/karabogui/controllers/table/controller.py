@@ -217,8 +217,13 @@ class BaseTableController(BaseBindingController):
         :param column: column of the data
 
         Note: Function added with Karabo > 2.13.X
+
+        Method changed in 2.16.X to account for filtering.
+        Please use `get_model_data` in the future.
         """
-        return self.sourceModel().get_model_data(row, column)
+        return self.tableModel().get_model_data(row, column)
+
+    get_model_data = getModelData
 
     def getInstanceId(self):
         """Retrieve the `instanceId` of the root proxy of this controller
@@ -252,6 +257,13 @@ class BaseTableController(BaseBindingController):
     def currentIndex(self):
         """Convenience method to get the currentIndex of the selection"""
         return self._table_widget.selectionModel().currentIndex()
+
+    def tableModel(self):
+        """Return the `model` of the table controller
+
+        Note: Added with Karabo 2.16.X
+        """
+        return self._table_widget.model()
 
     def sourceModel(self):
         """Return the `sourceModel` of the table controller"""
