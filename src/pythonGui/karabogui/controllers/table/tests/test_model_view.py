@@ -238,13 +238,15 @@ class TestTableModelView(GuiTestCase):
         self.assertEqual(model.rowCount(QModelIndex()), 3)
 
         # Test model data
-        value = self.controller.getModelData(0, 0)
+        value = self.controller.get_model_data(0, 0)
         self.assertEqual(value, ("arch", "a"))
-        value = self.controller.getModelData(0, 1)
+        value = self.controller.get_model_data(0, 1)
         self.assertEqual(value, ("foo", True))
-        value = self.controller.getModelData(0, 2)
+        value = self.controller.get_model_data(0, 2)
         self.assertEqual(value, ("bar", "ACTIVE"))
 
+        value = self.controller.get_model_data(1, 0)
+        self.assertEqual(value, ("arch", "b"))
         value = self.controller.getModelData(1, 0)
         self.assertEqual(value, ("arch", "b"))
 
@@ -642,13 +644,13 @@ class TestFilterTableModelView(GuiTestCase):
         self.assertEqual(model.rowCount(QModelIndex()), 3)
 
         # Test model data
-        value = self.controller.getModelData(0, 0)
+        value = self.controller.get_model_data(0, 0)
         self.assertEqual(value, ("arch", "a"))
-        value = self.controller.getModelData(0, 1)
+        value = self.controller.get_model_data(0, 1)
         self.assertEqual(value, ("foo", True))
-        value = self.controller.getModelData(0, 2)
+        value = self.controller.get_model_data(0, 2)
         self.assertEqual(value, ("bar", "ACTIVE"))
-        value = self.controller.getModelData(1, 0)
+        value = self.controller.get_model_data(1, 0)
         self.assertEqual(value, ("arch", "b"))
 
     def test_view_key_events(self):

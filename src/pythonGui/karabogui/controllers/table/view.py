@@ -15,9 +15,7 @@ class KaraboTableView(QTableView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._drag_column = None
         self._readonly = True
-
         header = self.horizontalHeader()
         header.sectionDoubleClicked.connect(self._header_resize)
 
