@@ -1413,24 +1413,36 @@ namespace karabo {
 
         void GuiServerDevice::onGetDeviceSchema(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
+                karabo::net::Channel::Pointer chan = channel.lock();
                 const string& deviceId = info.get<string>("deviceId");
-
-                Schema schema = remote().getDeviceSchemaNoWait(deviceId);
-
-                if (!schema.empty()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema for '" << deviceId << "': direct answer";
-                    Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", schema);
-                    safeClientWrite(channel, h);
-                } else {
+                {
                     boost::mutex::scoped_lock lock(m_channelMutex);
-                    karabo::net::Channel::Pointer chan = channel.lock();
                     if (chan) {
                         ChannelIterator itChannelData = m_channels.find(chan);
                         if (itChannelData != m_channels.end()) {
                             itChannelData->second.requestedDeviceSchemas.insert(deviceId);
                         }
                     }
+                }
+
+                Schema schema = remote().getDeviceSchemaNoWait(deviceId);
+                if (schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema for '" << deviceId << "': expect later answer";
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema for '" << deviceId << "': direct answer";
+                    Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", std::move(schema));
+                    safeClientWrite(channel, h);
+
+                    // Clean-up again, registration not needed. But it had to be registered before calling
+                    // getDeviceSchemaNoWait since with weird threading, schemaUpdatedHandler could have been called
+                    // before we register here.
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    if (chan) {
+                        ChannelIterator itChannelData = m_channels.find(chan);
+                        if (itChannelData != m_channels.end()) {
+                            itChannelData->second.requestedDeviceSchemas.erase(deviceId);
+                        }
+                    }
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetDeviceSchema(): " << e.what();
