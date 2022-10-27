@@ -86,6 +86,7 @@ void GuiServer_Test::appTestRunner() {
     testExecuteBeforeLogin();
     testExecute();
     testSlowSlots();
+    testGetClassSchema();
     testReconfigure();
     testDeviceConfigUpdates();
     testDisconnect();
@@ -689,6 +690,57 @@ void GuiServer_Test::testSlowSlots() {
     std::clog << "testSlowSlots: OK" << std::endl;
 }
 
+void GuiServer_Test::testGetClassSchema() {
+    std::clog << "testGetClassSchema: " << std::flush;
+
+    resetClientConnection();
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // Will request schema twice to trigger both code paths:
+    // * The one that will actually request the class schema.
+    // * The one that will get it from the cache.
+
+    karabo::TcpAdapter::QueuePtr messageQ; // Just re-use
+    Hash replyMessage;                     // Cache the first reply
+    // Request is of course identical both times
+    const Hash h("type", "getClassSchema", "serverId", m_deviceServer->getInstanceId(), "classId", "PropertyTest");
+
+    // First request
+    {
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = m_tcpAdapter->getNextMessages("classSchema", 1, [&] { m_tcpAdapter->sendMessage(h); }));
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("classSchema"), replyMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT_EQUAL(m_deviceServer->getInstanceId(), replyMessage.get<std::string>("serverId"));
+        CPPUNIT_ASSERT_EQUAL(std::string("PropertyTest"), replyMessage.get<std::string>("classId"));
+        const Schema& schema = replyMessage.get<karabo::util::Schema>("schema");
+        CPPUNIT_ASSERT(!schema.empty());
+    }
+
+    // Second request
+    {
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = m_tcpAdapter->getNextMessages("classSchema", 1, [&] { m_tcpAdapter->sendMessage(h); }));
+        Hash replyMessage2;
+        messageQ->pop(replyMessage2);
+        CPPUNIT_ASSERT(replyMessage.fullyEquals(replyMessage2));
+    }
+
+    // Finally test that for non-existing class an empty schema is returned
+    {
+        Hash h2(h);
+        h2.set("classId", "NonExistingDeviceClass");
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = m_tcpAdapter->getNextMessages("classSchema", 1, [&] { m_tcpAdapter->sendMessage(h2); }));
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("classSchema"), replyMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT_EQUAL(m_deviceServer->getInstanceId(), replyMessage.get<std::string>("serverId"));
+        CPPUNIT_ASSERT_EQUAL(std::string("NonExistingDeviceClass"), replyMessage.get<std::string>("classId"));
+        const Schema& schema = replyMessage.get<karabo::util::Schema>("schema");
+        CPPUNIT_ASSERT(schema.empty());
+    }
+    std::clog << "OK" << std::endl;
+}
 
 void GuiServer_Test::testReconfigure() {
     resetClientConnection();
@@ -889,9 +941,9 @@ void GuiServer_Test::testDeviceConfigUpdates() {
     }
     // Changes properties on the two devices and assures that an update message arrives containing only the change
     // to the subscribed one - and 2nd client does not receive anything anymore.
-    // NOTE: From this point on, the order of the operations matters - there's a synchronization code before an upcoming
-    //       property change test that is based on the timestamp that will be stored in propUpdateTime during the test
-    //       below.
+    // NOTE: From this point on, the order of the operations matters - there's a synchronization code before an
+    //       upcoming property change test that is based on the timestamp that will be stored in propUpdateTime during
+    //       the test below.
     Epochstamp propUpdateTime;
     {
         const Hash h_1("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 12));
@@ -956,8 +1008,8 @@ void GuiServer_Test::testDeviceConfigUpdates() {
         const Hash h_1("type", "reconfigure", "deviceId", "PropTest_1", "configuration", Hash("int32Property", 14));
         const Hash h_2("type", "reconfigure", "deviceId", "PropTest_2", "configuration", Hash("int32Property", 24));
 
-        // Syncs as close as possible to the next update "pulse" - we'll need that for the next check, which is supposed
-        // to get the two updates in the same cycle.
+        // Syncs as close as possible to the next update "pulse" - we'll need that for the next check, which is
+        // supposed to get the two updates in the same cycle.
         Epochstamp targetTime(propUpdateTime);
         Epochstamp currentTime;
         // Duration constructor takes care of overflow of fractions.
