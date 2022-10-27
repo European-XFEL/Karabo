@@ -1370,24 +1370,38 @@ namespace karabo {
 
         void GuiServerDevice::onGetClassSchema(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
-                string serverId = info.get<string>("serverId");
-                string classId = info.get<string>("classId");
+                karabo::net::Channel::Pointer chan = channel.lock();
+                if (!chan) return;
+
+                const string serverId = info.get<string>("serverId");
+                const string classId = info.get<string>("classId");
+                {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    ChannelIterator itChannelData = m_channels.find(chan);
+                    if (itChannelData != m_channels.end()) {
+                        itChannelData->second.requestedClassSchemas[serverId].insert(classId);
+                    }
+                }
                 Schema schema = remote().getClassSchemaNoWait(serverId, classId);
                 if (!schema.empty()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
-                    Hash h("type", "classSchema", "serverId", serverId, "classId", classId, "schema", schema);
+                    Hash h("type", "classSchema", "serverId", serverId, "classId", classId, "schema",
+                           std::move(schema));
                     safeClientWrite(channel, h);
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\""
-                                               << classId << "\": direct answer";
-                } else {
+                                               << classId << "\": provided direct answer";
+                    // Remove registration again - but we had to register before we trigger the schema request via
+                    // getClassSchemaNoWait since otherwise registration may come too late.
                     boost::mutex::scoped_lock lock(m_channelMutex);
-                    karabo::net::Channel::Pointer chan = channel.lock();
-                    if (chan) {
-                        ChannelIterator itChannelData = m_channels.find(chan);
-                        if (itChannelData != m_channels.end()) {
-                            itChannelData->second.requestedClassSchemas[serverId].insert(classId);
+                    ChannelIterator itChannelData = m_channels.find(chan);
+                    if (itChannelData != m_channels.end()) {
+                        ChannelData& chData = itChannelData->second;
+                        auto itServToClassMap = chData.requestedClassSchemas.find(serverId);
+                        if (itServToClassMap != chData.requestedClassSchemas.end()) {
+                            itServToClassMap->second.erase(classId);
+                            if (itServToClassMap->second.empty()) chData.requestedClassSchemas.erase(itServToClassMap);
                         }
                     }
+                } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\""
                                                << classId << "\": expect later answer";
                 }
@@ -1965,15 +1979,19 @@ namespace karabo {
                     auto itReq = it->second.requestedClassSchemas.find(serverId);
                     if (itReq != it->second.requestedClassSchemas.end()) {
                         if (itReq->second.find(classId) != itReq->second.end()) {
-                            // If e.g. a schema of an non-existing plugin was requested the schema could well be empty
-                            // In this case we would not answer, but we still must clean the requestedClassSchemas map
-                            if (!classSchema.empty()) {
-                                if (it->first && it->first->isOpen()) {
-                                    it->first->writeAsync(h);
-                                }
+                            const Channel::Pointer& channel = it->first;
+                            // If e.g. a schema of a non-existing plugin was requested, the schema could well be empty.
+                            // Forward to client anyway since otherwise it will not ask again later.
+                            if (classSchema.empty()) {
+                                // No harm if logged for more than one client
+                                KARABO_LOG_FRAMEWORK_WARN << "Received empty schema for class '" << classId
+                                                          << "' on server '" << serverId << "'.";
+                            }
+                            if (channel && channel->isOpen()) {
+                                channel->writeAsync(h);
                             }
                             itReq->second.erase(classId);
-                            // remove from the server key if all classSchema requests are fulfilled
+                            // remove from the server key if all "classSchema" requests are fulfilled
                             if (itReq->second.empty()) it->second.requestedClassSchemas.erase(itReq);
                         }
                     }
