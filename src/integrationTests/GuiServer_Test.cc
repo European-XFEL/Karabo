@@ -86,6 +86,7 @@ void GuiServer_Test::appTestRunner() {
     testExecuteBeforeLogin();
     testExecute();
     testSlowSlots();
+    testGetDeviceSchema();
     testGetClassSchema();
     testReconfigure();
     testDeviceConfigUpdates();
@@ -573,6 +574,46 @@ void GuiServer_Test::testRequestGeneric() {
         CPPUNIT_ASSERT_EQUAL(1, number_clients);
 
         std::clog << "requestGeneric: OK with online device and empty request and a token" << std::endl;
+    }
+}
+
+void GuiServer_Test::testGetDeviceSchema() {
+    std::clog << "testGetDeviceSchema: " << std::flush;
+
+    resetClientConnection();
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // Will request schema twice to trigger both code paths:
+    // * The one that will actually request the schema.
+    // * The one that will get it from the cache.
+    // Caveat:
+    // If any of the previously running tests access the device schema of the device used here (TEST_GUI_SERVER_ID),
+    // it might already be in the cache of the gui server's device client and both test runs get it from there :-(.
+    // When this test was implemented, it was proven that this was not the case.
+
+    karabo::TcpAdapter::QueuePtr messageQ; // Just re-use
+    Hash replyMessage;                     // Cache the first reply
+    // Request is of course identical both times
+    const Hash h("type", "getDeviceSchema", "deviceId", TEST_GUI_SERVER_ID);
+
+    // First request
+    {
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = m_tcpAdapter->getNextMessages("deviceSchema", 1, [&] { m_tcpAdapter->sendMessage(h); }));
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceSchema"), replyMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT_EQUAL(std::string(TEST_GUI_SERVER_ID), replyMessage.get<std::string>("deviceId"));
+        const Schema& schema = replyMessage.get<karabo::util::Schema>("schema");
+        CPPUNIT_ASSERT(!schema.empty());
+    }
+
+    // Second request
+    {
+        CPPUNIT_ASSERT_NO_THROW(
+              messageQ = m_tcpAdapter->getNextMessages("deviceSchema", 1, [&] { m_tcpAdapter->sendMessage(h); }));
+        Hash replyMessage2;
+        messageQ->pop(replyMessage2);
+        CPPUNIT_ASSERT(replyMessage.fullyEquals(replyMessage2));
     }
 }
 

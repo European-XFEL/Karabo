@@ -39,6 +39,7 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     void testNotification();
     void testExecuteBeforeLogin();
     void testExecute();
+    void testGetDeviceSchema();
     void testSlowSlots();
     void testGetClassSchema();
     void testReconfigure();
