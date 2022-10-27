@@ -364,6 +364,15 @@ def process_qt_events(app=None, timeout=100):  # ms
     app.processEvents(flags, timeout)
 
 
+def create_table_string(info):
+    """This creates a table string from an `info` dictionary"""
+    rows = (
+         f"<tr><td><b>{attr}</b>:   </td><td>{str(value)}</td></tr>"
+         for attr, value in info.items()
+    )
+    return f"<table>{''.join(rows)}</table>"
+
+
 def version_compatible(version: str, major: int, minor: int):
     """Check if a karaboVersion string `version` fullfills the requirement
 
