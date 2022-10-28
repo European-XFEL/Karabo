@@ -11,7 +11,6 @@ from karabo.common.api import (
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 from karabogui.request import get_scene_from_server
-from karabogui.singletons.api import get_config
 
 from .base import BasePanelWidget
 from .tool_widget import SearchBar
@@ -45,9 +44,6 @@ class TopologyPanel(BasePanelWidget):
         main_layout.addWidget(self.sbar)
         main_layout.addWidget(self.daemon_button)
         main_layout.addWidget(self.tree_view)
-
-        alarm_visible = get_config()["alarm_navigation"]
-        self.tree_view.setColumnHidden(2, not alarm_visible)
 
         return widget
 
