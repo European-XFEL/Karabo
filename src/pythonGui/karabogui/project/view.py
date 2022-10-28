@@ -8,7 +8,7 @@ from functools import partial
 from qtpy.QtCore import QItemSelection, QModelIndex, Qt, Slot
 from qtpy.QtGui import QClipboard, QCursor, QKeySequence
 from qtpy.QtWidgets import (
-    QAction, QApplication, QDialog, QMessageBox, QTreeView)
+    QAction, QApplication, QDialog, QHeaderView, QMessageBox, QTreeView)
 
 import karabogui.icons as icons
 from karabo.common.project.api import find_parent_object
@@ -19,8 +19,7 @@ from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import maybe_save_modified_project, save_object
 from karabogui.singletons.api import (
     get_db_conn, get_project_model, get_selection_tracker)
-from karabogui.util import (
-    is_database_processing, move_to_cursor, set_treeview_header)
+from karabogui.util import is_database_processing, move_to_cursor
 
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
@@ -49,7 +48,19 @@ class ProjectView(QTreeView):
         self.selectionModel().selectionChanged.connect(self._selection_change)
         self.setDragEnabled(True)
 
-        set_treeview_header(self.header())
+        header = self.header()
+        header.moveSection(1, 0)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.Fixed)
+        header.setSectionResizeMode(2, QHeaderView.Fixed)
+        header.setStretchLastSection(False)
+        icon_size = 26
+        header.setMaximumSectionSize(icon_size)
+        header.resizeSection(1, icon_size)
+        header.resizeSection(2, icon_size)
+
+        # Prevent drag reorder of the header
+        header.setSectionsMovable(False)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)

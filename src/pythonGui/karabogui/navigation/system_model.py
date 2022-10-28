@@ -26,8 +26,6 @@ class SystemTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-        # Add listeners for ``alarm_update`` change event
-        self.tree.on_trait_change(self._alarm_update, 'alarm_update')
         self.tree.on_trait_change(self._status_update, 'status_update')
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
@@ -107,7 +105,7 @@ class SystemTreeModel(QAbstractItemModel):
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
         """
-        return 3
+        return 2
 
     def indexInfo(self, index):
         if not index.isValid():
@@ -203,21 +201,6 @@ class SystemTreeModel(QAbstractItemModel):
         mimeData.setData('treeItems', bytearray(json.dumps(data),
                                                 encoding='UTF-8'))
         return mimeData
-
-    def _alarm_update(self, node_ids):
-        """ Whenever the ``alarm_update`` event of a ``SystemTree`` is changed
-        the view needs to be updated
-
-        :param node_ids: system topology deviceId's to be updated
-        """
-        assert isinstance(node_ids, set)
-
-        for node_id in node_ids:
-            node = self.tree.get_instance_node(node_id)
-            if node is not None:
-                index = self.createIndex(node.row(), 0, node)
-                index = index.sibling(node.row(), 2)
-                self.dataChanged.emit(index, index, [Qt.DecorationRole])
 
     def _status_update(self, node_ids):
         """Triggered from the status_update Event from the system tree"""

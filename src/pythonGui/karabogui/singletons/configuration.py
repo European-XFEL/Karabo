@@ -125,11 +125,6 @@ class Configuration(QObject):
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER)
 
-    alarm_project = Item(default=False, q_set=True, group=USER,
-                         editable=True, dtype=bool)
-    alarm_navigation = Item(default=False, q_set=True, group=USER,
-                            editable=True, dtype=bool)
-
     # ----------------------------------------------
     # Project db interface
 
