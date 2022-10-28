@@ -13,7 +13,7 @@ class Colors(object):
         self.g = (51, 160, 44, alpha)  # green
         self.c = (166, 206, 227, alpha)  # cyan
         self.p = (106, 61, 154, alpha)  # purple
-        self.y = (255, 255, 153, alpha)  # yellow
+        self.y = (255, 255, 0, alpha)  # yellow
         self.n = (251, 154, 153, alpha)  # pink
         self.w = (177, 89, 40, alpha)  # brown
         self.o = (255, 127, 0, alpha)  # orange
