@@ -14,7 +14,6 @@ from qtpy.QtCore import (
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
 from karabo.common.scenemodel.api import SceneModel
-from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_instance_info_icon
 from karabogui.project.controller.build import (
@@ -30,7 +29,6 @@ TABLE_HEADER_LABELS = ["Projects", "", ""]
 
 PROJECT_COLUMN = 0
 STATUS_COLUMN = 1
-ALARM_COLUMN = 2
 
 ROLES = [Qt.CheckStateRole, Qt.DisplayRole, Qt.DecorationRole,
          Qt.ForegroundRole, Qt.FontRole, Qt.ToolTipRole]
@@ -298,9 +296,6 @@ class ProjectViewItemModel(QAbstractItemModel):
             elif role == Qt.CheckStateRole:
                 if ui_data.checkable:
                     return ui_data.check_state
-        elif column == ALARM_COLUMN and role == Qt.DecorationRole:
-            if isinstance(controller, DeviceInstanceController):
-                return get_alarm_icon(ui_data.alarm_type)
         elif column == STATUS_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
                 return get_instance_info_icon(ui_data.instance_status)

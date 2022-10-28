@@ -33,19 +33,31 @@ class TestConfiguration(GuiTestCase):
         config['device_domain'] = 'CAS_INTERNAL'
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
-        self.assertEqual(len(config), 19)
+        self.assertEqual(len(config), 17)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['device_domain'], 'CAS_INTERNAL')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
-        self.assertEqual(list(config.keys()),
-                         ['access_level', 'alarm_navigation', 'alarm_project',
-                          'alarm_visible', 'broker_topic', 'console_visible',
-                          'data_dir', 'db_token', 'development',
-                          'device_domain', 'documentation', 'domain',
-                          'gui_servers', 'highDPI', 'log_visible',
-                          'main_geometry', 'reactive_login',
-                          'username', 'wizard'])
+        keys = [
+            'access_level',
+            'alarm_visible',
+            'broker_topic',
+            'console_visible',
+            'data_dir',
+            'db_token',
+            'development',
+            'device_domain',
+            'documentation',
+            'domain',
+            'gui_servers',
+            'highDPI',
+            'log_visible',
+            'main_geometry',
+            'reactive_login',
+            'username',
+            'wizard']
+
+        self.assertEqual(list(config.keys()), keys)
 
     def test_set_wrong_key(self):
         config = Configuration()
@@ -80,10 +92,8 @@ class TestConfiguration(GuiTestCase):
         groups = config.groups()
         self.assertEqual(len(groups), 6)
         user_group = [item.name for item in groups[USER]]
-        self.assertEqual(len(user_group), 6)
+        self.assertEqual(len(user_group), 4)
         self.assertIn('wizard', user_group)
-        self.assertIn('alarm_project', user_group)
-        self.assertIn('alarm_navigation', user_group)
         self.assertIn('main_geometry', user_group)
         self.assertIn('highDPI', user_group)
         self.assertIn('development', user_group)

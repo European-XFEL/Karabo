@@ -7,7 +7,6 @@ from traits.api import (
     Bool, Dict, HasStrictTraits, Instance, Property, Set, on_trait_change)
 
 from karabo.native import Hash
-from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
     NO_CLASS_STATUSES, BindingRoot, DeviceClassProxy, DeviceProxy,
     ProjectDeviceProxy, ProxyStatus, apply_configuration,
@@ -356,32 +355,6 @@ class SystemTopology(HasStrictTraits):
         self._system_hash = server_hash
         self.system_tree.initialize(server_hash)
         self.device_tree.initialize(server_hash)
-
-    def update_alarms_info(self, alarm_data):
-        """Update the ``SystemTreeNode`` objects with the current alarm types
-        """
-        update_types = alarm_data.get('update_types')
-        alarm_entries = alarm_data.get('alarm_entries')
-        # Only update system tree if the maximum alarm level has changed for
-        # any device, avoiding unnecessary repaint of the system tree.
-        needs_update = False
-
-        node_ids = set()
-        for up_type, alarm_entry in zip(update_types, alarm_entries):
-            node = self.system_tree.get_instance_node(alarm_entry.deviceId)
-            if node is not None:
-                if up_type in ADD_ALARM_TYPES:
-                    needs_update |= node.append_alarm_type(
-                        alarm_entry.property, alarm_entry.type)
-                elif up_type in REMOVE_ALARM_TYPES:
-                    needs_update |= node.remove_alarm_type(
-                        alarm_entry.property, alarm_entry.type)
-
-                # add nodes for event firing!
-                node_ids.add(alarm_entry.deviceId)
-        # NOTE: this should actually be called in the system_tree itself
-        if needs_update:
-            self.system_tree.alarm_update = node_ids
 
     # ---------------------------------------------------------------------
     # Topology interface
