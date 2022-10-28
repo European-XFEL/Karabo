@@ -46,6 +46,20 @@ def pushd_popd():
         os.chdir(old_path)
 
 
+def resolve_project(package):
+    """Resolve full gitlab project name.
+
+    mainly due to the European XFEL git repository structure.
+    If no `/` is present, the `/karaboDevices/` path is prepended.
+    """
+    if package.startswith("/"):
+        return package
+    elif '/' in package:
+        return f"/{package}"
+    else:
+        return f"/karaboDevices/{package}"
+
+
 def parse_commandline():
     parser = argparse.ArgumentParser(
         description=('Karabo Utility Script'),
@@ -100,8 +114,14 @@ def parse_commandline():
     parser_ins.add_argument('device',
                             type=str,
                             help='The name of the device package. '
-                                 'Note: this name is not case sensitive'
-                                 ' on the repository side.')
+                                 'if this device package does not '
+                                 'include a `/` the `/karaboDevices/` '
+                                 'sub-path will be prepended for '
+                                 'backwards compatibility. '
+                                 'Note: this name might not be '
+                                 'case sensitive on the repository '
+                                 'side depending on the protocol '
+                                 'chosen.')
 
     parser_ins.add_argument('tag',
                             type=str,
@@ -261,14 +281,14 @@ def new(args):
 
 def checkout(args):
     with pushd_popd():
-        path = os.path.join('devices', args.device)
+        path = os.path.join('devices', args.device.split('/')[-1])
         if os.path.isdir(path):
             print('INFO The device package already exists, skipped checkout')
         else:
             print('Downloading {}... '.format(args.device), end='', flush=True)
             git_opt = "-b {}".format(args.branch)
-            run_cmd('git clone {}/karaboDevices/{}.git {} {}'.format(
-                args.git, args.device, git_opt, path))
+            run_cmd(f"git clone {args.git}{resolve_project(args.device)}.git"
+                    f" {git_opt} {path}")
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
@@ -312,15 +332,14 @@ def download(args):
 def install(args):
     with pushd_popd():
         copyFlag = args.copy
-        path = os.path.join('installed', args.device)
+        path = os.path.join('installed', args.device.split('/')[-1])
         if not clean_dir(path, args):
             return
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
               end='', flush=True)
-        run_cmd('git clone {}/karaboDevices/{}.git --depth 1 -b {} '
-                '--single-branch {}'
-                .format(args.git, args.device, args.tag, path))
+        run_cmd(f"git clone {args.git}{resolve_project(args.device)}.git"
+                f" --depth 1 -b {args.tag} --single-branch {path}")
         print('done.')
         os.chdir(path)
         if os.path.exists('DEPENDS'):
@@ -390,7 +409,7 @@ def clean_dir(path, args):
             # if we do not have access to git under those credentials.
             remote_uri = run_cmd('cd {}; git ls-remote --get-url '
                                  'origin'.format(path)).decode("utf-8")
-            expected_url = f"{args.git}/karaboDevices/{args.device}.git"
+            expected_url = f"{args.git}{resolve_project(args.device)}.git"
             if args.no_clobber and expected_url.strip() != remote_uri.strip():
                 print(f"Device at {path} has a different remote than "
                       "the one expected: abort! ")
