@@ -8,7 +8,8 @@ from functools import partial
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QDialog, QInputDialog, QMenu, QTreeView)
+    QAbstractItemView, QAction, QDialog, QHeaderView, QInputDialog, QMenu,
+    QTreeView)
 
 from karabo.common.api import Capabilities
 from karabo.native import Timestamp
@@ -25,7 +26,7 @@ from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
 from karabogui.util import (
     load_configuration_from_file, move_to_cursor, open_documentation_link,
-    save_configuration_to_file, set_treeview_header)
+    save_configuration_to_file)
 from karabogui.widgets.popup import PopupWidget
 
 from .system_model import SystemTreeModel
@@ -43,7 +44,15 @@ class SystemTreeView(QTreeView):
         self.setModel(proxy_model)
         self.setSelectionModel(proxy_model.selectionModel)
 
-        set_treeview_header(self.header())
+        header = self.header()
+        header.moveSection(1, 0)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.Fixed)
+        header.setStretchLastSection(False)
+        icon_size = 26
+        header.setMaximumSectionSize(icon_size)
+        header.resizeSection(1, icon_size)
+
         proxy_model.setFilterKeyColumn(0)
         proxy_model.signalItemChanged.connect(self.onSelectionChanged)
         proxy_model.modelReset.connect(self.resetExpand)

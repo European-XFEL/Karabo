@@ -12,8 +12,7 @@ from dateutil.tz import tzlocal, tzutc
 from qtpy import QtCore
 from qtpy.QtCore import QEvent, QEventLoop, QObject, QSize, Qt
 from qtpy.QtGui import QCursor, QMovie, QValidator
-from qtpy.QtWidgets import (
-    QApplication, QDialog, QFileDialog, QHeaderView, QLabel)
+from qtpy.QtWidgets import QApplication, QDialog, QFileDialog, QLabel
 
 from karabo.native import Hash, decodeXML, writeXML
 from karabogui import const, icons, messagebox
@@ -227,27 +226,6 @@ def get_spin_widget(*, icon, scaled_size=QSize(), parent=None):
     spin_widget.setMovie(movie)
     movie.start()
     return spin_widget
-
-
-def set_treeview_header(header):
-    """This function is used by the ``QTreeView`` used for the navigation and
-    the projects and sets its header correctly.
-    """
-    # NOTE: Since QTreeView always displays the expander in column 0 the
-    # additional columns are moved to the front
-    header.moveSection(1, 0)
-    header.moveSection(2, 0)
-    header.setSectionResizeMode(0, QHeaderView.Stretch)
-    header.setSectionResizeMode(1, QHeaderView.Fixed)
-    header.setSectionResizeMode(2, QHeaderView.Fixed)
-    header.setStretchLastSection(False)
-    PANEL_ICON_SIZE = 26
-    header.setMaximumSectionSize(PANEL_ICON_SIZE)
-    header.resizeSection(1, PANEL_ICON_SIZE)
-    header.resizeSection(2, PANEL_ICON_SIZE)
-
-    # Prevent drag reorder of the header
-    header.setSectionsMovable(False)
 
 
 def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
