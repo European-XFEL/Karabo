@@ -696,8 +696,9 @@ namespace karabo {
                     const bool isBroadcast = (instanceId == "*");
                     if (!isBroadcast && instanceId != m_instanceId) continue;
 
-                    const vector<string> slotFunctions =
+                    vector<string> slotFunctions =
                           karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
+                    if (slotFunctions.empty()) slotFunctions.push_back(std::string()); // empty slot name, fails later
                     for (const string& slotFunction : slotFunctions) {
                         // Broadcasted calls in their own Strand: massive 'attacks' of instanceNew/Gone etc. should
                         // not introduce latencies for normal slot calls - and ordering between broadcast and normal
