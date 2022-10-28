@@ -9,7 +9,8 @@ from karabo.native import AccessMode, Bool, Configurable, Hash, Node, String
 from karabogui.binding.api import (
     DeviceClassProxy, NodeBinding, PropertyProxy, ProxyStatus, StringBinding,
     apply_configuration, build_binding, get_binding_value)
-from karabogui.testing import GuiTestCase, flushed_registry, set_proxy_value
+from karabogui.testing import (
+    GuiTestCase, flushed_registry, get_property_proxy, set_proxy_value)
 
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
@@ -52,6 +53,7 @@ class UniqueWidgetModel(BaseWidgetObjectData):
 def _define_binding_classes():
     """Do this in a function so that we can avoid polluting the registry
     """
+
     @register_binding_controller(klassname='Norm', binding_type=StringBinding)
     class DeviceController(BaseBindingController):
         model = Instance(UniqueWidgetModel, args=())
@@ -465,3 +467,8 @@ class TestBaseBindingController(GuiTestCase):
 
         set_proxy_value(proxy, 'state', 'ERROR')
         assert controller.widget.text() == ''
+
+    def test_get_instance_id(self):
+        proxy = get_property_proxy(None, "prop")
+        controller = self.StateTrackingController(proxy=proxy)
+        assert controller.getInstanceId() == "TestDevice"

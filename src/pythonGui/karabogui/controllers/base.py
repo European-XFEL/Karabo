@@ -251,6 +251,13 @@ class BaseBindingController(HasStrictTraits):
         if get_class_const_trait(type(self), '_can_edit'):
             self.widget.setEnabled(enable)
 
+    def getInstanceId(self):
+        """Retrieve the `instanceId` of the root proxy of this controller
+
+        Note: Function added with Karabo 2.16.X
+        """
+        return self.proxy.root_proxy.device_id
+
     # -------------------------------------------------------------------------
     # Traits
 
