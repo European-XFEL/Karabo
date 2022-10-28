@@ -927,13 +927,14 @@ class NetworkOutput(Configurable):
                We need to pass the instance in order to cancel all the tasks
                related to that instance once the instance dies.
             """
-            if not self.alive:
-                ts = get_timestamp().toLocal()
-                print(f"{ts}: Connecting although going down as instructed.")
-
-            channel_task = get_event_loop().create_task(
+            loop = get_event_loop()
+            channel_task = loop.create_task(
                 self.serve(reader, writer), instance=instance)
             self.active_channels.add(channel_task)
+            if not self.alive:
+                ts = get_timestamp().toLocal()
+                print(f"{ts}: Cancelling channel, going down as instructed.")
+                loop.call_soon_threadsafe(channel_task.cancel)
 
         port = int(self.port) if isSet(self.port) else 0
         self.server = await start_server(serve, host=hostname,
