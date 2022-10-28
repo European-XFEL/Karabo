@@ -195,7 +195,6 @@ class DeviceInstanceController(BaseProjectGroupController):
     def create_ui_data(self):
         ui_data = ProjectControllerUiData()
         self._update_icon(ui_data)
-        self._update_alarm_type(ui_data)
         self._update_instance_status(ui_data)
         return ui_data
 
@@ -272,7 +271,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         """ Whenever the object is modified it should be visible to the user
         """
         self._update_icon(self.ui_data)
-        self._update_alarm_type(self.ui_data)
         self._update_instance_status(self.ui_data)
 
     @on_trait_change("model:active_config_ref")
@@ -308,10 +306,6 @@ class DeviceInstanceController(BaseProjectGroupController):
     @on_trait_change("project_device:instance_status")
     def instance_status_change(self, status):
         self._update_instance_status(self.ui_data)
-
-    @on_trait_change("project_device:device_node.alarm_info.alarm_dict_items")
-    def _alarm_info_change(self):
-        self._update_alarm_type(self.ui_data)
 
     def _update_check_state(self):
         """Update the Qt.CheckState of the ``DeviceConfigurationController``
@@ -362,18 +356,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         status_enum = self.project_device.status
         ui_data.icon = get_project_device_status_icon(status_enum)
         ui_data.status = status_enum
-
-    def _update_alarm_type(self, ui_data):
-        # Get current status of device
-        if not self.model.initialized:
-            return
-
-        device_node = self.project_device.device_node
-        if device_node is None:
-            alarm_type = ''
-        else:
-            alarm_type = device_node.alarm_info.alarm_type
-        ui_data.alarm_type = alarm_type
 
     def _update_instance_status(self, ui_data):
         if not self.model.initialized:

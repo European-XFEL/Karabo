@@ -13,7 +13,6 @@ from traits.api import (
 import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus
 from karabo.native import AccessLevel
-from karabogui.alarms.api import AlarmInfo
 from karabogui.itemtypes import NavigationItemTypes
 
 HOST_LEVEL = 0
@@ -32,7 +31,6 @@ class SystemTreeNode(HasStrictTraits):
     capabilities = Int
     attributes = Dict
     # Struct to keep track of all alarms related to this
-    alarm_info = Instance(AlarmInfo, args=())
     monitoring = Bool(False)
     level = Int(-1)
 
@@ -78,26 +76,6 @@ class SystemTreeNode(HasStrictTraits):
             return 0
         return self.parent.children.index(self)
 
-    def append_alarm_type(self, dev_property, alarm_type):
-        """Append given ``alarm_type`` to dict and update list with device
-        properties
-
-        returns whether the maximum alarm level has changed
-        """
-        pre_change = self.alarm_info.alarm_type
-        self.alarm_info.append_alarm_type(dev_property, alarm_type)
-        return pre_change != self.alarm_info.alarm_type
-
-    def remove_alarm_type(self, dev_property, alarm_type):
-        """Remove given ``dev_property`` with ``alarm_type`` from dict list
-        or remove ``alarm_type`` from dict
-
-        returns whether the maximum alarm level has changed
-        """
-        pre_change = self.alarm_info.alarm_type
-        self.alarm_info.remove_alarm_type(dev_property, alarm_type)
-        return pre_change != self.alarm_info.alarm_type
-
 
 class SystemTree(HasStrictTraits):
     """A data model which holds data concerning the devices and servers in a
@@ -111,9 +89,6 @@ class SystemTree(HasStrictTraits):
 
     # An event which is triggered whenenver the tree needs a layout update
     status_update = Event
-
-    # An event which is triggered whenenver a device has an alarm update
-    alarm_update = Event
 
     # device/server node lookup dicts
     _device_nodes = Dict

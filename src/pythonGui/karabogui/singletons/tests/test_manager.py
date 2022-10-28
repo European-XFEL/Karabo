@@ -594,14 +594,12 @@ class TestManager(GuiTestCase):
         with singletons(topology=topology):
             manager = Manager()
             manager.handle_alarmUpdate('AlarmService', Hash(alarm_data()))
-            assert topology.update_alarms_info.call_count == 1
 
     def test_handle_alarm_init(self):
         topology = Mock()
         with singletons(topology=topology):
             manager = Manager()
             manager.handle_alarmInit('AlarmService', Hash(alarm_data()))
-            assert topology.update_alarms_info.call_count == 1
 
     def test_handle_property_history(self):
         topology, device_proxy = Mock(), Mock()
