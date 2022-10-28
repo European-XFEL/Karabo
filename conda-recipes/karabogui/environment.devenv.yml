@@ -26,7 +26,6 @@ dependencies:
   - qtpy=2.1.0
   - pyqtgraph=0.13.1
   - qt-main=5.15
-  - qtpy=2.1.0
   - pyqt=5.15.7
   - qtconsole=5.0.2
   - ipython=7.13.0
