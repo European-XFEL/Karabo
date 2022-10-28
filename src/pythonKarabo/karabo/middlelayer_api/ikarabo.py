@@ -83,12 +83,14 @@ def start_device_client():
     devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(
         hostname, os.getpid()))
 
-    set_event_loop(NoEventLoop(devices))
+    loop = NoEventLoop(devices)
+    set_event_loop(loop)
 
     def shutdown_hook(device):
+        nonlocal loop
         device = device()
         if device is not None:
-            del device
+            loop.create_task(device.slotKillDevice())
 
     weak = weakref.ref(devices)
     atexit.register(shutdown_hook, weak)
