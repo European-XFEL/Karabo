@@ -518,6 +518,21 @@ void GuiServer_Test::testRequestGeneric() {
         std::clog << "requestGeneric: OK without specified replyType" << std::endl;
     }
     {
+        Hash h("type", "requestGeneric", "instanceId", "isnotonline", "timeout", 1);
+        h.set("args", Hash("name", "scene"));
+        // Note: h is ill-formed as it misses "slot" element
+
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
+              "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(h); }, messageTimeout);
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT_EQUAL(std::string("requestGeneric"), replyMessage.get<std::string>("type"));
+        const std::string& reason = replyMessage.get<std::string>("reason");
+        CPPUNIT_ASSERT_MESSAGE(reason, reason.find("Key 'slot' does not exist") != std::string::npos);
+        std::clog << "requestGeneric: OK (since fails with ill formed message)" << std::endl;
+    }
+    {
         Hash h("type", "requestGeneric", "instanceId", "isnotonline", "timeout", 1, "replyType", "requestSuperScene",
                "slot", "slotDumpDebugInfo");
         h.set("args", Hash("name", "noname"));
