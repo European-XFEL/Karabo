@@ -560,6 +560,10 @@ void SignalSlotable_Test::_testReceiveExceptions() {
           greeter->request("responder", "slot_no_answer", "Hello").timeout(slotCallTimeout).receive(answer),
           karabo::util::RemoteException);
     karabo::util::Exception::clearTrace();
+    // Non existing empty slot name of existing instanceId
+    CPPUNIT_ASSERT_THROW(greeter->request("responder", "").timeout(slotCallTimeout).receive(answer),
+                         karabo::util::RemoteException);
+    karabo::util::Exception::clearTrace();
     // Non-existing receiver instanceId will run into timeout (shortened time to have less test delay)
     CPPUNIT_ASSERT_THROW(greeter->request("responder_not_existing", "slotAnswer", "Hello").timeout(150).receive(answer),
                          karabo::util::TimeoutException);
