@@ -25,7 +25,6 @@ class ProjectControllerUiData(HasStrictTraits):
     brush = Instance(QBrush, args=())
     checkable = Bool(False)
     check_state = Int(Qt.Checked)
-    alarm_type = String
     status = Enum(*ProxyStatus)
     instance_status = Enum(*InstanceStatus)
 
@@ -140,12 +139,6 @@ class BaseProjectController(ABCHasStrictTraits):
         if self._qt_model is not None:
             self._qt_model.controller_data_update(
                 self, column=1, roles=[Qt.DecorationRole])
-
-    @on_trait_change('ui_data.alarm_type')
-    def _update_alarm(self):
-        if self._qt_model is not None:
-            self._qt_model.controller_data_update(
-                self, column=2, roles=[Qt.DecorationRole])
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
