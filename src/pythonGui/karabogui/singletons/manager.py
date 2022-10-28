@@ -745,7 +745,6 @@ class Manager(QObject):
         """
         if not rows.empty():
             data = extract_alarms_data(instanceId, rows)
-            self._topology.update_alarms_info(data)
             self._alarm_model.init_alarms_info(data)
 
     def handle_alarmUpdate(self, instanceId, rows):
@@ -754,7 +753,6 @@ class Manager(QObject):
         """
         if not rows.empty():
             data = extract_alarms_data(instanceId, rows)
-            self._topology.update_alarms_info(data)
             self._alarm_model.update_alarms_info(data)
 
     # ------------------------------------------------------------------

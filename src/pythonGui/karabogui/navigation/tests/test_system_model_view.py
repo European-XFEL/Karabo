@@ -195,10 +195,10 @@ class TestCase(GuiTestCase):
         assert header == "Host - Server - Class - Device"
 
     def test_columnCount_root(self):
-        self.assertEqual(self.system_model.columnCount(), 3)
+        self.assertEqual(self.system_model.columnCount(), 2)
 
     def test_columnCount_filter_model(self):
-        self.assertEqual(self.model.columnCount(), 3)
+        self.assertEqual(self.model.columnCount(), 2)
 
     def test_rowCount_filter_model(self):
         self.assertEqual(self.model.rowCount(), 1)

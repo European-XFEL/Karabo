@@ -20,7 +20,7 @@ from karabogui.project.utils import (
     load_project, load_project_with_device, maybe_save_modified_project,
     reload_project, save_object, show_modified_project_message)
 from karabogui.project.view import ProjectView
-from karabogui.singletons.api import get_config, get_db_conn, get_topology
+from karabogui.singletons.api import get_db_conn, get_topology
 from karabogui.util import get_spin_widget, version_compatible
 from karabogui.widgets.toolbar import ToolBar
 
@@ -64,9 +64,6 @@ class ProjectPanel(BasePanelWidget):
 
         main_layout.addWidget(self.sbar)
         main_layout.addWidget(self.tree_view)
-
-        alarm_visible = get_config()["alarm_project"]
-        self.tree_view.setColumnHidden(2, not alarm_visible)
 
         return widget
 
