@@ -581,21 +581,27 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""
         flags = 0
-        state = get_device_state_string(self.root)
-        binding = proxy.binding
         is_project = isinstance(self.root, ProjectDeviceProxy)
-        is_class = isinstance(self.root, DeviceClassProxy)
-        uneditable_node_types = (ChoiceOfNodesBinding, ListOfNodesBinding,
-                                 NodeBinding)
-        configure_access = (AccessMode.INITONLY, AccessMode.RECONFIGURABLE)
-        is_uneditable_node = isinstance(binding, uneditable_node_types)
-        is_editable_type = (not is_uneditable_node or (
-                is_project and isinstance(binding, ChoiceOfNodesBinding)))
-        is_project_editable = (is_project and binding.access_mode in
-                               configure_access and binding.assignment
-                               is not Assignment.INTERNAL)
-        is_inst_editable = (not is_class and binding.is_allowed(state) and
-                            binding.access_mode is AccessMode.RECONFIGURABLE)
-        if is_editable_type and (is_project_editable or is_inst_editable):
-            flags |= Qt.ItemIsEditable
+        if isinstance(self.root, DeviceClassProxy) and not is_project:
+            return flags
+
+        binding = proxy.binding
+        if is_project:
+            if isinstance(binding, (ListOfNodesBinding, NodeBinding)):
+                return flags
+
+            writable = binding.access_mode in (AccessMode.INITONLY,
+                                               AccessMode.RECONFIGURABLE)
+            if writable and binding.assignment is not Assignment.INTERNAL:
+                flags |= Qt.ItemIsEditable
+        else:
+            if isinstance(binding, (ChoiceOfNodesBinding, ListOfNodesBinding,
+                                    NodeBinding)):
+                return flags
+
+            writable = binding.access_mode is AccessMode.RECONFIGURABLE
+            if (writable and binding.is_allowed(
+                    get_device_state_string(self.root))):
+                flags |= Qt.ItemIsEditable
+
         return flags
