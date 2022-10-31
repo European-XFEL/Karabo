@@ -33,7 +33,6 @@ KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, karabo::devices::GuiServ
 namespace karabo {
     namespace devices {
 
-        // requestFromSlot is a fine grained writeable command and will be handled differently!
         const std::unordered_set<std::string> GuiServerDevice::m_writeCommands(
               {"projectSaveItems", "initDevice", "killDevice", "execute", "killServer", "acknowledgeAlarm",
                "projectUpdateAttribute", "reconfigure", "updateAttributes"});
@@ -803,8 +802,6 @@ namespace karabo {
                               "' is not allowed on this GUI client version. Please upgrade your GUI client");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
-                    } else if (type == "requestFromSlot") {
-                        onRequestFromSlot(channel, info);
                     } else if (type == "reconfigure") {
                         onReconfigure(channel, info);
                     } else if (type == "execute") {
@@ -895,14 +892,9 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "violatesReadOnly " << info;
             if (m_writeCommands.find(type) != m_writeCommands.end()) {
                 return true;
-            } else if (type == "requestFromSlot" && info.has("slot") && info.get<string>("slot") != "requestScene" &&
-                       info.get<string>("slot") != "slotGetScene") {
-                // requestFromSlot must have a 'slot' argument. If not, it should fail somewhere else.
-                return true;
             } else if (type == "requestGeneric" && info.has("replyType") &&
                        isProjectLoadingReplyType(info.get<string>("replyType"))) {
                 // Request involved in the loading of projects are allowed in read-only mode.
-                KARABO_LOG_FRAMEWORK_INFO << "ProjectManager related request:\n" << info;
                 return false;
             } else if (type == "requestGeneric" && info.has("slot") && info.get<string>("slot") != "requestScene" &&
                        info.get<string>("slot") != "slotGetScene") {
@@ -2865,19 +2857,6 @@ namespace karabo {
             }
         }
 
-        void GuiServerDevice::forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply,
-                                                  const std::string& token) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "forwardRequestReply for token : " << token;
-                Hash h("reply", reply, "token", token, "success", true, "type", "requestFromSlot");
-                safeClientWrite(channel, h, LOSSLESS);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding request reply for token '" << token
-                                           << "': " << e.what();
-            }
-        }
-
-
         bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId,
                                                     const std::string& type, const std::string& reason) {
             boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
@@ -2886,65 +2865,6 @@ namespace karabo {
             safeClientWrite(channel, h, LOSSLESS);
             return false;
         }
-
-        void GuiServerDevice::onRequestFromSlot(WeakChannelPointer channel, const karabo::util::Hash& hash) {
-            Hash failureInfo;
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestFromSlot";
-                // verify that hash is sane on top level
-                failureInfo.set("deviceId", hash.has("deviceId"));
-                failureInfo.set("slot", hash.has("slot"));
-                failureInfo.set("args", hash.has("args"));
-                failureInfo.set("token", hash.has("token"));
-                const string& deviceId = hash.get<string>("deviceId");
-                const string& slot = hash.get<string>("slot");
-                const Hash& arg_hash = hash.get<Hash>("args");
-                const string& token = hash.get<string>("token");
-                request(deviceId, slot, arg_hash)
-                      .template receiveAsync<Hash>(
-                            bind_weak(&GuiServerDevice::forwardRequestReply, this, channel, _1, token),
-                            bind_weak(&GuiServerDevice::onRequestFromSlotErrorHandler, this, channel, failureInfo,
-                                      token));
-            } catch (const Exception& e) {
-                // TODO: Less details to GUI, more on log
-                // ADDENDUM: No need to touch code here - requestFromSlot API is to be phased out.
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequest() with args: " << hash << ": "
-                                           << e.userFriendlyMsg(false);
-                failureInfo.set("replied_error", e.what());
-                Hash reply("success", false, "info", failureInfo, "token",
-                           (hash.has("token") ? hash.get<std::string>("token") : "undefined"), "type",
-                           "requestFromSlot");
-                safeClientWrite(channel, reply, LOSSLESS);
-            }
-        }
-
-        void GuiServerDevice::onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info,
-                                                            const std::string& token) {
-            std::string msg;
-            std::string details;
-            try {
-                throw;
-            } catch (const RemoteException& re) {
-                msg = re.userFriendlyMsg(true);
-                details = re.details();
-            } catch (const Exception& te) {
-                // e.g. TimeoutException
-                msg = te.userFriendlyMsg(false);
-                details = te.detailedMsg();
-            } catch (const std::exception& se) {
-                msg = se.what();
-            }
-            KARABO_LOG_FRAMEWORK_ERROR << "Slot request failed: " << msg
-                                       << (details.empty() ? std::string() : "\nFailure details\n" + details);
-            if (!details.empty()) {
-                (msg += m_errorDetailsDelim) += details;
-            }
-            Hash failureInfo(info);
-            failureInfo.set("replied_error", msg);
-            Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
-            safeClientWrite(channel, reply, LOSSLESS);
-        }
-
 
         std::string GuiServerDevice::getChannelAddress(const karabo::net::Channel::Pointer& channel) const {
             TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
