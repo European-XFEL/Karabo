@@ -70,8 +70,7 @@ void SceneProvider_Test::appTestRunner() {
 
     testInstanceInfo();
     testRequestScenes();
-    testRequestSceneFailure1();
-    testRequestSceneFailure2();
+    testRequestSceneFailure();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -94,69 +93,43 @@ void SceneProvider_Test::testInstanceInfo() {
 
 void SceneProvider_Test::testRequestScenes() {
     const Hash arg_hash = Hash("scenes", std::vector<std::string>(1, "foo"));
-    Hash message("type", "requestFromSlot", "deviceId", "sceneProvider", "slot", "slotGetScenes", "args", arg_hash);
+    Hash message("type", "requestGeneric", "instanceId", "sceneProvider", "slot", "slotGetScenes", "args", arg_hash);
     message.set("token", "notAVeryUniqueToken");
     karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("requestFromSlot", 1, [&] { m_tcpAdapter->sendMessage(message); });
+          m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(message); });
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
     CPPUNIT_ASSERT(lastMessage.has("type"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("type") == "requestFromSlot");
+    CPPUNIT_ASSERT(lastMessage.get<std::string>("type") == "requestGeneric");
     CPPUNIT_ASSERT(lastMessage.has("reply.foo"));
     CPPUNIT_ASSERT(lastMessage.get<std::string>("reply.foo") == "encoded(bar scene)");
-    CPPUNIT_ASSERT(lastMessage.has("token"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("token") == "notAVeryUniqueToken");
+    CPPUNIT_ASSERT(lastMessage.has("request.token"));
+    CPPUNIT_ASSERT(lastMessage.get<std::string>("request.token") == "notAVeryUniqueToken");
     CPPUNIT_ASSERT(lastMessage.has("success"));
     CPPUNIT_ASSERT(lastMessage.get<bool>("success") == true);
     std::clog << "Tested scene retrieval via GUI server.. Ok" << std::endl;
 }
 
-void SceneProvider_Test::testRequestSceneFailure1() {
-    // here the slot argument is missing from the request
-    const Hash arg_hash = Hash("scenes", std::vector<std::string>(1, "foo"));
-    Hash message("type", "requestFromSlot", "deviceId", "sceneProvider", "args", arg_hash);
-    message.set("token", "notAVeryUniqueToken");
-    karabo::TcpAdapter::QueuePtr messageQ =
-          m_tcpAdapter->getNextMessages("requestFromSlot", 1, [&] { m_tcpAdapter->sendMessage(message); });
-    Hash lastMessage;
-    messageQ->pop(lastMessage);
-
-    CPPUNIT_ASSERT(lastMessage.has("type"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("type") == "requestFromSlot");
-    CPPUNIT_ASSERT(!lastMessage.has("reply"));
-    CPPUNIT_ASSERT(lastMessage.has("token"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("token") == "notAVeryUniqueToken");
-    CPPUNIT_ASSERT(lastMessage.has("success"));
-    CPPUNIT_ASSERT(lastMessage.get<bool>("success") == false);
-    CPPUNIT_ASSERT(lastMessage.has("info"));
-    CPPUNIT_ASSERT(lastMessage.has("info.slot"));
-    CPPUNIT_ASSERT(lastMessage.get<bool>("info.slot") == false);
-    CPPUNIT_ASSERT(lastMessage.get<bool>("info.deviceId") == true);
-    CPPUNIT_ASSERT(lastMessage.get<bool>("info.args") == true);
-    CPPUNIT_ASSERT(lastMessage.get<bool>("info.token") == true);
-    std::clog << "Tested scene retrieval failure (parameter error).. Ok" << std::endl;
-}
-
-void SceneProvider_Test::testRequestSceneFailure2() {
+void SceneProvider_Test::testRequestSceneFailure() {
     // here we request from a device that doesn't provide scenes
     const Hash arg_hash = Hash("scenes", std::vector<std::string>(1, "foo"));
-    Hash message("type", "requestFromSlot", "deviceId", "noSceneProvider", "slot", "slotGetScenes", "args", arg_hash);
+    Hash message("type", "requestGeneric", "instanceId", "noSceneProvider", "slot", "slotGetScenes", "args", arg_hash);
     message.set("token", "notAVeryUniqueToken");
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-          "requestFromSlot", 1, [&] { m_tcpAdapter->sendMessage(message); }, 10000);
+          "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(message); }, 10000);
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(lastMessage.has("type"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("type") == "requestFromSlot");
-    CPPUNIT_ASSERT(!lastMessage.has("reply"));
-    CPPUNIT_ASSERT(lastMessage.has("token"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("token") == "notAVeryUniqueToken");
+    CPPUNIT_ASSERT(lastMessage.has("request.type"));
+    CPPUNIT_ASSERT(lastMessage.get<std::string>("request.type") == "requestGeneric");
+    CPPUNIT_ASSERT(lastMessage.has("request.token"));
+    CPPUNIT_ASSERT(lastMessage.get<std::string>("request.token") == "notAVeryUniqueToken");
     CPPUNIT_ASSERT(lastMessage.has("success"));
     CPPUNIT_ASSERT(lastMessage.get<bool>("success") == false);
-    CPPUNIT_ASSERT(lastMessage.has("info"));
-    CPPUNIT_ASSERT(lastMessage.has("info.replied_error"));
+    CPPUNIT_ASSERT(lastMessage.has("reason"));
+    CPPUNIT_ASSERT(lastMessage.get<std::string>("reason").find("'noSceneProvider' has no slot 'slotGetScenes'") !=
+                   std::string::npos);
 
     std::clog << "Tested scene retrieval failure (device doesn't provide scenes).. Ok" << std::endl;
 }

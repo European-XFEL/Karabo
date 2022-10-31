@@ -34,8 +34,7 @@ class SceneProvider_Test : public CPPUNIT_NS::TestFixture {
     void appTestRunner();
     void testInstanceInfo();
     void testRequestScenes();
-    void testRequestSceneFailure1();
-    void testRequestSceneFailure2();
+    void testRequestSceneFailure();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
