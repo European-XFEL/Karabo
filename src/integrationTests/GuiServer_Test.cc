@@ -258,7 +258,6 @@ void GuiServer_Test::testReadOnly() {
           Hash("type", "killDevice"),
           Hash("type", "projectSaveItems"),
           Hash("type", "initDevice"),
-          Hash("type", "requestFromSlot", "slot", "thisSlotShouldBeRejected"),
           Hash("type", "killServer"),
           Hash("type", "acknowledgeAlarm"),
           Hash("type", "projectUpdateAttribute"),
@@ -278,18 +277,6 @@ void GuiServer_Test::testReadOnly() {
               std::string("Action '" + type + "' is not allowed on GUI servers in readOnly mode!"), message);
         std::clog << "testReadOnly: OK for " + type << std::endl;
     }
-    const unsigned int messageTimeout = 500u;
-    Hash reqScene("type", "requestFromSlot", "deviceId", "doesNotMatter", "slot", "requestScene");
-    CPPUNIT_ASSERT_THROW(m_tcpAdapter->getNextMessages(
-                               "notification", 1, [&] { m_tcpAdapter->sendMessage(reqScene); }, messageTimeout),
-                         karabo::util::TimeoutException);
-    std::clog << "testReadOnly: OK for requestFromSlot with requestScene" << std::endl;
-
-    Hash reqSlotScene("type", "requestFromSlot", "deviceId", "doesNotMatter", "slot", "slotGetScene");
-    CPPUNIT_ASSERT_THROW(m_tcpAdapter->getNextMessages(
-                               "notification", 1, [&] { m_tcpAdapter->sendMessage(reqSlotScene); }, messageTimeout),
-                         karabo::util::TimeoutException);
-    std::clog << "testReadOnly: OK for requestFromSlot with slotGetScene" << std::endl;
 }
 
 void GuiServer_Test::testExecuteBeforeLogin() {
@@ -303,7 +290,6 @@ void GuiServer_Test::testExecuteBeforeLogin() {
     // Request of any type other than login, will fail.
     //
     std::vector<std::string> blockedTypes = {"execute",
-                                             "requestFromSlot",
                                              "reconfigure",
                                              "getDeviceConfiguration",
                                              "getDeviceSchema",
@@ -1181,7 +1167,7 @@ void GuiServer_Test::testDisconnect() {
 
 void GuiServer_Test::testLogMute() {
     std::clog << "testLogMute: " << std::flush;
-    const Hash logCommand("type", "requestFromSlot", "deviceId", "PropTest_LOG", "slot", "logSomething", "args",
+    const Hash logCommand("type", "requestGeneric", "instanceId", "PropTest_LOG", "slot", "logSomething", "args",
                           Hash("priority", "INFO", "message", "log me"), "token", "superSecretPassword");
     // Instantiate a property test device
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
@@ -1227,7 +1213,7 @@ void GuiServer_Test::testLogMute() {
         CPPUNIT_ASSERT_MESSAGE("The correct log message was not received before the timeout",
                                status == std::future_status::ready);
         // clear the affected queues.
-        m_tcpAdapter->clearAllMessages("requestFromSlot");
+        m_tcpAdapter->clearAllMessages("requestGeneric");
         m_tcpAdapter->clearAllMessages("log");
     }
     {
@@ -1246,7 +1232,7 @@ void GuiServer_Test::testLogMute() {
     {
         for (int i = 0; i < 5; i++) {
             karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages(
-                  "requestFromSlot", 1, [&] { m_tcpAdapter->sendMessage(logCommand); }, 100);
+                  "requestGeneric", 1, [&] { m_tcpAdapter->sendMessage(logCommand); }, 100);
             Hash nextMessage;
             messageQ->pop(nextMessage);
             CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
