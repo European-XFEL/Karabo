@@ -2634,9 +2634,10 @@ namespace karabo {
                 auto successHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, true, channel, info, _1);
                 auto failureHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, false, channel, info, Hash());
                 requestor.receiveAsync<Hash>(successHandler, failureHandler);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Error in generic request to slot with info " << info << "...\n"
-                                           << e.what();
+            } catch (const std::exception&) {
+                // Make client aware of failure - we are in `catch` block as forwardHashReply(false, ...) expects:
+                forwardHashReply(false, channel, info, Hash());
+                // No need to LOG, is done in forwardHashReply
             }
         }
 
@@ -2683,8 +2684,10 @@ namespace karabo {
                 } catch (const std::exception& e) {
                     failTxt = e.what();
                 }
+                const std::string& slot =
+                      (info.has("slot") ? info.get<std::string>("slot") : std::string("<missing slot definition>"));
                 KARABO_LOG_FRAMEWORK_WARN << "Failure on request to " << info.get<std::string>("instanceId") << "."
-                                          << info.get<std::string>("slot") << ": " << failTxt
+                                          << slot << " via info: " << info << failTxt
                                           << (details.empty() ? std::string() : ".\nFailure details:\n" + details)
                                           << ".";
                 if (!details.empty()) {
