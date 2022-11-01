@@ -16,7 +16,7 @@ from karabogui.controllers.table.api import (
     BaseFilterTableController, BaseTableController, KaraboTableView,
     StringButtonDelegate, TableButtonDelegate, create_mime_data, list2string)
 from karabogui.testing import (
-    GuiTestCase, get_property_proxy, keySequence, singletons)
+    GuiTestCase, get_property_proxy, keySequence, set_proxy_value, singletons)
 from karabogui.topology.api import SystemTopology
 
 
@@ -61,12 +61,23 @@ class TableSchema(Configurable):
 
 
 class Object(Configurable):
-    prop = VectorHash(rows=TableSchema,
-                      accessMode=AccessMode.READONLY)
+    prop = VectorHash(
+        rows=TableSchema,
+        accessMode=AccessMode.READONLY)
 
 
 class ButtonObject(Configurable):
-    prop = VectorHash(rows=ButtonSchema)
+    prop = VectorHash(
+        rows=ButtonSchema)
+
+
+class StateObject(Configurable):
+    state = String(
+        defaultValue=State.ON)
+    prop = VectorHash(
+        rows=TableSchema,
+        accessMode=AccessMode.READONLY,
+        allowedStates=[State.ON])
 
 
 class TestTableModelView(GuiTestCase):
@@ -714,6 +725,24 @@ class TestFilterTableModelView(GuiTestCase):
         self.assertFalse(controller.tableWidget().isSortingEnabled())
         # 2.2 Does not have any buttons
         self.assertTrue(controller._table_buttons)
+
+    def test_table_controller_state(self):
+        proxy = get_property_proxy(StateObject.getClassSchema(), "prop")
+        model = TableElementModel()
+        controller = BaseTableController(proxy=proxy, model=model)
+        controller.create(None)
+        controller.set_read_only(False)
+        self.assertTrue(controller.widget.isEnabled())
+        set_proxy_value(proxy, "state", "CHANGING")
+        self.assertFalse(controller.widget.isEnabled())
+        set_proxy_value(proxy, "state", "ON")
+        self.assertTrue(controller.widget.isEnabled())
+
+        controller.set_read_only(True)
+        set_proxy_value(proxy, "state", "CHANGING")
+        self.assertTrue(controller.widget.isEnabled())
+
+        controller.destroy()
 
 
 if __name__ == "__main__":
