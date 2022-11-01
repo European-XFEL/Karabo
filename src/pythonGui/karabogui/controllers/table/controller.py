@@ -13,7 +13,8 @@ import karabogui.icons as icons
 from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
 from karabogui.binding.api import (
     StringBinding, get_default_value, get_editor_value)
-from karabogui.controllers.api import BaseBindingController, has_options
+from karabogui.controllers.api import (
+    BaseBindingController, has_options, is_proxy_allowed)
 from karabogui.dialogs.api import TopologyDeviceDialog
 
 from .delegates import (
@@ -134,6 +135,14 @@ class BaseTableController(BaseBindingController):
                                         from_device=True)
 
         self._item_model.updateData(value)
+
+    def state_update(self, proxy):
+        """A change in a state update will only disable reconfigurable tables
+        """
+        if self._readonly:
+            return
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
 
     def destroy_widget(self):
         if self._item_model is not None:
