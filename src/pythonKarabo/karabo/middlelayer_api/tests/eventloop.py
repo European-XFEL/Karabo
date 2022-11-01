@@ -119,7 +119,7 @@ def setEventLoop():
 @pytest.fixture(scope="module")
 def event_loop():
     """This is the eventloop fixture for pytest asyncio"""
-    loop = EventLoop()
+    loop = setEventLoop()
     yield loop
     loop.close()
 
