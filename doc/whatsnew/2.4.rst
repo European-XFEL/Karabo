@@ -75,7 +75,6 @@ The **most relevant improvements**, fixes and changes are:
 - GUI: Print support for each panel
 - GUI: Tooltips of last received data for image widgets
 - GUI: Enable of wheeling of widgets into the Karabo GUI - Extensions
-
 - MDL: Proxy (e.g. in ikarabo) uses now meta data timestamp for pipeline data.
 - MDL: Autostart implemented in device server to enable core devices startup
 - Core Devices: The ProjectManager is now a MDL device!
@@ -86,9 +85,11 @@ The **most relevant improvements**, fixes and changes are:
 - C++: DataLoggers publish when last data arrived
 
 Minor **backward incompatibilities**:
+
 - Invalid schema elements will not be ignored anymore, but trigger a LogicException.
   The specific cases are a leaf added to a non-existing node, a leaf where the
   parent is not node, and a leaf added to a list of nodes.
+
 - **OLD GUI Clients** (2.3.1) lack a new server protocol message and will not work with Karabo 2.4.0
 
 
