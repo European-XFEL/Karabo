@@ -318,7 +318,7 @@ Core Devices
 - Datalogger: Reject device log entries while above a logging rate threshold. !6283
 - Datalogger: Don't skip forceDeviceToBeLogged when the logger is behind the device update time. !6426
 - Influx: Add support for max schema logging rate for a device. !6405
-- Influx: Add "digest_start" and "schema_size" to "*__SCHEMAS" measurements !6399
+- Influx: Add "digest_start" and "schema_size" to `*__SCHEMAS` measurements !6399
 - Influx: Fix for ever-growing schema's m_archive of a device being logged.
 
 

@@ -55,8 +55,8 @@ UNIT TESTS
   file
 
 - If the Scene MODEL does not contain traits, add the class name to the 
-`test_all_empty_widgets` method in the 
-`src/pythonKarabo/karabo/common/scenemodel/tests/test_widget_simple.py` file.
+  `test_all_empty_widgets` method in the 
+  `src/pythonKarabo/karabo/common/scenemodel/tests/test_widget_simple.py` file.
 
 WIDGET CONTROLLER
 =================
