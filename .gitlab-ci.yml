@@ -267,6 +267,22 @@ lint:
     changes:
       - "src/**/*"
 
+test_docs:
+  stage: lint
+  image: europeanxfel/karabo-ci:miniconda-3
+  script:
+    - pushd doc
+    - pip install -r requirements.txt
+    - conda config --add channels conda-forge
+    - conda install doxygen
+    - make doctest
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - "src/**/*"
+      - "doc/**/*"
+
 # release build
 
 release build almalinux8:
