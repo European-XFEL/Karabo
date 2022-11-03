@@ -148,7 +148,7 @@ The **most relevant improvements**, fixes and changes are:
 - Compilation of device packages requires at least gcc version 7. Note that the default compiler on all supported platforms except Ubuntu16 fulfils that.
 
 Known Regressions or API Changes
-++++++++++++++++++++++++++++++++
+================================
 
 - GUI: The plotting library *PyQtGraph* removed the transparent background of the plot widgets. This was done for performance
   reasons. Karabo reintroduces the transparent background for images. For plot widgets, the background can now be
@@ -168,7 +168,7 @@ Known Regressions or API Changes
   and the last reference timestamp.
 
 Performance Improvements
-++++++++++++++++++++++++
+========================
 
 Several performance improvements are bundled in this release.
 
@@ -183,7 +183,7 @@ Several performance improvements are bundled in this release.
 
 
 Experimental features
-++++++++++++++++++++++
+=====================
 
 All APIs support a broker with the MQTT protocol instead of JMS.
 The protocol specified in the `KARABO_BROKER` environment variable defines which broker type to use:
@@ -193,7 +193,7 @@ This is an experimental feature, i.e. version compatibility is not guaranteed.
 
 
 Deprecations
-++++++++++++
+============
 
 - C++/Bound CHANGE: The properties ``useTimeServer`` and ``timeServerId`` have been deprecated and were removed from the devices
   since unused anyway (latter was only present in bound).
@@ -347,7 +347,7 @@ Bound/cpp core
 - C++: More info on unknown exceptions
 - C++: Better logs of output channel
 - C++: fix occasional CI failure due to Mqtt
-- C++: partial include clean-up, avoiding karabo/*.hpp !5343
+- C++: partial include clean-up, avoiding `karabo/*.hpp` !5343
 - C++: Invalid internal device updates should throw
 - Enable MQTT broker in karabo-brokermessagelogger XFEL-CLOSED 28421
 - C++: More robust input channel (re-)connection
