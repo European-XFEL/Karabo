@@ -2,6 +2,12 @@
 Karabo GUI API
 **************
 
+.. testcode::
+   :hide:
+
+   import karabogui.api
+
+
 .. automodule:: karabogui.api
 
 

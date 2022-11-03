@@ -60,6 +60,7 @@ sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
     "sphinx.ext.graphviz",
     "sphinx.ext.intersphinx",
     "sphinx.ext.inheritance_diagram",
@@ -97,7 +98,11 @@ copyright = "European XFEL GmbH - Controls Group"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = [".build"]
+exclude_patterns = [
+    ".build",  # the build directory
+    "tools/netbeans.rst",  # deprecated editor keep for the moment
+    "whatsnew/template.rst"  # template for whatsnew pages. Should not be included
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
