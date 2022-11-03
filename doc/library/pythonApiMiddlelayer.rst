@@ -1,6 +1,12 @@
 Python Middlelayer API
 ======================
 
+.. testcode::
+   :hide:
+
+   import karabo.middlelayer
+
+
 .. automodule:: karabo.middlelayer
 
 The Karabo Hash Dictionary
