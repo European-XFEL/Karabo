@@ -648,8 +648,7 @@ namespace karabo {
                 if (value.is_null()) {
                     // No digest has been found - it's not possible to go ahead.
                     std::ostringstream oss;
-                    oss << "No active schema could be found for device '" << ctxt->deviceId << "' at (or before) '"
-                        << ctxt->atTime.toIso8601Ext() << "'.";
+                    oss << "No active schema could be found for device at (or before) time point.";
                     Epochstamp currTime;
                     TimeDuration elapsed = currTime - ctxt->atTime;
                     const TimeValue atTimeSecsAgo = elapsed.getTotalSeconds();
