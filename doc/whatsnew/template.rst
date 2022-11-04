@@ -25,6 +25,11 @@ Change of behaviour
 Detailed Merge-Log
 ++++++++++++++++++
 
+Core Devices
+============
+
+- GUI Server: Bla bli. ! 1233
+
 Bound/cpp core
 ==============
 
@@ -44,12 +49,12 @@ Dependencies and deployment
 Documentation
 =============
 
-- 
+-
 
 Tests
 =====
 
-- 
+-
 
 Graphical User Interface
 ========================
