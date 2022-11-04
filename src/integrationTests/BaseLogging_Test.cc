@@ -870,7 +870,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
     } catch (const RemoteException& re) {
         const std::string fileLoggerMsg(
               "Requested time point for device configuration is earlier than anything logged");
-        const std::string influxLoggerMsg("No active schema could be found for device");
+        const std::string influxLoggerMsg("No active schema could be found for device at (or before) time point.");
         CPPUNIT_ASSERT_MESSAGE("Exception message: " + re.detailedMsg(),
                                (re.detailedMsg().find(fileLoggerMsg) != string::npos ||
                                 re.detailedMsg().find(influxLoggerMsg) != string::npos));
