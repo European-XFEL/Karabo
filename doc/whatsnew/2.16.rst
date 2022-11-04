@@ -15,6 +15,36 @@ Summary – Release highlights
   - PyQt5 to 5.15.
   - PyQtGraph to 0.13.1
 
+- GUI: Most controllers that can add multiple properties support removal of properties
+- GUI: Editable controllers can have multiple properties. This enables future controllers in extensions, e.g. schema
+  independent validation of values.
+- GUI/MDL: Macros know the name of the project they belong to
+- GUI: Table elements have key strokes:
+
+    - CTRL + N: New row
+    - DEL: Remove row
+    - SHIFT + UP: Move row up
+    - SHIFT + DOWN: Move row down
+
+- GUI: Row in reconfigurable table elements can be moved with mouse dragging
+- GUI: Table elements support the display type ``TableVectorButton`` for vector properties to provide a dialog for editing
+- GUI: Popup the mainwindow or Configuration Editor with **CTRL + ALT** key stroke on scene.
+- GUI: Provide information about `archivePolicy`` and `assignment` in the Configurator Popup
+- GUI: Display widget for vectors will elide their text if the text exceeds the widget width
+- GUI: All editable controllers have been fixed for **MacOS**, so that they can apply values with **Enter** key stroke.
+- GUI: Font size fixes for **MacOS** in the font editing of widgets
+- GUI: Addition of `BaseLineEditController` class that can be reused by **guiextensions**
+- GUI: Filtering in device capability dialog
+- GUI: Hovering over a project item will show the last date when the item was stored (UTC time)
+- GUI: Reactive gui client login that can be activated via the client application dialog.
+
+- MDL: Clients (e.g. ikarabo) will always send their slotInstanceGone
+- MDL: Addition of `AsyncTimer` class as utility feature for postponing or repeating tasks
+- MDL: Addition of `PipelineContext` feature to subscribe to pipeline data in a context. More information in **HowToMiddlelayer**
+- MDL: Only the top-level macros are instantiated. Addresses a Macro bug for macros using inheritance
+- MDL: InputChannels provide information about their missing connections
+- MDL: Always try to reconnect pipeline channel even if the remote channel does not exist yet (schema injection)
+
 - Preparing GUI Server for user authentication
 - Improve the Pipeline reconnection performance
 - Solved a Datalogger issue for data containing NaNs and Infinities
@@ -29,7 +59,15 @@ Change of behaviour
 
 - The DaemonManager has a different appearence showcasing the `displayType` extension
   for table elements.
-- The GUI Client uses a generic protocol for the ProjectManager and requires a GUI Server device with version **2.13.X**
+- GUI: The Client uses a generic protocol for the ProjectManager and requires a GUI Server device with version **2.13.X**
+- GUI: The table drag & drop feature from the project or navigation panel has been removed. Use a dialog via right click on the table cell to enter a deviceId.
+- GUI: If a property without default value specified `options`, the client was previously adding the first option as default value. This has been removed and
+  the client treats no default value correctly!
+- GUI: External SVG Elements on the scene cannot anymore selected.
+- GUI: The enum `MouseMode` has been renamed to `MouseTool` to not collide with the external dependency **pyqtgraph**. Backward compatibility is available
+  for guiextensions, but will be deprecated in the next release.
+
+
 
 Detailed Merge-Log
 ++++++++++++++++++
