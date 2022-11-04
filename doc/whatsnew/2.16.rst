@@ -1,0 +1,353 @@
+***************************
+What's New in Karabo 2.16.0
+***************************
+
+This section shows the new features in Karabo 2.16.0, compared to 2.15.0.
+The use of this version of the GUI is encouraged without the need of upgrading the Karabo Servers.
+This release is **backwards compatible** until version **2.11**.
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+- Upgrade of Python, Qt5 and pyQtGraph version got the GUI Client
+- Preparing GUI Server for user authentication
+- Improve the Pipeline reconnection performance
+- Solved a Datalogger issue for data containing NaNs and Infinities
+
+Breaking Changes
+++++++++++++++++
+
+None
+
+Change of behaviour
++++++++++++++++++++
+
+The DaemonManager has a different appearence showcasing the `displayType` extension
+for table elements.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+Bound/cpp core
+==============
+
+- C++: Configuration options for Strand class. !6622
+- C++: Strand construction via Configurator. !6624
+- C++: More robust device monitoring in GuiServerDevice. !6591
+- C++: Reliable InputChannel::connect handler. !6658
+- C++: extend test of Hash::getDeepPaths for key empty Hash. !6717
+- C++: Document SignalSlotable::reply(..) and DeviceClient constructors. !6742
+- C++: subscribe channel readHandler early. !6777
+- C++: Add integration tests for GUI Server one-time token validation. !6769
+- C++: PropertyTest::slotUpdateSchema recreates its output channel. !6807
+- C++: Fix the sampling instead of averaging bug found in the slotGetPropertyHistory of InfluxLogReader. !6805
+- C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
+- C++: Fix some doc strings. !6879
+- C++: Fix class schema forward loophole in GuiServer. !6894
+- C++: Protect against loosing device schema in GuiServer. !6908
+- C++: Fix that empty slot name was ignored. !6911
+- C++/Bound: ImageDataElement::setDimensions with vector argument. !6719
+- Bound: Do not spam log with warnings for caught exceptions. !6586
+- Bound: Publish written and read bytes for output channels. !6655
+- BOUND: fix integration test failure. !6689
+- Bound integration test: Follow-up. !6703
+- C++: Document SignalSlotable::reply(..) and DeviceClient constructors. !6742
+- GUI Auth: Add "loginInformation" message with token validation results. !6751
+- GUI Server: Remove "userId" from final message sent to GUI client after one-time token validation. !6767
+- C++: subscribe channel readHandler early. !6777
+- C++: Add integration tests for GUI Server one-time token validation. !6769
+- C++: PropertyTest::slotUpdateSchema recreates its output channel. !6807
+- Pipe integration test: relax requirement on data throughput. !6808
+- GUI Server: Bind "userId" and "oneTimeToken" to the channel data structure. !6788
+- C++: Fix the sampling instead of averaging bug found in the slotGetPropertyHistory of InfluxLogReader. !6805
+- C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
+- GUI Server: Allow user connected to a read-only GUI Server to load a project. !6885
+- C++: Fix some doc strings. !6879
+- C++: Fix class schema forward loophole in GuiServer. !6894
+- C++: Protect against loosing device schema in GuiServer. !6908
+- C++: Fix that empty slot name was ignored. !6911
+- Framework: Better message when no schema is found during GetConfigurationFromPast. !6891
+
+MDL/Native core
+===============
+
+- MDL: More formally correct slotGetTime hash filling. !6587
+- MDL: added overwritable parameter to saveConfigurationFromName. !6575
+- MDL: Fix proxy reconnect on CLI. !6607
+- MDL: Protect onDestruction with a timeout error. !6588
+- MDL: Deregister device quickly on slotKillDevice. !6581
+- MDL: Amqp broker connection failover. !6656
+- MDL: log if device is being shutdown. !6713
+- MDL: Provide an async timer that can snooze. !6729
+- MDL: fix typo in shutdown message. !6760
+- MDL: Fix re/connection to pipeline with injected output channel and protect handlers with a timeout. !6759
+- MDL: Always log exception when in onInitialization. Exception after init is still succesful instantiation. !6753
+- MDL: More simple infinite input channel connection. Avoid infinite stack traces. !6762
+- MDL: Enhance server testing, util extension. !6764
+- MDL: Improve instantiation of devices in device server. Reply error if already starting. !6772
+- MDL: Pipeline context for sync and async case. !6790
+- MDL: Set not alive in the cycling of output channels. !6796
+- MDL: Allow archivePolicy to have an effect again. !6797
+- MDL: Increase code quality by including tests and renaming jsonencoder. !6802
+- MDL: Provide more robustness in output closure. !6801
+- MDL: PipelineMetaData can be viewed with repr. !6800
+- MDL: Better pipeline proxy handling with attaching handlers. !6803
+- MDL: 'Synchronize' printHistory. !6809
+- MDL: Minor adjustments to output closure. !6804
+- MDL: Meta macros only instantiate the top level class and cleanup. !6768
+- MDL: Cleanup requestAction from DaemonManager. !6831
+- MDL: Ignore list in template. !6843
+- MDL: Use single connection to AMQP broker. !6795
+- MDL: Fix initial defaultValue for connected output channel and align. !6872
+- MDL: Fix device instantiation error message. !6886
+- MDL: Alive and server boolean for serving. Be verbose on accepting sockets. !6864
+- MDL: Input Channels provide information about their missing connections. !6868
+- MDL: Catch CancelledError in heartbeat task. !6900
+- MDL: Macros have their project name as variables and store code. !6874
+- MDL: Another graceful ikarabo shutdown attempt. !6898
+- MDL: Cancel channel and close writers when not alive. !6896
+- MDL: Call slotKillDevice directly. !6909
+- Native: Change Weak that it can always provide a value, e.g. None. !6579
+- Native: Add test for get_array_data with exception. !6595
+- Common: Rename to InstanceStatus. !6647
+- Add max_clients named parameter to InfluxDbClient init. !6741
+- Remove max_clients param from InfluxDbClient init. !6745
+- Native: Default row on TableValue provides a safe deepcopy. !6818
+- Native: Provide iter_hashes for TableValue. !6819
+- MDL Integration Test: Sleep until data arrives. !6832
+- Common: Cleanup the package namings. !6844
+- Graceful device client shutdown in ikarabo. !6845
+- scene2py: replace deviceId correctly. !6889
+- Common: Added constant and BaseEditWidget to api namespace. !6899
+- Allow Karabo CLI to handle device packages outside of karaboDevices/. !6852
+- ConfigDB: More flexible Configuration Sets support in the ConfigurationDatabase.. !5526
+- ConfigDB: Fix unit testFix method DbHandle. !6661
+
+Graphical User Interface
+========================
+
+- GUI: Remove additional proxies enabled for command widget. !6585
+- GUI: Enable to remove additional proxies from trendline. !6594
+- GUI: Allow to remove additional proxies for vector graph. !6604
+- GUI: Fix daemon controller brush casting. !6598
+- GUI: Move some internal variables before assigning the model. !6597
+- GUI: Change gui client protocol for project manager. !6341
+- GUI: Macro Editor - option to change font size. !6596
+- GUI: Make qversion check properly done. !6608
+- GUI: Syntax highlighter for Macro editor. !6590
+- GUI: Offer undock of ImageGraph for resizing. !6583
+- GUI: Keep the tooltip of the ControllerContainer in sync. !6606
+- GUI: ControllerPanel shows offline status. !6617
+- GUI: Target tool shows user friendly value for time, alarm and state axis. !6613
+- GUI: Update Python to 3.8. !6611
+- GUI: Update PyQt to 5.15. !6113
+- GUI: Update numpy and scipy. !6618
+- GUI: Set parent on error message box in proxies dialog. !6620
+- GUI: Align variables of translate snap and scale snap with upstream pyqtgraph. !6627
+- GUI: Set focus policy on combobox.. !6629
+- GUI: Sticker Widget - Make font size in sync.. !6615
+- GUI: Put option to request schema and configuration in retrieve default scene. !6631
+- GUI: Make sure editable controllers have strong focus. !6634
+- GUI: Remove segfault on mainwindow closing. !6628
+- GUI: Fix segfault in theatre timeout. !6630
+- GUI: Use tango icons for zoom in and out. !6640
+- GUI: Remove project model index bookkeeping. !6638
+- GUI: Increase project db timeout to 30 seconds for saving and loading. !6637
+- GUI: Performance improvements in db connection handler handling. !6639
+- GUI: Cast cell values of tables to their type. !6636
+- GUI: Alarm model peformance update. !6641
+- GUI: Edit Text dialog- Font button size should remain same. !6644
+- GUI: Split off the device status from the proxy status. !6643
+- GUI: More performance in attributes lookups and DeviceStatus in device topology. !6645
+- GUI: Cleanup topology and remove not required checks. !6648
+- GUI: Finally move ProxyStatus to the GUI and cleanup. !6646
+- GUI: compatibility numpy float. !6649
+- GUI: Optimize trait event project device. !6651
+- GUI: Fix classId changes between project devices. !6650
+- GUI: Fix conflict management of classId's of online devices. !6653
+- GUI: more optimization of trait handlers in project device. !6652
+- GUI: Minor cleanup device topology. !6654
+- GUI: Call updateMatrix on resizing plot.. !6665
+- GUI: After init set current index of Combobox to -1. !6670
+- GUI: Absolute import in cinema.py and theatre.py. !6675
+- GUI: Fix editable combobox for false values. !6676
+- GUI Client: Login dialog with user authentication. !6674
+- GUI: Close popup in index changes in the configurator view. !6679
+- GUI: Add row handling buttons. !6671
+- GUI: Close configurator popup on assigning new proxies. !6681
+- GUI: Deprecate and remove display combobox from controllers. !6684
+- GUI: Clean and refactor toolbar for table. !6680
+- GUI: Deprecate and remove bitfield widget. !6690
+- GUI: Cleanup multicurve graph and account no binding at start. !6691
+- GUI: Move back high dpi settings. !6697
+- GUI: Multi-Curve Graph should have the default configuration. !6701
+- GUI: Keep popup after schema injection. !6695
+- GUI: Immediately delete layout items when they are taken. !6696
+- GUI: Fix stacked widget layout of icons dialog. !6693
+- GUI: Account device provided scenes in deprecation of combobox model. !6704
+- GUI: Fix broken relationship between list controllers and their display... !6705
+- GUI: Change copyright year. !6708
+- GUI: Only silently erase edit value on succesful reply from gui server. !6699
+- GUI: Specification file to create Karabogui executable. !6692
+- GUI: Another popup precaution for the configurator. !6710
+- GUI: Provide a getTopology wrapper for the api. !6714
+- GUI: Deprecate and delete PopUp widget. !6720
+- GUI: Add a padding to controller panels. !6715
+- GUI: Correct Window Flag for the popup. !6718
+- GUI: Increase layout performance in treeviews. !6723
+- GUI: Protect historic widget from no value. !6725
+- GUI: Move VectorFillGraph on pyqtgraph builtin. !6726
+- GUI: Raise MainWindow or create Editor on key stroke on scene. !6712
+- GUI: Deprecate and remove display controller for choice of nodes. !6724
+- GUI: Adjust size policy of labels in horizontal direction. !6698
+- GUI: Move model assignment late in filter model. !6738
+- GUI: Add Configurator UNKNOWN alpha color. !6737
+- GUI: Remove quite a few deprecation warnings for implicit type castings. !6739
+- GUI: Remove boolean option from scatter. !6735
+- GUI: Allow filtering in capability dialog. !6732
+- GUI: Calculate elided text after setting geometry. !6743
+- Revert "GUI: Adjust size policy of labels in horizontal direction". !6744
+- GUI: Remove gui app from configurator utils test. !6746
+- GUI: Remove Qt5 import from time dialog. !6747
+- GUI: Prevent forbidden ui library imports and rewrite mainwindow test. !6748
+- GUI: Better None protection for image levels dialog. !6750
+- GUI: Topology Hash convenience fix. !6749
+- GUI: Align and check window title of axes dialog. !6752
+- GUI: Allow historic widget to be saved and loaded on scene. !6756
+- GUI: Allow multiple proxies for editable controllers. !6734
+- GUI: Enhance the configurator model, fix the flags for no items. !6770
+- GUI: Fix tooltips of navigation panel search. !6771
+- GUI: Offer to undock webcam graph. !6766
+- GUI: Refactor handle login info and provide test. !6774
+- GUI: Remove classId check in device topology and check for attrs. !6775
+- GUI: Offer possibility to include request in call_device_slot. !6776
+- GUI: Configurator Protection for races. !6778
+- GUI: Update sceneview after moving/resizing items via context menu. !6785
+- GUI: Enable to remove proxy from scatter graph. !6791
+- GUI: Clean link widgets and provide a base class. !6789
+- GUI: Add device dialog to enter deviceId in table. !6792
+- GUI: Provide the filter model in the karabogui api. !6798
+- GUI: Enable to remove proxy from vector scatter. !6793
+- GUI: Fix default configuration options on project device bindings. !6799
+- GUI: Cleanup unsupported widget. !6810
+- GUI: Optimize table model flags. !6814
+- GUI: Only provide Set Cell Value in table for reconfigurable binding. !6813
+- GUI: Fix binding writable in table utils. !6816
+- GUI: Remove proxies from MultiCurve Graph.https://redmine.xfel.eu/issues/136380
+- GUI: Protect an exception in the table dialog in the Configurator. !6821
+- GUI: Adjust focus policy on table element. !6815
+- GUI: Remove numpy clip patch. !6823
+- GUI: Update scipy to 1.9.X and numpy to 1.23.X. !6824
+- GUI: Change the priority of display vector graph. !6827
+- GUI: Set strong focus on runconfigurator widget. !6829
+- GUI: Cleanup lineedit super calls and remove not required update_label call. !6828
+- GUI: Provide elided label for list widgets. !6826
+- GUI: Provide more options for mouse modes to click on the image. !6830
+- GUI: Rewrite LineEdit controllers for stylesheet and cleanup tests. !6836
+- GUI: Add more graph enums to karabogui.api. !6834
+- GUI: Expose basic menu for subclassing table controllers. !6825
+- GUI: Fix Icon Widget size. !6835
+- GUI: Historic vectors of strings. !6811
+- GUI: Provide convenient way to set custom delegates in the table element. !6840
+- GUI: Create BaseLineEditController and expose via api. !6837
+- GUI: Abstract more the BaseLineEdit interface. !6848
+- GUI: Further test validators and code quality. !6851
+- GUI: Cleanup further the lineedit controller. !6849
+- GUI: Fix icon scene defaults. !6850
+- GUI: Add Configurator Item Types and expose all item types via api. !6847
+- GUI: Add column index and column key methods to table controller. !6846
+- GUI: Align validators to karabo attribute naming and formatting. !6854
+- GUI: Provide convenience binding checks for vector integer bindings. !6856
+- GUI: Align MouseMode with pyqtgraph. !6855
+- GUI: Enable friendly levels dialog tabbing with auto select and focus. !6859
+- GUI: Increase initial table performance and by creating a new row by a factor of 2. !6853
+- GUI: Align the karabogui api, add DeviceProxy, widget hints, Events, ... !6858
+- GUI: Delete devices when deleting a server in the project. !6860
+- GUI: Refactor project device controller test. !6863
+- GUI: Protect Slider with further integer conversion from segfaulting. !6839
+- GUI: Fix selection model handling of UnknownSVG's. !6865
+- GUI: Enable keyEvents for the table elements. !6861
+- GUI: Enable table drag and drop. !6862
+- GUI: Add a few tooltips to scene widgets. !6873
+- GUI: Solve the MacOS case for table keys. !6871
+- GUI: Activate quick table copy. !6869
+- GUI: Cleanup icons dialogs and account integer minimum and maximum. !6838
+- GUI: Refactor reactive login dialog. !6878
+- GUI: Refactor base project controller test. !6867
+- GUI: Refactor macro controller test. !6866
+- GUI: Only allow topology device for bindings without options in table. !6857
+- GUI: Refactor list edit dialog. !6881
+- GUI: Fix and test table view dialog toolbar. !6882
+- GUI: Macros know their project they are started in. !6875
+- GUI: Retrieve default scene for requested devices. !6877
+- GUI: Set a QSizePolicy for the Iconlabel. !6888
+- GUI: Add a vector delegate to edit tables with a dialog. !6884
+- GUI: Improvement to the List Edit Dialog. !6890
+- GUI: Activate validator for port and always abort connection if not connected. !6895
+- GUI: Provide helper tool to check for project instance duplicates. !6892
+- GUI: Abstract more the BaselineEditController. !6901
+- GUI: Add a logger notification possibility for the gui server. !6902
+- GUI: Add Assignment and ArchivePolicy information to the info popup of the configurator. !6893
+- GUI: Enhance PlotRange dialog with focus. !6905
+- GUI: Show the last date when item was saved in project. !6906
+- GUI: Adjustments for public interface of table controller. !6907
+- GUI: Make yellow a strong yellow in graph widgets. !6912
+- GUI: Remove alarms from panels. !6870
+- GUI: Set MacroSlot as the default slot in macros. !6916
+- GUI: Remove duplicate qtpy in meta data. !6914
+- GUI: Provide getInstanceId in controllers. !6915
+- GUI: Time Field Widget: Change font size/weight. !6833
+- GUI: Add spinboxes and doublespinboxes and booleans and text log to data model 2. !6755
+- GUI: use absolute imports in update_dialog. !6782
+- GUI: Login dialog that reacts to server sent info. !6780
+- GUI: Fix for argument of invalid type, 'str', passed to connect setEnabled. !6887
+
+Dependencies, Documentation and Tools
+=====================================
+
+- DOC: ChangeLog 2.15.X. !6599
+- DOC: Second Round: Whats New. !6600
+- DOC: Document 2.14.2. !6602
+- DOC: Document 2.13 releases. !6603
+- DEPS: Update python and jupyter libraries. !6476
+- DOC: Document broker shortcut possibility of MDL. !6605
+- TOOLS: fix build system for windows. !6619
+- TOOLS: remove PYTHONBUFFERED setting. !6626
+- TOOLS: allow multiple service directory templates. !6625
+- DOC: Documentation and tests for conversions on Hash node values get methods.. !6623
+- TEST: python tests without listing all modules. !6199
+- Device templates: State template origin. !6642
+- Add root CMakeLists.txt for IDEs that require it. !6156
+- DOC: document versions 2.15.1 and 2.15.2. !6657
+- TOOLS: make a local jms installation. !6660
+- TOOLS: Move "lint_modified.sh" (and "pre-commit") to proper directory. !6672
+- TOOLS: protect scripts from missing service dir. !6673
+- TOOLS: better support for cmake PkgConfig. !6503
+- DEPS: Add boost.beast 1.79 as an external dependency for the Framework. !6677
+- Brokerrates: Improve printed info. !6664
+- DEPS: Update PyQt to 5.15.7. !6700
+- DEPS: Fix dependency on Boost.Beast 1.79. !6694
+- DEPS: Remove beast-boost 1.79 dependency. !6709
+- DOC: document 2.15.3. !6730
+- DOC: 2.15 followup. !6731
+- DOC: document 2.15.4. !6779
+- DOC: correct outdated getHistory syntax. !6822
+- TOOLS: catch karabo-start failures. !6721
+- TESTS: Expand mdl test results. !6716
+- TOOLS: catch karabo-start failures. !6721
+- DEPS: Add C++14 fork of Belle as a dependency. !6727
+- Bound test: Re-write test of exception in initialisation. !6728
+- DOC: document 2.15.3. !6730
+- DOC: 2.15 followup. !6731
+- Include GUI Extensions in the bundle. !6733
+- SceneModel: Compatibility IntSpinbox. !6754
+- Device Templates: use nproc to determine -jN switch to make. !6740
+- DOC: document 2.15.4. !6779
+- CMake: Fix for missing "karabodependencies.pc" for devices with Netbeans based builds. !6783
+- BUILD: handle multiple pc files in extract script. !6784
+- Modules to exclude from bundle. !6794
+- Update PyQtGraph to 0.13.1. !6812
+- DOC: correct outdated getHistory syntax. !6822
+- Add google style hint to python development. !6817
+- Activate code quality test again in interactive. !6897
+- Revert "DEPS: Update python and jupyter libraries". !6904
