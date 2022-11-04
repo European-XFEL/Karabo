@@ -9,7 +9,12 @@ This release is **backwards compatible** until version **2.11**.
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
-- Upgrade of Python, Qt5 and pyQtGraph version got the GUI Client
+- GUI Dependency upgrade:
+
+  - Upgrade of Python to 3.8
+  - PyQt5 to 5.15.
+  - PyQtGraph to 0.13.1
+
 - Preparing GUI Server for user authentication
 - Improve the Pipeline reconnection performance
 - Solved a Datalogger issue for data containing NaNs and Infinities
@@ -22,8 +27,9 @@ None
 Change of behaviour
 +++++++++++++++++++
 
-The DaemonManager has a different appearence showcasing the `displayType` extension
-for table elements.
+- The DaemonManager has a different appearence showcasing the `displayType` extension
+  for table elements.
+- The GUI Client uses a generic protocol for the ProjectManager and requires a GUI Server device with version **2.13.X**
 
 Detailed Merge-Log
 ++++++++++++++++++
@@ -33,40 +39,39 @@ Bound/cpp core
 
 - C++: Configuration options for Strand class. !6622
 - C++: Strand construction via Configurator. !6624
-- C++: More robust device monitoring in GuiServerDevice. !6591
 - C++: Reliable InputChannel::connect handler. !6658
 - C++: extend test of Hash::getDeepPaths for key empty Hash. !6717
+- C++: subscribe channel readHandler early. !6777
+- C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
+- C++: Fix some doc strings. !6879
+- C++/Bound: ImageDataElement::setDimensions with vector argument. !6719
+- C++/Bound: relax requirement on data throughput. !6808
 - C++: Document SignalSlotable::reply(..) and DeviceClient constructors. !6742
 - C++: subscribe channel readHandler early. !6777
-- C++: Add integration tests for GUI Server one-time token validation. !6769
-- C++: PropertyTest::slotUpdateSchema recreates its output channel. !6807
 - C++: Fix the sampling instead of averaging bug found in the slotGetPropertyHistory of InfluxLogReader. !6805
 - C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
 - C++: Fix some doc strings. !6879
-- C++: Fix class schema forward loophole in GuiServer. !6894
-- C++: Protect against loosing device schema in GuiServer. !6908
-- C++: Fix that empty slot name was ignored. !6911
-- C++/Bound: ImageDataElement::setDimensions with vector argument. !6719
 - Bound: Do not spam log with warnings for caught exceptions. !6586
 - Bound: Publish written and read bytes for output channels. !6655
-- BOUND: fix integration test failure. !6689
+- Bound: fix integration test failure. !6689
 - Bound integration test: Follow-up. !6703
-- C++: Document SignalSlotable::reply(..) and DeviceClient constructors. !6742
+
+Core Devices
+============
+
+- PropertyTest::slotUpdateSchema recreates its output channel. !6807
 - GUI Auth: Add "loginInformation" message with token validation results. !6751
 - GUI Server: Remove "userId" from final message sent to GUI client after one-time token validation. !6767
-- C++: subscribe channel readHandler early. !6777
-- C++: Add integration tests for GUI Server one-time token validation. !6769
-- C++: PropertyTest::slotUpdateSchema recreates its output channel. !6807
-- Pipe integration test: relax requirement on data throughput. !6808
+- GUI Server: More robust device monitoring in GuiServerDevice. !6591
 - GUI Server: Bind "userId" and "oneTimeToken" to the channel data structure. !6788
-- C++: Fix the sampling instead of averaging bug found in the slotGetPropertyHistory of InfluxLogReader. !6805
-- C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
+- GUI Server: Protect against loosing device schema in GuiServer. !6908
+- GUI Server: Add integration tests for GUI Server one-time token validation. !6769
+- GUI Server: Fix class schema forward loophole in GuiServer. !6894
+- GUI Server: Fix that empty slot name was ignored. !6911
+- GUI Server: Protect against loosing device schema in GuiServer. !6908
 - GUI Server: Allow user connected to a read-only GUI Server to load a project. !6885
-- C++: Fix some doc strings. !6879
-- C++: Fix class schema forward loophole in GuiServer. !6894
-- C++: Protect against loosing device schema in GuiServer. !6908
-- C++: Fix that empty slot name was ignored. !6911
-- Framework: Better message when no schema is found during GetConfigurationFromPast. !6891
+- DataLogReader: Better message when no schema is found during GetConfigurationFromPast. !6891
+- DataLogReader: Fix the sampling instead of averaging bug found in the slotGetPropertyHistory of InfluxLogReader. !6805
 
 MDL/Native core
 ===============
