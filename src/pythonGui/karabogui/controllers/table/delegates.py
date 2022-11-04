@@ -16,7 +16,7 @@ from karabo.native import Hash, is_equal
 from karabogui import messagebox
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding, VectorBinding,
-    get_default_value, get_min_max)
+    VectorBoolBinding, get_default_value, get_min_max)
 from karabogui.controllers.validators import (
     BindingValidator as GenericValidator, ListValidator, SimpleValidator)
 from karabogui.dialogs.api import ListEditDialog
@@ -76,7 +76,8 @@ def get_table_delegate(proxy, binding, parent):
     elif isinstance(binding, (FloatBinding, IntBinding)):
         return NumberDelegate(binding, parent)
     elif isinstance(binding, VectorBinding):
-        if binding.display_type.split("|")[0] == "TableVectorButton":
+        if (binding.display_type.split("|")[0] == "TableVectorButton"
+                and not isinstance(binding, VectorBoolBinding)):
             return VectorButtonDelegate(binding, parent)
         return VectorDelegate(binding, parent)
     else:
