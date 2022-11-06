@@ -20,6 +20,7 @@ from karabo.common.project.utils import check_instance_duplicates
 from karabo.native import AccessLevel
 from karabogui import const, icons, messagebox
 from karabogui.access import ACCESS_LEVELS, AccessRole
+from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
     UpdateDialog)
@@ -798,13 +799,19 @@ class MainWindow(QMainWindow):
             messagebox.show_information(
                 "Please wait until project loading has finished.", parent=self)
             return
-        data = check_instance_duplicates(root)
-        text = ("The view shows the number of instances for both servers and "
+
+        @Slot(object)
+        def handler(future):
+            data = future.result()
+            text = (
+                "The view shows the number of instances for both servers and "
                 "devices and their occurrence as duplicates.\n"
                 "Duplicates can lead to configuration conflicts.")
-        dialog = DataViewDialog(
-            "Project Instance Conflicts", text, data, parent=self)
-        dialog.show()
+            dialog = DataViewDialog(
+                "Project Instance Conflicts", text, data, parent=self)
+            dialog.show()
+
+        background(check_instance_duplicates, root, callback=handler)
 
     @Slot()
     def onGrafana(self):
