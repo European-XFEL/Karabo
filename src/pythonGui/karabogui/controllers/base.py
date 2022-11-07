@@ -77,7 +77,7 @@ class BaseBindingController(HasStrictTraits):
         """
 
     def set_read_only(self, readonly):
-        """Implemented by subclasses to notify a widget of its read-only status.
+        """Implemented by subclasses to notify a widget of its read-only status
 
         OPTIONAL: (if can_edit=True passed to register_binding_controller)
         """
