@@ -26,8 +26,8 @@ class ListEditDialog(QDialog):
 
         self._allowed_choices = {}
         if isinstance(self.binding, VectorBoolBinding):
-            self._allowed_choices["0"] = 0
-            self._allowed_choices["1"] = 1
+            self._allowed_choices["False"] = False
+            self._allowed_choices["True"] = True
 
         # Check for possible size limitations!
         self.minSize, self.maxSize = get_min_max_size(binding)
@@ -79,8 +79,6 @@ class ListEditDialog(QDialog):
     def set_list(self, values):
         self.list_widget.clear()
         for value in values:
-            if isinstance(value, bool):
-                value = int(value)
             self._add_item(value)
 
         self._update_buttons()
@@ -164,12 +162,11 @@ class ListEditDialog(QDialog):
             text = self.list_widget.currentItem().text()
 
         keys = list(self._allowed_choices.keys())
+        index = 0
         if text in keys:
             index = keys.index(text)
-        else:
-            index = 0
 
-        text, ok = QInputDialog.getItem(self, mode, "", keys, index, False)
+        text, ok = QInputDialog.getItem(self, "Bool", mode, keys, index, False)
         if ok:
             return self._allowed_choices[text]
 
