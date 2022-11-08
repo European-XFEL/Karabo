@@ -37,12 +37,20 @@ Features
 
 - GUI: Row in reconfigurable table elements can be moved with mouse dragging
 - GUI: Table elements support the display type ``TableVectorButton`` for vector properties to provide a dialog for editing
+- GUI: Rework of the ListEdit dialog for vector properties. Now elements can be edited with double click, new elements can be added
+  with CTRL + N, etc.
+- GUI: Historic Data can now also be retrieved for vector of strings
 - GUI: Popup the mainwindow or Configuration Editor with **CTRL + ALT** key stroke on scene.
 - GUI: Provide information about `archivePolicy`` and `assignment` in the Configurator Popup
+- GUI: Toggling of auto range now auto focuses and selects the minimum value in the range dialogs for plot and Lut for images.
 - GUI: Addition of `BaseLineEditController` class that can be reused by **guiextensions**
+- GUI: Image Widgets can be **undocked**. The underlying model information is copied and a resizable controller is launched
+- GUI: Configurator shows now the Health Status `UNKNOWN` for the properties.
+- GUI: Health status `UNKNOWN` implemented in the project view.
 - GUI: Filtering in device capability dialog
 - GUI: Hovering over a project item will show the last date when the item was stored (UTC time)
 - GUI: Reactive gui client login that can be activated via the client application dialog.
+- GUI: Initial table element display performance increased by a factor of 2.
 - MDL: Addition of `AsyncTimer` class as utility feature for postponing or repeating tasks
 - MDL: Addition of `PipelineContext` feature to subscribe to pipeline data in a context. More information in **HowToMiddlelayer**
 
@@ -50,6 +58,7 @@ Bugfixes
 ++++++++
 
 - GUI: Display widget for vectors will elide their text if the text exceeds the widget width
+- GUI: Target tool (inspector) of the plot widget now handles timestamps and states properly
 - GUI: Font size fixes for **MacOS** in the font editing of widgets
 - GUI: All editable controllers have been fixed for **MacOS**, so that they can apply values with **Enter** key stroke.
 - MDL: Clients (e.g. ikarabo) will always send their slotInstanceGone
@@ -73,6 +82,7 @@ Change of behaviour
 - GUI: External SVG Elements on the scene cannot anymore selected.
 - GUI: The enum `MouseMode` has been renamed to `MouseTool` to not collide with the external dependency **pyqtgraph**. Backward compatibility is available
   for guiextensions, but will be deprecated in the next release.
+- MDL: The InputChannel property `connectedOutputChannels` changed the access mode from `RECONFIGURABLE` to `INITONLY` to align with the C++/Bound counterpart.
 
 Detailed Merge-Log
 ++++++++++++++++++
