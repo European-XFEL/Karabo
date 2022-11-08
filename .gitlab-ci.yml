@@ -59,6 +59,11 @@ stages:
   tags:
     - KaraboFramework
 
+.image_ubuntu22_: &image_ubuntu22
+  image: europeanxfel/karabo-ci:ubuntu-22
+  tags:
+    - KaraboFramework
+
 .image_ubuntu18_: &image_ubuntu18
   image: europeanxfel/karabo-ci:ubuntu-18-001
   tags:
@@ -285,6 +290,10 @@ release build ubuntu20:
   <<: *image_ubuntu20
   <<: *release-build
 
+release build ubuntu22:
+  <<: *image_ubuntu22
+  <<: *release-build
+
 release build ubuntu18:
   <<: *image_ubuntu18
   <<: *release-build
@@ -323,6 +332,10 @@ prerelease build debian10:
 
 prerelease build ubuntu20:
   <<: *image_ubuntu20
+  <<: *prerelease-build
+
+prerelease build ubuntu22:
+  <<: *image_ubuntu22
   <<: *prerelease-build
 
 prerelease build ubuntu18:
@@ -365,6 +378,10 @@ nightly build ubuntu20:
   <<: *image_ubuntu20
   <<: *nightly-build
 
+nightly build ubuntu22:
+  <<: *image_ubuntu22
+  <<: *nightly-build
+
 nightly build ubuntu18:
   <<: *image_ubuntu18
   <<: *nightly-build
@@ -405,6 +422,10 @@ deps build ubuntu20:
   <<: *image_ubuntu20
   <<: *deps-build
 
+deps build ubuntu22:
+  <<: *image_ubuntu22
+  <<: *deps-build
+
 deps build ubuntu18:
   <<: *image_ubuntu18
   <<: *deps-build
@@ -431,6 +452,10 @@ cpp_deps tests ubuntu20:
   <<: *image_ubuntu20
   <<: *deps-tests
 
+cpp_deps tests ubuntu22:
+  <<: *image_ubuntu22
+  <<: *deps-tests
+
 python_deps tests almalinux8:
   <<: *image_almalinux8
   <<: *deps-tests
@@ -451,6 +476,10 @@ python_deps tests ubuntu20:
   <<: *image_ubuntu20
   <<: *deps-tests
 
+python_deps tests ubuntu22:
+  <<: *image_ubuntu22
+  <<: *deps-tests
+
 # MR test builds
 
 python_unit tests almalinux8:
@@ -467,6 +496,10 @@ python_unit tests debian10:
 
 python_unit tests ubuntu20:
   <<: *image_ubuntu20
+  <<: *python-unit-tests
+
+python_unit tests ubuntu22:
+  <<: *image_ubuntu22
   <<: *python-unit-tests
 
 python_unit tests ubuntu18:
@@ -487,6 +520,10 @@ cpp_unit tests debian10:
 
 cpp_unit tests ubuntu20:
   <<: *image_ubuntu20
+  <<: *cpp-unit-tests
+
+cpp_unit tests ubuntu22:
+  <<: *image_ubuntu22
   <<: *cpp-unit-tests
 
 cpp_unit tests ubuntu18:
@@ -529,6 +566,10 @@ python_integration tests ubuntu20:
   <<: *image_ubuntu20
   <<: *integration-tests
 
+python_integration tests ubuntu22:
+  <<: *image_ubuntu22
+  <<: *integration-tests
+
 python_integration tests ubuntu18:
   <<: *image_ubuntu18
   <<: *integration-tests
@@ -543,6 +584,10 @@ cpp_integration tests centos7:
 
 cpp_integration tests ubuntu20:
   <<: *image_ubuntu20
+  <<: *integration-tests
+
+cpp_integration tests ubuntu22:
+  <<: *image_ubuntu22
   <<: *integration-tests
 
 cpp_integration tests ubuntu18:
@@ -573,6 +618,10 @@ long tests debian10:
 
 long tests ubuntu20:
   <<: *image_ubuntu20
+  <<: *long-tests
+
+long tests ubuntu22:
+  <<: *image_ubuntu22
   <<: *long-tests
 
 long tests ubuntu18:
