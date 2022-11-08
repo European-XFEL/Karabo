@@ -2,7 +2,66 @@ from enum import Enum
 from functools import total_ordering
 from heapq import heappop, heappush
 
-from qtpy.QtCore import QTimer, Slot
+from qtpy.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal, Slot
+
+
+class TaskMediator(QObject):
+    finished = Signal(object)
+
+
+class TaskResult:
+    __slots__ = ("data", )
+
+    def __init__(self, data=None):
+        self.data = data
+
+    def result(self):
+        if isinstance(self.data, Exception):
+            raise self.data
+        return self.data
+
+    def exception(self):
+        if isinstance(self.data, Exception):
+            return self.data
+        return None
+
+
+class Task(QRunnable):
+    """A task that can be run the global instance of `QThreadPool`"""
+
+    def __init__(self, obj, *args):
+        super().__init__()
+        self.obj = obj
+        self.args = args
+        self.signaller = None
+
+    def run(self):
+        """Reimplemented method of `QRunnable`"""
+        try:
+            data = self.obj(*self.args)
+        except Exception as exc:
+            data = exc
+        if self.signaller is not None:
+            result = TaskResult(data)
+            self.signaller.finished.emit(result)
+            self.signaller.deleteLater()
+
+    def connect(self, callback):
+        self.signaller = TaskMediator()
+        self.signaller.finished.connect(callback)
+
+
+def background(obj, *args, callback=None):
+    """Run a function in the background in the global threadpool
+
+    :returns: Returns task (QRunnable)
+    """
+
+    task = Task(obj, *args)
+    if callback is not None:
+        task.connect(callback)
+    QThreadPool.globalInstance().start(task)
+    return task
 
 
 @total_ordering
