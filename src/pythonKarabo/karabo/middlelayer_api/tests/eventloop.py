@@ -13,8 +13,11 @@ from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
 from karabo.middlelayer_api.signalslot import SignalSlotable
 
 
-def create_instanceId():
-    return f"test-mdl-{uuid.uuid4()}"
+def create_instanceId(name=None):
+    """Create a unique instanceId with `name` and append a uuid"""
+    if name is None:
+        name = "test-mdl"
+    return f"{name}-{uuid.uuid4()}"
 
 
 def async_tst(f=None, *, timeout=None):
