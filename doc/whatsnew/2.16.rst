@@ -94,16 +94,11 @@ Bound/cpp core
 - C++: Strand construction via Configurator. !6624
 - C++: Reliable InputChannel::connect handler. !6658
 - C++: extend test of Hash::getDeepPaths for key empty Hash. !6717
-- C++: subscribe channel readHandler early. !6777
-- C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
-- C++: Fix some doc strings. !6879
 - C++/Bound: ImageDataElement::setDimensions with vector argument. !6719
 - C++/Bound: relax requirement on data throughput. !6808
-- C++: Document SignalSlotable::reply(..) and DeviceClient constructors. !6742
 - C++: subscribe channel readHandler early. !6777
 - C++: Fix the sampling instead of averaging bug found in the slotGetPropertyHistory of InfluxLogReader. !6805
 - C++: Add NDArray::shape(vector<ull>(..)) besides shape(string). !6880
-- C++: Fix some doc strings. !6879
 - Bound: Do not spam log with warnings for caught exceptions. !6586
 - Bound: Publish written and read bytes for output channels. !6655
 - Bound: fix integration test failure. !6689
@@ -409,3 +404,5 @@ Dependencies, Documentation and Tools
 - Add google style hint to python development. !6817
 - Activate code quality test again in interactive. !6897
 - Revert "DEPS: Update python and jupyter libraries". !6904
+- C++: Document SignalSlotable::reply(..) and DeviceClient constructors. !6742
+- C++: Fix some doc strings. !6879
