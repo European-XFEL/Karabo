@@ -136,11 +136,15 @@ class TestEditableRegexList(GuiTestCase):
         self.controller = EditableRegexList(
             proxy=self.proxy, model=EditableRegexListModel())
         self.controller.create(None)
+        self.controller.binding_update(self.proxy)
         apply_default_configuration(self.proxy.root_proxy.binding)
 
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
+
+    def test_binding_update_validator(self):
+        assert self.controller._internal_widget.validator() is not None
 
     def test_set_value(self):
         self.controller.last_cursor_position = 0
