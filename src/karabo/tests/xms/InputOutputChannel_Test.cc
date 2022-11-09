@@ -14,6 +14,7 @@
 #include "karabo/net/utils.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/NDArray.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/xms/InputChannel.hh"
@@ -585,5 +586,122 @@ void InputOutputChannel_Test::testConnectHandler() {
         // Now ensure that handler is called
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + karabo::util::toString(count), std::future_status::ready,
                                      connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+    }
+}
+
+void InputOutputChannel_Test::testWriteUpdateFlags() {
+    // This test checks the behaviour of the raw data pointer behind an NDArray for the different flags
+    // that can be passed to OutputChannel::write(..) and ::update(..).
+    // Since input and output are local here, we can check when data is copied to ensure data consistency (i.e. new
+    // pointer) and when not to improve speed (same pointer for local memoryLocation).
+
+    using util::toString;
+
+    // To switch on logging output for debugging, do e.g. the following:
+    //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
+    //                                        // enable timestamps, with ms precision
+    //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
+    //    karabo::log::Logger::useOstream();
+
+    for (const std::string& dataDistribution : {"copy", "shared"}) {
+        for (const std::string& onSlowness : {"wait", "queue"}) {
+            // Setup output channel
+            Hash cfgOut;
+            std::vector<std::string> distributionModes(1, "load-balanced");
+            if (dataDistribution == "shared") {
+                // shared case: onSlowness on input channel side is ignored, but needed here for output
+                cfgOut.set("noInputShared", onSlowness);
+                // now also distributionMode matters - for copy case we use the irrelevant default "load-balanced"
+                distributionModes.push_back("round-robin");
+            }
+            for (const std::string& distributionMode : distributionModes) {
+                const std::string test(dataDistribution + " " + onSlowness + " " + distributionMode);
+                cfgOut.set("distributionMode", distributionMode);
+                OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", cfgOut, 0);
+                output->setInstanceIdAndName("outputChannel", "output");
+                output->initialize(); // needed due to int == 0 argument above
+
+                // Setup input channel
+                const std::string outputChannelId(output->getInstanceId() + ":output");
+                const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId),
+                               "dataDistribution", dataDistribution, "onSlowness", onSlowness);
+                InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
+                input->setInstanceId("inputChannel");
+
+                // Connect preparations
+                Hash outputInfo(output->getInformation());
+                CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
+                outputInfo.set("outputChannelString", outputChannelId);
+                outputInfo.set("memoryLocation", "local"); // important for this test, see below
+                std::promise<karabo::net::ErrorCode> connectErrorCode;
+                auto connectFuture = connectErrorCode.get_future();
+                auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) {
+                    connectErrorCode.set_value(ec);
+                };
+
+                // Call connect and block until connection established
+                input->connect(outputInfo, connectHandler);
+                CPPUNIT_ASSERT_EQUAL(std::future_status::ready,
+                                     connectFuture.wait_for(std::chrono::milliseconds(connectTimeoutMs)));
+                CPPUNIT_ASSERT_EQUAL(connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
+
+                // Create data with NDArray and get hands on its pointer
+                karabo::util::Hash data("array", karabo::util::NDArray(karabo::util::Dims(10), 4));
+                auto byteArr = data.get<karabo::util::ByteArray>("array.data");
+                const char* ptrSent = byteArr.first.get();
+
+                // Prepare to loop over all combinations of flags copyAllData (for OutputChannel::write) and
+                // safeNDArray (for OutputChannel::update) with their expected result of pointer comparison
+                const std::vector<std::tuple<bool, bool, bool>> vec_copyAllData_safeNDArray_shouldPtrBeEqual = {
+                      {false, false, false}, // copyAllData, safeNDArray and shouldPtrBeEqual, case 1
+                      {true, false, false},  // copyAllData, safeNDArray and shouldPtrBeEqual, case 2
+                      {true, true, false},   // ..., case 3
+                      // no copy on write(..) and safeNDArray on update(..) => data not copied (and thus pointers equal)
+                      // (and only for that combination and only since memoryLocation = "local")
+                      {false, true, true}, // ..., case 4
+                };
+                for (const auto& tup : vec_copyAllData_safeNDArray_shouldPtrBeEqual) {
+                    // Data handler
+                    const size_t nData = 5; // > 2, otherwise there may be no queue due to the two pots
+                    std::vector<const char*> ptrsReceived;
+                    std::promise<void> ptrPromise;
+                    auto ptrFuture = ptrPromise.get_future();
+                    input->registerDataHandler([&ptrPromise, &ptrsReceived, nData](const Hash& data,
+                                                                                   const InputChannel::MetaData& meta) {
+                        auto byteArr = data.get<karabo::util::ByteArray>("array.data");
+                        ptrsReceived.push_back(byteArr.first.get());
+                        if (ptrsReceived.size() == nData) ptrPromise.set_value();
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(9)); // some sleep to enforce queue
+                    });
+                    bool copyAllData, safeNDArray, shouldPtrBeEqual;
+                    std::tie(copyAllData, safeNDArray, shouldPtrBeEqual) = tup;
+                    const std::string testFlags(test + " " + toString(copyAllData) += " " + toString(safeNDArray));
+
+                    for (size_t i = 0; i < nData; ++i) {
+                        output->write(data, copyAllData);
+                        output->update(safeNDArray);
+                    }
+
+                    // Receive data and check
+                    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+                          testFlags, std::future_status::ready,
+                          ptrFuture.wait_for(std::chrono::milliseconds(9 * nData * 10))); // *10 as robustness margin
+                    ptrFuture.get();
+
+                    for (size_t i = 0; i < nData; ++i) {
+                        const std::string testI(testFlags + " " + toString(i));
+
+                        if (shouldPtrBeEqual) {
+                            CPPUNIT_ASSERT_EQUAL_MESSAGE(testI, reinterpret_cast<long long>(ptrSent),
+                                                         reinterpret_cast<long long>(ptrsReceived[i]));
+                        } else {
+                            CPPUNIT_ASSERT_MESSAGE(testI + " " + toString(copyAllData) += " " + toString(safeNDArray),
+                                                   ptrSent != ptrsReceived[i]);
+                        }
+                    }
+                    // When debugging, this may help:  std::clog << "\n" << testFlags << ": OK.";
+                }
+            }
+        }
     }
 }
