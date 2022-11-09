@@ -503,8 +503,8 @@ namespace karabo {
                             workNode.setAttribute(KARABO_INDICATE_STATE_SET, true);
                         }
                     } catch (const LogicException& e) {
-                        report << "Value " << value << " for parameter \"" << scope << "\" is not a valid state string"
-                               << endl;
+                        report << "Value '" << value << "' for parameter \"" << scope
+                               << "\" is not a valid state string" << endl;
                         Exception::clearTrace();
                     }
                 } else if (workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
@@ -523,8 +523,8 @@ namespace karabo {
                             workNode.setAttribute(KARABO_INDICATE_ALARM_SET, true);
                         }
                     } catch (const LogicException& e) {
-                        report << "Value " << value << " for parameter \"" << scope << "\" is not a valid alarm string"
-                               << endl;
+                        report << "Value '" << value << "' for parameter \"" << scope
+                               << "\" is not a valid alarm string" << endl;
                         Exception::clearTrace();
                     }
                 } else if (workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
@@ -546,7 +546,7 @@ namespace karabo {
                     templatize(workNode.getType(), findInOptions);
 
                     if (!findInOptions.result) {
-                        report << "Value " << workNode.getValueAs<string>() << " for parameter \"" << scope
+                        report << "Value '" << workNode.getValueAs<string>() << "' for parameter \"" << scope
                                << "\" is not one of the valid options: "
                                << masterNode.getAttributeAs<string>(KARABO_SCHEMA_OPTIONS) << endl;
                     }
