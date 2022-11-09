@@ -160,7 +160,7 @@ class EditableRegexList(BaseEditableListController):
     def binding_update(self, proxy):
         binding = proxy.binding
         regex = binding.attributes.get(KARABO_SCHEMA_REGEX, "")
-        min_size, max_size = get_min_max_size(binding)
+        minSize, maxSize = get_min_max_size(binding)
         self._validator = RegexListValidator(
-            regex, min_size=min_size, max_size=max_size, parent=self.widget)
+            regex, minSize=minSize, maxSize=maxSize, parent=self.widget)
         self._internal_widget.setValidator(self._validator)
