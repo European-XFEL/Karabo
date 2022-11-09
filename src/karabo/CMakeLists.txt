@@ -158,7 +158,7 @@ set(KARABO_VERSION_PATCH "0")
 find_package(Git)
 if(GIT_FOUND)
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --match "*.*.*" --dirty --always
+    COMMAND ${GIT_EXECUTABLE} describe --tags --match "[0-9]*.[0-9]*.[0-9]*" --dirty --always
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../.."
     RESULT_VARIABLE result
     OUTPUT_VARIABLE KARABO_VERSION
@@ -432,7 +432,7 @@ install(FILES "../cmake/import_karabo_lib.cmake"
 
 
 #
-# Custom install for karaboDependencies.pc file. 
+# Custom install for karaboDependencies.pc file.
 install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
         DESTINATION "lib/pkgconfig")
 # install here for backwards compatibility.
