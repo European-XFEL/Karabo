@@ -256,7 +256,7 @@ namespace karabo {
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
-             * @param copyAllData If false, serialization is optimized to avoid copies for big data.
+             * @param copyAllData If false, serialization is optimized to avoid copies for big (i.e. NDArray) data.
              *
              * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
              * called for the channel.
@@ -271,7 +271,7 @@ namespace karabo {
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
              * @param data input Hash object
-             * @param copyAllData If false, serialization is optimized to avoid copies for big data.
+             * @param copyAllData If false, serialization is optimized to avoid copies for big (i.e. NDArray) data.
              *
              * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
              * called for the channel.
@@ -306,10 +306,15 @@ namespace karabo {
              * Update the output channel, i.e. send all data over the wire that was previously written
              * by calling write(...).
              *
+             * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
+             *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
+             *                    finished. If false, safety copies are done when needed, i.e. when data is queued or
+             *                    sent locally.
+             *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void update();
+            void update(bool safeNDArray = false); // false: backward compatible - but change before releasing
 
             /**
              * Send end-of-stream (EOS) notification to all connected input channels to indicate a logical break
@@ -399,7 +404,7 @@ namespace karabo {
 
             void unregisterWriterFromChunk(int chunkId);
 
-            void distribute(unsigned int chunkId);
+            void distribute(unsigned int chunkId, bool safeNDArray);
 
             /**
              * Distribute endOfStream notification to all shared inputs
@@ -416,9 +421,10 @@ namespace karabo {
              * @param chunkId which chunk to distribute
              * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
              *             and might get unlocked within function call (or not)
+             * @param safeNDArray if true, no need to copy NDArray buffer if chunk is queued or sent locally
              *
              */
-            void distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+            void distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
 
             /**
              * Distribute in load balanced mode, i.e. pick one of the shared inputs that is ready
@@ -426,10 +432,10 @@ namespace karabo {
              * @param chunkId which chunk to distribute
              * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
              *             and might get unlocked within function call (or not)
-
+             * @param safeNDArray if true, no need to copy NDArray buffer if chunk is queued or sent locally
              *
              */
-            void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+            void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
 
             /**
              * Get iterator to next one of the shared inputs - round-robin case.
@@ -446,16 +452,23 @@ namespace karabo {
              */
             void undoGetNextRoundRobinChannel();
 
-            void copy(unsigned int chunkId);
+            /**
+             * Serve all 'copy' input channels
+             *
+             * @param chunkId which chunk to send to them
+             * @param safeNDArray see documentation of update(bool safeNDArray)
+             */
+            void copy(unsigned int chunkId, bool safeNDArray);
 
             /**
              * Helper to send chunkId to input channel identified by channelInfo
              *
              * Either uses sendLocal or sendRemote
              */
-            void sendOne(const unsigned int& chunkId, const InputChannelInfo& channelInfo);
+            void sendOne(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool safeNDArray);
 
-            void sendLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos);
+            void sendLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos,
+                           bool safeNDArray);
 
             void sendRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos);
 

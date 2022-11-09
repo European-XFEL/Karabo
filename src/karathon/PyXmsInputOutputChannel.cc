@@ -255,9 +255,9 @@ namespace karathon {
     }
 
 
-    void OutputChannelWrap::updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self) {
+    void OutputChannelWrap::updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, bool safeNDArray) {
         ScopedGILRelease nogil;
-        self->update();
+        self->update(safeNDArray);
     }
 
 
@@ -572,9 +572,14 @@ void exportPyXmsInputOutputChannel() {
                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
                    "      be called concurrently")
 
-              .def("update", &karathon::OutputChannelWrap().updatePy,
+              .def("update", &karathon::OutputChannelWrap().updatePy, (bp::arg("safeNDArray") = false),
                    "Update the output channel, i.e. send all data over the wire that was\n"
                    "previously written by calling write(..).\n"
+                   "safeNdarray - boolean to indicate whether all ndarrays inside the Hash\n"
+                   "              passed to write(..) before are 'safe', i.e. their memory\n"
+                   "              will not be referred to elsewhere after update is finished.\n"
+                   "              If false, safety copies are done when needed, i.e. when\n"
+                   "              data is queued.\n"
                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
                    "      be called concurrently")
 
