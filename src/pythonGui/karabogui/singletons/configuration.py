@@ -124,6 +124,8 @@ class Configuration(QObject):
                    dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER)
+    property_alarm_color_configurator = Item(
+        default=False, q_set=True, group=USER, editable=True, dtype=bool)
 
     # ----------------------------------------------
     # Project db interface
