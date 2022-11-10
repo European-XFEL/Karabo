@@ -217,7 +217,13 @@ class AsyncTimer:
 
         If the timer was already started, the callback is postponed by a
         timeout interval.
+
+        :returns bool: True if started, False otherwise
         """
+        # We restarted ourselves, but now the loop is closed. We don't start
+        # again.
+        if self.loop.is_closed():
+            return False
         if self._handle is None:
             self._time = self.loop.time()
             self._handle = self.loop.call_later(
@@ -233,6 +239,7 @@ class AsyncTimer:
             self._handle = self.loop.call_later(
                 self._timeout,
                 callback=self._channel_callback)
+        return True
 
     def _channel_callback(self):
         """Private method to launch the callback as a task on the eventloop"""
@@ -243,9 +250,18 @@ class AsyncTimer:
         if not self._single_shot:
             self.start()
 
+    def is_running(self):
+        """Check if the timer is running"""
+        return self._handle is not None
+
     def stop(self):
-        """Stop the execution of an asynchronous timer"""
+        """Stop the execution of an asynchronous timer
+
+        :returns bool: True if actively stopped, False otherwise
+        """
         if self._handle is not None:
             self._time = None
             self._handle.cancel()
             self._handle = None
+            return True
+        return False
