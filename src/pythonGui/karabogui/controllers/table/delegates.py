@@ -21,7 +21,8 @@ from karabogui.controllers.validators import (
     BindingValidator as GenericValidator, ListValidator, SimpleValidator)
 from karabogui.dialogs.api import ListEditDialog
 from karabogui.logger import get_logger
-from karabogui.request import call_device_slot, get_scene_from_server
+from karabogui.request import (
+    call_device_slot, get_scene_from_server, retrieve_default_scene)
 from karabogui.topology.api import is_device_online
 from karabogui.util import SignalBlocker, get_reason_parts
 
@@ -202,8 +203,11 @@ class StringButtonDelegate(TableButtonDelegate):
         elif action == "deviceScene":
             try:
                 deviceId = options["device_id"]
-                name = options["name"]
-                get_scene_from_server(deviceId, name)
+                name = options.get("name")
+                if name is None:
+                    retrieve_default_scene(deviceId)
+                else:
+                    get_scene_from_server(deviceId, name)
             except Exception:
                 get_logger().warning(
                     f"Invalid deviceScene information: {data}.")
