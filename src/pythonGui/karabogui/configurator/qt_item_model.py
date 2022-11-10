@@ -24,6 +24,7 @@ from karabogui.indicators import (
     PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR, STATE_COLORS,
     get_state_color)
 from karabogui.request import send_property_changes
+from karabogui.singletons.api import get_config
 
 from .utils import (
     dragged_configurator_items, get_attr_icon, get_child_names,
@@ -60,6 +61,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         self._model_index_refs = WeakValueDictionary()
         self._attr_backreferences = WeakValueDictionary()
         self._header_labels = ('Property', 'Current value on device', 'Value')
+        self._show_alarms = get_config()['property_alarm_color_configurator']
 
     # ----------------------------
     # Public interface
@@ -520,7 +522,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
             if binding.display_type == 'AlarmCondition':
                 return PROPERTY_ALARM_COLOR_MAP.get(value)
-        else:
+        elif self._show_alarms:
             alarm_low = attributes.get(KARABO_ALARM_LOW)
             alarm_high = attributes.get(KARABO_ALARM_HIGH)
             if threshold_triggered(value, alarm_low, alarm_high):
