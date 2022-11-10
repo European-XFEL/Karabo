@@ -19,6 +19,8 @@ from karabogui.testing import (
     GuiTestCase, get_property_proxy, keySequence, singletons)
 from karabogui.topology.api import SystemTopology
 
+DELEGATES = "karabogui.controllers.table.delegates"
+
 
 class ButtonSchema(Configurable):
     arch = String(
@@ -488,10 +490,23 @@ class TestTableModelView(GuiTestCase):
             table_view = controller.tableWidget()
             delegate = table_view.itemDelegate(index)
             self.assertIsInstance(delegate, StringButtonDelegate)
-            path = "karabogui.controllers.table.delegates.webbrowser"
+            path = f"{DELEGATES}.webbrowser"
             with mock.patch(path) as web:
                 delegate.click_action(index)
                 web.open_new.assert_called_with("https://www.xfel.eu")
+
+            # Retrieve default scene if no name is provided
+            index = model.index(0, 0)
+            delegate = table_view.itemDelegate(index)
+            s = "deviceScene|device_id=XHQ_EG_DG/CAM/CAMERA"
+            table_hash = Hash(
+                "prop", [Hash("arch", s,
+                              "bar", "url|https://www.xfel.eu",
+                              "foo", True)])
+            apply_configuration(table_hash, proxy.root_proxy.binding)
+            with mock.patch(f"{DELEGATES}.retrieve_default_scene") as rd:
+                delegate.click_action(index)
+                rd.assert_called_with('XHQ_EG_DG/CAM/CAMERA')
 
         controller.destroy()
 
