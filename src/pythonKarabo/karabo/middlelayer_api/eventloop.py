@@ -186,7 +186,15 @@ class NoEventLoop(AbstractEventLoop):
 
     def create_task(self, coro, name=None, instance=None):
         """Create a task on the main eventloop with this instance"""
-        loop = self._instance._ss.loop
+        sigslot = self._instance._ss
+        # The loop is closing or about to close. In this case no signal
+        # slotable is available or the loop is not anymore running. This can
+        # happen in CI (CLI) when the eventthread is stopped.
+        if sigslot is None:
+            return
+        loop = sigslot.loop
+        if not loop.is_running():
+            return
         hastask = threading.Lock()
         hastask.acquire()
 
@@ -195,7 +203,7 @@ class NoEventLoop(AbstractEventLoop):
 
         def inner():
             nonlocal task
-            task = loop.create_task(coro, name=name, instance=self._instance)
+            task = loop.create_task(coro, name=name, instance=instance)
             hastask.release()
 
         loop.call_soon_threadsafe(inner)
