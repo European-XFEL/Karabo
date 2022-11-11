@@ -7,12 +7,12 @@ from karabo.middlelayer_api.device_client import (
     compareDeviceConfiguration, compareDeviceWithPast, disconnectDevice,
     execute, executeNoWait, findDevices, findServers, getClasses, getClients,
     getConfiguration, getConfigurationFromName, getConfigurationFromPast,
-    getDevices, getHistory, getInstanceInfo, getLastConfiguration, getSchema,
-    getSchemaFromPast, getServers, getTimeInfo, getTopology, instantiate,
-    instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
-    listDevicesWithConfiguration, printHistory, saveConfigurationFromName,
-    setNoWait, setWait, shutdown, shutdownNoWait, updateDevice, waitUntil,
-    waitUntilNew, waitWhile)
+    getDevices, getHistory, getInstanceInfo, getLastConfiguration,
+    getProperties, getSchema, getSchemaFromPast, getServers, getTimeInfo,
+    getTopology, instantiate, instantiateFromName, instantiateNoWait, isAlive,
+    listConfigurationFromName, listDevicesWithConfiguration, printHistory,
+    saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
+    updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.ikarabo import connectDevice, getDevice
 from karabo.middlelayer_api.pipeline import PipelineContext, PipelineMetaData
 from karabo.middlelayer_api.synchronization import sleep

@@ -13,6 +13,7 @@ from .injectable import InjectMixin
 from .logger import Logger
 from .pipeline import OutputChannel
 from .signalslot import Signal, SignalSlotable, coslot, slot
+from .utils import get_property_hash
 
 
 class Device(InjectMixin, AlarmMixin, SignalSlotable):
@@ -231,6 +232,17 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     @slot
     def slotGetConfiguration(self):
         return self.configurationAsHash(), self.deviceId
+
+    @slot
+    def slotGetConfigurationSlice(self, info):
+        """Public slot to retrieve the values of a list of `paths`
+
+        :param info: Hash with {key: `paths`, value: list of strings}
+
+        returns: A Hash with the values and attributes for each requested
+        property key.
+        """
+        return get_property_hash(self, info["paths"])
 
     @slot
     def slotGetTime(self, info=None):

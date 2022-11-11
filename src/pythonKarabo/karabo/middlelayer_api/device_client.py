@@ -29,6 +29,7 @@ from .proxy import (
     ProxyNodeBase)
 from .signalslot import coslot, slot
 from .synchronization import firstCompleted
+from .utils import get_property_hash
 
 
 class DeviceClientBase(Device):
@@ -240,6 +241,28 @@ async def getConfiguration(device):
 
     hsh, _ = await get_instance().call(device, "slotGetConfiguration")
     return hsh
+
+
+@synchronize
+async def getProperties(device, properties):
+    """Get the property configuration from a target device
+
+    :param device: deviceId or proxy
+    :param properties: list of keys
+
+    Note: When passing a proxy, the proxy is updated and the
+    properties are derived from the proxy.
+
+    :returns: Configuration Hash
+    """
+    if isinstance(properties, str):
+        properties = [properties]
+
+    if isinstance(device, ProxyBase):
+        await device._update()
+        return get_property_hash(device, properties)
+    slot = "slotGetConfigurationSlice"
+    return await get_instance().call(device, slot, Hash("paths", properties))
 
 
 @synchronize
