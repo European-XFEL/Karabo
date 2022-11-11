@@ -18,8 +18,10 @@ from .device import Device
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
 from .signalslot import slot
+from .utils import AsyncTimer
 
 DEFAULT_ACTION_NAME = "_last_action"
+PRINT_THROTTLE = 0.5  # seconds
 
 
 def Monitor():
@@ -277,11 +279,16 @@ class Macro(Device):
         configuration.update(kwargs)
         super().__init__(configuration)
         self.code = ""
+        self.stacked_print = []
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
+        else:
+            self.stackTimer = AsyncTimer(
+                self._timer_callback, timeout=PRINT_THROTTLE)
+            self.stackTimer.start()
 
     def _initInfo(self):
-        info = super(Macro, self)._initInfo()
+        info = super()._initInfo()
         info["type"] = "macro" if self._has_server else "client"
         info["project"] = self.project
         info["module"] = self.module
@@ -292,7 +299,7 @@ class Macro(Device):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
-        await super(Macro, self)._run(**kwargs)
+        await super()._run(**kwargs)
         try:
             await self.__initialize_devices_monitors()
         except CancelledError:
@@ -345,10 +352,19 @@ class Macro(Device):
             ensure_future(h)
 
     async def printToConsole(self, data):
-        self.print = data
-        # Make sure a new timestamp gets attached!
-        self.doNotCompressEvents = self.doNotCompressEvents.value + 1
-        self.update()
+        """Put a data from the std out on the print stack"""
+        sp = self.stacked_print
+        if data == "\n" and sp and sp[-1] == "":
+            return
+        sp.extend(data.splitlines())
+
+    async def _timer_callback(self):
+        """Provide a nice print output for the macro instance and update"""
+        if self.stacked_print:
+            self.doNotCompressEvents += 1
+            self.print = "\n".join(self.stacked_print)
+            self.stacked_print = []
+            self.update()
 
     @classmethod
     def main(cls, argv=None):
