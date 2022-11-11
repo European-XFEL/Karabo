@@ -12,8 +12,8 @@ from karabo.middlelayer_api.broker import amqp, jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
-    getDevice, getInstanceInfo, getSchema, lock, setNoWait, setWait,
-    updateDevice, waitUntil, waitUntilNew, waitWhile)
+    getDevice, getInstanceInfo, getProperties, getSchema, lock, setNoWait,
+    setWait, updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.macro import Macro, MacroSlot
 from karabo.middlelayer_api.pipeline import OutputChannel, PipelineContext
@@ -295,6 +295,16 @@ class Tests(DeviceTest):
         finally:
             await localMacro.set_state(State.PASSIVE)
             await localMacro.slotKillDevice()
+
+    @sync_tst
+    def test_get_properties_hash(self):
+        """Test that we can get properties via slotGetConfigurationSlice"""
+        h = getProperties("remote", ["state"])
+        self.assertEqual(h["state"], "UNKNOWN")
+        attrs = h["state", ...]
+        self.assertIn("sec", attrs)
+        self.assertIn("frac", attrs)
+        self.assertIn("tid", attrs)
 
     @sync_tst
     def test_macro_pipeline_context(self):
