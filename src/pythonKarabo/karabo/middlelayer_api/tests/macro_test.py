@@ -630,8 +630,10 @@ class Tests(DeviceTest):
             self.assertEqual(self.local.nowstate, State.ACTIVE)
             self.assertEqual(self.local.currentSlot, "")
             self.assertEqual(self.local.state, State.PASSIVE)
-            self.assertEqual(self.local.print, "hero")
-            self.assertEqual(self.local.doNotCompressEvents, 2)
+            # Must wait at least 0.5 seconds. The print is bulked
+            await sleep(1)
+            self.assertGreater(self.local.doNotCompressEvents, 0)
+            self.assertEqual(self.local.print, "superpuper\nhero")
         finally:
             sys.stdout = sys.stdout.base
 
