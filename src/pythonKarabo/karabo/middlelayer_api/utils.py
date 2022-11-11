@@ -6,7 +6,7 @@ from time import perf_counter
 import numpy as np
 
 from karabo.middlelayer_api.eventloop import ensure_coroutine
-from karabo.native import MetricPrefix, NumpyVector, QuantityValue, Unit
+from karabo.native import Hash, MetricPrefix, NumpyVector, QuantityValue, Unit
 
 
 def get_karabo_version():
@@ -21,6 +21,22 @@ def get_karabo_version():
     with open(path, 'r') as fp:
         version = fp.read()
     return version
+
+
+def get_property_hash(device, properties):
+    """Get all properties from `device`
+
+    :param device: The device instance or proxy object
+    :param properties: The sequence of properties ('a', 'b') ...
+
+    returns: Hash
+    """
+    ret = Hash()
+    for key in properties:
+        value = get_property(device, key)
+        desc = value.descriptor
+        ret.setElement(key, *desc.toDataAndAttrs(value))
+    return ret
 
 
 def get_property(device, path):
