@@ -10,7 +10,8 @@ from karabo.middlelayer import (
     AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
     waitUntil, waitWhile)
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import call, getSchema
+from karabo.middlelayer_api.device_client import (
+    call, get_instance, getProperties, getSchema)
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sync_tst)
@@ -383,10 +384,9 @@ class Tests(DeviceTest):
     @async_tst
     async def test_get_property_set_property(self):
         prop = get_property(self.myDevice, "integer")
+        set_property(self.myDevice, "integer", 0)
         self.assertEqual(prop, 0)
-        set_property(self.myDevice, "integer", 2)
-        prop = get_property(self.myDevice, "integer")
-        self.assertEqual(prop, 2)
+        set_property(self.myDevice, "noded.floatProperty", 10)
         prop = get_property(self.myDevice, "noded.floatProperty")
         self.assertEqual(prop, 10)
         set_property(self.myDevice, "noded.floatProperty", 15)
@@ -401,6 +401,58 @@ class Tests(DeviceTest):
             set_property(self.myDevice, "notthere", 25)
         with self.assertRaises(AttributeError):
             set_property(self.myDevice, "noded.notthere", 2)
+
+    @async_tst
+    async def test_get_properties_hash(self):
+        self.myDevice.integer = 0
+
+        # Remote slot call via slotGetConfigurationSlice
+        deviceId = self.myDevice.deviceId
+        h = await getProperties(deviceId, "integer")
+        self.assertIsInstance(h, Hash)
+        self.assertEqual(h["integer"], 0)
+        self.assertEqual(len(h.paths(intermediate=False)), 1)
+
+        slot = "slotGetConfigurationSlice"
+        r = await get_instance().call(
+            deviceId, slot, Hash("paths", ["integer"]))
+        self.assertTrue(r.fullyEqual(h))
+
+        # And we have the timestamp
+        attrs = h["integer", ...]
+        self.assertEqual(len(attrs), 3)
+        self.assertIn("tid", attrs)
+        self.assertIn("frac", attrs)
+        self.assertIn("sec", attrs)
+
+        set_property(self.myDevice, "noded.floatProperty", 15)
+        h = await getProperties(deviceId,
+                                ["integer", "noded.floatProperty"])
+        self.assertEqual(h["integer"], 0)
+        self.assertEqual(h["noded.floatProperty"], 15)
+        self.assertEqual(len(h.paths()), 3)
+        self.assertEqual(len(h.paths(intermediate=False)), 2)
+
+        # exception for failing properties
+        with self.assertRaises(KaraboError):
+            h = await getProperties(deviceId, ["integer", "noded.notthere"])
+
+        # KaraboError for failing garbage
+        for fail in (
+            [False, True],
+            [Hash()],
+            [1, 2],
+            [1.78],
+        ):
+            with self.assertRaises(KaraboError):
+                h = await getProperties(deviceId, fail)
+
+        # Working with proxy
+        async with getDevice(self.myDevice.deviceId) as proxy:
+            h = await getProperties(proxy, ["integer", "noded.floatProperty"])
+            self.assertEqual(h["integer"], 0)
+            self.assertEqual(h["noded.floatProperty"], 15)
+            self.assertEqual(len(h.paths(intermediate=False)), 2)
 
     @async_tst
     async def test_slot_time(self):
