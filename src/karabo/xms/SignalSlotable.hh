@@ -792,8 +792,14 @@ namespace karabo {
             boost::mutex m_brokerErrorHandlerMutex;
             BrokerErrorHandler m_brokerErrorHandler;
 
-            static std::unordered_map<std::string, SignalSlotable::WeakPointer> m_instanceMap;
-            static boost::shared_mutex m_instanceMapMutex;
+            // Two maps of local (i.e. same process) instances:
+            // A shared static one that everybody registers and deregisters, and a copy for each instance that can be
+            // accessed whenever a message is sent.
+            static std::unordered_map<std::string, SignalSlotable::WeakPointer> m_sharedInstanceMap;
+            static boost::shared_mutex m_sharedInstanceMapMutex;
+
+            std::unordered_map<std::string, SignalSlotable::WeakPointer> m_myInstanceMap;
+            mutable boost::mutex m_myInstanceMapMutex;
 
             // TODO This is a helper variable
             std::string m_topic;
