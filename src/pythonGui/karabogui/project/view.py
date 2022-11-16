@@ -52,12 +52,10 @@ class ProjectView(QTreeView):
         header.moveSection(1, 0)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(1, QHeaderView.Fixed)
-        header.setSectionResizeMode(2, QHeaderView.Fixed)
         header.setStretchLastSection(False)
         icon_size = 26
         header.setMaximumSectionSize(icon_size)
         header.resizeSection(1, icon_size)
-        header.resizeSection(2, icon_size)
 
         # Prevent drag reorder of the header
         header.setSectionsMovable(False)
