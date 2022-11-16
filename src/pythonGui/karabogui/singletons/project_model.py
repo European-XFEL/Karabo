@@ -25,7 +25,7 @@ from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
 from karabogui.util import create_table_string
 
-TABLE_HEADER_LABELS = ["Projects", "", ""]
+TABLE_HEADER_LABELS = ["Projects", ""]
 
 PROJECT_COLUMN = 0
 STATUS_COLUMN = 1
