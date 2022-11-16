@@ -50,9 +50,7 @@ def sanitize_write_configuration(schema, config):
 
     readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
                       if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] in
-                      [AccessMode.READONLY.value, AccessMode.INITONLY.value]
-                      or schema.hash[pth, KARABO_SCHEMA_ASSIGNMENT] ==
-                      Assignment.INTERNAL.value]
+                      [AccessMode.READONLY.value, AccessMode.INITONLY.value]]
     for key in readonly_paths:
         config.erase(key)
 
