@@ -4,14 +4,13 @@ name: karabogui
 
 channels:
   - http://{{ xfel_conda_channel }}/karabo/channel
-  - http://{{ xfel_conda_channel }}/karabo/channel/mirror/conda-forge
   - conda-forge
+  - http://{{ xfel_conda_channel }}/karabo/channel/mirror/conda-forge
   - defaults
 {{ conda_local_channel }}
 
 dependencies:
-  - python=3.8.13=h6244533_0 # [win]
-  - python=3.8.* # [not win]
+  - python=3.8.*
   # for tests and building
   - flake8=3.8.4
   - isort=5.8.0
@@ -43,7 +42,7 @@ dependencies:
   - requests=2.25.1
   - python-dateutil=2.8.1
   - jupyter_client=6.0.0
-  - conda=4.12.0
+  - conda
   - pint=0.17
 
 environment:
