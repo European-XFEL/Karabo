@@ -195,6 +195,7 @@ class SignalSlotable(Configurable):
         self._proxies = weakref.WeakValueDictionary()
         self._proxy_futures = {}
         self.__initialized = False
+        self.__removed = False
         self._new_device_futures = FutureDict()
 
     @property
@@ -363,6 +364,7 @@ class SignalSlotable(Configurable):
         except CancelledError:
             # Cancellation is caught here, remove ourselves
             if server is not None:
+                self.__removed = True
                 server.removeChild(self.deviceId)
         except (TimeoutError, Exception):
             # TimeoutError accounts the preInitialization
@@ -417,7 +419,8 @@ class SignalSlotable(Configurable):
             except Exception:
                 self.logger.exception("Exception in onDestruction")
 
-        if self.device_server is not None:
+        if self.device_server is not None and not self.__removed:
+            self.__removed = True
             self.device_server.removeChild(self.deviceId)
 
         if self._ss is not None:
