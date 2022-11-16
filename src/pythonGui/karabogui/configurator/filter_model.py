@@ -17,10 +17,9 @@ class ConfiguratorFilterModel(QSortFilterProxyModel):
 
     def filterAcceptsRow(self, source_row, source_parent):
         model = self.sourceModel()
-        source_index = model.index(source_row, self.filterKeyColumn(),
-                                   source_parent)
+        source_index = model.index(source_row, 0, source_parent)
         if source_index.isValid():
-            node = source_index.internalPointer()
+            node = model.index_ref(source_index)
             if node is None:
                 return True
 
