@@ -210,6 +210,7 @@ class PanelWrangler(QObject):
             if self._editor is None:
                 self._editor = ConfigurationPanel(allow_closing=True)
                 self._editor.signalPanelClosed.connect(self._editor_closed)
+                self._editor.toolbar.setVisible(True)
                 self._editor.resize(600, 800)
                 self._editor.show()
             self._editor.activateWindow()
