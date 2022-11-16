@@ -140,7 +140,7 @@ def test_sanitize_init_configuration():
     assert sanitized is not None
     assert "integer" in sanitized
     assert "internalInteger" in run_time_conf
-    assert "internalInteger" not in sanitized
+    assert "internalInteger" in sanitized
     assert "readOnlyInteger" in run_time_conf
     assert "readOnlyInteger" not in sanitized
     assert "double" in run_time_conf
