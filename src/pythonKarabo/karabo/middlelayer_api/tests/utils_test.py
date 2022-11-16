@@ -351,7 +351,8 @@ class UtilsTests(TestCase):
         timer = AsyncTimer(timeout=0.2, callback=call)
         # 1. Test the snoozing by always starting the timer
         for _ in range(5):
-            timer.start()
+            assert timer.start()
+            assert timer.is_running()
             assert not called
             run_coro(asyncio.sleep(0.1))
         run_coro(asyncio.sleep(0.2))
@@ -364,19 +365,20 @@ class UtilsTests(TestCase):
 
         called = 0
         # 3. Test that stop does not call
-        timer.start()
+        assert timer.start()
         run_coro(asyncio.sleep(0.1))
-        timer.stop()
+        assert timer.stop()
         run_coro(asyncio.sleep(0.2))
+        assert not timer.is_running()
         assert not called
         # 4. Multiple stop does not hurt
         for _ in range(5):
-            timer.stop()
-
+            # No need to stop
+            assert not timer.stop()
         # 5. Test singleshot
 
         timer = AsyncTimer(timeout=0.2, callback=call, single_shot=True)
-        timer.start()
+        assert timer.start()
         run_coro(asyncio.sleep(1))
         assert called == 1
 
@@ -389,7 +391,7 @@ class UtilsTests(TestCase):
 
         timer = AsyncTimer(timeout=0.2, callback=call)
         for _ in range(5):
-            timer.start()
+            assert timer.start()
             assert not called
             run_coro(asyncio.sleep(0.1))
         run_coro(asyncio.sleep(0.2))
@@ -404,7 +406,7 @@ class UtilsTests(TestCase):
         # the timer will call the callback
         with pytest.raises(AssertionError):
             for _ in range(5):
-                timer.start()
+                assert timer.start()
                 assert not called
                 run_coro(asyncio.sleep(0.2))
 
