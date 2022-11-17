@@ -33,7 +33,7 @@ class TestConfiguration(GuiTestCase):
         config['device_domain'] = 'CAS_INTERNAL'
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
-        self.assertEqual(len(config), 18)
+        self.assertEqual(len(config), 20)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['device_domain'], 'CAS_INTERNAL')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
@@ -53,6 +53,8 @@ class TestConfiguration(GuiTestCase):
             'highDPI',
             'log_visible',
             'main_geometry',
+            'project_sort_column',
+            'project_sort_order',
             'property_alarm_color_configurator',
             'reactive_login',
             'username',
@@ -93,12 +95,14 @@ class TestConfiguration(GuiTestCase):
         groups = config.groups()
         self.assertEqual(len(groups), 6)
         user_group = [item.name for item in groups[USER]]
-        self.assertEqual(len(user_group), 5)
+        self.assertEqual(len(user_group), 7)
         self.assertIn('wizard', user_group)
         self.assertIn('main_geometry', user_group)
         self.assertIn('highDPI', user_group)
         self.assertIn('development', user_group)
         self.assertIn('property_alarm_color_configurator', user_group)
+        self.assertIn('project_sort_column', user_group)
+        self.assertIn('project_sort_order', user_group)
         network_group = [item.name for item in groups[NETWORK]]
         self.assertEqual(len(network_group), 4)
         self.assertIn('access_level', network_group)
