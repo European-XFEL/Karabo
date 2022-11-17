@@ -13,24 +13,8 @@ class ConfiguratorFilterModel(QSortFilterProxyModel):
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.setFilterKeyColumn(0)
+        self.setRecursiveFilteringEnabled(True)
         self.setSourceModel(source_model)
-
-    def filterAcceptsRow(self, source_row, source_parent):
-        model = self.sourceModel()
-        source_index = model.index(source_row, 0, source_parent)
-        if source_index.isValid():
-            node = model.index_ref(source_index)
-            if node is None:
-                return True
-
-            if self.filterRegExp().isEmpty():
-                return True
-            row_count = model.rowCount(source_index)
-            for row in range(row_count):
-                if self.filterAcceptsRow(row, source_index):
-                    return True
-
-        return super().filterAcceptsRow(source_row, source_parent)
 
     # --------------------------------------------------------------------
     # Index Methods
