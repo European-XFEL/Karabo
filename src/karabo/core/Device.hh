@@ -674,19 +674,23 @@ namespace karabo {
              * @param channelName The output channel name
              * @param data Hash with the data
              * @param timestamp A user provided timestamp (if e.g. retrieved from h/w)
+             * @param safeNDArray Boolean that should be set to 'true' if any 'NDArray' that is inside 'data' is NOT
+             *                    re-used after this 'writeChannel'. That avoids copies if output channel has to queue
+             *                    or serves inner-process receivers. Else 'false' must be used.
+             *                    Default will change to 'true' in 2.17.0.
              *
              * Thread safety:
              * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
              * for the same 'channelName'.
              */
             void writeChannel(const std::string& channelName, const karabo::util::Hash& data,
-                              const karabo::util::Timestamp& timestamp) {
+                              const karabo::util::Timestamp& timestamp, bool safeNDArray = false) {
                 using namespace karabo::xms;
                 OutputChannel::Pointer channel = this->getOutputChannel(channelName);
                 // Provide proper meta data information, as well as correct train- and timestamp
                 OutputChannel::MetaData meta(m_instanceId + ":" + channelName, timestamp);
                 channel->write(data, meta, false); // false means "no copy"
-                channel->update();
+                channel->update(safeNDArray);
             }
 
             /**
