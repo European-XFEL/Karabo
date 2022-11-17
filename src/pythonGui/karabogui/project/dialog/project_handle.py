@@ -78,12 +78,17 @@ class LoadProjectDialog(QDialog):
         self.model.setFilterCaseSensitivity(False)
         self.model.setFilterKeyColumn(0)
 
+        column = int(get_config()["project_sort_column"])
+        order = int(get_config()["project_sort_order"])
+        self.twProjects.horizontalHeader().setSortIndicator(column, order)
+
         # QTableview in ui file
         self.twProjects.setModel(self.model)
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self._load_item)
-
+        self.twProjects.horizontalHeader().sortIndicatorChanged.connect(
+            self._sorting_changed)
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
         # ... request the domains list
@@ -186,8 +191,8 @@ class LoadProjectDialog(QDialog):
     def update_view(self):
         if self.domain:
             self.twProjects.clearSelection()
-            self.model.sourceModel().request_data(self.domain,
-                                                  self.ignore_cache)
+            model = self.model.sourceModel()
+            model.request_data(self.domain, self.ignore_cache)
 
     @property
     def ignore_cache(self):
@@ -216,6 +221,13 @@ class LoadProjectDialog(QDialog):
         # Check if we have a preceeding valid selection
         enable = self._selected_item_loadable()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
+    @Slot(int, Qt.SortOrder)
+    def _sorting_changed(self, column, order):
+        """Change the view when sorting the table"""
+        get_config()["project_sort_column"] = column
+        get_config()["project_sort_order"] = order
+        self.update_view()
 
     @Slot(str)
     def _titleChanged(self, text):
@@ -415,12 +427,15 @@ class TableModel(QAbstractTableModel):
                     last_modified=utc_to_local(it.get('date')),
                     uuid=(it.get('uuid'), is_trashed),
                     description=it.get('description', ''),
-                    )
+                )
                 self.entries.append(entry)
         finally:
             self.endResetModel()
-        # Sort by simple name when table got filled
-        self.sort(get_column_index(SIMPLE_NAME))
+
+        # Sort the table according to the column
+        column = int(get_config()["project_sort_column"])
+        order = int(get_config()["project_sort_order"])
+        self.sort(column, order)
 
     def projectIndex(self, simple_name):
         """Return the `QModelIndex` which ``simple_name`` exists in the current
