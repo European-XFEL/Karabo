@@ -126,6 +126,8 @@ class Configuration(QObject):
     development = Item(default=False, q_set=False, group=USER)
     property_alarm_color_configurator = Item(
         default=False, q_set=True, group=USER, editable=True, dtype=bool)
+    project_sort_column = Item(default=0, q_set=True, group=USER)
+    project_sort_order = Item(default=0, q_set=True, group=USER)
 
     # ----------------------------------------------
     # Project db interface
