@@ -8,22 +8,17 @@ from collections import defaultdict
 from qtpy.QtCore import QObject, QSettings
 
 
-def _safe_bool(value, make_bool=True):
-    """Safely return a boolean value from a QSettings file in the correct
-    format"""
-    str_value = str(value).lower()
-    if str_value in ['true', 'false']:
-        if make_bool:
-            return str_value == 'true'
-        else:
-            return str_value
-
+def convert_value(value, dtype):
+    """Convert a value to a QSettings value. This is mainly done for booleans
+    """
+    if dtype is bool:
+        return str(value).lower()
     return value
 
 
 class Item:
-    __slots__ = ["name", "default", "q_set", "group", "path", "editable",
-                 "dtype"]
+    __slots__ = ("name", "default", "q_set", "group", "path", "editable",
+                 "dtype")
 
     def __init__(self, default=None, q_set=False, group=None, editable=False,
                  dtype=None):
@@ -37,18 +32,32 @@ class Item:
         if instance is None:
             return self
         else:
-            return _safe_bool(instance.__dict__.get(self.name, self.default))
+            return instance.__dict__.get(self.name, self.default)
 
     def __set__(self, instance, value):
         instance.__dict__[self.name] = value
         if self.q_set:
-            QSettings().setValue(self.path, _safe_bool(value, make_bool=False))
+            QSettings().setValue(self.path, convert_value(value, self.dtype))
 
     def __set_name__(self, owner, name):
         self.name = name
         self.path = "{group}/{name}".format(group=self.group, name=self.name)
         if self.q_set:
-            self.default = QSettings().value(self.path) or self.default
+            self.default = self.initialize_value()
+
+    def initialize_value(self):
+        """Initialize a value from `QSettings` file"""
+        value = QSettings().value(self.path)
+        if not value or self.dtype is None:
+            return value or self.default
+        # Actively stored values
+        if self.dtype is bool:
+            return str(value).lower() == "true"
+        elif self.dtype is int:
+            return int(value)
+        elif self.dtype is float:
+            return float(value)
+        return value
 
     def toDict(self):
         return {name: getattr(self, name) for name in
@@ -75,7 +84,7 @@ class Configuration(QObject):
 
     An Item is constructed via the descriptor protocol.
 
-    pool = Item(default='fish', q_set=False, group="POOL")
+    pool = Item(default="fish", q_set=False, group="POOL")
 
     - The first parameter ``default`` provides - as the name says - the
       default value. This value might be overwritten on initialization if
@@ -87,6 +96,9 @@ class Configuration(QObject):
 
     - The ``group`` parameter defines an additional string for sorting and
       grabbing the Items for a model view.
+
+    - The ``dtype`` parameter defines the data dtype. If a dtype is specified,
+      a default value must be provided.
 
     NOTE: Every parameter has a cache principle, meaning that if an additional
           client is opened on the same machine, both clients do not interact
@@ -123,26 +135,26 @@ class Configuration(QObject):
     highDPI = Item(default=True, q_set=True, group=USER, editable=False,
                    dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
-    development = Item(default=False, q_set=False, group=USER)
+    development = Item(default=False, q_set=False, group=USER, dtype=bool)
     property_alarm_color_configurator = Item(
         default=False, q_set=True, group=USER, editable=True, dtype=bool)
-    project_sort_column = Item(default=0, q_set=True, group=USER)
-    project_sort_order = Item(default=0, q_set=True, group=USER)
+    project_sort_column = Item(default=0, q_set=True, group=USER, dtype=int)
+    project_sort_order = Item(default=0, q_set=True, group=USER, dtype=int)
 
     # ----------------------------------------------
     # Project db interface
 
-    db_token = Item(default='admin', group=PROJECT)
-    domain = Item(default='CAS_INTERNAL', q_set=True, group=PROJECT)
-    # The most recently used domain in a successful 'Load Project with
-    # Device' operation. Does not persist accross GUI working sessions.
+    db_token = Item(default="admin", group=PROJECT)
+    domain = Item(default="CAS_INTERNAL", q_set=True, group=PROJECT)
+    # The most recently used domain in a successful `Load Project with
+    # Device` operation
     device_domain = Item(default=None, q_set=False, group=PROJECT)
 
     # ----------------------------------------------
     # GUI Server network connection
 
-    username = Item(default='operator', q_set=True, group=NETWORK)
-    access_level = Item(default='operator', q_set=True, group=NETWORK)
+    username = Item(default="operator", q_set=True, group=NETWORK)
+    access_level = Item(default="operator", q_set=True, group=NETWORK)
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
     reactive_login = Item(
         default=False, q_set=True, dtype=bool, editable=True, group=NETWORK)
@@ -152,36 +164,36 @@ class Configuration(QObject):
         # Memory filling avoiding __setattr__!
         memory = [getattr(cls, attr).name for attr in dir(cls)
                   if isinstance(getattr(cls, attr), Item)]
-        instance.__dict__['_memory'] = memory
+        instance.__dict__["_memory"] = memory
         return instance
 
     def __init__(self, parent=None):
-        super(Configuration, self).__init__(parent)
+        super().__init__(parent)
 
     def __setitem__(self, key, value):
         if key not in self._memory:
             raise KeyError("Configuration key is not valid: {}".format(key))
-        super(Configuration, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def __getitem__(self, item):
         if item not in self._memory:
             raise KeyError("Configuration key is not valid: {}".format(item))
-        return super(Configuration, self).__getattribute__(item)
+        return super().__getattribute__(item)
 
     def __contains__(self, key):
         return key in self._memory
 
     def __iter__(self):
         for key in self._memory:
-            yield key, super(Configuration, self).__getattribute__(key)
+            yield key, super().__getattribute__(key)
 
     def items(self):
         for key in self._memory:
-            yield key, super(Configuration, self).__getattribute__(key)
+            yield key, super().__getattribute__(key)
 
     def values(self):
         for key in self._memory:
-            yield super(Configuration, self).__getattribute__(key)
+            yield super().__getattribute__(key)
 
     def keys(self):
         for key in self._memory:
@@ -222,9 +234,9 @@ class Configuration(QObject):
     def __setattr__(self, key, value):
         if key not in self._memory:
             raise KeyError("Configuration key is not valid: {}".format(key))
-        super(Configuration, self).__setattr__(key, value)
+        super().__setattr__(key, value)
 
     def __repr__(self):
-        names = '\n'.join('\t' + attr + ': ' + repr(getattr(self, attr))
+        names = "\n".join("\t" + attr + ": " + repr(getattr(self, attr))
                           for attr in self._memory)
-        return '{{\n{}\n}}'.format(names)
+        return "{{\n{}\n}}".format(names)
