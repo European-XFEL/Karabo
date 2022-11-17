@@ -124,6 +124,8 @@ class Configuration(QObject):
                    dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER)
+    project_sort_column = Item(default=0, q_set=True, group=USER)
+    project_sort_order = Item(default=0, q_set=True, group=USER)
 
     # ----------------------------------------------
     # Project db interface
