@@ -6,6 +6,7 @@ import threading
 from asyncio import (
     CancelledError, TimeoutError, current_task, ensure_future, gather,
     get_event_loop, iscoroutinefunction, set_event_loop, wait_for)
+from collections import deque
 from contextlib import closing
 from functools import wraps
 
@@ -17,7 +18,7 @@ from karabo.native import (
 from .device import Device
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
-from .signalslot import slot
+from .signalslot import coslot, slot
 from .utils import AsyncTimer
 
 DEFAULT_ACTION_NAME = "_last_action"
@@ -279,13 +280,13 @@ class Macro(Device):
         configuration.update(kwargs)
         super().__init__(configuration)
         self.code = ""
-        self.stacked_print = []
+        self.stacked_print = deque(maxlen=100)
+        self.stackTimer = None
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
         else:
             self.stackTimer = AsyncTimer(
                 self._timer_callback, timeout=PRINT_THROTTLE)
-            self.stackTimer.start()
 
     def _initInfo(self):
         info = super()._initInfo()
@@ -299,6 +300,8 @@ class Macro(Device):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
+        if self.stackTimer is not None:
+            self.stackTimer.start()
         await super()._run(**kwargs)
         try:
             await self.__initialize_devices_monitors()
@@ -310,6 +313,15 @@ class Macro(Device):
             raise
         else:
             self.state = self.abstractPassiveState
+
+    async def slotKillDevice(self, message=None):
+        """Reimplemented method of SignalSlotable"""
+        if self.stackTimer is not None:
+            self.stackTimer.stop()
+            self.stackTimer = None
+        return await super().slotKillDevice(message)
+
+    slotKillDevice = coslot(slotKillDevice, passMessage=True)
 
     async def __holdDevice(self, d):
         """keep the connection to a remote device
@@ -363,7 +375,7 @@ class Macro(Device):
         if self.stacked_print:
             self.doNotCompressEvents += 1
             self.print = "\n".join(self.stacked_print)
-            self.stacked_print = []
+            self.stacked_print.clear()
             self.update()
 
     @classmethod
