@@ -20,7 +20,7 @@ from karabo.middlelayer_api.pipeline import OutputChannel, PipelineContext
 from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
 from karabo.middlelayer_api.tests.eventloop import (
-    DeviceTest, async_tst, sync_tst)
+    DeviceTest, async_tst, sleepUntil, sync_tst)
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32 as Int, KaraboError, Node, Slot)
 
@@ -447,6 +447,16 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             d.doit()
         self.assertTrue(self.remote.done)
+
+    @async_tst
+    async def test_destruct_macro_timer(self):
+        macro = Local(_deviceId_="macrodestruct", project="timer",
+                      module="timer")
+        await macro.startInstance()
+        await sleepUntil(lambda: macro.is_initialized is True)
+        self.assertTrue(macro.stackTimer.is_running())
+        await macro.slotKillDevice()
+        self.assertIsNone(macro.stackTimer)
 
     @sync_tst
     def test_archive(self):
