@@ -9,10 +9,12 @@ from asyncio import set_event_loop
 import IPython
 
 from karabo._version import version
+from karabo.native import Node
 
 from . import device_client
 from .device_client import DeviceClientBase
 from .eventloop import NoEventLoop
+from .logger import build_logger_node
 from .macro import EventThread, Macro
 from .signalslot import coslot
 
@@ -30,6 +32,11 @@ class DeviceClient(Macro, DeviceClientBase):
                 return getDevice(name)
             else:
                 raise AttributeError('Unknown device "{}"'.format(name))
+
+    # We don't allow logs coming from command line
+    log = Node(
+        build_logger_node([]),
+        displayedName="No Logger")
 
     def _initInfo(self):
         info = super(DeviceClient, self)._initInfo()
