@@ -34,6 +34,8 @@ Change of behaviour
 - GUI: By default the property alarm color for devices in the `Configurator` is now disabled. This is intended as the
   `Configurator` can only evaluate static alarms defined by the device schema. To view property specific alarms, please use the alarm panel.
   To turn this feature back on, please use the *Application Configuration dialog** accessible via the menu bar of the client.
+- MDL: Log-events do not generate a broker message anymore. For logging messages, please retrieve the last log messages on demand via the karabo gui client
+       interface or view the local log file.
 
 Detailed Merge-Log
 ++++++++++++++++++
