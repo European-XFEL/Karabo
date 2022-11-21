@@ -10,7 +10,7 @@ from karabo.native import (
 
 from .alarm import AlarmMixin
 from .injectable import InjectMixin
-from .logger import Logger
+from .logger import build_logger_node
 from .pipeline import OutputChannel
 from .signalslot import Signal, SignalSlotable, coslot, slot
 
@@ -125,10 +125,11 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         daqPolicy=DaqPolicy.OMIT)
 
-    log = Node(Logger,
-               description="Logging settings",
-               displayedName="Logger",
-               requiredAccessLevel=AccessLevel.EXPERT)
+    log = Node(
+        build_logger_node(),
+        description="Logging settings",
+        displayedName="Logger",
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     signalChanged = Signal(TypeHash(), String())
     signalStateChanged = Signal(TypeHash(), String())
