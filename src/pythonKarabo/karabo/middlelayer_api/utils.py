@@ -1,7 +1,10 @@
 import asyncio
 import os
+from contextlib import contextmanager
 from functools import reduce, wraps
 from time import perf_counter
+from types import MethodType
+from weakref import WeakMethod, ref
 
 import numpy as np
 
@@ -199,7 +202,10 @@ class profiler:
 class AsyncTimer:
     """AsyncTimer class to periodically execute callbacks
 
-    :param callback: Callable function to execute
+    this timer will be deleted once the instance creating it is being deleted.
+    :param callback: Callable function to execute. If callback is a bound
+                     method, the timer automatically creates a weak
+                     reference
     :param timeout: Interval in seconds after which the callback is put on
                     the eventloop
     :param single_shot: Boolean to set if the timer only does a single call
@@ -214,9 +220,18 @@ class AsyncTimer:
 
     def __init__(self, callback, timeout=0, single_shot=False,
                  flush_interval=None, loop=None):
-        self.loop = loop or asyncio.get_event_loop()
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        self.loop = loop
+        instance = loop.instance()
+        if instance is None:
+            raise RuntimeError("A timer needs an instance to run ...")
+        self._register(instance)
 
         assert callable(callback)
+        if type(callback) is MethodType:
+            callback = WeakMethod(callback)
+
         self._callback = callback
         self._timeout = timeout
         self._single_shot = single_shot
@@ -227,6 +242,22 @@ class AsyncTimer:
         # Internally used variables
         self._handle = None
         self._time = None
+
+    def _register(self, instance):
+        """Internal method to register a timer on an `instance`"""
+        instance._timers.add(self)
+        weak_timer = ref(self)
+
+        @contextmanager
+        def destroyer():
+            try:
+                yield
+            finally:
+                weak = weak_timer()
+                if weak is not None:
+                    weak.destroy()
+
+        instance._ss.enter_context(destroyer())
 
     def start(self):
         """Start the async timer
@@ -259,7 +290,15 @@ class AsyncTimer:
 
     def _channel_callback(self):
         """Private method to launch the callback as a task on the eventloop"""
-        coro = ensure_coroutine(self._callback)
+        callback = (self._callback() if isinstance(self._callback, WeakMethod)
+                    else self._callback)
+        if callback is None:
+            # destroyed or the object holding the WeakMethod is deleted
+            self._handle = None
+            self._time = None
+            return
+
+        coro = ensure_coroutine(callback)
         self.loop.call_soon_threadsafe(self.loop.create_task, coro())
         self._handle = None
         self._time = None
@@ -281,3 +320,12 @@ class AsyncTimer:
             self._handle = None
             return True
         return False
+
+    def __del__(self):
+        self.destroy()
+
+    def destroy(self):
+        """Stop the timer and delete any callback or loop reference"""
+        self.stop()
+        self._callback = None
+        self._loop = None
