@@ -457,6 +457,7 @@ class Tests(DeviceTest):
         self.assertTrue(macro.stackTimer.is_running())
         await macro.slotKillDevice()
         self.assertFalse(macro.stackTimer.is_running())
+        self.assertIsNone(macro.stackTimer.loop)
 
     @sync_tst
     def test_archive(self):
