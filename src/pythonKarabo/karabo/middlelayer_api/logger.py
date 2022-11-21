@@ -25,7 +25,7 @@ class CacheLog:
         return events
 
 
-class NetworkHandler(logging.Handler):
+class CacheHandler(logging.Handler):
     def emit(self, record):
 
         level = ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
@@ -33,31 +33,14 @@ class NetworkHandler(logging.Handler):
         timestamp = datetime.fromtimestamp(record.created).isoformat()
         message = record.getMessage()
         deviceId = self.parent.broker.deviceId
-
-        hash = Hash(
-            "timestamp", timestamp,
-            "type", level,
-            "category", deviceId,
-            "message", message,
-            "msg", record.msg,
-            "lineno", record.lineno,
-            "module", record.module,
-            "funcname", record.funcName)
-        args = Hash()
-        for i, arg in enumerate(record.args):
-            args["{}{}".format(type(arg).__name__, i)] = arg
-        hash["args"] = args
         trace = ""
         if record.exc_info is not None:
             trace = "".join(traceback.format_exception(*record.exc_info))
-            hash["traceback"] = trace
 
         CacheLog.add_event(
             Hash("type", level, "message", message,
                  "timestamp", timestamp, "category", deviceId,
                  "traceback", trace))
-
-        self.parent.broker.log(hash)
 
 
 class PrintHandler(logging.Handler):
@@ -75,7 +58,7 @@ class PrintHandler(logging.Handler):
 
 
 _LOGGER_HANDLER = {
-    "NetworkHandler": NetworkHandler,
+    "CacheHandler": CacheHandler,
     "PrintHandler": PrintHandler
 }
 
@@ -84,10 +67,10 @@ def build_logger_node(handles=None):
     """Create a `Logger` Configurable for a Node
 
     :param handles: List of handlers (str) used for the logger.
-                    Choices: `NetworkHandler`, `PrintHandler`
+                    Choices: `CacheHandler`, `PrintHandler`
     """
     if handles is None:
-        handles = ["NetworkHandler", "PrintHandler"]
+        handles = ["CacheHandler", "PrintHandler"]
 
     class Logger(Configurable):
         logger = None
