@@ -194,6 +194,7 @@ class SignalSlotable(Configurable):
         self.deviceId = self._deviceId_
         self._proxies = weakref.WeakValueDictionary()
         self._proxy_futures = {}
+        self._timers = weakref.WeakSet()
         self.__initialized = False
         self.__removed = False
         self._new_device_futures = FutureDict()
@@ -422,6 +423,10 @@ class SignalSlotable(Configurable):
         if self.device_server is not None and not self.__removed:
             self.__removed = True
             self.device_server.removeChild(self.deviceId)
+
+        # Stop all timers!
+        for timer in list(self._timers):
+            timer.destroy()
 
         if self._ss is not None:
             # Returns success
