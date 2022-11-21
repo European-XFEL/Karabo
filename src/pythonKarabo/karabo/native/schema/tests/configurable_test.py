@@ -375,6 +375,207 @@ class Tests(TestCase):
         a.set(h, False)
         self.assertNotEqual(ts, a.node.node.cvalue.timestamp)
 
+    def test_bulk_set_via_setter(self):
+        """Test the bulk setting of a full Hash on a configurable via setter"""
+
+        csetter_called = False
+        bsetter_called = False
+
+        class C(Configurable):
+            @Int32(
+                accessMode=AccessMode.READONLY,
+                minInc=-2,
+                unitSymbol=Unit.METER)
+            def cvalue(self, value):
+                self.cvalue = value
+                nonlocal csetter_called
+                csetter_called = True
+
+        class B(Configurable):
+            @Int32(accessMode=AccessMode.READONLY,
+                   unitSymbol=Unit.METER)
+            def bvalue(self, value):
+                self.bvalue = value
+                nonlocal bsetter_called
+                bsetter_called = True
+
+            node = Node(C)
+
+        class A(Configurable):
+            state = String(enum=State,
+                           options=[State.ON, State.OFF])
+
+            @Double(accessMode=AccessMode.READONLY,
+                    unitSymbol=Unit.METER)
+            def value(self, value):
+                if isSet(value):
+                    self.value = value * 2
+                else:
+                    self.value = value
+            node = Node(B)
+
+        # 1. Test the basic node setting
+        a = A()
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        h = Hash("value", 5)
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.value, 10 * unit.meter)
+        self.assertEqual(a.value.dtype, numpy.float64)
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        bsetter_called = False
+        h["value"] = 22
+        h["node.bvalue"] = 2
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.value, 44 * unit.meter)
+        self.assertEqual(a.node.bvalue, 2 * unit.meter)
+        self.assertEqual(a.node.bvalue.dtype, numpy.int32)
+        self.assertTrue(bsetter_called)
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        csetter_called = False
+        h["node.node.cvalue"] = -1
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.node.node.cvalue, -1 * unit.meter)
+        self.assertIsNotNone(a.value.timestamp)
+        self.assertIsNotNone(a.node.bvalue.timestamp)
+        self.assertIsNotNone(a.node.node.cvalue.timestamp)
+        self.assertTrue(csetter_called)
+
+        # 2. Test exception case
+        a = A()
+        h = Hash("value", 12)
+        h["node.bvalue"] = 12
+        h["node.node.cvalue"] = -3
+
+        bsetter_called = False
+        csetter_called = False
+        with pytest.raises(ValueError):
+            run_coro(a.set_setter(h))
+
+        # All values are not set
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+        self.assertFalse(bsetter_called)
+        self.assertFalse(csetter_called)
+
+        # 3. Test KaraboValues in a Hash
+        a = A()
+        ts = Timestamp()
+        h = Hash("value", QuantityValue(5, timestamp=ts))
+        with pytest.raises(DimensionalityError):
+            run_coro(a.set_setter(h))
+        self.assertFalse(isSet(a.value))
+
+        h = Hash("value", QuantityValue(5, unit=Unit.METER, timestamp=ts))
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.value, 10 * unit.meter)
+        self.assertEqual(a.value.timestamp, ts)
+
+        # 4. Test RuntimeErrors
+        a = A()
+        h = {"value", 5}
+        with pytest.raises(RuntimeError):
+            run_coro(a.set_setter(h))
+
+        h = Hash("value", 5)
+        # Not a Hash for a Node
+        h["node"] = {"bvalue": 12}
+        with pytest.raises(RuntimeError):
+            run_coro(a.set_setter(h))
+
+        # 5. Test a Hash with timestamp in attributes
+        a = A()
+        ts = Timestamp()
+        h = Hash("value", 15)
+        ts.toHashAttributes(h)
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.value, 30 * unit.meter)
+        self.assertEqual(a.value.timestamp, ts)
+
+        # 5. Test a Hash with an Enum
+        a = A()
+        ts = Timestamp()
+        h = Hash("state", State.ON)
+        ts.toHashAttributes(h)
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.state, State.ON)
+        self.assertEqual(a.state.timestamp, ts)
+
+        # 6. Invalid Option for string
+        a = A()
+        h = Hash("state", State.RUNNING)
+        with pytest.raises(ValueError):
+            run_coro(a.set_setter(h))
+        self.assertFalse(isSet(a.state))
+
+        h = Hash("state", State.RUNNING.value)
+        with pytest.raises(ValueError):
+            run_coro(a.set_setter(h))
+        self.assertFalse(isSet(a.state))
+
+        # 7. Back to None
+        a = A()
+        h = Hash("value", 5)
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.value, 10 * unit.meter)
+
+        h = Hash("value", None)
+        try:
+            # The double converts to nan
+            run_coro(a.set_setter(h))
+        except TypeError:
+            self.fail("Could not set None value on floating point")
+
+        self.assertIsNotNone(a.value.value)
+        numpy.testing.assert_equal(a.value.value, numpy.nan)
+
+        # 8.1 Test the only changes for leafs
+        a = A()
+        h = Hash("value", 5)
+        run_coro(a.set_setter(h))
+        self.assertEqual(a.value, 10 * unit.meter)
+        ts = a.value.timestamp
+        self.assertIsNotNone(ts)
+        run_coro(asyncio.sleep(0.01))
+        h = Hash("value", 10)
+        run_coro(a.set_setter(h, True))
+        # Wasn't changed, setter not triggered
+        self.assertEqual(a.value, 10 * unit.meter)
+        self.assertEqual(a.value.timestamp, ts)
+        run_coro(asyncio.sleep(0.01))
+        run_coro(a.set_setter(h))
+        self.assertNotEqual(a.value.timestamp, ts)
+
+        # 8.2 Test the only changes for nodes
+        a = A()
+        h = Hash("value", 5)
+        h["node.node.cvalue"] = -1
+        run_coro(a.set_setter(h, True))
+        self.assertEqual(a.node.node.cvalue, -1 * unit.meter)
+        ts = a.node.node.cvalue.timestamp
+        self.assertIsNotNone(ts)
+        run_coro(asyncio.sleep(0.01))
+        run_coro(a.set_setter(h, True))
+        self.assertEqual(ts, a.node.node.cvalue.timestamp)
+        run_coro(asyncio.sleep(0.01))
+        run_coro(a.set_setter(h, False))
+        self.assertNotEqual(ts, a.node.node.cvalue.timestamp)
+
+        # 9. Test empty hash
+        h = Hash()
+        a = A()
+        run_coro(a.set_setter(h))
+        # All values are not set
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+
     def test_readonly(self):
         class B(Configurable):
             bvalue = Int32(accessMode=AccessMode.READONLY,
