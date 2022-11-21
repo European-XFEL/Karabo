@@ -50,7 +50,8 @@ protected:
         m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
         m_deviceSrv->finalizeInternalInitialization();
         // Instantiate Device Client.
-        m_deviceCli = boost::make_shared<karabo::core::DeviceClient>();
+        m_deviceCli = boost::make_shared<karabo::core::DeviceClient>(std::string(), false);
+        m_deviceCli->initialize();
     }
 
     void TearDown( ) {
