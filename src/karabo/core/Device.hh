@@ -921,9 +921,9 @@ namespace karabo {
                     }
 
                     return m_parameters.get<T>(key);
-                } catch (const karabo::util::Exception& e) {
+                } catch (const karabo::util::Exception&) {
                     KARABO_RETHROW_AS(
-                          KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
+                          KARABO_PARAMETER_EXCEPTION(getInstanceId() + " failed to retrieve parameter '" + key + "'"));
                 }
                 return *static_cast<T*>(NULL); // never reached. Keep it to make the compiler happy.
             }
