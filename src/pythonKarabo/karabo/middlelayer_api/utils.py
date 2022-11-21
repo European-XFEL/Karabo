@@ -328,4 +328,4 @@ class AsyncTimer:
         """Stop the timer and delete any callback or loop reference"""
         self.stop()
         self._callback = None
-        self._loop = None
+        self.loop = None
