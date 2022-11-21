@@ -18,7 +18,7 @@ from karabo.native import (
 from .device import Device
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
-from .signalslot import coslot, slot
+from .signalslot import slot
 from .utils import AsyncTimer
 
 DEFAULT_ACTION_NAME = "_last_action"
@@ -282,11 +282,10 @@ class Macro(Device):
         self.code = ""
         self.stacked_print = deque(maxlen=100)
         self.stackTimer = None
+        self.__local = False
         if not isinstance(get_event_loop(), EventLoop):
+            self.__local = True
             EventLoop.global_loop.start_device(self)
-        else:
-            self.stackTimer = AsyncTimer(
-                self._timer_callback, timeout=PRINT_THROTTLE)
 
     def _initInfo(self):
         info = super()._initInfo()
@@ -300,7 +299,9 @@ class Macro(Device):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
-        if self.stackTimer is not None:
+        if not self.__local:
+            self.stackTimer = AsyncTimer(
+                self._timer_callback, timeout=PRINT_THROTTLE)
             self.stackTimer.start()
         await super()._run(**kwargs)
         try:
@@ -313,15 +314,6 @@ class Macro(Device):
             raise
         else:
             self.state = self.abstractPassiveState
-
-    async def slotKillDevice(self, message=None):
-        """Reimplemented method of SignalSlotable"""
-        if self.stackTimer is not None:
-            self.stackTimer.stop()
-            self.stackTimer = None
-        return await super().slotKillDevice(message)
-
-    slotKillDevice = coslot(slotKillDevice, passMessage=True)
 
     async def __holdDevice(self, d):
         """keep the connection to a remote device
