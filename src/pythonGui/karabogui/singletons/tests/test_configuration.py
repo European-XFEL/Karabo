@@ -70,6 +70,17 @@ class TestConfiguration(GuiTestCase):
         with self.assertRaises(KeyError):
             config.noitem = "Boom"
 
+    def test_default_value(self):
+        """Every item that specifies a data type must have a default value"""
+        config = Configuration()
+        counter = 0
+        for key in config.keys():
+            item = getattr(config.__class__, key)
+            if item.dtype is not None:
+                counter += 1
+                self.assertIsNotNone(item.default)
+        self.assertEqual(counter, 10)
+
     def test_set_bool_value(self):
         target = 'karabogui.singletons.configuration.QSettings'
         with patch(target, new=MockSettings):
