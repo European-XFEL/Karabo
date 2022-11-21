@@ -1,10 +1,8 @@
-import copy
 import time
 import traceback
 import weakref
 from asyncio import (
-    Future, TimeoutError, coroutine, ensure_future, gather, get_event_loop,
-    sleep, wait_for)
+    Future, TimeoutError, coroutine, ensure_future, gather, sleep, wait_for)
 from contextlib import contextmanager
 from datetime import datetime
 from unittest import main
@@ -15,12 +13,12 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, Bool, Configurable, Device, DeviceNode, Float, Hash, Int32,
     KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
-    Timestamp, Unit, VectorChar, VectorFloat, VectorInt16, VectorString,
-    background, call, connectDevice, coslot, decodeBinary, disconnectDevice,
-    execute, filterByTags, getDevice, getInstanceInfo, getTimeInfo, isAlive,
-    isSet, lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
-    waitUntilNew)
-from karabo.middlelayer_api.broker import amqp, jms, mqtt, openmq, redis
+    Timestamp, Unit, VectorFloat, VectorInt16, VectorString, background, call,
+    connectDevice, coslot, disconnectDevice, execute, filterByTags, getDevice,
+    getInstanceInfo, getTimeInfo, isAlive, isSet, lock, setNoWait, setWait,
+    slot, unit, updateDevice, waitUntil, waitUntilNew)
+from karabo.middlelayer_api.broker import amqp, jms, mqtt, redis
+from karabo.middlelayer_api.logger import CacheLog
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -153,36 +151,11 @@ class Remote(Device):
 
     generic = Superslot()
     generic_int = SuperInteger()
-    logmessage = VectorChar()
+    logmessage = None
 
     @Slot()
     async def read_log(self):
-        if jms:
-            consumer = openmq.Consumer(self._ss.session, self._ss.destination,
-                                       "target = 'log'", False)
-            message = await get_event_loop().run_in_executor(
-                None, consumer.receiveMessage, 1000)
-            self.logmessage = message.data
-        else:
-            # reading is asynchronous, so define callback
-            # before binding to 'log' exchange
-
-            def __inner(m):
-                self.logmessage = copy.deepcopy(m)
-
-            self._ss.logproc = __inner
-            if amqp:
-                exch = self._ss.exchanges[f'{self._ss.domain}.log']
-                await self._ss.queue.bind(exch, routing_key='')
-            elif mqtt:
-                topics = [(f'{self._ss.domain}/log', 1)]
-                await self._ss.client.subscribe(topics)
-            elif redis:
-                topic = self._ss.mpsc.channel(f'{self._ss.domain}/log')
-                await self._ss.redis.subscribe(topic)
-            else:
-                self.logmessage = None
-
+        self.logmessage = CacheLog.summary(1)[0]
     got_config = 0
 
     @slot
@@ -741,38 +714,30 @@ class Tests(DeviceTest):
             return (delta.days * 3600 * 24 + delta.seconds +
                     delta.microseconds * 1e-6)
 
+        self.remote.logmessage = None
         with (await getDevice("remote")) as d:
-            t = ensure_future(d.read_log())
-            await sleep(0.5)
             self.local.logger.warning("this is an info")
-            await t
+            await d.read_log()
 
-        if not jms:
-            await sleep(0.1)
-        hash = decodeBinary(self.remote.logmessage)
-        hash = hash["messages"][0]
+        hash = self.remote.logmessage
         self.assertEqual(hash["message"], "this is an info")
         self.assertEqual(hash["type"], "WARN")
         self.assertEqual(hash["category"], "local")
         self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
+
+        self.remote.logmessage = None
         with (await getDevice("remote")) as d:
-            t = ensure_future(d.read_log())
-            await sleep(0.1)
             try:
                 raise RuntimeError("test_log exception")
             except Exception:
                 self.local.logger.exception("expected exception")
-            await t
-        if not jms:
-            await sleep(0.2)
-        hash = decodeBinary(self.remote.logmessage)
-        hash = hash["messages"][0]
+            await d.read_log()
+
+        hash = self.remote.logmessage
         self.assertEqual(hash["message"], "expected exception")
         self.assertEqual(hash["type"], "ERROR")
         self.assertEqual(hash["category"], "local")
         self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
-        self.assertEqual(hash["funcname"], "test_log")
-        self.assertEqual(hash["module"], "remote_test")
         # Traceback is a joined string of traceback info parts
         self.assertEqual(type(hash["traceback"]), str)
 
@@ -893,18 +858,15 @@ class Tests(DeviceTest):
     @async_tst
     async def test_task_error_background_coro(self):
         """test that errors of background tasks are properly reported"""
+        self.remote.logmessage = None
         with (await getDevice("local")) as local, \
                 (await getDevice("remote")) as remote:
-            t = ensure_future(remote.read_log())
             await sleep(0.1)
             await local.task_background_error_coro()
-            await t
+            await remote.read_log()
 
-            if not jms:
-                await sleep(0.2)
             # Read out the log message
-            hash = decodeBinary(self.remote.logmessage)
-            hash = hash["messages"][0]
+            hash = self.remote.logmessage
             message = hash["message"]
             self.assertIn("Error", message)
             # self.assertIn("Error in background task ...", message)
@@ -920,6 +882,7 @@ class Tests(DeviceTest):
     @async_tst
     async def test_task_error_background_no_coro(self):
         """test that errors of background tasks are properly reported"""
+        self.remote.logmessage = None
         with (await getDevice("local")) as local, \
                 (await getDevice("remote")) as remote:
             t = ensure_future(remote.read_log())
@@ -928,8 +891,7 @@ class Tests(DeviceTest):
             await t
 
             # Read out the log message
-            hash = decodeBinary(self.remote.logmessage)
-            hash = hash["messages"][0]
+            hash = self.remote.logmessage
             message = hash["message"]
             self.assertIn("Error", message)
             # self.assertIn("Error in background task ...", message)
