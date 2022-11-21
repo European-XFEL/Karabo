@@ -23,7 +23,7 @@ from karabo.native import (
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
-from .logger import CacheLog, Logger
+from .logger import CacheLog, build_logger_node
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, coslot, slot
@@ -90,7 +90,7 @@ class DeviceServerBase(SignalSlotable):
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    log = Node(Logger,
+    log = Node(build_logger_node(),
                description="Logging settings",
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
