@@ -27,6 +27,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.setFilterKeyColumn(0)
+        self.setRecursiveFilteringEnabled(True)
         self.setSourceModel(source_model)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
@@ -53,25 +54,12 @@ class TopologyFilterModel(QSortFilterProxyModel):
             if not node.is_visible:
                 return False
 
-            if self._filter_status is None:
-                if self.filterRegExp().isEmpty():
-                    return True
-                row_count = model.rowCount(source_index)
-                for row in range(row_count):
-                    if self.filterAcceptsRow(row, source_index):
-                        return True
-            else:
-                row_count = model.rowCount(source_index)
-                for row in range(row_count):
-                    if self.filterAcceptsRow(row, source_index):
-                        return True
-
+            if self._filter_status is not None:
                 status = node.status is self._filter_status
                 if not status:
                     return False
 
-        return super(TopologyFilterModel, self).filterAcceptsRow(
-            source_row, source_parent)
+        return super().filterAcceptsRow(source_row, source_parent)
 
     def setFilterStatus(self, text):
         """Set a filter status for the filtering"""
