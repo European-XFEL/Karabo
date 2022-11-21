@@ -1,5 +1,6 @@
 from asyncio import gather
 from collections import OrderedDict
+from functools import partial
 from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
@@ -20,6 +21,39 @@ class MetaConfigurable(type(Registry)):
     @staticmethod
     def __prepare__(name, bases):
         return OrderedDict()
+
+
+def _get_setters(instance, hsh, only_changes=False):
+    """Get the list of tuples of decriptor, instance and value
+
+    :param hsh: configuration Hash
+    :param only_changes: Boolean if only changed values are considered
+
+    returns: [tuple(descriptor, instance, value), ...]
+    """
+    if not isinstance(hsh, Hash):
+        raise RuntimeError(
+            f"Value must be of a `Hash`, got {type(hsh).__name__} instead.")
+
+    setter = []
+    for k, v in hsh.items():
+        desc = getattr(instance.__class__, k)
+        if isinstance(desc, Node):
+            node = getattr(instance, k)
+            setter.extend(_get_setters(node, v, only_changes))
+        else:
+            v = desc.toKaraboValue(v)
+            if v.timestamp is None:
+                # If there is no timestamp, try to get it
+                # from attributes
+                v.timestamp = Timestamp.fromHashAttributes(
+                    hsh[k, ...])
+            if only_changes:
+                old = getattr(instance, k)
+                if not has_changes(old.value, v.value):
+                    continue
+            setter.append((desc, instance, v))
+    return setter
 
 
 class Configurable(Registry, metaclass=MetaConfigurable):
@@ -183,38 +217,25 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         setters = (s() for s in setters)
         await gather(*[s for s in setters if s is not None])
 
+    async def set_setter(self, config, only_changes=False):
+        """Internal handler to set a Hash on the Configurable via the setter functions
+
+        :param only_changes: Boolean to check if only changed values should
+                             be set, the default is `False`.
+        """
+        setters = [partial(desc.setter, instance, value)
+                   for (desc, instance, value)
+                   in _get_setters(self, config, only_changes)]
+        setters = (s() for s in setters)
+        await gather(*[s for s in setters if s is not None])
+
     def set(self, config, only_changes=False):
         """Internal handler to set a Hash on the Configurable
 
         :param only_changes: Boolean to check if only changed values should
                              be set, the default is `False`.
         """
-
-        def _get_setters(instance, hsh):
-            if not isinstance(hsh, Hash):
-                raise RuntimeError("Value must be of type `Hash`, got "
-                                   f"{type(hsh).__name__} instead.")
-            setter = []
-            for k, v in hsh.items():
-                desc = getattr(instance.__class__, k)
-                if isinstance(desc, Node):
-                    node = getattr(instance, k)
-                    setter.extend(_get_setters(node, v))
-                else:
-                    v = desc.toKaraboValue(v)
-                    if v.timestamp is None:
-                        # If there is no timestamp, try to get it
-                        # from attributes
-                        v.timestamp = Timestamp.fromHashAttributes(
-                            hsh[k, ...])
-                    if only_changes:
-                        old = getattr(instance, k)
-                        if not has_changes(old.value, v.value):
-                            continue
-                    setter.append((desc, instance, v))
-            return setter
-
-        setters = _get_setters(self, config)
+        setters = _get_setters(self, config, only_changes)
         for desc, instance, value in setters:
             # This is similar to descriptor's `__set__`
             value._parent = instance
