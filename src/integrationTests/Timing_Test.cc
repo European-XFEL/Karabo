@@ -69,7 +69,8 @@ void Timing_Test::setUp() {
         m_deviceServer2->finalizeInternalInitialization();
     }
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>();
+    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient->initialize();
 }
 
 
