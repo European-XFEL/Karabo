@@ -80,55 +80,67 @@ _LOGGER_HANDLER = {
 }
 
 
-class Logger(Configurable):
-    logger = None
+def build_logger_node(handles=None):
+    """Create a `Logger` Configurable for a Node
 
-    handlers = VectorString(
-        defaultValue=["NetworkHandler", "PrintHandler"],
-        requiredAccessLevel=AccessLevel.OPERATOR,
-        accessMode=AccessMode.READONLY)
+    :param handles: List of handlers (str) used for the logger.
+                    Choices: `NetworkHandler`, `PrintHandler`
+    """
+    if handles is None:
+        handles = ["NetworkHandler", "PrintHandler"]
 
-    @String(
-        displayedName="Logging Level",
-        options=("DEBUG", "INFO", "WARN", "ERROR", "FATAL"),
-        defaultValue="INFO")
-    def level(self, value):
-        """The minimum level for this logger to log"""
-        if self.logger is not None:
-            self.logger.setLevel(value)
-        self.level = value
+    class Logger(Configurable):
+        logger = None
 
-    @contextmanager
-    def setBroker(self, broker):
-        """Once a device is up and running, set the broker
+        handlers = VectorString(
+            defaultValue=handles,
+            requiredAccessLevel=AccessLevel.OPERATOR,
+            accessMode=AccessMode.READONLY)
 
-        This method adds the log handlers and filters defined for a device
-        to the Python logging loggers. This can only be done once we
-        have a connection to the broker, and should stop once we loose it."""
-        self.logger = logging.getLogger(broker.deviceId)
-        self.logger.setLevel(self.level)
-        for handler in self.handlers.value:
-            h = _LOGGER_HANDLER[handler]()
-            h.parent = self
-            self.logger.addHandler(h)
-        self.broker = broker
-        try:
-            yield
-        finally:
-            self.logger.handlers = []
+        @String(
+            displayedName="Logging Level",
+            options=("DEBUG", "INFO", "WARN", "ERROR", "FATAL"),
+            defaultValue="INFO")
+        def level(self, value):
+            """The minimum level for this logger to log"""
+            if self.logger is not None:
+                self.logger.setLevel(value)
+            self.level = value
 
-    def INFO(self, what):
-        """ legacy """
-        self.logger.info(what)
+        @contextmanager
+        def setBroker(self, broker):
+            """Once a device is up and running, set the broker
 
-    def WARN(self, what):
-        """ legacy """
-        self.logger.warning(what)
+            This method adds the log handlers and filters defined for a
+            device to the Python logging loggers. This can only be done
+            once we have a connection to the broker, and should stop once
+            we loose it."""
+            self.logger = logging.getLogger(broker.deviceId)
+            self.logger.setLevel(self.level)
+            for handler in self.handlers.value:
+                h = _LOGGER_HANDLER[handler]()
+                h.parent = self
+                self.logger.addHandler(h)
+            self.broker = broker
+            try:
+                yield
+            finally:
+                self.logger.handlers = []
 
-    def DEBUG(self, what):
-        """ legacy """
-        self.logger.debug(what)
+        def INFO(self, what):
+            """ legacy """
+            self.logger.info(what)
 
-    def ERROR(self, what):
-        """ legacy """
-        self.logger.error(what)
+        def WARN(self, what):
+            """ legacy """
+            self.logger.warning(what)
+
+        def DEBUG(self, what):
+            """ legacy """
+            self.logger.debug(what)
+
+        def ERROR(self, what):
+            """ legacy """
+            self.logger.error(what)
+
+    return Logger
