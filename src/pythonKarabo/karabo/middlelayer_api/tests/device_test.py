@@ -1,4 +1,4 @@
-from asyncio import TimeoutError, sleep
+from asyncio import TimeoutError, get_event_loop, sleep
 from contextlib import contextmanager
 from unittest import main
 
@@ -14,7 +14,7 @@ from karabo.middlelayer_api.device_client import call, getSchema
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sync_tst)
-from karabo.middlelayer_api.utils import get_property, set_property
+from karabo.middlelayer_api.utils import AsyncTimer, get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
 
@@ -471,6 +471,54 @@ class Tests(DeviceTest):
             await echo.startInstance()
         self.assertTrue(echo.isDown)
         self.assertFalse(echo.is_initialized)
+
+    @async_tst
+    async def test_atimer_destruct(self):
+
+        global counter
+        counter = 0
+
+        class TimerDevice(Device):
+            __version__ = "1.2.3"
+
+            async def onInitialization(self):
+                self.timer = AsyncTimer(self.timer_callback, 0.1)
+                self.timer.start()
+                get_event_loop().something_changed()
+
+            async def timer_callback(self):
+                global counter
+                counter += 1
+
+        device = TimerDevice({"_deviceId_": "timerDeviceTest"})
+        await device.startInstance()
+        self.assertEqual(counter, 0)
+        await waitUntil(lambda: device.is_initialized)
+        await sleep(0.2)
+        self.assertGreater(counter, 0)
+        await device.slotKillDevice()
+        old_counter = counter
+        await sleep(0.2)
+        self.assertEqual(counter, old_counter)
+
+        counter = 0
+        device = TimerDevice({"_deviceId_": "timerDeviceTest"})
+        await device.startInstance()
+        await waitUntil(lambda: device.is_initialized)
+        await sleep(0.2)
+        self.assertGreater(counter, 0)
+        device.__del__()
+        await sleep(0.2)
+        old_counter = counter
+        await sleep(0.2)
+        self.assertEqual(counter, old_counter)
+
+        counter = 0
+        device = TimerDevice({"_deviceId_": "timerDeviceTest"})
+        await device.startInstance()
+        await waitUntil(lambda: device.is_initialized)
+        await device.slotKillDevice()
+        self.assertEqual(0, counter)
 
 
 if __name__ == '__main__':

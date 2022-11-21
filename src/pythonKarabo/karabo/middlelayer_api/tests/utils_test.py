@@ -1,6 +1,8 @@
 import asyncio
 import time
-from unittest import TestCase, main
+import uuid
+import weakref
+from unittest import TestCase, main, mock
 
 import numpy as np
 import pytest
@@ -347,6 +349,15 @@ class UtilsTests(TestCase):
         def call():
             nonlocal called
             called += 1
+
+        loop = asyncio.get_event_loop()
+        # Provide a fake instance
+        instance = mock.Mock()
+        instance.deviceId = "test-mdl-{}".format(uuid.uuid4())
+        instance._ss = mock.Mock()
+        instance._ss.loop = loop
+        instance._ss.tasks = set()
+        loop.instance = weakref.ref(instance)
 
         timer = AsyncTimer(timeout=0.2, callback=call)
         # 1. Test the snoozing by always starting the timer
