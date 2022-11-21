@@ -252,7 +252,8 @@ void BaseLogging_Test::setUp() {
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>();
+    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient->initialize();
     m_sigSlot = boost::make_shared<SignalSlotable>("sigSlot");
     m_sigSlot->start();
 
