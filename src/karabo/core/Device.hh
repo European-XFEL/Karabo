@@ -535,7 +535,8 @@ namespace karabo {
             DeviceClient& remote() {
                 if (!m_deviceClient) {
                     // Initialize an embedded device client (for composition)
-                    m_deviceClient = boost::make_shared<DeviceClient>(shared_from_this());
+                    m_deviceClient = boost::make_shared<DeviceClient>(shared_from_this(), false);
+                    m_deviceClient->initialize();
                 }
                 return *(m_deviceClient);
             }
