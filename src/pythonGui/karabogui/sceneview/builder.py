@@ -7,17 +7,19 @@ from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import ArrowShape, LineShape, PathShape, RectangleShape
 from .widget.api import (
-    ControllerContainer, ImageRendererWidget, LabelWidget, SceneLinkWidget,
-    StickerWidget, UnknownSvgWidget, UnknownWidget, WebLinkWidget)
+    ControllerContainer, DeviceSceneLinkWidget, ImageRendererWidget,
+    LabelWidget, SceneLinkWidget, StickerWidget, UnknownSvgWidget,
+    UnknownWidget, WebLinkWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (ArrowShape, LineShape, PathShape, RectangleShape)
-_WIDGET_CLASSES = (ControllerContainer, LabelWidget, SceneLinkWidget,
-                   StickerWidget, WebLinkWidget, UnknownSvgWidget,
-                   UnknownWidget, ImageRendererWidget)
+_WIDGET_CLASSES = (ControllerContainer, DeviceSceneLinkWidget, LabelWidget,
+                   SceneLinkWidget, StickerWidget, WebLinkWidget,
+                   UnknownSvgWidget, UnknownWidget, ImageRendererWidget)
 
 _SCENE_OBJ_FACTORIES = {
-    models.BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
+    models.BoxLayoutModel: lambda m, p: BoxLayout(
+        m, QT_BOX_LAYOUT_DIRECTION[m.direction]),
     models.FixedLayoutModel: lambda m, p: GroupLayout(m),
     models.GridLayoutModel: lambda m, p: GridLayout(m),
     models.LabelModel: LabelWidget,
@@ -29,8 +31,10 @@ _SCENE_OBJ_FACTORIES = {
     models.StickerModel: StickerWidget,
     models.WebLinkModel: WebLinkWidget,
     models.UnknownWidgetDataModel: UnknownWidget,
+    models.DeviceSceneLinkModel: DeviceSceneLinkWidget,
     models.ImageRendererModel: ImageRendererWidget,
-    models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),  # noqa
+    models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(
+        m, parent=p),
 }
 
 
@@ -39,6 +43,7 @@ def find_top_level_model(scene_model, model):
     the given ``model`` and return its parent model which is the top level
     model in the end.
     """
+
     def recurse(parent_model, seek_model):
         if isinstance(parent_model, models.BaseLayoutModel):
             for child in parent_model.children:
