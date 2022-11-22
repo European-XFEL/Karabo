@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy import uic
-from qtpy.QtCore import Slot
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem
 from traits.api import Undefined
 
@@ -15,20 +15,21 @@ from .utils import get_dialog_ui
 
 
 class DeviceCapabilityDialog(QDialog):
-    def __init__(self, device_id='', capability=Capabilities.PROVIDES_SCENES,
+    def __init__(self, device_id="", capability=Capabilities.PROVIDES_SCENES,
                  parent=None):
         """A dialog to load capability items provided by devices
 
         :param device_id: If provided, the single device to request items from
         :param parent: The parent of the dialog
         """
-        super(DeviceCapabilityDialog, self).__init__(parent)
-        filepath = get_dialog_ui('device_capability.ui')
+        super().__init__(parent)
+        filepath = get_dialog_ui("device_capability.ui")
         uic.loadUi(filepath, self)
 
         self.capability = capability
         # The currently selected device configuration
         self._selected_device = None
+        self._requested_capa = None
 
         if device_id:
             # Add a single device and select it
@@ -49,19 +50,19 @@ class DeviceCapabilityDialog(QDialog):
         item = self.deviceNames.currentItem()
         if item:
             return item.text()
-        return ''
+        return ""
 
     @property
     def capa_name(self):
         item = self.capaNames.currentItem()
         if item:
             return item.text()
-        return ''
+        return ""
 
     def done(self, result):
         """Reimplement ``QDialog`` virtual slot"""
         self._clean_up()
-        super(DeviceCapabilityDialog, self).done(result)
+        super().done(result)
 
     @Slot(str)
     def on_device_filter_textChanged(self, text):
@@ -95,6 +96,26 @@ class DeviceCapabilityDialog(QDialog):
         """Just accept immediately when a capability is double-clicked"""
         self.accept()
 
+    # -----------------------------------------------------------------------
+    # Public interface
+
+    def find_and_select(self, name):
+        """Public interface to find and selected the capa name `name`"""
+        self._requested_capa = name
+        self._set_requested_capa()
+
+    # -----------------------------------------------------------------------
+
+    def _set_requested_capa(self):
+        name = self._requested_capa
+        if name is None:
+            return
+
+        items = self.capaNames.findItems(name, Qt.MatchExactly)
+        if items:
+            self.capaNames.setCurrentItem(items[0])
+            self._requested_capa = None
+
     def _clean_up(self):
         """Clean up:
             - Trait notifications
@@ -104,7 +125,7 @@ class DeviceCapabilityDialog(QDialog):
             return
 
         device_proxy = self._selected_device
-        device_proxy.on_trait_change(self._device_update, 'config_update',
+        device_proxy.on_trait_change(self._device_update, "config_update",
                                      remove=True)
         device_proxy.remove_monitor()
         self._selected_device = None
@@ -165,7 +186,7 @@ class DeviceCapabilityDialog(QDialog):
         """
         self._clean_up()
 
-        device_proxy.on_trait_change(self._device_update, 'config_update')
+        device_proxy.on_trait_change(self._device_update, "config_update")
         device_proxy.add_monitor()
         self._selected_device = device_proxy
 
@@ -175,3 +196,4 @@ class DeviceCapabilityDialog(QDialog):
 
         self._clean_up()
         self.on_deviceNames_itemSelectionChanged()
+        self._set_requested_capa()
