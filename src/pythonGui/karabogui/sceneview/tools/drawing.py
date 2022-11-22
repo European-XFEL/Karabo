@@ -9,10 +9,13 @@ from qtpy.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    ARROW_HEAD, ArrowModel, ImageRendererModel, LineModel, RectangleModel,
-    SceneLinkModel, StickerModel, WebLinkModel, convert_to_svg_image)
+    ARROW_HEAD, ArrowModel, DeviceSceneLinkModel, ImageRendererModel,
+    LineModel, RectangleModel, SceneLinkModel, SceneTargetWindow, StickerModel,
+    WebLinkModel, convert_to_svg_image)
 from karabogui import messagebox
-from karabogui.dialogs.api import SceneLinkDialog, TextDialog, WebDialog
+from karabogui.dialogs.api import (
+    DeviceCapabilityDialog, SceneLinkDialog, TextDialog, WebDialog)
+from karabogui.fonts import get_font_metrics
 from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.utils import calc_rotated_point, calc_snap_pos
@@ -192,6 +195,42 @@ class SceneLinkTool(BaseSceneTool):
             scene_view.set_tool(None)
 
 
+class DeviceSceneLinkTool(BaseSceneTool):
+    def mouse_down(self, scene_view, event):
+        pass
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        mouse_pos = event.pos()
+        dialog = DeviceCapabilityDialog(parent=scene_view)
+        result = dialog.exec()
+        if result == QDialog.Accepted:
+            device_id = dialog.device_id
+            scene_name = dialog.capa_name
+
+            _LINK_MARGIN = 10
+            _LINK_SIZE_HIT = 30
+            fm = get_font_metrics()
+            model = DeviceSceneLinkModel(x=mouse_pos.x(), y=mouse_pos.y())
+            width = max(fm.width(device_id) + _LINK_MARGIN, _LINK_SIZE_HIT)
+            height = max(fm.height() + _LINK_MARGIN, _LINK_SIZE_HIT)
+            model.width = width
+            model.height = height
+
+            # Link properties
+            model.keys = [f"{device_id}.availableScenes"]
+            model.text = f"{device_id}"
+            model.target = scene_name
+            model.target_window = SceneTargetWindow.Dialog
+            scene_view.add_models(model, initialize=True)
+            scene_view.set_tool(None)
+
+
 class StickerTool(BaseSceneTool):
     def mouse_down(self, scene_view, event):
         pass
@@ -233,6 +272,7 @@ class WebLinkTool(BaseSceneTool):
 
 class ImageRendererTool(BaseSceneTool):
     """This tool will place an `ImageRenderer` widget on the scene"""
+
     def mouse_down(self, scene_view, event):
         pass
 

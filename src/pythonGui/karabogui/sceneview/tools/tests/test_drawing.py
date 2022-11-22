@@ -3,13 +3,15 @@ from unittest import mock
 
 from qtpy.QtCore import QEvent, QPoint, Qt
 from qtpy.QtGui import QMouseEvent
+from qtpy.QtWidgets import QDialog
 
-from karabo.common.scenemodel.api import ImageRendererModel, SceneModel
+from karabo.common.scenemodel.api import (
+    DeviceSceneLinkModel, ImageRendererModel, SceneModel)
 from karabogui import icons
 from karabogui.sceneview.api import SceneView
 from karabogui.testing import GuiTestCase
 
-from ..drawing import ImageRendererTool
+from ..drawing import DeviceSceneLinkTool, ImageRendererTool
 
 
 class TestDrawingTools(GuiTestCase):
@@ -48,3 +50,30 @@ class TestDrawingTools(GuiTestCase):
             self.assertIsInstance(model, ImageRendererModel)
             self.assertEqual(model.x, 20)
             self.assertEqual(model.y, 0)
+
+    def test_device_scene_link(self):
+        self.assertEqual(len(self.scene_model.children), 0)
+        path = "karabogui.sceneview.tools.drawing.DeviceCapabilityDialog"
+        with mock.patch(path) as dia:
+            dia().device_id = "TestDevice"
+            dia().capa_name = "scene"
+            dia().exec.return_value = QDialog.Accepted
+
+            tool = DeviceSceneLinkTool()
+
+            event = QMouseEvent(
+                QEvent.MouseMove,
+                QPoint(20, 0),
+                Qt.LeftButton,
+                Qt.LeftButton,
+                Qt.NoModifier)
+
+            tool.mouse_up(self.scene_view, event)
+
+            self.assertEqual(len(self.scene_model.children), 1)
+            model = self.scene_model.children[0]
+            self.assertIsInstance(model, DeviceSceneLinkModel)
+            self.assertEqual(model.x, 20)
+            self.assertEqual(model.y, 0)
+            self.assertEqual(model.target, "scene")
+            self.assertEqual(model.keys, ["TestDevice.availableScenes"])

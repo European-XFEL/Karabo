@@ -4,11 +4,13 @@ from qtpy.QtCore import QPoint, QRect
 from qtpy.QtWidgets import QDialog, QWidget
 
 from karabo.common.scenemodel.api import (
-    LabelModel, SceneLinkModel, SceneTargetWindow, WebLinkModel)
+    DeviceSceneLinkModel, LabelModel, SceneLinkModel, SceneTargetWindow,
+    WebLinkModel)
 from karabogui.events import KaraboEvent
 from karabogui.testing import GuiTestCase
 
-from ..link import SceneLinkWidget, WebDialog, WebLinkWidget
+from ..link import (
+    DeviceSceneLinkWidget, SceneLinkWidget, WebDialog, WebLinkWidget)
 
 
 class TestSceneLink(GuiTestCase):
@@ -76,7 +78,7 @@ class TestSceneLink(GuiTestCase):
         with mock.patch(path) as dialog:
             dialog.exec.return_value = QDialog.Accepted
             dialog().label_model = LabelModel(text="This is a label text")
-            self.widget.edit_label()
+            self.widget.actions()[0].trigger()
             self.assertEqual(self.model.text, "This is a label text")
 
         path = "karabogui.sceneview.widget.link.SceneLinkDialog"
@@ -84,10 +86,11 @@ class TestSceneLink(GuiTestCase):
             dialog.exec.return_value = QDialog.Accepted
             dialog().selectedScene = "New selected scene"
             dialog().selectedTargetWindow = SceneTargetWindow.Dialog
-            self.widget.edit()
+            self.widget.actions()[1].trigger()
             self.assertEqual(self.model.target, "New selected scene")
             self.assertEqual(self.model.target_window,
                              SceneTargetWindow.Dialog)
+            self.assertEqual(self.widget.toolTip(), "name:122345677")
 
 
 class TestWeblink(GuiTestCase):
@@ -147,21 +150,73 @@ class TestWeblink(GuiTestCase):
         with mock.patch(path) as dialog:
             dialog.exec.return_value = QDialog.Accepted
             dialog().label_model = LabelModel(text="This is a label text")
-            self.widget.edit_label()
+            self.widget.actions()[0].trigger()
             self.assertEqual(self.model.text, "This is a label text")
 
         path = "karabogui.sceneview.widget.link.WebDialog"
         with mock.patch(path) as dialog:
             dialog.exec.return_value = QDialog.Accepted
             dialog().target = "www.desy.de"
-            self.widget.edit()
+            self.widget.actions()[1].trigger()
             self.assertEqual(self.model.target, "www.desy.de")
+            self.assertEqual(self.widget.toolTip(), "www.xfel.eu")
 
     def test_webdialog(self):
         dialog = WebDialog(self.model.target)
         self.assertNotEqual(dialog.target, self.model.target)
         # Dialog corrects with http
         self.assertEqual(dialog.target, "http://www.xfel.eu")
+
+
+def test_device_scene_link_widget(gui_app, mocker):
+    model = DeviceSceneLinkModel(
+        text="DeviceSceneLink Text", foreground="black",
+        x=0, y=0, width=100, height=100,
+        target="scene", keys=["XHQ_EH_DG/SCENE/LINK"])
+
+    main_widget = QWidget()
+    widget = DeviceSceneLinkWidget(model=model,
+                                   parent=main_widget)
+    main_widget.show()
+
+    model_rect = QRect(model.x, model.y,
+                       model.width, model.height)
+    assert widget.rect() == model_rect
+    assert len(widget.actions()) == 2
+
+    # Geometry
+    rect = QRect(2, 10, 2, 10)
+    assert widget.geometry() != rect
+    widget.set_geometry(rect)
+    assert widget.geometry() == rect
+
+    # Translation
+    assert widget.pos() == QPoint(2, 10)
+    widget.translate(QPoint(10, 0))
+    assert widget.pos() == QPoint(12, 10)
+
+    path = "karabogui.sceneview.widget.link.TextDialog"
+    dialog = mocker.patch(path)
+    dialog.exec.return_value = QDialog.Accepted
+    dialog().label_model = LabelModel(text="This is a label text")
+    widget.actions()[0].trigger()
+    assert model.text == "This is a label text"
+
+    path = "karabogui.sceneview.widget.link.DeviceCapabilityDialog"
+    dialog = mocker.patch(path)
+    dialog.exec.return_value = QDialog.Accepted
+    dialog().capa_name = "plot"
+    widget.actions()[1].trigger()
+    assert model.target == "plot"
+    assert widget.toolTip() == "XHQ_EH_DG/SCENE/LINK|scene"
+
+    # Make sure, basic interface is there
+    widget.add_proxies(None)
+    widget.apply_changes()
+    widget.decline_changes()
+    widget.set_visible(True)
+    widget.update_global_access_level(None)
+    widget.destroy()
 
 
 if __name__ == "__main__":
