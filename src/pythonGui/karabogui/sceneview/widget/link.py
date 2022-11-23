@@ -7,15 +7,19 @@ import webbrowser
 
 from qtpy.QtCore import QPoint, QRect, QRectF, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QPainter, QPen
-from qtpy.QtWidgets import QAction, QDialog, QPushButton
+from qtpy.QtWidgets import (
+    QAction, QDialog, QLabel, QPushButton, QStackedLayout)
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import messagebox
+from karabogui.binding.api import ProxyStatus
 from karabogui.dialogs.api import (
     DeviceCapabilityDialog, SceneLinkDialog, TextDialog, WebDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import get_qfont
+from karabogui.indicators import get_device_status_pixmap
 from karabogui.request import get_scene_from_server
+from karabogui.singletons.api import get_topology
 from karabogui.topology.api import is_device_online
 from karabogui.widgets.hints import KaraboSceneWidget
 
@@ -205,12 +209,44 @@ class DeviceSceneLinkWidget(BaseLinkWidget):
     """
     iconColor = QColor(100, 149, 237)
 
+    def __init__(self, model, parent=None):
+        super().__init__(model, parent)
+        self.status_symbol = QLabel("", self)
+        self.status_symbol.setAttribute(Qt.WA_TransparentForMouseEvents)
+        pixmap = get_device_status_pixmap(ProxyStatus.OFFLINE)
+        self.status_symbol.setPixmap(pixmap)
+
+        self.layout = QStackedLayout(self)
+        self.layout.setStackingMode(QStackedLayout.StackAll)
+        self.layout.addWidget(self.status_symbol)
+
+        self.proxy = get_topology().get_device(self.deviceId)
+        self.proxy_status_change(self.proxy.status)
+        self.proxy.on_trait_change(self.proxy_status_change, "status")
+
+    @property
+    def deviceId(self):
+        return _get_device_id(self.model.keys)
+
+    def proxy_status_change(self, status):
+        if status is ProxyStatus.OFFLINE:
+            self.status_symbol.show()
+        else:
+            self.status_symbol.hide()
+
     def getToolTip(self):
-        return f"{_get_device_id(self.model.keys)}|{self.model.target}"
+        """Reimplemented function of `BaseLinkWidget`"""
+        return f"{self.deviceId}|{self.model.target}"
+
+    def destroy(self):
+        """Reimplemented function of `BaseLinkWidget`"""
+        self.proxy.on_trait_change(self.proxy_status_change, "status",
+                                   remove=True)
+        self.proxy = None
 
     def on_click(self):
         """Reimplemented function of `BaseLinkWidget`"""
-        device_id = _get_device_id(self.model.keys)
+        device_id = self.deviceId
         if not is_device_online(device_id):
             messagebox.show_warning(
                 f"Device <b>{device_id}</b> is not online!",
@@ -224,8 +260,7 @@ class DeviceSceneLinkWidget(BaseLinkWidget):
 
     def on_edit(self):
         """Reimplemented function of `BaseLinkWidget"""
-        device_id = _get_device_id(self.model.keys)
-        dialog = DeviceCapabilityDialog(device_id, parent=self)
+        dialog = DeviceCapabilityDialog(self.deviceId, parent=self)
         dialog.find_and_select(self.model.target)
         if dialog.exec() == QDialog.Rejected:
             return
