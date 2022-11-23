@@ -12,6 +12,7 @@ from karabo.common.scenemodel.widgets.simple import (
 
 
 class BaseLinkModel(BaseWidgetObjectData):
+    # The target of the link widget
     target = String
     # The text to be displayed
     text = String
@@ -22,12 +23,11 @@ class BaseLinkModel(BaseWidgetObjectData):
     # A background color, CSS-style
     background = String("transparent")
     # The line width of a frame around the text
-    frame_width = Int(0)  # XXX: Make the default 1
+    frame_width = Int(1)
 
 
 class DeviceSceneLinkModel(BaseLinkModel):
     """A model for a DeviceSceneLink Widget"""
-    frame_width = Int(1)
     # Deprecated ...
     target_window = Enum(*list(SceneTargetWindow))
 
@@ -39,44 +39,46 @@ class SceneLinkModel(BaseLinkModel):
 
 class WebLinkModel(BaseLinkModel):
     """A model for the weblink widget"""
-    frame_width = Int(1)
+
+
+def read_base_link(element):
+    """Read the base link information from the element"""
+    traits = {}
+    traits["target"] = element.get(NS_KARABO + "target")
+    traits["text"] = element.get(NS_KARABO + "text", "")
+    traits["font"] = element.get(NS_KARABO + "font", "")
+    traits["foreground"] = element.get(NS_KARABO + "foreground", "black")
+    background = element.get(NS_KARABO + "background", "transparent")
+    traits["background"] = background
+    frame_width = element.get(NS_KARABO + "frameWidth", 1)
+    traits["frame_width"] = int(frame_width)
+    return traits
+
+
+def write_base_link(model, element, klass):
+    """Write the common base link information"""
+    _write_class_and_geometry(model, element, klass)
+    for name in ("background", "text", "font", "foreground", "target"):
+        element.set(NS_KARABO + name, getattr(model, name))
+    element.set(NS_KARABO + "frameWidth", str(model.frame_width))
 
 
 @register_scene_reader("DeviceSceneLink")
-def _device_scene_link_reader(element):
+def __device_scene_link_reader(element):
     traits = _read_geometry_data(element)
+    traits.update(read_base_link(element))
     keys = element.get(NS_KARABO + "keys", "")
     if len(keys) > 0:
         traits["keys"] = keys.split(",")
-    # If unspecified, the default is 'scene`
-    traits["target"] = element.get(NS_KARABO + "target", "")
-    traits["text"] = element.get(NS_KARABO + "text", "")
-    traits["font"] = element.get(NS_KARABO + "font")
-    traits["foreground"] = element.get(NS_KARABO + "foreground", "black")
-    bg = element.get(NS_KARABO + "background")
-    if bg is not None:
-        traits["background"] = bg
-    fw = element.get(NS_KARABO + "frameWidth")
-    if fw is not None:
-        traits["frame_width"] = int(fw)
     traits["target_window"] = SceneTargetWindow.Dialog
-
     return DeviceSceneLinkModel(**traits)
 
 
 @register_scene_writer(DeviceSceneLinkModel)
-def _device_scene_link_writer(model, parent):
+def __device_scene_link_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    _write_class_and_geometry(model, element, "DeviceSceneLink")
+    write_base_link(model, element, "DeviceSceneLink")
     element.set(NS_KARABO + "keys", ",".join(model.keys))
-    for name in ("text", "font", "foreground"):
-        element.set(NS_KARABO + name, getattr(model, name))
-
-    element.set(NS_KARABO + "frameWidth", str(model.frame_width))
-    if model.background != "":
-        element.set(NS_KARABO + "background", model.background)
-    element.set(NS_KARABO + "target", model.target)
-
     # XXX: removal around Karabo 2.18.X
     element.set(NS_KARABO + "target_window", SceneTargetWindow.Dialog.value)
     return element
@@ -85,17 +87,7 @@ def _device_scene_link_writer(model, parent):
 @register_scene_reader("WebLink", version=1)
 def __web_link_reader(element):
     traits = _read_geometry_data(element)
-    traits["target"] = element.get(NS_KARABO + "target")
-    traits["text"] = element.get(NS_KARABO + "text", "")
-    traits["font"] = element.get(NS_KARABO + "font", "")
-    traits["foreground"] = element.get(NS_KARABO + "foreground", "black")
-
-    bg = element.get(NS_KARABO + "background")
-    if bg is not None:
-        traits["background"] = bg
-    fw = element.get(NS_KARABO + "frameWidth")
-    if fw is not None:
-        traits["frame_width"] = int(fw)
+    traits.update(read_base_link(element))
 
     return WebLinkModel(**traits)
 
@@ -103,36 +95,17 @@ def __web_link_reader(element):
 @register_scene_writer(WebLinkModel)
 def __web_link_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    _write_class_and_geometry(model, element, "WebLink")
-    element.set(NS_KARABO + "target", model.target)
-
-    for name in ("text", "font", "foreground"):
-        element.set(NS_KARABO + name, getattr(model, name))
-
-    element.set(NS_KARABO + "frameWidth", str(model.frame_width))
-    if model.background != "":
-        element.set(NS_KARABO + "background", model.background)
-
+    write_base_link(model, element, "WebLink")
     return element
 
 
 @register_scene_reader("SceneLink", version=1)
 def __scene_link_reader(element):
     traits = _read_geometry_data(element)
-    traits["target"] = element.get(NS_KARABO + "target")
-    # If unspecified, the default is 'mainwin'
-    target_window = element.get(NS_KARABO + "target_window", "mainwin")
+    traits.update(read_base_link(element))
+    # If unspecified, the default is 'dialog'
+    target_window = element.get(NS_KARABO + "target_window", "dialog")
     traits["target_window"] = SceneTargetWindow(target_window)
-    traits["text"] = element.get(NS_KARABO + "text", "")
-    traits["font"] = element.get(NS_KARABO + "font", "")
-    traits["foreground"] = element.get(NS_KARABO + "foreground", "black")
-
-    bg = element.get(NS_KARABO + "background")
-    if bg is not None:
-        traits["background"] = bg
-    fw = element.get(NS_KARABO + "frameWidth")
-    if fw is not None:
-        traits["frame_width"] = int(fw)
 
     return SceneLinkModel(**traits)
 
@@ -140,14 +113,7 @@ def __scene_link_reader(element):
 @register_scene_writer(SceneLinkModel)
 def __scene_link_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    _write_class_and_geometry(model, element, "SceneLink")
-    element.set(NS_KARABO + "target", model.target)
+    write_base_link(model, element, "SceneLink")
     element.set(NS_KARABO + "target_window", model.target_window.value)
-
-    for name in ("text", "font", "foreground"):
-        element.set(NS_KARABO + name, getattr(model, name))
-
-    if model.background != "":
-        element.set(NS_KARABO + "background", model.background)
 
     return element
