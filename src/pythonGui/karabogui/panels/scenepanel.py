@@ -18,12 +18,13 @@ from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
     ArrowSceneTool, BoxHSceneAction, BoxVSceneAction, CreateToolAction,
-    GroupEntireSceneAction, GroupSceneAction, ImageRendererTool, LineSceneTool,
-    RectangleSceneTool, SceneAlignAction, SceneBringToFrontAction,
-    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
-    SceneMoveAction, ScenePasteAction, ScenePasteReplaceAction,
-    SceneSelectAllAction, SceneSelectionTool, SceneSendToBackAction,
-    StickerTool, TextSceneTool, UngroupSceneAction, WebLinkTool)
+    DeviceSceneLinkTool, GroupEntireSceneAction, GroupSceneAction,
+    ImageRendererTool, LineSceneTool, RectangleSceneTool, SceneAlignAction,
+    SceneBringToFrontAction, SceneCopyAction, SceneCutAction,
+    SceneDeleteAction, SceneLinkTool, SceneMoveAction, ScenePasteAction,
+    ScenePasteReplaceAction, SceneSelectAllAction, SceneSelectionTool,
+    SceneSendToBackAction, StickerTool, TextSceneTool, UngroupSceneAction,
+    WebLinkTool)
 from karabogui.util import move_to_cursor
 from karabogui.widgets.toolbar import ToolBar
 
@@ -323,6 +324,11 @@ class ScenePanel(BasePanelWidget):
                                         icon=icons.weblink,
                                         text="Add web link",
                                         tooltip="Add web link to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=DeviceSceneLinkTool,
+                                        icon=icons.deviceInstance,
+                                        text="Add device scene link",
+                                        tooltip="Add device link to scene",
                                         checkable=True))
         actions.append(CreateToolAction(tool_factory=StickerTool,
                                         icon=icons.sticker,
