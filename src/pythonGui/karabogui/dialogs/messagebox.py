@@ -24,7 +24,7 @@ class KaraboMessageBox(QDialog):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         # Set focus on the OK button
-        self.ok_button.clicked.connect(self.close)
+        self.ok_button.clicked.connect(self.accept)
         self.ok_button.setFocus()
 
         # Initialize the "Show details" part of the widget
