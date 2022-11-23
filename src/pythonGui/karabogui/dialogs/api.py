@@ -9,7 +9,6 @@ from .configuration_from_past import ConfigurationFromPastDialog
 from .configuration_preview import ConfigPreviewDialog
 from .data_view_dialog import DataViewDialog
 from .device_capability import DeviceCapabilityDialog
-from .device_scenelink_dialog import DeviceSceneLinkDialog
 from .font_dialog import FontDialog
 from .format_label import FormatLabelDialog
 from .listedit import ListEditDialog

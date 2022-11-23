@@ -233,7 +233,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.CheckBoxModel)
         self._assert_geometry(sm.ColorBoolModel)
         self._assert_geometry(sm.DaemonManagerModel)
-        self._assert_geometry(sm.DeviceSceneLinkModel)
         self._assert_geometry(sm.DisplayCommandModel)
         self._assert_geometry(sm.DisplayIconCommandModel)
         self._assert_geometry(sm.DisplayLabelModel)
@@ -286,12 +285,14 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.ScatterGraphModel)
         self._assert_geometry(sm.VectorScatterGraphModel)
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_text_widgets(self):
-        """These are standalone widgets that are not bound to any devices."""
         self._assert_geometry(sm.LabelModel)
-        self._assert_geometry(sm.SceneLinkModel)
         self._assert_geometry(sm.StickerModel)
+
+    @skipIf(IS_MAC_SYSTEM, reason="Link widgets are flaky on MacOS")
+    def test_link_widgets(self):
+        self._assert_geometry(sm.DeviceSceneLinkModel)
+        self._assert_geometry(sm.SceneLinkModel)
         self._assert_geometry(sm.WebLinkModel)
 
     def test_tool_widgets(self):

@@ -4,7 +4,7 @@ from qtpy.QtGui import QColor, QFont
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import (
-    LabelModel, SceneLinkModel, WebLinkModel)
+    DeviceSceneLinkModel, LabelModel, SceneLinkModel, WebLinkModel)
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.fonts import get_alias_from_font
 from karabogui.testing import GuiTestCase
@@ -16,6 +16,7 @@ class TestTextDialog(GuiTestCase):
         self.check_model(LabelModel(), alignment=True)
         self.check_model(WebLinkModel())
         self.check_model(SceneLinkModel())
+        self.check_model(DeviceSceneLinkModel())
 
     def check_model(self, model, alignment=False):
         self.model = model
