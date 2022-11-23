@@ -6,7 +6,7 @@ from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
     NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_SIZES, SCENE_FONT_WEIGHT,
-    SCENE_FONT_WEIGHTS, WIDGET_ELEMENT_TAG, SceneTargetWindow)
+    SCENE_FONT_WEIGHTS, WIDGET_ELEMENT_TAG)
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
     read_font_format_data, write_base_widget_data, write_font_format_data)
@@ -38,25 +38,6 @@ class DisplayIconCommandModel(BaseWidgetObjectData):
     """A model for DisplayIconCommand"""
 
     icon_name = String
-
-
-class DeviceSceneLinkModel(BaseWidgetObjectData):
-    """A model for a DeviceSceneLink Widget"""
-
-    # What device scene is being linked to?
-    target = String
-    # Where should the target be opened?
-    target_window = Enum(*list(SceneTargetWindow))
-    # The text to be displayed
-    text = String
-    # A string describing the font
-    font = String
-    # A foreground color, CSS-style
-    foreground = String
-    # A background color, CSS-style
-    background = String("transparent")
-    # The line width of a frame around the text
-    frame_width = Int(1)
 
 
 class DoubleLineEditModel(BaseEditWidget):
@@ -182,41 +163,6 @@ def __display_icon_command_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "DisplayIconCommand")
     element.set(NS_KARABO + "icon_name", model.icon_name)
-    return element
-
-
-@register_scene_reader("DeviceSceneLink", version=2)
-def _device_scene_link_reader(element):
-    traits = read_base_widget_data(element)
-    # If unspecified, the default is 'scene'
-    traits["target"] = element.get(NS_KARABO + "target", "")
-    traits["text"] = element.get(NS_KARABO + "text", "")
-    traits["font"] = element.get(NS_KARABO + "font")
-    traits["foreground"] = element.get(NS_KARABO + "foreground", "black")
-    bg = element.get(NS_KARABO + "background")
-    if bg is not None:
-        traits["background"] = bg
-    fw = element.get(NS_KARABO + "frameWidth")
-    if fw is not None:
-        traits["frame_width"] = int(fw)
-    # If unspecified, the default is 'mainwin'
-    target_window = element.get(NS_KARABO + "target_window", "mainwin")
-    traits["target_window"] = SceneTargetWindow(target_window)
-    return DeviceSceneLinkModel(**traits)
-
-
-@register_scene_writer(DeviceSceneLinkModel)
-def _device_scene_link_writer(model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, "DeviceSceneLink")
-    for name in ("text", "font", "foreground"):
-        element.set(NS_KARABO + name, getattr(model, name))
-
-    element.set(NS_KARABO + "frameWidth", str(model.frame_width))
-    if model.background != "":
-        element.set(NS_KARABO + "background", model.background)
-    element.set(NS_KARABO + "target", model.target)
-    element.set(NS_KARABO + "target_window", model.target_window.value)
     return element
 
 
