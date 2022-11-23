@@ -9,10 +9,14 @@ from qtpy.QtCore import QPoint, QRect, QRectF, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QAction, QDialog, QPushButton
 
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import messagebox
-from karabogui.dialogs.api import SceneLinkDialog, TextDialog, WebDialog
+from karabogui.dialogs.api import (
+    DeviceCapabilityDialog, SceneLinkDialog, TextDialog, WebDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import get_qfont
+from karabogui.request import get_scene_from_server
+from karabogui.topology.api import is_device_online
 from karabogui.widgets.hints import KaraboSceneWidget
 
 
@@ -24,7 +28,7 @@ class BaseLinkWidget(KaraboSceneWidget, QPushButton):
     def __init__(self, model, parent=None):
         super().__init__(model=model, parent=parent)
         self.setFont(get_qfont(model.font))
-        self.setToolTip(self.model.target)
+        self.setToolTip(self.getToolTip())
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self.handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
@@ -94,6 +98,7 @@ class BaseLinkWidget(KaraboSceneWidget, QPushButton):
     def edit(self, scene_view=None):
         """Double click handle for the scene view"""
         self.on_edit()
+        self.setToolTip(self.getToolTip())
 
     # Qt Slots
     # -----------------------------------------------------------------------
@@ -124,6 +129,9 @@ class BaseLinkWidget(KaraboSceneWidget, QPushButton):
 
     # Public abstract interface
     # -----------------------------------------------------------------------
+
+    def getToolTip(self):
+        return self.model.target
 
     def on_edit(self):
         """Subclass this method to provide an action on `edit`"""
@@ -160,7 +168,6 @@ class SceneLinkWidget(BaseLinkWidget):
 
         self.model.target = dialog.selectedScene
         self.model.target_window = dialog.selectedTargetWindow
-        self.setToolTip(self.model.target)
 
 
 class WebLinkWidget(BaseLinkWidget):
@@ -182,4 +189,45 @@ class WebLinkWidget(BaseLinkWidget):
         if dialog.exec() == QDialog.Rejected:
             return
         self.model.target = dialog.target
-        self.setToolTip(self.model.target)
+
+
+def _get_device_id(keys):
+    if not isinstance(keys, list):
+        return ''
+    try:
+        return keys[0].split('.', 1)[0]
+    except IndexError:
+        return ''
+
+
+class DeviceSceneLinkWidget(BaseLinkWidget):
+    """A clickable widget which opens a Device Scene Link
+    """
+    iconColor = QColor(100, 149, 237)
+
+    def getToolTip(self):
+        return f"{_get_device_id(self.model.keys)}|{self.model.target}"
+
+    def on_click(self):
+        """Reimplemented function of `BaseLinkWidget`"""
+        device_id = _get_device_id(self.model.keys)
+        if not is_device_online(device_id):
+            messagebox.show_warning(
+                f"Device <b>{device_id}</b> is not online!",
+                "Warning", parent=self)
+            return
+        if len(self.model.target):
+            scene_name = self.model.target
+            target_window = self.model.target_window
+            get_scene_from_server(device_id, scene_name=scene_name,
+                                  target_window=target_window)
+
+    def on_edit(self):
+        """Reimplemented function of `BaseLinkWidget"""
+        device_id = _get_device_id(self.model.keys)
+        dialog = DeviceCapabilityDialog(device_id, parent=self)
+        dialog.find_and_select(self.model.target)
+        if dialog.exec() == QDialog.Rejected:
+            return
+        self.model.target = dialog.capa_name
+        self.model.target_window = SceneTargetWindow.Dialog
