@@ -1,7 +1,9 @@
 from copy import deepcopy
 from unittest import TestCase, main
 
-from ..enums import NodeType
+from ..enums import (
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, MetricPrefix, NodeType,
+    Unit)
 from ..hash import Hash, Schema
 
 
@@ -16,6 +18,11 @@ class Tests(TestCase):
         h["a", "allowedStates"] = ["INIT", "UNKNOWN"]
         h["a", "unitSymbol"] = "A"
         h["a", "defaultValue"] = 22.5
+        h["a", "metricPrefixSymbol"] = "m"
+        h["a", "accessMode"] = AccessMode.RECONFIGURABLE.value
+        h["a", "requiredAccessLevel"] = AccessLevel.USER.value
+        h["a", "assignment"] = Assignment.INTERNAL.value
+        h["a", "archivePolicy"] = ArchivePolicy.EVERY_EVENT.value
         h["a", "alias"] = "Karabo"
         h["node", "nodeType"] = NodeType.Node.value
         h["node.b", "nodeType"] = NodeType.Leaf.value
@@ -118,6 +125,27 @@ class Tests(TestCase):
         self.assertFalse(s["mutable"] is mutable)
         self.assertFalse(deep["mutable"] is mutable)
         self.assertTrue(deep.fullyEqual(s))
+
+    def test_helpers(self):
+        attrs = self.schema.hash["a", ...]
+        self.assertEqual(
+            AccessLevel.USER, AccessLevel.fromAttributes(attrs))
+        self.assertEqual(
+            AccessMode.RECONFIGURABLE, AccessMode.fromAttributes(attrs))
+        self.assertEqual(
+            ArchivePolicy.EVERY_EVENT, ArchivePolicy.fromAttributes(attrs))
+        self.assertEqual(
+            Assignment.INTERNAL, Assignment.fromAttributes(attrs))
+        self.assertEqual(
+            MetricPrefix.MILLI, MetricPrefix.fromAttributes(attrs))
+        self.assertEqual(
+            Unit.AMPERE, Unit.fromAttributes(attrs))
+        attrs = self.schema.hash["c", ...]
+        self.assertIsNone(AccessLevel.fromAttributes(attrs))
+        self.assertIsNone(AccessMode.fromAttributes(attrs))
+        self.assertIsNone(ArchivePolicy.fromAttributes(attrs))
+        self.assertIsNone(Assignment.fromAttributes(attrs))
+        self.assertIsNone(MetricPrefix.fromAttributes(attrs))
 
 
 if __name__ == "__main__":
