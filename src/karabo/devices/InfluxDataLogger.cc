@@ -282,7 +282,13 @@ namespace karabo {
                 }
 
                 if (vectorSize > m_maxVectorSize) {
-                    rejectedPaths.push_back(std::make_pair(path, "vector length " + toString(vectorSize)));
+                    std::ostringstream oss;
+                    if (type == Types::VECTOR_HASH) {
+                        oss << "table of " << toString(vectorSize / 10u) << " rows";
+                    } else {
+                        oss << "vector of size " << toString(vectorSize);
+                    }
+                    rejectedPaths.push_back(std::make_pair(path, oss.str()));
                     // All stamp manipulations done, we just skip logValue
                     continue;
                 }
