@@ -1,6 +1,11 @@
 from enum import Enum, IntEnum, unique
 from functools import total_ordering
 
+from karabo.common.api import (
+    KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ARCHIVE_POLICY,
+    KARABO_SCHEMA_ASSIGNMENT, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, KARABO_SCHEMA_UNIT_SYMBOL)
+
 __all__ = ['AccessLevel', 'AccessMode', 'ArchivePolicy', 'Assignment',
            'NodeType', 'LeafType', 'DaqDataType', 'MetricPrefix',
            'Unit', 'DimensionType', 'EncodingType', 'DaqPolicy']
@@ -21,6 +26,17 @@ class AccessLevel(Enum):
             return self.value > other.value
         return NotImplemented
 
+    @classmethod
+    def fromAttributes(cls, attrs):
+        """returns an AccessLevel from schema attributes
+
+        :param attrs: The Schema attributes can be obtained with
+                      `schema.hash["path.to.property", ...]`
+        :return: an AccessLevel or None if missing
+        """
+        al = attrs.get(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)
+        return cls(al) if al is not None else None
+
 
 @unique
 class AccessMode(Enum):
@@ -28,6 +44,17 @@ class AccessMode(Enum):
     INITONLY = 1
     READONLY = 2
     RECONFIGURABLE = 4
+
+    @classmethod
+    def fromAttributes(cls, attrs):
+        """returns an AccessMode from schema attributes
+
+        :param attrs: The Schema attributes can be obtained with
+                      `schema.hash["path.to.property", ...]`
+        :return: an AccessMode or None if missing
+        """
+        am = attrs.get(KARABO_SCHEMA_ACCESS_MODE)
+        return cls(am) if am is not None else None
 
 
 @unique
@@ -41,12 +68,34 @@ class ArchivePolicy(Enum):
     EVERY_10MIN = 6
     NO_ARCHIVING = 7
 
+    @classmethod
+    def fromAttributes(cls, attrs):
+        """returns an ArchivePolicy from schema attributes
+
+        :param attrs: The Schema attributes can be obtained with
+                      `schema.hash["path.to.property", ...]`
+        :return: an ArchivePolicy or None if missing
+        """
+        ap = attrs.get(KARABO_SCHEMA_ARCHIVE_POLICY)
+        return cls(ap) if ap is not None else None
+
 
 @unique
 class Assignment(Enum):
     OPTIONAL = 0
     MANDATORY = 1
     INTERNAL = 2
+
+    @classmethod
+    def fromAttributes(cls, attrs):
+        """returns an Assignment from schema attributes
+
+        :param attrs: The Schema attributes can be obtained with
+                      `schema.hash["path.to.property", ...]`
+        :return: an Assignment or None if missing
+        """
+        a = attrs.get(KARABO_SCHEMA_ASSIGNMENT)
+        return cls(a) if a is not None else None
 
 
 @unique
@@ -101,6 +150,17 @@ class MetricPrefix(Enum):
     ZEPTO = "z"
     YOCTO = "y"
 
+    @classmethod
+    def fromAttributes(cls, attrs):
+        """returns a MetricPrefix from schema attributes
+
+        :param attrs: The Schema attributes can be obtained with
+                      `schema.hash["path.to.property", ...]`
+        :return: a MetricPrefix or None if missing
+        """
+        mp = attrs.get(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL)
+        return cls(mp) if mp is not None else None
+
 
 @unique
 class Unit(Enum):
@@ -151,6 +211,17 @@ class Unit(Enum):
     AMPERE_PER_SECOND = "A/s"
     PERCENT = "%"
     NOT_ASSIGNED = "N_A"
+
+    @classmethod
+    def fromAttributes(cls, attrs):
+        """returns an Unit from schema attributes
+
+        :param attrs: The Schema attributes can be obtained with
+                      `schema.hash["path.to.property", ...]`
+        :return: an Unit or None if missing
+        """
+        us = attrs.get(KARABO_SCHEMA_UNIT_SYMBOL)
+        return cls(us) if us is not None else None
 
 
 @unique
