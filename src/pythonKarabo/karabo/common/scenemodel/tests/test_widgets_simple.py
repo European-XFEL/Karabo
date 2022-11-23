@@ -158,17 +158,6 @@ def test_spinbox_model():
     assert read_model.font_weight == "bold"
 
 
-def test_scene_link_model():
-    traits = _geometry_traits()
-    traits["target"] = "other.svg"
-    traits["target_window"] = api.SceneTargetWindow.Dialog
-    model = api.SceneLinkModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert read_model.target == "other.svg"
-    assert read_model.target_window == api.SceneTargetWindow.Dialog
-
-
 def test_sticker_model():
     traits = _geometry_traits()
     traits["text"] = "foo"
@@ -198,33 +187,14 @@ def test_tickslider():
 def test_timelabel():
     traits = _geometry_traits()
     traits["time_format"] = "%H:%M:%S"
-    traits['font_size'] = 18
-    traits['font_weight'] = "bold"
+    traits["font_size"] = 18
+    traits["font_weight"] = "bold"
     model = api.DisplayTimeModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.time_format == "%H:%M:%S"
     assert read_model.font_size == 18
     assert read_model.font_weight == "bold"
-
-
-def test_web_link_model():
-    traits = _geometry_traits()
-    traits["target"] = "www.xfel.eu"
-    traits["text"] = "www.karabo.eu"
-    traits["font"] = UBUNTU_FONT_SPEC
-    traits["foreground"] = "#000000"
-    traits["background"] = "#ffffff"
-    traits["frame_width"] = 1
-    model = api.WebLinkModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert read_model.target == "www.xfel.eu"
-    assert read_model.text == "www.karabo.eu"
-    assert read_model.font == UBUNTU_FONT_SPEC
-    assert read_model.foreground == "#000000"
-    assert read_model.background == "#ffffff"
-    assert read_model.frame_width == 1
 
 
 def test_deprecated_file_system_model():
