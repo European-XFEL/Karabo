@@ -730,7 +730,7 @@ void BaseLogging_Test::testDropBadData() {
     const std::string& info = vectorHash.get<std::string>("info");
     CPPUNIT_ASSERT_MESSAGE(info, info.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(info,
-                           info.find("'vector' (vector length " + toString(vectorSize) += ")") != std::string::npos);
+                           info.find("'vector' (vector of size " + toString(vectorSize) += ")") != std::string::npos);
     CPPUNIT_ASSERT(vectorHash.has("time"));
     const std::string& timeStr = vectorHash.get<std::string>("time");
     const Epochstamp timeEpoch = Epochstamp::fromHashAttributes(vectorHash.getAttributes("time"));
@@ -745,7 +745,7 @@ void BaseLogging_Test::testDropBadData() {
     const std::string& info2 = mixtureHash1.get<std::string>("info");
     CPPUNIT_ASSERT_MESSAGE(info2, info2.find("log metric(s) for device '" + deviceId + "'") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(info2,
-                           info2.find("'vector' (vector length " + toString(vectorSize) += ")") != std::string::npos);
+                           info2.find("'vector' (vector of size " + toString(vectorSize) += ")") != std::string::npos);
     CPPUNIT_ASSERT(mixtureHash1.has("time"));
     const std::string& timeStr2 = mixtureHash1.get<std::string>("time");
     const Epochstamp timeEpoch2 = Epochstamp::fromHashAttributes(mixtureHash1.getAttributes("time"));
