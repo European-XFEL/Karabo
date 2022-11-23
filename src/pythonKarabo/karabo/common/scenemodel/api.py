@@ -21,11 +21,10 @@ from .registry import register_scene_reader, register_scene_writer
 from .shapes import (
     ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)
 from .widgets.complex import (
-    ColorBoolModel, DeviceSceneLinkModel, DisplayCommandModel,
-    DisplayIconCommandModel, DisplayProgressBarModel, DisplayStateColorModel,
-    DoubleLineEditModel, ErrorBoolModel, EvaluatorModel,
-    FilterTableElementModel, FloatSpinBoxModel, MonitorModel, SingleBitModel,
-    TableElementModel)
+    ColorBoolModel, DisplayCommandModel, DisplayIconCommandModel,
+    DisplayProgressBarModel, DisplayStateColorModel, DoubleLineEditModel,
+    ErrorBoolModel, EvaluatorModel, FilterTableElementModel, FloatSpinBoxModel,
+    MonitorModel, SingleBitModel, TableElementModel)
 # deprecated widgets
 # Graph widgets
 from .widgets.graph_image import (
@@ -47,6 +46,7 @@ from .widgets.graph_utils import (
 from .widgets.icon import (
     BaseIconsModel, DigitIconsModel, DisplayIconsetModel, IconData,
     SelectionIconsModel, TextIconsModel)
+from .widgets.links import DeviceSceneLinkModel, SceneLinkModel, WebLinkModel
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
     CheckBoxModel, ComboBoxModel, DaemonManagerModel, DirectoryModel,
@@ -55,8 +55,8 @@ from .widgets.simple import (
     EditableListElementModel, EditableListModel, EditableRegexListModel,
     EditableRegexModel, EditableSpinBoxModel, FileInModel, FileOutModel,
     GlobalAlarmModel, HexadecimalModel, HistoricTextModel, IntLineEditModel,
-    LabelModel, LampModel, LineEditModel, RunConfiguratorModel, SceneLinkModel,
-    SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
+    LabelModel, LampModel, LineEditModel, RunConfiguratorModel, SliderModel,
+    StickerModel, TickSliderModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, convert_from_svg_image, convert_to_svg_image)
