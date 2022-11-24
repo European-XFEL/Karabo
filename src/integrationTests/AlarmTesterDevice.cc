@@ -344,33 +344,33 @@ namespace karabo {
     }
 
     void AlarmTester::triggerInterlockAck() {
-        setAlarmCondition(AlarmCondition::INTERLOCK);
+        setAlarmCondition(AlarmCondition::INTERLOCK, true);
         set("result", "triggerInterlockAck");
     }
 
     void AlarmTester::triggerGlobalWarnAck() {
-        setAlarmCondition(AlarmCondition::WARN);
+        setAlarmCondition(AlarmCondition::WARN, true);
         set("result", "triggerGlobalWarnAck");
     }
 
     void AlarmTester::triggerGlobalAlarmAck() {
-        setAlarmCondition(AlarmCondition::ALARM);
+        setAlarmCondition(AlarmCondition::ALARM, true);
         KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerGlobalAlarmAck");
     }
 
     void AlarmTester::triggerInterlock() {
-        setAlarmCondition(AlarmCondition::INTERLOCK, false);
+        setAlarmCondition(AlarmCondition::INTERLOCK);
         set("result", "triggerInterlock");
     }
 
     void AlarmTester::triggerGlobalWarn() {
-        setAlarmCondition(AlarmCondition::WARN, false);
+        setAlarmCondition(AlarmCondition::WARN);
         set("result", "triggerGlobalWarn");
     }
 
     void AlarmTester::triggerGlobalAlarm() {
-        setAlarmCondition(AlarmCondition::ALARM, false);
+        setAlarmCondition(AlarmCondition::ALARM);
 
         KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerGlobalAlarm");
@@ -397,7 +397,7 @@ namespace karabo {
     }
 
     void AlarmTester::triggerGlobalNormal() {
-        setAlarmCondition(AlarmCondition::NONE);
+        setAlarmCondition(AlarmCondition::NONE, true);
         set("result", "triggerGlobalNormal");
     }
 
