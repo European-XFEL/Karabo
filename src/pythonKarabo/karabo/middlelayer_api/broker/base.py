@@ -26,10 +26,6 @@ class Broker(ABC):
         pass
 
     @abstractmethod
-    def log(self, message):
-        pass
-
-    @abstractmethod
     def emit(self, signal, targets, *args):
         pass
 
