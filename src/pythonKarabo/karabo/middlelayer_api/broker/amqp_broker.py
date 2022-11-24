@@ -52,7 +52,6 @@ class AmqpBroker(Broker):
         self.consumer_tag = None    # tag returned by consume method
         # Connection birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
-        self.logproc = None
         self.future = None
         self.heartbeatTask = None
         self.lastPublishTask = None
@@ -94,9 +93,6 @@ class AmqpBroker(Broker):
                 self.subscriptions.add((exch, binding_key))
 
         exchange = self.domain + ".signals"
-        self.exchanges[exchange] = await self.channel.declare_exchange(
-                exchange, aio_pika.ExchangeType.TOPIC)
-        exchange = self.domain + ".log"
         self.exchanges[exchange] = await self.channel.declare_exchange(
                 exchange, aio_pika.ExchangeType.TOPIC)
 
@@ -223,16 +219,6 @@ class AmqpBroker(Broker):
         self.repliers[reply] = future
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (await future)
-
-    def log(self, message):
-        exchange = self.domain + ".log"
-        routing_key = ""
-        header = Hash("target", "log")
-        body = Hash("messages", [message])
-        bindata = b''.join([encodeBinary(header), encodeBinary(body)])
-        m = aio_pika.Message(bindata)
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(exchange, routing_key, m))
 
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
@@ -373,9 +359,8 @@ class AmqpBroker(Broker):
 
     async def _cleanup(self):
         await self.stopHeartbeat()
-        self.future.set_result(None)
-        if self.logproc is not None:
-            self.logproc = None
+        if self.future is not None:
+            self.future.set_result(None)
         if self.consumer_tag is not None:
             await self.queue.cancel(self.consumer_tag)
             self.consumer_tag = None
@@ -395,11 +380,6 @@ class AmqpBroker(Broker):
         """
         try:
             header, pos = decodeBinaryPos(message)
-            islog = header.get('target', '')
-            if islog == 'log':
-                if self.logproc is not None:
-                    self.logproc(message[pos:])
-                return
             body = decodeBinary(message[pos:])
             decoded = Hash("header", header, "body", body)
         except BaseException:

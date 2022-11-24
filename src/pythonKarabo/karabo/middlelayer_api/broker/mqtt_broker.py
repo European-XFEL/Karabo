@@ -46,7 +46,6 @@ class MqttBroker(Broker):
                 self.loop, client_id=self.clientId, logger=self.logger)
         # Client birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
-        self.logproc = None
         # Every MqttBroker instance has the following 4 dictionaries...
         self.conMap = {}        # consumer order number's map
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
@@ -202,14 +201,6 @@ class MqttBroker(Broker):
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (await future)
 
-    def log(self, message):
-        topic = self.domain + "/log"
-        header = Hash("target", "log")
-        body = Hash("messages", [message])
-        m = b''.join([encodeBinary(header), encodeBinary(body)])
-        self.loop.call_soon_threadsafe(self.loop.create_task,
-                                       self.client.publish(topic, m, 0))
-
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 
@@ -353,11 +344,6 @@ class MqttBroker(Broker):
         try:
             topic = message.topic
             header, pos = decodeBinaryPos(message.payload)
-            islog = header.get('target', '')
-            if islog == 'log':
-                if self.logproc is not None:
-                    self.logproc(message.payload[pos:])
-                return
             body = decodeBinary(message.payload[pos:])
             hash = Hash("header", header, "body", body)
             self.checkOrder(topic, device, hash)
