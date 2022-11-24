@@ -225,7 +225,11 @@ class ScenePanel(BasePanelWidget):
         mode_qactions = self.create_mode_qactions()
         tool_qactions = [self._build_qaction(a)
                          for a in self.create_tool_actions()]
-        self._build_qaction_group(mode_qactions + tool_qactions)
+        link_qactions = [self._build_qaction(a)
+                         for a in self.create_link_actions()]
+
+        self._build_qaction_group(
+            mode_qactions + tool_qactions + link_qactions)
         self.qactions.extend(mode_qactions)
         self.qactions.append(self._build_separator())
 
@@ -234,6 +238,13 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions.extend(tool_qactions)
         self.qactions.append(self._build_separator())
+
+        link_menu = QMenu()
+        for q_action in link_qactions:
+            link_menu.addAction(q_action)
+        link_action = QAction(icons.scenelink, "Link", self)
+        link_action.setMenu(link_menu)
+        self.qactions.extend([link_action, self._build_separator()])
 
         menu = QMenu()
         group_actions = self.create_group_tool_actions()
@@ -295,6 +306,26 @@ class ScenePanel(BasePanelWidget):
 
         return [show_grid_action, resize_scene_action]
 
+    def create_link_actions(self):
+        """ Create link actions and return list of them"""
+        actions = []
+        actions.append(CreateToolAction(tool_factory=SceneLinkTool,
+                                        icon=icons.scenelink,
+                                        text="Add scene link",
+                                        tooltip="Add scene link to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=WebLinkTool,
+                                        icon=icons.weblink,
+                                        text="Add web link",
+                                        tooltip="Add web link to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=DeviceSceneLinkTool,
+                                        icon=icons.deviceInstance,
+                                        text="Add device scene link",
+                                        tooltip="Add device link to scene",
+                                        checkable=True))
+        return actions
+
     def create_tool_actions(self):
         """ Create tool actions and return list of them"""
         actions = []
@@ -315,21 +346,6 @@ class ScenePanel(BasePanelWidget):
                                         icon=icons.rect, text="Add rectangle",
                                         tooltip="Add rectangle to scene",
                                         checkable=True))
-        actions.append(CreateToolAction(tool_factory=SceneLinkTool,
-                                        icon=icons.scenelink,
-                                        text="Add scene link",
-                                        tooltip="Add scene link to scene",
-                                        checkable=True))
-        actions.append(CreateToolAction(tool_factory=WebLinkTool,
-                                        icon=icons.weblink,
-                                        text="Add web link",
-                                        tooltip="Add web link to scene",
-                                        checkable=True))
-        actions.append(CreateToolAction(tool_factory=DeviceSceneLinkTool,
-                                        icon=icons.deviceInstance,
-                                        text="Add device scene link",
-                                        tooltip="Add device link to scene",
-                                        checkable=True))
         actions.append(CreateToolAction(tool_factory=StickerTool,
                                         icon=icons.sticker,
                                         text="Add a sticker widget",
@@ -340,7 +356,6 @@ class ScenePanel(BasePanelWidget):
                                         text="Add an image to the scene",
                                         tooltip="Add image to scene",
                                         checkable=True))
-
         return actions
 
     def create_group_tool_actions(self):
