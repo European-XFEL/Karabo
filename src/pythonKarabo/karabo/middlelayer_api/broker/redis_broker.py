@@ -49,7 +49,6 @@ class RedisBroker(Broker):
         self.mpsc = None        # Multi-producer single consumer queue
         # Client birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
-        self.logproc = None
         # Every RedisBroker instance has the following 4 dictionaries...
         self.conMap = {}        # consumer order number's map
         self.conTStamp = {}     # consumer timestamp's map ("incarnation")
@@ -201,16 +200,6 @@ class RedisBroker(Broker):
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (await future)
 
-    def log(self, message):
-        topic = self.domain + "/log"
-        header = Hash("target", "log")
-        body = Hash("messages", [message])
-        m = b''.join([encodeBinary(header), encodeBinary(body)])
-
-        async def inner():
-            await self.redis.publish(topic, m)
-        ensure_future(inner())
-
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 
@@ -343,8 +332,6 @@ class RedisBroker(Broker):
     async def _cleanup(self):
         await self.async_unsubscribe_all()
         await self.stopHeartbeat()
-        if self.logproc is not None:
-            self.logproc = None
         if self.readerTask is not None:
             if not self.readerTask.done():
                 self.mpsc.stop()
@@ -359,11 +346,6 @@ class RedisBroker(Broker):
         try:
             topic = message.topic
             header, pos = decodeBinaryPos(message.payload)
-            islog = header.get('target', '')
-            if islog == 'log':
-                if self.logproc is not None:
-                    self.logproc(message.payload[pos:])
-                return
             body = decodeBinary(message.payload[pos:])
             hash = Hash("header", header, "body", body)
             self.checkOrder(topic, device, hash)
