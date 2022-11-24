@@ -1883,7 +1883,7 @@ class PythonDevice(NoFsm):
             self["performanceStatistics.messagingProblems"] = True
             self.lastBrokerErrorStamp = time.time()
 
-    def setAlarmCondition(self, condition, needsAcknowledging=True,
+    def setAlarmCondition(self, condition, needsAcknowledging=False,
                           description=""):
         """Set the global alarm condition
 
