@@ -9,8 +9,9 @@ from .clipboard import (
     SceneMoveAction, ScenePasteAction, ScenePasteReplaceAction,
     SceneSelectAllAction)
 from .drawing import (
-    ArrowSceneTool, DeviceSceneLinkTool, ImageRendererTool, LineSceneTool,
-    RectangleSceneTool, SceneLinkTool, StickerTool, TextSceneTool, WebLinkTool)
+    ArrowSceneTool, DeviceSceneLinkTool, ImageRendererTool, InstanceStatusTool,
+    LineSceneTool, RectangleSceneTool, SceneLinkTool, StickerTool,
+    TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
     ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler)
 from .selection import (

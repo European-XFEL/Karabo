@@ -289,6 +289,10 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.LabelModel)
         self._assert_geometry(sm.StickerModel)
 
+    def test_instance_widget(self):
+        self._assert_geometry(sm.InstanceStatusModel,
+                              keys=["DEVICE1.deviceId"])
+
     @skipIf(IS_MAC_SYSTEM, reason="Link widgets are flaky on MacOS")
     def test_link_widgets(self):
         self._assert_geometry(sm.DeviceSceneLinkModel)

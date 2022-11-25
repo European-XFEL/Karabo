@@ -8,14 +8,15 @@ from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import ArrowShape, LineShape, PathShape, RectangleShape
 from .widget.api import (
     ControllerContainer, DeviceSceneLinkWidget, ImageRendererWidget,
-    LabelWidget, SceneLinkWidget, StickerWidget, UnknownSvgWidget,
-    UnknownWidget, WebLinkWidget)
+    InstanceStatusWidget, LabelWidget, SceneLinkWidget, StickerWidget,
+    UnknownSvgWidget, UnknownWidget, WebLinkWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (ArrowShape, LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (ControllerContainer, DeviceSceneLinkWidget, LabelWidget,
                    SceneLinkWidget, StickerWidget, WebLinkWidget,
-                   UnknownSvgWidget, UnknownWidget, ImageRendererWidget)
+                   UnknownSvgWidget, UnknownWidget, ImageRendererWidget,
+                   InstanceStatusWidget)
 
 _SCENE_OBJ_FACTORIES = {
     models.BoxLayoutModel: lambda m, p: BoxLayout(
@@ -32,6 +33,7 @@ _SCENE_OBJ_FACTORIES = {
     models.WebLinkModel: WebLinkWidget,
     models.UnknownWidgetDataModel: UnknownWidget,
     models.DeviceSceneLinkModel: DeviceSceneLinkWidget,
+    models.InstanceStatusModel: InstanceStatusWidget,
     models.ImageRendererModel: ImageRendererWidget,
     models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(
         m, parent=p),
