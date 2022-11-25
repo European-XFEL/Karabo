@@ -10,11 +10,12 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     ARROW_HEAD, ArrowModel, DeviceSceneLinkModel, ImageRendererModel,
-    LineModel, RectangleModel, SceneLinkModel, SceneTargetWindow, StickerModel,
-    WebLinkModel, convert_to_svg_image)
+    InstanceStatusModel, LineModel, RectangleModel, SceneLinkModel,
+    SceneTargetWindow, StickerModel, WebLinkModel, convert_to_svg_image)
 from karabogui import messagebox
 from karabogui.dialogs.api import (
-    DeviceCapabilityDialog, SceneLinkDialog, TextDialog, WebDialog)
+    DeviceCapabilityDialog, SceneLinkDialog, TextDialog, TopologyDeviceDialog,
+    WebDialog)
 from karabogui.fonts import get_font_metrics
 from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
@@ -229,6 +230,30 @@ class DeviceSceneLinkTool(BaseSceneTool):
             model.target_window = SceneTargetWindow.Dialog
             scene_view.add_models(model, initialize=True)
             scene_view.set_tool(None)
+
+
+class InstanceStatusTool(BaseSceneTool):
+    def mouse_down(self, scene_view, event):
+        pass
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        dialog = TopologyDeviceDialog(parent=scene_view)
+        if dialog.exec() == QDialog.Rejected:
+            return
+        mouse_pos = event.pos()
+        device_id = dialog.device_id
+        model = InstanceStatusModel(
+            x=mouse_pos.x(), y=mouse_pos.y(),
+            width=30, height=30,
+            keys=[f"{device_id}.deviceId"])
+        scene_view.add_models(model, initialize=True)
+        scene_view.set_tool(None)
 
 
 class StickerTool(BaseSceneTool):
