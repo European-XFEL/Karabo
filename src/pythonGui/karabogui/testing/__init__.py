@@ -5,6 +5,7 @@ from .schema import (
     get_simple_schema, get_slotted_schema, get_vectorattr_schema)
 from .utils import (
     GuiTestCase, SimpleDeviceSchema, alarm_data, assert_trait_change,
-    click_button, device_hash, flushed_registry, get_class_property_proxy,
-    get_device_schema, get_property_proxy, keySequence, set_proxy_hash,
-    set_proxy_value, singletons, system_hash, system_hash_server_and_plugins)
+    check_renderer_against_svg, click_button, device_hash, flushed_registry,
+    get_class_property_proxy, get_device_schema, get_property_proxy,
+    keySequence, set_proxy_hash, set_proxy_value, singletons, system_hash,
+    system_hash_server_and_plugins)
