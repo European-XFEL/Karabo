@@ -252,7 +252,7 @@ def killkarabo():
     If you want to kill all of karabo, use the following:
 
       karabo-kill -dx .svscan  # prevent supervisors from getting restarted
-      karabo-kill -dx          # kill all device servers and their suvervisors
+      karabo-kill -dx          # kill all device servers and their supervisors
       karabo-kill -l -dx       # kill all loggers and their supervisors
 
     This command does not try to start supervisors before running, so it is
