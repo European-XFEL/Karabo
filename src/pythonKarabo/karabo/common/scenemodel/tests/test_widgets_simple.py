@@ -54,6 +54,7 @@ def test_all_empty_widgets():
         api.DisplayListModel,
         api.WidgetNodeModel,
         api.ComboBoxModel,
+        api.InstanceStatusModel,
     )
     for klass in model_classes:
         _check_empty_widget(klass)

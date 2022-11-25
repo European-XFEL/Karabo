@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="20"
+   height="20"
+   id="svg4782"
+   version="1.1"
+   sodipodi:docname="statusOffline.svg"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs17" />
+  <sodipodi:namedview
+     id="namedview15"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     showgrid="false"
+     inkscape:zoom="11.8"
+     inkscape:cx="-15.59322"
+     inkscape:cy="10.974576"
+     inkscape:window-width="1351"
+     inkscape:window-height="667"
+     inkscape:window-x="276"
+     inkscape:window-y="383"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg4782" />
+  <path
+     inkscape:connector-curvature="0"
+     id="path6765"
+     d="M 1.1880404,19.756098 H 18.81196 c 0.519276,0 0.944139,-0.424864 0.944139,-0.944137 V 1.1880416 c 0,-0.51927604 -0.424863,-0.94413804 -0.944139,-0.94413804 H 1.1880404 c -0.51927597,0 -0.94413797,0.424862 -0.94413797,0.94413804 V 18.811961 c 0,0.519273 0.424862,0.944137 0.94413797,0.944137 z"
+     style="fill:#969396;fill-opacity:1;stroke:#000000;stroke-width:0.487805;stroke-opacity:1" />
+  <g
+     id="g1717"
+     transform="translate(1.9876659,-1.4869249)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1067"
+       width="3.7288132"
+       height="14.067797"
+       x="-4.3504906"
+       y="6.74893"
+       transform="rotate(-45.121268)" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1067-0"
+       width="3.7288132"
+       height="14.067797"
+       x="11.923653"
+       y="-4.5769916"
+       transform="rotate(45)" />
+  </g>
+</svg>

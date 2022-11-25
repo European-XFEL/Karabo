@@ -4,6 +4,7 @@ import sys
 import unittest
 from collections import OrderedDict
 from platform import system
+from xml.etree.ElementTree import parse
 
 from qtpy.QtCore import Qt
 from qtpy.QtTest import QTest
@@ -383,3 +384,17 @@ class SimpleDeviceSchema(Configurable):
 
 def get_device_schema():
     return SimpleDeviceSchema.getClassSchema()
+
+
+def check_renderer_against_svg(renderer, svgfile):
+    """Yeah... Check an SVG for elements which we suspect it should have.
+    """
+    def _get_path_ids(filename):
+        tree = parse(filename)
+        ids = []
+        for elem in tree.iter('{http://www.w3.org/2000/svg}path'):
+            ids.append(elem.get('id'))
+        return ids
+
+    for name in _get_path_ids(svgfile):
+        assert renderer.elementExists(name)
