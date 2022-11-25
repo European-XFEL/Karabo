@@ -182,6 +182,10 @@ class DisplayTimeModel(DisplayLabelModel):
     time_format = String("%H:%M:%S")
 
 
+class InstanceStatusModel(BaseWidgetObjectData):
+    """A model to display the topology status of a device on the scene"""
+
+
 def _read_geometry_data(element):
     """Read the geometry information."""
     return get_numbers(("x", "y", "width", "height"), element)
@@ -452,6 +456,7 @@ def _build_empty_widget_readers_and_writers():
         "LampModel",
         "RunConfiguratorModel",
         "WidgetNodeModel",
+        "InstanceStatusModel",
     )
     for name in names:
         klass = globals()[name]
