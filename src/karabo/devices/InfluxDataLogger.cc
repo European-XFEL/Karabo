@@ -57,8 +57,7 @@ namespace karabo {
             {
                 // Timestamp shall be the one of the most recent update - this ensures that all stamps come from
                 // the device and cannot be screwed up if clocks of logger and device are off from each other.
-                // TODO: Since the time when logging stops might be of interest as well (for silent devices), it would
-                //       be nice to store it somehow as well.
+                // But we store the local time of the logger as well.
                 boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                 const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
                 ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
