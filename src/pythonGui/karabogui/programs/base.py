@@ -161,14 +161,6 @@ def init_gui(app, use_splash=True):
     warnings.filterwarnings('ignore', '.*Covariance of the parameters '
                                       'could not be estimated.*')
 
-    # 3. Trendline
-    # We might deal with NaN values only, hence we disable all the warnings
-    # as Qwt will handle nicely!
-    IGNORE_NAN_WARN = [r'Mean of empty slice', r'All-NaN slice encountered',
-                       r'All-NaN axis encountered']
-    for warn in IGNORE_NAN_WARN:
-        numpy.warnings.filterwarnings('ignore', warn)
-
     # Load the icons
     icons.init()
     # Load the sceneview widget controllers
