@@ -112,8 +112,6 @@ namespace karabo {
                   m_nonTreatedSlotChanged; // also needs m_perDeviceDataMutex protection
 
            private:
-            boost::mutex m_changeVectorPropMutex;
-
             boost::asio::deadline_timer m_flushDeadline;
             unsigned int m_flushInterval;
 
@@ -145,7 +143,7 @@ namespace karabo {
                                 const boost::shared_ptr<std::atomic<unsigned int>>& counter);
 
             /**
-             * Helper to remove an element from a vector<string> element.
+             * Helper to remove an element from a vector<string> element - needs protection by m_perDeviceDataMutex.
              * Note that if the same element is in the vector more than once, only the first one is removed.
              *
              * @param str the element to remove
@@ -156,7 +154,7 @@ namespace karabo {
             bool removeFrom(const std::string& str, const std::string& vectorProp);
 
             /**
-             * Helper to add an element to a vector<string> element.
+             * Helper to add an element to a vector<string> element - needs protection by m_perDeviceDataMutex.
              * Note that if the same element is already in, it will not be added again.
              *
              * @param str the element to add
@@ -214,9 +212,9 @@ namespace karabo {
 
             void checkReady(std::atomic<unsigned int>& counter);
 
-            bool stopLogging(const std::string& deviceId, bool retry);
+            void disconnect(const std::string& deviceId);
 
-            void disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal, bool retry,
+            void disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
                                    const boost::shared_ptr<std::atomic<int>>& counter);
 
             void flushActor(const boost::system::error_code& e);
