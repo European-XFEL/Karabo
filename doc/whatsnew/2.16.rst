@@ -1,4 +1,36 @@
 ***************************
+What's New in Karabo 2.16.1
+***************************
+
+Planned release 2.12.2022
+This patch release fixes a datalogger connection issue found in a lab installation.
+A few performance improvements for output channels in the C++ device.
+The Middlelayer API has some bugfixes for tests and features of 2.16.0.
+The GUI client has some validation and future proofing improvements.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- GUI: Prevent VectorBool to be considered for TableVectorButton
+- GUI: Provide option to retrieve default scene on TableStringButton
+- GUI: Add validator again to list regex edit
+- GUI: Provide toolbar in Configuration Editor when in cinema mode
+- GUI: Remove not required column in project view
+- GUI: Put index ref protection in filter model
+- GUI: Improve image node validation
+- GUI: Memorize project sorting in dialog
+- C++/Bound: Add flag to avoid NDArray data copy even if pipeline queues
+- C++: Allow Device::writeChannel to specify safeNDArray for OutputChannel::update
+- C++: Add deviceId to exception message of Device::get
+- C++: Fixed data logger connection failure handling
+- MDL: Protect NoEventLoop from launching tasks when beingoing down
+- MDL: Assignment.INTERNAL in sanitize_write_configuration
+- MDL: Don't start the AsyncTimer again when the loop is closed, provide success...
+- MDL: Rely on instanceGone to remove Child of server
+- MDL: Provide convenient async timer handling. They are always stopped and destroyed.
+
+
+***************************
 What's New in Karabo 2.16.0
 ***************************
 
