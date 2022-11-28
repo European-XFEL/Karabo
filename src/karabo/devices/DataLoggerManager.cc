@@ -839,6 +839,7 @@ namespace karabo {
                 const TimeDuration tolerance(0, 0, get<unsigned int>("topologyCheck.toleranceLogged"), 0ull,
                                              0ull); // from minutes
                 const std::vector<Hash>& updates = config.get<std::vector<Hash>>("lastUpdatesUtc");
+                // DataLogger logic ensures that the content of the last updates table matches devicesToBeLogged
                 auto loggedDevCounter = boost::make_shared<std::atomic<size_t>>(updates.size());
                 const unsigned int timeout = get<unsigned int>("timeout");
                 std::vector<std::string> idsWithoutTimestamp;
