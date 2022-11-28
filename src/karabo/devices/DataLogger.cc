@@ -165,7 +165,7 @@ namespace karabo {
                 throw KARABO_INIT_EXCEPTION("Duplicated ids in configured devicesToBeLogged: " + toString(devsToLog));
             }
             // In the beginning, all are not yet logged (no mutex needed since no parallel action triggered yet):
-            set("devicesNotLogged", devsToLog);
+            if (!devsToLog.empty()) set("devicesNotLogged", devsToLog);
 
             // Create data structures, including directories
             for (const std::string& deviceId : devsToLog) {
@@ -243,8 +243,29 @@ namespace karabo {
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "Failed " << reason << " " << deviceId << ": " << e.what();
             }
-            if (counter) checkReady(*counter);
-            stopLogging(deviceId, true); // 'true' means retry later!
+            data->stopLogging(); // Likely nothing to do (did not reach 'connected' state), but be sure.
+
+            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            auto it = m_perDeviceData.find(deviceId);
+            if (it == m_perDeviceData.end()) {
+                // Should not be logged anymore, i.e. not in "devicesToBeLogged", either.
+                if (counter) checkReady(*counter);
+            } else {
+                // Disconnect and start from scratch
+                KARABO_LOG_FRAMEWORK_INFO << "Retry to connect device " << deviceId;
+                // For cases where the failure is a timeout of an outdated connection attempt, i.e. meanwhile we are
+                // happily logging (see https://redmine.xfel.eu/issues/143594), we append to not logged devices. In
+                // other cases this is a no-op.
+                appendTo(deviceId, "devicesNotLogged");
+
+                DeviceData::Pointer newData = createDeviceData(Hash("deviceToBeLogged", deviceId));
+                m_perDeviceData[deviceId] = newData;     // overwriting previous DeviceData
+                m_nonTreatedSlotChanged.erase(deviceId); // Just in case we received unwanted data before...
+
+                lock.unlock();        // broker writes in disconnect and initConnection
+                disconnect(deviceId); // No need to wait for completion of disconnect (message order guarantee).
+                initConnection(data, counter);
+            }
         }
 
 
@@ -283,8 +304,8 @@ namespace karabo {
             asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
                           SignalSlotConnection(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged")},
                          util::bind_weak(&DataLogger::handleConfigConnected, this, data, counter),
-                         util::bind_weak(&DataLogger::handleFailure, this, "connecting to configuration updates", data,
-                                         counter));
+                         util::bind_weak(&DataLogger::handleFailure, this, "connecting to configuration updates for",
+                                         data, counter));
         }
 
 
@@ -317,13 +338,11 @@ namespace karabo {
         }
 
 
-        bool DataLogger::stopLogging(const std::string& deviceId, bool retry) {
+        void DataLogger::disconnect(const std::string& deviceId) {
             auto disconnectCounter = boost::make_shared<std::atomic<int>>(3); // three signals to disconnect below
-            auto genericHandler =
-                  bind_weak(&DataLogger::disconnectHandler, this, _1, deviceId, _2, retry, disconnectCounter);
+            auto genericHandler = bind_weak(&DataLogger::disconnectHandler, this, _1, deviceId, _2, disconnectCounter);
+
             // Use the very long default timeout for the disconnection:
-            // If we shall retry to connect, a long timeout gives a better chance that the other end is now capable to
-            // accept connections (in the situation that this failed before due to overload).
             asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
                             boost::bind(genericHandler, false, "signalSchemaUpdated"), // successHandler for schema
                             boost::bind(genericHandler, true, "signalSchemaUpdated")); // failureHandler for schema
@@ -333,54 +352,26 @@ namespace karabo {
             asyncDisconnect(deviceId, "signalChanged", "", "slotChanged",
                             boost::bind(genericHandler, false, "signalChanged"), // ... for changed
                             boost::bind(genericHandler, true, "signalChanged")); // ... for changed
-
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            auto it = m_perDeviceData.find(deviceId);
-            if (it == m_perDeviceData.end()) return false;
-            it->second->stopLogging();
-            m_perDeviceData.erase(it);
-
-            return true;
         }
 
 
         void DataLogger::disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
-                                           bool retry, const boost::shared_ptr<std::atomic<int>>& counter) {
+                                           const boost::shared_ptr<std::atomic<int>>& counter) {
+            const int count = --(*counter);
             if (isFailure) {
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException&) {
-                    // Silence the expected timeout if stopLogging was called since device went offline
+                    // Silence the expected timeout if disconnect was called since device went offline
                     karabo::util::Exception::clearTrace();
                 } catch (const std::exception& se) {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect from " << devId << "." << signal << ": "
                                               << se.what();
                 }
-            }
-
-            // If retry requested, wait until all signals are disconnected (do not bother if that failed);
-            if (retry && 0 >= --(*counter)) {
-                const std::vector<std::string> devsToLog = get<std::vector<std::string>>("devicesToBeLogged");
-                if (std::find(devsToLog.begin(), devsToLog.end(), devId) == devsToLog.end()) {
-                    return; // lost interest in this device
-                }
-                const std::vector<std::string> devsNotLogged = get<std::vector<std::string>>("devicesNotLogged");
-                if (std::find(devsNotLogged.begin(), devsNotLogged.end(), devId) == devsNotLogged.end()) {
-                    // Maybe some other path was taken to connect, e.g. from outside while the attempt to connect
-                    // "this time" ran into time out.
-                    KARABO_LOG_FRAMEWORK_INFO << "Skip retry to connect to " << devId << " since connection OK.";
-                    return;
-                }
-                KARABO_LOG_FRAMEWORK_INFO << "Retry to connect device " << devId;
-
-                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", devId));
-
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-                m_perDeviceData.insert(std::make_pair(devId, data));
-                m_nonTreatedSlotChanged.erase(devId); // Just in case we received unwanted data before...
-
-                // Init connection to device
-                initConnection(data, boost::shared_ptr<std::atomic<unsigned int>>());
+            } else if (count <= 0) {
+                // Little logic problem: If two disconnections failed and this last one succeeds, also get here.
+                // Should never happen and if yes, does not harm.
+                KARABO_LOG_FRAMEWORK_INFO << "Disconnected from device " << devId;
             }
         }
 
@@ -389,14 +380,18 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Stop logging '" << deviceId
                                       << "' requested since: " << reason;
 
-            removeFrom(deviceId, "devicesToBeLogged");
-            removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
-
-            // (Try to) Remove device from m_perDeviceData:
-            if (!stopLogging(deviceId, false)) {
-                // Inform caller about failure by exception
-                throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' not treated.");
+            {
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                auto it = m_perDeviceData.find(deviceId);
+                if (it == m_perDeviceData.end()) {
+                    throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' not treated.");
+                }
+                it->second->stopLogging();
+                m_perDeviceData.erase(it);
+                removeFrom(deviceId, "devicesToBeLogged");
+                removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
             }
+            disconnect(deviceId);
         }
 
 
@@ -406,6 +401,7 @@ namespace karabo {
 
             // Initiate logging for all of them
             for (const std::string& deviceId : deviceIds) {
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 if (!appendTo(deviceId, "devicesToBeLogged")) {
                     badIds.push_back(deviceId);
                     continue;
@@ -415,13 +411,13 @@ namespace karabo {
 
                 // Create data structure ... depending on implementation
                 DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId));
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
                 m_nonTreatedSlotChanged.erase(deviceId);
 
                 // Init connection to device,
                 // using an empty pointer to counter since addition of logged devices at runtime shall not influence
                 // State.
+                lock.unlock(); // writing to broker inside initConnection...
                 initConnection(data, boost::shared_ptr<std::atomic<unsigned int>>());
             }
 
@@ -489,8 +485,6 @@ namespace karabo {
 
 
         bool DataLogger::removeFrom(const std::string& str, const std::string& vectorProp) {
-            // lock mutex to avoid that another thread interferes in between get and set
-            boost::mutex::scoped_lock lock(m_changeVectorPropMutex);
             std::vector<std::string> vec = get<std::vector<std::string>>(vectorProp);
             const auto it = std::find(vec.begin(), vec.end(), str);
             if (it != vec.end()) {
@@ -504,8 +498,6 @@ namespace karabo {
 
 
         bool DataLogger::appendTo(const std::string& str, const std::string& vectorProp) {
-            // lock mutex to avoid that another thread interferes in between get and set
-            boost::mutex::scoped_lock lock(m_changeVectorPropMutex);
             std::vector<std::string> vec = get<std::vector<std::string>>(vectorProp);
             const auto it = std::find(vec.begin(), vec.end(), str);
             if (it == vec.end()) {
