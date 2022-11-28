@@ -135,14 +135,6 @@ class JmsBroker(Broker):
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (await future)
 
-    def log(self, message):
-        p = openmq.Properties()
-        p["target"] = "log"
-        m = openmq.BytesMessage()
-        m.data = encodeBinary(Hash("messages", [message]))
-        m.properties = p
-        self.producer.send(m, 1, _MSG_PRIORITY_LOW, _MSG_TIME_TO_LIVE)
-
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 
