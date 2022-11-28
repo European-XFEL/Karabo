@@ -14,7 +14,7 @@ from karabogui import icons
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding)
 from karabogui.controllers.api import (
-    HIDDEN, MAX_NUMBER_LIMIT, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
+    HIDDEN, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
     BaseBindingController, Curve, get_start_end_date_time,
     register_binding_controller, with_display_type)
 from karabogui.dialogs.api import RequestTimeDialog
@@ -313,7 +313,7 @@ class BaseSeriesGraph(BaseBindingController):
         for curve in self._curves.values():
             if not curve.fill:
                 continue
-            timestamps.append(curve.get_max_x_value())
+            timestamps.append(curve.get_max_timepoint())
 
         if not timestamps:
             return QDateTime.currentDateTime()
@@ -344,7 +344,7 @@ class DisplayTrendGraph(BaseSeriesGraph):
     curve_type = Int(0)
 
     def value_update(self, proxy):
-        if self.widget is None or abs(proxy.value) >= MAX_NUMBER_LIMIT:
+        if self.widget is None:
             return
 
         timestamp = proxy.binding.timestamp
