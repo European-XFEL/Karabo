@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
 
 from karabogui.fonts import get_qfont
 from karabogui.graph.common.api import COLORMAPS
-from karabogui.util import move_to_cursor
+from karabogui.util import generateObjectName, move_to_cursor
 
 from .dialogs.levels import LevelsDialog
 from .utils import ensure_finite_levels, get_level_limits, levels_almost_equal
@@ -20,6 +20,7 @@ class ColorBarWidget(GraphicsWidget):
 
     def __init__(self, imageItem, parent=None):
         super().__init__(parent=parent)
+        self.setObjectName(generateObjectName(self))
         self.imageItem = imageItem
 
         self.levels = min_level, max_level = [0, NUM_SAMPLES - 1]
