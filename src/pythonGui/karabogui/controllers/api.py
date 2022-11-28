@@ -9,8 +9,8 @@ from .registry import (
     get_class_const_trait, get_compatible_controllers, get_model_controller,
     get_scene_model_class, register_binding_controller)
 from .trendmodel import (
-    HIDDEN, MAX_NUMBER_LIMIT, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
-    Curve, get_start_end_date_time)
+    HIDDEN, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME, Curve,
+    get_start_end_date_time)
 from .unitlabel import add_unit_label
 from .util import (
     axis_label, get_class_const_trait, get_regex, has_options, has_regex,
