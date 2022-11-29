@@ -1058,6 +1058,16 @@ class Tests(TestCase):
         self.assertEqual(a.complexVector.value[0], 5 + 3j)
         self.assertEqual(a.complexVector.value[1], 3 + 4j)
 
+        # Test initialization
+
+        class A(Configurable):
+            stringVector = VectorString(
+                defaultValue=['blub'],
+                minSize=2)
+
+        with self.assertRaises(ValueError):
+            A()
+
     def test_table(self):
         class Row(Configurable):
             name = String()
@@ -1365,6 +1375,40 @@ class Tests(TestCase):
         self.assertEqual(b.d.descriptor.defaultValue, ["remote:output"])
         self.assertEqual(b.d.descriptor.classId, "VectorRegexString")
         self.assertEqual(b.d.descriptor.displayType, "VectorRegexString")
+
+        # No default value
+        class C(Configurable):
+            d = VectorRegexString(
+                regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
+            e = VectorString()
+
+        c = C()
+        self.assertEqual(c.d.descriptor.classId, "VectorRegexString")
+        self.assertEqual(c.d.descriptor.displayType, "VectorRegexString")
+        self.assertEqual(c.d.descriptor.defaultValue, None)
+        self.assertEqual(c.d, None)
+        # Same behavior
+        self.assertEqual(c.e.descriptor.defaultValue, None)
+        self.assertEqual(c.e, None)
+
+        # Minsize and maxsize
+
+        class D(Configurable):
+            d = VectorRegexString(
+                defaultValue=["remote:output"],
+                minSize=2,
+                regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
+
+        with self.assertRaises(ValueError):
+            D()
+
+        class E(Configurable):
+            d = VectorRegexString(
+                defaultValue=["remote:output", "remote1:output"],
+                maxSize=1,
+                regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
+        with self.assertRaises(ValueError):
+            E()
 
     def test_image_with_image_data(self):
         arrayEqual = numpy.testing.assert_array_equal
