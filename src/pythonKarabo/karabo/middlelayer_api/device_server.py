@@ -76,7 +76,7 @@ class DeviceServerBase(SignalSlotable):
     deviceClasses = VectorString(
         displayedName="Device Classes",
         description="The device classes the server will manage",
-        assignment=Assignment.OPTIONAL, defaultValue="",
+        assignment=Assignment.OPTIONAL, defaultValue=[],
         requiredAccessLevel=AccessLevel.EXPERT)
 
     scanPluginsTask = None
