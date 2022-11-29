@@ -1166,10 +1166,6 @@ class VectorRegexString(VectorString):
         self._pattern = re.compile(self.regex, flags)
         self.displayType = "VectorRegexString"
 
-    def initialize(self, instance, value):
-        self.check(value)
-        return self.setter(instance, value)
-
     def check(self, data):
         super().check(data)
         for index, string in enumerate(data):
