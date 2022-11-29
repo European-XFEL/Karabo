@@ -1357,6 +1357,18 @@ class Tests(TestCase):
         self.assertEqual(a.d.descriptor.defaultValue, "1")
         self.assertEqual(a.d.descriptor.classId, "RegexString")
 
+        class C(Configurable):
+            d = RegexString(
+                regex=r"(0|1|[T]rue|[F]alse)")
+            e = String()
+
+        a = C()
+        self.assertEqual(a.d.descriptor.defaultValue, None)
+        self.assertEqual(a.d, None)
+        self.assertEqual(a.d.descriptor.classId, "RegexString")
+        self.assertEqual(a.e.descriptor.defaultValue, None)
+        self.assertEqual(a.e, None)
+
     def test_vector_regex_string(self):
 
         class A(Configurable):
