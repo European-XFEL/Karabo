@@ -1015,8 +1015,13 @@ def _create_numpy_vector(name, number, numpy, basetype):
         def check(self, value):
             if self.dtype is None or not isSet(value):
                 return value
+            if not isinstance(value, (list, np.ndarray)):
+                raise KaraboError(
+                    "Default value for a vector must be either "
+                    f"a list or ndarray, got {type(value)} instead.")
             if isinstance(value, np.ndarray) and value.ndim != 1:
                 raise KaraboError("Only 1 dimensional vectors are allowed.")
+
             # Vector defaults are lists...
             array = [self.dtype(v) for v in value]
             return array
@@ -1103,13 +1108,30 @@ class RegexString(String):
         super().check(data)
 
 
+class VectorStringDefault(Attribute):
+    """Attribute class to set a defaultValue for a numpy vector"""
+
+    def check(self, value):
+        """Reimplemented method of `Attribute`"""
+        if not isSet(value):
+            return value
+        if not isinstance(value, list):
+            raise KaraboError(
+                "Default value for a vector string must be a list, "
+                f"got {type(value)} instead.")
+        if not all([isinstance(item, str) for item in value]):
+            raise ValueError(
+                "VectorStrings require strings in their default value.")
+        return value
+
+
 class VectorString(Vector):
     basetype = String
     number = 29
     numpy = np.object_
-
     # NOTE: Vectorstring should be represented as python lists
     # the np.object is simply for the table element
+    defaultValue = VectorStringDefault()
 
     def cast(self, other):
         def check(s):
