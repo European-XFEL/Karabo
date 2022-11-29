@@ -18,10 +18,6 @@ TEN_MINUTES = "Ten Minutes"
 UPTIME = "Uptime"
 HIDDEN = "Hidden"
 
-DEFAULT_MIN = -0.5
-DEFAULT_MAX = 0.5
-MAX_NUMBER_LIMIT = 1e30
-
 
 def get_start_end_date_time(selected_time_span):
     """ Return beginning and end date time for given ``selected_time_span``.
@@ -199,12 +195,12 @@ class Curve(HasStrictTraits):
         if self.curve:
             self.curve.setData(self.x[:self.fill], self.y[:self.fill])
 
-    @on_trait_change('proxy:visible')
+    @on_trait_change("proxy:visible")
     def _visibility_update(self, visible):
         if visible and self.t1 >= self.x[self.histsize]:
             self.get_property_history(self.t0, self.t1)
 
-    @on_trait_change('proxy:binding:historic_data')
+    @on_trait_change("proxy:binding:historic_data")
     def _historic_data_arrival(self, data):
         if not data:
             return
@@ -221,12 +217,10 @@ class Curve(HasStrictTraits):
 
         for i, d in enumerate(data):
             # Protect against inf by setting numpy.NaN which is not shown
-            x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
+            x[i] = Timestamp.fromHashAttributes(d["v", ...]).toTimestamp()
             # Do some gymnastics for crazy values!
             value = d["v"]
-            if self.curve_type == 0 and abs(value) >= MAX_NUMBER_LIMIT:
-                value = numpy.NaN
-            elif self.curve_type == 1:
+            if self.curve_type == 1:
                 value = STATE_INTEGER_MAP[value]
             elif self.curve_type == 2:
                 value = ALARM_INTEGER_MAP[value]
@@ -262,20 +256,6 @@ class Curve(HasStrictTraits):
         self.fill_current()
         self.update()
 
-    def get_mean_y_value(self, count=10):
-        """ Return mean value for last ``count`` of y values."""
-        if count > len(self.y):
-            count = len(self.y)
-        return numpy.nanmean(self.y[max(self.fill - count, 0):self.fill])
-
-    def get_min_y_value(self):
-        """ Return min value of all y values."""
-        return numpy.nanmin(self.y[:self.fill]) if self.fill else DEFAULT_MIN
-
-    def get_max_y_value(self):
-        """ Return max value for all y values"""
-        return numpy.nanmax(self.y[:self.fill]) if self.fill else DEFAULT_MAX
-
-    def get_max_x_value(self):
-        """ Return max value for all x values"""
-        return numpy.nanmax(self.x[:self.fill]) if self.fill else DEFAULT_MAX
+    def get_max_timepoint(self):
+        """ Return the max time point for the fill values"""
+        return numpy.max(self.x[:self.fill]) if self.fill else 0.0
