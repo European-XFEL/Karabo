@@ -10,7 +10,11 @@ This patch release
   the case that input channels connect with onSlowness="queueDrop" (see
   documentation of new *safeNDArray* flag in Device::writeChannel and
   OutputChannel::update),
-* has some bugfixes in the Middlelayer API for tests and features of 2.16.0,
+* hardens the Middlelayer API in tests,
+* changes the behavior of MDL's *sanitize_write_configuration*. Now the properties declared
+  as Assignment.INTERNAL in the runtime schema are included in the configuration, before they
+  were filtered out,
+* provides a convenient `AsyncTimer` handling (stop of timer at end of device lifetime),
 * and includes some validation and future proofing improvements in the GUI
   client.
 
