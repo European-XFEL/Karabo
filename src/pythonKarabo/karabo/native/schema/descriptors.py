@@ -1097,10 +1097,6 @@ class RegexString(String):
         self._pattern = re.compile(self.regex, flags)
         self.displayType = "RegexString"
 
-    def initialize(self, instance, value):
-        self.check(value)
-        return self.setter(instance, value)
-
     def check(self, data):
         if not self._pattern.match(data):
             raise KaraboError(f"Value {data} does not comply with regex "
