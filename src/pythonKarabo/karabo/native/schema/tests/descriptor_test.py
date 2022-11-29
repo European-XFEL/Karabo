@@ -259,6 +259,14 @@ class Tests(TestCase):
                         metricPrefixSymbol=MetricPrefix.MICRO,
                         defaultValue=np.array([[1, 2], [3, 4]]))
 
+        # Check faulty defaults
+        with self.assertRaises(KaraboError):
+            VectorInt8(defaultValue=2)
+
+        # Check faulty defaults
+        with self.assertRaises(KaraboError):
+            VectorInt8(defaultValue="1,2,3")
+
     def test_floats(self):
         d = Float()
         v = d.toKaraboValue(3)
@@ -620,6 +628,14 @@ class Tests(TestCase):
         self.assertEqual(v, ["a", "b", "c"])
         self.assertEqual(v[1], "b")
         self.assertEqual(len(v), 3)
+        with self.assertRaises(KaraboError):
+            d = VectorString(defaultValue="")
+        with self.assertRaises(ValueError):
+            d = VectorString(defaultValue=[1])
+        with self.assertRaises(ValueError):
+            d = VectorString(defaultValue=["a", 1])
+        VectorString(defaultValue=[])
+        VectorString(defaultValue=["a"])
 
     def test_vector_hash_init(self):
         # Test vector hash without schema
