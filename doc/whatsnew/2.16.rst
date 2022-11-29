@@ -2,11 +2,17 @@
 What's New in Karabo 2.16.1
 ***************************
 
-Planned release 2.12.2022
-This patch release fixes a datalogger connection issue found in a lab installation.
-A few performance improvements for output channels in the C++ device.
-The Middlelayer API has some bugfixes for tests and features of 2.16.0.
-The GUI client has some validation and future proofing improvements.
+Planned release 2.12.2022.
+
+This patch release
+* fixes a datalogger connection issue found in a lab installation,
+* offers performance improvements for output channels in a C++ device for
+  the case that input channels connect with onSlowness="queueDrop" (see
+  documentation of new *safeNDArray* flag in Device::writeChannel and
+  OutputChannel::update),
+* has some bugfixes in the Middlelayer API for tests and features of 2.16.0,
+* and includes some validation and future proofing improvements in the GUI
+  client.
 
 Detailed Merge-Log
 ++++++++++++++++++
