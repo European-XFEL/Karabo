@@ -27,6 +27,27 @@ from .amqp_cluster import connect_cluster
 from .base import Broker
 
 
+def ensure_running(func):
+    """Ensure a running eventloop for `func`"""
+    if asyncio.iscoroutinefunction(func):
+        async def wrapper(self, *args, **kwargs):
+            if self.loop.is_closed() or not self.loop.is_running():
+                self.logger.warning(
+                    f"Loop not running for func {func.__name__} with "
+                    f"arguments {args}.")
+                return
+            return await func(self, *args, **kwargs)
+    else:
+        def wrapper(self, *args, **kwargs):
+            if self.loop.is_closed() or not self.loop.is_running():
+                self.logger.warning(
+                    f"Loop not running for func {func.__name__} with "
+                    f"arguments {args}.")
+                return
+            return func(self, *args, **kwargs)
+    return wrapper
+
+
 class AmqpBroker(Broker):
     global_lock = Lock()
     connection = None
@@ -54,8 +75,7 @@ class AmqpBroker(Broker):
         self.timestamp = time.time() * 1000000 // 1000      # float
         self.future = None
         self.heartbeatTask = None
-        self.lastPublishTask = None
-        self.subscrLock = Lock()
+        self.subscribe_lock = Lock()
 
     async def subscribe_default(self):
         """Subscribe to 'default' exchanges to allow a communication
@@ -71,26 +91,27 @@ class AmqpBroker(Broker):
         """
         self.queue = await self.channel.declare_queue(exclusive=True)
         # create main exchange : <domain>.slots
-        exchange = self.domain + ".slots"
-        binding_key = self.deviceId
-        exch = await self.channel.declare_exchange(
-                exchange, aio_pika.ExchangeType.TOPIC)
-        self.exchanges[exchange] = exch   # aio_pika.exchange.Exchange instance
-        # bind to the queue
-        await self.queue.bind(exch, routing_key=binding_key)
-        async with self.subscrLock:
-            self.subscriptions.add((exch, binding_key))
+        name = f"{self.domain}.slots"
+        routing = self.deviceId
+        exchange = await self.channel.declare_exchange(
+                name, aio_pika.ExchangeType.TOPIC)
+        self.exchanges[name] = exchange
+        await self.queue.bind(exchange, routing_key=routing)
+        async with self.subscribe_lock:
+            self.subscriptions.add((exchange, routing))
 
+        # Globals for instanceNew, Gone ...
+        name = f"{self.domain}.global_slots"
+        exchange = await self.channel.declare_exchange(
+                name, aio_pika.ExchangeType.TOPIC)
+        self.exchanges[name] = exchange
+
+        # Interest in broadcasts, bind the queue
         if self.broadcast:
-            # declare exchange
-            exchange = self.domain + ".global_slots"
-            binding_key = ""
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-            await self.queue.bind(exch, routing_key=binding_key)
-            async with self.subscrLock:
-                self.subscriptions.add((exch, binding_key))
+            routing = ""
+            await self.queue.bind(exchange, routing_key=routing)
+            async with self.subscribe_lock:
+                self.subscriptions.add((exchange, routing))
 
         exchange = self.domain + ".signals"
         self.exchanges[exchange] = await self.channel.declare_exchange(
@@ -99,22 +120,17 @@ class AmqpBroker(Broker):
     async def publish(self, exchange, routing_key, message):
         while True:
             try:
-                exch = self.exchanges.get(exchange, None)
-                if exch is None:
-                    exch = await self.channel.declare_exchange(
-                            exchange, aio_pika.ExchangeType.TOPIC)
-                    self.exchanges[exchange] = exch
+                exch = self.exchanges[exchange]
                 await exch.publish(message, routing_key)
                 break
             except BaseException:
                 # Channel closed ... wait forever ...
                 await sleep(0.1)
 
-    def send(self, exchange, routing_key, header, args):
-        if self.loop.is_closed() or not self.loop.is_running():
-            return
+    @ensure_running
+    def send(self, exchange, routing_key, header, arguments):
         body = Hash()
-        for i, a in enumerate(args):
+        for i, a in enumerate(arguments):
             body['a{}'.format(i + 1)] = a
         header['signalInstanceId'] = self.deviceId
         header['__format'] = 'Bin'
@@ -122,11 +138,11 @@ class AmqpBroker(Broker):
         bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
         # publish is awaitable
-        self.lastPublishTask = self.loop.create_task(
-                self.publish(exchange, routing_key, m))
+        self.loop.call_soon_threadsafe(self.loop.create_task(
+                self.publish(exchange, routing_key, m)))
 
     def heartbeat(self, interval):
-        exchange = self.domain + ".signals"
+        name = f"{self.domain}.signals"
         routing_key = self.deviceId + ".signalHeartbeat"
         header = Hash("signalFunction", "signalHeartbeat")
         # Note: C++ adds
@@ -142,7 +158,7 @@ class AmqpBroker(Broker):
         m = aio_pika.Message(bindata)
         # publish is awaitable
         self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(exchange, routing_key, m))
+                self.loop.create_task, self.publish(name, routing_key, m))
 
     def notify_network(self, info):
         """notify the network that we are alive
@@ -179,7 +195,7 @@ class AmqpBroker(Broker):
 
         self.heartbeatTask = ensure_future(heartbeat())
 
-    def call(self, signal, targets, reply, args):
+    def call(self, signal, targets, reply, arguments):
         if not targets:
             return
         p = Hash()
@@ -197,31 +213,31 @@ class AmqpBroker(Broker):
         slotInstanceId = slotInstanceIds.strip("|")
         if (signal == "__request__" or signal == "__replyNoWait__"
                 or signal == "__reply__" or signal == "__replyNoWait"):
-            exchange = self.domain + ".slots"
+            name = f"{self.domain}.slots"
             routing_key = slotInstanceId
         elif signal == "call" or signal == "__call__":
             if slotInstanceId == '*':
-                exchange = self.domain + ".global_slots"
+                name = f"{self.domain}.global_slots"
                 routing_key = ""
             else:
-                exchange = self.domain + ".slots"
+                name = f"{self.domain}.slots"
                 routing_key = slotInstanceId
         else:
-            exchange = self.domain + ".signals"
+            name = f"{self.domain}.signals"
             routing_key = self.deviceId + '.' + signal
 
-        self.send(exchange, routing_key, p, args)
+        self.send(name, routing_key, p, arguments)
 
-    async def request(self, device, target, *args):
+    async def request(self, device, target, *arguments):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
-        self.call("call", {device: [target]}, reply, args)
+        self.call("call", {device: [target]}, reply, arguments)
         future = Future(loop=self.loop)
         self.repliers[reply] = future
         future.add_done_callback(lambda _: self.repliers.pop(reply))
         return (await future)
 
-    def emit(self, signal, targets, *args):
-        self.call(signal, targets, None, args)
+    def emit(self, signal, targets, *arguments):
+        self.call(signal, targets, None, arguments)
 
     def reply(self, message, reply, error=False):
         header = message.get('header')
@@ -237,9 +253,9 @@ class AmqpBroker(Broker):
             p['signalFunction'] = "__reply__"
             p['slotInstanceIds'] = '|' + sender + '|'
             p['error'] = error
-            exchange = self.domain + ".slots"
+            name = f'{self.domain}.slots'
             routing_key = sender
-            self.send(exchange, routing_key, p, reply)
+            self.send(name, routing_key, p, reply)
 
         if 'replyInstanceIds' in header:
             replyId = header['replyInstanceIds']
@@ -249,9 +265,9 @@ class AmqpBroker(Broker):
             p['slotFunctions'] = header['replyFunctions']
             p['error'] = error
             dest = replyId.strip('|')
-            exchange = self.domain + ".slots"
+            name = f'{self.domain}.slots'
             routing_key = dest
-            self.send(exchange, routing_key, p, reply)
+            self.send(name, routing_key, p, reply)
 
     def replyException(self, message, exception):
         trace = ''.join(traceback.format_exception(
@@ -281,58 +297,43 @@ class AmqpBroker(Broker):
         else:
             signals = [signal]
 
-        exchange = self.domain + ".signals"
-        if exchange not in self.exchanges:
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-        else:
-            exch = self.exchanges[exchange]
-
+        name = f"{self.domain}.signals"
+        exchange = self.exchanges[name]
         for s in signals:
-            binding_key = deviceId + "." + s
-            t = (exch, binding_key)
-            async with self.subscrLock:
-                if t not in self.subscriptions:
-                    await self.queue.bind(exch, routing_key=binding_key)
-                    self.subscriptions.add(t)
+            routing = f"{deviceId}.{s}"
+            key = (exchange, routing)
+            async with self.subscribe_lock:
+                if key not in self.subscriptions:
+                    await self.queue.bind(exchange, routing_key=routing)
+                    self.subscriptions.add(key)
 
             self.emit("call", {deviceId: ["slotConnectToSignal"]},
                       s, slot.__self__.deviceId, slot.__name__)
 
+    @ensure_running
     def disconnect(self, deviceId, signal, slot):
-        if self.loop.is_closed() or not self.loop.is_running():
-            return
         self.loop.call_soon_threadsafe(self.loop.create_task,
                                        self.async_disconnect(deviceId,
                                                              signal, slot))
 
+    @ensure_running
     async def async_disconnect(self, deviceId, signal, slot):
         signals = []
         if isinstance(signal, (list, tuple)):
             signals = list(signal)
         else:
             signals = [signal]
-        if self.loop.is_closed() or not self.loop.is_running():
-            self.logger.warning(
-                f'Cannot disconnect from signals: {signals}')
-            return
 
-        exchange = self.domain + ".signals"
-        if exchange not in self.exchanges:
-            exch = await self.channel.declare_exchange(
-                    exchange, aio_pika.ExchangeType.TOPIC)
-            self.exchanges[exchange] = exch
-        else:
-            exch = self.exchanges[exchange]
+        name = f"{self.domain}.signals"
+        exchange = self.exchanges[name]
         try:
             for s in signals:
-                binding_key = deviceId + "." + s
-                t = (exch, binding_key)
-                async with self.subscrLock:
-                    if t in self.subscriptions:
-                        self.subscriptions.remove(t)
-                        await self.queue.unbind(exch, routing_key=binding_key)
+                routing = f"{deviceId}.{s}"
+                key = (exchange, routing)
+                async with self.subscribe_lock:
+                    if key in self.subscriptions:
+                        self.subscriptions.remove(key)
+                        await self.queue.unbind(exchange, routing_key=routing)
 
                 self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
                           s, slot.__self__.deviceId, slot.__name__)
@@ -341,9 +342,9 @@ class AmqpBroker(Broker):
                 f'Fail to disconnect from signals: {signals}')
 
     async def async_unsubscribe_all(self):
-        async with self.subscrLock:
-            for exch, binding_key in self.subscriptions:
-                await self.queue.unbind(exch, routing_key=binding_key)
+        async with self.subscribe_lock:
+            for exchange, routing in self.subscriptions:
+                await self.queue.unbind(exchange, routing_key=routing)
             self.subscriptions = set()
 
     async def stopHeartbeat(self):
@@ -352,10 +353,6 @@ class AmqpBroker(Broker):
                 self.heartbeatTask.cancel()
                 await self.heartbeatTask
             self.heartbeatTask = None
-        task = self.lastPublishTask
-        self.lastPublishTask = None
-        if task is not None and not task.done():
-            await wait_for(task, timeout=1)
 
     async def _cleanup(self):
         await self.stopHeartbeat()
