@@ -138,8 +138,9 @@ class AmqpBroker(Broker):
         bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
         # publish is awaitable
-        self.loop.call_soon_threadsafe(self.loop.create_task(
-                self.publish(exchange, routing_key, m)))
+        self.loop.call_soon_threadsafe(
+            self.loop.create_task,
+            self.publish(exchange, routing_key, m))
 
     def heartbeat(self, interval):
         name = f"{self.domain}.signals"
