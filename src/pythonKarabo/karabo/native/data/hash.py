@@ -97,7 +97,11 @@ class Hash(OrderedDict):
         return '<' + r + '>'
 
     def __repr__(self):
-        """Return the printable representation of the `Hash`"""
+        """Return the printable representation of the `Hash`
+
+        the representation will contain types.
+        please note that the types are not accurate if the
+        data cannot be serialised."""
         if self.empty():
             return "<>"
         tabular = "  "
@@ -119,7 +123,10 @@ class Hash(OrderedDict):
                     for row in value.__repr__().split("\n"):
                         yield tabular * n + row + "\n"
                 else:
-                    hash_type = get_hash_type_from_data(value).name
+                    try:
+                        hash_type = get_hash_type_from_data(value).name
+                    except (ValueError, TypeError):
+                        hash_type = "Unknown"
                     yield (tabular * n + f"{key}{attrs!r}: "
                            f"{value!r} => {hash_type}\n")
 
