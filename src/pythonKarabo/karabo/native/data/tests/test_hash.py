@@ -563,3 +563,15 @@ g{}: [<>, <>] => VectorHash
 >"""
 
     assert repr(h) == hrep
+
+    hrep = """<
+a{}: 1 => Int32
+b{}: [None, 1.2] => Unknown
+c{}: {1: 2} => Unknown
+>"""
+    h = Hash()
+    assert repr(h) == "<>"
+    h["a"] = 1
+    h["b"] = [None, 1.2]
+    h["c"] = {1: 2}
+    assert repr(h) == hrep
