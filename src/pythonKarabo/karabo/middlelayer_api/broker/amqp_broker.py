@@ -140,7 +140,7 @@ class AmqpBroker(Broker):
         m = self._create_publish_message(header, arguments)
         await self.publish(exchange, routing_key, m)
 
-    def heartbeat(self, interval):
+    async def heartbeat(self, interval):
         name = f"{self.domain}.signals"
         routing_key = self.deviceId + ".signalHeartbeat"
         header = Hash("signalFunction", "signalHeartbeat")
@@ -155,11 +155,9 @@ class AmqpBroker(Broker):
         body["a3"] = self.info
         bindata = b''.join([encodeBinary(header), encodeBinary(body)])
         m = aio_pika.Message(bindata)
-        # publish is awaitable
-        self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.publish(name, routing_key, m))
+        await self.publish(name, routing_key, m)
 
-    def notify_network(self, info):
+    async def notify_network(self, info):
         """notify the network that we are alive
 
         we send out an instance new and gone, and the heartbeats in between.
@@ -167,8 +165,8 @@ class AmqpBroker(Broker):
         :param info: the info Hash that should be published regularly.
         """
         self.info = info
-        self.emit('call', {'*': ['slotInstanceNew']},
-                  self.deviceId, self.info)
+        await self.async_emit('call', {'*': ['slotInstanceNew']},
+                              self.deviceId, self.info)
 
         async def heartbeat():
             try:
@@ -185,12 +183,12 @@ class AmqpBroker(Broker):
                         sleepInterval = sleepInterval // 2 + 1
                         first = False
                     await sleep(sleepInterval)
-                    self.heartbeat(interval)
+                    await self.heartbeat(interval)
             except CancelledError:
                 pass
             finally:
-                self.emit('call', {'*': ['slotInstanceGone']},
-                          self.deviceId, self.info)
+                await self.async_emit('call', {'*': ['slotInstanceGone']},
+                                      self.deviceId, self.info)
 
         self.heartbeatTask = ensure_future(heartbeat())
 
