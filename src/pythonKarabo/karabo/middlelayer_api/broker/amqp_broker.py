@@ -23,7 +23,6 @@ import aio_pika
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
-from .amqp_cluster import connect_cluster
 from .base import Broker
 
 
@@ -116,16 +115,8 @@ class AmqpBroker(Broker):
                 exchange, aio_pika.ExchangeType.TOPIC)
 
     async def publish(self, exchange, routing_key, message):
-        while True:
-            try:
-                exch = self.exchanges[exchange]
-                await exch.publish(message, routing_key)
-                break
-            except CancelledError:
-                break
-            except BaseException:
-                # Channel closed ... wait forever ...
-                await sleep(0.1)
+        exch = self.exchanges[exchange]
+        await exch.publish(message, routing_key)
 
     @ensure_running
     def send(self, exchange, routing_key, header, arguments):
@@ -541,24 +532,23 @@ class AmqpBroker(Broker):
     async def ensure_connection(self):
         urls = os.environ.get("KARABO_BROKER",
                               "amqp://localhost:5672").split(',')
-        error = None
         for url in urls:
             try:
                 # Perform connection
-                self.connection = await connect_cluster(url, loop=self.loop)
-                # Creating a channel
-                self.channel = await self.connection.channel()
-                await self.channel.set_qos(prefetch_count=1)
-                await self.subscribe_default()
+                self.connection = aio_pika.Connection(url, loop=self.loop)
+                await self.connection.connect()
                 break
-            except Exception as e:
-                error = e
+            except Exception:
                 self.connection = None
-                self.channel = None
 
-        if self.connection is None or self.channel is None:
-            raise RuntimeError(f'Fail to connect to any of KARABO_BROKER='
-                               f'"{urls}": {str(error)}')
+        if self.connection is None:
+            raise RuntimeError(
+                f"Fail to connect to any of KARABO_BROKER={urls}")
+
+        # Creating a channel
+        self.channel = await self.connection.channel()
+        await self.channel.set_qos(prefetch_count=1)
+        await self.subscribe_default()
 
     @staticmethod
     def create_connection(hosts, connection):
