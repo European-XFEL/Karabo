@@ -391,9 +391,6 @@ class EventLoop(SelectorEventLoop):
         for t in asyncio.all_tasks(loop=self):
             t.cancel()
         if self.connection is not None:
-            if iscoroutinefunction(self.connection.close):
-                self.run_until_complete(self.connection.close())
-            else:
-                self.connection.close()
+            self.connection.close()
         super().close()
         EventLoop.global_loop = None
