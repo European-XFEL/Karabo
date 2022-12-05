@@ -49,9 +49,6 @@ def ensure_running(func):
 
 
 class AmqpBroker(Broker):
-    global_lock = Lock()
-    connection = None
-
     def __init__(self, loop, deviceId, classId, broadcast=True):
         super(AmqpBroker, self).__init__(True)
         self.domain = loop.topic
@@ -67,6 +64,7 @@ class AmqpBroker(Broker):
         self.exitStack = AsyncExitStack()
         # AMQP specific bookkeeping ...
         self.subscriptions = set()  # registered tuple: exchange, routing key
+        self.connection = None      # broker connection
         self.channel = None         # channel for communication
         self.exchanges = {}         # registered exchanges
         self.queue = None           # main queue
@@ -122,6 +120,8 @@ class AmqpBroker(Broker):
             try:
                 exch = self.exchanges[exchange]
                 await exch.publish(message, routing_key)
+                break
+            except CancelledError:
                 break
             except BaseException:
                 # Channel closed ... wait forever ...
@@ -355,6 +355,10 @@ class AmqpBroker(Broker):
                 await self.heartbeatTask
             self.heartbeatTask = None
 
+    async def ensure_disconnect(self):
+        """Close broker connection"""
+        await self.connection.close()
+
     async def _cleanup(self):
         await self.stopHeartbeat()
         if self.future is not None:
@@ -471,6 +475,9 @@ class AmqpBroker(Broker):
             return True
         except TimeoutError:
             return False
+        finally:
+            self.loop.call_soon_threadsafe(
+                    self.loop.create_task, self.ensure_disconnect())
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
@@ -531,38 +538,27 @@ class AmqpBroker(Broker):
             return None
         return header.get(prop)
 
-    @classmethod
-    async def _ensure_global_connection(cls):
-        async with cls.global_lock:
-            if cls.connection is not None:
-                return cls.connection
-            urls = os.environ.get("KARABO_BROKER",
-                                  "amqp://localhost:5672").split(',')
-            cls.connection = None
-            for url in urls:
-                try:
-                    # Perform connection
-                    cls.connection = await connect_cluster(url)
-                    break
-                except BaseException:
-                    # print(f'While trying node "{url}": {str(e)}')
-                    cls.connection = None
-
-            return cls.connection
-
     async def ensure_connection(self):
-        if self.connection is None:
-            self.connection = await AmqpBroker._ensure_global_connection()
-            if self.connection is None:
-                raise RuntimeError("No connection established")
-        try:
-            # Creating a channel
-            self.channel = await self.connection.channel()
-            await self.channel.set_qos(prefetch_count=1)
-            await self.subscribe_default()
-        except BaseException:
-            self.channel = None
-            raise
+        urls = os.environ.get("KARABO_BROKER",
+                              "amqp://localhost:5672").split(',')
+        error = None
+        for url in urls:
+            try:
+                # Perform connection
+                self.connection = await connect_cluster(url, loop=self.loop)
+                # Creating a channel
+                self.channel = await self.connection.channel()
+                await self.channel.set_qos(prefetch_count=1)
+                await self.subscribe_default()
+                break
+            except Exception as e:
+                error = e
+                self.connection = None
+                self.channel = None
+
+        if self.connection is None or self.channel is None:
+            raise RuntimeError(f'Fail to connect to any of KARABO_BROKER='
+                               f'"{urls}": {str(error)}')
 
     @staticmethod
     def create_connection(hosts, connection):
