@@ -358,7 +358,7 @@ class SignalSlotable(Configurable):
             self._register_slots()
             ensure_future(self._ss.main(self))
             await self._assert_name_unique()
-            self._ss.notify_network(self._initInfo())
+            await self._ss.notify_network(self._initInfo())
             await super(SignalSlotable, self)._run(**kwargs)
             await wait_for(get_event_loop().run_coroutine_or_thread(
                 self.preInitialization), timeout=5)

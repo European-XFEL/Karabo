@@ -77,7 +77,7 @@ class JmsBroker(Broker):
         m.properties = p
         self.hbproducer.send(m, 1, _MSG_PRIORITY_LOW, _MSG_TIME_TO_LIVE)
 
-    def notify_network(self, info):
+    async def notify_network(self, info):
         """notify the network that we are alive
 
         we send out an instance new and gone, and the heartbeats in between.

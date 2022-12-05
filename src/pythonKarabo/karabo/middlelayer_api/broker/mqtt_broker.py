@@ -130,7 +130,7 @@ class MqttBroker(Broker):
         m = b''.join([encodeBinary(header), encodeBinary(body)])
         await self.client.publish(topic, m, 0)
 
-    def notify_network(self, info):
+    async def notify_network(self, info):
         """notify the network that we are alive
 
         we send out an instance new and gone, and the heartbeats in between.
