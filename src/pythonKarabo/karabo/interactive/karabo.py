@@ -340,6 +340,19 @@ def install(args):
               end='', flush=True)
         run_cmd(f"git clone {args.git}{resolve_project(args.device)}.git"
                 f" --depth 1 -b {args.tag} --single-branch {path}")
+        # remove tags folder. this avoids that a commit tagged with multiple
+        # tags will generate a device with a tag other than `args.tag`.
+        tag_dir = os.path.join(path, ".git", "refs", "tags")
+        for tag_file in os.listdir(tag_dir):
+            if os.path.basename(tag_file) == args.tag:
+                # The requested tag is not part of tags folder.
+                # This should not happen
+                print(f"unexpected git configuration. {args.tag}"
+                      " present in .git/refs/tag folder")
+                break
+            os.remove(os.path.join(tag_dir, tag_file))
+        else:
+            os.rmdir(tag_dir)
         print('done.')
         os.chdir(path)
         if os.path.exists('DEPENDS'):
