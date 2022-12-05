@@ -1,6 +1,6 @@
 from asyncio import Future, TimeoutError, sleep, wait_for
 from contextlib import contextmanager
-from unittest import main
+from unittest import main, skipIf
 
 import pytest
 
@@ -9,6 +9,7 @@ from karabo.middlelayer import (
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
     getDevice, isAlive, setWait, waitUntil)
+from karabo.middlelayer_api.broker.compat import amqp
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sleepUntil)
 
@@ -621,6 +622,7 @@ class RemotePipelineTest(DeviceTest):
         await self.alice.output.close()
 
     @async_tst
+    @skipIf(amqp, reason="Invalid Future State")
     async def test_pipeline_context(self):
         """Test the operation of a pipeline context channel"""
         output_device = Sender({"_deviceId_": "ContextSender"})
