@@ -118,8 +118,7 @@ class AmqpBroker(Broker):
         exch = self.exchanges[exchange]
         await exch.publish(message, routing_key)
 
-    @ensure_running
-    def send(self, exchange, routing_key, header, arguments):
+    def _create_publish_message(self, header, arguments):
         body = Hash()
         for i, a in enumerate(arguments):
             body['a{}'.format(i + 1)] = a
@@ -127,11 +126,19 @@ class AmqpBroker(Broker):
         header['__format'] = 'Bin'
         header['producerTimestamp'] = self.timestamp
         bindata = b''.join([encodeBinary(header), encodeBinary(body)])
-        m = aio_pika.Message(bindata)
-        # publish is awaitable
+        return aio_pika.Message(bindata)
+
+    @ensure_running
+    def send(self, exchange, routing_key, header, arguments):
+        m = self._create_publish_message(header, arguments)
         self.loop.call_soon_threadsafe(
             self.loop.create_task,
             self.publish(exchange, routing_key, m))
+
+    @ensure_running
+    async def async_send(self, exchange, routing_key, header, arguments):
+        m = self._create_publish_message(header, arguments)
+        await self.publish(exchange, routing_key, m)
 
     def heartbeat(self, interval):
         name = f"{self.domain}.signals"
@@ -187,20 +194,40 @@ class AmqpBroker(Broker):
 
         self.heartbeatTask = ensure_future(heartbeat())
 
+    async def async_call(self, signal, targets, reply, arguments):
+        if not targets:
+            return
+        name, routing_key, p = self._create_routing_data(
+            signal, targets, reply)
+        await self.async_send(name, routing_key, p, arguments)
+
     def call(self, signal, targets, reply, arguments):
         if not targets:
             return
-        p = Hash()
-        p['signalFunction'] = signal
+        name, routing_key, p = self._create_routing_data(
+            signal, targets, reply)
+        self.send(name, routing_key, p, arguments)
+
+    def _create_routing_data(self, signal, targets, reply):
+        """Create the routing data for the signals and targets
+
+        :param signal: The signal string
+        :param targets: list of target instanceId's
+        :param reply: A possible reply container
+
+        :returns: (exchange name, routing_key, Hash)
+        """
+        h = Hash()
+        h['signalFunction'] = signal
         slotInstanceIds = (
             '|' + '||'.join(t for t in targets) + '|')
-        p['slotInstanceIds'] = slotInstanceIds
+        h['slotInstanceIds'] = slotInstanceIds
         funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
-        p['slotFunctions'] = ('|' + '||'.join(funcs) + '|')
+        h['slotFunctions'] = ('|' + '||'.join(funcs) + '|')
         if reply is not None:
-            p['replyTo'] = reply
-        p['hostname'] = socket.gethostname()
-        p['classId'] = self.classId
+            h['replyTo'] = reply
+        h['hostname'] = socket.gethostname()
+        h['classId'] = self.classId
         # AMQP specific follows ...
         slotInstanceId = slotInstanceIds.strip("|")
         if (signal == "__request__" or signal == "__replyNoWait__"
@@ -218,18 +245,26 @@ class AmqpBroker(Broker):
             name = f"{self.domain}.signals"
             routing_key = self.deviceId + '.' + signal
 
-        self.send(name, routing_key, p, arguments)
+        return name, routing_key, h
 
     async def request(self, device, target, *arguments):
-        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
-        self.call("call", {device: [target]}, reply, arguments)
+        reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
         future = Future(loop=self.loop)
         self.repliers[reply] = future
         future.add_done_callback(lambda _: self.repliers.pop(reply))
+        await self.async_call("call", {device: [target]}, reply, arguments)
         return (await future)
 
     def emit(self, signal, targets, *arguments):
+        """Synchronous call with `signal`, `targets` and arguments
+
+        The `call` is wrapped in a task and scheduled.
+        """
         self.call(signal, targets, None, arguments)
+
+    async def async_emit(self, signal, targets, *arguments):
+        """Asynchronously call with `signal`, `targets` and arguments"""
+        await self.async_call(signal, targets, None, arguments)
 
     def reply(self, message, reply, error=False):
         header = message.get('header')
