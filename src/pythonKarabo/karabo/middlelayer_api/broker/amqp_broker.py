@@ -70,7 +70,7 @@ class AmqpBroker(Broker):
         self.consumer_tag = None    # tag returned by consume method
         # Connection birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000      # float
-        self.future = None
+        self.exit_event = asyncio.Event()
         self.heartbeatTask = None
         self.subscribe_lock = Lock()
 
@@ -352,8 +352,7 @@ class AmqpBroker(Broker):
 
     async def _cleanup(self):
         await self.stopHeartbeat()
-        if self.future is not None:
-            self.future.set_result(None)
+        self.exit_event.set()
         if self.consumer_tag is not None:
             await self.queue.cancel(self.consumer_tag)
             self.consumer_tag = None
@@ -432,8 +431,7 @@ class AmqpBroker(Broker):
         self.consumer_tag = await self.queue.consume(
             partial(self.on_message, device))
         # Be under exitStack scope as soon as queue is alive
-        self.future = Future()
-        await self.future
+        await self.exit_event.wait()
 
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
