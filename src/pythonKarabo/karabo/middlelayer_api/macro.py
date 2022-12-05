@@ -131,10 +131,9 @@ class EventThread(threading.Thread):
 
     def stop(self, weakref=None):
         self.loop.call_soon_threadsafe(self.loop.stop)
-        # Executor shutdown is available in 3.9.
-        # We have to shutdown gracefully to collect all threads in the
-        # executor
-        self.loop.call_later(1, self.loop._default_executor.shutdown)
+        # In Python 3.9 it is possible to shutdown the
+        # thread pool executor gracefully here without
+        # waiting.
 
     def start_device(self, device):
 
