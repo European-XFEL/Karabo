@@ -354,9 +354,6 @@ namespace karabo {
 
         void GuiServerDevice::initialize() {
             try {
-                // Switch on instance tracking
-                remote().enableInstanceTracking();
-
                 // Protect clients from too frequent updates of a single property:
                 remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
 
@@ -383,22 +380,9 @@ namespace karabo {
                 asyncConnect(get<std::string>("dataLogManagerId"), "signalLoggerMap", "", "slotLoggerMap",
                              bind_weak(&karabo::devices::GuiServerDevice::loggerMapConnectedHandler, this));
 
-                // scan topology to treat alarm services, project managers, ...
-                // NOTE: If instanceNewHandler would be registered before enableInstanceTracking(),
-                //       this code would probably not be needed here, but just in instanceNewHandler!
-                const Hash& topology = remote().getSystemTopology();
-                const boost::optional<const Hash::Node&> devices = topology.find("device");
-                if (devices) {
-                    const Hash& deviceEntry = devices->getValue<Hash>();
-                    for (Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it) {
-                        const std::string& deviceId = it->getKey();
-                        Hash topologyEntry;
-                        Hash::Node& hn = topologyEntry.set("device." + deviceId, it->getValue<Hash>());
-                        hn.setAttributes(it->getAttributes());
-                        connectPotentialAlarmService(topologyEntry);
-                        registerPotentialProjectManager(topologyEntry);
-                    }
-                }
+                // Switch on instance tracking - which is blocking a while.
+                // Note that instanceNew(..) will be called for all instances already in the game.
+                remote().enableInstanceTracking();
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
