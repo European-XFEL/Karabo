@@ -9,7 +9,6 @@
 #include <karabo/util/SimpleElement.hh>
 
 #include "CacheAppender.hh"
-#include "NetworkAppender.hh"
 #include "OstreamAppender.hh"
 #include "RollingFileAppender.hh"
 #include "karabo/util/NodeElement.hh"
@@ -50,8 +49,6 @@ namespace karabo {
 
             NODE_ELEMENT(s).key("file").appendParametersOf<RollingFileAppender>().commit();
 
-            NODE_ELEMENT(s).key("network").appendParametersOf<NetworkAppender>().commit();
-
             NODE_ELEMENT(s).key("cache").appendParametersOf<CacheAppender>().commit();
         }
 
@@ -86,12 +83,6 @@ namespace karabo {
 
         void Logger::useFile(const std::string& category, bool inheritAppenders) {
             auto p = Configurator<RollingFileAppender>::createNode("file", m_config);
-            useAppender(category, inheritAppenders, p->getAppender());
-        }
-
-
-        void Logger::useNetwork(const std::string& category, bool inheritAppenders) {
-            auto p = Configurator<NetworkAppender>::createNode("network", m_config);
             useAppender(category, inheritAppenders, p->getAppender());
         }
 
