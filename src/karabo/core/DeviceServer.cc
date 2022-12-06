@@ -212,6 +212,10 @@ namespace karabo {
                 m_hostname = net::bareHostName();
             }
 
+            // Load logger before creating broker connection to log that being done.
+            // Requires that there is no logging to the broker as we had before 2.17.0.
+            loadLogger(config);
+
             // For a choice element, there is exactly one sub-Hash where the key is the chosen (here: Broker) sub-class.
             // We have to transfer the instance id and thus copy the relevant part of the (const) config.
             // (Otherwise we could just pass 'input' to createChoice(..).)
@@ -223,7 +227,6 @@ namespace karabo {
 
             m_pluginLoader = PluginLoader::create(
                   "PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"), "pluginsToLoad", "*"));
-            loadLogger(config);
 
             karabo::util::Hash instanceInfo;
             instanceInfo.set("type", "server");
@@ -262,20 +265,14 @@ namespace karabo {
             path += "/device-server.log";
 
             config.set("file.filename", path.generic_string());
-            // Copy the connection properties and specify an instanceId.
-            // Remember that for the choice element "connection" there is a single leaf with the key specifying the
-            // type.
-            Hash::Node& connectionNode = config.set("network.connection", input.get<Hash>("connection"));
-            Hash& brokerCfg = connectionNode.getValue<Hash>().begin()->getValue<Hash>();
-            // Avoid name clash with any SignalSlotable since there ':' is not allowed as instanceId:
-            brokerCfg.set("instanceId", m_serverId + ":logger");
 
             Logger::configure(config);
 
             // By default all categories use all three appenders
+            // Note: If logging via broker shall be established, take care that its Logger::useXxx()
+            //       is called after broker communication is established.
             Logger::useOstream();
             Logger::useFile();
-            Logger::useNetwork();
             Logger::useCache();
 
             // Initialize category
