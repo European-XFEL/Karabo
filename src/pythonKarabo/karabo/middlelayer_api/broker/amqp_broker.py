@@ -332,8 +332,9 @@ class AmqpBroker(Broker):
                     await self.queue.bind(exchange, routing_key=routing)
                     self.subscriptions.add(key)
 
-            self.emit("call", {deviceId: ["slotConnectToSignal"]},
-                      s, slot.__self__.deviceId, slot.__name__)
+            await self.async_emit(
+                "call", {deviceId: ["slotConnectToSignal"]},
+                s, slot.__self__.deviceId, slot.__name__)
 
     @ensure_running
     def disconnect(self, deviceId, signal, slot):
@@ -360,8 +361,9 @@ class AmqpBroker(Broker):
                         self.subscriptions.remove(key)
                         await self.queue.unbind(exchange, routing_key=routing)
 
-                self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
-                          s, slot.__self__.deviceId, slot.__name__)
+                await self.async_emit(
+                    "call", {deviceId: ["slotDisconnectFromSignal"]},
+                    s, slot.__self__.deviceId, slot.__name__)
         except BaseException:
             self.logger.warning(
                 f'Fail to disconnect from signals: {signals}')
