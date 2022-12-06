@@ -8,7 +8,7 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
-    getDevice, isAlive, setWait, waitUntil)
+    getDevice, isAlive, setWait, waitUntil, waitUntilNew)
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sleepUntil)
 
@@ -715,12 +715,12 @@ class RemotePipelineTest(DeviceTest):
     @async_tst
     async def test_injected_output_channel_connection(self):
         """Test the re/connect to an injected output channel"""
-        NUM_DATA = 5
         output_device = InjectedSender({"_deviceId_": "InjectedSender"})
         receiver = Receiver({"_deviceId_": "ReceiverInjectedSender"})
         await output_device.startInstance()
         await receiver.startInstance()
         await receiver.connectInputChannel("InjectedSender")
+
         try:
             with (await getDevice("InjectedSender")) as sender_proxy, \
                     await getDevice("ReceiverInjectedSender") as input_proxy:
@@ -733,8 +733,11 @@ class RemotePipelineTest(DeviceTest):
                 # Sender and receiver are online, but no output
                 await sender_proxy.injectOutput()
                 # output is injected, wait for connection
+                # must wait because proxy needs a schema to connect
+
                 await sleep(3)
                 received = False
+                connected = False
 
                 def handler(data, meta):
                     """Output handler to see if we received data
@@ -742,11 +745,17 @@ class RemotePipelineTest(DeviceTest):
                     nonlocal received
                     received = True
 
+                def connect_handler(channel):
+                    nonlocal connected
+                    connected = True
+
                 self.assertEqual(received, False)
                 sender_proxy.output.setDataHandler(handler)
+                sender_proxy.output.setConnectHandler(connect_handler)
                 sender_proxy.output.connect()
-                for _ in range(NUM_DATA):
-                    await sender_proxy.sendData()
+                await sleepUntil(lambda: connected is True)
+                await sender_proxy.sendData()
+                await sleepUntil(lambda: received is True)
                 self.assertEqual(received, True)
 
                 with pytest.raises(RuntimeError):
@@ -756,21 +765,34 @@ class RemotePipelineTest(DeviceTest):
                     nonlocal received
                     received = True
 
+                def new_connect_handler(channel):
+                    nonlocal connected
+                    connected = True
+
+                received = False
+                connected = False
                 # Disconnect and reattach a handler
                 sender_proxy.output.disconnect()
                 assert sender_proxy.output.task is None
                 sender_proxy.output.setDataHandler(new_handler)
+                sender_proxy.output.setConnectHandler(new_connect_handler)
                 sender_proxy.output.connect()
 
                 # Receiver device
+                await sleepUntil(lambda: connected is True)
                 self.assertTrue(receiver.connected)
-                self.assertGreater(receiver.received, 0)
+                await sender_proxy.sendData()
+                await waitUntilNew(input_proxy.received)
                 self.assertGreater(input_proxy.received, 0)
+                await sleepUntil(lambda: receiver.received > 0)
+                self.assertGreater(receiver.received, 0)
+                self.assertTrue(received)
 
                 # Kill the device and bring up again
                 await output_device.slotKillDevice()
 
                 # Have to start a fresh device object for inject
+                connected = False
                 output_device = InjectedSender(
                     {"_deviceId_": "InjectedSender"})
                 await output_device.startInstance()
@@ -778,16 +800,17 @@ class RemotePipelineTest(DeviceTest):
                 # Sender and receiver are online, but no output
                 await sender_proxy.injectOutput()
                 # output is injected, wait for connection
-                await sleep(3)
+                await sleepUntil(lambda: connected is True)
 
                 # Send data again
                 received = False
                 await receiver.resetCounter()
-                for _ in range(NUM_DATA):
-                    await sender_proxy.sendData()
-                self.assertEqual(received, True)
-                self.assertGreater(receiver.received, 0)
+                await sender_proxy.sendData()
+                await waitUntilNew(input_proxy.received)
+                await sleepUntil(lambda: receiver.received > 0)
                 self.assertGreater(input_proxy.received, 0)
+                self.assertGreater(receiver.received, 0)
+                self.assertTrue(received)
         finally:
             await output_device.slotKillDevice()
             await receiver.slotKillDevice()
