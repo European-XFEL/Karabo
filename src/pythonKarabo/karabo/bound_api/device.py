@@ -263,7 +263,7 @@ class PythonDevice(NoFsm):
             # Logging config:
             # Expose only the non-appender specific part (only 'priority' now).
             # Would like to use NODE_ELEMENT(..)...appendParametersOf(Logger)
-            # and then remove again "ostream", "file" and "network" from
+            # and then remove again "ostream", "file" and "cache" from
             # expected["Logger"], but Schema.getParameterHash() returns a copy.
             NODE_ELEMENT(expected).key("Logger")
             .description("Logging settings")
@@ -420,14 +420,15 @@ class PythonDevice(NoFsm):
 
             info["interfaces"] = interfaces
 
+        # Setup device logger (needs self._parameters) before SignalSlotable
+        # to log e.g. broker setup (i.e. logging must not log to broker).
+        self.loadLogger()
+        self.log = Logger.getCategory(self.deviceid)
+
         # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid,
                                   PythonDevice.connectionParams,
                                   self._parameters["heartbeatInterval"], info)
-
-        # Setup device logger (needs self._ss and self._parameters)
-        self.loadLogger()
-        self.log = Logger.getCategory(self.deviceid)
 
         # Initialize FSM slots if defined
         if hasattr(self, 'initFsmSlots'):
@@ -510,15 +511,6 @@ class PythonDevice(NoFsm):
             config = copy.copy(PythonDevice._loggerCfg)
             config.merge(self._parameters["Logger"])
 
-        # Set unique instance id for network logging: Using ':' in name avoids
-        # name clash with any SignalSlotable since there ':' is not allowed.
-        # Note that the config for a choice element has a single key only.
-        if "network.connection" not in config:
-            config["network.connection"] = PythonDevice.connectionParams
-        typeKey = config["network.connection"].getKeys()[0]
-        config.set("network.connection." + typeKey + ".instanceId",
-                   self.deviceid + ":logger")
-
         # Cure the file name of file logger: own dir inside server's log dir:
         if 'file.filename' in config:
             serverLogDir = os.path.dirname(config['file.filename'])
@@ -535,7 +527,6 @@ class PythonDevice(NoFsm):
         Logger.configure(config)
         Logger.useOstream()
         Logger.useFile()
-        Logger.useNetwork()
         Logger.useCache()
 
     def __del__(self):

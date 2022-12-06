@@ -233,6 +233,12 @@ class DeviceServer(object):
         info["log"] = config.get("Logger.priority")
         devicesInfo, scanLogs = self.scanPlugins(self.pluginNamespace)
         info.merge(devicesInfo)
+
+        # Start the logging system before SignalSlotable
+        # to log e.g. broker setup (i.e. logging must not log to broker).
+        self.loadLogger(config)
+        self.log = Logger.getCategory(self.serverid)
+
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
 
@@ -245,10 +251,6 @@ class DeviceServer(object):
 
         self.ss = SignalSlotable(self.serverid, self.connectionParameters,
                                  config["heartbeatInterval"], info)
-
-        # Now we can start the logging system (needs self.ss.getTopic())
-        self.loadLogger(config)
-        self.log = Logger.getCategory(self.serverid)
 
         # Register before self.ss.start(), i.e before sending instanceNew:
         self._registerAndConnectSignalsAndSlots()
@@ -281,19 +283,9 @@ class DeviceServer(object):
         path = os.path.join(path, 'device-server.log')
         self.loggerParameters.set('file.filename', path)
 
-        # Re-use connection parameters for network logging. Need to specify
-        # network instanceId - by using ':' we avoid a name clash with any
-        # SignalSlotable since there ':' is not allowed as instanceId:
-        self.loggerParameters.set("network.connection",
-                                  self.connectionParameters)
-        typeKey = self.connectionParameters.getKeys()[0]
-        networkIdKey = "network.connection." + typeKey + ".instanceId"
-        self.loggerParameters.set(networkIdKey, self.serverid + ":logger")
-
         Logger.configure(self.loggerParameters)
         Logger.useOstream()
         Logger.useFile()
-        Logger.useNetwork()
         Logger.useCache()
 
     def _registerAndConnectSignalsAndSlots(self):
@@ -450,7 +442,7 @@ class DeviceServer(object):
         config['timeServerId'] = self.timeServerId
 
         # Also add config for Logger appenders
-        for appender in ["ostream", "file", "network"]:
+        for appender in ["ostream", "file", "cache"]:
             config["_logger_." + appender] = self.loggerParameters[appender]
 
         reply = self.ss.createAsyncReply()

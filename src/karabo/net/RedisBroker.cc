@@ -260,9 +260,6 @@ namespace karabo {
             } else if (target == "karaboGuiDebug") {
                 topic = "karaboGuiDebug";
 
-            } else if (target == m_topic && header->has("target") && header->get<std::string>("target") == "log") {
-                topic = m_topic + "/log";
-
             } else if (target == m_topic) {
                 if (!header->has("signalFunction")) {
                     throw KARABO_LOGIC_EXCEPTION("Header has to define \"signalFunction\"");

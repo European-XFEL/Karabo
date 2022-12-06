@@ -697,7 +697,7 @@ class BoundDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
-        # Logger settings for the three appenders (ostream, file, network)
+        # Logger settings for the three appenders (ostream, file, cache)
         # would have to be passed via config["_logger_"], as a copy of the
         # settings of the server. But there are no such parameters for the mdl
         # server, so we let the bound device choose the defaults...
