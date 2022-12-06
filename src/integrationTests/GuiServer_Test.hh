@@ -47,7 +47,6 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
     void testRequestGeneric();
     void testRequestFailProtocol();
     void testRequestFailOldVersion();
-    void testLogMute();
     void testSlotNotify();
     void testSlotBroadcast();
     /**
