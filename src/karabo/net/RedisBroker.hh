@@ -37,8 +37,6 @@ namespace karabo {
              *     slotInstanceGone     -- to announce device death,
              *     slotPing             -- to trigger sending their status by all devices received such message
              *
-             * <domain/log        <--  this is a place where all printing directed
-             *
              * karaboGuiDebug     <--   GUI debugging channel
              *
              * Later the following topics will be used ...
@@ -124,7 +122,7 @@ namespace karabo {
                   const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
             /**
-             * REDIS subscription.
+             * Deprecated - REDIS subscription.
              * Subscribe to topic:
              *   "m_domain/log"
              *
