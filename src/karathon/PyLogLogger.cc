@@ -100,8 +100,6 @@ void exportPyLogLogger() {
               .staticmethod("useOstream")
               .def("useFile", &Logger::useFile, (bp::arg("category") = "", bp::arg("inheritAppenders") = true))
               .staticmethod("useFile")
-              .def("useNetwork", &Logger::useNetwork, (bp::arg("category") = "", bp::arg("inheritAppenders") = true))
-              .staticmethod("useNetwork")
               .def("useCache", &Logger::useCache, (bp::arg("category") = "", bp::arg("inheritAppenders") = true))
               .staticmethod("useCache")
               .def("getCachedContent", &Logger::getCachedContent, (bp::arg("nMessages") = 100u))
