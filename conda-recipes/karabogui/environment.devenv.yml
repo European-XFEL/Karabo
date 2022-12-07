@@ -4,8 +4,8 @@ name: karabogui
 
 channels:
   - http://{{ xfel_conda_channel }}/karabo/channel
-  - conda-forge
   - http://{{ xfel_conda_channel }}/karabo/channel/mirror/conda-forge
+  - conda-forge
   - defaults
 {{ conda_local_channel }}
 
