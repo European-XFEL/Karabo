@@ -31,7 +31,7 @@ class AlarmFilterModel(QSortFilterProxyModel):
         source_index = self.mapToSource(index)
         return self.sourceModel().get_alarm_id(source_index)
 
-    def filterAcceptsRow(self, row, parent=QModelIndex):
+    def filterAcceptsRow(self, row, parent=QModelIndex()):
         model = self.sourceModel()
         _type = model.data(model.index(row, ALARM_TYPE_COLUMN))
         if _type not in self.filter_type:
