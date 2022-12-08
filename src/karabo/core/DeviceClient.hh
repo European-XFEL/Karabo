@@ -235,6 +235,14 @@ namespace karabo {
              */
             void initialize();
 
+            /**
+             * InstanceId of underlying communication object (i.e. SignalSlotable)
+             */
+            const std::string& getInstanceId() {
+                karabo::xms::SignalSlotable::Pointer ptr(m_signalSlotable); // throws if nothing behind weak_ptr
+                return ptr->getInstanceId();
+            }
+
             bool login(const std::string& username, const std::string& password, const std::string& provider = "LOCAL");
 
             bool logout();
