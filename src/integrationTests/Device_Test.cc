@@ -1336,8 +1336,15 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
 
 
 void Device_Test::testNodedSlot() {
+    std::clog << "Start testNodedSlot: " << std::flush;
     // Note that calling "node_slot" would work as well... :-|
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestDevice", "node.slot", KRB_TEST_MAX_TIMEOUT));
+
+    // Check also that slot is properly recorded as lastCommand
+    CPPUNIT_ASSERT_EQUAL(std::string("node.slot <- ") += m_deviceClient->getInstanceId(),
+                         m_deviceClient->get<std::string>("TestDevice", "lastCommand"));
+
+    std::clog << "OK." << std::endl;
 }
 
 
