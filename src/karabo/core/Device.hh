@@ -2068,7 +2068,11 @@ namespace karabo {
                 }
 
                 // Log the call of this slot by setting a parameter of the device
-                if (isSchemaSlot) set("lastCommand", slotName);
+                if (isSchemaSlot) {
+                    std::stringstream source;
+                    source << slotName << " <- " << callee;
+                    set("lastCommand", source.str());
+                }
             }
 
             void ensureSlotIsValidUnderCurrentLock(const std::string& slotName, const std::string& callee) {
