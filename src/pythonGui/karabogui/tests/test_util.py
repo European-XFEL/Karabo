@@ -4,8 +4,8 @@ from qtpy.QtWidgets import QSlider, QSpinBox
 
 from karabogui.testing import GuiTestCase
 from karabogui.util import (
-    SignalBlocker, _get_invalid_chars, qtversion_compatible,
-    version_compatible)
+    SignalBlocker, _get_invalid_chars, create_list_string, create_table_string,
+    qtversion_compatible, version_compatible)
 
 
 class TestUtilsGUI(GuiTestCase):
@@ -87,6 +87,19 @@ class TestUtilsGUI(GuiTestCase):
     def test_qversion_compatible(self):
         self.assertTrue(qtversion_compatible(5, 13))
         self.assertTrue(qtversion_compatible(5, 9))
+
+    def test_html_list_string(self):
+        info = ["1", "2", 4, []]
+        html = create_list_string(info)
+        assert html == "<ul><li>1</li><li>2</li><li>4</li><li>[]</li></ul>"
+
+    def test_html_table_string(self):
+        info = {"1": "a", 2: 3}
+        html = create_table_string(info)
+        assert html == "<table>" \
+                       "<tr><td><b>1</b>:   </td><td>a</td></tr>" \
+                       "<tr><td><b>2</b>:   </td><td>3</td></tr>" \
+                       "</table>"
 
 
 if __name__ == "__main__":

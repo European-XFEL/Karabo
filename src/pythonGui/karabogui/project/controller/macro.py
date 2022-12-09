@@ -289,7 +289,7 @@ class MacroController(BaseProjectGroupController):
                                     parent=parent)
             return
 
-        run_macro(self.model)
+        run_macro(self.model, parent)
 
 
 # ----------------------------------------------------------------------
