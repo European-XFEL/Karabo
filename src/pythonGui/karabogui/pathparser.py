@@ -37,7 +37,8 @@ class Parser(object):
                 token = self.next()
                 getattr(self, token.lower())(token.islower())
                 self.lasttoken = token
-        except StopIteration:
+        except (RuntimeError, StopIteration):
+            # RuntimeError in generators since Python 3.8
             return self.path
 
     def points(self, relative):
