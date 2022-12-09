@@ -1355,19 +1355,19 @@ void Device_Test::testGetconfigReconfig() {
     const std::string deviceId("TestDevice");
 
     // Check default visibility value and other device properties
-    Hash hash;
+    Hash cfgHash;
     CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(deviceId, hash.get<std::string>("deviceId"));
-    CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), hash.get<std::string>("classId"));
-    CPPUNIT_ASSERT_EQUAL(fakeClassVersion, hash.get<std::string>("classVersion"));
-    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), hash.get<std::string>("karaboVersion"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
-    CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), hash.get<std::string>("serverId"));
-    CPPUNIT_ASSERT_EQUAL(::getpid(), hash.get<int>("pid"));
+          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
+    CPPUNIT_ASSERT_EQUAL(deviceId, cfgHash.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), cfgHash.get<std::string>("classId"));
+    CPPUNIT_ASSERT_EQUAL(fakeClassVersion, cfgHash.get<std::string>("classVersion"));
+    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), cfgHash.get<std::string>("karaboVersion"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), cfgHash.get<int>("visibility"));
+    CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), cfgHash.get<std::string>("serverId"));
+    CPPUNIT_ASSERT_EQUAL(::getpid(), cfgHash.get<int>("pid"));
 
     // We cannot set visibility
-    hash.clear();
+    cfgHash.clear();
     CPPUNIT_ASSERT_THROW(m_deviceServer
                                ->request(deviceId, "slotReconfigure",
                                          Hash("visibility", static_cast<int>(karabo::util::Schema::ADMIN)))
@@ -1375,21 +1375,22 @@ void Device_Test::testGetconfigReconfig() {
                                .receive(),
                          karabo::util::RemoteException);
     CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
+          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), cfgHash.get<int>("visibility"));
 
     // But we can set the performance statistics
-    hash.clear();
+    cfgHash.clear();
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotReconfigure", Hash("performanceStatistics.enable", true))
                 .timeout(timeoutInMs)
                 .receive());
     CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(true, hash.get<bool>("performanceStatistics.enable"));
+          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
+    CPPUNIT_ASSERT_EQUAL(true, cfgHash.get<bool>("performanceStatistics.enable"));
 
     // Now try to set performanceStatistics again, but with an old timestamp - that should not be taken!
-    const Timestamp enableTimestamp(Timestamp::fromHashAttributes(hash.getAttributes("performanceStatistics.enable")));
+    const Timestamp enableTimestamp(
+          Timestamp::fromHashAttributes(cfgHash.getAttributes("performanceStatistics.enable")));
     const Epochstamp pastEpochstamp(
           enableTimestamp.getSeconds() - 3ull * 3600ull, // 3 hours back: no CET/CEST vs UTC confusion
           enableTimestamp.getFractionalSeconds());
@@ -1397,18 +1398,53 @@ void Device_Test::testGetconfigReconfig() {
     Hash hToSet;
     Hash::Attributes& attrs = hToSet.set("performanceStatistics.enable", false).getAttributes();
     pastTimestamp.toHashAttributes(attrs);
-    hash.clear();
+    cfgHash.clear();
     const Timestamp beforeSetStamp;
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request(deviceId, "slotReconfigure", hToSet).timeout(timeoutInMs).receive());
     CPPUNIT_ASSERT_NO_THROW(
-          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+          m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(cfgHash));
 
-    const Timestamp receivedStamp(Timestamp::fromHashAttributes(hash.getAttributes("performanceStatistics.enable")));
+    const Timestamp receivedStamp(Timestamp::fromHashAttributes(cfgHash.getAttributes("performanceStatistics.enable")));
     CPPUNIT_ASSERT_MESSAGE(receivedStamp.toIso8601Ext() += " " + pastTimestamp.toIso8601Ext(),
                            receivedStamp != pastTimestamp);
     CPPUNIT_ASSERT_MESSAGE(receivedStamp.toIso8601Ext() += " " + beforeSetStamp.toIso8601Ext(),
                            receivedStamp.getEpochstamp() > beforeSetStamp.getEpochstamp()); // cannot compare Timestamps
+
+    // Now test slotGetConfigurationSlice
+    const std::vector<std::string> selectedPaths({"performanceStatistics.enable", "vecString", "table"});
+    Hash arg("paths", selectedPaths);
+    const Hash slice =
+          m_deviceClient->execute1<Hash, Hash>(deviceId, "slotGetConfigurationSlice", timeoutInMs / 1000, arg);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(3u), slice.size());
+
+    // Remove all non-selected paths from full config ('cfgHash') and then check full equality, i.e. values and
+    // attributes (e.g. timestamp).
+    std::vector<std::string> allPaths;
+    cfgHash.getPaths(allPaths);
+    for (const std::string& path : allPaths) {
+        if (std::find(selectedPaths.begin(), selectedPaths.end(), path) != selectedPaths.end() ||
+            boost::algorithm::starts_with(path, "table")) { // paths contains "table[0].type" etc.
+            continue;
+        }
+        cfgHash.erasePath(path);
+    }
+    CPPUNIT_ASSERT_MESSAGE(toString(cfgHash) + " vs\n" + toString(slice),
+                           slice.fullyEquals(cfgHash, false)); // false: order does not matter
+
+    // Request for a non-existing path fails with remote exception that originates from a ParameterException
+    bool exceptionCaught = false;
+    arg.set("paths", std::vector<std::string>(1, "not_a_property"));
+    try {
+        m_deviceClient->execute1<Hash, Hash>(deviceId, "slotGetConfigurationSlice", timeoutInMs / 1000, arg);
+    } catch (const karabo::util::RemoteException& e) {
+        exceptionCaught = true;
+        const std::string& det = e.details();
+        CPPUNIT_ASSERT_MESSAGE(det, det.find("Exception Type....:  Parameter Exception") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(det, det.find("Key 'not_a_property' does not exist") != std::string::npos);
+    } catch (...) {
+    };
+    CPPUNIT_ASSERT(exceptionCaught);
 
     std::clog << "OK." << std::endl;
 }
