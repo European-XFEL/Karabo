@@ -1253,6 +1253,27 @@ namespace karabo {
             }
 
             /**
+             * Retrieves a slice of the current configuration.
+             *
+             * @param paths of the configuration which should be returned (as declared in expectedParameters)
+             *              (method throws ParameterExcepton if a non-existing path is given)
+             * @return Hash with the current values and attributes (e.g. timestamp) of the selected configuration
+             *
+             */
+            karabo::util::Hash getCurrentConfigurationSlice(const std::vector<std::string>& paths) const {
+                karabo::util::Hash result;
+
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                for (const std::string& path : paths) {
+                    const karabo::util::Hash::Node& node = m_parameters.getNode(path);
+                    // Copy value and attributes
+                    karabo::util::Hash::Node& newNode = result.set(path, node.getValueAsAny());
+                    newNode.setAttributes(node.getAttributes());
+                }
+                return result;
+            }
+
+            /**
              * Return a tag filtered version of the input Hash. Tags are as defined
              * in the device schema
              * @param hash to filter
@@ -1892,6 +1913,8 @@ namespace karabo {
 
                 KARABO_SLOT(slotGetConfiguration)
 
+                KARABO_SLOT(slotGetConfigurationSlice, karabo::util::Hash)
+
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
 
                 KARABO_SLOT(slotKillDevice)
@@ -2116,6 +2139,11 @@ namespace karabo {
             void slotGetConfiguration() {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 reply(m_parameters, m_deviceId);
+            }
+
+            void slotGetConfigurationSlice(const karabo::util::Hash& info) {
+                const auto& paths = info.get<std::vector<std::string>>("paths");
+                reply(getCurrentConfigurationSlice(paths));
             }
 
             void slotGetSchema(bool onlyCurrentState) {
