@@ -15,14 +15,14 @@ from qtpy.QtWidgets import (
     QAbstractItemDelegate, QAbstractItemView, QAction, QMenu, QTreeView)
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_ARCHIVE_POLICY,
-    KARABO_SCHEMA_ASSIGNMENT, KARABO_SCHEMA_DAQ_POLICY,
-    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_DESCRIPTION,
-    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_SIZE,
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_MIN_EXC,
-    KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_TAGS,
-    KARABO_SCHEMA_UNIT_SYMBOL)
-from karabo.native import Assignment
+    KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ALIAS,
+    KARABO_SCHEMA_ARCHIVE_POLICY, KARABO_SCHEMA_ASSIGNMENT,
+    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_DEFAULT_VALUE,
+    KARABO_SCHEMA_DESCRIPTION, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
+    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_UNIT_SYMBOL)
+from karabo.native import AccessMode, Assignment
 from karabogui import icons
 from karabogui.alarms.api import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.binding.api import (
@@ -217,6 +217,9 @@ class ConfigurationTreeView(QTreeView):
             info['Value Type'] = name
         if KARABO_SCHEMA_DEFAULT_VALUE in attributes:
             info['Default Value'] = attributes.get(KARABO_SCHEMA_DEFAULT_VALUE)
+        if KARABO_SCHEMA_ACCESS_MODE in attributes:
+            info['AccessMode'] = AccessMode(
+                attributes[KARABO_SCHEMA_ACCESS_MODE]).name
         if KARABO_SCHEMA_ASSIGNMENT in attributes:
             info['Assignment'] = Assignment(
                 attributes[KARABO_SCHEMA_ASSIGNMENT]).name
