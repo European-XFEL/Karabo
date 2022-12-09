@@ -343,12 +343,18 @@ def process_qt_events(app=None, timeout=100):  # ms
 
 
 def create_table_string(info):
-    """This creates a table string from an `info` dictionary"""
+    """This creates a html table string from an `info` dictionary"""
     rows = (
          f"<tr><td><b>{attr}</b>:   </td><td>{str(value)}</td></tr>"
          for attr, value in info.items()
     )
     return f"<table>{''.join(rows)}</table>"
+
+
+def create_list_string(info):
+    """Create a html string presentation from an `info` list"""
+    sequence = "".join([f"<li>{arg}</li>" for arg in info])
+    return f"<ul>{sequence}</ul>"
 
 
 def version_compatible(version: str, major: int, minor: int):
