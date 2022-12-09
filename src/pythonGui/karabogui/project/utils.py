@@ -21,7 +21,7 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model, get_topology)
 from karabogui.topology.util import get_macro_servers
-from karabogui.util import version_compatible
+from karabogui.util import create_list_string, version_compatible
 
 
 def add_device_to_server(server, class_id='', parent=None):
@@ -439,7 +439,8 @@ def show_no_configuration():
     broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': None})
 
 
-def run_macro(macro_model):
+def run_macro(macro_model, parent=None):
+    """Request to run a macro by validating and sending an instantiate"""
     instance_id = macro_model.instance_id
     h = Hash("code", macro_model.code,
              "module", macro_model.simple_name,
@@ -453,11 +454,11 @@ def run_macro(macro_model):
 
     report = validate_macro(macro_model.code)
     if report:
-        fails = "<ul>" + "".join(["<li>" + issue + "</li>"
-                                  for issue in report]) + "</ul>"
+        fails = create_list_string(report)
         html = ("Please check the macro validation report and rename function "
                 f"names or remove forbidden imports:{fails}")
-        messagebox.show_error(html, title="The Macro cannot be started")
+        messagebox.show_error(html, title="The Macro cannot be started",
+                              parent=parent)
         return
 
     # Backward compatibility, only servers with `MetaMacro` class of 2.16.X
