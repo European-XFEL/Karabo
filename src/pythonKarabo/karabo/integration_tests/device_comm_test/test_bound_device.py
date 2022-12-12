@@ -3,10 +3,12 @@ from time import sleep
 
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
-    AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp)
+    AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp,
+    fullyEqual)
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
 instTimeout = 30
+instTimeoutMs = instTimeout * 1000
 
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
@@ -160,7 +162,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                      'RaiseInitializationDevice']
         self.start_server("bound", SERVER_ID, class_ids,
                           namespace="karabo.bound_device_test"
-                          )  #,logLevel='ERROR')
+                          )  # ,logLevel='ERROR')
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 
@@ -354,13 +356,13 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         with self.subTest(msg="Test slotReconfigure"):
             # Non-reconfigurables cannot be modified:
             request = sigSlotA.request("testComm1", "slotReconfigure",
-                                       Hash("archive", False))
+                                       Hash("visibility", False))
             with self.assertRaises(RuntimeError):
-                request.waitForReply(30000)  # in ms
+                request.waitForReply(instTimeoutMs)
 
             # Cannot define timestamp:
             request = sigSlotA.request("testComm1", "slotGetConfiguration")
-            cfg = request.waitForReply(30000)[0]
+            cfg = request.waitForReply(instTimeoutMs)[0]
             attrs = cfg.getAttributes("someString")
             tsBefore = Timestamp.fromHashAttributes(attrs)
             epochPast = Epochstamp(tsBefore.getSeconds() - 3 * 3600, 0)
@@ -369,9 +371,9 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             tsPast.toHashAttributes(arg.getAttributes("someString"))
             epochBeforeSet = Epochstamp()
             request = sigSlotA.request("testComm1", "slotReconfigure", arg)
-            request.waitForReply(30000)  # in ms
+            request.waitForReply(instTimeoutMs)  # in ms
             request = sigSlotA.request("testComm1", "slotGetConfiguration")
-            cfg = request.waitForReply(30000)[0]
+            cfg = request.waitForReply(instTimeoutMs)[0]
             self.assertEqual("reconfiguredWithStamp", cfg["someString"])
             attrs = cfg.getAttributes("someString")
             tsReceived = Timestamp.fromHashAttributes(attrs)
@@ -384,6 +386,42 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertTrue(epochReceived > epochBeforeSet,
                             epochReceived.toIso8601Ext() + " "
                             + epochBeforeSet.toIso8601Ext())
+
+        with self.subTest(msg="Test slotGetConfigurationSlice"):
+            request = sigSlotA.request("testComm1", "slotGetConfiguration")
+            cfg = request.waitForReply(instTimeoutMs)[0]
+
+            selectedPaths = ["performanceStatistics.enable", "vectorInt32"]
+            request = sigSlotA.request("testComm1",
+                                       "slotGetConfigurationSlice",
+                                       Hash("paths", selectedPaths))
+            cfgSlice = request.waitForReply(instTimeoutMs)[0]
+            self.assertEqual(len(cfgSlice), 2)
+            self.assertTrue(selectedPaths[0] in cfgSlice)
+            self.assertTrue(selectedPaths[1] in cfgSlice)
+            # Make sure that we have an empty vector here to ensure we test
+            # such a case, see PythonDevice.getCurrentConfigurationSlice:
+            self.assertEqual(len(cfgSlice["vectorInt32"]), 0)
+            # remove all non-selected paths from full config and check full
+            # equality, i.e values and attributes (e.g. timestamp)
+            for p in cfg.getPaths():
+                if p not in selectedPaths:
+                    cfg.erasePath(p)
+            # False: Don't care about order
+            self.assertTrue(fullyEqual(cfg, cfgSlice, False),
+                            str(cfg) + " vs " + str(cfgSlice))
+
+            # Now test slot failures for non-existing property
+            request = sigSlotA.request("testComm1",
+                                       "slotGetConfigurationSlice",
+                                       Hash("paths", ["not_a_property"]))
+            with self.assertRaises(RuntimeError) as ctxt:
+                request.waitForReply(instTimeoutMs)[0]
+
+            self.assertIn("Remote Exception from", str(ctxt.exception))
+            self.assertIn("Parameter Exception: "
+                          "Key 'not_a_property' does not exist",
+                          str(ctxt.exception))
 
         with self.subTest(msg="Test killing 'deviceNotGoingDownCleanly'"):
             # Check that the device goes down although thread not stopped
