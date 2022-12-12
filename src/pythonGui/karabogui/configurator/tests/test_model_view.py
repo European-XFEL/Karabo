@@ -240,6 +240,7 @@ class TestConfiguratorDevice(GuiTestCase):
                 OrderedDict([('Property', 'State'), ('Key', 'state'),
                              ('Value Type', 'String'),
                              ('Default Value', 'UNKNOWN'),
+                             ('AccessMode', 'READONLY'),
                              ('Assignment', 'OPTIONAL'),
                              ('Value on device', 'ON'),
                              ('metricPrefixSymbol', ''), ('unitSymbol', ''),
