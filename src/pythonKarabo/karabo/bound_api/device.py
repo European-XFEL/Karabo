@@ -394,8 +394,6 @@ class PythonDevice(NoFsm):
         else:
             status = "ok"
         info["status"] = status
-        # XXX: remove this legacy key in 2.17.
-        info["archive"] = True
 
         # device capabilities are encoded in a bit mask field
         capabilities = 0
@@ -1272,6 +1270,26 @@ class PythonDevice(NoFsm):
                 return HashFilter.byTag(self._fullSchema, self._parameters,
                                         tags, " ,;")
 
+    def getCurrentConfigurationSlice(self, paths):
+        """Retrieves a slice of the current configuration.
+
+        :param paths: of the configuration which should be returned
+                      (as declared in expectedParameters,
+                       method throws if a non-existing path is given)
+        :return: Hash with the current values and attributes (e.g. timestamp)
+                 of the selected configuration
+        """
+        result = Hash()
+        with self._stateChangeLock:
+            for p in paths:
+                node = self._parameters.getNode(p)
+                # with normal set, type deduction for empty vector may fail
+                result.setAs(p, node.getValue(), node.getType())
+                newNode = result.getNode(p)
+                newNode.setAttributes(node.getAttributes())
+
+        return result
+
     def filterByTags(self, configuration, tags):
         """Filter a given configuration Hash by tags
 
@@ -1429,6 +1447,7 @@ class PythonDevice(NoFsm):
         # Register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)
         self._ss.registerSlot(self.slotGetConfiguration)
+        self._ss.registerSlot(self.slotGetConfigurationSlice)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.slotUpdateSchemaAttributes)
@@ -1686,6 +1705,11 @@ class PythonDevice(NoFsm):
     def slotGetConfiguration(self):
         with self._stateChangeLock:
             self._ss.reply(self._parameters, self.deviceid)
+
+    def slotGetConfigurationSlice(self, info):
+        paths = info.get("paths")
+        cfgSlice = self.getCurrentConfigurationSlice(paths)
+        self._ss.reply(cfgSlice)
 
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
