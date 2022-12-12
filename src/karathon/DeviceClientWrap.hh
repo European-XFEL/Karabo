@@ -47,6 +47,10 @@ namespace karathon {
 
         ~DeviceClientWrap() {}
 
+        std::string getInstanceIdPy() {
+            return this->getInstanceId();
+        }
+
         bp::tuple instantiatePy(const std::string& serverId, const karabo::util::Hash& configuration,
                                 int timeoutInSeconds) {
             std::pair<bool, std::string> instantiateReply;
