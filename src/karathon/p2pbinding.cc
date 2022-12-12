@@ -140,9 +140,15 @@ void exportp2p() {
         void EventLoopWorkWrap();
         void EventLoopRunWrap();
         void EventLoopServicePostWrap(const bp::object& callable, const bp::object& delay);
+        void EventLoopSetSignalHandler(const bp::object& handler);
         bp::class_<EventLoop, boost::noncopyable>(
               "EventLoop", "EventLoop is a singleton class wrapping Boost ASIO functionality.", bp::no_init)
-              .def("work", &EventLoopWorkWrap)
+              .def("work", &EventLoopWorkWrap,
+                   "Start the event loop and block until EventLoop::stop() is called.\n\n"
+                   "The system signals SIGINT and SIGTERM will be caught and trigger the\n"
+                   "following actions:\n"
+                   " - a signal handler set via setSignalHandler is called,\n"
+                   " - and the event loop is stopped.")
               .staticmethod("work")
               .def("run", &EventLoopRunWrap)
               .staticmethod("run")
@@ -157,7 +163,11 @@ void exportp2p() {
               .def("post", &EventLoopServicePostWrap, (bp::arg("callable"), bp::arg("delay") = bp::object()),
                    "Post 'callable' for execution in background. Needs EventLoop to run/work.\n"
                    "If 'delay' is not None, execution is postponed by given seconds.")
-              .staticmethod("post");
+              .staticmethod("post")
+              .def("setSignalHandler", &EventLoopSetSignalHandler, (bp::arg("handler")),
+                   "Set handler to be called if a system signal is caught in 'work',\n"
+                   "'handler' has to take the signal value as argument.")
+              .staticmethod("setSignalHandler");
     }
 }
 
@@ -193,4 +203,11 @@ void EventLoopServicePostWrap(const bp::object& callable, const bp::object& dela
             wrapped(); // BTW: Compiler tells me that 'wrapped' is a const object - why?
         });
     }
+}
+
+void EventLoopSetSignalHandler(const bp::object& handler) {
+    HandlerWrap<int> wrapped(handler, "EventLoop.setSignalHandler");
+    // No GIL when entering pure C++:
+    ScopedGILRelease nogil;
+    EventLoop::setSignalHandler(wrapped);
 }
