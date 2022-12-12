@@ -1642,7 +1642,7 @@ class PythonDevice(NoFsm):
                             raise RuntimeError(msg)
 
             # Log the call of this slot by setting a parameter of the device
-            self.set("lastCommand", slotName)
+            self.set("lastCommand", slotName + " <- " + callee)
 
     def allowLock(self):
         """

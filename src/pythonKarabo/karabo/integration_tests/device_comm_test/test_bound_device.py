@@ -62,6 +62,15 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(len(tbl), 1)  # tableReadOnly now has 1 row.
             self.assertEqual(tbl[0]["e3"], 14)
 
+        with self.subTest(msg="Test lastCommand"):
+            lastCommand = self.dc.get(deviceId, "lastCommand")
+            self.assertEqual(lastCommand, str())
+
+            self.dc.execute(deviceId, "slotClearLock")
+            lastCommand = self.dc.get(deviceId, "lastCommand")
+            self.assertEqual(lastCommand,
+                             "slotClearLock <- " + self.dc.getInstanceId())
+
         ok, msg = self.dc.killDevice(deviceId, instTimeout)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
