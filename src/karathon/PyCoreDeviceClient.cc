@@ -28,6 +28,7 @@ void exportPyCoreDeviceClient() {
           .def(bp::init<const string&>())
           .def(bp::init<boost::shared_ptr<SignalSlotableWrap>&>())
 
+          .def("getInstanceId", &DeviceClientWrap::getInstanceIdPy)
           .def("login", &DeviceClient::login)
           .def("logout", &DeviceClient::logout)
           .def("setInternalTimeout", (void(DeviceClient::*)(const unsigned int))(&DeviceClient::setInternalTimeout),
