@@ -5,7 +5,7 @@ from karabo.integration_tests.utils import BoundDeviceTestCase
 
 
 class TestDeviceServer(BoundDeviceTestCase):
-    _max_timeoutMs = 60000
+    _max_timeoutMs = 60_000
 
     def test_instantiate(self):
 
@@ -18,7 +18,7 @@ class TestDeviceServer(BoundDeviceTestCase):
         sigSlot = SignalSlotable("sigSlotTestServer")
         sigSlot.start()
 
-        # Can instantiate wit default config
+        # Can instantiate with default config
         cfg = Hash("classId", classId,
                    "deviceId", deviceId,
                    "configuration", Hash())
@@ -85,12 +85,12 @@ class TestDeviceServer(BoundDeviceTestCase):
 
         with self.subTest(msg="test logger priority roundtrip"):
             (h,) = sigSlot.request(serverId, "slotPing", serverId,
-                                    1, True).waitForReply(self._max_timeoutMs)
+                                   1, True).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "INFO")
             sigSlot.request(serverId, "slotLoggerPriority",
                             "ERROR").waitForReply(self._max_timeoutMs)
             (h,) = sigSlot.request(serverId, "slotPing", serverId,
-                                    1, True).waitForReply(self._max_timeoutMs)
+                                   1, True).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "ERROR")
             sigSlot.request(serverId, "slotLoggerPriority",
                             "INFO").waitForReply(self._max_timeoutMs)
@@ -119,3 +119,40 @@ class TestDeviceServer(BoundDeviceTestCase):
             expectMsg += f"{deviceId} did not confirm it is up "
             expectMsg += f"within {timeout} seconds"
             self.assertEqual(msg, expectMsg)
+
+        with self.subTest(msg="test invalid device"):
+            # Checks that an invalid device class (with a broken import) fails
+            # to load and the loading failure is properly logged.
+            serverId = "testInvalidDeviceServer"
+            deviceId = "invalidDevice"
+            classId = "InvalidImportDevice"
+
+            self.start_server("bound", serverId, [classId],
+                              namespace="karabo.bound_device_test",
+                              logLevel="INFO", skip_plugins_check=True)
+
+            # Wait for the device server to be available in the topology before
+            # querying its log entries.
+            server_available = self.waitUntilTrue(
+                # Server available in topology
+                lambda: serverId in self.dc.getServers(),
+                # within 5 seconds
+                5)
+            self.assertTrue(server_available)
+
+            info = Hash("logs", 100)
+            req = sigSlot.request(serverId, "slotLoggerContent", info)
+            (cached_log, ) = req.waitForReply(self._max_timeoutMs)
+            n_msgs = len(cached_log["content"])
+            self.assertTrue(n_msgs > 0)
+            # The log entry reporting the error should be to the end of the
+            # device server's log.
+            error_msg_found = False
+            idx = n_msgs - 1
+            while not error_msg_found and idx > -1:
+                error_msg_found = (
+                    "Failure while building schema for class "
+                    "InvalidImportDevice" in
+                    cached_log["content"][idx]["message"])
+                idx -= 1
+            self.assertTrue(error_msg_found)
