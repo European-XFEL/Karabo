@@ -651,6 +651,12 @@ class DeviceServer(object):
         with self.deviceInstanceMapLock:
             log_map = dict.fromkeys(self.deviceInstanceMap)
 
+        if not log_map:  # no devices => direct reply instead of an async one
+            nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
+            content = Logger.getCachedContent(nMessages)
+            self.ss.reply(Hash("serverId", self.serverid, "content", content))
+            return
+
         replyLock = threading.Lock()
 
         areply = self.ss.createAsyncReply()
