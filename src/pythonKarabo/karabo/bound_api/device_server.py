@@ -224,6 +224,11 @@ class DeviceServer(object):
         self.pid = os.getpid()
         self.seqnum = 0
 
+        # Start the logging system before the scanning of plugins, so any
+        # error during plugin loading can be logged.
+        self.loadLogger(config)
+        self.log = Logger.getCategory(self.serverid)
+
         info = Hash("type", "server")
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
@@ -233,11 +238,6 @@ class DeviceServer(object):
         info["log"] = config.get("Logger.priority")
         devicesInfo, scanLogs = self.scanPlugins(self.pluginNamespace)
         info.merge(devicesInfo)
-
-        # Start the logging system before SignalSlotable
-        # to log e.g. broker setup (i.e. logging must not log to broker).
-        self.loadLogger(config)
-        self.log = Logger.getCategory(self.serverid)
 
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
@@ -335,11 +335,15 @@ class DeviceServer(object):
                     logs.append(("INFO",
                                  'Successfully loaded plugin: "{}:{}"'
                                  .format(ep.module_name, ep.name)))
-                except (RuntimeError, AttributeError) as e:
+                # A generic handler is used here due to the different kind
+                # of exceptions that may be raised when obtained the schema
+                # for the just loaded plugin.
+                except Exception as e:
                     m = "Failure while building schema for class {}, base " \
                         "class {} and bases {} : {}"\
                         .format(classid, deviceClass.__base_classid__,
-                                deviceClass.__bases_classid__, e)
+                                deviceClass.__bases_classid__, repr(e))
+                    # repr(e) also includes type
                     logs.append(("ERROR", m))
 
         instInfo = Hash("deviceClasses",
