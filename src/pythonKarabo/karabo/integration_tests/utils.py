@@ -59,7 +59,8 @@ class BoundDeviceTestCase(TestCase):
     dc = None
 
     def start_server(self, api, server_id, class_ids, plugin_dir='',
-                     logLevel='FATAL', namespace=None, **kw_server_args):
+                     logLevel='FATAL', namespace=None,
+                     skip_plugins_check=False, **kw_server_args):
         """
         Start a server in its own process.
         api: "bound", "cpp" or "mdl"
@@ -68,6 +69,8 @@ class BoundDeviceTestCase(TestCase):
         logLevel: log level of server (default: 'FATAL', i.e. no logging)
         namespace: if not None, it will set the `pluginNamespace` option
                    in the `bound` and `mdl` apis.
+        skip_plugins_check: if True, the step that checks that plugins have
+                            been loaded is skipped.
 
         Further arguments to the server can be given via kw_server_args and
         will be passed as "<key>=str(<value>)" to the server command line.
@@ -108,15 +111,17 @@ class BoundDeviceTestCase(TestCase):
             raise RuntimeError("Unknown server api: {}".format(api))
 
         # wait for classes to appear
-        nTries = 0
-        while not classes_loaded():
-            sleep(self._waitTime)
-            if nTries > self._retries:
-                if serverProcess is not None:
-                    serverProcess.terminate()
-                    serverProcess = None
-                raise RuntimeError("Waiting for plugin to appear timed out")
-            nTries += 1
+        if not skip_plugins_check:
+            nTries = 0
+            while not classes_loaded():
+                sleep(self._waitTime)
+                if nTries > self._retries:
+                    if serverProcess is not None:
+                        serverProcess.terminate()
+                        serverProcess = None
+                    raise RuntimeError(
+                        "Waiting for plugin to appear timed out")
+                nTries += 1
 
         self.serverProcesses[server_id] = serverProcess
 
