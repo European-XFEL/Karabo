@@ -141,9 +141,10 @@ class DeviceServerBase(SignalSlotable):
         await super(DeviceServerBase, self)._run(**kwargs)
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
-        self.logger.info(f"Starting Karabo {karaboVersion} DeviceServer on "
-                         f"host {self.hostName}, topic "
-                         f"{get_event_loop().topic}")
+        self.logger.info(
+            f"Starting Karabo {karaboVersion} DeviceServer "
+            f"(pid: {self.pid}) on host {self.hostName}, topic "
+            f"{get_event_loop().topic}")
 
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
@@ -344,7 +345,8 @@ class DeviceServerBase(SignalSlotable):
 
             def sig_kill_handler():
                 """Kill the server on sigterm"""
-                ensure_future(server.slotKillServer())
+                loop = get_event_loop()
+                loop.create_task(server.slotKillServer(), instance=server)
 
             loop.add_signal_handler(SIGTERM, sig_kill_handler)
             # NOTE: The server listens to broadcasts and we set a flag in the
