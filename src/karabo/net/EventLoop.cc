@@ -41,6 +41,7 @@ namespace karabo {
 
 
         void EventLoop::work() {
+            // Note: If signal set is changed, adjust documentation (also in karathon)
             boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
             auto loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
@@ -56,6 +57,8 @@ namespace karabo {
                           boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
                           if (loop->m_signalHandler) {
                               loop->m_signalHandler(signo);
+                              // Clear handler, so it is called exactly once as handlers passed to 'signals.async_wait'
+                              loop->m_signalHandler.clear();
                           }
                       }
                       // Some time to do all actions possibly triggered by handler.
