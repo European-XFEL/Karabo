@@ -1,10 +1,25 @@
 ***************************
+What's New in Karabo 2.16.2
+***************************
+
+This patch release:
+
+* fixes a long standing issue where the GUI server missed elements of the system topology
+* fixes the inability of the GUI client to open some scenes manipulated with SVG editors.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- C++: Fix initial topology gathering of the GuiServer
+- GUI: Fix pathparser transport to Python 3.8
+
+
+***************************
 What's New in Karabo 2.16.1
 ***************************
 
-Planned release 2.12.2022.
+This patch release:
 
-This patch release
 * fixes a datalogger connection issue found in a lab installation,
 * offers performance improvements for output channels in a C++ device for
   the case that input channels connect with onSlowness="queueDrop" (see
