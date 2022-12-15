@@ -1,5 +1,5 @@
 The cppunitxmlparser should not be installed
-as a Karabo dependency.
+as a Karabo framework dependency.
 
 Karabo Device code can depend on it on installation or
 on setup by installing the upstream file from here:
