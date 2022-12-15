@@ -1,6 +1,6 @@
 sphinx==1.8.5
 pint
-git+https://git.xfel.eu/gitlab/xfel-rtd/rtd-conf.git
+git+https://git.xfel.eu/xfel-rtd/rtd-conf.git
 slumber
 breathe==4.7.3
 numpy
