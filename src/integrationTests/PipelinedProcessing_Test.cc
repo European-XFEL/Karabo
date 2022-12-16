@@ -606,7 +606,7 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit() {
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
     // (the 'slowReceiver == false' test fails sometimes with delay = 2, so 4 was choosen - but even that failed in
-    //  https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/238881)
+    //  https://git.xfel.eu/Karabo/Framework/-/jobs/238881)
     testPipeQueueAtLimit(0, 5, "queueDrop", maxLengthCfg, false, false);
 
     // 2) Test overall limit from Memory, no effective queue length limit (queue can be as big as the whole Memory
@@ -1362,7 +1362,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& 
                                          : finallyReceived2 - finallyReceived1);
         if (expectDataLoss) {
             // If data loss, chunks might be skipped more often for the one receiver than for the other.
-            // Failed here with 1%: https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/141838
+            // Failed here with 1%: https://git.xfel.eu/Karabo/Framework/-/jobs/141838
             CPPUNIT_ASSERT_LESS(nData / 50u, diff); // arbitrarily tolerate 2% deviation of total number of items sent
         } else {
             // Additional test that data share was fair, i.e. difference is zero (one) for even (odd) total number
