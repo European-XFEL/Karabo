@@ -93,7 +93,7 @@ Clone the Karabo Framework git repository into your local system with::
 
 or with::
 
-   git clone https://git.xfel.eu/gitlab/Karabo/Framework.git
+   git clone https://git.xfel.eu/Karabo/Framework.git
 
 depending on the access mode you have configured for the remote
 Karabo git repository.
