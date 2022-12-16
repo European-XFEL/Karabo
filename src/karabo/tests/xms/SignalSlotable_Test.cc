@@ -103,7 +103,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
         AsyncReply aReply(this);
         // We go via the event loop: An AsyncReply answering in the same thread where it was created might add an extra
         // default reply at the very end because the protection not to place a default reply is released.
-        // That is likely the reason for failure in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/43518
+        // That is likely the reason for failure in https://git.xfel.eu/Karabo/Framework/-/jobs/43518
         karabo::net::EventLoop::getIOService().post([aReply]() {
             // A little imperfect, but OK for this test: We capture indirectly a bare `this`, so in principle this
             // can end up as a dangling pointer on the event loop...

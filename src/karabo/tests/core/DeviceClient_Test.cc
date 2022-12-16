@@ -259,7 +259,7 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     int counter = 0;
-    while (counter++ < maxIterWait) { // failed with 100 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/144940
+    while (counter++ < maxIterWait) { // failed with 100 in https://git.xfel.eu/Karabo/Framework/-/jobs/144940
         if (imageEntry == 1) break;   // Check the last variable assigned in dataHandler
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
@@ -269,7 +269,7 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(100u), vecInt64inChannel.size());
     CPPUNIT_ASSERT_EQUAL(1ll, vecInt64inChannel[0]);
     CPPUNIT_ASSERT(ndArrayDims == Dims(100ull, 200ull));
-    // Float comparison can fail, see e.g. https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/26996
+    // Float comparison can fail, see e.g. https://git.xfel.eu/Karabo/Framework/-/jobs/26996
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1., ndArrayEntry, 1.e-7);
     CPPUNIT_ASSERT(imageDims == Dims(400ull, 500ull));
     CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short>(1), imageEntry);
@@ -289,7 +289,7 @@ void DeviceClient_Test::testMonitorChannel() {
     trackerFuture = trackerPromise.get_future();
     CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
     // Check that we are connected:
-    // With just sleep 50ms  failed in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/171924
+    // With just sleep 50ms  failed in https://git.xfel.eu/Karabo/Framework/-/jobs/171924
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
                          static_cast<int>(trackerFuture.get()));

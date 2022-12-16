@@ -237,7 +237,7 @@ std::string BaseLogging_Test::getDeviceIdPrefix() {
 
 void BaseLogging_Test::setUp() {
     // There are indications for rare hanging between tests, see
-    // https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/101484 So debug print when this happens.
+    // https://git.xfel.eu/Karabo/Framework/-/jobs/101484 So debug print when this happens.
     const Epochstamp start;
     std::clog << "\nStart setUp " << start.toIso8601Ext() << std::endl;
 
@@ -257,7 +257,7 @@ void BaseLogging_Test::setUp() {
     m_sigSlot->start();
 
     // There are indications for rare hanging between tests, see
-    // https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/101484 So debug print when this happens.
+    // https://git.xfel.eu/Karabo/Framework/-/jobs/101484 So debug print when this happens.
     const Epochstamp stop;
     std::clog << "End setUp " << stop.toIso8601Ext() << std::endl;
 }
