@@ -19,7 +19,7 @@ Get and install the Karabo framework (quick - no details)
 
   .. code-block:: bash
 
-    git clone https://in.xfel.eu/gitlab/Karabo/Framework.git karaboFramework
+    git clone https://in.xfel.eu/Karabo/Framework.git karaboFramework
 
 3. Compile the Karabo bundle by running the following command for the
    Debug version
@@ -110,20 +110,29 @@ Supported Operating Systems
 ---------------------------
 
 The operating systems which are currently supported by Karabo are: Centos 7,
-Ubuntu 16.04, and Ubuntu 18.04 (and generally Ubuntu 16-19). To learn which
+Ubuntu 18.04, 20.04, and 22.04, Debian 10 and AlmaLinux 8. To learn which
 packages must be installed before building Karabo, refer to the following
 project on the XFEL GitLab server:
 
-https://in.xfel.eu/gitlab/Karabo/ci-containers/
+https://in.xfel.eu/Karabo/ci-containers/
 
 There you will find the following Dockerfiles which list the packages needed
 on each platform.
 
-https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/centos/7/Dockerfile
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/centos/7gcc7/Dockerfile
 
-https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/16.04/Dockerfile
+https://in.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/18.04/Dockerfile
 
-https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/18.04/Dockerfile
+https://in.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/20.04/Dockerfile
+
+https://in.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/22.04/Dockerfile
+
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/debian/10/Dockerfile
+
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/almalinux/8/Dockerfile
+
+Framework/-/merge_requests
+
 
 These same files are used to generate the continuous integration infrastructure
 for Karabo, so they are more up to date than any documentation can hope to be.

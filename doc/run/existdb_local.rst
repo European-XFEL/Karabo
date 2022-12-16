@@ -44,6 +44,6 @@ command, i.e. stopping the container with `karabo-stopprojectdb` and running
 
 In case one wishes to change the main username and password for the database,
 one should follow the instructions in the `README.md` of the
-`source <https://git.xfel.eu/gitlab/ITDM/docker_existdb>`_ of the image, and
+`source <https://git.xfel.eu/ITDM/docker_existdb>`_ of the image, and
 update the content of the `KARABO_PROJECT_DB_USER` and
 `KARABO_PROJECT_DB_PASSWORD` accordingly.
