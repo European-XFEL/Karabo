@@ -12,6 +12,8 @@ from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
 from karabo.middlelayer_api.signalslot import SignalSlotable
 
+SHUTDOWN_TIME = 2
+
 
 def create_instanceId(name=None):
     """Create a unique instanceId with `name` and append a uuid"""
@@ -121,10 +123,34 @@ def setEventLoop():
 
 @pytest.fixture(scope="module")
 def event_loop():
-    """This is the eventloop fixture for pytest asyncio"""
+    """This is the eventloop fixture for pytest asyncio
+
+    It automatically comes with a broker connection via
+    a signal slotable
+    """
     loop = setEventLoop()
-    yield loop
-    loop.close()
+    try:
+        lead = SignalSlotable(
+            {"_deviceId_": create_instanceId()})
+        loop.run_until_complete(lead.startInstance())
+        loop.instance = weakref.ref(lead)
+        yield loop
+    finally:
+        loop.run_until_complete(lead.slotKillDevice())
+        loop.run_until_complete(sleep(SHUTDOWN_TIME))
+        loop.close()
+
+
+@contextmanager
+def switch_instance(instance):
+    """Switch the owning instance of the loop"""
+    loop = get_event_loop()
+    try:
+        loop_instance = loop.instance
+        loop.instance = weakref.ref(instance)
+        yield
+    finally:
+        loop.instance = loop_instance
 
 
 def create_device_server(serverId, plugins=[], config={}):
@@ -152,17 +178,13 @@ def create_device_server(serverId, plugins=[], config={}):
 class AsyncDeviceContext:
     """This class is responsible to instantiate and shutdown device classes
 
-    :param sigslot: Boolean to set if a signal slotable should be created
-                    The signalslotable will take the eventloop instance.
-                    The default setting is `True`.
     :param timeout: The timeout in seconds to wait for instantiation of an
                     instance.
     """
 
-    def __init__(self, sigslot=True, timeout=20, **instances):
+    def __init__(self, timeout=20, **instances):
+        assert "sigslot" not in instances, "sigslot not allowed"
         self.instances = instances
-        self.sigslot = sigslot
-        self.instance = None
         self.timeout = timeout
 
     async def wait_online(self, instances):
@@ -178,16 +200,10 @@ class AsyncDeviceContext:
             await sleep(sleep_time)
 
     async def __aenter__(self):
-        loop = get_event_loop()
-        if self.sigslot:
-            instance = SignalSlotable(
-                {"_deviceId_": create_instanceId()})
-            await instance.startInstance()
-            loop.instance = weakref.ref(instance)
-            self.instance = instance
         if self.instances:
             await gather(*(d.startInstance() for d in self.instances.values()))
             await self.wait_online(self.instances)
+
         return self
 
     async def __aexit__(self, exc_type, exc, exc_tb):
@@ -200,9 +216,8 @@ class AsyncDeviceContext:
                    if isinstance(s, MiddleLayerDeviceServer)]
         if servers:
             await gather(*(s.slotKillDevice() for s in servers))
-        if self.instance is not None:
-            await self.instance.slotKillDevice()
-            del self.instance
+        # Shutdown time
+        await sleep(SHUTDOWN_TIME)
 
     async def device_context(self, **instances):
         """Relay control of device `instances`
@@ -217,6 +232,10 @@ class AsyncDeviceContext:
         self.instances.update(devices)
         await gather(*(d.startInstance() for d in devices.values()))
         await self.wait_online(devices)
+
+    def __getitem__(self, instance):
+        """Convenience method to get an instance from the context"""
+        return self.instances[instance]
 
 
 async def sleepUntil(condition, timeout=None):
