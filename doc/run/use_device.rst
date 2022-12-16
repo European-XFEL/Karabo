@@ -19,7 +19,7 @@ unrelated code that serves as a dependency to one or more Karabo device(s).
 All device packages are maintained in remote git repositories and are easily 
 accessible via a GitLab server under::
 
-  https://git.xfel.eu/gitlab/karaboDevices
+  https://git.xfel.eu/karaboDevices
 
 To simplify interaction, Karabo provides a utility tool helping developers and 
 system integrators to work with devices. 
@@ -50,13 +50,13 @@ repository optionally (if C++) compile it and subsequently install it to Karabo.
    By default, karabo will work with the device repositories at ssh://git@git.xfel.eu:10022/karaboDevices/<devicePackageName>.git.
    Therefore the user's public ssh key has to be submitted to git.xfel.eu before, otherwise command will fail. 
    The URL for adding a new ssh key to user settings is: 
-   https://git.xfel.eu/gitlab/profile/keys
+   https://git.xfel.eu/-/profile/keys
    Instructions on how to generate the key are also linked there.
 
    
    Alternatively, one can talk via https to the repositories at 
-   https://git.xfel.eu/gitlab/karaboDevices/<devicePackageName>.git
-   For this, one can use the ``karabo --git https://git.xfel.eu/gitlab install``
+   https://git.xfel.eu/karaboDevices/<devicePackageName>.git
+   For this, one can use the ``karabo --git https://git.xfel.eu install``
    (-g flag will work as well as --git)
 
 .. note::
