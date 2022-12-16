@@ -9,7 +9,6 @@ import socket
 import sys
 import threading
 import time
-import traceback
 
 from karabo import __version__ as karaboVersion
 from karabo.common.api import (
@@ -451,12 +450,7 @@ class PythonDevice(NoFsm):
         # Communication (incl. system registration) starts and thus parallelism
         # This is done here and not yet in __init__ to be sure that inheriting
         # devices can register in their __init__ after super(..).__init__(..)
-        try:
-            self._ss.start()
-        except RuntimeError as e:
-            raise RuntimeError("PythonDevice.__init__: "
-                               "SignalSlotable Exception -- {0}"
-                               .format(str(e)))
+        self._ss.start()  # Can raise e.g. for invalid instanceId
 
         pid = self["pid"]
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
@@ -526,10 +520,6 @@ class PythonDevice(NoFsm):
         Logger.useOstream()
         Logger.useFile()
         Logger.useCache()
-
-    def __del__(self):
-        """ PythonDevice destructor """
-        sys.exit(0)
 
     def remote(self):
         """Return a DeviceClient instance.
@@ -2126,20 +2116,32 @@ def launchPythonDevice():
         "PythonPluginLoader", Hash("pluginNamespace", namespace))
     loader.update()
 
-    try:
-        # Load the module containing classid so that it gets registered.
-        entrypoint = loader.getPlugin(modname)
-        deviceClass = entrypoint.load()
-        assert deviceClass.__classid__ == classid
-        t = threading.Thread(target=EventLoop.work)
-        t.start()
+    # Load the module containing classid so that it gets registered.
+    entrypoint = loader.getPlugin(modname)
+    deviceClass = entrypoint.load()
+    assert deviceClass.__classid__ == classid
 
-        device = Configurator(PythonDevice).create(classid, config)
-        device._finalizeInternalInitialization()
+    # Create device and prepare its initialisation
+    device = Configurator(PythonDevice).create(classid, config)
 
-        t.join()
-        device.__del__()
-    except Exception:
-        print("Exception caught when trying to run a '{}':".format(classid))
-        traceback.print_exc()
-    os._exit(77)
+    exception = None
+
+    def initialize():
+        nonlocal exception
+        try:
+            device._finalizeInternalInitialization()
+        except Exception as e:
+            EventLoop.stop()
+            exception = e
+
+    EventLoop.post(initialize)
+
+    # Start the event loop that will first call initialize()
+    EventLoop.work()  # Blocks until loop is stopped
+
+    # Finish off - either exception from initialize or clean shutdown
+    if exception:
+        # from None: no "During handling of the above exception, another..."
+        raise exception from None
+    else:
+        print(f"'{device.getInstanceId()}' has cleanly exited!\n")
