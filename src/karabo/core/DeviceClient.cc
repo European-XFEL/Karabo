@@ -34,7 +34,7 @@ namespace karabo {
 
         // Maximum number of attempts to complete the initialization of the DeviceClient by locking a weak pointer from
         //'*this'. Further details on the reasoning behind the two phase initialization of the DeviceClient instance
-        // can be found https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/3684.
+        // can be found https://git.xfel.eu/Karabo/Framework/merge_requests/3684.
         //
         // See also OutputChannel::initializeServerConnection(...)
         const int kMaxCompleteInitializationAttempts = 2500;

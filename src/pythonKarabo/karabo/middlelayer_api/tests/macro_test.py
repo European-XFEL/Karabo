@@ -818,7 +818,7 @@ class Tests(DeviceTest):
             await d.cancel()
             # Sleep a little while, so the task can finish. With a static
             # karabo_sleep of 0.06 this failed e.g. in
-            # https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/141622
+            # https://git.xfel.eu/Karabo/Framework/-/jobs/141622
             counter = 100
             while counter > 0:
                 await karabo_sleep(0.01)
