@@ -105,11 +105,12 @@ namespace karabo {
 
                             string plugin = it->path().string();
                             bool faultyPlugin = false;
-                            for (size_t i = 0; i < m_failedPlugins.size(); i++)
+                            for (size_t i = 0; i < m_failedPlugins.size(); i++) {
                                 if (m_failedPlugins[i] == plugin) {
                                     faultyPlugin = true;
                                     break;
                                 }
+                            }
                             // add to known plugins
                             m_knownPlugins.insert(it->path().stem().string());
 
