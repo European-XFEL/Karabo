@@ -1,13 +1,14 @@
 import time
 from asyncio import ensure_future, sleep
-from contextlib import contextmanager
-from unittest import main
 
+import pytest
+
+from karabo.middlelayer.testing import assertLogs, run_test
 from karabo.middlelayer_api.broker import amqp, redis
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 from karabo.middlelayer_api.tests.eventloop import (
-    DeviceTest, async_tst, sync_tst)
+    AsyncDeviceContext, event_loop)
 from karabo.native import Int32 as Int, Slot
 
 
@@ -53,46 +54,51 @@ class Local(Macro):
         self.remoteB.counter = 0
 
 
-class Tests(DeviceTest):
-    @classmethod
-    @contextmanager
-    def lifetimeManager(cls):
-        cls.local = Local(_deviceId_="local", project="test", module="test",
-                          may_start_thread=False)
-        cls.remA = Remote(dict(_deviceId_="remA"))
-        cls.remB = Remote(dict(_deviceId_="remB"))
-        with cls.deviceManager(cls.remA, cls.remB, lead=cls.local):
-            yield
-
-    @sync_tst
-    def test_count(self):
-        self.local.startA()
-        self.local.startB()
-        if amqp or redis:
-            time.sleep(1.0)
-        else:
-            time.sleep(0.3)
-        for i in range(30):
-            self.assertEqual(self.local.division,
-                             self.remA.counter // self.remB.counter)
-            time.sleep(0.1)
-
-    @sync_tst
-    def test_error(self):
-        with self.assertLogs("local", "ERROR"):
-            self.local.error()
-
-    @async_tst
-    async def test_quick_shutdown(self):
-        """Test that a quick instantiation and shutdown works"""
-        device = LocalRemoteDevice(dict(_deviceId_="localWithRemote"))
-        ensure_future(device.startInstance())
-        # Use sleep to make sure we are trying to connect to remote
-        await sleep(1)
-        self.assertFalse(device.is_initialized)
-        await device.slotKillDevice()
-        self.assertFalse(device.is_initialized)
+@pytest.fixture(scope="module")
+@pytest.mark.asyncio
+async def deviceTest(event_loop: event_loop):
+    local = Local(_deviceId_="local", project="test", module="test",
+                  may_start_thread=False)
+    remA = Remote(dict(_deviceId_="remA"))
+    remB = Remote(dict(_deviceId_="remB"))
+    async with AsyncDeviceContext(local=local, remA=remA, remB=remB) as ctx:
+        yield ctx
 
 
-if __name__ == "__main__":
-    main()
+@pytest.mark.timeout(30)
+@run_test
+def test_count(deviceTest):
+    local = deviceTest["local"]
+    local.startA()
+    local.startB()
+    remA = deviceTest["remA"]
+    remB = deviceTest["remB"]
+
+    if amqp or redis:
+        time.sleep(1.0)
+    else:
+        time.sleep(0.3)
+    for _ in range(30):
+        assert local.division == remA.counter // remB.counter
+        time.sleep(0.1)
+
+
+@pytest.mark.timeout(30)
+@run_test
+def test_error(deviceTest):
+    local = deviceTest["local"]
+    with assertLogs("local", "ERROR"):
+        local.error()
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_quick_shutdown(deviceTest):
+    """Test that a quick instantiation and shutdown works"""
+    device = LocalRemoteDevice(dict(_deviceId_="localWithRemote"))
+    ensure_future(device.startInstance())
+    # Use sleep to make sure we are trying to connect to remote
+    await sleep(1)
+    assert not device.is_initialized
+    await device.slotKillDevice()
+    assert not device.is_initialized
