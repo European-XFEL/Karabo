@@ -1,6 +1,13 @@
 import ast
+import collections
+import functools
+import logging
 import os
+from asyncio import get_event_loop
+from contextlib import contextmanager
 from pathlib import Path
+
+import pytest
 
 
 def get_ast_objects(package, ignore=[]):
@@ -21,3 +28,76 @@ def get_ast_objects(package, ignore=[]):
                 path = str(Path(dirpath).joinpath(fn))
                 ast_objects.append(_get_ast(path))
     return ast_objects
+
+
+def run_test(func):
+    """Run a pytest test function `func` in the karabo eventloop"""
+
+    @functools.wraps(func)
+    @pytest.mark.asyncio
+    async def wrapper(*args, **kwargs):
+        loop = get_event_loop()
+        return await loop.run_coroutine_or_thread(func, *args, **kwargs)
+
+    return wrapper
+
+
+_LoggingWatcher = collections.namedtuple("_LoggingWatcher",
+                                         ["records", "output"])
+
+
+class _CapturingHandler(logging.Handler):
+    """A logging handler capturing all (raw and formatted) logging output.
+    """
+
+    def __init__(self):
+        logging.Handler.__init__(self)
+        self.watcher = _LoggingWatcher([], [])
+
+    def flush(self):
+        pass
+
+    def emit(self, record):
+        self.watcher.records.append(record)
+        msg = self.format(record)
+        self.watcher.output.append(msg)
+
+
+@contextmanager
+def assertLogs(logger_name, level):
+    """A context manager used to implement assertLogs()."""
+    try:
+        if isinstance(logger_name, logging.Logger):
+            logger = logger_name
+        else:
+            logger = logging.getLogger(logger_name)
+
+        if level:
+            level = logging._nameToLevel.get(level, level)
+        else:
+            level = logging.INFO
+
+        # Store old
+        old_handlers = logger.handlers[:]
+        old_level = logger.level
+        old_propagate = logger.propagate
+        # Attach new
+        LOGGING_FORMAT = "%(levelname)s:%(name)s:%(message)s"
+        formatter = logging.Formatter(LOGGING_FORMAT)
+        handler = _CapturingHandler()
+        handler.setFormatter(formatter)
+        watcher = handler.watcher
+        logger.handlers = [handler]
+        logger.setLevel(level)
+        logger.propagate = False
+
+        yield handler.watcher
+    finally:
+        logger.handlers = old_handlers
+        logger.propagate = old_propagate
+        logger.setLevel(old_level)
+
+        if len(watcher.records) == 0:
+            raise AssertionError(
+                "no logs of level {} or higher triggered on {}"
+                .format(logging.getLevelName(level), logger.name))
