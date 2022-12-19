@@ -356,7 +356,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
                                connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
 
         // Some time to travel for message
-        trials = 1000; // failed with 200 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/131075/raw
+        trials = 1000; // failed with 200 in https://git.xfel.eu/Karabo/Framework/-/jobs/131075/raw
         do {
             boost::this_thread::sleep(boost::posix_time::milliseconds(2));
             boost::mutex::scoped_lock lock(handlerDataMutex);
