@@ -79,7 +79,7 @@ namespace karabo {
         class Configurator {
             typedef std::map<std::string, boost::any> CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
-            typedef std::vector<boost::function<void(Schema&)> > SchemaFuncs;
+            typedef std::vector<boost::function<void(Schema&)>> SchemaFuncs;
             typedef std::map<std::string, SchemaFuncs> SchemaFuncRegistry;
 
             Registry m_registry;
@@ -95,12 +95,27 @@ namespace karabo {
              */
             template <class DerivedClass>
             static void registerClass(const std::string& classId) {
-                // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" <<
-                // ctorKey() <<
-                // ") for configuration" << std::endl;
-                Configurator::init().m_registry[classId][ctorKey()] =
-                      static_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)> >(
-                            boost::factory<boost::shared_ptr<DerivedClass> >());
+                // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "("
+                //           << ctorKey() << ") for configuration" << std::endl;
+
+                // Map of constructors for classId
+                CtorMap& ctrs = Configurator::init().m_registry[classId];
+
+                // Try to insert construction method
+                const std::pair<CtorMap::iterator, bool> ctrIt_isInserted =
+                      ctrs.insert({ctorKey(), static_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)>>(
+                                                    boost::factory<boost::shared_ptr<DerivedClass>>())});
+
+                if (!ctrIt_isInserted.second) { // So there was already something in the map
+                    // Registering same constructor type again for a derived class smells like asking for trouble:
+                    // Could come when loading different libs witht different versions of the same class
+                    std::cerr << "Attempt to register constructor key '" << ctorKey()
+                              << "' a second time for class '" + classId + "'!\n"
+                              << "Probably the class is in different libraries.\n"
+                              << " ==> Directly bailing out due to potentially conflicting class versions."
+                              << std::endl;
+                    exit(1);
+                }
             }
 
             /**
@@ -110,12 +125,28 @@ namespace karabo {
              */
             template <class DerivedClass, typename A1>
             static void registerClass(const std::string& classId) {
-                // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" <<
-                // ctorKey<A1 >
-                // () << ") for configuration" << std::endl;
-                Configurator::init().m_registry[classId][ctorKey<A1>()] =
-                      static_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)> >(
-                            boost::factory<boost::shared_ptr<DerivedClass> >());
+                // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "("
+                //           << ctorKey<A1>() << ") for configuration" << std::endl;
+
+                // Map of constructors for classId
+                CtorMap& ctrs = Configurator::init().m_registry[classId];
+
+                // Try to insert construction method
+                const std::pair<CtorMap::iterator, bool> ctrIt_isInserted =
+                      ctrs.insert({ctorKey<A1>(),
+                                   static_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
+                                         boost::factory<boost::shared_ptr<DerivedClass>>())});
+
+                if (!ctrIt_isInserted.second) { // So there was already something in the map
+                    // Registering same constructor type again for a derived class smells like asking for trouble:
+                    // Could come when loading different libs with different versions of the same class
+                    std::cerr << "Attempt to register constructor key '" << ctorKey<A1>()
+                              << "' a second time for class '" + classId + "'!\n"
+                              << "Probably the class is in different libraries.\n"
+                              << " ==> Directly bailing out due to potentially conflicting class versions."
+                              << std::endl;
+                    exit(1);
+                }
             }
 
             /**
@@ -202,10 +233,10 @@ namespace karabo {
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)> >(it->second))(
+                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
                           validated);
                 } else {
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)> >(it->second))(
+                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&)>>(it->second))(
                           configuration);
                 }
             }
@@ -248,10 +279,10 @@ namespace karabo {
                 if (validate) {
                     Hash validated;
                     validateConfiguration(classId, configuration, validated);
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)> >(
+                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
                           it->second))(validated, a1);
                 } else {
-                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)> >(
+                    return (boost::any_cast<boost::function<boost::shared_ptr<BaseClass>(const Hash&, const A1&)>>(
                           it->second))(configuration, a1);
                 }
             }
@@ -333,7 +364,7 @@ namespace karabo {
                                                                               const karabo::util::Hash& input,
                                                                               const bool validate = true) {
                 if (input.has(listName)) {
-                    const std::vector<Hash>& tmp = input.get<std::vector<Hash> >(listName);
+                    const std::vector<Hash>& tmp = input.get<std::vector<Hash>>(listName);
                     std::vector<typename BaseClass::Pointer> instances(tmp.size());
                     for (size_t i = 0; i < tmp.size(); ++i) {
                         instances[i] = create(tmp[i], validate);
@@ -393,7 +424,7 @@ namespace karabo {
             static std::string ctorKey() {
                 std::string h(typeid(Hash).name());
                 std::string a1(typeid(A1).name());
-                return h + a1;
+                return h += a1;
             }
 
             template <typename A1, typename A2>
@@ -401,7 +432,7 @@ namespace karabo {
                 std::string h(typeid(Hash).name());
                 std::string a1(typeid(A1).name());
                 std::string a2(typeid(A2).name());
-                return h + a1 + a2;
+                return h += a1 += a2;
             }
 
             template <typename A1, typename A2, typename A3>
@@ -410,7 +441,7 @@ namespace karabo {
                 std::string a1(typeid(A1).name());
                 std::string a2(typeid(A2).name());
                 std::string a3(typeid(A3).name());
-                return h + a1 + a2 + a3;
+                return h += a1 += a2 += a3;
             }
 
             static CtorMap::const_iterator findCtor(const std::string& factoryKey, const std::string& constructorKey) {
@@ -722,7 +753,7 @@ namespace karabo {
         return karabo::util::Configurator<Self>::createChoice(choiceName, input, validate);                      \
     }                                                                                                            \
                                                                                                                  \
-    static std::vector<boost::shared_ptr<Self> > createList(                                                     \
+    static std::vector<boost::shared_ptr<Self>> createList(                                                      \
           const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {            \
         return karabo::util::Configurator<Self>::createList(listName, input, validate);                          \
     }                                                                                                            \
