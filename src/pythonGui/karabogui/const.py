@@ -25,6 +25,7 @@ GUI_DPI_FACTOR = (
 OS_SYSTEM = system()
 IS_MAC_SYSTEM = OS_SYSTEM == "Darwin"
 IS_WINDOWS_SYSTEM = OS_SYSTEM == "Windows"
+IS_LINUX_SYSTEM = OS_SYSTEM == "Linux"
 
 # Hidden karabo folder which includes certain karabo related files
 if IS_WINDOWS_SYSTEM:

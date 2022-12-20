@@ -334,7 +334,11 @@ def move_to_cursor(widget):
     widget.move(pos)
 
 
-def process_qt_events(app=None, timeout=100):  # ms
+def process_qt_events(app=None, timeout=100):
+    """Process the qt events of the application
+
+    :param timeout: time in milliseconds, defaults to 100
+    """
     if app is None:
         app = QApplication
 
