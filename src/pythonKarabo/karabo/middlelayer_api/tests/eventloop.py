@@ -70,7 +70,6 @@ class DeviceTest(TestCase):
             # multiple tests might fail if we do not do this.
             # also: closing the event loop in a `finally`
             # as insurance against failures in exit_stack
-            cls.loop.stop()
             cls.loop.close()
             set_event_loop(cls.old_event_loop)
 
