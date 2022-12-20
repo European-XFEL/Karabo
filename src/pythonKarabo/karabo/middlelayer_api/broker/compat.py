@@ -18,7 +18,7 @@ def _get_exception():
         from .openmq import Error as JMSError
         return JMSError
     elif amqp:
-        from aio_pika import AMQPException
+        from aiormq.exceptions import AMQPException
         return AMQPException
     elif mqtt:
         from .pahomqtt import MqttError
