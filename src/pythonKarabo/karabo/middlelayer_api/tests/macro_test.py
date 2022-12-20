@@ -326,12 +326,11 @@ class Tests(DeviceTest):
         self.assertFalse(channel.is_alive())
 
     @sync_tst
+    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_macro_slotter_sync(self):
         """Test the execution of MacroSlots in sync case"""
         with getDevice("localMacroSlot") as d:
             # 1.1
-            if not jms:
-                updateDevice(d)
             self.assertEqual(d.state, State.PASSIVE)
             d.startSync()
             self.assertEqual(d.state, State.ACTIVE)
@@ -372,8 +371,6 @@ class Tests(DeviceTest):
         """Test the execution of MacroSlots in async case"""
         with await getDevice("localMacroSlot") as d:
             # Using async with works out of the box ...
-            if not jms:
-                await updateDevice(d)
             # 1.1
             self.assertEqual(d.state, State.PASSIVE)
             await d.startASync()
