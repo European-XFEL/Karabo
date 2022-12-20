@@ -144,7 +144,7 @@ class Builder:
             os.environ['XAUTHORITY'] = XAUTHORITY_PATH
             command_run([
                 'start-stop-daemon', '--start', '-b', '-x', '/usr/bin/Xvfb',
-                '--', XVFB_DISPLAY, '-screen', '0', '1024x768x24'])
+                '--', XVFB_DISPLAY, '-screen', '0', '1024x768x24', '-extension', 'GLX'])
 
     def clean(self):
         print("Cleaning conda..")

@@ -75,7 +75,7 @@ stages:
     - KaraboFramework
 
 .image_miniconda_: &image_miniconda
-  image: europeanxfel/karabo-ci:miniconda-3
+  image: europeanxfel/karabo-ci:miniconda-3-005
   tags:
     - KaraboFramework
 
