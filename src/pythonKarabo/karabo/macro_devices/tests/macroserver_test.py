@@ -78,7 +78,6 @@ class Tests(TestCase):
                 pass
         finally:
             del cls.lead
-            cls.loop.stop()
             cls.loop.close()
             set_event_loop(cls.old_event_loop)
 
