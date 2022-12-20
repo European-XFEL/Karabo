@@ -9,6 +9,7 @@ from karabo.middlelayer import (
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
     getDevice, isAlive, setWait, waitUntil, waitUntilNew)
+from karabo.middlelayer_api.broker import amqp
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sleepUntil)
 
@@ -787,6 +788,8 @@ class RemotePipelineTest(DeviceTest):
                 await sleepUntil(lambda: receiver.received > 0)
                 self.assertGreater(receiver.received, 0)
                 self.assertTrue(received)
+                if amqp:
+                    await sleep(0.2)
 
                 # Kill the device and bring up again
                 await output_device.slotKillDevice()
@@ -811,6 +814,8 @@ class RemotePipelineTest(DeviceTest):
                 self.assertGreater(input_proxy.received, 0)
                 self.assertGreater(receiver.received, 0)
                 self.assertTrue(received)
+                if amqp:
+                    await sleep(0.2)
         finally:
             await output_device.slotKillDevice()
             await receiver.slotKillDevice()
