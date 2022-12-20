@@ -25,7 +25,6 @@ from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
 from ..eventloop import EventLoop
-from ..synchronization import allCompleted
 from .base import Broker
 
 
@@ -303,17 +302,23 @@ class AmqpBroker(Broker):
             signals = [signal]
 
         exchange = f"{self.domain}.signals"
-        for s in signals:
-            key = f"{deviceId}.{s}"
-            subscription = (exchange, key)
-            async with self.subscribe_lock:
+
+        futures = [sleep(0)]
+        async with self.subscribe_lock:
+            for s in signals:
+                key = f"{deviceId}.{s}"
+                subscription = (exchange, key)
                 if subscription not in self.subscriptions:
-                    await self.channel.queue_bind(
-                        queue=self.queue, exchange=exchange, routing_key=key)
+                    futures.append(self.channel.queue_bind(
+                        queue=self.queue, exchange=exchange, routing_key=key))
                     self.subscriptions.add(subscription)
 
-            await self.async_emit("call", {deviceId: ["slotConnectToSignal"]},
-                                  s, slot.__self__.deviceId, slot.__name__)
+                futures.append(
+                    self.async_emit(
+                        "call", {deviceId: ["slotConnectToSignal"]},
+                        s, slot.__self__.deviceId, slot.__name__))
+
+        await gather(*futures, return_exceptions=True)
 
     @ensure_running
     def disconnect(self, devId, signal, slot):
@@ -330,32 +335,34 @@ class AmqpBroker(Broker):
 
         exchange = f"{self.domain}.signals"
         try:
-            for s in signals:
-                key = f"{deviceId}.{s}"
-                subscription = (exchange, key)
-                async with self.subscribe_lock:
+            futures = [sleep(0)]
+            async with self.subscribe_lock:
+                for s in signals:
+                    key = f"{deviceId}.{s}"
+                    subscription = (exchange, key)
                     if subscription in self.subscriptions:
                         self.subscriptions.remove(subscription)
-                        await self.channel.queue_unbind(queue=self.queue,
-                                                        exchange=exchange,
-                                                        routing_key=key)
 
-                await self.async_emit("call",
-                                      {deviceId: ["slotDisconnectFromSignal"]},
-                                      s, slot.__self__.deviceId, slot.__name__)
+                        futures.append(self.channel.queue_unbind(
+                            queue=self.queue, exchange=exchange,
+                            routing_key=key))
+                    futures.append(self.async_emit(
+                        "call", {deviceId: ["slotDisconnectFromSignal"]},
+                        s, slot.__self__.deviceId, slot.__name__))
+            await gather(*futures, return_exceptions=True)
         except BaseException:
             self.logger.warning(
                 f'Fail to disconnect from signals: {signals}')
 
     async def async_unsubscribe_all(self):
+        futures = [sleep(0)]
         async with self.subscribe_lock:
-            tasks = [
+            futures.extend([
                 asyncio.shield(self.channel.queue_unbind(
                     queue=self.queue, exchange=exchange, routing_key=key)
-                ) for exchange, key in self.subscriptions]
-            if tasks:
-                await allCompleted(*tasks, cancel_pending=False, timeout=5)
+                ) for exchange, key in self.subscriptions])
             self.subscriptions = set()
+        await gather(*futures, return_exceptions=True)
 
     async def handleMessage(self, message, device):
         """Decode message from binary blob
