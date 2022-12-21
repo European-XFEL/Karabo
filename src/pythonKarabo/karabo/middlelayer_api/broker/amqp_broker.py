@@ -88,7 +88,8 @@ class AmqpBroker(Broker):
             routing_key = <deviceId>
             queue = <deviceId>
         """
-        declare_ok = await self.channel.queue_declare(exclusive=True)
+        declare_ok = await self.channel.queue_declare(
+            auto_delete=True)
         self.queue = declare_ok.queue
         # create main exchange : <domain>.slots
         exchange = f"{self.domain}.slots"
@@ -438,11 +439,11 @@ class AmqpBroker(Broker):
         d = device()
         if d is not None:
             await self.handleMessage(message.body, d)
-        await message.channel.basic_ack(message.delivery.delivery_tag)
 
     async def consume(self, device):
         consume_ok = await self.channel.basic_consume(
-            self.queue, partial(self.on_message, device))
+            self.queue, partial(self.on_message, device), no_ack=True)
+        # no_ack means automatic acknowlegdement
         self.consumer_tag = consume_ok.consumer_tag
         # Be under exitStack scope as soon as queue is alive
         self.future = Future()
@@ -565,7 +566,8 @@ class AmqpBroker(Broker):
                 raise RuntimeError("No connection established")
         try:
             # Creating a channel
-            self.channel = await self.connection.channel()
+            self.channel = await self.connection.channel(
+                publisher_confirms=False)
             await self.channel.basic_qos(prefetch_count=1)
             await self.subscribe_default()
         except BaseException:
