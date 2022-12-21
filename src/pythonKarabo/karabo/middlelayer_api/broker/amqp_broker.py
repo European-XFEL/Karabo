@@ -19,7 +19,6 @@ from functools import partial, wraps
 from itertools import count
 
 import aiormq
-from aiormq.types import DeliveredMessage
 
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
@@ -434,15 +433,15 @@ class AmqpBroker(Broker):
             self.heartbeatTask = None
 
     async def _cleanup(self):
-        await self.stopHeartbeat()
-        if self.future is not None:
-            self.future.set_result(None)
         if self.consumer_tag is not None:
             await self.channel.basic_cancel(self.consumer_tag)
             self.consumer_tag = None
+        if self.future is not None:
+            self.future.set_result(None)
+        await self.stopHeartbeat()
         await self.async_unsubscribe_all()
 
-    async def on_message(self, device, message: DeliveredMessage):
+    async def on_message(self, device, message):
         d = device()
         if d is not None:
             await self.handleMessage(message.body, d)
