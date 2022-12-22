@@ -1,8 +1,3 @@
-# To change this license header, choose License Headers in Project Properties.
-# To change this template file, choose Tools | Templates
-# and open the template in the editor.
-from __future__ import absolute_import, unicode_literals
-
 import asyncio
 import inspect
 import logging
@@ -56,6 +51,7 @@ class AmqpBroker(Broker):
         self.connection = None
         self.deviceId = deviceId
         self.classId = classId
+        # Interest in receiving broadcasts
         self.broadcast = broadcast
         self.repliers = {}
         self.tasks = set()
@@ -102,10 +98,14 @@ class AmqpBroker(Broker):
         exchange = f"{self.domain}.global_slots"
         await self.channel.exchange_declare(exchange=exchange,
                                             exchange_type='topic')
-        key = ''
-        await self.channel.queue_bind(self.queue, exchange, routing_key=key)
-        async with self.subscribe_lock:
-            self.subscriptions.add((exchange, key))
+        # Only if interested, we subscribe to broadcasts messages,
+        # but still declare the exchange to publish
+        if self.broadcast:
+            key = ''
+            await self.channel.queue_bind(self.queue, exchange,
+                                          routing_key=key)
+            async with self.subscribe_lock:
+                self.subscriptions.add((exchange, key))
 
         exchange = f"{self.domain}.signals"
         await self.channel.exchange_declare(exchange=exchange,
