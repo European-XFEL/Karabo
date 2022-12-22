@@ -132,7 +132,13 @@ def event_loop():
         lead = SignalSlotable(
             {"_deviceId_": create_instanceId()})
         loop.run_until_complete(lead.startInstance())
-        loop.instance = weakref.ref(lead)
+        instance_handler = loop.instance
+
+        def instance(loop):
+            """A new instance handler for the loop"""
+            return instance_handler() or lead
+
+        loop.instance = instance.__get__(loop, type(loop))
         yield loop
     finally:
         loop.run_until_complete(lead.slotKillDevice())
@@ -161,15 +167,14 @@ def create_device_server(serverId, plugins=[], config={}):
     """
     config.update({"serverId": serverId,
                    "heartbeatInterval": 20})
-
     server = MiddleLayerDeviceServer(config)
-
     if plugins:
 
-        async def scanPluginsOnce():
+        async def scanPluginsOnce(server):
             return False
 
-        server.scanPluginsOnce = scanPluginsOnce
+        server.scanPluginsOnce = scanPluginsOnce.__get__(
+            server, type(server))
         server.plugins = {klass.__name__: klass for klass in plugins}
     return server
 

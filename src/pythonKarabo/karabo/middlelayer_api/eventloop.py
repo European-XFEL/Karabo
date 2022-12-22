@@ -286,6 +286,7 @@ class EventLoop(SelectorEventLoop):
             # create_task has been called from outside a Karabo context
             # this happens in tests and while bootstrapping.
             pass
+
         return task
 
     async def run_coroutine_or_thread(self, f, *args, **kwargs):
