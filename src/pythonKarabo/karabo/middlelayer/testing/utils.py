@@ -37,7 +37,10 @@ def run_test(func):
     @pytest.mark.asyncio
     async def wrapper(*args, **kwargs):
         loop = get_event_loop()
-        return await loop.run_coroutine_or_thread(func, *args, **kwargs)
+        lead = getattr(loop, "lead", None)
+        task = loop.create_task(loop.run_coroutine_or_thread(
+            func, *args, **kwargs), instance=lead)
+        return await task
 
     return wrapper
 
