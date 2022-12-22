@@ -335,13 +335,17 @@ class RemotePipelineTest(DeviceTest):
             self.assertEqual(received, True)
             self.assertEqual(connected, True)
 
-            received = False
-
-        self.assertEqual(received, False)
         # Delete our proxy and see if we still receive data!
         del proxy
-        await output_device.slotKillDevice()
         await sleep(1)
+        received = False
+        self.assertEqual(received, False)
+        # No new data is arriving ...
+        await sleep(1)
+        # after 1 second
+        self.assertEqual(received, False)
+
+        await output_device.slotKillDevice()
 
         # Bring up our device with same deviceId, we should not have a
         # channel active with the handler
