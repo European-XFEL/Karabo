@@ -8,7 +8,6 @@ from itertools import count
 from unittest import TestCase, main
 
 from karabo.common.states import State
-from karabo.middlelayer_api.broker import amqp, jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     callNoWait, findDevices, getClients, getDevice, getDevices, shutdown)
@@ -86,15 +85,9 @@ class Tests(TestCase):
             r = weakref.ref(remote)
             Remote.destructed = False
             del remote
-            if jms:
-                time.sleep(0.02)
-            else:
-                time.sleep(0.2)
+            time.sleep(0.02)
             gc.collect()
-            if jms:
-                time.sleep(0.02)
-            else:
-                time.sleep(0.2)
+            time.sleep(0.02)
             self.assertIsNone(r())
             self.assertTrue(Remote.destructed)
         finally:
@@ -180,13 +173,9 @@ class Tests(TestCase):
         self.assertNotIn("other", getDevices("tserver"))
         await other.startInstance()
         await sleep(0.1)
-        if amqp:
-            await sleep(5.0)
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", findDevices("beep"))
-        if amqp:
-            await sleep(2.0)
         self.assertIn("other", findDevices("other"))
         self.assertIn("other", findDevices("OTHER"))
         self.assertIn("other", findDevices("OT"))
