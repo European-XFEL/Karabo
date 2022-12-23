@@ -351,8 +351,6 @@ def install(args):
                       " present in .git/refs/tag folder")
                 break
             os.remove(os.path.join(tag_dir, tag_file))
-        else:
-            os.rmdir(tag_dir)
         print('done.')
         os.chdir(path)
         if os.path.exists('DEPENDS'):
