@@ -1,20 +1,18 @@
 from asyncio import TimeoutError, get_event_loop, sleep
-from contextlib import contextmanager
-from unittest import main
 
 import numpy as np
+import pytest
 
 from karabo import __version__ as karaboVersion
 from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
     waitUntil, waitWhile)
+from karabo.middlelayer.testing import AsyncDeviceContext, event_loop, run_test
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, get_instance, getProperties, getSchema)
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
-from karabo.middlelayer_api.tests.eventloop import (
-    DeviceTest, async_tst, sync_tst)
 from karabo.middlelayer_api.utils import AsyncTimer, get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
@@ -136,442 +134,497 @@ class MyDevice(Device):
     nodeWithSlot = Node(NodeWithSlot)
 
 
-class Tests(DeviceTest):
-    @classmethod
-    @contextmanager
-    def lifetimeManager(cls):
-        cls.myDevice = MyDevice(dict(_deviceId_='MyDevice'))
-        with cls.deviceManager(lead=cls.myDevice):
-            yield
+@pytest.fixture(scope="module")
+@pytest.mark.asyncio
+async def deviceTest(event_loop: event_loop):
+    myDevice = MyDevice(dict(_deviceId_="MyDevice"))
+    async with AsyncDeviceContext(myDevice=myDevice) as ctx:
+        yield ctx
 
-    @sync_tst
-    def test_device_version(self):
-        expected = "karabo-1.2.3"
-        self.assertEqual(self.myDevice.classVersion, expected)
-        self.assertEqual(self.myDevice.karaboVersion, karaboVersion)
-        # Testing the internals of the Device.__init__ / InjectMixin.__new__
-        # interplay. But otherwise we would not test that __module_orig__ is
-        # really the original module, also for non-framework classes (because
-        # we use only the first part and that is 'karabo' for devices from
-        # anywhere in the frameowrk, including test classes.
-        self.assertEqual(self.myDevice.__module_orig__, self.__module__)
 
-    @sync_tst
-    def test_output_names(self):
-        names = self.myDevice.slotGetOutputChannelNames()
-        expected = ['dataOutput', 'nodeOutput.output', 'output']
-        self.assertEqual(names, expected)
+@pytest.mark.timeout(30)
+@run_test
+def test_device_version(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    expected = "karabo-1.2.3"
+    assert myDevice.classVersion == expected
+    assert myDevice.karaboVersion == karaboVersion
 
-    @sync_tst
-    def test_displayType_state(self):
-        self.assertEqual(self.myDevice.state.descriptor.displayType, 'State')
 
-    @sync_tst
-    def test_displayType_output(self):
-        self.assertEqual(self.myDevice.output.displayType, 'OutputChannel')
-        self.assertEqual(self.myDevice.dataOutput.displayType, 'OutputChannel')
+@pytest.mark.timeout(30)
+@run_test
+def test_output_names(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    names = myDevice.slotGetOutputChannelNames()
+    expected = ["dataOutput", "nodeOutput.output", "output"]
+    assert names == expected
 
-    @sync_tst
-    def test_displayType_input(self):
-        self.assertEqual(self.myDevice.input.displayType, 'InputChannel')
 
-    @sync_tst
-    def test_classId_output(self):
-        self.assertEqual(self.myDevice.output.classId, 'OutputChannel')
-        self.assertEqual(self.myDevice.dataOutput.classId, 'OutputChannel')
+@pytest.mark.timeout(30)
+@run_test
+def test_displayType_state(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.state.descriptor.displayType == "State"
 
-    @sync_tst
-    def test_classId_input(self):
-        self.assertEqual(self.myDevice.input.classId, 'InputChannel')
 
-    @async_tst
-    async def test_state_dependent_schema(self):
-        schema_before = await getSchema("MyDevice", onlyCurrentState=False)
-        # The notation `before` refers to the device in state ON.
-        with (await getDevice("MyDevice")) as d:
-            # Set a transient state
-            await self.myDevice.set_state(State.ACQUIRING)
-            proxy_before_schema = await getSchema(d, onlyCurrentState=False)
-            self.assertEqual(schema_before.hash.paths(),
-                             proxy_before_schema.hash.paths())
-            schema_after = await getSchema("MyDevice", onlyCurrentState=True)
-            proxy_after_schema = await getSchema(d, onlyCurrentState=True)
-            # Back to State.ON
-            await self.myDevice.set_state(State.ON)
-            self.assertNotEqual(proxy_before_schema.hash.paths(),
-                                proxy_after_schema.hash.paths())
-            self.assertNotEqual(schema_before.hash.paths(),
-                                schema_after.hash.paths())
-            # Check slot in schemas before (ON) and after (ACQUIRING)
-            self.assertIn("increaseCounter", schema_before.hash)
-            self.assertNotIn("increaseCounter", schema_after.hash)
-            self.assertIn("increaseCounter", proxy_before_schema.hash)
-            self.assertNotIn("increaseCounter", proxy_after_schema.hash)
+@pytest.mark.timeout(30)
+@run_test
+def test_displayType_output(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.output.displayType == "OutputChannel"
+    assert myDevice.dataOutput.displayType == "OutputChannel"
 
-    @async_tst
-    async def test_classId_slot(self):
-        s = await getSchema("MyDevice")
-        self.assertTrue(s.hash.hasAttribute('start', 'classId'),
-                        "Attribute 'classId' is missing from Slot schema.")
-        self.assertEqual(s.hash.getAttribute('start', 'classId'), 'Slot')
 
-    @async_tst
-    async def test_classId_node(self):
-        s = await getSchema("MyDevice")
-        self.assertFalse(s.hash.hasAttribute('nodeOutput', 'classId'),
-                         "Node should not have a 'classId' attribute.")
+@pytest.mark.timeout(30)
+@run_test
+def test_displayType_input(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.input.displayType, "InputChannel"
 
-    @async_tst
-    async def test_send_raw(self):
-        hsh = Hash("Itchy", 10)
-        self.assertIsNone(self.myDevice.output.schema)
-        await self.myDevice.output.writeRawData(hsh)
 
-        # provoke attribute error because we don't have a schema
-        with self.assertRaises(AttributeError):
-            await self.myDevice.output.writeData(hsh)
+@pytest.mark.timeout(30)
+@run_test
+def test_classId_output(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.output.classId == "OutputChannel"
+    assert myDevice.dataOutput.classId == "OutputChannel"
 
-    @sync_tst
-    def test_send_raw_no_wait(self):
-        hsh = Hash("Scratchy", 20)
-        self.assertIsNone(self.myDevice.output.schema)
-        self.myDevice.output.writeRawDataNoWait(hsh)
 
-        # provoke attribute error because we don't have a schema
-        with self.assertRaises(AttributeError):
-            self.myDevice.output.writeDataNoWait(hsh)
+@pytest.mark.timeout(30)
+@run_test
+def test_classId_input(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.input.classId == "InputChannel"
 
-    @async_tst
-    async def test_lastCommand(self):
-        self.assertEqual(self.myDevice.lastCommand, "")
-        with (await getDevice("MyDevice")) as d:
-            await d.nodeWithSlot.pressMe()
-            self.assertEqual(self.myDevice.lastCommand, "nodeWithSlot.pressMe")
-            await d.start()
-        self.assertEqual(self.myDevice.lastCommand, "start")
-        await getSchema("MyDevice")
-        self.assertEqual(self.myDevice.lastCommand, "start")
 
-    @async_tst
-    async def test_two_calls_concurrent(self):
-        self.assertEqual(self.myDevice.counter, 0)
-        with (await getDevice("MyDevice")) as d:
-            await d.increaseCounter()
-            await waitUntil(lambda: d.state != State.ON)
-            await waitWhile(lambda: d.state == State.ACQUIRING)
-            self.assertEqual(self.myDevice.counter, 1)
-            # Concurrent slot calls, one will return due to state block
-            self.myDevice._ss.emit("call", {"MyDevice": ["increaseCounter",
-                                                         "increaseCounter"]})
-            await waitUntil(lambda: d.state != State.ON)
-            await waitWhile(lambda: d.state == State.ACQUIRING)
-            self.assertEqual(self.myDevice.counter, 2)
+@pytest.mark.timeout(30)
+@run_test
+async def test_state_dependent_schema(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    schema_before = await getSchema("MyDevice", onlyCurrentState=False)
+    # The notation `before` refers to the device in state ON.
+    with (await getDevice("MyDevice")) as d:
+        # Set a transient state
+        await myDevice.set_state(State.ACQUIRING)
+        proxy_before_schema = await getSchema(d, onlyCurrentState=False)
+        assert schema_before.hash.paths() == proxy_before_schema.hash.paths()
+        schema_after = await getSchema("MyDevice", onlyCurrentState=True)
+        p_after_schema = await getSchema(d, onlyCurrentState=True)
+        # Back to State.ON
+        await myDevice.set_state(State.ON)
+        assert proxy_before_schema.hash.paths() != p_after_schema.hash.paths()
+        assert schema_before.hash.paths() != schema_after.hash.paths()
+        # Check slot in schemas before (ON) and after (ACQUIRING)
+        assert "increaseCounter" in schema_before.hash
+        assert "increaseCounter" not in schema_after.hash
+        assert "increaseCounter" in proxy_before_schema.hash
+        assert "increaseCounter" not in p_after_schema.hash
 
-    @async_tst
-    async def test_clear_table_external(self):
-        with (await getDevice("MyDevice")) as d:
-            dtype = d.table.descriptor.dtype
-            current_value = np.array((2.0, 5.6), dtype=dtype)
-            self.assertEqual(d.table[0].value, current_value)
 
-            # pop the first item and compare
-            check_value = d.table.pop(0)
-            self.assertEqual(check_value.value, current_value)
+@pytest.mark.timeout(30)
+@run_test
+async def test_classId_slot(deviceTest):
+    s = await getSchema("MyDevice")
+    assert s.hash.hasAttribute("start", "classId")
+    assert s.hash.getAttribute("start", "classId") == "Slot"
 
-            # The former second is now first
-            current_value = np.array((1.0, 1.6), dtype=dtype)
-            self.assertEqual(d.table[0].value, current_value)
-            self.assertEqual(len(d.table.value), 1)
 
-            # clear the value on the device side. The values are popped.
-            d.table.clear()
-            empty_table = np.array([], dtype=dtype)
-            success = np.array_equal(d.table.value, empty_table)
-            self.assertTrue(success)
+@pytest.mark.timeout(30)
+@run_test
+async def test_classId_node(deviceTest):
+    s = await getSchema("MyDevice")
+    assert not s.hash.hasAttribute("nodeOutput", "classId")
 
-    @async_tst
-    async def test_allowed_state_reconfigure_nodes(self):
-        with (await getDevice("MyDevice")) as d:
-            self.assertEqual(d.noded.floatProperty, 10.0)
-            await setWait(d, 'noded.floatProperty', 27.0)
-            self.assertEqual(d.noded.floatProperty, 27.0)
-            await setWait(d, 'noded.floatProperty', 10.0)
-            self.assertEqual(d.noded.floatProperty, 10.0)
-            with self.assertRaises(KaraboError):
-                await setWait(d, 'noded.intProperty', 22)
-            self.assertEqual(d.noded.intProperty, 7)
 
-    @sync_tst
-    def test_slot_verification(self):
-        self.assertEqual(self.myDevice.slotHasSlot("increaseCounter"), True)
-        self.assertEqual(self.myDevice.slotHasSlot("output"), False)
-        self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
+@pytest.mark.timeout(30)
+@run_test
+async def test_send_raw(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    hsh = Hash("Itchy", 10)
+    assert myDevice.output.schema is None
+    await myDevice.output.writeRawData(hsh)
 
-    @async_tst
-    async def test_instance_info(self):
-        device = self.myDevice
-        self.assertEqual(device._ss.info["status"], "ok")
-        await device.setState(State.ERROR)
-        await sleep(0)
-        self.assertEqual(device._ss.info["status"], "error")
-        await device.setState(State.UNKNOWN)
-        await sleep(0)
-        self.assertEqual(device._ss.info["status"], "unknown")
-        await device.setState(State.ON)
-        await sleep(0)
-        self.assertEqual(device._ss.info["status"], "ok")
+    # provoke attribute error because we don"t have a schema
+    with pytest.raises(AttributeError):
+        await myDevice.output.writeData(hsh)
 
-    @async_tst
-    async def test_output_information(self):
-        device = self.myDevice
-        # Second argument processId is not used in MDL
-        success, data = device.slotGetOutputChannelInformation(
-            "output", None)
-        self.assertEqual(success, True)
-        self.assertEqual(data["connectionType"], "tcp")
-        self.assertEqual(data["memoryLocation"], "remote")
-        self.assertIsInstance(data["port"], np.uint32)
 
-        success, data = device.slotGetOutputChannelInformation(
-            "doesNotExist", None)
-        self.assertEqual(success, False)
-        self.assertEqual(data, Hash())
+@pytest.mark.timeout(30)
+@run_test
+def test_send_raw_no_wait(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    hsh = Hash("Scratchy", 20)
+    assert myDevice.output.schema is None
+    myDevice.output.writeRawDataNoWait(hsh)
 
-    @async_tst
-    async def test_output_information_hash_version(self):
-        # tests the version that the GUI can generically call
-        device = self.myDevice
-        info = Hash('channelId', 'output')
-        h = device.slotGetOutputChannelInformationFromHash(info)
-        success, data = h["success"], h["info"]
-        self.assertEqual(success, True)
-        self.assertEqual(data["connectionType"], "tcp")
-        self.assertEqual(data["memoryLocation"], "remote")
-        self.assertIsInstance(data["port"], np.uint32)
+    # provoke attribute error because we don"t have a schema
+    with pytest.raises(AttributeError):
+        myDevice.output.writeDataNoWait(hsh)
 
-        info = Hash('channelId', 'doesNotExist')
-        h = device.slotGetOutputChannelInformationFromHash(info)
-        success, data = h["success"], h["info"]
-        self.assertEqual(success, False)
-        self.assertEqual(data, Hash())
 
-        info = Hash('NoChannelId', 'NotImportant')
-        with self.assertRaises(KeyError):
-            device.slotGetOutputChannelInformationFromHash(info)
+@pytest.mark.timeout(30)
+@run_test
+async def test_lastCommand(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.lastCommand == ""
+    with (await getDevice("MyDevice")) as d:
+        await d.nodeWithSlot.pressMe()
+        assert myDevice.lastCommand == "nodeWithSlot.pressMe"
+        await d.start()
+    assert myDevice.lastCommand == "start"
+    await getSchema("MyDevice")
+    assert myDevice.lastCommand == "start"
 
-    @async_tst
-    async def test_applyRunTimeUpdates(self):
-        with (await getDevice("MyDevice")) as d:
-            self.assertEqual(d.counter.descriptor.minInc, 0)
-            self.assertEqual(d.counter.descriptor.maxInc, 2000)
 
-        updates = [Hash('path', "counter",
-                        'attribute', "maxInc",
-                        'value', 100.0)]
-        reply = await self.myDevice.slotUpdateSchemaAttributes(updates)
-        self.assertTrue(reply['success'])
+@pytest.mark.timeout(30)
+@run_test
+async def test_two_calls_concurrent(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.counter == 0
+    with (await getDevice("MyDevice")) as d:
+        await d.increaseCounter()
+        await waitUntil(lambda: d.state != State.ON)
+        await waitWhile(lambda: d.state == State.ACQUIRING)
+        assert myDevice.counter == 1
+        # Concurrent slot calls, one will return due to state block
+        myDevice._ss.emit("call", {"MyDevice": ["increaseCounter",
+                                                "increaseCounter"]})
+        await waitUntil(lambda: d.state != State.ON)
+        await waitWhile(lambda: d.state == State.ACQUIRING)
+        assert myDevice.counter == 2
 
-        with (await getDevice("MyDevice")) as d:
-            self.assertEqual(d.counter.descriptor.minInc, 0)
-            self.assertEqual(d.counter.descriptor.maxInc, 100)
 
-        updates = [Hash('path', "nocounter",
-                        'attribute', "maxExc",
-                        'value', 100.0)]
-        reply = await self.myDevice.slotUpdateSchemaAttributes(updates)
-        self.assertFalse(reply['success'])
+@pytest.mark.timeout(30)
+@run_test
+async def test_clear_table_external(deviceTest):
+    with (await getDevice("MyDevice")) as d:
+        dtype = d.table.descriptor.dtype
+        current_value = np.array((2.0, 5.6), dtype=dtype)
+        assert d.table[0].value == current_value
 
-    @async_tst
-    async def test_get_property_set_property(self):
-        prop = get_property(self.myDevice, "integer")
-        set_property(self.myDevice, "integer", 0)
-        self.assertEqual(prop, 0)
-        set_property(self.myDevice, "noded.floatProperty", 10)
-        prop = get_property(self.myDevice, "noded.floatProperty")
-        self.assertEqual(prop, 10)
-        set_property(self.myDevice, "noded.floatProperty", 15)
-        self.assertIsNot(prop, self.myDevice.noded.floatProperty)
-        prop = get_property(self.myDevice, "noded.floatProperty")
-        self.assertEqual(prop, 15)
-        with self.assertRaises(AttributeError):
-            get_property(self.myDevice, "noded.notthere")
-        with self.assertRaises(AttributeError):
-            get_property(self.myDevice, "notthere")
-        with self.assertRaises(AttributeError):
-            set_property(self.myDevice, "notthere", 25)
-        with self.assertRaises(AttributeError):
-            set_property(self.myDevice, "noded.notthere", 2)
+        # pop the first item and compare
+        check_value = d.table.pop(0)
+        assert check_value.value == current_value
 
-    @async_tst
-    async def test_get_properties_hash(self):
-        self.myDevice.integer = 0
+        # The former second is now first
+        current_value = np.array((1.0, 1.6), dtype=dtype)
+        assert d.table[0].value == current_value
+        assert len(d.table.value) == 1
 
-        # Remote slot call via slotGetConfigurationSlice
-        deviceId = self.myDevice.deviceId
-        h = await getProperties(deviceId, "integer")
-        self.assertIsInstance(h, Hash)
-        self.assertEqual(h["integer"], 0)
-        self.assertEqual(len(h.paths(intermediate=False)), 1)
+        # clear the value on the device side. The values are popped.
+        d.table.clear()
+        empty_table = np.array([], dtype=dtype)
+        success = np.array_equal(d.table.value, empty_table)
+        assert success
 
-        slot = "slotGetConfigurationSlice"
-        r = await get_instance().call(
-            deviceId, slot, Hash("paths", ["integer"]))
-        self.assertTrue(r.fullyEqual(h))
 
-        # And we have the timestamp
-        attrs = h["integer", ...]
-        self.assertEqual(len(attrs), 3)
-        self.assertIn("tid", attrs)
-        self.assertIn("frac", attrs)
-        self.assertIn("sec", attrs)
+@pytest.mark.timeout(30)
+@run_test
+async def test_allowed_state_reconfigure_nodes(deviceTest):
+    with (await getDevice("MyDevice")) as d:
+        assert d.noded.floatProperty == 10.0
+        await setWait(d, "noded.floatProperty", 27.0)
+        assert d.noded.floatProperty == 27.0
+        await setWait(d, "noded.floatProperty", 10.0)
+        assert d.noded.floatProperty == 10.0
+        with pytest.raises(KaraboError):
+            await setWait(d, "noded.intProperty", 22)
+        assert d.noded.intProperty == 7
 
-        set_property(self.myDevice, "noded.floatProperty", 15)
-        h = await getProperties(deviceId,
-                                ["integer", "noded.floatProperty"])
-        self.assertEqual(h["integer"], 0)
-        self.assertEqual(h["noded.floatProperty"], 15)
-        self.assertEqual(len(h.paths()), 3)
-        self.assertEqual(len(h.paths(intermediate=False)), 2)
 
-        # exception for failing properties
-        with self.assertRaises(KaraboError):
-            h = await getProperties(deviceId, ["integer", "noded.notthere"])
+@pytest.mark.timeout(30)
+@run_test
+def test_slot_verification(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.slotHasSlot("increaseCounter") is True
+    assert myDevice.slotHasSlot("output") is False
+    assert myDevice.slotHasSlot("doesNotExist") is False
 
-        # KaraboError for failing garbage
-        for fail in (
-            [False, True],
-            [Hash()],
-            [1, 2],
-            [1.78],
-        ):
-            with self.assertRaises(KaraboError):
-                h = await getProperties(deviceId, fail)
 
-        # Working with proxy
-        async with getDevice(self.myDevice.deviceId) as proxy:
-            h = await getProperties(proxy, ["integer", "noded.floatProperty"])
-            self.assertEqual(h["integer"], 0)
-            self.assertEqual(h["noded.floatProperty"], 15)
-            self.assertEqual(len(h.paths(intermediate=False)), 2)
+@pytest.mark.timeout(30)
+@run_test
+async def test_instance_info(deviceTest):
+    device = deviceTest["myDevice"]
+    assert device._ss.info["status"] == "ok"
+    await device.setState(State.ERROR)
+    await sleep(0)
+    assert device._ss.info["status"] == "error"
+    await device.setState(State.UNKNOWN)
+    await sleep(0)
+    assert device._ss.info["status"] == "unknown"
+    await device.setState(State.ON)
+    await sleep(0)
+    assert device._ss.info["status"] == "ok"
 
-    @async_tst
-    async def test_slot_time(self):
-        h = await call("MyDevice", "slotGetTime")
-        self.assertIsNotNone(h)
-        self.assertTrue(h["time"])
-        self.assertGreater(h.getAttributes("time")["sec"], 0)
-        self.assertIsNotNone(h.getAttributes("time")["frac"], 0)
-        self.assertEqual(h.getAttributes("time")["tid"], 0)
-        timestamp_first = Timestamp.fromHashAttributes(h["time", ...])
-        h = await call("MyDevice", "slotGetTime")
-        timestamp_second = Timestamp.fromHashAttributes(h["time", ...])
-        self.assertGreater(timestamp_second, timestamp_first)
 
-    @async_tst
-    async def test_initialization(self):
-        # this will not throw in the preInitialization
-        bob = MyDevice({"_deviceId_": "bob", "preInitError": True})
-        # fails in preInitialization -> instantiation will throw
-        with self.assertRaisesRegex(RuntimeError, "I am going down"):
-            await bob.startInstance()
-        self.assertTrue(bob.isDown)
-        self.assertFalse(bob.is_initialized)
+@pytest.mark.timeout(30)
+@run_test
+async def test_output_information(deviceTest):
+    device = deviceTest["myDevice"]
+    # Second argument processId is not used in MDL
+    success, data = device.slotGetOutputChannelInformation(
+        "output", None)
+    assert success
+    assert data["connectionType"] == "tcp"
+    assert data["memoryLocation"] == "remote"
+    assert isinstance(data["port"], np.uint32)
 
-        # this will not throw in the onInitialization
-        alice = MyDevice({"_deviceId_": "alice", "initError": True})
-        await alice.startInstance()
-        # for backward compatibility, we kill the device on initError.
-        self.assertTrue(alice.isDown)
-        self.assertFalse(alice.is_initialized)
+    success, data = device.slotGetOutputChannelInformation(
+        "doesNotExist", None)
+    assert not success
+    assert data == Hash()
 
-        # this will succeed
-        charlie = MyDevice({"_deviceId_": "charlie"})
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_output_information_hash_version(deviceTest):
+    # tests the version that the GUI can generically call
+    device = deviceTest["myDevice"]
+    info = Hash("channelId", "output")
+    h = device.slotGetOutputChannelInformationFromHash(info)
+    success, data = h["success"], h["info"]
+    assert success
+    assert data["connectionType"] == "tcp"
+    assert data["memoryLocation"] == "remote"
+    assert isinstance(data["port"], np.uint32)
+
+    info = Hash("channelId", "doesNotExist")
+    h = device.slotGetOutputChannelInformationFromHash(info)
+    success, data = h["success"], h["info"]
+    assert not success
+    assert data == Hash()
+
+    info = Hash("NoChannelId", "NotImportant")
+    with pytest.raises(KeyError):
+        device.slotGetOutputChannelInformationFromHash(info)
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_applyRunTimeUpdates(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    with (await getDevice("MyDevice")) as d:
+        assert d.counter.descriptor.minInc == 0
+        assert d.counter.descriptor.maxInc == 2000
+
+    updates = [Hash("path", "counter",
+                    "attribute", "maxInc",
+                    "value", 100.0)]
+    reply = await myDevice.slotUpdateSchemaAttributes(updates)
+    assert reply["success"]
+
+    with (await getDevice("MyDevice")) as d:
+        assert d.counter.descriptor.minInc == 0
+        assert d.counter.descriptor.maxInc == 100
+
+    updates = [Hash("path", "nocounter",
+                    "attribute", "maxExc",
+                    "value", 100.0)]
+    reply = await myDevice.slotUpdateSchemaAttributes(updates)
+    assert not reply["success"]
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_get_property_set_property(deviceTest):
+    myDevice = deviceTest["myDevice"]
+
+    prop = get_property(myDevice, "integer")
+    set_property(myDevice, "integer", 0)
+    assert prop == 0
+    set_property(myDevice, "noded.floatProperty", 10)
+    prop = get_property(myDevice, "noded.floatProperty")
+    assert prop == 10
+    set_property(myDevice, "noded.floatProperty", 15)
+    assert prop is not myDevice.noded.floatProperty
+    prop = get_property(myDevice, "noded.floatProperty")
+    assert prop == 15
+    with pytest.raises(AttributeError):
+        get_property(myDevice, "noded.notthere")
+    with pytest.raises(AttributeError):
+        get_property(myDevice, "notthere")
+    with pytest.raises(AttributeError):
+        set_property(myDevice, "notthere", 25)
+    with pytest.raises(AttributeError):
+        set_property(myDevice, "noded.notthere", 2)
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_get_properties_hash(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    myDevice.integer = 0
+
+    # Remote slot call via slotGetConfigurationSlice
+    deviceId = myDevice.deviceId
+    h = await getProperties(deviceId, "integer")
+    assert isinstance(h, Hash)
+    assert h["integer"] == 0
+    assert len(h.paths(intermediate=False)) == 1
+
+    slot = "slotGetConfigurationSlice"
+    r = await get_instance().call(
+        deviceId, slot, Hash("paths", ["integer"]))
+    assert r.fullyEqual(h)
+
+    # And we have the timestamp
+    attrs = h["integer", ...]
+    assert len(attrs) == 3
+    assert "tid" in attrs
+    assert "frac" in attrs
+    assert "sec" in attrs
+
+    set_property(myDevice, "noded.floatProperty", 15)
+    h = await getProperties(deviceId,
+                            ["integer", "noded.floatProperty"])
+    assert h["integer"] == 0
+    assert h["noded.floatProperty"] == 15
+    assert len(h.paths()) == 3
+    assert len(h.paths(intermediate=False)) == 2
+
+    # exception for failing properties
+    with pytest.raises(KaraboError):
+        h = await getProperties(deviceId, ["integer", "noded.notthere"])
+
+    # KaraboError for failing garbage
+    for fail in (
+        [False, True],
+        [Hash()],
+        [1, 2],
+        [1.78],
+    ):
+        with pytest.raises(KaraboError):
+            h = await getProperties(deviceId, fail)
+
+    # Working with proxy
+    async with getDevice(myDevice.deviceId) as proxy:
+        h = await getProperties(proxy, ["integer", "noded.floatProperty"])
+        assert h["integer"] == 0
+        assert h["noded.floatProperty"] == 15
+        assert len(h.paths(intermediate=False)) == 2
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_slot_time(deviceTest):
+    h = await call("MyDevice", "slotGetTime")
+    assert h is not None
+    assert h["time"]
+    assert h.getAttributes("time")["sec"] > 0
+    assert h.getAttributes("time")["frac"] > 0
+    assert h.getAttributes("time")["tid"] == 0
+    timestamp_first = Timestamp.fromHashAttributes(h["time", ...])
+    h = await call("MyDevice", "slotGetTime")
+    timestamp_second = Timestamp.fromHashAttributes(h["time", ...])
+    assert timestamp_second > timestamp_first
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_initialization(deviceTest):
+    # this will not throw in the preInitialization
+    bob = MyDevice({"_deviceId_": "bob", "preInitError": True})
+    # fails in preInitialization -> instantiation will throw
+    with pytest.raises(RuntimeError):
+        await bob.startInstance()
+    assert bob.isDown
+    assert not bob.is_initialized
+
+    # this will not throw in the onInitialization
+    alice = MyDevice({"_deviceId_": "alice", "initError": True})
+    await alice.startInstance()
+    # for backward compatibility, we kill the device on initError.
+    assert alice.isDown
+    assert not alice.is_initialized
+
+    # this will succeed
+    charlie = MyDevice({"_deviceId_": "charlie"})
+    await charlie.startInstance()
+    assert not charlie.isDown
+    assert charlie.is_initialized
+    await charlie.slotKillDevice()
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_preinitialization(deviceTest):
+    """Test the preinitialization taking too long"""
+    class ASlowInitDevice(Device):
+
+        async def preInitialization(self):
+            await sleep(10)
+
+        async def slotKillDevice(self):
+            self.isDown = True
+            await super().slotKillDevice()
+
+    charlie = ASlowInitDevice({"_deviceId_": "charlie"})
+    with pytest.raises(TimeoutError):
         await charlie.startInstance()
-        self.assertFalse(charlie.isDown)
-        self.assertTrue(charlie.is_initialized)
-        await charlie.slotKillDevice()
+    assert charlie.isDown
+    assert not charlie.is_initialized
 
-    @async_tst
-    async def test_preinitialization(self):
-        """Test the preinitialization taking too long"""
-        class ASlowInitDevice(Device):
+    class SlowInitDevice(Device):
 
-            async def preInitialization(self):
-                await sleep(10)
+        def preInitialization(self):
+            mdlsleep(10)
 
-            async def slotKillDevice(self):
-                self.isDown = True
-                await super().slotKillDevice()
+        async def slotKillDevice(self):
+            self.isDown = True
+            await super().slotKillDevice()
 
-        charlie = ASlowInitDevice({"_deviceId_": "charlie"})
-        with self.assertRaises(TimeoutError):
-            await charlie.startInstance()
-        self.assertTrue(charlie.isDown)
-        self.assertFalse(charlie.is_initialized)
-
-        class SlowInitDevice(Device):
-
-            def preInitialization(self):
-                mdlsleep(10)
-
-            async def slotKillDevice(self):
-                self.isDown = True
-                await super().slotKillDevice()
-
-        echo = SlowInitDevice({"_deviceId_": "echo"})
-        with self.assertRaises(TimeoutError):
-            await echo.startInstance()
-        self.assertTrue(echo.isDown)
-        self.assertFalse(echo.is_initialized)
-
-    @async_tst
-    async def test_atimer_destruct(self):
-
-        global counter
-        counter = 0
-
-        class TimerDevice(Device):
-            __version__ = "1.2.3"
-
-            async def onInitialization(self):
-                self.timer = AsyncTimer(self.timer_callback, 0.1)
-                self.timer.start()
-                get_event_loop().something_changed()
-
-            async def timer_callback(self):
-                global counter
-                counter += 1
-
-        device = TimerDevice({"_deviceId_": "timerDeviceTest"})
-        await device.startInstance()
-        self.assertEqual(counter, 0)
-        await waitUntil(lambda: device.is_initialized)
-        await sleep(0.2)
-        self.assertGreater(counter, 0)
-        await device.slotKillDevice()
-        old_counter = counter
-        await sleep(0.2)
-        self.assertEqual(counter, old_counter)
-
-        counter = 0
-        device = TimerDevice({"_deviceId_": "timerDeviceTest"})
-        await device.startInstance()
-        await waitUntil(lambda: device.is_initialized)
-        await sleep(0.2)
-        self.assertGreater(counter, 0)
-        device.__del__()
-        await sleep(0.2)
-        old_counter = counter
-        await sleep(0.2)
-        self.assertEqual(counter, old_counter)
-
-        counter = 0
-        device = TimerDevice({"_deviceId_": "timerDeviceTest"})
-        await device.startInstance()
-        await waitUntil(lambda: device.is_initialized)
-        await device.slotKillDevice()
-        self.assertEqual(0, counter)
+    echo = SlowInitDevice({"_deviceId_": "echo"})
+    with pytest.raises(TimeoutError):
+        await echo.startInstance()
+    assert echo.isDown
+    assert not echo.is_initialized
 
 
-if __name__ == '__main__':
-    main()
+@pytest.mark.timeout(30)
+@run_test
+async def test_atimer_destruct(deviceTest):
+
+    global counter
+    counter = 0
+
+    class TimerDevice(Device):
+        __version__ = "1.2.3"
+
+        async def onInitialization(self):
+            self.timer = AsyncTimer(self.timer_callback, 0.1)
+            self.timer.start()
+            get_event_loop().something_changed()
+
+        async def timer_callback(self):
+            global counter
+            counter += 1
+
+    device = TimerDevice({"_deviceId_": "timerDeviceTest"})
+    await device.startInstance()
+    assert counter == 0
+    await waitUntil(lambda: device.is_initialized)
+    await sleep(0.2)
+    assert counter > 0
+    await device.slotKillDevice()
+    old_counter = counter
+    await sleep(0.2)
+    assert counter == old_counter
+
+    counter = 0
+    device = TimerDevice({"_deviceId_": "timerDeviceTest"})
+    await device.startInstance()
+    await waitUntil(lambda: device.is_initialized)
+    await sleep(0.2)
+    assert counter > 0
+    device.__del__()
+    await sleep(0.2)
+    old_counter = counter
+    await sleep(0.2)
+    assert counter == old_counter
+
+    counter = 0
+    device = TimerDevice({"_deviceId_": "timerDeviceTest"})
+    await device.startInstance()
+    await waitUntil(lambda: device.is_initialized)
+    await device.slotKillDevice()
+    assert 0 == counter
