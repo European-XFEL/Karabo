@@ -75,7 +75,7 @@ class AmqpBroker(Broker):
         through the broker:
             -------------
             exchange = <domain>.global_slots
-            routing_key = ''
+            routing_key = ""
             queue = <deviceId>
             -------------
             exchange = <domain>.slots
@@ -88,7 +88,7 @@ class AmqpBroker(Broker):
         # create main exchange : <domain>.slots
         exchange = f"{self.domain}.slots"
         await self.channel.exchange_declare(exchange=exchange,
-                                            exchange_type='topic')
+                                            exchange_type="topic")
         key = self.deviceId
         await self.channel.queue_bind(self.queue, exchange, routing_key=key)
         async with self.subscribe_lock:
@@ -97,11 +97,11 @@ class AmqpBroker(Broker):
         # Globals for instanceNew, Gone ...
         exchange = f"{self.domain}.global_slots"
         await self.channel.exchange_declare(exchange=exchange,
-                                            exchange_type='topic')
+                                            exchange_type="topic")
         # Only if interested, we subscribe to broadcasts messages,
         # but still declare the exchange to publish
         if self.broadcast:
-            key = ''
+            key = ""
             await self.channel.queue_bind(self.queue, exchange,
                                           routing_key=key)
             async with self.subscribe_lock:
@@ -109,7 +109,7 @@ class AmqpBroker(Broker):
 
         exchange = f"{self.domain}.signals"
         await self.channel.exchange_declare(exchange=exchange,
-                                            exchange_type='topic')
+                                            exchange_type="topic")
 
     def publish(self, exch, key, msg):
         # schedule 'basic_publish' call soon on event loop ...
@@ -120,11 +120,11 @@ class AmqpBroker(Broker):
     def encode_binary_message(self, header, arguments):
         body = Hash()
         for i, a in enumerate(arguments):
-            body['a{}'.format(i + 1)] = a
-        header['signalInstanceId'] = self.deviceId
-        header['__format'] = 'Bin'
-        header['producerTimestamp'] = self.timestamp
-        return b''.join([encodeBinary(header), encodeBinary(body)])
+            body[f"a{i + 1}"] = a
+        header["signalInstanceId"] = self.deviceId
+        header["__format"] = "Bin"
+        header["producerTimestamp"] = self.timestamp
+        return b"".join([encodeBinary(header), encodeBinary(body)])
 
     @ensure_running
     def send(self, exchange, routing_key, header, arguments):
@@ -146,7 +146,7 @@ class AmqpBroker(Broker):
         body["a1"] = self.deviceId
         body["a2"] = interval
         body["a3"] = self.info
-        msg = b''.join([encodeBinary(header), encodeBinary(body)])
+        msg = b"".join([encodeBinary(header), encodeBinary(body)])
         exch = f"{self.domain}.signals"
         key = f"{self.deviceId}.signalHeartbeat"
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
@@ -159,7 +159,7 @@ class AmqpBroker(Broker):
         :param info: the info Hash that should be published regularly.
         """
         self.info = info
-        await self.async_emit('call', {'*': ['slotInstanceNew']},
+        await self.async_emit("call", {"*": ["slotInstanceNew"]},
                               self.deviceId, self.info)
 
         async def heartbeat():
@@ -181,23 +181,23 @@ class AmqpBroker(Broker):
             except CancelledError:
                 pass
             finally:
-                await self.async_emit('call', {'*': ['slotInstanceGone']},
+                await self.async_emit("call", {"*": ["slotInstanceGone"]},
                                       self.deviceId, self.info)
 
         self.heartbeatTask = ensure_future(heartbeat())
 
     def build_arguments(self, signal, targets, reply):
         p = Hash()
-        p['signalFunction'] = signal
+        p["signalFunction"] = signal
         slotInstanceIds = (
-                '|' + '||'.join(t for t in targets) + '|')
-        p['slotInstanceIds'] = slotInstanceIds
+                "|" + "||".join(t for t in targets) + "|")
+        p["slotInstanceIds"] = slotInstanceIds
         funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
-        p['slotFunctions'] = ('|' + '||'.join(funcs) + '|')
+        p["slotFunctions"] = ("|" + "||".join(funcs) + "|")
         if reply is not None:
-            p['replyTo'] = reply
-        p['hostname'] = socket.gethostname()
-        p['classId'] = self.classId
+            p["replyTo"] = reply
+        p["hostname"] = socket.gethostname()
+        p["classId"] = self.classId
         # AMQP specific follows ...
         slotInstanceId = slotInstanceIds.strip("|")
         if (signal == "__request__" or signal == "__replyNoWait__"
@@ -205,7 +205,7 @@ class AmqpBroker(Broker):
             name = f"{self.domain}.slots"
             routing_key = slotInstanceId
         elif signal == "call" or signal == "__call__":
-            if slotInstanceId == '*':
+            if slotInstanceId == "*":
                 name = f"{self.domain}.global_slots"
                 routing_key = ""
             else:
@@ -213,7 +213,7 @@ class AmqpBroker(Broker):
                 routing_key = slotInstanceId
         else:
             name = f"{self.domain}.signals"
-            routing_key = self.deviceId + '.' + signal
+            routing_key = f"{self.deviceId}.{signal}"
 
         return name, routing_key, p
 
@@ -230,7 +230,7 @@ class AmqpBroker(Broker):
         await self.async_send(name, routing_key, p, arguments)
 
     async def request(self, device, target, *arguments):
-        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
+        reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
         self.call("call", {device: [target]}, reply, arguments)
         future = Future(loop=self.loop)
         self.repliers[reply] = future
@@ -244,37 +244,35 @@ class AmqpBroker(Broker):
         await self.async_call(signal, targets, None, arguments)
 
     def reply(self, message, reply, error=False):
-        header = message.get('header')
-        sender = header['signalInstanceId']
+        header = message["header"]
+        sender = header["signalInstanceId"]
 
         if not isinstance(reply, tuple):
             reply = reply,
 
-        if 'replyTo' in header:
-            replyTo = header['replyTo']
+        if replyTo := header.get("replyTo"):
             p = Hash()
-            p['replyFrom'] = replyTo
-            p['signalFunction'] = "__reply__"
-            p['slotInstanceIds'] = '|' + sender + '|'
-            p['error'] = error
-            name = f'{self.domain}.slots'
+            p["replyFrom"] = replyTo
+            p["signalFunction"] = "__reply__"
+            p["slotInstanceIds"] = "|" + sender + "|"
+            p["error"] = error
+            name = f"{self.domain}.slots"
             routing_key = sender
             self.send(name, routing_key, p, reply)
 
-        if 'replyInstanceIds' in header:
-            replyId = header['replyInstanceIds']
+        if replyId := header.get("replyInstanceIds"):
             p = Hash()
-            p['signalFunction'] = "__replyNoWait__"
-            p['slotInstanceIds'] = replyId
-            p['slotFunctions'] = header['replyFunctions']
-            p['error'] = error
-            dest = replyId.strip('|')
-            name = f'{self.domain}.slots'
+            p["signalFunction"] = "__replyNoWait__"
+            p["slotInstanceIds"] = replyId
+            p["slotFunctions"] = header["replyFunctions"]
+            p["error"] = error
+            dest = replyId.strip("|")
+            name = f"{self.domain}.slots"
             routing_key = dest
             self.send(name, routing_key, p, reply)
 
     def replyException(self, message, exception):
-        trace = ''.join(traceback.format_exception(
+        trace = "".join(traceback.format_exception(
             type(exception), exception, exception.__traceback__))
         self.reply(message, (str(exception), trace), error=True)
 
@@ -351,7 +349,7 @@ class AmqpBroker(Broker):
             await gather(*futures, return_exceptions=True)
         except BaseException:
             self.logger.warning(
-                f'Fail to disconnect from signals: {signals}')
+                f"Fail to disconnect from signals: {signals}")
 
     async def async_unsubscribe_all(self):
         futures = [sleep(0)]
@@ -395,7 +393,7 @@ class AmqpBroker(Broker):
             return
         try:
             for slot, name in callSlots:
-                # call 'coslot.outer(...)' for slot, i.e. reply
+                # call "coslot.outer(...)" for slot, i.e. reply
                 slot.slot(slot, device, name, decoded, params)
         except Exception:
             # the slot.slot wrapper should already catch all exceptions
@@ -511,19 +509,20 @@ class AmqpBroker(Broker):
         :returns: a dictionary that maps the device id of slots to be called
             to a list of slots to be called on that device
         """
-        header = hash.get('header')
-        body = hash.get('body')
+        header = hash["header"]
+        body = hash["body"]
         params = []
         for i in count(1):
             try:
-                params.append(body['a{}'.format(i)])
+                params.append(body[f"a{i}"])
             except KeyError:
                 break
-        replyFrom = header.get('replyFrom')
+
+        replyFrom = header.get("replyFrom")
         if replyFrom is not None:
             f = self.repliers.get(replyFrom)
             if f is not None and not f.done():
-                if header.get('error', False):
+                if header.get("error", False):
                     exceptTxt = params[0]
                     if len(params) >= 2 and params[1]:
                         exceptTxt += "\nDETAILS: " + params[1]
@@ -536,15 +535,13 @@ class AmqpBroker(Broker):
                     f.set_result(params)
             return {}, None
 
-        slots = (header['slotFunctions'][1:-1]).split('||')
+        slots = (header["slotFunctions"][1:-1]).split("||")
         return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
                 params)
 
     def get_property(self, message, prop):
-        header = message.get('header')
-        if header is None:
-            return None
-        return header.get(prop)
+        header = message.get("header")
+        return header.get(prop) if header is not None else None
 
     @classmethod
     async def _ensure_global_connection(cls):
@@ -552,7 +549,7 @@ class AmqpBroker(Broker):
         if connection and connection.is_opened:
             return connection
         urls = os.environ.get("KARABO_BROKER",
-                              "amqp://localhost:5672").split(',')
+                              "amqp://localhost:5672").split(",")
         for url in urls:
             try:
                 # Perform connection
@@ -560,7 +557,7 @@ class AmqpBroker(Broker):
                 EventLoop.global_loop.connection = connection
                 break
             except BaseException as e:
-                print(f'While trying node "{url}": {str(e)}')
+                print(f"While trying node '{url}': {str(e)}")
                 connection = None
         return connection
 
