@@ -1,20 +1,11 @@
-# To change this license header, choose License Headers in Project Properties.
-# To change this template file, choose Tools | Templates
-# and open the template in the editor.
-from __future__ import absolute_import, unicode_literals
-
 import asyncio
-import inspect
 import logging
 import socket
-import time
-import traceback
 import weakref
 from asyncio import (
-    CancelledError, Future, TimeoutError, ensure_future, gather,
-    get_event_loop, shield, sleep, wait_for)
-from contextlib import AsyncExitStack, closing
-from functools import wraps
+    CancelledError, TimeoutError, ensure_future, gather, get_event_loop,
+    shield, sleep, wait_for)
+from contextlib import closing
 from itertools import count
 
 from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
@@ -42,12 +33,7 @@ class JmsBroker(Broker):
         self.deviceId = deviceId
         self.classId = classId
         self.broadcast = broadcast
-        self.repliers = {}
-        self.tasks = set()
         self.logger = logging.getLogger(deviceId)
-        self.info = None
-        self.slots = {}
-        self.exitStack = AsyncExitStack()
 
     def send(self, p, args):
         hash = Hash()
@@ -127,17 +113,6 @@ class JmsBroker(Broker):
         p['classId'] = self.classId
         self.send(p, args)
 
-    async def request(self, device, target, *args):
-        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
-        self.call("call", {device: [target]}, reply, args)
-        future = Future(loop=self.loop)
-        self.repliers[reply] = future
-        future.add_done_callback(lambda _: self.repliers.pop(reply))
-        return (await future)
-
-    def emit(self, signal, targets, *args):
-        self.call(signal, targets, None, args)
-
     def reply(self, message, reply, error=False):
         sender = message.properties['signalInstanceId']
 
@@ -161,11 +136,6 @@ class JmsBroker(Broker):
             p['slotFunctions'] = message.properties['replyFunctions']
             p['error'] = error
             self.send(p, reply)
-
-    def replyException(self, message, exception):
-        trace = ''.join(traceback.format_exception(
-            type(exception), exception, exception.__traceback__))
-        self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signals, slot):
         """This is an interface for establishing connection netween local slot
@@ -278,39 +248,6 @@ class JmsBroker(Broker):
             self.logger.exception(
                 "Internal error while executing slot")
 
-    def register_slot(self, name, slot):
-        """register a slot on the device
-
-        :param name: the name of the slot
-        :param slot: the slot to be called. If this is a bound method, it is
-            assured that no reference to the object holding the method is kept.
-        """
-        if inspect.ismethod(slot):
-            def delete(ref):
-                del self.slots[name]
-
-            weakself = weakref.ref(slot.__self__, delete)
-            func = slot.__func__
-
-            @wraps(func)
-            def wrapper(*args):
-                return func(weakself(), *args)
-
-            self.slots[name] = wrapper
-        else:
-            self.slots[name] = slot
-
-    async def main(self, device):
-        """This is the main loop of a device
-
-        A device is running if this coroutine is still running.
-        Use `stop_tasks` to stop this main loop."""
-        async with self.exitStack:
-            # this method should not keep a reference to the device
-            # while yielding, otherwise the device cannot be collected
-            device = weakref.ref(device)
-            await self.consume(device())
-
     async def stop_tasks(self):
         """Stop all currently running task
 
@@ -323,37 +260,12 @@ class JmsBroker(Broker):
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
             t.cancel()
-        # A task is immediately cancelled. We are waiting for the tasks here
-        # to be done, which might take forever and thus we are not able to
-        # exit here if we are not putting a timeout of a few seconds.
-        # We also do not expect a very long procedure to be executed in a
-        # cancellation.
-        # A typical case which gets stuck is a logging after an exception when
-        # the device is shutdown.
-        # Hence, this makes sure the device gets killed and thus a server
-        # can shutdown by closing the eventloop.
         try:
             await wait_for(gather(*tasks, return_exceptions=True),
                            timeout=5)
             return True
         except TimeoutError:
             return False
-
-    def enter_context(self, context):
-        return self.exitStack.enter_context(context)
-
-    async def enter_async_context(self, context):
-        return await self.exitStack.enter_async_context(context)
-
-    def updateInstanceInfo(self, info):
-        """update the short information about this instance
-
-        the instance info hash contains a very brief summary of the device.
-        It is regularly published, and even lives longer than a device,
-        as it is published with the message that the device died."""
-        self.info.merge(info)
-        self.emit("call", {"*": ["slotInstanceUpdated"]},
-                  self.deviceId, self.info)
 
     def decodeMessage(self, message):
         """Decode a Karabo message
