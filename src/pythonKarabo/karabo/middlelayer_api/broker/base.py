@@ -1,40 +1,129 @@
+import inspect
+import time
+import traceback
+import weakref
 from abc import ABC, abstractmethod
+from asyncio import Future
+from contextlib import AsyncExitStack
+from functools import wraps
 
 
 class Broker(ABC):
     def __init__(self, need_subscribe):
         self.needSubscribe = need_subscribe
+        self.exitStack = AsyncExitStack()
+        self.slots = {}
+        self.info = None
+        self.repliers = {}
+        self.tasks = set()
 
-    @abstractmethod
-    def send(self, p, args):
-        pass
+    def enter_context(self, context):
+        """Synchronously enter the exit stack context"""
+        return self.exitStack.enter_context(context)
 
-    @abstractmethod
-    def heartbeat(self, interval):
-        pass
+    async def enter_async_context(self, context):
+        """Asynchronously enter the exit stack context"""
+        return await self.exitStack.enter_async_context(context)
+
+    async def main(self, device):
+        """This is the main loop of a device (SignalSlotable instance)
+
+        A device is running if this coroutine is still running.
+        Use `stop_tasks` to stop this main loop."""
+        async with self.exitStack:
+            device = weakref.ref(device)
+            await self.consume(device())
+
+    def register_slot(self, name, slot):
+        """register a slot on the device
+
+        :param name: the name of the slot
+        :param slot: the slot to be called. If this is a bound method, it is
+            assured that no reference to the object holding the method is kept.
+        """
+        if inspect.ismethod(slot):
+            def delete(ref):
+                del self.slots[name]
+
+            weakself = weakref.ref(slot.__self__, delete)
+            func = slot.__func__
+
+            @wraps(func)
+            def wrapper(*args):
+                return func(weakself(), *args)
+
+            self.slots[name] = wrapper
+        else:
+            self.slots[name] = slot
+
+    def updateInstanceInfo(self, info):
+        """update the short information about this instance
+
+        the instance info hash contains a very brief summary of the device.
+        It is regularly published, and even lives longer than a device,
+        as it is published with the message that the device died."""
+        self.info.merge(info)
+        self.emit("call", {"*": ["slotInstanceUpdated"]},
+                  self.deviceId, self.info)
+
+    def replyException(self, message, exception):
+        trace = ''.join(traceback.format_exception(
+            type(exception), exception, exception.__traceback__))
+        self.reply(message, (str(exception), trace), error=True)
+
+    def emit(self, signal, targets, *args):
+        self.call(signal, targets, None, args)
+
+    async def request(self, device, target, *arguments):
+        reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
+        self.call("call", {device: [target]}, reply, arguments)
+        future = Future(loop=self.loop)
+        self.repliers[reply] = future
+        future.add_done_callback(lambda _: self.repliers.pop(reply))
+        return (await future)
+
+    # ------------------------------------------------------------------------
+    # Subclass interface
+
+    async def ensure_connection(self):
+        """Ensure a connection to the broker
+
+        This method is used for libraries with async interface
+        """
+
+    # ------------------------------------------------------------------------
+    # Abstract interface
 
     @abstractmethod
     def notify_network(self, info):
-        pass
+        """notify the network that we are alive
+
+        we send out an instance new and gone, and the heartbeats in between.
+
+        :param info: the info Hash that should be published regularly.
+        """
+
+    @abstractmethod
+    async def consume(self, device):
+        """The main consume method called from `main`. Implementation must
+        be blocking, as the exit stack is bound to leaving this method"""
+
+    @abstractmethod
+    async def stop_tasks(self):
+        """Stop all currently running task
+
+        This marks the end of life of a device.
+
+        Note that the task this coroutine is called from, as an exception,
+        is not cancelled. That's the chicken-egg-problem.
+        """
 
     @abstractmethod
     def call(self, signal, targets, reply, args):
         pass
 
     @abstractmethod
-    def request(self, device, target, *args):
-        pass
-
-    @abstractmethod
-    def emit(self, signal, targets, *args):
-        pass
-
-    @abstractmethod
     def reply(self, message, reply, error=False):
-        pass
-
-    @abstractmethod
-    def replyException(self, message, exception):
         pass
 
     @abstractmethod
@@ -54,71 +143,26 @@ class Broker(ABC):
         pass
 
     @abstractmethod
-    def consume(self, device):
-        pass
-
-    @abstractmethod
-    def handleMessage(self, message, device):
-        pass
-
-    @abstractmethod
-    def register_slot(self, name, slot):
-        pass
-
-    @abstractmethod
-    def main(self, device):
-        pass
-
-    @abstractmethod
-    def stop_tasks(self):
-        pass
-
-    @abstractmethod
-    def enter_context(self, context):
-        pass
-
-    @abstractmethod
-    def enter_async_context(self, context):
-        pass
-
-    @abstractmethod
-    def updateInstanceInfo(self, info):
-        pass
-
-    @abstractmethod
-    def decodeMessage(self, message):
-        pass
-
-    @abstractmethod
     def get_property(self, message, prop):
         return None
-
-    async def ensure_connection(self):
-        pass
-
-    async def async_unsubscribe_all(self):
-        pass
-
-    async def ensure_disconnect(self, device):
-        pass
 
     @staticmethod
     def create_connection(hosts, connection):
         # Get scheme (protocol) of first URI...
-        scheme, _ = hosts[0].split('://')
-        if scheme == 'tcp':
+        scheme, _ = hosts[0].split("://")
+        if scheme == "tcp":
             from .jms_broker import JmsBroker
             return (JmsBroker.create_connection(hosts, connection),
                     JmsBroker)
-        elif scheme == 'mqtt':
+        elif scheme == "mqtt":
             from .mqtt_broker import MqttBroker
             return (MqttBroker.create_connection(hosts, connection),
                     MqttBroker)
-        elif scheme == 'redis':
+        elif scheme == "redis":
             from .redis_broker import RedisBroker
             return (RedisBroker.create_connection(hosts, connection),
                     RedisBroker)
-        elif scheme == 'amqp':
+        elif scheme == "amqp":
             from .amqp_broker import AmqpBroker
             return (AmqpBroker.create_connection(hosts, connection),
                     AmqpBroker)
