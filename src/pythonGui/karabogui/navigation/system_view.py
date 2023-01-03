@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (
 
 from karabo.common.api import Capabilities
 from karabo.native import Timestamp
-from karabogui import icons, messagebox
+from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.api import (
     ConfigurationFromNameDialog, ConfigurationFromPastDialog,
@@ -232,16 +232,6 @@ class SystemTreeView(QTreeView):
     @Slot()
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
-        archive = info.get("archive", False)
-        if not archive:
-            # Display a hint for the operator that currently the device is not
-            # archived/logged if so.
-            messagebox.show_warning(
-                f"The device {info.get('deviceId')} is currently NOT "
-                "archived! If it was not archived at the requested point in "
-                "time but before that, you will receive an outdated "
-                "configuration.")
-
         device_id = info.get('deviceId')
         dialog = ConfigurationFromPastDialog(instance_id=device_id,
                                              parent=self)
