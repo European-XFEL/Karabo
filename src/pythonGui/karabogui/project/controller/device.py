@@ -611,19 +611,6 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _get_configuration_from_past(self, parent=None):
         """Request a configuration from the datalog reader
         """
-        topo_node = self.project_device.device_node
-        if topo_node is not None:
-            attributes = topo_node.attributes
-            archive = attributes.get('archive', False)
-            if not archive:
-                # Display a hint for the operator that currently the device is
-                # not archived/logged if so. Do not see a parent here to block!
-                messagebox.show_warning(
-                    f"The device {self.model.instance_id} is currently NOT "
-                    f"archived! If it was not archived at the requested point "
-                    f"in time but before that, you will receive an outdated "
-                    f"configuration.")
-
         dialog = ConfigurationFromPastDialog(
             instance_id=self.model.instance_id, parent=parent)
         dialog.move(QCursor.pos())
