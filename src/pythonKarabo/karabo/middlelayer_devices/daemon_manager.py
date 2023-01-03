@@ -246,6 +246,9 @@ class DaemonManager(Device):
             for host_name in servers:
                 info = servers[host_name]
                 link = info["link"]
+                if "services" not in info:
+                    self.logger.error(f"No services for {host_name}")
+                    continue
                 for service in info["services"]:
                     entry = {
                         data_key: service[data_key]
