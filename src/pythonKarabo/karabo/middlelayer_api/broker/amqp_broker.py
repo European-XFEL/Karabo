@@ -1,16 +1,13 @@
 import asyncio
-import inspect
 import logging
 import os
 import socket
 import time
-import traceback
 import weakref
 from asyncio import (
     CancelledError, Future, Lock, TimeoutError, ensure_future, gather, sleep,
     wait_for)
-from contextlib import AsyncExitStack
-from functools import partial, wraps
+from functools import partial
 from itertools import count
 
 import aiormq
@@ -53,12 +50,7 @@ class AmqpBroker(Broker):
         self.classId = classId
         # Interest in receiving broadcasts
         self.broadcast = broadcast
-        self.repliers = {}
-        self.tasks = set()
         self.logger = logging.getLogger(deviceId)
-        self.info = None
-        self.slots = {}
-        self.exitStack = AsyncExitStack()
         # AMQP specific bookkeeping ...
         self.subscriptions = set()  # registered tuple: exchange, routing key
         self.channel = None  # channel for communication
@@ -67,7 +59,7 @@ class AmqpBroker(Broker):
         # Connection birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000  # float
         self.future = None
-        self.heartbeatTask = None
+        self.heartbeat_task = None
         self.subscribe_lock = Lock()
 
     async def subscribe_default(self):
@@ -184,7 +176,7 @@ class AmqpBroker(Broker):
                 await self.async_emit("call", {"*": ["slotInstanceGone"]},
                                       self.deviceId, self.info)
 
-        self.heartbeatTask = ensure_future(heartbeat())
+        self.heartbeat_task = ensure_future(heartbeat())
 
     def build_arguments(self, signal, targets, reply):
         p = Hash()
@@ -229,17 +221,6 @@ class AmqpBroker(Broker):
         name, routing_key, p = self.build_arguments(signal, targets, reply)
         await self.async_send(name, routing_key, p, arguments)
 
-    async def request(self, device, target, *arguments):
-        reply = f"{self.deviceId}-{time.monotonic().hex()[4:-4]}"
-        self.call("call", {device: [target]}, reply, arguments)
-        future = Future(loop=self.loop)
-        self.repliers[reply] = future
-        future.add_done_callback(lambda _: self.repliers.pop(reply))
-        return (await future)
-
-    def emit(self, signal, targets, *arguments):
-        self.call(signal, targets, None, arguments)
-
     async def async_emit(self, signal, targets, *arguments):
         await self.async_call(signal, targets, None, arguments)
 
@@ -270,11 +251,6 @@ class AmqpBroker(Broker):
             name = f"{self.domain}.slots"
             routing_key = dest
             self.send(name, routing_key, p, reply)
-
-    def replyException(self, message, exception):
-        trace = "".join(traceback.format_exception(
-            type(exception), exception, exception.__traceback__))
-        self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signal, slot):
         """This is way of establishing 'karabo signalslot' connection with
@@ -401,42 +377,34 @@ class AmqpBroker(Broker):
             self.logger.exception(
                 "Internal error while executing slot")
 
-    def register_slot(self, name, slot):
-        """register a slot on the device
+    async def _stop_heartbeat(self):
+        if self.heartbeat_task is not None:
+            if not self.heartbeat_task.done():
+                self.heartbeat_task.cancel()
+                await self.heartbeat_task
+            self.heartbeat_task = None
 
-        :param name: the name of the slot
-        :param slot: the slot to be called. If this is a bound method, it is
-            assured that no reference to the object holding the method is kept.
-        """
-        if inspect.ismethod(slot):
-            def delete(ref):
-                del self.slots[name]
+    async def stop_tasks(self):
+        """Reimplemented method of `Broker`"""
+        await self._on_stop_tasks()
+        me = asyncio.current_task(loop=None)
+        tasks = [t for t in self.tasks if t is not me]
+        for t in tasks:
+            t.cancel()
+        try:
+            await wait_for(gather(*tasks, return_exceptions=True),
+                           timeout=6)
+            return True
+        except TimeoutError:
+            return False
 
-            weakself = weakref.ref(slot.__self__, delete)
-            func = slot.__func__
-
-            @wraps(func)
-            def wrapper(*args):
-                return func(weakself(), *args)
-
-            self.slots[name] = wrapper
-        else:
-            self.slots[name] = slot
-
-    async def stopHeartbeat(self):
-        if self.heartbeatTask is not None:
-            if not self.heartbeatTask.done():
-                self.heartbeatTask.cancel()
-                await self.heartbeatTask
-            self.heartbeatTask = None
-
-    async def _cleanup(self):
+    async def _on_stop_tasks(self):
         if self.consumer_tag is not None:
             await self.channel.basic_cancel(self.consumer_tag)
             self.consumer_tag = None
         if self.future is not None:
             self.future.set_result(None)
-        await self.stopHeartbeat()
+        await self._stop_heartbeat()
         await self.async_unsubscribe_all()
 
     async def on_message(self, device, message):
@@ -445,6 +413,7 @@ class AmqpBroker(Broker):
             await self.handleMessage(message.body, d)
 
     async def consume(self, device):
+        device = weakref.ref(device)
         consume_ok = await self.channel.basic_consume(
             self.queue, partial(self.on_message, device), no_ack=True)
         # no_ack means automatic acknowlegdement
@@ -452,54 +421,6 @@ class AmqpBroker(Broker):
         # Be under exitStack scope as soon as queue is alive
         self.future = Future()
         await self.future
-
-    async def main(self, device):
-        """This is the main loop of a device (SignalSlotable instance)
-
-        A device is running if this coroutine is still running.
-        Use `stop_tasks` to stop this main loop."""
-        async with self.exitStack:
-            device = weakref.ref(device)
-            await self.consume(device)
-
-    async def _stop_tasks(self):
-        me = asyncio.current_task(loop=None)
-        tasks = [t for t in self.tasks if t is not me]
-        for t in tasks:
-            t.cancel()
-        await wait_for(gather(*tasks, return_exceptions=True),
-                       timeout=5)
-
-    async def stop_tasks(self):
-        """Stop all currently running task
-
-        This marks the end of life of a device.
-
-        Note that the task this coroutine is called from, as an exception,
-        is not cancelled. That's the chicken-egg-problem.
-        """
-        await self._cleanup()
-        try:
-            await self._stop_tasks()
-            return True
-        except TimeoutError:
-            return False
-
-    def enter_context(self, context):
-        return self.exitStack.enter_context(context)
-
-    async def enter_async_context(self, context):
-        return await self.exitStack.enter_async_context(context)
-
-    def updateInstanceInfo(self, info):
-        """update the short information about this instance
-
-        the instance info hash contains a very brief summary of the device.
-        It is regularly published, and even lives longer than a device,
-        as it is published with the message that the device died."""
-        self.info.merge(info)
-        self.emit("call", {"*": ["slotInstanceUpdated"]},
-                  self.deviceId, self.info)
 
     def decodeMessage(self, hash):
         """Decode a Karabo message
@@ -543,8 +464,7 @@ class AmqpBroker(Broker):
         header = message.get("header")
         return header.get(prop) if header is not None else None
 
-    @classmethod
-    async def _ensure_global_connection(cls):
+    async def create_global_connection(self):
         connection = EventLoop.global_loop.connection
         if connection and connection.is_opened:
             return connection
@@ -564,18 +484,14 @@ class AmqpBroker(Broker):
     async def ensure_connection(self):
         if self.connection is None:
             self.connection = await asyncio.shield(
-                AmqpBroker._ensure_global_connection())
-            if self.connection is None:
-                raise RuntimeError("No connection established")
-        try:
-            # Creating a channel
-            self.channel = await self.connection.channel(
-                publisher_confirms=False)
-            await self.channel.basic_qos(prefetch_count=1)
-            await self.subscribe_default()
-        except BaseException:
-            self.channel = None
-            raise
+                self.create_global_connection())
+        if self.connection is None:
+            raise RuntimeError("No connection established")
+        # Creating a channel
+        self.channel = await self.connection.channel(
+            publisher_confirms=False)
+        await self.channel.basic_qos(prefetch_count=1)
+        await self.subscribe_default()
 
     @staticmethod
     def create_connection(hosts, connection):
