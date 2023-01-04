@@ -1,19 +1,14 @@
-from __future__ import absolute_import, unicode_literals
-
 import asyncio
-import inspect
 import logging
 import os
 import socket
 import time
-import traceback
 import uuid
 import weakref
 from asyncio import (
     CancelledError, Future, Lock, TimeoutError, ensure_future, gather,
     get_event_loop, sleep, wait_for)
-from contextlib import AsyncExitStack
-from functools import partial, wraps
+from functools import partial
 from itertools import count
 
 import aioredis
@@ -38,12 +33,7 @@ class RedisBroker(Broker):
         self.deviceId = deviceId
         self.classId = classId
         self.broadcast = broadcast
-        self.repliers = {}
-        self.tasks = set()
         self.logger = logging.getLogger(deviceId)
-        self.info = Hash()
-        self.slots = {}
-        self.exitStack = AsyncExitStack()
         self.subscriptions = set()
         self.redis = None       # Redis pool
         self.mpsc = None        # Multi-producer single consumer queue
@@ -192,17 +182,6 @@ class RedisBroker(Broker):
             topic = self.domain + "/signals/" + signal_id + '/' + signal
         self.send(topic, p, args)
 
-    async def request(self, device, target, *args):
-        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
-        self.call("call", {device: [target]}, reply, args)
-        future = Future(loop=self.loop)
-        self.repliers[reply] = future
-        future.add_done_callback(lambda _: self.repliers.pop(reply))
-        return (await future)
-
-    def emit(self, signal, targets, *args):
-        self.call(signal, targets, None, args)
-
     def reply(self, message, reply, error=False):
         header = message.get('header')
         sender = header['signalInstanceId']
@@ -230,11 +209,6 @@ class RedisBroker(Broker):
             dest = replyId.strip('|')
             topic = self.domain + "/slots/" + dest.replace('/', '|')
             self.send(topic, p, reply)
-
-    def replyException(self, message, exception):
-        trace = ''.join(traceback.format_exception(
-            type(exception), exception, exception.__traceback__))
-        self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signal, slot):
         """This is way of establishing "karabo signalslot"connection with
@@ -460,29 +434,9 @@ class RedisBroker(Broker):
             self.logger.exception(
                 f"Internal error while executing slot: {e}")
 
-    def register_slot(self, name, slot):
-        """register a slot on the device
-
-        :param name: the name of the slot
-        :param slot: the slot to be called. If this is a bound method, it is
-            assured that no reference to the object holding the method is kept.
-        """
-        if inspect.ismethod(slot):
-            def delete(ref):
-                del self.slots[name]
-
-            weakself = weakref.ref(slot.__self__, delete)
-            func = slot.__func__
-
-            @wraps(func)
-            def wrapper(*args):
-                return func(weakself(), *args)
-
-            self.slots[name] = wrapper
-        else:
-            self.slots[name] = slot
-
     async def consume(self, device):
+        device = weakref.ref(device)
+
         mpsc = aioredis.pubsub.Receiver()
         fut = Future()
 
@@ -547,22 +501,6 @@ class RedisBroker(Broker):
         finally:
             self.loop.call_soon_threadsafe(
                     self.loop.create_task, self.ensure_disconnect())
-
-    def enter_context(self, context):
-        return self.exitStack.enter_context(context)
-
-    async def enter_async_context(self, context):
-        return await self.exitStack.enter_async_context(context)
-
-    def updateInstanceInfo(self, info):
-        """update the short information about this instance
-
-        the instance info hash contains a very brief summary of the device.
-        It is regularly published, and even lives longer than a device,
-        as it is published with the message that the device died."""
-        self.info.merge(info)
-        self.emit("call", {"*": ["slotInstanceUpdated"]},
-                  self.deviceId, self.info)
 
     def decodeMessage(self, hash):
         """Decode a Karabo message
