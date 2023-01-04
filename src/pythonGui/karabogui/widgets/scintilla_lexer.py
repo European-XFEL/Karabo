@@ -1,7 +1,7 @@
 from qtpy.Qsci import QsciLexerPython
 from qtpy.QtGui import QColor, QFont
 
-from karabogui.api import get_qfont
+from karabogui.fonts import get_qfont
 
 # Collection of comment types as Enum.
 COMMENTS = (
