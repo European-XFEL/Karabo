@@ -1,0 +1,70 @@
+from qtpy.Qsci import QsciLexerPython
+from qtpy.QtGui import QColor, QFont
+
+from karabogui.api import get_qfont
+
+# Collection of comment types as Enum.
+COMMENTS = (
+    QsciLexerPython.Comment, QsciLexerPython.CommentBlock,
+    QsciLexerPython.TripleDoubleQuotedString,
+    QsciLexerPython.TripleSingleQuotedString
+)
+
+# Syntax color map
+COLOR_MAP = {
+    QsciLexerPython.Default: QColor("#000000"),
+    QsciLexerPython.Comment: QColor("#8C8C8C"),
+    QsciLexerPython.Number: QColor("#1750EB"),
+    QsciLexerPython.DoubleQuotedString: QColor("#067D17"),
+    QsciLexerPython.DoubleQuotedFString: QColor("#067D17"),
+    QsciLexerPython.SingleQuotedString: QColor("#067D17"),
+    QsciLexerPython.SingleQuotedFString: QColor("#067D17"),
+    QsciLexerPython.Keyword: QColor("#0033B3"),
+    QsciLexerPython.TripleSingleQuotedString: QColor("#8C8C8C"),
+    QsciLexerPython.TripleDoubleQuotedString: QColor("#8C8C8C"),
+    QsciLexerPython.ClassName: QColor("#000000"),
+    QsciLexerPython.FunctionMethodName: QColor("#00627A"),
+    QsciLexerPython.Operator: QColor("#000000"),
+    QsciLexerPython.Identifier: QColor("#000000"),
+    QsciLexerPython.CommentBlock: QColor("#8C8C8C"),
+    QsciLexerPython.HighlightedIdentifier: QColor("#94558D"),
+    QsciLexerPython.Decorator: QColor("#9E880D"),
+}
+
+
+class PythonLexer(QsciLexerPython):
+    """
+    Syntax highlighter for Macro Editor
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Set font
+        font = get_qfont("Source Code Pro,12,-1,5,50,0,0,0,0,0")
+        for item, color in COLOR_MAP.items():
+            self.setColor(color, item)
+            self.setFont(font, item)
+
+        # Comment text in Italics
+        comment_font = QFont(font)
+        comment_font.setItalic(True)
+        for comment in COMMENTS:
+            self.setFont(comment_font, comment)
+
+        # code fold
+        self.setFoldComments(True)
+        self.setFoldQuotes(True)
+        self.setFoldCompact(True)
+
+    def keywords(self, set_number):
+        """
+        Extend method of QsciLexerPython to create a keyword set for 'True',
+        'False', 'self' and 'cls' to color them in the editor.
+        """
+        ret_value = super().keywords(set_number)
+        # Other Python reserved keywords are defined as set number 1 in
+        # QsciLexerPython
+        if set_number == 2:
+            ret_value = "True False self cls"
+        return ret_value
