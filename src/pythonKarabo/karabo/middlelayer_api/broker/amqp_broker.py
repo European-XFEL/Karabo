@@ -5,8 +5,7 @@ import socket
 import time
 import weakref
 from asyncio import (
-    CancelledError, Future, Lock, TimeoutError, ensure_future, gather, sleep,
-    wait_for)
+    CancelledError, Lock, TimeoutError, ensure_future, gather, sleep, wait_for)
 from functools import partial
 from itertools import count
 
@@ -58,7 +57,7 @@ class AmqpBroker(Broker):
         self.consumer_tag = None  # tag returned by consume method
         # Connection birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000  # float
-        self.future = None
+        self.exit_event = asyncio.Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
 
@@ -402,8 +401,7 @@ class AmqpBroker(Broker):
         if self.consumer_tag is not None:
             await self.channel.basic_cancel(self.consumer_tag)
             self.consumer_tag = None
-        if self.future is not None:
-            self.future.set_result(None)
+        self.exit_event.set()
         await self._stop_heartbeat()
         await self.async_unsubscribe_all()
 
@@ -419,8 +417,7 @@ class AmqpBroker(Broker):
         # no_ack means automatic acknowlegdement
         self.consumer_tag = consume_ok.consumer_tag
         # Be under exitStack scope as soon as queue is alive
-        self.future = Future()
-        await self.future
+        await self.exit_event.wait()
 
     def decodeMessage(self, hash):
         """Decode a Karabo message
