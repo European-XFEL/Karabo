@@ -1,22 +1,15 @@
-# To change this license header, choose License Headers in Project Properties.
-# To change this template file, choose Tools | Templates
-# and open the template in the editor.
-from __future__ import absolute_import, unicode_literals
-
 import asyncio
-import inspect
 import logging
 import os
 import socket
 import time
-import traceback
 import uuid
 import weakref
 from asyncio import (
-    CancelledError, Future, Lock, TimeoutError, ensure_future, gather,
-    get_event_loop, sleep, wait_for)
+    CancelledError, Lock, TimeoutError, ensure_future, gather, get_event_loop,
+    sleep, wait_for)
 from contextlib import AsyncExitStack
-from functools import partial, wraps
+from functools import partial
 from itertools import count
 
 from karabo.native import (
@@ -193,17 +186,6 @@ class MqttBroker(Broker):
             topic = self.domain + "/signals/" + signal_id + '/' + signal
         self.send(topic, p, args)
 
-    async def request(self, device, target, *args):
-        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
-        self.call("call", {device: [target]}, reply, args)
-        future = Future(loop=self.loop)
-        self.repliers[reply] = future
-        future.add_done_callback(lambda _: self.repliers.pop(reply))
-        return (await future)
-
-    def emit(self, signal, targets, *args):
-        self.call(signal, targets, None, args)
-
     def reply(self, message, reply, error=False):
         header = message.get('header')
         sender = header['signalInstanceId']
@@ -231,11 +213,6 @@ class MqttBroker(Broker):
             dest = replyId.strip('|')
             topic = self.domain + "/slots/" + dest.replace('/', '|')
             self.send(topic, p, reply)
-
-    def replyException(self, message, exception):
-        trace = ''.join(traceback.format_exception(
-            type(exception), exception, exception.__traceback__))
-        self.reply(message, (str(exception), trace), error=True)
 
     def connect(self, deviceId, signal, slot):
         """This is way of establishing "karabo signalslot"connection with
@@ -459,31 +436,11 @@ class MqttBroker(Broker):
             self.logger.exception(
                 "Internal error while executing slot")
 
-    def register_slot(self, name, slot):
-        """register a slot on the device
-
-        :param name: the name of the slot
-        :param slot: the slot to be called. If this is a bound method, it is
-            assured that no reference to the object holding the method is kept.
-        """
-        if inspect.ismethod(slot):
-            def delete(ref):
-                del self.slots[name]
-
-            weakself = weakref.ref(slot.__self__, delete)
-            func = slot.__func__
-
-            @wraps(func)
-            def wrapper(*args):
-                return func(weakself(), *args)
-
-            self.slots[name] = wrapper
-        else:
-            self.slots[name] = slot
-
     async def consume(self, device):
         if self.client is None:
             raise MqttError("MQTT client is not connected")
+
+        device = weakref.ref(device)
 
         def receiver(client, userdata, msg):
             d = device()
@@ -495,15 +452,6 @@ class MqttBroker(Broker):
 
         self.client.register_on_message(receiver)
         await self.client.custom_loop()
-
-    async def main(self, device):
-        """This is the main loop of a device (SignalSlotable instance)
-
-        A device is running if this coroutine is still running.
-        Use `stop_tasks` to stop this main loop."""
-        async with self.exitStack:
-            device = weakref.ref(device)
-            await self.consume(device)
 
     async def _stop_tasks(self):
         me = asyncio.current_task(loop=None)
@@ -530,22 +478,6 @@ class MqttBroker(Broker):
         finally:
             self.loop.call_soon_threadsafe(
                     self.loop.create_task, self.ensure_disconnect())
-
-    def enter_context(self, context):
-        return self.exitStack.enter_context(context)
-
-    async def enter_async_context(self, context):
-        return await self.exitStack.enter_async_context(context)
-
-    def updateInstanceInfo(self, info):
-        """update the short information about this instance
-
-        the instance info hash contains a very brief summary of the device.
-        It is regularly published, and even lives longer than a device,
-        as it is published with the message that the device died."""
-        self.info.merge(info)
-        self.emit("call", {"*": ["slotInstanceUpdated"]},
-                  self.deviceId, self.info)
 
     def decodeMessage(self, hash):
         """Decode a Karabo message
