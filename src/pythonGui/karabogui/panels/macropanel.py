@@ -17,7 +17,8 @@ from karabogui.events import (
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_topology
 from karabogui.util import getSaveFileName
-from karabogui.widgets.codeeditor import CodeBook
+# from karabogui.widgets.codeeditor import CodeBook
+from karabogui.widgets.scintilla_editor import CodeBook
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
