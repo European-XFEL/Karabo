@@ -1,11 +1,13 @@
 from jedi import Script
 from qtpy.Qsci import QsciAPIs, QsciScintilla
-from qtpy.QtCore import Signal, Slot
+from qtpy.QtCore import QTimer, Signal, Slot
 from qtpy.QtGui import QColor
 
+from karabogui.background import background
 from karabogui.widgets.scintilla_lexer import PythonLexer
 
 AUTO_COMPLETION_THRESHOLD = 3
+LINE_LENGTH = 79
 LINE_HIGHLIGHT = QColor("#FFFFCC")
 MARGIN_BACKGROUND = QColor("#E0E0E0")
 MARGIN_FOREGROUND = QColor("#A0A0A0")
@@ -61,14 +63,20 @@ class CodeBook(QsciScintilla):
         self.setFolding(QsciScintilla.PlainFoldStyle)
         self.setFoldMarginColors(MARGIN_BACKGROUND, MARGIN_BACKGROUND)
 
-        # A vertical line at 79th column as indicate the line-length limit
+        # A vertical line to indicate the line-length limit
         self.setEdgeMode(QsciScintilla.EdgeLine)
-        self.setEdgeColumn(79)
+        self.setEdgeColumn(LINE_LENGTH)
         self.setEdgeColor(QColor("gray"))
 
-        self.textChanged.connect(self._update_suggestions)
         self._apis = QsciAPIs(lexer)
         self.setLexer(lexer)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._update_suggestions)
+        self.timer.setInterval(500)
+        self.timer.setSingleShot(True)
+        self.textChanged.connect(self.timer.start)
+        self.textChanged.connect(self.codeChanged)
 
     @Slot()
     def _update_suggestions(self):
@@ -79,18 +87,25 @@ class CodeBook(QsciScintilla):
         line, col = self.getCursorPosition()
         if col < AUTO_COMPLETION_THRESHOLD:
             return
+
+        background(self._prepare_apis, line, col)
+
+    def _prepare_apis(self, line, col):
+        """Prepare the auto completion with new input"""
         text = self.text()
         script = Script(text)
-        completions = script.complete(line+1, col)
+        completions = script.complete(line + 1, col)
         self._apis.clear()
         for item in completions:
             self._apis.add(item.name)
         self._apis.prepare()
+
+    def getEditorCode(self):
+        """Return the text of the code editor"""
+        return self.text()
 
     def increaseFontSize(self):
         self.zoomIn()
 
     def decreaseFontSize(self):
         self.zoomOut()
-
-    #  TODO : Find and Replace functionality
