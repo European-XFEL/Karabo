@@ -1,8 +1,10 @@
 from copy import copy
+from unittest import skipIf
 
 from karabo.bound import (
     AlarmCondition, Hash, SignalSlotable, Timestamp, Validator, fullyEqual)
 from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.middlelayer_api.broker import jms
 
 #from karathon import fullyEqual
 
@@ -34,6 +36,7 @@ def reconfigure(caller, dev_id, cfg):
 
 class TestDeviceAlarmApi(BoundDeviceTestCase):
 
+    @skipIf(not jms, reason="Not supported yet")
     def test_alarms_cpp(self):
         self._test_alarms("cpp")
 
