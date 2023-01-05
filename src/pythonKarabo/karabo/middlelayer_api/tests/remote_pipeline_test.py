@@ -1,6 +1,7 @@
 from asyncio import Future, TimeoutError, sleep, wait_for
 
 import pytest
+import pytest_asyncio
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
@@ -186,7 +187,7 @@ class Receiver(InputSchema, Device):
         self.state = State.ON
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
 async def deviceTest(event_loop: event_loop):
     alice = Sender({"_deviceId_": "alice"})
