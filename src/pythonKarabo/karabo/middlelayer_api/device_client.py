@@ -19,7 +19,8 @@ import dateutil.parser
 import dateutil.tz
 
 from karabo.common.services import KARABO_CONFIG_MANAGER
-from karabo.native import Hash, KaraboError, KaraboValue, Schema, Timestamp
+from karabo.native import (
+    Hash, KaraboError, KaraboValue, Schema, Timestamp, isStringSet)
 
 from .configuration import config_changes, sanitize_init_configuration
 from .device import Device
@@ -761,6 +762,10 @@ class DeviceFuture:
 @synchronize
 async def _getDevice(deviceId, sync, initialize,
                      factory=DeviceClientProxyFactory):
+    if not isStringSet(deviceId):
+        raise KaraboError(
+            f"Need a proper 'deviceId' for a proxy, got {str(deviceId)}.")
+
     instance = get_instance()
     proxy = instance._proxies.get(deviceId)
     if proxy is not None:

@@ -1008,6 +1008,17 @@ async def test_connectDevice(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
+async def test_nonproper_connectDevice(event_loop):
+    with pytest.raises(KaraboError) as exc:
+        await connectDevice(None)
+    assert "Need a proper" in str(exc)
+    with pytest.raises(KaraboError) as exc:
+        await connectDevice("")
+    assert "Need a proper" in str(exc)
+
+
+@pytest.mark.timeout(30)
+@run_test
 async def test_getdoc(deviceTest):
     # this is usually done by iPython/iKarabo
     d = await getDevice("remote")
