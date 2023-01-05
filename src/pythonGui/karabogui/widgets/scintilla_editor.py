@@ -1,9 +1,8 @@
-from jedi import Script
 from qtpy.Qsci import QsciAPIs, QsciScintilla
-from qtpy.QtCore import QTimer, Signal, Slot
+from qtpy.QtCore import Signal
 from qtpy.QtGui import QColor
 
-from karabogui.background import background
+from karabogui.widgets.scintilla_api import get_symbols
 from karabogui.widgets.scintilla_lexer import PythonLexer
 
 AUTO_COMPLETION_THRESHOLD = 3
@@ -14,15 +13,12 @@ MARGIN_FOREGROUND = QColor("#A0A0A0")
 
 
 class CodeBook(QsciScintilla):
-    """
-    Python Code editor class.
-    """
+    """Python Code editor class based on Scintilla"""
 
     codeChanged = Signal()
 
-    def __init__(self, code=None, parent=None):
+    def __init__(self, code=None, use_api=True, parent=None):
         super().__init__(parent)
-
         if code is not None:
             self.setText(code)
         # Indentation
@@ -30,6 +26,7 @@ class CodeBook(QsciScintilla):
         self.setAutoIndent(True)
         self.setIndentationsUseTabs(True)
         self.setIndentationGuides(True)
+        self.setBackspaceUnindents(True)
         self.setIndentationGuidesBackgroundColor(MARGIN_BACKGROUND)
         self.setIndentationGuidesForegroundColor(MARGIN_BACKGROUND)
 
@@ -68,37 +65,14 @@ class CodeBook(QsciScintilla):
         self.setEdgeColumn(LINE_LENGTH)
         self.setEdgeColor(QColor("gray"))
 
-        self._apis = QsciAPIs(lexer)
+        if use_api:
+            self._apis = QsciAPIs(lexer)
+            for symbol in get_symbols():
+                self._apis.add(symbol)
+            self._apis.prepare()
+
         self.setLexer(lexer)
-
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self._update_suggestions)
-        self.timer.setInterval(500)
-        self.timer.setSingleShot(True)
-        self.textChanged.connect(self.timer.start)
         self.textChanged.connect(self.codeChanged)
-
-    @Slot()
-    def _update_suggestions(self):
-        """
-        Update the auto-suggestion list using 'jedi.Script'. This suggests the
-        apis from the installed libraries effectively.
-        """
-        line, col = self.getCursorPosition()
-        if col < AUTO_COMPLETION_THRESHOLD:
-            return
-
-        background(self._prepare_apis, line, col)
-
-    def _prepare_apis(self, line, col):
-        """Prepare the auto completion with new input"""
-        text = self.text()
-        script = Script(text)
-        completions = script.complete(line + 1, col)
-        self._apis.clear()
-        for item in completions:
-            self._apis.add(item.name)
-        self._apis.prepare()
 
     def getEditorCode(self):
         """Return the text of the code editor"""
