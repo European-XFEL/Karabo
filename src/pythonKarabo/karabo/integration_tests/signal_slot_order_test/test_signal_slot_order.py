@@ -1,11 +1,15 @@
+from unittest import skipIf
+
 from karabo.bound import Hash, State
 from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.middlelayer_api.broker import jms
 
 max_timeout = 60    # in seconds
 
 
 class TestSignalSlotOrder(BoundDeviceTestCase):
 
+    @skipIf(not jms, reason="Not supported yet")
     def test_cpp(self):
 
         api = "cpp"
