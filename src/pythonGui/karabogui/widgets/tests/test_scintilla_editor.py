@@ -1,9 +1,12 @@
+from karabogui.widgets.scintilla_api import create_symbols
 from karabogui.widgets.scintilla_editor import CodeBook
 
 
-def test_scinitilla_editor(gui_app):
-    editor = CodeBook(code="from karabo.native import Hash")
+def test_scintilla_editor(gui_app):
+    symbols = create_symbols()
+    assert len(symbols) > 150
 
+    editor = CodeBook(code="from karabo.native import Hash", use_api=False)
     # Basic default features
     assert editor.tabWidth() == 4
     assert editor.autoIndent()
