@@ -26,7 +26,6 @@ class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-    karabo::net::JmsConnection::Pointer m_connection;
     std::vector<std::string> m_defaultBrokers;
     std::string m_baseTopic;
     std::atomic<unsigned int> m_messageCount;
