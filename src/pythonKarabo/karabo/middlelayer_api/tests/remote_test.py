@@ -6,6 +6,7 @@ from asyncio import (
 from datetime import datetime
 
 import pytest
+import pytest_asyncio
 from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
@@ -24,7 +25,7 @@ from karabo.middlelayer_api.logger import CacheLog
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
 async def deviceTest(event_loop: event_loop):
     local = Local({"_deviceId_": "local"})
