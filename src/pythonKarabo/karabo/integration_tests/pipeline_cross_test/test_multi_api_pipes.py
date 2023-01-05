@@ -1,8 +1,10 @@
 from datetime import datetime
 from time import sleep, time
+from unittest import skipIf
 
 from karabo.bound import Hash, SignalSlotable, State
 from karabo.integration_tests.utils import BoundDeviceTestCase
+from karabo.middlelayer_api.broker import jms
 
 
 class TestCrossPipelining(BoundDeviceTestCase):
@@ -17,6 +19,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
     # Note: number of messages written to pipeline per test:
     #       _test_duration * _sender_freq
 
+    @skipIf(not jms, reason="Not supported yet")
     def test_1to1(self):
         # Start all servers you need in the end:
         self.start_server_num("cpp", 1)
@@ -119,6 +122,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         self._test_1to1_drop_slowReceiver("mdl", "bound")
         self._test_1to1_drop_slowReceiver("mdl", "mdl")
 
+    @skipIf(not jms, reason="Not supported yet")
     def test_chain_receivers(self):
         """Checks for pipelines composed of more than 2 devices."""
         # Prepare a list of apis such that we have each API sending to each API
@@ -496,7 +500,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                 out_count = self.dc.get("sender", "outputCounter")
                 is_in_range = 0.90 * out_count < inputCounter <= out_count
                 counter += 1
-            
+
             self.assertTrue(is_in_range,
                             "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]."
                             .format(inputCounter, 0.90 * out_count, out_count))

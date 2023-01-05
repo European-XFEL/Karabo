@@ -10,7 +10,7 @@ from asyncio import (
 from contextlib import contextmanager
 from datetime import datetime
 from subprocess import PIPE
-from unittest import main, skipIf
+from unittest import main
 
 import numpy as np
 
@@ -22,8 +22,7 @@ from karabo.middlelayer import (
     Unit, VectorDouble, background, call, encodeXML, getDevice, getHistory,
     isSet, setWait, shutdown, sleep, unit, updateDevice, waitUntil,
     waitUntilNew)
-from karabo.middlelayer_api.broker import jms
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer.testing import DeviceTest, async_tst, sleepUntil
 
 
 class Child(Configurable):
@@ -168,7 +167,6 @@ class Tests(DeviceTest):
         if had_to_kill:
             self.fail("process didn't properly go down")
 
-    @skipIf(not jms, "no support yet")
     @async_tst(timeout=90)
     async def test_cross(self):
         await getDevice("middlelayerDevice")
@@ -352,6 +350,8 @@ class Tests(DeviceTest):
         # pipeline part
         ####################################
         await proxy.send()
+        # XXX: This was working without any wait or sleep in jms
+        await sleepUntil(lambda: self.device.channelcount == 1)
         self.assertEqual(self.device.channelcount, 1)
         self.assertFalse(isSet(self.device.channeldata.d))
         self.assertEqual(self.device.channeldata.s, "hallo")
@@ -425,7 +425,6 @@ class Tests(DeviceTest):
         await sleep(2)
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
-    @skipIf(not jms, "no support yet")
     @async_tst(timeout=90)
     async def test_cross_image(self):
         config = Hash(
@@ -479,7 +478,6 @@ class Tests(DeviceTest):
         await shutdown(bound_proxy)
         await self.process.wait()
 
-    @skipIf(not jms, "no support yet")
     @async_tst(timeout=90)
     async def test_history(self):
         before = datetime.now()

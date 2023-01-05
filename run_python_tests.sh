@@ -113,17 +113,6 @@ safeRunTests() {
     if [ "${BROKER_TYPE}" == "tcp" ]; then
         BROKER_TYPE="jms"
     fi
-
-    if [ "${BROKER_TYPE}" == "amqp" -a "${TEST_SUITE_NAME}" == "Integration" ]; then
-        echo "***************************************************************************************"
-        echo "**"
-        echo "** For now skip ${TEST_SUITE_NAME} tests for ${BROKER_TYPE} broker"
-        echo "** (Revive by editing 'run_python_tests.sh'.)"
-        echo "**"
-        echo "***************************************************************************************"
-        return
-    fi
-
     export KARABO_BROKER=$BROKER
     echo
     echo "*************************************************************************************************"
