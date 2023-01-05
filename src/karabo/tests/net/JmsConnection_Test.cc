@@ -40,43 +40,43 @@ void JmsConnection_Test::testConnect() {
         return;
     }
     { // constructor with empty vector<string> leads to exception in connect()
-        m_connection = JmsConnection::Pointer(new JmsConnection(std::vector<std::string>()));
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        CPPUNIT_ASSERT_THROW(m_connection->connect(), karabo::util::NetworkException);
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
+        JmsConnection::Pointer connection(new JmsConnection(std::vector<std::string>()));
+        CPPUNIT_ASSERT(connection->isConnected() == false);
+        CPPUNIT_ASSERT_THROW(connection->connect(), karabo::util::NetworkException);
+        CPPUNIT_ASSERT(connection->isConnected() == false);
     }
 
     CPPUNIT_ASSERT_GREATEREQUAL(1ul, m_defaultBrokers.size());
     { // constructor from vector<string>
-        m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], m_connection->getBrokerUrl());
-        m_connection->disconnect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
+        JmsConnection::Pointer connection(new JmsConnection(m_defaultBrokers));
+        CPPUNIT_ASSERT(connection->isConnected() == false);
+        connection->connect();
+        CPPUNIT_ASSERT(connection->isConnected() == true);
+        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], connection->getBrokerUrl());
+        connection->disconnect();
+        CPPUNIT_ASSERT(connection->isConnected() == false);
+        connection->connect();
+        CPPUNIT_ASSERT(connection->isConnected() == true);
     }
 
     { // constructor from string, with more than one addresses and first bad
-        m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777," + m_defaultBrokers[0]));
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], m_connection->getBrokerUrl());
-        m_connection->disconnect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
+        JmsConnection::Pointer connection(new JmsConnection("tcp://someBadHost:7777," + m_defaultBrokers[0]));
+        CPPUNIT_ASSERT(connection->isConnected() == false);
+        connection->connect();
+        CPPUNIT_ASSERT(connection->isConnected() == true);
+        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], connection->getBrokerUrl());
+        connection->disconnect();
+        CPPUNIT_ASSERT(connection->isConnected() == false);
     }
 
     { // constructor from Hash
-        m_connection = JmsConnection::Pointer(new JmsConnection(Hash("brokers", m_defaultBrokers)));
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], m_connection->getBrokerUrl());
-        m_connection->disconnect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
+        JmsConnection::Pointer connection(new JmsConnection(Hash("brokers", m_defaultBrokers)));
+        CPPUNIT_ASSERT(connection->isConnected() == false);
+        connection->connect();
+        CPPUNIT_ASSERT(connection->isConnected() == true);
+        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], connection->getBrokerUrl());
+        connection->disconnect();
+        CPPUNIT_ASSERT(connection->isConnected() == false);
     }
 }
 
@@ -132,12 +132,12 @@ void JmsConnection_Test::testCommunication1() {
     m_messageCount = 0;
     m_failures.clear();
 
-    m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
+    JmsConnection::Pointer connection(new JmsConnection(m_defaultBrokers));
 
-    m_connection->connect();
+    connection->connect();
 
-    JmsConsumer::Pointer consumer = m_connection->createConsumer(m_baseTopic);
-    JmsProducer::Pointer producer = m_connection->createProducer();
+    JmsConsumer::Pointer consumer = connection->createConsumer(m_baseTopic);
+    JmsProducer::Pointer producer = connection->createProducer();
 
     consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
 
@@ -180,19 +180,19 @@ void JmsConnection_Test::testCommunication2() {
     }
     // Here we basically test selectors for the consumer.
 
-    m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
+    JmsConnection::Pointer connection(new JmsConnection(m_defaultBrokers));
 
-    m_connection->connect();
+    connection->connect();
 
     m_messageCount = 0;
     Hash::Pointer header1(new Hash("key", "foo"));
     Hash::Pointer header2(new Hash("key", "bar"));
     Hash::Pointer body(new Hash("body", 42));
 
-    JmsConsumer::Pointer c1 = m_connection->createConsumer(m_baseTopic, "key = 'foo'");
-    JmsConsumer::Pointer c2 = m_connection->createConsumer(m_baseTopic, "key = 'bar'");
-    JmsConsumer::Pointer c3 = m_connection->createConsumer(m_baseTopic);
-    JmsProducer::Pointer p = m_connection->createProducer();
+    JmsConsumer::Pointer c1 = connection->createConsumer(m_baseTopic, "key = 'foo'");
+    JmsConsumer::Pointer c2 = connection->createConsumer(m_baseTopic, "key = 'bar'");
+    JmsConsumer::Pointer c3 = connection->createConsumer(m_baseTopic);
+    JmsProducer::Pointer p = connection->createProducer();
 
     c1->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2));
     c2->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c2, _1, _2));
@@ -223,21 +223,22 @@ void JmsConnection_Test::testPermanentRead() {
         std::clog << " No JMS broker in environment. Skipping..." << std::flush;
         return;
     }
-    m_connection = boost::make_shared<JmsConnection>(m_defaultBrokers);
-    m_connection->connect();
+    JmsConnection::Pointer connection = boost::make_shared<JmsConnection>(m_defaultBrokers);
+    connection->connect();
 
     m_messageCount = 0;
 
     boost::thread t(boost::bind(&EventLoop::work));
 
     const std::string topic(m_baseTopic += "_oneMore");
-    JmsConsumer::Pointer consumer = m_connection->createConsumer(topic);
-    JmsProducer::Pointer producer = m_connection->createProducer();
+    JmsConsumer::Pointer consumer = connection->createConsumer(topic);
+    JmsProducer::Pointer producer = connection->createProducer();
 
-    std::vector<unsigned int> counters;
-    auto read = [this, &counters](karabo::util::Hash::Pointer h, karabo::util::Hash::Pointer body) {
+    auto counters = std::make_shared<std::vector<unsigned int>>();
+    // 'counters' is ptr and captured by value to prevent crash in case of test failure
+    auto read = [this, counters](karabo::util::Hash::Pointer h, karabo::util::Hash::Pointer body) {
         // Collect counters to test for sequentiality
-        counters.push_back(body->get<unsigned int>("counter"));
+        counters->push_back(body->get<unsigned int>("counter"));
         // increment at the end since its value is in the break condition
         ++m_messageCount;
     };
@@ -272,9 +273,9 @@ void JmsConnection_Test::testPermanentRead() {
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
     CPPUNIT_ASSERT_EQUAL(numMessages, static_cast<unsigned int>(m_messageCount));
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numMessages), counters.size());
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numMessages), counters->size());
     for (unsigned i = 0; i < numMessages; ++i) {
         // Test correct ordering
-        CPPUNIT_ASSERT_EQUAL(i, counters[i]);
+        CPPUNIT_ASSERT_EQUAL(i, counters->at(i));
     }
 }
