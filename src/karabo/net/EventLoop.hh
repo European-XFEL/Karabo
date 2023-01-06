@@ -117,6 +117,9 @@ namespace karabo {
 
             void asyncDestroyThread(const boost::thread::id& id);
 
+            /**
+             * Clears the thread pool and joins the threads
+             */
             void clearThreadPool();
 
             size_t _getNumberOfThreads() const;
