@@ -44,7 +44,9 @@ class Tests(TestCase):
         slow_func()
         after = time.time()
         diff = after - before
-        self.assertAlmostEqual(diff, sleep_time, delta=0.2)
+        # https://git.xfel.eu/Karabo/Framework/-/jobs/357337 showed a
+        # diff of 0.2084, so relax delta a bit further
+        self.assertAlmostEqual(diff, sleep_time, delta=0.25)
 
 
 if __name__ == "__main__":
