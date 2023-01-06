@@ -230,7 +230,7 @@ struct TcpClient {
 struct WriteAsyncTestsParams {
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
     const karabo::util::Hash dataHashNDArray =
-          karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(10000, 60000), 1000u));
+          karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(5000, 6000), 1000u));
     const std::string dataString = std::string("Sample of std::string");
     const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const karabo::net::VectorCharPointer vectorCharPointer =
@@ -271,7 +271,7 @@ enum class TestOutcome { UNKNOWN, SUCCESS, FAILURE };
  * to the client, and the client closes the connection.
  */
 struct WriteAsyncSrv {
-    KARABO_CLASSINFO(WriteAsyncSrv, "WriteAndForgetSrv", "1.0");
+    KARABO_CLASSINFO(WriteAsyncSrv, "WriteAsyncSrv", "1.0");
 
 
     WriteAsyncSrv(boost::function<void(const TestOutcome&, const std::string&, const std::string&)> testReportFn)
@@ -292,6 +292,7 @@ struct WriteAsyncSrv {
 
 
     void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
+        std::clog << "[Srv]\t 0.1. Connect handler called." << std::endl;
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error: " << ec.value() << " -- " << ec.message();
             m_testReportFn(TestOutcome::FAILURE, ec.message(), "WriteAsync connection");
@@ -299,6 +300,7 @@ struct WriteAsyncSrv {
             return;
         }
         channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyFalse, this, _1, channel, _2));
+        std::clog << "[Srv]\t 0.2. First read handler registered." << std::endl;
     }
 
 
@@ -699,7 +701,6 @@ struct WriteAsyncCli {
                   boost::function<const TestOutcome&()> testOutcomeFn)
         : m_port(port),
           m_testReportFn(testReportFn),
-          m_testOutcomeFn(testOutcomeFn),
           m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) {
         m_connection->startAsync(boost::bind(&WriteAsyncCli::connectHandler, this, _1, _2));
     }
@@ -707,8 +708,8 @@ struct WriteAsyncCli {
    private:
     int m_port;
     boost::function<void(const TestOutcome&, const std::string&, const std::string&)> m_testReportFn;
-    boost::function<const TestOutcome&()> m_testOutcomeFn;
     karabo::net::Connection::Pointer m_connection;
+    karabo::net::Channel::Pointer m_channel;
     WriteAsyncTestsParams m_params;
 
     void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
@@ -791,23 +792,9 @@ struct WriteAsyncCli {
             if (channel) channel->close();
         }
 
-        // The client has done its part; now keeps waiting for the server to do its (or to fail trying).
-        constexpr unsigned int testTimeoutMs = 120000;
-        const unsigned int sleepIntervalMs = 100;
-        constexpr unsigned int maxSleeps = testTimeoutMs / sleepIntervalMs;
-        unsigned int numOfSleeps = 0;
-        do {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-            numOfSleeps++;
-        } while (m_testOutcomeFn() == TestOutcome::UNKNOWN && numOfSleeps < maxSleeps);
-
-        if (channel) channel->close();
-
-        if (numOfSleeps >= maxSleeps) {
-            m_testReportFn(TestOutcome::FAILURE,
-                           "Test timed-out while waiting for server reads - more than 2 minutes elapsed.",
-                           "Waiting for server reads.");
-        }
+        // Keep channel alive to avoid that [Srv] gets informed about disconnection before all data has been read
+        // (but do not block the thread by sleeping).
+        m_channel = channel;
     }
 };
 
@@ -1096,9 +1083,7 @@ void TcpNetworking_Test::testWriteAsync() {
     WriteAsyncSrv server(testReportFn);
     WriteAsyncCli client("localhost", server.port(), testReportFn, testOutcomeFn);
 
-    karabo::net::EventLoop::addThread(1);
     karabo::net::EventLoop::run();
-    karabo::net::EventLoop::removeThread(1);
 
     if (testOutcomeFn() == TestOutcome::SUCCESS) {
         auto testDuration = finishTime - startTime;

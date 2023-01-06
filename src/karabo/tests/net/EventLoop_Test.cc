@@ -107,3 +107,29 @@ void EventLoop_Test::testSignalCapture() {
 
     CPPUNIT_ASSERT(terminateCaught);
 }
+
+void EventLoop_Test::testAddThreadDirectly() {
+    // Tests that, even in a so far single threaded event loop, adding a thread before blocking on something that
+    // requires another task on the event loop to unblock, actually helps.
+
+    auto promise = std::make_shared<std::promise<bool>>();
+    auto future = promise->get_future();
+
+    std::future_status status = std::future_status::deferred;
+    auto question = [&future, &status]() {
+        EventLoop::addThread();                                    // thread is added and allows 'answer' to run
+        status = future.wait_for(std::chrono::milliseconds(1000)); // wait for 'answer' to unblock here
+        EventLoop::removeThread();
+    };
+
+    auto answer = [promise]() { promise->set_value(true); };
+
+    // Post question and answer and run them.
+    EventLoop::getIOService().post(question);
+    EventLoop::getIOService().post(answer);
+    EventLoop::run();
+
+    // Check that indeed 'answer' unblocked 'question'
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, status);
+    CPPUNIT_ASSERT(future.get());
+}
