@@ -84,7 +84,6 @@ namespace karabo {
             auto loop = instance();
             loop->m_ioService.reset();
             loop->runProtected();
-            loop->m_threadPool.join_all();
             loop->clearThreadPool();
         }
 
@@ -118,13 +117,13 @@ namespace karabo {
 
         void EventLoop::addThread(const int nThreads) {
             auto loop = instance();
-            loop->m_ioService.post(boost::bind(&karabo::net::EventLoop::_addThread, loop, nThreads));
+            loop->_addThread(nThreads);
         }
 
 
         void EventLoop::_addThread(const int nThreads) {
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
             auto loop = instance();
+            boost::mutex::scoped_lock lock(m_threadPoolMutex);
             for (int i = 0; i < nThreads; ++i) {
                 boost::thread* thread = m_threadPool.create_thread(boost::bind(&EventLoop::runProtected, loop));
                 m_threadMap[thread->get_id()] = thread;
@@ -156,9 +155,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
             ThreadMap::iterator it = m_threadMap.find(id);
             if (it != m_threadMap.end()) {
-                boost::thread* thread = it->second;
+                boost::thread* theThread = it->second;
                 m_threadMap.erase(it);
-                m_threadPool.remove_thread(thread);
+                m_threadPool.remove_thread(theThread);
                 const size_t poolSize = m_threadPool.size();
                 if (poolSize > 1) { // Failed to print the last thread: SIGSEGV
                     // An attempt to use Logger API here may result in SIGSEGV: we are depending on
@@ -170,19 +169,46 @@ namespace karabo {
                 }
                 // Join without lock - though thread should already be returned from before we get here?
                 lock.unlock();
-                thread->join();
-                delete thread;
+                theThread->join();
+                delete theThread;
             }
         }
 
 
         void EventLoop::clearThreadPool() {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
-            for (ThreadMap::iterator it = m_threadMap.begin(); it != m_threadMap.end(); ++it) {
-                m_threadPool.remove_thread(it->second);
-                delete it->second;
+
+            int round = 1;
+            auto clearThreads = [this, &round]() {
+                for (ThreadMap::iterator it = m_threadMap.begin(); it != m_threadMap.end();) {
+                    boost::thread* theThread = it->second;
+                    // Try to join the thread and clean-up
+                    if (theThread->try_join_for(boost::chrono::milliseconds(100))) {
+                        m_threadPool.remove_thread(theThread);
+                        delete theThread;
+                        it = m_threadMap.erase(it);
+                    } else {
+                        // Joining can fail if 'asyncDestroyThread()' is blocked when it tries to lock
+                        // m_threadPoolMutex that is locked here as well.
+                        ++it;
+                        KARABO_LOG_FRAMEWORK_WARN << "Thread not joined after 100 ms (round " << round << ")";
+                    }
+                }
+            };
+            clearThreads();
+
+            // There may be threads left. Hopefully only those that ran 'asyncDestroyThread', but were stuck on the
+            // mutex. For those we release the lock and try a few more times. If that does not help, there is probably
+            // something misbehaving and we give up - the exception will likely finish the process.
+            while (!m_threadMap.empty()) {
+                lock.unlock();
+                if (++round > 40) {
+                    throw KARABO_TIMEOUT_EXCEPTION("Repeated failure to join all threads");
+                };
+                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                lock.lock();
+                clearThreads();
             }
-            m_threadMap.clear();
         }
 
 
@@ -241,7 +267,6 @@ namespace karabo {
 #endif
                     KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception" << fullMessage << extraInfo << ".";
                 }
-                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             }
         }
     } // namespace net
