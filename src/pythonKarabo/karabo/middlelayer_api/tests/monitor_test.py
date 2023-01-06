@@ -2,6 +2,7 @@ import time
 from asyncio import ensure_future, sleep
 
 import pytest
+import pytest_asyncio
 
 from karabo.middlelayer.testing import assertLogs, run_test
 from karabo.middlelayer_api.broker import amqp, redis
@@ -54,7 +55,7 @@ class Local(Macro):
         self.remoteB.counter = 0
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
 async def deviceTest(event_loop: event_loop):
     local = Local(_deviceId_="local", project="test", module="test",
