@@ -235,7 +235,7 @@ namespace karabo {
             // environment).
             //       Caveat: Ensure that Signals registered in device constructors get the correct topic!
             setTopic();
-            EventLoop::addThread();
+            EventLoop::addThread(); // possibly needed e.g. for ensureInstanceIdIsValid, see note therein
         }
 
 
@@ -397,6 +397,7 @@ namespace karabo {
             }
             // Ping any guy with my id. If there is one, he will answer, if not, we timeout.
             // slotPing takes care that I do not answer myself before timeout...
+            // Note: To process the reply may require the thread added to the event loop in SignalSlotable constructor
             Hash instanceInfo;
             try {
                 request(instanceId, "slotPing", instanceId, m_randPing, false)
