@@ -9,7 +9,6 @@ from flaky import flaky
 from karabo.common.states import State
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
-from karabo.middlelayer_api.broker import jms
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
@@ -880,8 +879,7 @@ async def test_cancel(deviceTest):
             counter -= 1
         assert local.slept_count == 2
         assert local.cancelled_slot == Local.sleepalot
-        if jms:
-            assert task.done()
+        assert task.done()
 
 
 @pytest.mark.timeout(30)
@@ -893,10 +891,7 @@ def test_connectdevice(deviceTest):
     try:
         assert d.value == 123
         remote.value = 456
-        if jms:
-            waitUntil(lambda: d.value == 456, timeout=0.1)  # noqa
-        else:
-            waitUntil(lambda: d.value == 456, timeout=1.0)  # noga
+        waitUntil(lambda: d.value == 456, timeout=0.1)  # noqa
     finally:
         # check that the proxy gets collected when not used anymore
         weak = weakref.ref(d)
