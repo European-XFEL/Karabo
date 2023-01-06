@@ -130,6 +130,11 @@ class Remote(Device):
         with (await getDevice("local")) as leet:
             await leet.remotecalls()
 
+    @Slot()
+    async def call_local_another(self):
+        with (await getDevice("local")) as leet:
+            await leet.remotecallsanother()
+
     generic = Superslot()
 
 
@@ -138,7 +143,14 @@ class Local(Macro):
     def remotecalls(self):
         self.nowslot = self.currentSlot
         self.nowstate = self.state
-        print("superpuper", end="hero")
+        print("superpuper")
+        print("hero")
+
+    @Slot()
+    def remotecallsanother(self):
+        self.nowslot = self.currentSlot
+        self.nowstate = self.state
+        print("superpuper", end="nohero")
 
     @Slot()
     def selfcall(self):
@@ -683,10 +695,16 @@ async def test_print(deviceTest):
         assert local.nowstate == State.ACTIVE
         assert local.currentSlot == ""
         assert local.state == State.PASSIVE
-        # Must wait at least 0.5 seconds. The print is bulked
-        await sleep(1)
-        assert local.doNotCompressEvents > 0
-        assert local.print == "superpuper\nhero"
+        # Must wait at least 0.5 seconds. Two prints get bulked
+        await sleep(0.5)
+        assert local.doNotCompressEvents == 1
+        assert local.print == "superpuper\n\nhero\n"
+        await remote.call_local_another()
+        # Wait for bulk, but local_another has a print `end` which
+        # we can only safely assert
+        await sleep(0.5)
+        assert local.doNotCompressEvents >= 2
+        assert "nohero" in local.print
     finally:
         sys.stdout = sys.stdout.base
 
