@@ -2,6 +2,7 @@ from asyncio import TimeoutError, get_event_loop, sleep
 
 import numpy as np
 import pytest
+import pytest_asyncio
 
 from karabo import __version__ as karaboVersion
 from karabo.common.states import State
@@ -134,7 +135,7 @@ class MyDevice(Device):
     nodeWithSlot = Node(NodeWithSlot)
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
 async def deviceTest(event_loop: event_loop):
     myDevice = MyDevice(dict(_deviceId_="MyDevice"))

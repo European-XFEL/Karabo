@@ -4,6 +4,7 @@ import weakref
 from asyncio import Future, TimeoutError, ensure_future
 
 import pytest
+import pytest_asyncio
 from flaky import flaky
 
 from karabo.common.states import State
@@ -253,7 +254,7 @@ class LocalMacroSlot(Macro):
         self.cancelled_slot = slot
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
 async def deviceTest(event_loop: event_loop):
     local = Local(_deviceId_="local", project="test", module="test",
@@ -1034,7 +1035,7 @@ def test_macro_klass_inheritance():
     assert issubclass(macro.klass, B)
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 @pytest.mark.asyncio
 async def abstractDeviceTest(event_loop):
     local = LocalAbstract(_deviceId_="local_abstract",

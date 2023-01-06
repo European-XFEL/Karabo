@@ -2,6 +2,7 @@ import uuid
 from asyncio import ensure_future, get_event_loop, sleep
 
 import pytest
+import pytest_asyncio
 
 from karabo.middlelayer import (
     Device, Slot, String, connectDevice, getDevice, isSet, lock)
@@ -71,7 +72,7 @@ async def test_server_context(event_loop: event_loop):
         assert "WW" in server_instance.plugins
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 @pytest.mark.asyncio
 async def deviceTest(event_loop):
     ww = WW({"_deviceId_": f"test-ww-{uuid.uuid4()}"})
