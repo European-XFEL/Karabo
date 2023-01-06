@@ -1,5 +1,5 @@
 import time
-from asyncio import ensure_future, sleep
+from asyncio import Future, ensure_future, sleep
 
 import pytest
 import pytest_asyncio
@@ -27,7 +27,17 @@ class Remote(Device):
 
 
 class LocalRemoteDevice(Macro):
-    notthere = RemoteDevice("notthere", timeout=5)
+    # The timeout has to be large for the test, because
+    # we want to cancel the connection
+    notthere = RemoteDevice("notmonitorthere", timeout=30)
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.run_future = Future()
+
+    async def _run(self, **kwargs):
+        self.run_future.set_result(None)
+        await super()._run(**kwargs)
 
 
 class Local(Macro):
@@ -94,12 +104,14 @@ def test_error(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_quick_shutdown(deviceTest):
+async def test_quick_shutdown(event_loop):
     """Test that a quick instantiation and shutdown works"""
     device = LocalRemoteDevice(dict(_deviceId_="localWithRemote"))
     ensure_future(device.startInstance())
+    await device.run_future
     # Use sleep to make sure we are trying to connect to remote
-    await sleep(1)
+    # but only sleep a bit
+    await sleep(0.5)
     assert not device.is_initialized
     await device.slotKillDevice()
     assert not device.is_initialized
