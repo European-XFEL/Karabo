@@ -392,7 +392,7 @@ class AmqpBroker(Broker):
             t.cancel()
         try:
             await wait_for(gather(*tasks, return_exceptions=True),
-                           timeout=6)
+                           timeout=5)
             return True
         except TimeoutError:
             return False
