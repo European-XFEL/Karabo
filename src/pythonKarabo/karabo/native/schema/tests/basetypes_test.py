@@ -10,7 +10,8 @@ from karabo.native import (
     BoolValue, EncodingType, EnumValue, Float, Hash, HashList, ImageData,
     Int32, KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
-    VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
+    VectorStringValue, encodeBinary, isSet, isStringSet, unit_registry as unit,
+    wrap)
 
 TEST_REPR_HL = "\
 +-----------+-----------------------+\n\
@@ -159,6 +160,15 @@ class Tests(TestCase):
         self.assertTrue(isSet(BoolValue(True)))
         self.assertFalse(isSet(NoneValue()))
         self.assertFalse(isSet(None))
+
+    def test_isstringset(self):
+        self.assertTrue(isStringSet("Yes"))
+        self.assertTrue(isStringSet(StringValue("Jo")))
+        self.assertFalse(isStringSet(NoneValue()))
+        self.assertFalse(isStringSet(None))
+        self.assertFalse(isStringSet(StringValue("")))
+        self.assertFalse(isStringSet([]))
+        self.assertFalse(isStringSet([1, 2]))
 
     def test_enum(self):
         class E(Enum):
