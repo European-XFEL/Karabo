@@ -4,7 +4,7 @@ import socket
 import sys
 import threading
 from asyncio import (
-    CancelledError, TimeoutError, current_task, ensure_future, gather,
+    CancelledError, Task, TimeoutError, current_task, ensure_future, gather,
     get_event_loop, iscoroutinefunction, set_event_loop, wait_for)
 from collections import deque
 from contextlib import closing
@@ -246,9 +246,11 @@ class Macro(Device):
         daqPolicy=DaqPolicy.OMIT)
 
     @Slot(displayedName="Cancel")
-    def cancel(self):
+    async def cancel(self):
         if self._last_action is not None:
             self._last_action.cancel()
+            if isinstance(self._last_action, Task):
+                await self._last_action
 
     @classmethod
     def register(cls, name, dict):
