@@ -88,6 +88,7 @@ class TestKaraboImagePlotROIController(GuiTestCase):
         self.assertEqual(roi.center, QPointF(3.000000, -3.000000))
         self.assertEqual(roi.textItem.toPlainText(),
                          "Region of Interest\nCenter: (3, -3)")
+        assert roi.coords == (3.000000, -3.000000)
         self.plot_item.set_image(image)
         y_axis = self.plot_item.transformed_axes[1]
         y_slice = self._region.slices[1]
