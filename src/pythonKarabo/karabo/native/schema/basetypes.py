@@ -19,11 +19,11 @@ from karabo.native.data import EncodingType, Hash, HashList, MetricPrefix, Unit
 
 from ..weak import Weak
 
-__all__ = ['BoolValue', 'EnumValue', 'ImageData', 'isSet', 'KaraboValue',
-           'NoneValue', 'newest_timestamp', 'Quantity', 'QuantityValue',
-           'StringValue', 'StringlikeValue', 'TableValue', 'unit_registry',
-           'VectorCharValue', 'VectorStringValue', 'wrap', 'wrap_function',
-           'wrap_methods']
+__all__ = ['BoolValue', 'EnumValue', 'ImageData', 'isSet', 'isStringSet',
+           'KaraboValue', 'NoneValue', 'newest_timestamp', 'Quantity',
+           'QuantityValue', 'StringValue', 'StringlikeValue', 'TableValue',
+           'unit_registry', 'VectorCharValue', 'VectorStringValue', 'wrap',
+           'wrap_function', 'wrap_methods']
 
 
 def wrap(data):
@@ -246,6 +246,11 @@ class NoneValue(_Singleton):
 def isSet(value):
     """Test whether *value* actually has a value"""
     return not (value is None or isinstance(value, NoneValue))
+
+
+def isStringSet(value):
+    """Test whether *value* actually has a non-empty string value"""
+    return isSet(value) and not (not isinstance(value, str) or not value)
 
 
 @wrap_methods
