@@ -34,6 +34,7 @@ class JmsBroker(Broker):
         self.classId = classId
         self.broadcast = broadcast
         self.logger = logging.getLogger(deviceId)
+        self.heartbeat_task = None
 
     def send(self, p, args):
         hash = Hash()
@@ -96,7 +97,7 @@ class JmsBroker(Broker):
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        ensure_future(heartbeat())
+        self.heartbeat_task = ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -248,14 +249,16 @@ class JmsBroker(Broker):
             self.logger.exception(
                 "Internal error while executing slot")
 
+    async def _stop_heartbeat(self):
+        if self.heartbeat_task is not None:
+            if not self.heartbeat_task.done():
+                self.heartbeat_task.cancel()
+                await self.heartbeat_task
+            self.heartbeat_task = None
+
     async def stop_tasks(self):
-        """Stop all currently running task
-
-        This marks the end of life of a device.
-
-        Note that the task this coroutine is called from, as an exception,
-        is not cancelled. That's the chicken-egg-problem.
-        """
+        """Reimplemented method of `Broker`"""
+        await self._stop_heartbeat()
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
