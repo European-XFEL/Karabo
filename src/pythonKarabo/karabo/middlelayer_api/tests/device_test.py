@@ -628,4 +628,7 @@ async def test_atimer_destruct(deviceTest):
     await device.startInstance()
     await waitUntil(lambda: device.is_initialized)
     await device.slotKillDevice()
-    assert 0 == counter
+    # Between start and shutdown there might have been a tick,
+    # but the timer gracefully stopped
+    assert counter <= 1
+    assert not device.timer.is_running()
