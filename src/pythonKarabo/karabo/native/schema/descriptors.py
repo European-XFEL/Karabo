@@ -656,24 +656,26 @@ class Slot(Descriptor):
 
         async def wrapper():
             try:
+                sigslot = device._ss
                 if (self.allowedStates is not None and
                         device.state not in self.allowedStates):
                     msg = ('Calling slot "{}" not allowed in '
                            'state "{}"'.format(self.key, device.state))
-                    device._ss.reply(message, msg, error=True)
+                    sigslot.reply(message, msg, error=True)
                     device.logger.warning(msg)
                     return
 
+                caller = sigslot.get_property(message, "signalInstanceId")
                 coro = get_event_loop().run_coroutine_or_thread(func)
-                device.lastCommand = name
+                device.lastCommand = f"{name} <- {caller}"
                 ret = await coro
                 device.update()
-                device._ss.reply(message, ret)
+                sigslot.reply(message, ret)
             except BaseException as e:
                 # In Python 3.8 changed to BaseException
                 _, exc, tb = sys.exc_info()
                 await device._onException(self, exc, tb)
-                device._ss.replyException(message, e)
+                sigslot.replyException(message, e)
 
         return get_event_loop().create_task(wrapper(), instance=device)
 
