@@ -641,8 +641,9 @@ def test_waituntil(deviceTest):
         d.counter = 0
         assert d.counter == 0
         executeNoWait(d, "count")
-        waitUntil(lambda: d.counter > 10)
-        assert d.counter == 11
+        # Busy CI, increase the number, before was 10
+        waitUntil(lambda: d.counter > 15)
+        assert d.counter == 16
         with pytest.raises(TimeoutError):
             waitUntil(lambda: d.counter > 40, timeout=0.1)
         waitUntil(lambda: d.state == State.UNKNOWN)
