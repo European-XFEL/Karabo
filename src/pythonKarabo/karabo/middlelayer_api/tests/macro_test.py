@@ -645,6 +645,7 @@ def test_waituntil(deviceTest):
         assert d.counter == 11
         with pytest.raises(TimeoutError):
             waitUntil(lambda: d.counter > 40, timeout=0.1)
+        waitUntil(lambda: d.state == State.UNKNOWN)
 
 
 @pytest.mark.timeout(30)
@@ -657,6 +658,7 @@ def test_waitWhile(deviceTest):
         executeNoWait(d, "count")
         waitWhile(lambda: d.counter <= 10)
         assert d.counter >= 10
+        waitUntil(lambda: d.state == State.UNKNOWN)
 
 
 @pytest.mark.timeout(30)
@@ -678,6 +680,7 @@ def test_waituntilnew(deviceTest):
             i = d.counter + 1   # next (expected) remote value
 
         assert 29 == d.counter
+        waitUntil(lambda: d.state == State.UNKNOWN)
 
 
 @pytest.mark.timeout(30)
