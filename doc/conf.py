@@ -33,7 +33,7 @@ for mod_name in LOCAL_MODULES:
     sys.modules.pop(mod_name)
 
 MOCK_MODULES = [
-    "traits.traits_listener", "lxml", "paho",
+    "traits.traits_listener", "lxml", "paho", "async_timeout",
     "paho.mqtt", "paho.mqtt.client", "karabogui._version",
     "karabo._version", "karabo.common.packaging.utils",
     "qtpy", "qtpy.QtGui", "qtpy.QtCore", "qtpy.QtWidgets",
