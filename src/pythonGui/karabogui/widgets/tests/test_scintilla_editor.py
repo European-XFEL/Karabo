@@ -21,6 +21,7 @@ def test_scintilla_editor(gui_app):
     assert editor.tabWidth() == 4
     assert editor.autoIndent()
     assert editor.indentationGuides()
+    assert not editor.indentationsUseTabs()
     assert code_book.getEditorCode() is not None
 
 
