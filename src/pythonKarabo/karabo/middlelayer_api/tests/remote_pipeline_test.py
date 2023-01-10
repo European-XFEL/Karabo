@@ -744,15 +744,14 @@ async def test_noded_output_channel(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_injected_output_channel_connection(deviceTest):
+async def test_injected_output_channel_connection(event_loop):
     """Test the re/connect to an injected output channel"""
     output_device = InjectedSender({"_deviceId_": "InjectedSender"})
-    receiver = Receiver({"_deviceId_": "ReceiverInjectedSender"})
-    await output_device.startInstance()
-    await receiver.startInstance()
-    await receiver.connectInputChannel("InjectedSender")
-
-    try:
+    receiver = Receiver(
+        {"_deviceId_": "ReceiverInjectedSender",
+         "input": {"connectedOutputChannels": ["InjectedSender:output"]}})
+    async with AsyncDeviceContext(output_device=output_device,
+                                  receiver=receiver):
         with (await getDevice("InjectedSender")) as sender_proxy, \
                 await getDevice("ReceiverInjectedSender") as input_proxy:
             assert isAlive(sender_proxy)
@@ -765,7 +764,6 @@ async def test_injected_output_channel_connection(deviceTest):
             await sender_proxy.injectOutput()
             # output is injected, wait for connection
             # must wait because proxy needs a schema to connect
-
             await sleep(3)
             received = False
             connected = False
@@ -842,6 +840,3 @@ async def test_injected_output_channel_connection(deviceTest):
             assert input_proxy.received > 0
             assert receiver.received > 0
             assert received
-    finally:
-        await output_device.slotKillDevice()
-        await receiver.slotKillDevice()
