@@ -101,7 +101,7 @@ class CodeEditor(QsciScintilla):
         # Indentation
         self.setTabWidth(4)
         self.setAutoIndent(True)
-        self.setIndentationsUseTabs(True)
+        self.setIndentationsUseTabs(False)
         self.setIndentationGuides(True)
         self.setBackspaceUnindents(True)
         self.setIndentationGuidesBackgroundColor(MARGIN_BACKGROUND)
