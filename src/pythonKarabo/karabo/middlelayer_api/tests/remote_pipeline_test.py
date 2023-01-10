@@ -7,7 +7,7 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
-    getDevice, isAlive, setWait, waitUntil, waitUntilNew)
+    getDevice, isAlive, setWait, waitUntil)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, event_loop, run_test, sleepUntil)
 
@@ -811,7 +811,7 @@ async def test_injected_output_channel_connection(event_loop):
             await sleepUntil(lambda: connected is True)
             assert receiver.connected
             await sender_proxy.sendData()
-            await waitUntilNew(input_proxy.received)
+            await waitUntil(lambda: input_proxy.received > 0)
             assert input_proxy.received > 0
             await sleepUntil(lambda: receiver.received > 0)
             assert receiver.received > 0
@@ -835,8 +835,7 @@ async def test_injected_output_channel_connection(event_loop):
             received = False
             await receiver.resetCounter()
             await sender_proxy.sendData()
-            await waitUntilNew(input_proxy.received)
+            await sleepUntil(lambda: received is True)
+            await waitUntil(lambda: input_proxy.received > 0)
             await sleepUntil(lambda: receiver.received > 0)
-            assert input_proxy.received > 0
             assert receiver.received > 0
-            assert received
