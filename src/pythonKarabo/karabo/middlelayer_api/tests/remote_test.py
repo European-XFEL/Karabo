@@ -1040,21 +1040,17 @@ async def test_devicenode(deviceTest):
 
     a = A({"_deviceId_": "devicenode", "dn": "badwienix"})
     b = B({"_deviceId_": "badwienix"})
-
-    a.startInstance()
-    try:
+    async with AsyncDeviceContext(a=a, timeout=0) as ctx:
         with (await getDevice("devicenode")) as d:
-            # A is started without awaiting, we have to wait for the
-            # device to come online, however it will not pass
-            # initialization, the device badwienix is not online.
-            await waitUntil(lambda: d.dn.value == "badwienix")
+            # The device does not pass `onInitialization` as
+            # the device badwienix is not online.
             assert d.state == State.UNKNOWN
             assert d.lockedBy == ""
             assert d.dn.value == "badwienix"
             ts_before = d.dn.timestamp
             assert ts_before is not None
             assert type(d).dn.displayType == "deviceNode"
-            await b.startInstance()
+            await ctx.device_context(b=b)
             # wait until it is online, the device will pass
             # the initialization phase
             await waitUntil(lambda: d.state == State.NORMAL)
@@ -1067,9 +1063,6 @@ async def test_devicenode(deviceTest):
             await updateDevice(d)
             ts_after = d.dn.timestamp
             assert ts_after == ts_before
-    finally:
-        await a.slotKillDevice()
-        await b.slotKillDevice()
 
 
 @pytest.mark.timeout(30)
