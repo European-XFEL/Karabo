@@ -268,13 +268,14 @@ def test_send_raw_no_wait(deviceTest):
 async def test_lastCommand(deviceTest):
     myDevice = deviceTest["myDevice"]
     assert myDevice.lastCommand == ""
+    leadId = get_event_loop().instance().deviceId
     with (await getDevice("MyDevice")) as d:
         await d.nodeWithSlot.pressMe()
-        assert myDevice.lastCommand == "nodeWithSlot.pressMe"
+        assert myDevice.lastCommand == f"nodeWithSlot.pressMe <- {leadId}"
         await d.start()
-    assert myDevice.lastCommand == "start"
+    assert myDevice.lastCommand == f"start <- {leadId}"
     await getSchema("MyDevice")
-    assert myDevice.lastCommand == "start"
+    assert myDevice.lastCommand == f"start <- {leadId}"
 
 
 @pytest.mark.timeout(30)
