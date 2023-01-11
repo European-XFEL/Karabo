@@ -1,12 +1,13 @@
 import asyncio
 import os
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from functools import reduce, wraps
 from time import perf_counter
 from types import MethodType
 from weakref import WeakMethod, ref
 
 import numpy as np
+from async_timeout import timeout
 
 from karabo.middlelayer_api.eventloop import ensure_coroutine
 from karabo.native import Hash, MetricPrefix, NumpyVector, QuantityValue, Unit
@@ -329,3 +330,19 @@ class AsyncTimer:
         self.stop()
         self._callback = None
         self.loop = None
+
+
+@asynccontextmanager
+async def countdown(delay=5, exception=True):
+    """An async contextmanager to enter a timeout context
+
+    :param delay: timeout limit (delay), default is 5 seconds
+    :param exception: Boolean if an exception should be raised on timeout,
+                      defaults to `True`
+    """
+    try:
+        async with timeout(delay) as ctx:
+            yield ctx
+    except asyncio.TimeoutError:
+        if exception:
+            raise

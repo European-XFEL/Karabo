@@ -19,7 +19,7 @@ from .device import Device
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
 from .signalslot import slot
-from .utils import AsyncTimer
+from .utils import AsyncTimer, countdown
 
 DEFAULT_ACTION_NAME = "_last_action"
 PRINT_THROTTLE = 0.5  # seconds
@@ -249,7 +249,9 @@ class Macro(Device):
     async def cancel(self):
         if self._last_action is not None:
             self._last_action.cancel()
-            if isinstance(self._last_action, Task):
+            if not isinstance(self._last_action, Task):
+                return
+            async with countdown(exception=False):
                 await self._last_action
 
     @classmethod
