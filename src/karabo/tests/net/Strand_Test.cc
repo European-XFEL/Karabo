@@ -37,7 +37,10 @@ void Strand_Test::setUp() {
 
 
 void Strand_Test::tearDown() {
-    EventLoop::removeThread(m_nThreadsInPool);
+    // No need to do EventLoop::removeThread(m_nThreadsInPool) since joining the main eventloop thread implicitly
+    // removes all threads, i.e. a new start of the event loop starts "from scratch". In best case, this cures hanging
+    // tests as in https://git.xfel.eu/Karabo/Framework/-/jobs/357339 and
+    // https://git.xfel.eu/Karabo/Framework/-/jobs/357451.
     EventLoop::stop();
 
     m_thread->join();
