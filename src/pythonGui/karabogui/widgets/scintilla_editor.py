@@ -1,5 +1,5 @@
 from qtpy.Qsci import QsciAPIs, QsciScintilla
-from qtpy.QtCore import Qt, Signal, Slot
+from qtpy.QtCore import QRegularExpression, Qt, Signal, Slot
 from qtpy.QtGui import QColor, QKeySequence
 from qtpy.QtWidgets import QShortcut, QVBoxLayout, QWidget
 
@@ -12,6 +12,11 @@ LINE_LENGTH = 79
 LINE_HIGHLIGHT = QColor("#FFFFCC")
 MARGIN_BACKGROUND = QColor("#E0E0E0")
 MARGIN_FOREGROUND = QColor("#A0A0A0")
+
+# This is an arbitrary number to represent an indicator style. There may be
+# up to 32 types of indicator defined at a time. The first 8 are normally
+# used by lexers.
+HIGHLIGHT_INDICATOR = 21
 
 
 class CodeBook(QWidget):
@@ -30,9 +35,12 @@ class CodeBook(QWidget):
             code_editor.setText(code)
 
         code_editor.textChanged.connect(self.codeChanged)
+        code_editor.resultFound.connect(self.updateResultText)
 
         find_toolbar = FindToolBar(parent=self)
         find_toolbar.findRequested.connect(self._findNext)
+        find_toolbar.highlightRequested.connect(self._highlight)
+        find_toolbar.aboutToClose.connect(self._clearHighlight)
         find_toolbar.replaceRequested.connect(self._replace)
         find_toolbar.setVisible(False)
 
@@ -51,8 +59,13 @@ class CodeBook(QWidget):
     def showFindToolbar(self):
         self.find_toolbar.setVisible(True)
         selected_text = self.code_editor.selectedText()
+        # Consider the text from previous search.
+        search_text = self.find_toolbar.find_line_edit.text()
+        match_case = self.find_toolbar.match_case.isChecked()
         if selected_text:
             self.find_toolbar.find_line_edit.setText(selected_text)
+            search_text = selected_text
+        self.code_editor.highlight(search_text, match_case)
         self.find_toolbar.find_line_edit.setFocus()
         self.find_toolbar.set_replace_widgets_visibility(False)
 
@@ -71,6 +84,18 @@ class CodeBook(QWidget):
             self.code_editor.replace_all(text, new_text, match_case)
         else:
             self.code_editor.replace_text(text, new_text, match_case)
+
+    @Slot(int)
+    def updateResultText(self, count):
+        self.find_toolbar.setResultText(count)
+
+    @Slot(str, bool)
+    def _highlight(self, text, match_case):
+        self.code_editor.highlight(text, match_case)
+
+    @Slot()
+    def _clearHighlight(self):
+        self.code_editor.clearHighlight()
 
     def increaseFontSize(self):
         self.code_editor.zoomIn()
@@ -94,6 +119,8 @@ class CodeEditor(QsciScintilla):
     """
     Python Code editor class.
     """
+
+    resultFound = Signal(int)
 
     def __init__(self, parent=None, use_api=True):
         super().__init__(parent)
@@ -150,7 +177,11 @@ class CodeEditor(QsciScintilla):
 
         self.setLexer(lexer)
 
-    def find_match(self, text, match_case=False, find_backward=False):
+        self._highlights = []
+        self.indicatorDefine(self.StraightBoxIndicator, HIGHLIGHT_INDICATOR)
+
+    @Slot(str, bool, bool)
+    def find_match(self, text, match_case, find_backward):
         """
         Select the first match from the current cursor position.
         Return True if found else False.
@@ -159,24 +190,84 @@ class CodeEditor(QsciScintilla):
         word_only = False
         wrap = True
         find_forward = not find_backward
-        line, col = self.getCursorPosition()
+        line, index = self.getCursorPosition()
         if find_backward:
             # Move cursor behind by one, so that backward search doesn't get
             # stuck on the just single hit.
-            col -= 1
-        return self.findFirst(text, regular_expression, match_case, word_only,
-                              wrap, find_forward, line, col)
+            index -= 1
+        found = self.findFirst(text, regular_expression, match_case, word_only,
+                               wrap, find_forward, line, index)
+        if not found:
+            self.clearHighlight()
+        return found
 
-    def replace_text(self, text, new_text, match_case=False):
-        """
-        Replace the text with new_text.
-        """
-        if self.find_match(text, match_case):
+    def replace_text(self, text, new_text, match_case):
+        """ Replace the text with new_text."""
+        if self.find_match(text, match_case, find_backward=False):
             self.replace(new_text)
 
-    def replace_all(self, text, new_text, match_case=False):
-        found = self.find_match(text, match_case)
+    def replace_all(self, text, new_text, match_case):
+        """ Recursively replace a text with a new text."""
+        found = self.find_match(text, match_case, find_backward=False)
         if found:
-            self.replace(new_text)
+            self.beginUndoAction()
             while self.findNext():
                 self.replace(new_text)
+            self.endUndoAction()
+
+    @Slot(str, bool)
+    def highlight(self, text, match_case):
+        """ Highlight all the occurrence of the given text."""
+        self.clearHighlight()
+        if text == "":
+            return
+        options = QRegularExpression().patternOptions()
+        if not match_case:
+            options = options | QRegularExpression.CaseInsensitiveOption
+        pattern = QRegularExpression(text, options)
+        matches = pattern.globalMatch(self.text())
+
+        hit_count = 0
+        while matches.hasNext():
+            match = matches.next()
+            if match.capturedLength() != len(pattern.pattern()):
+                # Avoid matching regular expression.
+                continue
+            start = match.capturedStart()
+            end = match.capturedEnd()
+            _range = self._range_from_position(start, end)
+            line_start, index_start, line_end, index_end = _range
+
+            selection = {"line_start": line_start,
+                         "index_start": index_start,
+                         "line_end": line_end,
+                         "index_end": index_end}
+            self._highlights.append(selection)
+            self.fillIndicatorRange(
+                line_start, index_start, line_end, index_end,
+                HIGHLIGHT_INDICATOR)
+            hit_count += 1
+        self.resultFound.emit(hit_count)
+
+    @Slot()
+    def clearHighlight(self):
+        for selection in self._highlights:
+            self.clearIndicatorRange(
+                selection["line_start"],
+                selection["index_start"],
+                selection["line_end"],
+                selection["index_end"],
+                HIGHLIGHT_INDICATOR
+            )
+        self._highlights.clear()
+        self.resultFound.emit(0)
+
+    def _range_from_position(self, start_position, end_position):
+        """
+        Convert a position which is globally indexed from the start of the
+        text to a combination of line number and index from the start of the
+        line.
+        """
+        start_line, start_offset = self.lineIndexFromPosition(start_position)
+        end_line, end_offset = self.lineIndexFromPosition(end_position)
+        return start_line, start_offset, end_line, end_offset
