@@ -102,12 +102,6 @@ class AmqpBroker(Broker):
         await self.channel.exchange_declare(exchange=exchange,
                                             exchange_type="topic")
 
-    def publish(self, exch, key, msg):
-        # schedule 'basic_publish' call soon on event loop ...
-        self.loop.call_soon_threadsafe(
-            self.loop.create_task,
-            self.channel.basic_publish(msg, routing_key=key, exchange=exch))
-
     def encode_binary_message(self, header, arguments):
         body = Hash()
         for i, a in enumerate(arguments):
@@ -118,9 +112,10 @@ class AmqpBroker(Broker):
         return b"".join([encodeBinary(header), encodeBinary(body)])
 
     @ensure_running
-    def send(self, exchange, routing_key, header, arguments):
+    def send(self, exch, key, header, arguments):
         msg = self.encode_binary_message(header, arguments)
-        self.publish(exchange, routing_key, msg)  # fire&forget
+        ensure_future(self.channel.basic_publish(
+            msg, routing_key=key, exchange=exch))
 
     async def async_send(self, exch, key, header, arguments):
         msg = self.encode_binary_message(header, arguments)
