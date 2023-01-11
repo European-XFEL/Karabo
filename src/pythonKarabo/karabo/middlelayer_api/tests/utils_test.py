@@ -9,7 +9,7 @@ from karabo.middlelayer.testing import event_loop
 from karabo.middlelayer_api.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
 from karabo.middlelayer_api.utils import (
-    AsyncTimer, build_karabo_value, profiler)
+    AsyncTimer, build_karabo_value, countdown, profiler)
 from karabo.native import (
     Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
     String, StringValue, Timestamp, Unit, VectorDouble, unit_registry as unit)
@@ -434,3 +434,26 @@ async def test_async_timer(event_loop):
 
     assert called > 0
     await asyncio.sleep(0.2)
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_countdown(event_loop):
+    """Test that we can use a countdown error context"""
+    # 1. exception is `True`
+    try:
+        async with countdown(0.1) as ctx:
+            assert ctx is not None
+            await asyncio.sleep(0.2)
+    except asyncio.TimeoutError:
+        # Must have timeout
+        pass
+    else:
+        assert False
+    assert ctx.expired
+
+    # 2. exception is `False`, no exception
+    async with countdown(0.1, False) as ctx:
+        assert ctx is not None
+        await asyncio.sleep(0.2)
+    assert ctx.expired
