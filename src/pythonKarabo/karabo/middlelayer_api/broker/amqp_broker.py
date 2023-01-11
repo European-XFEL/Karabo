@@ -191,11 +191,10 @@ class AmqpBroker(Broker):
         p["classId"] = self.classId
         # AMQP specific follows ...
         slotInstanceId = slotInstanceIds.strip("|")
-        if (signal == "__request__" or signal == "__replyNoWait__"
-                or signal == "__reply__" or signal == "__replyNoWait"):
+        if signal in ("__replyNoWait__", "__reply__"):
             name = f"{self.domain}.slots"
             routing_key = slotInstanceId
-        elif signal == "call" or signal == "__call__":
+        elif signal == "call":
             if slotInstanceId == "*":
                 name = f"{self.domain}.global_slots"
                 routing_key = ""
