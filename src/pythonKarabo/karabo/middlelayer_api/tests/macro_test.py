@@ -699,10 +699,16 @@ async def test_print(deviceTest):
         assert local.nowstate == State.ACTIVE
         assert local.currentSlot == ""
         assert local.state == State.PASSIVE
-        # Must wait at least 0.5 seconds. Two prints get bulked
+        # Must wait at least 0.5 seconds. Two prints might
+        # get bulked
         await sleep(0.5)
-        assert local.doNotCompressEvents == 1
-        assert local.print == "superpuper\n\nhero\n"
+        assert local.doNotCompressEvents >= 1
+        if local.doNotCompressEvents == 1:
+            assert local.print == "superpuper\n\nhero\n"
+        else:
+            assert "superpuper" not in local.print
+            assert "hero" in local.print
+            assert local.doNotCompressEvents == 2
         await remote.call_local_another()
         # Wait for bulk, but local_another has a print `end` which
         # we can only safely assert
