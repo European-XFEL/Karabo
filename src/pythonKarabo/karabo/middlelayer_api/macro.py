@@ -4,7 +4,7 @@ import socket
 import sys
 import threading
 from asyncio import (
-    CancelledError, Task, TimeoutError, current_task, ensure_future, gather,
+    CancelledError, TimeoutError, current_task, ensure_future, gather,
     get_event_loop, iscoroutinefunction, set_event_loop, wait_for)
 from collections import deque
 from contextlib import closing
@@ -249,8 +249,6 @@ class Macro(Device):
     async def cancel(self):
         if self._last_action is not None:
             self._last_action.cancel()
-            if not isinstance(self._last_action, Task):
-                return
             async with countdown(exception=False):
                 await self._last_action
 
@@ -342,6 +340,7 @@ class Macro(Device):
             coro = getDevice(remote.id)
             if remote.timeout > 0:
                 coro = wait_for(coro, remote.timeout)
+
             try:
                 d = await coro
             except TimeoutError:
