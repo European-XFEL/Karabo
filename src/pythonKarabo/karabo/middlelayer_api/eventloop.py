@@ -9,7 +9,7 @@ import weakref
 from asyncio import (
     AbstractEventLoop, CancelledError, Future, Queue, SelectorEventLoop,
     TimeoutError, ensure_future, get_event_loop, iscoroutinefunction,
-    set_event_loop, wait_for)
+    set_event_loop, sleep, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
@@ -137,6 +137,10 @@ class NoEventLoop(AbstractEventLoop):
         self._cancelled = True
         if self.task is not None:
             self._instance._ss.loop.call_soon_threadsafe(self.task.cancel)
+
+    def __await__(self):
+        """Awaiting the NoEventLoop cycles and suspend the current task"""
+        return sleep(0).__await__()
 
     def sync(self, coro, timeout, wait):
         """The main synchronization routine
