@@ -383,6 +383,24 @@ mkdir -p $EXTERN_DEPS_BASE_DIR
 export CMAKE_BUILD_PARALLEL_LEVEL=$NUM_JOBS
 safeRunCommand $scriptDir/extern/build.sh $EXTERN_DEPS_DIR ALL
 
+# Use Ninja as the CMAKE Generator if it is available and if no setting for
+# using a given Generator already exists.
+which ninja &> /dev/null
+if [[ $? = 0 && -z "$CMAKE_GENERATOR" ]]; then
+    export CMAKE_GENERATOR="Ninja"
+    echo
+    echo "### Using ninja as the CMAKE_GENERATOR... ###"
+    echo
+elif [ -n "$CMAKE_GENERATOR" ]; then
+    echo
+    echo "### Using $CMAKE_GENERATOR as the CMAKE_GENERATOR... ###"
+    echo
+else
+    echo
+    echo "### Using the default CMAKE_GENERATOR ('cmake -h' shows the default)... ###"
+    echo
+fi
+
 LOWER_CMAKE_CONF=$(echo "$CONF" | tr '[:upper:]' '[:lower:]')
 FRAMEWORK_BUILD_DIR="$scriptDir/build_$LOWER_CMAKE_CONF"
 mkdir -p $FRAMEWORK_BUILD_DIR
