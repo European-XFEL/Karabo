@@ -314,13 +314,7 @@ class EventLoop(SelectorEventLoop):
                     self.call_soon_threadsafe(
                         lambda: future.set_exception(exception))
                 finally:
-                    pass
-                    # Previously we did set loop to `None`. However, since
-                    # threads are complaining that no loop is found in
-                    # current thread, we might deal with races.
-                    # XXX: Thread in thread?
-                    # Hence, in case of asyncio we let the `NoEventLoop`
-                    # die in the other thread.
+                    set_event_loop(None)
 
             self.run_in_executor(None, thread)
             while True:
