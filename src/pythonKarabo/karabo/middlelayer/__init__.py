@@ -37,8 +37,8 @@ from karabo.middlelayer_api.jsonencoder import KaraboJSONEncoder
 from karabo.middlelayer_api.macro import (
     EventThread, Macro, MacroSlot, Monitor, RemoteDevice)
 from karabo.middlelayer_api.pipeline import (
-    InputChannel, NetworkInput, NetworkOutput, OutputChannel, OutputProxy,
-    PipelineContext, PipelineMetaData)
+    Channel, InputChannel, NetworkInput, NetworkOutput, OutputChannel,
+    OutputProxy, PipelineContext, PipelineMetaData, RingQueue)
 from karabo.middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxyNodeBase as ProxyNode, ProxySlotBase as ProxySlot,
     SubProxyBase as SubProxy)
