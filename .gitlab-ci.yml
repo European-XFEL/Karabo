@@ -45,32 +45,32 @@ stages:
   <<: *artifacts-spec
 
 .image_almalinux8_: &image_almalinux8
-  image: europeanxfel/karabo-ci:almalinux-8-001
+  image: europeanxfel/karabo-ci:almalinux-8-002
   tags:
     - KaraboFramework
 
 .image_centos7_: &image_centos7
-  image: europeanxfel/karabo-ci:centos-7-001
+  image: europeanxfel/karabo-ci:centos-7-002
   tags:
     - KaraboFramework
 
 .image_ubuntu20_: &image_ubuntu20
-  image: europeanxfel/karabo-ci:ubuntu-20-001
+  image: europeanxfel/karabo-ci:ubuntu-20-002
   tags:
     - KaraboFramework
 
 .image_ubuntu22_: &image_ubuntu22
-  image: europeanxfel/karabo-ci:ubuntu-22
+  image: europeanxfel/karabo-ci:ubuntu-22-001
   tags:
     - KaraboFramework
 
 .image_ubuntu18_: &image_ubuntu18
-  image: europeanxfel/karabo-ci:ubuntu-18-001
+  image: europeanxfel/karabo-ci:ubuntu-18-002
   tags:
     - KaraboFramework
 
 .image_debian10_: &image_debian10
-  image: europeanxfel/karabo-ci:debian-10-001
+  image: europeanxfel/karabo-ci:debian-10-002
   tags:
     - KaraboFramework
 
@@ -172,8 +172,8 @@ stages:
       -C $KARABO_CONDA_CHANNEL_PATH/mirror
       --index-mirror
   only:
-      variables:
-        - $REFRESH_MIRROR
+    variables:
+      - $REFRESH_MIRROR
   when: manual
 
 .nightly_build: &nightly-build
@@ -234,7 +234,7 @@ stages:
       - merge_requests
     changes:
       - "src/karathon/**/*" # bound api depends on the c++ build
-      - "src/karabo/**/*"   # bound api depends on the c++ build
+      - "src/karabo/**/*" # bound api depends on the c++ build
       - "src/pythonKarabo/**/*"
   <<: *except-main
 
