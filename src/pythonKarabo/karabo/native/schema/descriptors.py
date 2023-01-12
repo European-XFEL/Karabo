@@ -496,8 +496,9 @@ class Descriptor(object):
         return instance._getValue(self.key)
 
     def __set__(self, instance, value):
-        if (self.assignment is Assignment.OPTIONAL and
+        if (self.assignment is not Assignment.MANDATORY and
                 not isSet(value)):
+            # Assignment.INTERNAL and Assignment.OPTIONAL
             value = NoneValue(value, descriptor=self)
         else:
             value = self.toKaraboValue(value)
