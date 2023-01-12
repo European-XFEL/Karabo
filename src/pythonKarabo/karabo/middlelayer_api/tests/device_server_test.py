@@ -6,6 +6,7 @@ import pytest
 
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, create_device_server, event_loop)
+from karabo.middlelayer_api.broker import amqp
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
@@ -21,6 +22,7 @@ class FaultyDevice(Device):
 
 @pytest.mark.asyncio
 @pytest.mark.timeout(90)
+@pytest.mark.skipif(amqp, reason="Not working on amqp")
 async def test_device_server(event_loop: event_loop, subtests):
     async with AsyncDeviceContext():
         with subtests.test("Test that we can instantiate a server without "
