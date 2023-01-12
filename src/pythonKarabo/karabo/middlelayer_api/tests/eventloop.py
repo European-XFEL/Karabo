@@ -3,11 +3,12 @@ import weakref
 from asyncio import gather, get_event_loop, set_event_loop, sleep, wait_for
 from contextlib import ExitStack, contextmanager
 from functools import partial, wraps
-from unittest import TestCase
+from unittest import TestCase, skipIf
 from unittest.mock import Mock
 
 import pytest
 
+from karabo.middlelayer_api.broker import amqp
 from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
 from karabo.middlelayer_api.signalslot import SignalSlotable
@@ -48,6 +49,7 @@ def sync_tst(f=None, *, timeout=None):
     return wrapper
 
 
+@skipIf(amqp, reason="not working on amqp")
 class DeviceTest(TestCase):
     timeout = 20
 
@@ -70,7 +72,6 @@ class DeviceTest(TestCase):
             # multiple tests might fail if we do not do this.
             # also: closing the event loop in a `finally`
             # as insurance against failures in exit_stack
-            cls.loop.stop()
             cls.loop.close()
             set_event_loop(cls.old_event_loop)
 

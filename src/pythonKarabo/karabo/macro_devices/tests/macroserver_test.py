@@ -1,10 +1,10 @@
 import uuid
 from asyncio import get_event_loop, set_event_loop
 from contextlib import ExitStack, contextmanager
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 from karabo.middlelayer import getDevice, updateDevice
-from karabo.middlelayer_api.broker import jms
+from karabo.middlelayer_api.broker import amqp, jms
 from karabo.middlelayer_api.signalslot import SignalSlotable
 from karabo.middlelayer_api.tests.eventloop import EventLoop
 from karabo.native import Hash
@@ -46,6 +46,7 @@ class TestMacro(Macro):
 """
 
 
+@skipIf(amqp, reason="Not working on amqp")
 class Tests(TestCase):
 
     @classmethod

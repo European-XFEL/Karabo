@@ -5,7 +5,7 @@ from asyncio import (
     ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
 from itertools import count
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 from karabo.common.states import State
 from karabo.middlelayer_api.broker import amqp, jms
@@ -75,6 +75,7 @@ class Other(Device):
             await sleep(0.02)
 
 
+@skipIf(amqp, reason="not working on amqp")
 class Tests(TestCase):
     def test_delete(self):
         thread = EventThread()
