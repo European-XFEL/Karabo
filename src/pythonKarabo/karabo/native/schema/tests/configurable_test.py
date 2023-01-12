@@ -1039,6 +1039,32 @@ class Tests(TestCase):
         a = A()
         self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
 
+    def test_assignment_internal(self):
+        """Test that we can have no defaults with assignment internal"""
+        class A(Configurable):
+            a = Bool(assignment=Assignment.INTERNAL)
+            b = Float(assignment=Assignment.INTERNAL)
+            c = VectorFloat(assignment=Assignment.INTERNAL)
+            d = Int8(assignment=Assignment.INTERNAL)
+            e = VectorInt8(assignment=Assignment.INTERNAL)
+            z = String(assignment=Assignment.INTERNAL)
+            az = VectorString(assignment=Assignment.INTERNAL)
+            aa = VectorBool(assignment=Assignment.INTERNAL)
+            ab = VectorHash(
+                rows=RowSchema,
+                assignment=Assignment.INTERNAL)
+
+        a = A()
+        self.assertEqual(a.a, None)
+        self.assertEqual(a.b, None)
+        self.assertEqual(a.c, None)
+        self.assertEqual(a.d, None)
+        self.assertEqual(a.e, None)
+        self.assertEqual(a.z, None)
+        self.assertEqual(a.az, None)
+        self.assertEqual(a.aa, None)
+        self.assertEqual(a.ab, None)
+
     def test_allowedActions(self):
         class B(Configurable):
             allowedActions = ["ROI", "CROP"]
