@@ -97,8 +97,8 @@ def start_device_client():
         nonlocal loop
         device = device()
         if device is not None:
-            loop.create_task(device.slotKillDevice())
-
+            # Signal slotable has a timeout protection
+            loop.sync(device.slotKillDevice(), -1, True)
     weak = weakref.ref(devices)
     atexit.register(shutdown_hook, weak)
 
