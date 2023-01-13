@@ -103,6 +103,11 @@ class MacroSlot(Slot):
 
 
 class RemoteDevice:
+    """A RemoteDevice is the complement of a `DeviceNode`
+
+    This `RemoteDevice` does not appear in the Schema, but creates
+    a proxy that can be used under the key specified in the code.
+    """
     def __init__(self, id, timeout=5):
         self.id = id
         self.timeout = timeout
@@ -308,7 +313,7 @@ class Macro(Device):
             self.stackTimer.start()
         await super()._run(**kwargs)
         try:
-            await self.__initialize_devices_monitors()
+            await self.__initialize_remotes()
         except CancelledError:
             # we are cancelled from the outside, nothing to do
             pass
@@ -318,12 +323,12 @@ class Macro(Device):
         else:
             self.state = self.abstractPassiveState
 
-    async def __holdDevice(self, d):
+    async def __watch_remote(self, d):
         """keep the connection to a remote device
 
         this method holds the connection to the RemoteDevice d, and calls
         all monitors upon changes in this device."""
-        with d:
+        async with d:
             while True:
                 await waitUntilNew(d)
                 for m in self.__monitors:
@@ -334,9 +339,9 @@ class Macro(Device):
                             'exception in monitor "{}" of device "{}"'.
                             format(m.key, self.deviceId))
 
-    async def __initialize_devices_monitors(self):
+    async def __initialize_remotes(self):
         """Initialize all RemoteDevice and their monitors"""
-        holders = []
+        watchers = []
 
         async def connect(key, remote):
             coro = getDevice(remote.id)
@@ -349,13 +354,13 @@ class Macro(Device):
                                   format(remote.id, self.deviceId))
             else:
                 setattr(self, key, d)
-                holders.append(self.__holdDevice(d))
+                watchers.append(self.__watch_remote(d))
 
         ts = type(self)
         attributes = ((k, getattr(ts, k)) for k in dir(ts))
         await gather(*(connect(k, v) for k, v in attributes
                        if isinstance(v, RemoteDevice)))
-        for h in holders:
+        for h in watchers:
             ensure_future(h)
 
     async def printToConsole(self, data):
