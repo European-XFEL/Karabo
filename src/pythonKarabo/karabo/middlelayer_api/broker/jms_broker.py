@@ -223,6 +223,55 @@ class JmsBroker(Broker):
             await task
             raise
 
+    async def consume_beats(self, server):
+        loop = get_event_loop()
+        running = True
+        server = weakref.ref(server)
+
+        def receiver():
+            consumer = openmq.Consumer(
+                self.session, self.hbdestination,
+                "signalFunction = 'signalHeartbeat'", False)
+            with closing(consumer):
+                while running:
+                    try:
+                        message = consumer.receiveMessage(1000)
+                    except openmq.Error as e:
+                        if e.status == openmq.OPEN_MQ_TIMEOUT:
+                            continue
+                        elif e.status == openmq.OPEN_MQ_CONCURRENT_ACCESS:
+                            loop.call_soon_threadsafe(
+                                self.logger.warning,
+                                'consumer of instance "%s" had a concurrent '
+                                'access',
+                                self.deviceId)
+                            continue
+                        elif e.status == openmq.OPEN_MQ_MSG_DROPPED:
+                            loop.call_soon_threadsafe(
+                                self.logger.warning,
+                                'consumer of instance "%s" dropped messages',
+                                self.deviceId)
+                            message = e.message
+                        else:
+                            raise
+
+                    s = server()
+                    if s is None:
+                        return
+                    hash = decodeBinary(message.data)
+                    instance_id, info = hash['a1'], hash['a3']
+                    loop.call_soon_threadsafe(
+                        loop.create_task, s.updateHeartBeat(instance_id, info))
+                    s = None
+
+        task = loop.run_in_executor(None, receiver)
+        try:
+            await shield(task)
+        except CancelledError:
+            running = False
+            await task
+            raise
+
     async def handleMessage(self, message, device):
         try:
             slots, params = self.decodeMessage(message)
