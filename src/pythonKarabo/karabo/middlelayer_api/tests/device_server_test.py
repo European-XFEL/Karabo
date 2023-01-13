@@ -5,13 +5,14 @@ from asyncio import gather, sleep, wait
 import pytest
 
 from karabo.middlelayer.testing import (
-    AsyncDeviceContext, create_device_server, event_loop)
+    AsyncDeviceContext, create_device_server, create_instanceId, event_loop)
 from karabo.middlelayer_api.broker.compat import amqp
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
-from karabo.middlelayer_api.tests.eventloop import create_instanceId
 from karabo.native import Hash, KaraboError, Schema, Timestamp
+
+SHUTDOWN_TIME = 1
 
 
 class FaultyDevice(Device):
@@ -28,7 +29,8 @@ async def test_device_server(event_loop: event_loop, subtests):
                            "plugins"):
             serverId = f"testMDLServer-{uuid.uuid4()}"
             configuration = {"timeServerId": "KaraboTimeServer",
-                             "scanPlugins": False}
+                             "scanPlugins": False,
+                             "track": True}
             server = create_device_server(serverId, config=configuration)
             assert server is not None
             try:
@@ -209,3 +211,4 @@ async def finalize_server(server):
     if futures:
         await wait(futures, timeout=10)
     await server.slotKillDevice()
+    await sleep(SHUTDOWN_TIME)
