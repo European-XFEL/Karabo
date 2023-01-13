@@ -467,6 +467,9 @@ class RedisBroker(Broker):
         # Block here until 'self.mpsc' will not be stopped
         await fut
 
+    async def consume_beats(self, server):
+        """Heartbeat method for the device server"""
+
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
 

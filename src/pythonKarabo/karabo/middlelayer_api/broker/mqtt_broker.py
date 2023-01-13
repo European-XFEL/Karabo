@@ -453,6 +453,9 @@ class MqttBroker(Broker):
         self.client.register_on_message(receiver)
         await self.client.custom_loop()
 
+    async def consume_beats(self, server):
+        """Heartbeat method for the device server"""
+
     async def _stop_tasks(self):
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
