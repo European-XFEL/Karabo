@@ -413,6 +413,9 @@ class AmqpBroker(Broker):
         # Be under exitStack scope as soon as queue is alive
         await self.exit_event.wait()
 
+    async def consume_beats(self, server):
+        """Heartbeat method for the device server"""
+
     def decodeMessage(self, hash):
         """Decode a Karabo message
 
