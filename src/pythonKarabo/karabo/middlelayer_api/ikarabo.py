@@ -5,6 +5,7 @@ import re
 import socket
 import weakref
 from asyncio import set_event_loop
+from contextlib import suppress
 
 import IPython
 
@@ -97,8 +98,10 @@ def start_device_client():
         nonlocal loop
         device = device()
         if device is not None:
-            # Signal slotable has a timeout protection
-            loop.sync(device.slotKillDevice(), -1, True)
+            # Signal slotable has a timeout protection. We protect
+            # against every exception as we are at the very end of lifetime
+            with suppress(BaseException):
+                loop.sync(device.slotKillDevice(), -1, True)
     weak = weakref.ref(devices)
     atexit.register(shutdown_hook, weak)
 
