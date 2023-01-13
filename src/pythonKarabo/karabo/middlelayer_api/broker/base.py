@@ -109,6 +109,14 @@ class Broker(ABC):
         be blocking, as the exit stack is bound to leaving this method"""
 
     @abstractmethod
+    async def consume_beats(self, server):
+        """The consume beats method called from the heartbeat mixin
+
+        This is considered when a device server wants to `track` the
+        heartbeats.
+        """
+
+    @abstractmethod
     async def stop_tasks(self):
         """Stop all currently running task
 
