@@ -170,17 +170,23 @@ namespace karabo {
             AmqpBroker(const AmqpBroker& o) = delete;
             AmqpBroker(const AmqpBroker& o, const std::string& newInstanceId);
 
-            void amqpReadHashHandler(const boost::system::error_code& ec, const std::string& exchange,
-                                     const std::string& routingkey, const karabo::util::Hash::Pointer& msg,
+            void amqpReadHashHandler(const boost::system::error_code& ec, const karabo::util::Hash::Pointer& msg,
                                      const consumer::MessageHandler& handler,
                                      const consumer::ErrorNotifier& errorNotifier);
 
            protected:
             // "main" producer/consumer client
             karabo::net::AmqpClient::Pointer m_client;
+            karabo::net::consumer::MessageHandler m_clientConsumerHandler;
+            karabo::net::consumer::ErrorNotifier m_clientErrorNotifier;
             // optional consumers ...
-            karabo::net::AmqpClient::Pointer m_heartbeatConsumerChannel;
-            karabo::net::AmqpClient::Pointer m_logConsumerChannel;
+            karabo::net::AmqpClient::Pointer m_heartbeatClient;
+            karabo::net::consumer::MessageHandler m_heartbeatConsumerHandler;
+            karabo::net::consumer::ErrorNotifier m_heartbeatErrorNotifier;
+
+            karabo::net::AmqpClient::Pointer m_logClient;
+            karabo::net::consumer::MessageHandler m_logConsumerHandler;
+            karabo::net::consumer::ErrorNotifier m_logErrorNotifier;
 
            private:
             karabo::net::Strand::Pointer m_handlerStrand;
