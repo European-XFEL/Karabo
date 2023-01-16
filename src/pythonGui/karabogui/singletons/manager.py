@@ -304,9 +304,9 @@ class Manager(QObject):
                 self.expect_properties(device, pending)
             text = (f'Device reconfiguration of <b>{deviceId}</b> encountered '
                     'an error. <br><br>The reason is:<br>'
-                    f'<i>{reason}</i><br><br>'
-                    'Click "Show Details..." for more information.')
-
+                    f'<i>{reason}</i><br>')
+            if details is not None:
+                text += '<br>Click "Show Details..." for more information.'
             # Provide a text for the logger!
             log_text = (f"Device reconfiguration of <b>{deviceId}</b> with "
                         f"properties <b>{', '.join(paths)}</b> failed")
@@ -523,8 +523,9 @@ class Manager(QObject):
                     '<br><br>'
                     'The reason is:<br>'
                     f'<i>{reason}</i>'
-                    '<br><br>'
-                    'Click "Show Details..." for more information.')
+                    '<br>')
+            if details is not None:
+                text += '<br>Click "Show Details..." for more information.'
             messagebox.show_error(text, details=details)
 
     def handle_propertyHistory(self, **info):
@@ -735,8 +736,9 @@ class Manager(QObject):
                 reason, details = get_reason_parts(message)
                 text = (f'The instance <b>{deviceId}</b> could not be '
                         'instantiated.. <br><br>The reason is:<br>'
-                        f'<i>{reason}</i><br><br>'
-                        'Click "Show Details..." for more information.')
+                        f'<i>{reason}</i><br>')
+                if details is not None:
+                    text += '<br>Click "Show Details..." for more information.'
                 messagebox.show_error(text, details=details)
 
     def handle_alarmInit(self, instanceId, rows):
