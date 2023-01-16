@@ -192,14 +192,11 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     }
 
     // Define read handler for message visualization...
-    auto readHandler = [](const boost::system::error_code& ec, const std::string& exchange,
-                          const std::string& routingkey, const Hash::Pointer& msg) {
+    auto readHandler = [](const boost::system::error_code& ec, const Hash::Pointer& msg) {
         if (ec) {
             std::cout << "Error " << ec.value() << ": " << ec.message() << std::endl;
             return;
         }
-
-        std::cout << "Exchange: \"" << exchange << "\", routingKey: \"" << routingkey << "\"" << std::endl;
 
         if (msg) {
             std::cout << *msg << std::endl;
