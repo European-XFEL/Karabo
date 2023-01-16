@@ -67,8 +67,12 @@ class _CapturingHandler(logging.Handler):
 
 
 @contextmanager
-def assertLogs(logger_name, level):
-    """A context manager used to implement assertLogs()."""
+def assertLogs(logger_name=None, level=None):
+    """A context manager used to implement assertLogs().
+
+    :param logger_name: defaults to `None` (root)
+    :param level: The logging level, defaults to `None` -> INFO
+    """
     try:
         if isinstance(logger_name, logging.Logger):
             logger = logger_name
