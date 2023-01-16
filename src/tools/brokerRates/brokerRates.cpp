@@ -656,8 +656,8 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
     util::Hash::Pointer body(boost::make_shared<util::Hash>());
 
-    auto readHandler = [stats, binSerializer, body](const boost::system::error_code& ec, const std::string& exchange,
-                                                    const std::string& routingkey, const util::Hash::Pointer& msg) {
+    auto readHandler = [stats, binSerializer, body](const boost::system::error_code& ec,
+                                                    const util::Hash::Pointer& msg) {
         if (!ec) {
             std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
             if (msg->has("raw")) {
