@@ -2,7 +2,7 @@ from pathlib import Path
 
 from qtpy import uic
 from qtpy.QtCore import Signal, Slot
-from qtpy.QtWidgets import QWidget
+from qtpy.QtWidgets import QToolButton, QWidget
 
 from karabogui import icons
 
@@ -33,11 +33,19 @@ class FindToolBar(QWidget):
 
         self.replace_button.clicked.connect(self.requestReplace)
         self.replace_all_button.clicked.connect(self.requestReplaceAll)
+        self.show_replace_tool_button.toggled.connect(
+            self.set_replace_widgets_visibility)
+        self.find_line_edit.findChild(QToolButton).setIcon(icons.close_small)
+        self.replace_line_edit.findChild(
+            QToolButton).setIcon(icons.close_small)
 
+    @Slot(bool)
     def set_replace_widgets_visibility(self, visible):
         for widget in (self.replace_label, self.replace_line_edit,
                        self.replace_button, self.replace_all_button):
             widget.setVisible(visible)
+        icon = icons.arrowDown if visible else icons.arrowRight
+        self.show_replace_tool_button.setIcon(icon)
 
     @Slot()
     def findNext(self):
