@@ -67,12 +67,13 @@ class CodeBook(QWidget):
             search_text = selected_text
         self.code_editor.highlight(search_text, match_case)
         self.find_toolbar.find_line_edit.setFocus()
+        self.find_toolbar.show_replace_tool_button.setChecked(False)
         self.find_toolbar.set_replace_widgets_visibility(False)
 
     @Slot()
     def showReplaceToolbar(self):
         self.showFindToolbar()
-        self.find_toolbar.set_replace_widgets_visibility(True)
+        self.find_toolbar.show_replace_tool_button.setChecked(True)
 
     @Slot(str, bool, bool)
     def _findNext(self, text, match_case, find_backward):
