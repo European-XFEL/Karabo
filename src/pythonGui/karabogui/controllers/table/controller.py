@@ -428,6 +428,8 @@ class BaseTableController(BaseBindingController):
 
     def _on_user_edit(self, data):
         """Callback method used by `self._item_model` when data changes"""
+        if self.proxy.binding is None:
+            return
         self.proxy.edit_value = data
 
     def _set_bindings(self, binding):
