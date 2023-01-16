@@ -269,6 +269,10 @@ void BaseLogging_Test::tearDown() {
     const Epochstamp start;
     std::clog << "Start tearDown " << start.toIso8601Ext() << std::endl;
 
+    m_sigSlot.reset();
+    m_deviceClient.reset();
+    m_deviceServer.reset();
+
     EventLoop::stop();
     if (m_eventLoopThread.joinable()) {
         bool joined = m_eventLoopThread.try_join_for(boost::chrono::seconds(10));
@@ -291,10 +295,6 @@ void BaseLogging_Test::tearDown() {
             setenv("PATH", m_oldPath.data(), 1);
         }
     }
-
-    m_sigSlot.reset();
-    m_deviceClient.reset();
-    m_deviceServer.reset();
 
     // So debug print for in between tests, see setUp()
     const Epochstamp stop;
