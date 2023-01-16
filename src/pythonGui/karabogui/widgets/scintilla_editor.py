@@ -225,6 +225,8 @@ class CodeEditor(QsciScintilla):
         if not match_case:
             options = options | QRegularExpression.CaseInsensitiveOption
         pattern = QRegularExpression(text, options)
+        if not pattern.isValid():
+            return
         matches = pattern.globalMatch(self.text())
 
         hit_count = 0
