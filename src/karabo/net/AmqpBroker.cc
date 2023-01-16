@@ -18,7 +18,6 @@
 
 using namespace karabo::util;
 
-
 #define AMQP_CLIENT_CLASS "AmqpClient"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::AmqpBroker)
@@ -33,8 +32,12 @@ namespace karabo {
         AmqpBroker::AmqpBroker(const karabo::util::Hash& config)
             : Broker(config),
               m_client(),
-              m_heartbeatConsumerChannel(),
-              m_logConsumerChannel(),
+              m_clientConsumerHandler(),
+              m_clientErrorNotifier(),
+              m_heartbeatConsumerHandler(),
+              m_heartbeatErrorNotifier(),
+              m_logConsumerHandler(),
+              m_logErrorNotifier(),
               m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
               m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
                                        std::chrono::system_clock::now().time_since_epoch())
@@ -50,8 +53,6 @@ namespace karabo {
         AmqpBroker::~AmqpBroker() {
             stopReading();
             m_client.reset();
-            m_heartbeatConsumerChannel.reset();
-            m_logConsumerChannel.reset();
         }
 
 
@@ -84,10 +85,8 @@ namespace karabo {
 
 
         void AmqpBroker::disconnect() {
-            if (m_logConsumerChannel && m_logConsumerChannel->isConnected()) m_logConsumerChannel->disconnect();
-            if (m_heartbeatConsumerChannel && m_heartbeatConsumerChannel->isConnected())
-                m_heartbeatConsumerChannel->disconnect();
             if (m_client && m_client->isConnected()) m_client->disconnect();
+            if (m_heartbeatClient && m_heartbeatClient->isConnected()) m_heartbeatClient->disconnect();
         }
 
 
@@ -101,22 +100,17 @@ namespace karabo {
         }
 
 
-        void AmqpBroker::amqpReadHashHandler(const boost::system::error_code& ec,
-                                             const std::string& exchange,   // publisher's exchange
-                                             const std::string& routingkey, // publisher's routingkey
-                                             const Hash::Pointer& msg, const consumer::MessageHandler& handler,
+        void AmqpBroker::amqpReadHashHandler(const boost::system::error_code& ec, const Hash::Pointer& msg,
+                                             const consumer::MessageHandler& handler,
                                              const consumer::ErrorNotifier& errorNotifier) {
-            if (m_client && m_client->isConnected() && !ec) {
+            if (!ec) {
                 auto header = boost::make_shared<Hash>(msg->get<Hash>("header"));
-                header->set("exchange", exchange);
-                header->set("routingkey", routingkey);
                 auto body = boost::make_shared<Hash>(msg->get<Hash>("body"));
                 m_handlerStrand->post(boost::bind(handler, header, body));
             } else {
                 // Error ...
                 std::ostringstream oss;
-                oss << "Exchange -> \"" << exchange << "\", routing key -> \"" << routingkey << "\" : Error code #"
-                    << ec.value() << " -- " << ec.message();
+                oss << "Message -> ...\n" << *msg << ": Error code #" << ec.value() << " -- " << ec.message();
                 if (errorNotifier) {
                     errorNotifier(consumer::Error::drop, oss.str()); // call error handler
                 } else {
@@ -128,11 +122,9 @@ namespace karabo {
 
         boost::system::error_code AmqpBroker::subscribeToRemoteSignal(const std::string& signalInstanceId,
                                                                       const std::string& signalFunction) {
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
-            auto fut = prom->get_future();
-            subscribeToRemoteSignalAsync(signalInstanceId, signalFunction,
-                                         [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
-            return fut.get();
+            const std::string exchange = m_topic + ".signals";
+            const std::string bindingKey = signalInstanceId + "." + signalFunction;
+            return m_client->subscribe(exchange, bindingKey);
         }
 
 
@@ -140,18 +132,17 @@ namespace karabo {
                                                       const std::string& signalFunction,
                                                       const AsyncHandler& completionHandler) {
             const std::string exchange = m_topic + ".signals";
-            const std::string bindingkey = signalInstanceId + "." + signalFunction;
-            m_client->subscribeAsync(exchange, bindingkey, completionHandler);
+            const std::string bindingKey = signalInstanceId + "." + signalFunction;
+            m_client->subscribeAsync(exchange, bindingKey, completionHandler);
         }
 
 
         boost::system::error_code AmqpBroker::unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
                                                                           const std::string& signalFunction) {
-            auto prom = std::make_shared<std::promise<boost::system::error_code> >();
-            auto fut = prom->get_future();
-            unsubscribeFromRemoteSignalAsync(signalInstanceId, signalFunction,
-                                             [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
-            return fut.get();
+            if (!m_client || !m_client->isConnected()) return KARABO_ERROR_CODE_SUCCESS;
+            const std::string exchange = m_topic + ".signals";
+            const std::string bindingKey = signalInstanceId + "." + signalFunction;
+            return m_client->unsubscribe(exchange, bindingKey);
         }
 
 
@@ -160,7 +151,7 @@ namespace karabo {
                                                           const AsyncHandler& completionHandler) {
             if (!m_client || !m_client->isConnected()) {
                 if (completionHandler) {
-                    m_handlerStrand->post(boost::bind(completionHandler, KARABO_ERROR_CODE_NOT_CONNECTED));
+                    m_handlerStrand->post(boost::bind(completionHandler, KARABO_ERROR_CODE_SUCCESS));
                 }
                 return;
             }
@@ -172,11 +163,6 @@ namespace karabo {
 
         void AmqpBroker::write(const std::string& target, const karabo::util::Hash::Pointer& header,
                                const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) {
-            if (!m_client || !m_client->isConnected()) {
-                std::ostringstream oss;
-                oss << "AmqpBroker.write: no broker connection.";
-                throw KARABO_NETWORK_EXCEPTION(oss.str());
-            }
             if (!header) {
                 throw KARABO_PARAMETER_EXCEPTION("AmqpBroker.write: header pointer is null");
             }
@@ -191,12 +177,37 @@ namespace karabo {
             if (target == m_topic + "_beats") {
                 exchange = m_topic + ".signals";
                 routingkey = m_instanceId + ".signalHeartbeat";
-
+                // Use m_heartbeatClient if exists ...
+                if (m_heartbeatClient) {
+                    auto msg = boost::make_shared<Hash>("header", *header, "body", *body);
+                    boost::system::error_code ec = m_heartbeatClient->publish(exchange, routingkey, msg);
+                    if (ec) {
+                        std::ostringstream oss;
+                        oss << "\"" << m_instanceId << "\" : Failed to publish heartbeat msg to \"" << exchange
+                            << "\" exchange with routing key = \"" << routingkey << "\" : code #" << ec.value()
+                            << " -- " << ec.message();
+                        throw KARABO_NETWORK_EXCEPTION(oss.str());
+                    }
+                    return;
+                }
             } else if (target == "karaboGuiDebug") {
                 exchange = "karaboGuiDebug";
 
             } else if (target == m_topic && header->has("target") && header->get<std::string>("target") == "log") {
                 exchange = m_topic + ".log";
+                // Use m_logClient if exists ...
+                if (m_logClient) {
+                    auto msg = boost::make_shared<Hash>("header", *header, "body", *body);
+                    boost::system::error_code ec = m_logClient->publish(exchange, routingkey, msg);
+                    if (ec) {
+                        std::ostringstream oss;
+                        oss << "\"" << m_instanceId << "\" : Failed to publish log msg to \"" << exchange
+                            << "\" exchange with routing key = \"" << routingkey << "\" : code #" << ec.value()
+                            << " -- " << ec.message();
+                        throw KARABO_NETWORK_EXCEPTION(oss.str());
+                    }
+                    return;
+                }
 
             } else if (target == m_topic) {
                 if (!header->has("signalFunction")) {
@@ -303,7 +314,6 @@ namespace karabo {
         }
 
 
-        // This method is protected and virtual ... can be overridden in derived class
         void AmqpBroker::publish(const std::string& exchange, const std::string& routingkey,
                                  const karabo::util::Hash::Pointer& message) {
             boost::system::error_code ec;
@@ -320,22 +330,31 @@ namespace karabo {
 
         void AmqpBroker::startReading(const consumer::MessageHandler& handler,
                                       const consumer::ErrorNotifier& errorNotifier) {
-            std::string exchange = m_topic + ".slots";
-            std::string bindingkey = m_instanceId;
+            m_clientConsumerHandler = handler;
+            m_clientErrorNotifier = errorNotifier;
 
-            auto readHandler =
-                  bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, _3, _4, handler, errorNotifier);
+            std::string exchange = m_topic + ".slots";
+            std::string bindingKey = m_instanceId;
+
+            auto readHandler = bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, handler, errorNotifier);
+
+            if (!m_client) {
+                throw KARABO_LOGIC_EXCEPTION("startReading: client is not initialized");
+            }
+            if (!m_client->isConnected()) {
+                throw KARABO_LOGIC_EXCEPTION("startReading: client is not connected");
+            }
             m_client->registerConsumerHandler(readHandler);
 
-            boost::system::error_code ec = m_client->subscribe(exchange, bindingkey);
+            boost::system::error_code ec = m_client->subscribe(exchange, bindingKey);
             if (!ec && m_consumeBroadcasts) {
                 exchange = m_topic + ".global_slots";
-                bindingkey = "";
-                ec = m_client->subscribe(exchange, bindingkey);
+                bindingKey = "";
+                ec = m_client->subscribe(exchange, bindingKey);
             }
             if (ec) {
                 std::ostringstream oss;
-                oss << "Subscription to exchange -> \"" << exchange << "\", binding key -> \"" << bindingkey
+                oss << "Subscription to exchange -> \"" << exchange << "\", binding key -> \"" << bindingKey
                     << "\" failed: #" << ec.value() << " -- " << ec.message();
                 throw KARABO_NETWORK_EXCEPTION(oss.str());
             }
@@ -345,19 +364,27 @@ namespace karabo {
         void AmqpBroker::stopReading() {
             if (m_topic.empty() || m_instanceId.empty()) return;
             m_client->close();
-            if (m_heartbeatConsumerChannel) m_heartbeatConsumerChannel->close();
-            if (m_logConsumerChannel) m_logConsumerChannel->close();
+            if (m_heartbeatClient) m_heartbeatClient->close();
+            if (m_logClient) m_logClient->close();
+            // clear handlers as well
+            m_clientConsumerHandler = karabo::net::consumer::MessageHandler();
+            m_clientErrorNotifier = karabo::net::consumer::ErrorNotifier();
+            m_heartbeatConsumerHandler = karabo::net::consumer::MessageHandler();
+            m_heartbeatErrorNotifier = karabo::net::consumer::ErrorNotifier();
         }
 
 
         void AmqpBroker::startReadingHeartbeats(const consumer::MessageHandler& handler,
                                                 const consumer::ErrorNotifier& errorNotifier) {
-            if (!m_heartbeatConsumerChannel) {
-                Hash amqpConfig("brokers", m_availableBrokerUrls);
-                amqpConfig.set("instanceId", m_instanceId);
-                amqpConfig.set("domain", m_topic);
-                m_heartbeatConsumerChannel = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, amqpConfig);
-                boost::system::error_code ec = m_heartbeatConsumerChannel->connect();
+            m_heartbeatConsumerHandler = handler;
+            m_heartbeatErrorNotifier = errorNotifier;
+
+            if (!m_heartbeatClient) {
+                Hash config("brokers", m_availableBrokerUrls);
+                config.set("instanceId", m_instanceId + ":beats");
+                config.set("domain", m_topic);
+                m_heartbeatClient = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config);
+                boost::system::error_code ec = m_heartbeatClient->connect();
                 if (ec) {
                     std::ostringstream oss;
                     oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
@@ -365,17 +392,15 @@ namespace karabo {
                 }
             }
 
+            auto readHandler = bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, handler, errorNotifier);
+            m_heartbeatClient->registerConsumerHandler(readHandler);
+
             const std::string exchange = m_topic + ".signals";
-            const std::string bindingkey = "*.signalHeartbeat";
-
-            auto readHandler =
-                  bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, _3, _4, handler, errorNotifier);
-            m_heartbeatConsumerChannel->registerConsumerHandler(readHandler);
-
-            boost::system::error_code ec = m_heartbeatConsumerChannel->subscribe(exchange, bindingkey);
+            const std::string bindingKey = "*.signalHeartbeat";
+            boost::system::error_code ec = m_heartbeatClient->subscribe(exchange, bindingKey);
             if (ec) {
                 std::ostringstream oss;
-                oss << "Failed to subscribe to exchange -> \"" << exchange << "\", bindingkey->\"" << bindingkey
+                oss << "Failed to subscribe to exchange -> \"" << exchange << "\", bindingkey->\"" << bindingKey
                     << "\" : code #" << ec.value() << " -- " << ec.message();
                 throw KARABO_NETWORK_EXCEPTION(oss.str());
             }
@@ -384,12 +409,15 @@ namespace karabo {
 
         void AmqpBroker::startReadingLogs(const consumer::MessageHandler& handler,
                                           const consumer::ErrorNotifier& errorNotifier) {
-            if (!m_logConsumerChannel) {
-                Hash amqpConfig("brokers", m_availableBrokerUrls);
-                amqpConfig.set("instanceId", m_instanceId);
-                amqpConfig.set("domain", m_topic);
-                m_logConsumerChannel = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, amqpConfig);
-                boost::system::error_code ec = m_logConsumerChannel->connect();
+            m_logConsumerHandler = handler;
+            m_logErrorNotifier = errorNotifier;
+
+            if (!m_logClient) {
+                Hash config("brokers", m_availableBrokerUrls);
+                config.set("instanceId", m_instanceId + ":rdlog");
+                config.set("domain", m_topic);
+                m_logClient = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config);
+                boost::system::error_code ec = m_logClient->connect();
                 if (ec) {
                     std::ostringstream oss;
                     oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
@@ -397,17 +425,15 @@ namespace karabo {
                 }
             }
 
+            auto readHandler = bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, handler, errorNotifier);
+            m_logClient->registerConsumerHandler(readHandler);
+
             const std::string exchange = m_topic + ".log";
-            const std::string bindingkey = "";
-
-            auto readHandler =
-                  bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, _3, _4, handler, errorNotifier);
-            m_logConsumerChannel->registerConsumerHandler(readHandler);
-
-            boost::system::error_code ec = m_logConsumerChannel->subscribe(exchange, bindingkey);
+            const std::string bindingKey = "";
+            boost::system::error_code ec = m_logClient->subscribe(exchange, bindingKey);
             if (ec) {
                 std::ostringstream oss;
-                oss << "Failed to subscribe to exchange -> \"" << exchange << "\", bindingkey->\"" << bindingkey
+                oss << "Failed to subscribe to exchange -> \"" << exchange << "\", bindingkey->\"" << bindingKey
                     << "\" : code #" << ec.value() << " -- " << ec.message();
                 throw KARABO_NETWORK_EXCEPTION(oss.str());
             }
