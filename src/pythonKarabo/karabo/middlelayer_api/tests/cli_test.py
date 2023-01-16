@@ -5,9 +5,11 @@ from asyncio import (
     ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
 from itertools import count
-from unittest import TestCase, main
+
+import pytest
 
 from karabo.common.states import State
+from karabo.middlelayer.testing import assertLogs, setEventLoop
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     callNoWait, findDevices, getClients, getDevice, getDevices, shutdown)
@@ -15,7 +17,6 @@ from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.ikarabo import (
     DeviceClient, connectDevice, start_device_client)
 from karabo.middlelayer_api.macro import EventThread, Macro, RemoteDevice
-from karabo.middlelayer_api.tests.eventloop import setEventLoop
 from karabo.native import Int32 as Int, KaraboError, Slot
 
 
@@ -74,147 +75,157 @@ class Other(Device):
             await sleep(0.02)
 
 
-class Tests(TestCase):
-    def test_delete(self):
-        thread = EventThread()
-        thread.start()
-        try:
-            remote = Remote()
-            remote.count()
-            self.assertEqual(remote.counter, 29)
-            r = weakref.ref(remote)
-            Remote.destructed = False
-            del remote
-            time.sleep(0.02)
-            gc.collect()
-            time.sleep(0.02)
-            self.assertIsNone(r())
-            self.assertTrue(Remote.destructed)
-        finally:
+@pytest.mark.timeout(30)
+def test_delete():
+    thread = EventThread()
+    thread.start()
+    try:
+        remote = Remote()
+        remote.count()
+        assert remote.counter == 29
+        r = weakref.ref(remote)
+        Remote.destructed = False
+        del remote
+        time.sleep(0.02)
+        gc.collect()
+        time.sleep(0.02)
+        assert r() is None
+        assert Remote.destructed
+    finally:
+        thread.stop()
+        thread.join(0.5)
+        assert not thread.is_alive()
+
+
+@pytest.mark.timeout(30)
+def test_main():
+    Remote.main(["", "count", "counter=7"])
+
+
+@pytest.mark.timeout(30)
+def test_remote_timeout():
+    """Test that remote devices can timeout and send logs"""
+    thread = None
+    try:
+        # start a thread with event loop and then try
+        # to run the device
+        thread = start_device_client()
+        with assertLogs("NoRemote"):
+            NoRemote(_deviceId_="NoRemote")
+    finally:
+        if thread is not None:
             thread.stop()
             thread.join(0.5)
-            self.assertFalse(thread.is_alive())
+            assert not thread.is_alive()
 
-    def test_main(self):
-        Remote.main(["", "count", "counter=7"])
 
-    def test_remote_timeout(self):
-        """Test that remote devices can timeout and send logs"""
-        thread = None
-        try:
-            # start a thread with event loop and then try
-            # to run the device
+@pytest.mark.timeout(60)
+def test_autodisconnect():
+    """test the automatic disconnect after 15 s ATTENTION! LONG TEST!
+
+    this tests that a device connected to by connectDevice automatically
+    disconnects again after 15 s. Unfortunately this means the test
+    needs to run very long..."""
+    thread = EventThread()
+    thread.start()
+    try:
+        devices = DeviceClient(_deviceId_="ikarabo-test")
+        oel = get_event_loop()
+        set_event_loop(NoEventLoop(devices))
+        time.sleep(0.1)
+
+        other = None
+
+        async def init_other():
+            nonlocal other
+            other = Other(dict(_deviceId_="other", _serverId_="tserver"))
+            await other.startInstance()
+
+        thread.loop.call_soon_threadsafe(ensure_future, init_other())
+        time.sleep(4)
+
+        # test whether proxy stays alive while used
+        other = connectDevice("other")
+        assert other.state == State.ON
+        other.count()
+        lastcount = -2
+        for i in range(20):
+            assert other.state == State.PROCESSING
+            assert lastcount < other.counter
+            lastcount = other.counter
+            time.sleep(1)
+
+        # test proxy disconnects when not used
+        time.sleep(16)
+        # but call to stop counting, we don't receive the state
+        # update as well
+        callNoWait("other", "stopCount")
+        lastcount = other.__dict__["counter"]
+        laststate = other.__dict__["state"]
+        time.sleep(3)
+        assert other.__dict__["counter"] == lastcount
+        assert laststate == State.PROCESSING
+        # reconnect with fresh state and counter
+        assert other.counter != lastcount
+        assert other.state == State.ON
+
+        set_event_loop(oel)
+        del other
+    finally:
+        thread.stop()
+        thread.join(5)
+        assert not thread.is_alive()
+
+
+@pytest.mark.timeout(30)
+def test_topology():
+    loop = setEventLoop()
+    with closing(loop):
+        dc = DeviceClient(dict(_deviceId_="ikarabo-test2"))
+        loop.run_until_complete(dc.startInstance())
+
+        async def init_topo(dc):
+            other = Other(dict(_deviceId_="other", _serverId_="tserver"))
+            assert "other" not in getDevices()
+            assert "other" not in getClients()
+            assert "other" not in getDevices("tserver")
+
+            await other.startInstance()
+            await sleep(0.1)
+            assert "other" in getDevices()
+            assert "other" in getDevices("tserver")
+            assert "other" not in findDevices("beep")
+            assert "other" in findDevices("other")
+            assert "other" in findDevices("OTHER")
+            assert "other" in findDevices("OT")
+            assert "other" not in getDevices("bserver")
+
+            double = Other(dict(_deviceId_="other", _serverId_="bserver"))
+            with pytest.raises(KaraboError):
+                await double.startInstance()
+            assert "other" in getDevices()
+            assert "other" in getDevices("tserver")
+            assert "other" not in getDevices("bserver")
+            await shutdown("other")
+            assert "other" not in getDevices()
+
+        task = loop.create_task(init_topo(dc), dc)
+        loop.run_until_complete(task)
+        loop.run_until_complete(dc.slotKillDevice())
+
+
+@pytest.mark.timeout(30)
+def test_ikarabo():
+    thread = None
+    try:
+        with assertLogs(level="WARNING"):
             thread = start_device_client()
-            with self.assertLogs("NoRemote"):
-                NoRemote(_deviceId_="NoRemote")
-        finally:
-            if thread is not None:
-                thread.stop()
-                thread.join(0.5)
-                self.assertFalse(thread.is_alive())
-
-    async def init_other(self):
-        self.other = Other(dict(_deviceId_="other", _serverId_="tserver"))
-        await self.other.startInstance()
-
-    def test_autodisconnect(self):
-        """test the automatic disconnect after 15 s ATTENTION! LONG TEST!
-
-        this tests that a device connected to by connectDevice automatically
-        disconnects again after 15 s. Unfortunately this means the test
-        needs to run very long..."""
-        thread = EventThread()
-        thread.start()
-        try:
-            devices = DeviceClient(_deviceId_="ikarabo-test")
-            oel = get_event_loop()
-            set_event_loop(NoEventLoop(devices))
-            time.sleep(0.1)
-            thread.loop.call_soon_threadsafe(ensure_future, self.init_other())
-            time.sleep(4)
-
-            # test whether proxy stays alive while used
-            other = connectDevice("other")
-            self.assertEqual(other.state, State.ON)
-            other.count()
-            lastcount = -2
-            for i in range(20):
-                self.assertEqual(other.state, State.PROCESSING)
-                self.assertLess(lastcount, other.counter)
-                lastcount = other.counter
-                time.sleep(1)
-
-            # test proxy disconnects when not used
-            time.sleep(16)
-            # but call to stop counting, we don't receive the state
-            # update as well
-            callNoWait("other", "stopCount")
-            lastcount = other.__dict__["counter"]
-            laststate = other.__dict__["state"]
-            time.sleep(3)
-            self.assertEqual(other.__dict__["counter"], lastcount)
-            self.assertEqual(laststate, State.PROCESSING)
-            # reconnect with fresh state and counter
-            self.assertNotEqual(other.counter, lastcount)
-            self.assertEqual(other.state, State.ON)
-
-            set_event_loop(oel)
-            del self.other
-        finally:
+    except AssertionError:
+        pass
+    else:
+        assert False, "no log should be generated!"
+    finally:
+        if thread is not None:
             thread.stop()
-            thread.join(5)
-            self.assertFalse(thread.is_alive())
-    test_autodisconnect.slow = 1
-
-    async def init_topo(self, dc):
-        other = Other(dict(_deviceId_="other", _serverId_="tserver"))
-        self.assertNotIn("other", getDevices())
-        self.assertNotIn("other", getClients())
-        self.assertNotIn("other", getDevices("tserver"))
-        await other.startInstance()
-        await sleep(0.1)
-        self.assertIn("other", getDevices())
-        self.assertIn("other", getDevices("tserver"))
-        self.assertNotIn("other", findDevices("beep"))
-        self.assertIn("other", findDevices("other"))
-        self.assertIn("other", findDevices("OTHER"))
-        self.assertIn("other", findDevices("OT"))
-        self.assertNotIn("other", getDevices("bserver"))
-
-        double = Other(dict(_deviceId_="other", _serverId_="bserver"))
-        with self.assertRaises(KaraboError):
-            await double.startInstance()
-        self.assertIn("other", getDevices())
-        self.assertIn("other", getDevices("tserver"))
-        self.assertNotIn("other", getDevices("bserver"))
-
-        await shutdown("other")
-        self.assertNotIn("other", getDevices())
-
-    def test_topology(self):
-        loop = setEventLoop()
-        with closing(loop):
-            dc = DeviceClient(dict(_deviceId_="ikarabo-test2"))
-            loop.run_until_complete(dc.startInstance())
-            task = loop.create_task(self.init_topo(dc), dc)
-            loop.run_until_complete(task)
-            loop.run_until_complete(dc.slotKillDevice())
-
-    def test_ikarabo(self):
-        thread = None
-        try:
-            with self.assertLogs(level="WARNING"):
-                thread = start_device_client()
-        except AssertionError:
-            pass
-        else:
-            self.fail("no log should be generated!")
-        finally:
-            if thread is not None:
-                thread.stop()
-                thread.join(0.5)
-                self.assertFalse(thread.is_alive())
-
-
-if __name__ == "__main__":
-    main()
+            thread.join(0.5)
+            assert not thread.is_alive()
