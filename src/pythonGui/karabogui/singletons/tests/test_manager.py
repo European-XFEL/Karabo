@@ -536,8 +536,20 @@ class TestManager(GuiTestCase):
                 mbox.show_error.assert_called_with(
                     'The instance <b>bob</b> could not be instantiated.. '
                     '<br><br>The reason is:<br><i>mandatory key '
-                    'missing</i><br><br>Click "Show Details..." '
-                    'for more information.', details=None)
+                    'missing</i><br>', details=None)
+
+                # details case
+                info = {
+                    'deviceId': 'bob',
+                    'message': 'mandatory key missing\nDetails:\nhost missing',
+                    'success': False}
+                manager.handle_initReply(**info)
+                mbox.show_error.assert_called_with(
+                    'The instance <b>bob</b> could not be instantiated.. '
+                    '<br><br>The reason is:<br><i>mandatory key '
+                    'missing</i><br><br>Click '
+                    '"Show Details..." for more information.',
+                    details="host missing")
 
     def test_handle_log_messages(self):
         target = 'karabogui.singletons.manager.broadcast_event'
@@ -668,13 +680,26 @@ class TestManager(GuiTestCase):
                 "success", False,
                 "input", Hash("deviceId", "XFEL/MOTOR/2",
                               "command", "move"),
-                "reason", "timeout in gui server")
+                "reason", "timeout in gui server\nDetails:\nNot online")
             manager.handle_executeReply(**info)
             mbox.show_error.assert_called_with(
                 'Execute slot <b>move</b> of device <b>XFEL/MOTOR/2</b> has '
                 'encountered an error!<br><br>The reason is:'
                 '<br><i>timeout in gui server</i><br><br>Click '
                 '"Show Details..." for more information.',
+                details="Not online")
+
+            # No details test
+            info = Hash(
+                "success", False,
+                "input", Hash("deviceId", "XFEL/MOTOR/2",
+                              "command", "move"),
+                "reason", "timeout in gui server")
+            manager.handle_executeReply(**info)
+            mbox.show_error.assert_called_with(
+                'Execute slot <b>move</b> of device <b>XFEL/MOTOR/2</b> has '
+                'encountered an error!<br><br>The reason is:'
+                '<br><i>timeout in gui server</i><br>',
                 details=None)
 
     def test_handle_deviceConfigurations(self):
