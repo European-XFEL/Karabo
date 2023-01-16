@@ -75,8 +75,18 @@ class AmqpBroker(Broker):
             routing_key = <deviceId>
             queue = <deviceId>
         """
-        declare_ok = await self.channel.queue_declare(
-            auto_delete=True)
+        name = f'{self.domain}.{self.deviceId}'
+        try:
+            await self.channel.queue_declare(name, passive=True)
+            # If no exception raised the the queue name exists already ...
+            # To continue  just use generated queue name...
+            name = ""
+        except aiormq.exceptions.ChannelNotFoundEntity:
+            # Exception raised since the queue not found on the broker
+            # The channel is not valid anymore, so create the new one
+            self.channel = await self.connection.channel()
+        declare_ok = await self.channel.queue_declare(name, auto_delete=True)
+        # The received queue name (either input or generated) is ...
         self.queue = declare_ok.queue
         # create main exchange : <domain>.slots
         exchange = f"{self.domain}.slots"
