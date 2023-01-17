@@ -41,7 +41,7 @@ def ensure_running(func):
 
 class AmqpBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(AmqpBroker, self).__init__(True)
+        super().__init__(True)
         self.domain = loop.topic
         self.loop = loop
         self.connection = None
@@ -55,6 +55,8 @@ class AmqpBroker(Broker):
         self.channel = None  # channel for communication
         self.queue = None  # main queue
         self.consumer_tag = None  # tag returned by consume method
+        self.heartbeat_queue = None
+        self.heartbeat_consumer_tag = None
         # Connection birth time representing device ID incarnation.
         self.timestamp = time.time() * 1000000 // 1000  # float
         self.exit_event = asyncio.Event()
@@ -342,9 +344,7 @@ class AmqpBroker(Broker):
         except BaseException:
             self.logger.exception("Malformed message")
             return
-        self._handleMessage(decoded, device)
 
-    def _handleMessage(self, decoded, device):
         try:
             slots, params = self.decodeMessage(decoded)
         except BaseException:
@@ -395,6 +395,9 @@ class AmqpBroker(Broker):
         if self.consumer_tag is not None:
             await self.channel.basic_cancel(self.consumer_tag)
             self.consumer_tag = None
+        if self.heartbeat_consumer_tag is not None:
+            await self.channel.basic_cancel(self.heartbeat_consumer_tag)
+            self.heartbeat_consumer_tag = None
         self.exit_event.set()
         await self._stop_heartbeat()
         await self.async_unsubscribe_all()
@@ -413,8 +416,37 @@ class AmqpBroker(Broker):
         # Be under exitStack scope as soon as queue is alive
         await self.exit_event.wait()
 
-    async def consume_beats(self, server):
+    async def on_heartbeat(self, device, message):
+        d = device()
+        if d is not None:
+            message = message.body
+            try:
+                _, pos = decodeBinaryPos(message)
+                hsh = decodeBinary(message[pos:])
+            except BaseException:
+                self.logger.exception("Malformed message")
+            else:
+                instance_id, info = hsh["a1"], hsh["a3"]
+                await d.updateHeartBeat(instance_id, info)
+
+    async def consume_beats(self, device):
         """Heartbeat method for the device server"""
+        device = weakref.ref(device)
+        declare_ok = await self.channel.queue_declare(
+            auto_delete=True)
+        self.heartbeat_queue = declare_ok.queue
+        consume_ok = await self.channel.basic_consume(
+            self.heartbeat_queue, partial(self.on_heartbeat, device),
+            no_ack=True)
+        self.heartbeat_consumer_tag = consume_ok.consumer_tag
+
+        # Binding and book-keeping!
+        exchange = f"{self.domain}.signals"
+        key = "*.signalHeartbeat"
+        await self.channel.queue_bind(self.heartbeat_queue, exchange,
+                                      routing_key=key)
+        async with self.subscribe_lock:
+            self.subscriptions.add((exchange, key))
 
     def decodeMessage(self, hash):
         """Decode a Karabo message
