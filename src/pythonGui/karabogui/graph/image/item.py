@@ -327,7 +327,7 @@ class KaraboImageItem(GraphicsObject):
             if image.dtype != np.uint8:
                 image = image.astype(np.uint8)
 
-            self._slice_rect = QRectF(0, 0, *image.shape[:2])
+            self._slice_rect = QRectF(0, 0, *reversed(image.shape[:2]))
             self.qimage = self._build_qimage(image, img_format)
 
     def _build_qimage(self, image, img_format):
