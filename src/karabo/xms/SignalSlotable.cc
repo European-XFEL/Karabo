@@ -1571,7 +1571,9 @@ namespace karabo {
             AsyncReply aReply(this);
             m_connection->subscribeToRemoteSignalAsync(
                   signalInstanceId, signalFunction,
-                  [this, aReply{std::move(aReply)}](const boost::system::error_code& ec) {
+                  [weakSelf{weak_from_this()}, aReply{std::move(aReply)}](const boost::system::error_code& ec) {
+                      auto self = weakSelf.lock();
+                      if (!self) return; // If we are (going) down, one must not use an AsyncReply of us anymore
                       if (ec) {
                           std::ostringstream oss;
                           oss << "Connect signal-slot failed: #" << ec.value() << " -- " << ec.message();
@@ -1588,7 +1590,9 @@ namespace karabo {
             AsyncReply aReply(this);
             m_connection->unsubscribeFromRemoteSignalAsync(
                   signalInstanceId, signalFunction,
-                  [this, aReply{std::move(aReply)}](const boost::system::error_code& ec) {
+                  [weakSelf{weak_from_this()}, aReply{std::move(aReply)}](const boost::system::error_code& ec) {
+                      auto self = weakSelf.lock();
+                      if (!self) return; // If we are (going) down, one must not use an AsyncReply of us anymore
                       if (ec) {
                           std::ostringstream oss;
                           oss << "Disconnect signal-slot failed: #" << ec.value() << " -- " << ec.message();
@@ -1618,7 +1622,7 @@ namespace karabo {
             storeConnection(signalInstanceId, signalSignature, slotInstanceId, slotSignature);
 
             // Prepare a success handler for the request to slotConnectToSignal:
-            auto signalConnectedHandler = [this, signalInstanceId, signalSignature, slotInstanceId, slotSignature,
+            auto signalConnectedHandler = [signalInstanceId, signalSignature, slotInstanceId, slotSignature,
                                            successHandler{std::move(successHandler)},
                                            failureHandler{std::move(failureHandler)}](bool signalExists) {
                 if (signalExists) {
@@ -1651,11 +1655,13 @@ namespace karabo {
                 }
             }; // end of lambda definition of success handler for slotHasSlot
 
-            auto successConnectSignalSlot = [this, slotInstanceId, slotSignature, timeout,
+            auto successConnectSignalSlot = [weakSelf{weak_from_this()}, slotInstanceId, slotSignature, timeout,
                                              hasSlotSuccessHandler{std::move(hasSlotSuccessHandler)},
                                              failureHandler{std::move(failureHandler)}]() {
+                auto self = weakSelf.lock();
+                if (!self) return;
                 // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
-                auto requestor = request(slotInstanceId, "slotHasSlot", slotSignature);
+                auto requestor = self->request(slotInstanceId, "slotHasSlot", slotSignature);
                 if (timeout > 0) requestor.timeout(timeout);
                 requestor.receiveAsync<bool>(
                       hasSlotSuccessHandler, (failureHandler ? failureHandler : [slotInstanceId] {
@@ -1664,7 +1670,7 @@ namespace karabo {
             };
 
             if (m_instanceId == slotInstanceId) {
-                auto onComplete = [this, failureHandler{std::move(failureHandler)},
+                auto onComplete = [failureHandler{std::move(failureHandler)},
                                    successConnectSignalSlot{std::move(successConnectSignalSlot)}](
                                         const boost::system::error_code& ec) {
                     if (ec) {
@@ -1682,7 +1688,7 @@ namespace karabo {
                       request(slotInstanceId, "slotSubscribeRemoteSignal", signalInstanceId, signalSignature);
                 if (timeout > 0) requestor.timeout(timeout);
 
-                auto handler = [this, slotInstanceId, failureHandler{std::move(failureHandler)},
+                auto handler = [slotInstanceId, failureHandler{std::move(failureHandler)},
                                 successConnectSignalSlot{std::move(successConnectSignalSlot)}](const bool& ok) {
                     if (ok) {
                         successConnectSignalSlot();
