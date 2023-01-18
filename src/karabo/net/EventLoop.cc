@@ -79,12 +79,18 @@ namespace karabo {
 
 
         void EventLoop::run() {
-            // First reset io service if e.g. stop() was called before this run()
-            // and after a previous run() had finished since out of work.
             auto loop = instance();
-            loop->m_ioService.reset();
-            loop->runProtected();
-            loop->clearThreadPool();
+            loop->_run();
+        }
+
+        void EventLoop::_run() {
+            // First restart io service if e.g. stop() was called
+            // before this run() and after a previous run() had finished since out of work.
+            m_running = true;
+            m_ioService.restart();
+            runProtected();
+            clearThreadPool();
+            m_running = false;
         }
 
 
@@ -123,13 +129,25 @@ namespace karabo {
 
         void EventLoop::_addThread(const int nThreads) {
             auto loop = instance();
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
-            for (int i = 0; i < nThreads; ++i) {
-                boost::thread* thread = m_threadPool.create_thread(boost::bind(&EventLoop::runProtected, loop));
-                m_threadMap[thread->get_id()] = thread;
-                KARABO_LOG_FRAMEWORK_DEBUG << "A thread (id: " << thread->get_id()
-                                           << ") was added to the event-loop, now running: " << m_threadPool.size()
-                                           << " threads in total";
+            auto add = [loop, nThreads]() {
+                boost::mutex::scoped_lock lock(loop->m_threadPoolMutex);
+                for (int i = 0; i < nThreads; ++i) {
+                    boost::thread* thread =
+                          loop->m_threadPool.create_thread(boost::bind(&EventLoop::runProtected, loop));
+                    loop->m_threadMap[thread->get_id()] = thread;
+                    KARABO_LOG_FRAMEWORK_DEBUG
+                          << "A thread (id: " << thread->get_id()
+                          << ") was added to the event-loop, now running: " << loop->m_threadPool.size()
+                          << " threads in total";
+                }
+            };
+            // If main thread is already running, we can directly add the thread. Otherwise we have to postpone to avoid
+            // that the new thread calls m_ioService.run() before EventLoop::run() calls m_ioService.restart().
+            if (m_running) {
+                add();
+            } else {
+                // Postpone until main thread is running.
+                m_ioService.post(add);
             }
         }
 
