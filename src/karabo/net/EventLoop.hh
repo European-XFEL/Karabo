@@ -68,9 +68,9 @@ namespace karabo {
             /** Start the event loop and block until all work posted to its io service is
              *  completed or until EventLoop::stop() is called.
              *
-             *  Frequently, this function should be called in a separate thread, which
-             *  blocks upon joining until all work has been processed or stop has been
-             *  called.
+             *  This function may be called in a separate thread, which blocks upon joining
+             *  until all work has been processed or stop has been called.
+             *  Must not be called in parallel to each other.
              */
             static void run();
 
@@ -97,7 +97,7 @@ namespace karabo {
             static void setSignalHandler(const SignalHandler& handler);
 
            private:
-            EventLoop() = default;
+            EventLoop() : m_running(false){};
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:
             EventLoop(const EventLoop&) = delete;
@@ -106,6 +106,8 @@ namespace karabo {
             static void init();
 
             static boost::shared_ptr<EventLoop> instance();
+
+            void _run();
 
             void _addThread(const int nThreads);
 
@@ -129,6 +131,7 @@ namespace karabo {
             boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
             mutable boost::mutex m_threadPoolMutex;
+            bool m_running;
 
             static boost::shared_ptr<EventLoop> m_instance;
             static boost::once_flag m_initInstanceFlag;
