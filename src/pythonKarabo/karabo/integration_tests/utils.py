@@ -7,6 +7,7 @@ from unittest import TestCase
 
 from karabo.bound import DeviceClient, EventLoop
 
+# Added to trigger python integration tests. REMOVE ME!
 
 def start_bound_server(server_id, args, plugin_dir=''):
     """Start a Bound API device server in its own process
