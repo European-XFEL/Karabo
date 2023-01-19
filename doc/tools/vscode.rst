@@ -98,135 +98,54 @@ or with::
 depending on the access mode you have configured for the remote
 Karabo git repository.
 
-1.5. Install Miniconda
-----------------------
-
-The `cmake` build of the Karabo Framework library requires all the build dependencies
-to be available on the building system. A good and less invasive approach to
-guarantee that is to create a `Conda` environment with those dependencies installed.
-
-Due to its smaller size, `Miniconda` is recommended over `Anaconda`. If you already
-have Anaconda installed, everything should work fine as well.
-
-To install Miniconda, please follow the instructions at
-https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html.
-
-
-1.6. Create the Conda Environment with the Karabo Framework dependencies
-------------------------------------------------------------------------
-
-Once Conda is installed, an XFEL hosted Conda channel will be needed to get
-some of the Karabo Framework dependencies. To add those channels, run::
-
-   conda config --add channels http://exflserv05.desy.de/karabo/channel
-
-If you are outside the `DESY` network, an SSH tunnel will be needed as the host
-`exflserv05.desy.de` is not public. A detailed explanation on how to add the channels
-when outside the DESY network can be seem at
-https://in.xfel.eu/readthedocs/docs/karabo/en/latest/installation/gui.html#remote-installations.
-
-While validating the installation tests on a test machine, it happened that the
-Miniconda installation lacked the `conda-forge` channel. As this channel is
-required for some of the Karabo Framework dependencies, please make sure that
-`conda-forge` is listed as an output for the following command::
-
-   conda config --show channels
-
-If `conda-forge` is not listed, please run the following command and list the
-channels again to make sure it has been properly added::
-
-   conda config --add channels https://conda.anaconda.org/conda-forge
-
-The next step is to create a Conda environment with the packages corresponding
-to the Karabo Framework dependencies installed. For that the `conda-devenv`
-package is needed::
-
-   conda install conda-devenv -c conda-forge
-   conda devenv -f [KARABO_FRAMEWORK_DIR]/conda-recipes/karabo-cpp/environment.devenv.yml
-
-Replace [KARABO_FRAMEWORK_DIR] with the path of the directory where you cloned
-the `Framework` repository to in step 1.4.
-
-1.7. Configure the VSCode for the Karabo Framework Workspace
+1.5. Configure the VSCode for the Karabo Framework Workspace
 ------------------------------------------------------------
 
-Go to the directory where you cloned the Karabo Framework in the previous
-step and create a `.vscode` sub-directory in there - do not worry, `.vscode`
-is already included in the repository's `.gitignore` file. In the `.vscode`
-directory, create a `settings.json` file with the following content::
+To setup VSCode with the appropriate CMake related options for building the
+Karabo Framework, go to the directory where you cloned the Karabo Framework in 
+the previous step and from there run the script `build/karabo/setupVSCodeCMake.py`.
+The script will create (or update) the file `.vscode/settings.json` used by 
+VSCode as the settings for the workspace for the Karabo Framework project. 
+The script is pretty safe: it backs-up any existing version of the `settings.json` 
+file and it only sets the entries related to CMake. An example of the settings
+updated (or added) by the script is given::
 
-   {
-      "cmake.buildDirectory": "${workspaceFolder}/../[BUILD_DIR]",
-      "cmake.sourceDirectory": "${workspaceFolder}/src",
-      "cmake.configureSettings": {
-         "CMAKE_PREFIX_PATH": "[CONDA_ENV_DIR]",
-         "CMAKE_INSTALL_PREFIX": "[KARABO_FRAMEWORK_INSTALL_DIR]",
-         "CMAKE_BUILD_TYPE": "Debug",
-         "BUILD_UNIT_TESTING": 1,
-         "BUILD_INTEGRATION_TESTING": 1,
-      }
+    "cmake.sourceDirectory": "/home/bob/work/Framework/src",
+    "cmake.buildDirectory": "/home/bob/work/Framework/build_debug",
+    "cmake.cmakePath": "/home/bob/work/Framework/extern/Ubuntu-20-x86_64/bin/cmake",
+    "cmake.configureSettings": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "/home/bob/work/Framework/package/Debug/Ubuntu/20/x86_64/karabo",
+        "CMAKE_PREFIX_PATH": "/home/bob/work/Framework/extern/Ubuntu-20-x86_64",
+        "BUILD_UNIT_TESTING": "1",
+        "BUILD_INTEGRATION_TESTING": "0",
+        "BUILD_LONG_RUN_TESTING": "0",
+        "GEN_CODE_COVERAGE": "0"
+    }
+
+The `cmake.sourceDirectory` informs the VSCode CMake extension about the location of the 
+root `CMakeLists.txt` file. If this parameter is not specified, VSCode will complain about 
+not finding a `CMakeLists.txt` file in the root of the workspace and will prompt you to manually
+choose the main `CMakeLists.txt` among all the `CMakeLists.txt` files it finds in the workspace.
+
+As the Gitlab CI of the Karabo Framework project checks the formatting of the C++
+source files for compliance with a standard style, it is recommended to also setup 
+the options related to automatic formatting by VSCode. The standard style checked against 
+is defined by the configurations in the `.clang-format` file at the root of the Karabo Framework
+repository. A recommended configuration is shown by the excerpt of the `.vscode/settings.json` file shown below:: 
+
       "editor.defaultFormatter": null,
       "editor.formatOnPaste": true,
       "editor.formatOnSave": true,
       "editor.formatOnSaveMode": "file",
       "C_Cpp.formatting": "clangFormat",
-      "C_Cpp.clang_format_path": "[CONDA_ENV_DIR]/bin/clang-format",
-   }
 
-The set of options above configure both the CMake extension and the automatic formatting
-of C++ source files using the `clang-format` utility included in the Karabo Framework
-Conda environment (it is important to use the utility instance in the Conda environment
-to avoid any incompatibility with the `clang-format` used by the CI pipelines).
+The VSCode C++ Extension installed in step 1.2 contains a recent version of the `clang-format` tool,
+so no installation is needed. If for some reason you prefer to use another instance of the 
+`clang-format` tool, please be informed that the Gitlab CI uses version `13.0` of `clang-format`.
+Formatting with any version older than that may result in the CI formatting test not passing.
 
-For the `cmake.buildDirectory` parameter, replace [BUILD_DIR] with any valid
-directory name of your preference, e.g., "build_debug_karaboCpp". The `${workspaceFolder}`
-is a reference to a variable kept by VSCode and should be left as is. The parent folder
-reference is optional, but has been left in the example as a reminder on using build
-directories that are outside the source tree, which is a good practice. If you opt for
-using build directories inside the Framework's source tree, please make sure that
-your choice for build tree is properly configured in `.gitignore`. The `cmake.sourceDirectory`
-informs the VSCode CMake extension about the location of the main `CMakeLists.txt` file.
-If this parameter is not specified, VSCode will complain about not finding a
-`CMakeLists.txt` file in the root of the workspace and will prompt you to manually
-chose the main `CMakeLists.txt` among all the `CMakeLists.txt` files it finds in
-the workspace.
-
-[CONDA_ENV_DIR] should be replaced by the directory where the Conda environment
-created in the previous step is located. To get its path, issue the command::
-
-   conda env list
-
-The value to use for [CONDA_ENV_DIR] will be the path to the right of the
-environment `karabo-cpp` on the command output.
-
-[KARABO_FRAMEWORK_INSTALL_DIR] can be any writable location on your system. This
-is where an installation tree with the artifacts resulting from the CMake build
-will be installed when `cmake --build . -target install` or `make install` are
-executed from the [BUILD_DIR].
-
-An example of a configured `settings.json`::
-
-   {
-      "cmake.buildDirectory": "${workspaceFolder}/../build_debug_karaboCpp",
-      "cmake.sourceDirectory": "${workspaceFolder}/src",
-      "cmake.configureSettings": {
-            "CMAKE_PREFIX_PATH": "/home/bob/miniconda3/envs/karabo-cpp",
-            "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/../install_framework",
-            "CMAKE_BUILD_TYPE": "Debug",
-            "BUILD_UNIT_TESTING": 1,
-            "BUILD_INTEGRATION_TESTING": 1
-      }
-      "editor.defaultFormatter": null,
-      "editor.formatOnPaste": true,
-      "editor.formatOnSave": true,
-      "editor.formatOnSaveMode": "file",
-      "C_Cpp.formatting": "clangFormat",
-      "C_Cpp.clang_format_path": "/home/bob/miniconda3/envs/karabo-cpp/bin/clang-format",
-   }
-
-The `settings.json` file above will be scoped for the VSCode workspace. All the
-configurations shown above are for the `CMake Tools` extension for VSCode. Now open
-the local Karabo Framework repository working folder in VSCode by issuing the
+Now open the local Karabo Framework repository working folder in VSCode by issuing the
 following commands::
 
    cd [KARABO_FRAMEWORK_DIR]
