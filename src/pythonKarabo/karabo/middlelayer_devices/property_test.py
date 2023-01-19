@@ -1,5 +1,5 @@
 import time
-from asyncio import CancelledError, shield
+from asyncio import CancelledError, shield, wait_for
 
 import numpy as np
 
@@ -12,10 +12,11 @@ from karabo.common.scenemodel.api import (
 from karabo.middlelayer import (
     AccessLevel, AccessMode, AlarmCondition, Bool, Configurable, DaqDataType,
     Device, Double, Float, Hash, InputChannel, Int32, Int64, KaraboError,
-    MetricPrefix, NDArray, Node, OutputChannel, Overwrite, RegexString, Slot,
-    State, String, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorDouble,
-    VectorFloat, VectorHash, VectorInt32, VectorInt64, VectorRegexString,
-    VectorString, VectorUInt32, VectorUInt64, background, sleep, slot)
+    MetricPrefix, NDArray, Node, OutputChannel, Overwrite, RegexString, Signal,
+    Slot, State, String, UInt32, UInt64, Unit, VectorBool, VectorChar,
+    VectorDouble, VectorFloat, VectorHash, VectorInt32, VectorInt64,
+    VectorRegexString, VectorString, VectorUInt32, VectorUInt64, background,
+    coslot, sleep, slot)
 
 VECTOR_MAX_SIZE = 10
 
@@ -168,6 +169,104 @@ class CounterNode(Configurable):
         alarmHigh=100_000_000,
         alarmInfo_alarmHigh="Too high",
         alarmNeedsAck_alarmHigh=False)  # False for tests
+
+
+class OrderTestNode(Configurable):
+
+    def __init__(self, configuration={}):
+        super().__init__(configuration)
+        self._counts = []
+
+    @Slot(displayedName="Start",
+          description="Start test that signals and direct slot calls from "
+                      "another instance are received in order. 'Other' "
+                      "PropertyTest instance is defined via 'stringProperty' "
+                      "and number of messages via 'int32Property'. "
+                      "Results are stored in properties below.",
+          allowedStates=[State.NORMAL])
+    async def slotStart(self):
+        self.state = State.STARTING
+        background(self.startOrderTest)
+
+    async def startOrderTest(self):
+        device = self.get_root()
+        other = device.stringProperty
+        updates = Hash("stringProperty", device.deviceId,
+                       "int32Property",  device.int32Property)
+        try:
+            await wait_for(
+                device.call(other, "slotReconfigure", updates),
+                timeout=2)
+            await wait_for(
+                device._ss.async_connect(other, ["signalCount"],
+                                         device.slotCount),
+                timeout=2)
+        except Exception as e:
+            device.log.WARN(f"Failed to start order test: {repr(e)}")
+            self.state = State.ERROR
+            self.status = "Failed to start order test"
+
+        else:
+            if device.status:
+                device.status = ""
+            self.nonConsecutiveCounts = []
+            self.receivedCounts = 0
+            device.state = State.STARTED
+
+            device.callNoWait(other, "slotStartCount")
+
+    async def startCount(self, other, numCounts):
+        # This is the implementation for device.slotStartCount
+        device = self.get_root()
+        device.state = State.STARTED
+
+        for i in range(0, numCounts, 2):
+            device.callNoWait(other, "slotCount", i)
+            device.signalCount(i + 1)
+
+        device.log.INFO(f"Done messaging {other}")
+        device.callNoWait(other, "slotCount", -1)  # Tell that loop is done
+        device.state = State.NORMAL
+
+    def count(self, count):
+        nCounts = len(self._counts)
+        if count >= 0:
+            self._counts.append(count)
+            if nCounts % 1000 == 0:
+                # Let others follow our progress
+                self.receivedCounts = nCounts
+        else:
+            # Loop of calls and signals is done - publish result
+            self.receivedCounts = nCounts
+
+            nonConsecutiveCounts = []
+            for i in range(self.receivedCounts):
+                if i == 0 or self._counts[i] != self._counts[i - 1] + 1:
+                    if len(nonConsecutiveCounts) < 1000:
+                        nonConsecutiveCounts.append(self._counts[i])
+                    else:
+                        break  # limit output size as defined in schema
+            self.nonConsecutiveCounts = nonConsecutiveCounts
+            self._counts = []  # clear for next round
+
+            log = ("Count summary: At least "
+                   f"{len(nonConsecutiveCounts) - 1} "  # -1 for first count
+                   f"out of {nCounts} messages out of order!")
+            self.get_root().log.INFO(log)
+            self.get_root().state = State.NORMAL
+
+    nonConsecutiveCounts = VectorInt32(
+        displayedName="Non Consecutive Counts",
+        description="All received counts N whose predecessor was not N-1",
+        accessMode=AccessMode.READONLY,
+        maxSize=1000,
+        defaultValue=[])
+
+    receivedCounts = UInt32(
+        displayedName="Received Counts",
+        description="Number of counts received in test cycle",
+        accessMode=AccessMode.READONLY,
+        defaultValue=0)
 
 
 class PropertyTestMDL(Device):
@@ -625,6 +724,26 @@ class PropertyTestMDL(Device):
     optString = String(displayedName="String with Options",
                        defaultValue=DEFAULT_OPT[0],
                        options=DEFAULT_OPT)
+
+    orderTest = Node(
+        OrderTestNode,
+        displayedName="Order Test")
+
+    signalCount = Signal(Int32())  # for order test
+
+    @coslot
+    async def slotCount(self, count):
+        self.orderTest.count(count)
+
+    @coslot  # No need to expose to schema
+    async def slotStartCount(self):
+        self.state = State.STARTING
+        other = self.stringProperty
+        numCounts = self.int32Property.value
+
+        self.log.INFO(f"Start alternatingly calling '{other}' and emitting "
+                      f"'signalCount' {numCounts // 2} times each")
+        background(self.orderTest.startCount, other, numCounts)
 
 
 def get_scene(deviceId):
