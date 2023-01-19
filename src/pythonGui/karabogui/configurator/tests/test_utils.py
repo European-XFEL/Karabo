@@ -5,7 +5,7 @@ from qtpy.QtGui import QColor
 from karabo.native import (
     AccessMode, Assignment, Configurable, Int8, Node, String, Unit)
 from karabogui import icons
-from karabogui.testing import get_class_property_proxy
+from karabogui.testing import get_class_property_proxy, get_property_proxy
 
 from ..utils import (
     dragged_configurator_items, get_child_names, get_icon, get_qcolor_state,
@@ -42,15 +42,16 @@ class Object(Configurable):
 
 def test_dragged_configurator_items():
     schema = Object.getClassSchema()
-    proxy = get_class_property_proxy(schema, 'string')
+    proxy = get_property_proxy(schema, 'string')
     mime_data = dragged_configurator_items([proxy])
     items_data = mime_data.data('tree_items').data()
     drop = json.loads(items_data.decode())
 
     expected = {
         'label': 'String',
-        'key': 'string',
+        'key': 'TestDevice.string',
         'type': 'Leaf',
+        'binding': 'StringBinding',
         'display_widget_class': 'DisplayLabel',
         'edit_widget_class': 'EditableLineEdit'
     }
