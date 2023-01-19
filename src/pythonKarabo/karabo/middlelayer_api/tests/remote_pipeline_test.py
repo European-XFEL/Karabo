@@ -430,6 +430,7 @@ async def test_output_reconnect_device(deviceTest):
     await output_device.slotKillDevice()
 
 
+@pytest.mark.fail
 @pytest.mark.timeout(30)
 @run_test
 async def test_output_change_schema(deviceTest):
@@ -443,27 +444,31 @@ async def test_output_change_schema(deviceTest):
     NUM_DATA = 5
     with (await getDevice("outputdevice")) as proxy:
         assert isAlive(proxy)
+        # Check for initial connection
+        output = proxy.output
+        await waitUntil(lambda: len(output.connections) > 0)
         assert receiver.received == 0
         for _ in range(NUM_DATA):
             await proxy.sendData()
+        await waitUntil(lambda: receiver.received > 0)
         assert receiver.received > 0
         # We received data and now change the schema
-        data_desc = output_device.output.schema.data.descriptor
+        data_desc = output.schema.data.descriptor
         assert data_desc.displayedName == ""
         await output_device.changeSchema("TestDisplayed")
         # We set the counter to zero!
         await receiver.resetCounter()
         # Changing schema closes output channel, hence we wait
-        # a few seconds because the reconnect will wait seconds
-        # as well before attempt
-        await sleep(2)
-        data_desc = output_device.output.schema.data.descriptor
+        # for connection
+        await waitUntil(lambda: len(output.connections) > 0)
+        data_desc = output.schema.data.descriptor
         assert data_desc.displayedName == "TestDisplayed"
         assert receiver.received == 0
         for _ in range(NUM_DATA):
             await proxy.sendData()
         # Our reconnect was successful, we are receiving data via the
         # output channel
+        await waitUntil(lambda: receiver.received > 0)
         assert receiver.received > 0
 
     del proxy
