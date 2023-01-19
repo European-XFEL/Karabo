@@ -63,11 +63,8 @@ class MacroSlot(Slot):
                          allowedStates=allowedStates, **kwargs)
 
     def __call__(self, method):
-        name = method.__name__
 
         def background_slot(loop, configurable, device):
-            device.state = self.activeState
-            device.currentSlot = name
 
             async def inner():
                 try:
@@ -84,18 +81,23 @@ class MacroSlot(Slot):
                     device.state = self.passiveState
 
             task = loop.create_task(inner(), instance=device)
-            device.__dict__[DEFAULT_ACTION_NAME] = task
+            setattr(device, DEFAULT_ACTION_NAME, task)
 
+        name = method.__name__
         if iscoroutinefunction(method):
             @wraps(method)
             async def wrapper(configurable):
                 device = configurable.get_root()
+                device.state = self.activeState
+                device.currentSlot = name
                 loop = get_event_loop()
                 background_slot(loop, configurable, device)
         else:
             @wraps(method)
             def wrapper(configurable):
                 device = configurable.get_root()
+                device.state = self.activeState
+                device.currentSlot = name
                 loop = device._ss.loop
                 background_slot(loop, configurable, device)
 
