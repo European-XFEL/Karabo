@@ -440,6 +440,14 @@ namespace karabo {
                         // Connection problem should be caught and handled by ConnectionHandler object
                         // so remove callback below
                         m_channel->onError(nullptr);
+                        // Check and possibly assign shared publisher to use single channel
+                        auto publisher = m_connector->getPublisher();
+                        if (!publisher || !publisher->usable()) {
+                            m_connector->setPublisher(m_channel);
+                        } else {
+                            m_channel->close();
+                            m_channel = publisher;
+                        }
                     }
                     {
                         // Call completion handlers registered so far...
@@ -852,6 +860,7 @@ namespace karabo {
               m_instanceId(id),
               m_transceivers(),
               m_connectorActivated(true),
+              m_activateMutex(),
               m_amqp(std::make_shared<AmqpSingleton>(EventLoop::getIOService().get_executor().context(), urls)) {}
 
 
@@ -1033,7 +1042,6 @@ namespace karabo {
                     sendAsyncDelayed(exchange, routingKey, data, onComplete);
                 }
             };
-
             open(t, cb);
         }
 
