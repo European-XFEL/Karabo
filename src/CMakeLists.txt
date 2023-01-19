@@ -1,7 +1,6 @@
-# The project that builds the various C++ components of the Karabo
-# Framework: karabo library itself, device server, unit tests,
-# integration tests and karabo C++ utilities like BrokerMessageLogs,
-# BrokerMessageRates, IdxBuild ...
+# The project that builds the various C++ components of the Karabo Framework:
+# libkarabo, libkarathon, C++ device server, unit tests, integration tests,
+# and karabo C++ utilities like BrokerMessageLogs, BrokerMessageRates, ...
 #
 # Variables that influence the configuration behavior and that should be
 # explicitly set at project configuration and generation time:
@@ -21,26 +20,20 @@
 # CMAKE_PREFIX_PATH: this is used by the projects to find their external
 #                    dependencies - e.g. libkarabo depends on Boost and the
 #                    tests depend on CppUnit. The variable should point to the
-#                    directory(ies) that host the includes and libs for the
-#                    required dependencies (most likely it will be the path to
-#                    a Conda environment with all the dependencies installed as
-#                    packages).
+#                    directory that host the header files and libs for the
+#                    dependencies. If you are using Visual Studio Code there is
+#                    a Python script, "$REPO_ROOT/build/karabo/setupVSCodeCMake.py"
+#                    that generates a settings file containing among other things
+#                    the right CMAKE_PREFIX_PATH for your system.
 #
 # Example of command line to configure and generate the build:
 #
-# cmake -DCMAKE_PREFIX_PATH=/home/user/miniconda3/envs/karabo-cpp
+# cmake -DCMAKE_PREFIX_PATH=/home/user/Framework/extern/Ubuntu-20-x86_64
 #       -DBUILD_UNIT_TESTING=1 -DBUILD_INTEGRATION_TESTING=1
 #       -DBUILD_LONG_RUN_TESTING=1 ../Framework
 #
 
-# TODO: Add a BUILD_KARATHON variable that when true (the default) will build
-#       the Karathon library.
-
-# TODO: Add logic to update the Conda environment with the requirements for the
-#       Karathon library to the CMakeLists.txt at the src/karathon directory
-#       (the Karathon requirements Conda environment will be created).
-
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 
 project(
     "karabo-cpp"
@@ -103,8 +96,9 @@ endif()
 # The build of the C++ Karabo Framework Library (libkarabo.so).
 # For now, the binary output dir is set to have the same name of
 # the project contained in the subdirectory. It cannot use the
-# current CMAKE_BINARY_DIR directly because it will also output its own
-# Makefile that would clash with the one from the root directory.
+# current CMAKE_BINARY_DIR directly because there could be some
+# overwritten files, e.g., "Makefile" if the makefiles generator
+# is used.
 add_subdirectory(karabo ${CMAKE_BINARY_DIR}/karabo)
 
 # The build of the Karathon Library (used by the Bound Python API).
