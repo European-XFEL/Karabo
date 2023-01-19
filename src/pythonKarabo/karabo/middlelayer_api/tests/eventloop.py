@@ -11,6 +11,7 @@ import pytest
 from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
 from karabo.middlelayer_api.signalslot import SignalSlotable
+from karabo.middlelayer_api.synchronization import synchronize_notimeout
 
 SHUTDOWN_TIME = 2
 
@@ -242,6 +243,7 @@ class AsyncDeviceContext:
         return self.instances[instance]
 
 
+@synchronize_notimeout
 async def sleepUntil(condition, timeout=None):
     """Sleep until some condition is valid
 
