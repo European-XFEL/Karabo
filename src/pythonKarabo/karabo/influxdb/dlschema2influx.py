@@ -221,7 +221,7 @@ class DlSchema2Influx():
                 "Unable to parse line: '{}'".format(line.strip()))
 
         try:
-            timestamp_ns = np.int(np.float(secs)*1E9 + np.float(frac_secs)/1E9)
+            timestamp_ns = int(float(secs)*1E9 + float(frac_secs)/1E9)
             train_id = np.uint32(train_id)
         except ValueError:
             raise Exception(
