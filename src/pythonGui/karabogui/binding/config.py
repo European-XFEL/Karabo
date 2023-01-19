@@ -239,9 +239,6 @@ def extract_configuration(binding, include_attributes=False):
         elif isinstance(binding, ChoiceOfNodesBinding):
             value = getattr(binding.value, binding.choice)
             return Hash(value.class_id, extract_configuration(value))
-        elif isinstance(binding, VectorHashBinding):
-            value = binding.value
-            return [] if value is Undefined else value
         else:
             return binding.value
 
