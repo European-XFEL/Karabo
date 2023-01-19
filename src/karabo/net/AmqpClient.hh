@@ -909,6 +909,7 @@ namespace karabo {
             // <instanceId>:rdlog   -- for reading log messages, for instance, GuiServer
             // <instanceId>:logger  -- for writing log messages, NetworkAppender
             std::string m_instanceId;
+            std::shared_ptr<AMQP::TcpChannel> m_publisher; // Shared channel for publishing
             std::unordered_map<std::string, AmqpTransceiver::Pointer> m_transceivers;
             // Mutex protecting access to `m_transceivers' container
             std::mutex m_transceiversMutex;
@@ -917,6 +918,7 @@ namespace karabo {
             std::mutex m_activateMutex;
             // Shared pointer to AmqpSingleton singleton (AMQP broker connection)
             std::shared_ptr<AmqpSingleton> m_amqp;
+
 
             AmqpConnector() = delete;
             AmqpConnector(const AmqpConnector&) = delete;
@@ -928,6 +930,14 @@ namespace karabo {
 
             const std::shared_ptr<AmqpSingleton>& getSingleton() const noexcept {
                 return m_amqp;
+            }
+
+            const std::shared_ptr<AMQP::TcpChannel>& getPublisher() const noexcept {
+                return m_publisher;
+            }
+
+            void setPublisher(const std::shared_ptr<AMQP::TcpChannel>& channel) noexcept {
+                m_publisher = channel;
             }
 
             template <typename CompletionToken>
