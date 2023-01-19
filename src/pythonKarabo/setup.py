@@ -115,6 +115,7 @@ else:
         ],
         'karabo.middlelayer_device_test': [
             'MiddlelayerDevice=karabo.integration_tests.device_cross_test.test_cross:MiddlelayerDevice',
+            'MdlOrderTestDevice=karabo.integration_tests.signal_slot_order_test.mdl_ordertest_device:MdlOrderTestDevice',
         ],
         'karabo.macro_device': [
             'IPythonKernel=karabo.macro_devices.ipython:IPythonKernel',

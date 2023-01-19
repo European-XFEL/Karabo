@@ -22,19 +22,21 @@ class TestSignalSlotOrder(BoundDeviceTestCase):
         server_id2 = api + "Server/2"
 
         dev_class = "PropertyTest"
+        namespace = None
         if api == "mdl":
-            dev_class += "MDL"
+            dev_class = "MdlOrderTestDevice"
+            namespace = "karabo.middlelayer_device_test"
 
-        self.start_server(api, server_id1,
-                          [dev_class])  # , logLevel="INFO")
-        self.start_server(api, server_id2,
-                          [dev_class])  # , logLevel="INFO")
+        self.start_server(api, server_id1, [dev_class],
+                          namespace=namespace)  # , logLevel="INFO")
+        self.start_server(api, server_id2, [dev_class],
+                          namespace=namespace)  # , logLevel="INFO")
 
         # Start devices on different servers to avoid inner-process shortcut
         # and test ordering if broker is involved
         receiver_id = "bob_" + api
         sender_id = "alice_" + api
-        numMsg = 10000  # with 30k, mdl needs > 60 sec timeout in waitUntilTrue
+        numMsg = 10_000  # with 30k, mdl needs > 60 s timeout in waitUntilTrue
         self.start_device(server_id1, dev_class, receiver_id,
                           cfg=Hash("int32Property", numMsg,
                                    "stringProperty", sender_id))
