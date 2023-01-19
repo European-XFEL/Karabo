@@ -11,11 +11,20 @@ class TestSignalSlotOrder(BoundDeviceTestCase):
 
     @skipIf(not jms, reason="Not supported yet")
     def test_cpp(self):
+        self._test_order("cpp")
 
-        api = "cpp"
+    def test_mdl(self):
+        self._test_order("mdl")
+
+    def _test_order(self, api):
+
         server_id1 = api + "Server/1"
         server_id2 = api + "Server/2"
-        dev_class = "PropertyTest"  # + "MDL" for mdl API
+
+        dev_class = "PropertyTest"
+        if api == "mdl":
+            dev_class += "MDL"
+
         self.start_server(api, server_id1,
                           [dev_class])  # , logLevel="INFO")
         self.start_server(api, server_id2,
@@ -23,9 +32,9 @@ class TestSignalSlotOrder(BoundDeviceTestCase):
 
         # Start devices on different servers to avoid inner-process shortcut
         # and test ordering if broker is involved
-        receiver_id = "bob"
-        sender_id = "alice"
-        numMsg = 30000
+        receiver_id = "bob_" + api
+        sender_id = "alice_" + api
+        numMsg = 10000  # with 30k, mdl needs > 60 sec timeout in waitUntilTrue
         self.start_device(server_id1, dev_class, receiver_id,
                           cfg=Hash("int32Property", numMsg,
                                    "stringProperty", sender_id))
