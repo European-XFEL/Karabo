@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
 
-#
-#  NOTE
-#
-#  This is just a convenience script developed for internal use while two
-#  external dependency systems exist for the C++ components of the Framework:
-#  the legacy system based on binary packages under the "extern/resources"
-#  directory and the newer one, based on a Conda Environment.
-#
-#  Due to its temporary nature, this script is provided as-is and no formal
-#  maintenance and evolution processes should be expected.
-#
-
 import argparse
 import json
 import os
@@ -71,6 +59,7 @@ def cmake_settings(build_type: str,
     }
 
     return {
+        "cmake.sourceDirectory": f"{base_dir}/src",
         "cmake.buildDirectory": cmake_build_directory,
         "cmake.cmakePath": f"{cmake_prefix_path}/bin/cmake",
         "cmake.configureSettings": cmake_config_settings
@@ -115,8 +104,12 @@ def update_cmake_settings(settings: Dict[str, str]) -> int:
 
     data_to_save["cmake.configureSettings"] = (
         settings["cmake.configureSettings"])
+    data_to_save["cmake.sourceDirectory"] = settings["cmake.sourceDirectory"]
     data_to_save["cmake.buildDirectory"] = settings["cmake.buildDirectory"]
     data_to_save["cmake.cmakePath"] = settings["cmake.cmakePath"]
+
+    # Be sure the directory that will host the settings file exists
+    os.makedirs(file_dir, exist_ok=True)
 
     with open(settings_path, "w") as settings_file:
         json.dump(data_to_save, settings_file, indent=4)
@@ -145,13 +138,7 @@ def setupVSCodeCMake(build_type: str,
     be backed up with the name "settings.bak.<create_timestamp>.json".
     "<create_timestamp>" is the timestamp of the creation of the backup file.
 
-    NOTE: using the same CMake settings as the "auto_build_all.sh" implies
-    switching to the current external dependency management mechanism of the
-    Framework, instead of using the new mechanism which gets the external
-    dependencies from a Conda Environment. The new mechanism allows builds
-    started from VSCode to automatically update the external dependencies when
-    there is any modification in the set of installed packages of the Conda
-    environment. The current external dependency mechanism requires
+    NOTE: The current external dependency management mechanism requires
     "auto_build_all.sh" to be executed if there is any change in the set of
     external dependecies - starting a build from VSCode won't update any
     external dependency.
@@ -178,9 +165,9 @@ if __name__ == "__main__":
                     choices=["Debug", "Release", "CodeCoverage"],
                     nargs="?", default="Debug",
                     help="Build type (default is 'Debug')")
-    ap.add_argument("--buildUnitTests", action="store_true",
+    ap.add_argument("--buildUnitTests", action="store_false",
                     help="Build C++ unit tests?")
-    ap.add_argument("--buildIntegrationTests", action="store_true",
+    ap.add_argument("--buildIntegrationTests", action="store_false",
                     help="Build C++ integration tests?")
     ap.add_argument("--buildLongTests", action="store_true",
                     help="Build C++ long-running tests?")

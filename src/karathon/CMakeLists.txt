@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 
 project(
     "KarathonLib"
@@ -38,7 +38,7 @@ message(STATUS "NumPy include dirs = '${Python3_NumPy_INCLUDE_DIRS}'")
 set(Boost_NO_BOOST_CMAKE 1)
 find_package(Boost 1.68 EXACT REQUIRED COMPONENTS python38)
 
-file(GLOB_RECURSE KARATHON_SRCS "*.cc")
+file(GLOB_RECURSE KARATHON_SRCS CONFIGURE_DEPENDS "*.cc")
 
 add_library(
     ${KARATHON_LIB_TARGET_NAME} SHARED
@@ -93,7 +93,7 @@ install(
 )
 
 # Add karathon header files to the installation tree.
-file(GLOB INCLUDE_FILES "*.hh")
+file(GLOB INCLUDE_FILES CONFIGURE_DEPENDS "*.hh")
 foreach (FILE_PATH ${INCLUDE_FILES})
     install(FILES ${FILE_PATH} DESTINATION "include/karathon")
 endforeach()
