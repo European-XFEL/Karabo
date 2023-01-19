@@ -219,6 +219,21 @@ class Tests(TestCase):
         self.assertEqual(a.value, 10 * unit.meter)
         self.assertEqual(a.node.bvalue, 5 * unit.meter)
 
+        # mandatory vector
+        class RowSchema(Configurable):
+            value = Int32(defaultValue=0)
+
+        class C(Configurable):
+            value = VectorHash(
+                rows=RowSchema,
+                assignment=Assignment.MANDATORY,
+                unitSymbol=Unit.METER)
+        with pytest.raises(KaraboError):
+            C()
+
+        c = C({"value": []})
+        assert c is not None
+
     def test_bulk_set_setter(self):
         """Test the bulk setting of a full Hash on a configurable"""
 
