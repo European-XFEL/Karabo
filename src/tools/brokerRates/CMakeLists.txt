@@ -3,24 +3,13 @@
 # Variables that influence the configuration behavior and that should be
 # explicitly set at project configuration and generation time:
 #
-# CMAKE_PREFIX_PATH: when the target named "karabo" (the Karabo Shared Library target)
-#                    is not known, this variable value should point to the root
-#                    directory of an activated Conda environment. It can also have the
-#                    default value as initialized by CMAKE for a Docker Image or for a
-#                    Physical System (for Ubuntus this is "/usr/local"). In all three
-#                    cases, namely Conda, Docker Image or Physical System, the build
-#                    dependencies of the Karabo Framework lib as well as the Karabo
-#                    Framework shared lib itself must be available for this script
-#                    to succeed.
-#
-# Example of command line to configure and generate the build for this project inside
-# an activated Conda environment with the Karabo Framework lib package (and its dependencies)
-# installed:
-#
-# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/tools/brokerRates
+# CMAKE_PREFIX_PATH: when the target named "karabo" (the Karabo Shared Library 
+#                    target) is not known, this variable value should have the
+#                    root directory of the external build (and run) time 
+#                    dependencies of the karabo shared library.
 #
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 
 project(
     "karabo-broker-rates"
