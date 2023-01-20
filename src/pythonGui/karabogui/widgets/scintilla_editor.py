@@ -1,3 +1,12 @@
+import io
+import os
+import re
+from collections import defaultdict
+from contextlib import redirect_stdout
+from tempfile import mkstemp
+
+from pycodestyle import Checker, StyleGuide
+from pyflakes.api import check
 from qtpy.Qsci import QsciAPIs, QsciScintilla
 from qtpy.QtCore import QRegularExpression, Qt, Signal, Slot
 from qtpy.QtGui import QColor, QKeySequence
@@ -13,10 +22,25 @@ LINE_HIGHLIGHT = QColor("#FFFFCC")
 MARGIN_BACKGROUND = QColor("#E0E0E0")
 MARGIN_FOREGROUND = QColor("#A0A0A0")
 
-# This is an arbitrary number to represent an indicator style. There may be
+# These are arbitrary numbers to represent an indicator style. There may be
 # up to 32 types of indicator defined at a time. The first 8 are normally
 # used by lexers.
-HIGHLIGHT_INDICATOR = 21
+ERROR_INDICATOR = 19
+HIGHLIGHT_INDICATOR = 20
+STYLE_ISSUE_INDICATOR = 21
+
+# To match result from pycodestyle as filename:line_no:col_no:pep8Code message
+# For example, "test.py:3:1: E302 expected 2 blank lines, found 1"
+STYLE_REGEX = re.compile(r".*:(\d+):(\d+):\s+(.*)")
+
+# To match result from pyflakes as filename:line_no:col_no: message
+# For example, "test.py:1:1 'karabo.middlelayer.Int32' imported but unused"
+FLAKE_REGEX = re.compile(r".*:(\d+):(\d+):?\s+(.*)")
+
+IGNORED_STYLE_CODES = (
+    "W292",  # No new line at the end
+    "W293",  # Blank line contains whitespace
+    )
 
 
 class CodeBook(QWidget):
@@ -115,6 +139,13 @@ class CodeBook(QWidget):
         """ Get the current code from the editor """
         return self.code_editor.text()
 
+    def checkCode(self):
+        self.code_editor.checkCodeQuality()
+
+    def clearIndicators(self):
+        self.code_editor.clearAnnotations()
+        self.code_editor.clearAllIndicators()
+
 
 class CodeEditor(QsciScintilla):
     """
@@ -180,6 +211,10 @@ class CodeEditor(QsciScintilla):
 
         self._highlights = []
         self.indicatorDefine(self.StraightBoxIndicator, HIGHLIGHT_INDICATOR)
+        self.indicatorDefine(self.SquiggleLowIndicator, ERROR_INDICATOR)
+        self.indicatorDefine(self.SquiggleLowIndicator, STYLE_ISSUE_INDICATOR)
+        self.setIndicatorForegroundColor(QColor("red"), ERROR_INDICATOR)
+        self.setIndicatorForegroundColor(QColor("blue"), STYLE_ISSUE_INDICATOR)
 
     @Slot(str, bool, bool)
     def find_match(self, text, match_case, find_backward):
@@ -252,7 +287,6 @@ class CodeEditor(QsciScintilla):
             hit_count += 1
         self.resultFound.emit(hit_count)
 
-    @Slot()
     def clearHighlight(self):
         for selection in self._highlights:
             self.clearIndicatorRange(
@@ -274,3 +308,121 @@ class CodeEditor(QsciScintilla):
         start_line, start_offset = self.lineIndexFromPosition(start_position)
         end_line, end_offset = self.lineIndexFromPosition(end_position)
         return start_line, start_offset, end_line, end_offset
+
+    def checkCodeQuality(self):
+        """ Run 'pyflakes' and 'pycodestyle' to check the code quality"""
+        self.clearAnnotations()
+        self.clearAllIndicators()
+
+        code = self.text()
+        indicators = defaultdict(list)
+
+        flake_feedback = check_flake(code)
+        for line_number, feedback in flake_feedback.items():
+            indicators[line_number].extend(feedback)
+
+        style_feedback = check_style(code)
+        for line_number, feedback in style_feedback.items():
+            indicators[line_number].extend(feedback)
+
+        if flake_feedback or style_feedback:
+            self._annotate_code(indicators)
+
+    def _annotate_code(self, indicators):
+        for line_number, descriptions in indicators.items():
+            messages = []
+            # Editor follows zero based indexing.
+            line_number = line_number - 1
+            for description in descriptions:
+                message = description.get("message")
+                messages.append(message)
+                line_text = self.text(line_number)
+                col_end = len(line_text)
+                col_start = col_end - len(line_text.strip()) - 1
+                indicator = (ERROR_INDICATOR if description.get(
+                    "is_error", False) else STYLE_ISSUE_INDICATOR)
+                self.fillIndicatorRange(line_number, col_start,
+                                        line_number, col_end, indicator)
+            message = "\n".join(messages)
+            self.annotate(line_number,  message, self.annotationDisplay())
+
+    def clearAllIndicators(self):
+        line_start = 0
+        col_start = 0
+        line_end = self.lines()
+        col_end = len(self.text(line_end-1))
+        self.clearIndicatorRange(
+            line_start, col_start, line_end, col_end, ERROR_INDICATOR
+        )
+        self.clearIndicatorRange(
+            line_start, col_start, line_end, col_end, STYLE_ISSUE_INDICATOR
+        )
+
+
+class FlakeReporter:
+    """
+    This class imitates 'pyflakes.reporter.Reporter' class but
+    additionally stores the report as 'log' instead of just printing out.
+    """
+    def __init__(self):
+        self.log = defaultdict(list)
+
+    def unexpectedError(self, filename, message):
+        self.log[0].append({"filename": filename,
+                            "message": str(message)
+                            })
+
+    def syntaxError(self, filename, message, line_no, column, source):
+        self.log[line_no].append({
+            "message": str(message),
+            "is_error": True,
+        })
+
+    def flake(self, message):
+        matcher = FLAKE_REGEX.match(str(message))
+        if matcher:
+            line_no, col, msg = matcher.groups()
+            line_no = int(line_no)
+            self.log[line_no].append({
+                "message": msg,
+            })
+        else:
+            self.log[0].append({"message": str(message)})
+
+
+def check_flake(code):
+    reporter = FlakeReporter()
+    # Skipping the filename as it is used to mention in error report.
+    check(code, filename="", reporter=reporter)
+    return reporter.log
+
+
+def check_style(code):
+    code_fd, code_filename = mkstemp()
+    os.close(code_fd)
+
+    with open(code_filename, "w") as fh:
+        fh.write(code)
+
+    style = StyleGuide(config_file="")  # Optionally can add config file here.
+    ignore_codes = style.options.ignore + IGNORED_STYLE_CODES
+    style.options.ignore = ignore_codes
+    checker = Checker(code_filename, options=style.options)
+    with redirect_stdout(io.StringIO()) as f:
+        checker.check_all()
+    results = f.getvalue()
+
+    os.remove(code_filename)
+
+    style_feedback = defaultdict(list)
+    for result in results.split("\n"):
+        matcher = STYLE_REGEX.match(result)
+        if matcher:
+            line_no, col, msg = matcher.groups()
+            line_no = int(line_no)
+            code, description = msg.split(" ", 1)
+            style_feedback[line_no].append({
+                "message": description,
+                "code": code,
+            })
+    return style_feedback
