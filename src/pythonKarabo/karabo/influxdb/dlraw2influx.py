@@ -65,7 +65,7 @@ class DlRaw2Influx():
         self.db_client = InfluxDbClient(
             host=host, port=port, db=self.db_name, protocol=protocol,
             user=user, password=password, request_timeout=write_timeout
-            )
+        )
 
         self.chunk_queries = lines_per_write
 
@@ -277,12 +277,12 @@ class DlRaw2Influx():
         flag = matches.group(8)
 
         try:
-            timestamp_ns = np.int(np.float(timestamp_s) * 1E9)
+            timestamp_ns = int(float(timestamp_s) * 1E9)
             train_id = np.uint32(train_id)
         except ValueError:
             raise Exception(
-                      "Unable to parse timestamp ({}) and/or "
-                      "train_id ({}).".format(timestamp_s, train_id))
+                "Unable to parse timestamp ({}) and/or "
+                "train_id ({}).".format(timestamp_s, train_id))
 
         if ktype == "BOOL":
             # name += 'b'
@@ -292,8 +292,8 @@ class DlRaw2Influx():
                 value = 'f'
             else:
                 raise Exception(
-                          "Bool parameter with undefined value, '{}'. "
-                          "skipping line: '{}'".format(value, line.strip()))
+                    "Bool parameter with undefined value, '{}'. "
+                    "skipping line: '{}'".format(value, line.strip()))
         elif ktype in ("FLOAT", "DOUBLE"):
             # if the value is not finite, convert it into a string and mangle
             # the type adding an `_INF`
