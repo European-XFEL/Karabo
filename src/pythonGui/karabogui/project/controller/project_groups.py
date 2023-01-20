@@ -165,6 +165,7 @@ def _fill_servers_menu(menu, project_controller):
 _macro_template = """\
 from karabo.middlelayer import Macro, MacroSlot, String
 
+
 class {0}(Macro):
     name = String(defaultValue="{0}")
 
