@@ -7,8 +7,8 @@ from traits.api import Undefined
 
 from karabo.common.api import KARABO_ALARM_LOW, State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Schema,
-    String, Timestamp, decodeBinary)
+    AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Int32,
+    Schema, String, Timestamp, VectorHash, decodeBinary)
 from karabogui.testing import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
     get_simple_schema, get_vectorattr_schema)
@@ -69,6 +69,39 @@ def test_data_files():
                 assert all(extracted[key] == value)
             else:
                 assert extracted[key] == value
+
+
+def test_vector_hash_extract():
+    """Test that we can extract vector hashes from a binding"""
+
+    def get_table_schema(default_value):
+        class RowSchema(Configurable):
+            value = Int32(defaultValue=0)
+
+        class TableTest(Configurable):
+            table = VectorHash(
+                defaultValue=default_value,
+                rows=RowSchema)
+            integer = Int32(defaultValue=1)
+
+        return TableTest.getClassSchema()
+
+    binding = build_binding(get_table_schema(None))
+    apply_default_configuration(binding)
+    extracted = extract_configuration(binding)
+    assert isinstance(extracted, Hash)
+    assert "table" not in extracted
+    assert "integer" in extracted
+    assert extracted["integer"] == 1
+
+    binding = build_binding(get_table_schema([Hash("value", 0)]))
+    apply_default_configuration(binding)
+    extracted = extract_configuration(binding)
+    assert isinstance(extracted, Hash)
+    assert "table" in extracted
+    assert "integer" in extracted
+    assert extracted["integer"] == 1
+    assert extracted["table"] == [Hash("value", 0)]
 
 
 def test_complete_schema():
