@@ -5,12 +5,11 @@ import shutil
 import string
 import time
 import unittest
-import uuid
 from asyncio import sleep
 from contextlib import contextmanager
 from random import choice
 
-from karabo.influxdb import InfluxDbClient, Results, get_line_fromdicts
+from karabo.influxdb import InfluxDbClient, get_line_fromdicts
 from karabo.influxdb.dl_migrator import DlMigrator
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.native import decodeBinary
@@ -43,7 +42,8 @@ class Influx_TestCase(DeviceTest):
         cls.loop.run_until_complete(cls.inject())
         cls.lead = cls.client
         yield
-        cls.loop.run_until_complete(cls.adm_client.drop_measurement(_fake_device))
+        cls.loop.run_until_complete(
+            cls.adm_client.drop_measurement(_fake_device))
         cls.client.disconnect()
 
     @classmethod
@@ -71,19 +71,19 @@ class Influx_TestCase(DeviceTest):
                for i in range(2 * cls.points, cls.points, -1)]
         cls.begin = seq[0][1]
         data = [get_line_fromdicts(
-                    _fake_device,
-                    {f'{_fake_key}-FLOAT': value, '_tid': tid},
-                    tag_dict={"karabo_user": "."},
-                    timestamp=ts)
-                for tid, ts, value in seq]
+            _fake_device,
+            {f'{_fake_key}-FLOAT': value, '_tid': tid},
+            tag_dict={"karabo_user": "."},
+            timestamp=ts)
+            for tid, ts, value in seq]
         seq = [(last_tid - i, int(timestamp - i * cls.step), 22. + i)
                for i in range(cls.points, 0, -1)]
         data.extend([get_line_fromdicts(
-                         _fake_device,
-                         {f'{_fake_key}-DOUBLE': value, '_tid': tid},
-                         tag_dict={"karabo_user": "."},
-                         timestamp=ts)
-                     for tid, ts, value in seq])
+            _fake_device,
+            {f'{_fake_key}-DOUBLE': value, '_tid': tid},
+            tag_dict={"karabo_user": "."},
+            timestamp=ts)
+            for tid, ts, value in seq])
         cls.end = seq[-1][1]
         r = await cls.client.write(b"\n".join(data))
         assert r.code == 204
@@ -97,6 +97,7 @@ class Influx_TestCase(DeviceTest):
     @async_tst
     async def test_write_large(self):
         letters = string.ascii_lowercase
+
         def make_random():
             return ''.join(
                 choice(letters)
@@ -158,12 +159,14 @@ class Influx_TestCase(DeviceTest):
         timestamp = int((time.time() + 1) * 1e6)
 
         r = await self.client.write_measurement(
-            _fake_device, dict(value=24., BOBBY=25.), timestamp=timestamp)
+            _fake_device, dict(value=24., BOBBY=25.),
+            timestamp=timestamp)
         self.assertEqual(r.code, 204)
         attempts = 5
         while attempts > 0:
             try:
-                r, cols = await self.client.get_last_value(_fake_device, "value")
+                r, cols = await self.client.get_last_value(
+                    _fake_device, "value")
                 break
             except RuntimeError as e:
                 print(e)
@@ -188,11 +191,14 @@ class Influx_TestCase(DeviceTest):
         for i, vals in enumerate(r):
             self.assertEqual(len(vals), len(cols))
             if i < self.points:
-                self.assertIsNone(vals[1])  # first half has f"{_fake_key}-FLOAT"
+                # first half has f"{_fake_key}-FLOAT"
+                self.assertIsNone(vals[1])
             else:
-                self.assertIsNone(vals[2])  # second half has f"{_fake_key}-DOUBLE"
+                # second half has f"{_fake_key}-DOUBLE"
+                self.assertIsNone(vals[2])
         # because of the silly quotes, `time` is last
-        expected_keys = set(('time', f'{_fake_key}-FLOAT', f'{_fake_key}-DOUBLE'))
+        expected_keys = set(
+            ('time', f'{_fake_key}-FLOAT', f'{_fake_key}-DOUBLE'))
 
         self.assertEqual(set(cols), expected_keys)
         r = await self.client.get_field_count(
@@ -307,10 +313,9 @@ class Influx_TestCase(DeviceTest):
                                                     'processed',
                                                     MIGRATION_TEST_DEVICE,
                                                     'archive_schema.txt.ok')))
-        self.assertFalse(os.path.exists(os.path.join(output_dir,
-                                                     'part_processed',
-                                                     MIGRATION_TEST_DEVICE,
-                                                     'archive_schema.txt.err')))
+        self.assertFalse(os.path.exists(
+            os.path.join(output_dir, 'part_processed', MIGRATION_TEST_DEVICE,
+                         'archive_schema.txt.err')))
         self.assertTrue(os.path.exists(os.path.join(output_dir,
                                                     '.previous_run.txt')))
         self.assertTrue(os.path.exists(os.path.join(output_dir,
@@ -330,8 +335,8 @@ class Influx_TestCase(DeviceTest):
         while attempts > 0:
             try:
                 r, cols = await self.client.get_last_value(
-                                    MIGRATION_TEST_DEVICE, "table-VECTOR_HASH"
-                          )
+                    MIGRATION_TEST_DEVICE, "table-VECTOR_HASH"
+                )
                 break
             except RuntimeError as e:
                 print(e)
@@ -348,8 +353,8 @@ class Influx_TestCase(DeviceTest):
 
         # The timestamp returned from Influx is in microseconds.
         dt = datetime.datetime.fromtimestamp(
-                ts/1_000_000, datetime.timezone.utc
-             )
+            ts/1_000_000, datetime.timezone.utc
+        )
         # The table property is a base64 encoding of a stream serialized by
         # Karabo's binary serializer.
         table = decodeBinary(base64.b64decode(table_enc))
@@ -365,28 +370,36 @@ class Influx_TestCase(DeviceTest):
         self.assertEqual(table[1]['e3'], 4158)
 
         # check that nans are inserted as expected
-        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "^floatProperty-FLOAT$")
+        r, cols = await self.client.get_last_value(
+            MIGRATION_TEST_DEVICE,
+            "^floatProperty-FLOAT$")
         ts, value = next(r)
         self.assertEqual(value, 0)
 
-        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "^floatProperty-FLOAT_INF$")
+        r, cols = await self.client.get_last_value(
+            MIGRATION_TEST_DEVICE,
+            "^floatProperty-FLOAT_INF$")
         ts, value = next(r)
         self.assertEqual(value, "nan")
 
-        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "^vectors.stringProperty-.*|_tid")
+        r, cols = await self.client.get_last_value(
+            MIGRATION_TEST_DEVICE, "^vectors.stringProperty-.*|_tid")
         ts, *values = next(r)
         for col_idx, col_name in enumerate(cols[1:]):
             if col_name == "_tid":
                 self.assertEqual(42000, values[col_idx])
             if col_name == "vectors.stringProperty-VECTOR_STRING":
                 value = base64.b64decode(values[col_idx])
-                self.assertEqual(["bla", "bli"], json.loads(value.decode('utf-8')))
+                self.assertEqual(
+                    ["bla", "bli"], json.loads(value.decode('utf-8')))
 
-        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "charProperty-CHAR")
+        r, cols = await self.client.get_last_value(
+            MIGRATION_TEST_DEVICE, "charProperty-CHAR")
         ts, value = next(r)
         self.assertEqual(b"A", base64.b64decode(value))
 
-        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "vectors.charProperty-VECTOR_CHAR")
+        r, cols = await self.client.get_last_value(
+            MIGRATION_TEST_DEVICE, "vectors.charProperty-VECTOR_CHAR")
         ts, value = next(r)
         self.assertEqual(b"ABCDEF", base64.b64decode(value))
         properties_to_test = {
@@ -395,20 +408,26 @@ class Influx_TestCase(DeviceTest):
             'uint8Property': 177,
             'int16Property': 3_200,
             'uint16Property': 32_000,
-            'int32Property' : 99,
-            'uint32Property' : 32_000_000,
-            'int64Property' : 3_200_000_000,
-            'uint64Property' : 3200000000,
-            'stringProperty' : "Some arbitrary text.",
+            'int32Property': 99,
+            'uint32Property': 32_000_000,
+            'int64Property': 3_200_000_000,
+            'uint64Property': 3200000000,
+            'stringProperty': "Some arbitrary text.",
             'vectors.boolProperty': "1,0,1,0,1,0",
-            'vectors.uint8Property': "41,42,43,44,45,46", # this is decoded from base64
+            'vectors.uint8Property': "41,42,43,44,45,46",  # noqa: this is decoded from base64
             'vectors.int8Property': "41,42,43,44,45,46",
-            'vectors.int16Property': ",".join([str(20_041 +i) for i in range(6)]),
-            'vectors.uint16Property': ",".join([str(10_041 +i) for i in range(6)]),
-            'vectors.int32Property': ",".join([str(20_000_041 +i) for i in range(6)]),
-            'vectors.uint32Property': ",".join([str(90_000_041 +i) for i in range(6)]),
-            'vectors.int64Property': ",".join([str(20_000_000_041 +i) for i in range(6)]),
-            'vectors.uint64Property': ",".join([str(90_000_000_041 +i) for i in range(6)]),
+            'vectors.int16Property': ",".join([str(20_041 + i)
+                                               for i in range(6)]),
+            'vectors.uint16Property': ",".join([str(10_041 + i)
+                                                for i in range(6)]),
+            'vectors.int32Property': ",".join([str(20_000_041 + i)
+                                               for i in range(6)]),
+            'vectors.uint32Property': ",".join([str(90_000_041 + i)
+                                                for i in range(6)]),
+            'vectors.int64Property': ",".join([str(20_000_000_041 + i)
+                                               for i in range(6)]),
+            'vectors.uint64Property': ",".join([str(90_000_000_041 + i)
+                                                for i in range(6)]),
         }
         for key, expected in properties_to_test.items():
             r, cols = await self.client.get_last_value(
