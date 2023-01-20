@@ -32,6 +32,22 @@ class Remote(Device):
     def setCountSync(self):
         self.counter = self.targetCounter.value
 
+    @Slot()
+    def setSyncError(self):
+        self.state = State.ERROR
+
+    @Slot()
+    async def setError(self):
+        self.state = State.ERROR
+
+    @Slot()
+    def setSyncOn(self):
+        self.state = State.ON
+
+    @Slot()
+    async def setOn(self):
+        self.state = State.ON
+
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
@@ -198,3 +214,63 @@ async def test_async_monoton_nowait(deviceTest):
         assert d.state == State.ON
         await setWait(d, monoCounter=25)
         assert d.state == State.ERROR
+
+
+@pytest.mark.timeout(30)
+@run_test
+def test_sync_sync_state_slot_reply(deviceTest):
+    with getDevice("OrderRemote") as d:
+        for i in range(0, 100):
+            if i % 2 == 0:
+                state = State.ON
+                slot = d.setSyncOn
+            else:
+                state = State.ERROR
+                slot = d.setSyncError
+            slot()
+            assert d.state == state
+
+
+@pytest.mark.timeout(30)
+@run_test
+def test_sync_async_state_slot_reply(deviceTest):
+    with getDevice("OrderRemote") as d:
+        for i in range(0, 100):
+            if i % 2 == 0:
+                state = State.ON
+                slot = d.setOn
+            else:
+                state = State.ERROR
+                slot = d.setError
+            slot()
+            assert d.state == state
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_async_async_state_slot_reply(deviceTest):
+    with (await getDevice("OrderRemote")) as d:
+        for i in range(0, 100):
+            if i % 2 == 0:
+                state = State.ON
+                slot = d.setOn
+            else:
+                state = State.ERROR
+                slot = d.setError
+            await slot()
+            assert d.state == state
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_async_sync_state_slot_reply(deviceTest):
+    with (await getDevice("OrderRemote")) as d:
+        for i in range(0, 100):
+            if i % 2 == 0:
+                state = State.ON
+                slot = d.setSyncOn
+            else:
+                state = State.ERROR
+                slot = d.setSyncError
+            await slot()
+            assert d.state == state
