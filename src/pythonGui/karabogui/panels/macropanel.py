@@ -5,7 +5,7 @@
 #############################################################################
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
-from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
+from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter, QToolButton
 
 import karabogui.access as krb_access
 from karabo.common.project.api import write_macro
@@ -74,7 +74,27 @@ class MacroPanel(BasePanelWidget):
         toolbar.addSeparator()
         toolbar.addAction(icons.zoomIn, "Increase font", self.increaseFont)
         toolbar.addAction(icons.zoomOut, "Decrease font", self.decreaseFont)
+
+        # These are temporary buttons with texts. Need to create icons.
+        check_button = QToolButton()
+        check_button.setText("Check Code")
+        check_button.clicked.connect(self.checkCode)
+        toolbar.addWidget(check_button)
+        clear_button = QToolButton()
+        clear_button.setText("Clear")
+        clear_button.clicked.connect(self.clearIndicators)
+        toolbar.addWidget(clear_button)
         return [toolbar]
+
+    @Slot()
+    def checkCode(self):
+        """Run linters to check code quality and highlight with indicators"""
+        self.ui_editor.checkCode()
+
+    @Slot()
+    def clearIndicators(self):
+        """Clear the linter indicators"""
+        self.ui_editor.clearIndicators()
 
     @Slot()
     def increaseFont(self):
