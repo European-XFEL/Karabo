@@ -415,7 +415,8 @@ class NetworkInput(Configurable):
 
     def _update_configured_connections(self, output):
         """Update and remove channel `output` from connected"""
-        self.connected.pop(output)
+        # Graceful, due to cancellation it might get out of sync
+        self.connected.pop(output, None)
         self.connectedOutputChannels = list(self.connected)
 
     def _update_missing_connections(self, output, missing):
