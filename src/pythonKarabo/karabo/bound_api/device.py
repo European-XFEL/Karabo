@@ -2012,11 +2012,16 @@ class PythonDevice(NoFsm):
         :param signalName: name of the signal to connect
         :param slotInstance: instance the slot is on, use "" for local
         :param slotName: name of the slot to be executed upon signal reception
+        :return whether connection could be established
         """
-        self._ss.connect(signalInstance, signalName, slotInstance, slotName)
+        return self._ss.connect(signalInstance, signalName,
+                                slotInstance, slotName)
 
     def reply(self, *args):
-        """Send a reply upon a slot being called
+        """Place the reply of a slot being called
+
+        Reply content will not be sent immediately, but when the slot call
+        ends. If called more than once, the last call defines the slot reply.
 
         :param args: list of arguments to reply, maximum length is 4
         """
