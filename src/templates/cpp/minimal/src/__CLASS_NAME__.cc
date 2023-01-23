@@ -27,12 +27,16 @@ namespace karabo {
         karabo::core::BaseDevice, karabo::core::Device<>, __CLASS_NAME__)
 
     void __CLASS_NAME__::expectedParameters(karabo::util::Schema& expected) {
+            // Define device schema here, i.e. properties, slots and Input-/OutputChannels
     }
 
     __CLASS_NAME__::__CLASS_NAME__ (const karabo::util::Hash& config) :
         karabo::core::Device<>(config) {
 
-            // TODO: Add remaining initialization statements.
+            // If the device provides slots (remotely callable methods), add them here.
+            // If they should be clickable from the GUI, they have to be added to the schema
+            // in expectedParameters in addition.
+            // KARABO_SLOT(slotFoo); // void slotFoo() should be a member function
 
             KARABO_INITIAL_FUNCTION(initialize);
     }
@@ -51,6 +55,11 @@ namespace karabo {
     }
 
     void __CLASS_NAME__::initialize() {
+
+        // For any InputChannel (e.g. "input") defined in expectedParameters, register
+        // a data processing function here. Signature of member function onData should be
+        // void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta)
+        // KARABO_ON_DATA("input", onData);
 
         // TODO: add any initialization required after the device has been
         //       created with its starting config (e.g. connect to another

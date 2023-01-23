@@ -33,17 +33,24 @@ class __CLASS_NAME__(PythonDevice):
         # Define the first function to be called after the constructor has
         # finished
         self.registerInitialFunction(self.initialization)
+
+        # If you need methods that can be callable from another device or GUI
+        # you may register them here:
+        # self.KARABO_SLOT(self.myslot1)
+        # self.KARABO_SLOT(myslot2)
+        # ...
+        # It works for both methods (normal case) and standalone functions.
+        # See documentation of KARABO_SLOT for more details.
+
         # Initialize your member variables here...
+        # self._privateData = None
 
     def initialization(self):
-        """ This method will be called after the constructor.
-
-        If you need methods that can be callable from another device or GUI
-        you may register them here:
-        self.KARABO_SLOT(self.myslot1)
-        self.KARABO_SLOT(self.myslot2)
-        ...
-        Corresponding methods (myslot1, myslot2, ...) should be defined in this
-        class
         """
-        # Define your slots here
+        This method will be called after the constructor.
+        """
+        # Register methods to process pipeline data.
+        # Here 'def onData(self, data, meta)' is registered
+        # for InputChannel "input" as defined in expectedParameters.
+        # self.KARABO_ON_DATA("input", self.onData)
+
