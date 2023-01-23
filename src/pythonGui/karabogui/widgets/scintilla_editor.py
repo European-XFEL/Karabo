@@ -47,6 +47,7 @@ class CodeBook(QWidget):
     """Python Code editor class based on Scintilla"""
 
     codeChanged = Signal()
+    qualityChecked = Signal(bool)
 
     def __init__(self, code=None, parent=None):
         super().__init__(parent)
@@ -60,6 +61,7 @@ class CodeBook(QWidget):
 
         code_editor.textChanged.connect(self.codeChanged)
         code_editor.resultFound.connect(self.updateResultText)
+        code_editor.qualityChecked.connect(self.qualityChecked)
 
         find_toolbar = FindToolBar(parent=self)
         find_toolbar.findRequested.connect(self._findNext)
@@ -153,6 +155,7 @@ class CodeEditor(QsciScintilla):
     """
 
     resultFound = Signal(int)
+    qualityChecked = Signal(bool)
 
     def __init__(self, parent=None, use_api=True):
         super().__init__(parent)
@@ -215,6 +218,7 @@ class CodeEditor(QsciScintilla):
         self.indicatorDefine(self.SquiggleLowIndicator, STYLE_ISSUE_INDICATOR)
         self.setIndicatorForegroundColor(QColor("red"), ERROR_INDICATOR)
         self.setIndicatorForegroundColor(QColor("blue"), STYLE_ISSUE_INDICATOR)
+        self.has_annotation = False
 
     @Slot(str, bool, bool)
     def find_match(self, text, match_case, find_backward):
@@ -324,9 +328,12 @@ class CodeEditor(QsciScintilla):
         style_feedback = check_style(code)
         for line_number, feedback in style_feedback.items():
             indicators[line_number].extend(feedback)
-
+        error = False
         if flake_feedback or style_feedback:
             self._annotate_code(indicators)
+            error = True
+            self.has_annotation = True
+        self.qualityChecked.emit(error)
 
     def _annotate_code(self, indicators):
         for line_number, descriptions in indicators.items():
@@ -357,6 +364,7 @@ class CodeEditor(QsciScintilla):
         self.clearIndicatorRange(
             line_start, col_start, line_end, col_end, STYLE_ISSUE_INDICATOR
         )
+        self.has_annotation = False
 
 
 class FlakeReporter:
