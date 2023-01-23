@@ -24,7 +24,7 @@ from karabogui.request import retrieve_default_scene, send_property_changes
 from .bases import BaseSceneTool
 from .builder import (
     bring_object_to_front, create_object_from_model, fill_root_layout,
-    find_top_level_model, is_widget, iter_widgets_and_models,
+    find_top_level_model, is_rect, is_widget, iter_widgets_and_models,
     remove_object_from_layout, replace_model_in_top_level_model,
     send_object_to_back)
 from .const import QT_CURSORS, SELECTION_COLOR
@@ -420,7 +420,7 @@ class SceneView(QWidget):
 
         # Prioritize items on the selection
         child = self.selection_model.child_in_rect(self._hover_rect)
-        if child is not None:
+        if child is not None and not is_rect(child):
             return child
 
         for child in self.scene_model.children[::-1]:
