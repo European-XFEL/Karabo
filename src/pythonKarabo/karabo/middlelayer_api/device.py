@@ -199,7 +199,6 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         info["visibility"] = self.visibility.value
         info["host"] = self.hostName
         info["status"] = self._statusInfo
-        info["archive"] = True  # XXX: legacy key, scheduled for removal
 
         # device capabilities are encoded in a bit mask field
         capabilities = 0
