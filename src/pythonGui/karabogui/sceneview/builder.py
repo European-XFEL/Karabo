@@ -231,6 +231,10 @@ def is_shape(scene_obj):
     return isinstance(scene_obj, _SHAPE_CLASSES)
 
 
+def is_rect(scene_obj):
+    return isinstance(scene_obj, RectangleShape)
+
+
 def is_widget(scene_obj):
     """Returns True if `scene_obj` is a widget"""
     return isinstance(scene_obj, _WIDGET_CLASSES)
