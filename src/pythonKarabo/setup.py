@@ -136,6 +136,7 @@ else:
             'StuckLoggerDevice=karabo.integration_tests.device_comm_test.stuckLoggerDevice:StuckLoggerDevice',
             'RaiseInitializationDevice=karabo.integration_tests.device_comm_test.raiseInitializationDevice:RaiseInitializationDevice',
             'InvalidImportDevice=karabo.integration_tests.device_comm_test.invalidImportDevice:InvalidImportDevice',
+            'BoundOrderTestDevice=karabo.integration_tests.signal_slot_order_test.bound_ordertest_device:BoundOrderTestDevice',
         ],
         'karabo.bound_broken_device_test': [
             'BrokenTestDevice=karabo.bound_api.tests.brokenBoundDevice:BrokenTestDevice',
