@@ -145,6 +145,15 @@ so no installation is needed. If for some reason you prefer to use another insta
 `clang-format` tool, please be informed that the Gitlab CI uses version `13.0` of `clang-format`.
 Formatting with any version older than that may result in the CI formatting test not passing.
 
+Before opening the Karabo Framework CMake project inside VSCode, the `auto_build_all.sh` script must have
+been executed successfully at least once with either the `Debug`, `Release` or `CodeCoverage` options.
+`auto_build_all.sh` will take care of either downloading or building the external dependencies of the 
+Karabo Framework and make them available to the CMake project. 
+
+Similarly, as `auto_build_all.sh Clean-All` clears all the external dependencies, after its execution an
+`auto_build_all.sh` with either the `Debug`, `Release` or `CodeCoverage` options must be completed successfully
+before the CMake project can be opened and work properly again in VSCode.
+
 Now open the local Karabo Framework repository working folder in VSCode by issuing the
 following commands::
 
