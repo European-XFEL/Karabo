@@ -1370,7 +1370,7 @@ async def test_archive_fails(deviceTest):
         with pytest.raises(AttributeError):
             _ = d.archive.value
     info = await getInstanceInfo("remote")
-    assert info["archive"] is True
+    assert "archive" not in info
 
 
 @pytest.mark.timeout(30)
