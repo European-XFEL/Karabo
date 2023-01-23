@@ -1786,8 +1786,6 @@ namespace karabo {
                     status = "ok";
                 }
                 instanceInfo.set("status", status);
-                // XXX: remove this legacy in 2.17.
-                instanceInfo.set("archive", true);
 
                 // the capabilities field specifies the optional capabilities a device provides.
                 unsigned int capabilities = 0;
