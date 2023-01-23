@@ -12,6 +12,9 @@ class TestSignalSlotOrder(BoundDeviceTestCase):
     def test_mdl(self):
         self._test_order("mdl")
 
+    def test_bound(self):
+        self._test_order("bound")
+
     def _test_order(self, api):
 
         server_id1 = api + "Server/1"
@@ -22,11 +25,18 @@ class TestSignalSlotOrder(BoundDeviceTestCase):
         if api == "mdl":
             dev_class = "MdlOrderTestDevice"
             namespace = "karabo.middlelayer_device_test"
+        elif api == "bound":
+            dev_class = "BoundOrderTestDevice"
+            namespace = "karabo.bound_device_test"
 
         self.start_server(api, server_id1, [dev_class],
                           namespace=namespace)  # , logLevel="INFO")
-        self.start_server(api, server_id2, [dev_class],
-                          namespace=namespace)  # , logLevel="INFO")
+        if api == "bound":
+            # In bound we anyway have different processes
+            server_id2 = server_id1
+        else:
+            self.start_server(api, server_id2, [dev_class],
+                              namespace=namespace)  #, logLevel="INFO")
 
         # Start devices on different servers to avoid inner-process shortcut
         # and test ordering if broker is involved
