@@ -5,7 +5,7 @@
 #############################################################################
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
-from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter, QToolButton
+from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
 
 import karabogui.access as krb_access
 from karabo.common.project.api import write_macro
@@ -51,6 +51,7 @@ class MacroPanel(BasePanelWidget):
         ui_editor = CodeBook(parent=widget, code=write_macro(self.model))
         widget.addWidget(ui_editor)
         ui_editor.codeChanged.connect(self.on_macro_changed)
+        ui_editor.qualityChecked.connect(self.updateCodeQualityIcon)
         self.ui_editor = ui_editor
 
         self.ui_console = QPlainTextEdit(widget)
@@ -75,15 +76,13 @@ class MacroPanel(BasePanelWidget):
         toolbar.addAction(icons.zoomIn, "Increase font", self.increaseFont)
         toolbar.addAction(icons.zoomOut, "Decrease font", self.decreaseFont)
 
-        # These are temporary buttons with texts. Need to create icons.
-        check_button = QToolButton()
-        check_button.setText("Check Code")
-        check_button.clicked.connect(self.checkCode)
-        toolbar.addWidget(check_button)
-        clear_button = QToolButton()
-        clear_button.setText("Clear")
-        clear_button.clicked.connect(self.clearIndicators)
-        toolbar.addWidget(clear_button)
+        # Buttons for linter
+        toolbar.addSeparator()
+        self.check_button = toolbar.addAction(
+            icons.inspect_code, "Check Code Quality", self.checkCode)
+        self.clear_button = toolbar.addAction(
+            icons.editClear, "Clear Linter Messages", self.clearIndicators)
+        self.clear_button.setVisible(False)
         return [toolbar]
 
     @Slot()
@@ -95,6 +94,15 @@ class MacroPanel(BasePanelWidget):
     def clearIndicators(self):
         """Clear the linter indicators"""
         self.ui_editor.clearIndicators()
+        self.clear_button.setVisible(False)
+
+    @Slot(bool)
+    def updateCodeQualityIcon(self, error):
+        """ Set the icon on 'check_button' depending on whether the code
+        has any error or not. """
+        icon = icons.inspect_code_error if error else icons.inspect_code_ok
+        self.check_button.setIcon(icon)
+        self._setClearButtonVisibility()
 
     @Slot()
     def increaseFont(self):
@@ -236,3 +244,11 @@ class MacroPanel(BasePanelWidget):
     @Slot()
     def on_macro_changed(self):
         self.model.code = self.ui_editor.getEditorCode()
+        self.check_button.setIcon(icons.inspect_code)
+        self._setClearButtonVisibility()
+
+    def _setClearButtonVisibility(self):
+        """ The 'clear_button' should be visible only when the issues are
+        annotated."""
+        has_annotation = self.ui_editor.code_editor.has_annotation
+        self.clear_button.setVisible(has_annotation)
