@@ -4,6 +4,7 @@ from collections.abc import MutableMapping
 from ctypes import (
     CDLL, CFUNCTYPE, POINTER, Structure, byref, c_bool, c_byte, c_char,
     c_char_p, c_double, c_float, c_int, c_longlong, c_short, c_uint, string_at)
+from datetime import datetime
 
 _dll = None
 logger = logging.getLogger(__name__)
@@ -22,9 +23,11 @@ TYPENAMES = ["Bool", "Int8", "Int16", "Int32", "Int64",
            c_int, c_char_p)
 def _logging_func(severity, logCode, logMessage, timeOfMessage, connectionId,
                   filename, fileLineNumber, callbackData):
+    ts = datetime.fromtimestamp(timeOfMessage * 1.e-6)  # input is microsec
+    txt = ts.isoformat(' ') + " openmq: " + logMessage.decode("ascii")
     logger.log([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG,
                 logging.DEBUG, logging.DEBUG, logging.DEBUG][severity],
-               logMessage.decode("ascii"))
+               txt)
     return 0
 
 
@@ -309,9 +312,10 @@ class Consumer(_Consumer):
                 self.dll.MQReceiveMessageWithTimeout(
                     self.handle, c_int(timeout), byref(ret))
         except Error as e:
-            if e.status == 3120:  # broker dropped messages
+            if e.status == OPEN_MQ_MSG_DROPPED:
                 e.message = Message._create(ret)
             raise
+
         return Message._create(ret)
 
 
