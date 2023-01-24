@@ -1,6 +1,7 @@
 from karabogui.widgets.scintilla_api import create_symbols
 from karabogui.widgets.scintilla_editor import (
-    HIGHLIGHT_INDICATOR, CodeBook, CodeEditor)
+    ERROR_INDICATOR, HIGHLIGHT_INDICATOR, STYLE_ISSUE_INDICATOR, CodeBook,
+    CodeEditor, FlakeReporter, check_style)
 
 MULTILINE_CODE = """
 This is a dummy code
@@ -8,6 +9,16 @@ containing multiple lines
 Number 1
 Number 2
 Number 3
+"""
+
+REAL_CODE = """from karabo.middlelayer import Macro, MacroSlot, String
+class New(Macro):  # miss blank lines above
+    name = String(defaultValue="New")
+
+    @MacroSlot()
+    def execute(self):
+        print("Hello {}!".format(self.name))
+        x =
 """
 
 
@@ -147,3 +158,84 @@ def test_highlight_from_find_toolbar(gui_app):
     find_toolbar.find_line_edit.clear()
     assert len(code_editor._highlights) == 0
     assert find_toolbar.result_label.text() == "0 Results"
+
+
+def test_code_quality_check(gui_app):
+    """Test the Code Quality checking in the Macro Editor"""
+    code_book = CodeBook(code=REAL_CODE)
+    code_book.checkCode()
+    code_editor = code_book.code_editor
+
+    style_issue_lines = set()
+    error_lines = set()
+    for pos in range(len(code_editor.text())):
+        if code_editor.SendScintilla(
+                code_editor.SCI_INDICATORVALUEAT, STYLE_ISSUE_INDICATOR, pos):
+            line, _ = code_editor.lineIndexFromPosition(pos)
+            style_issue_lines.add(line)
+        if code_editor.SendScintilla(
+                code_editor.SCI_INDICATORVALUEAT, ERROR_INDICATOR, pos):
+            line, _ = code_editor.lineIndexFromPosition(pos)
+            error_lines.add(line)
+
+    # Line numbers are zero indexed.
+    assert style_issue_lines == {1}
+    assert error_lines == {7}
+
+    for line in range(code_editor.lines()):
+        has_anno = line in style_issue_lines.union(error_lines)
+        # Return 1 if has annotation else 0
+        assert code_editor.SendScintilla(
+            code_editor.SCI_ANNOTATIONGETSTYLE, line) == has_anno
+
+    # We don't have an easy way to test the annotation text as Scintilla
+    # provide only the size of the annotation message and not the text.
+    style_message = "expected 2 blank lines, found 0"
+    assert code_editor.SendScintilla(code_editor.SCI_ANNOTATIONGETTEXT,
+                                     1) == len(style_message)
+    assert code_editor.SendScintilla(
+        code_editor.SCI_ANNOTATIONGETTEXT, 2) == 0  # No issue
+
+    error_message = "invalid syntax"
+    assert code_editor.SendScintilla(
+            code_editor.SCI_ANNOTATIONGETTEXT, 7) == len(error_message)
+
+    #  Clear all indicators.
+    code_book.clearIndicators()
+    for line in range(code_editor.lines()):
+        assert not (code_editor.SendScintilla(
+            code_editor.SCI_ANNOTATIONGETSTYLE, line))
+
+
+def test_flake_reporter():
+    reporter = FlakeReporter()
+    message = "test.py:1:1 'karabo.middlelayer.Int32' imported but unused"
+    reporter.flake(message)
+    expected = {
+        1: [{'message': "'karabo.middlelayer.Int32' imported but unused"}]}
+    assert reporter.log == expected
+
+    # Invalid message - column number is missing.
+    message = "test.py:1 'karabo.middlelayer.Int32' imported but unused"
+    reporter.flake(message)
+    assert reporter.log == expected
+
+    # Another issue on the same line.
+    message = "test.py:1:6 'foo' : imported : but unused"
+    reporter.flake(message)
+    assert reporter.log[1][1].get('message') == (
+        "'foo' : imported : but unused")
+    assert not reporter.log[1][1].get('is_error')
+
+    # A Syntax error
+    message = "unexpected EOD while parsing"
+    reporter.syntaxError(
+        filename="", message=message, line_no=18, column=8, source="")
+    assert reporter.log[18][0].get('message') == message
+    assert reporter.log[18][0].get('is_error')
+
+
+def test_check_style():
+    feedback = check_style(REAL_CODE)
+    assert feedback == {
+        2: [{'message': 'expected 2 blank lines, found 0', 'code': 'E302'}]}
