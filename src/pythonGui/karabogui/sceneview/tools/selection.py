@@ -114,7 +114,9 @@ class SceneSelectionTool(BaseSceneTool):
             self.state = 'draw'
             self._selection_rect.start_drag(mouse_pos)
         else:
-            # There is a selected item. We start moving it.
+            # There is a selected or hovered item, which has preference.
+            # We select and start moving it.
+            item = self._hover_item or item
             self.state = 'move'
             self._moving_pos = mouse_pos
             if event.modifiers() & Qt.ShiftModifier:
