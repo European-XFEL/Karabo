@@ -164,6 +164,7 @@ bzip2                1.0.6             BSD                                      
 certifi              2018.4.16         MPL2.0                                                      no                    no
 chardet              3.0.4             LGPL                                                        yes                   no
 colorama             0.4.4             BSD                                                         yes                   yes
+conan                1.57.0            MIT                                                         yes                   no
 coverage             4.5.1             Apache-2.0                                                  no                    no
 cppunit              1.14.0            LGPL                                                        no                    no
 cycler               0.10.0            BSD-3                                                       no                    yes
