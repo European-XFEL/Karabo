@@ -394,13 +394,11 @@ class FlakeReporter:
             self.log[line_no].append({
                 "message": msg,
             })
-        else:
-            self.log[0].append({"message": str(message)})
 
 
 def check_flake(code):
     reporter = FlakeReporter()
-    # Skipping the filename as it is used to mention in error report.
+    # Skipping the filename as it is only used to mention in error report.
     check(code, filename="", reporter=reporter)
     return reporter.log
 
