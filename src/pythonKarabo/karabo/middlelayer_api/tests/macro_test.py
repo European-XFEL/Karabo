@@ -873,21 +873,10 @@ async def test_cancel(deviceTest):
         await d.cancel()
         # Finally, sleep for long enough that the macro runs in to the
         # karabo sleep which CAN be interrupted.
-        counter = 100
-        while counter > 0:
-            await karabo_sleep(0.01)
-            if local.slept_count == 1:
-                break
-            counter -= 1
-        counter = 100
-        while counter > 0:
-            await karabo_sleep(0.01)
-            if task.done():
-                break
-            counter -= 1
+        await sleepUntil(lambda: local.slept_count == 1, 1)
         assert local.cancelled_slot == Local.sleepalot
         assert local.slept_count == 1
-        assert task.done()
+        await sleepUntil(lambda: task.done(), 0.1)
 
         # cancel during karabo.sleep
         local.cancelled_slot = None
@@ -897,17 +886,11 @@ async def test_cancel(deviceTest):
         await karabo_sleep(0.13)
         # Then cancel, while the macro is in that interruptable sleep
         await d.cancel()
-        # Sleep a little while, so the task can finish. With a static
-        # karabo_sleep of 0.06 this failed e.g. in
-        # https://git.xfel.eu/Karabo/Framework/-/jobs/141622
-        counter = 100
-        while counter > 0:
-            await karabo_sleep(0.01)
-            if local.slept_count == 2:
-                break
-            counter -= 1
+        await sleepUntil(lambda: local.slept_count == 2, 1)
         assert local.slept_count == 2
         assert local.cancelled_slot == Local.sleepalot
+        # Sleep, but only short to show that the task was cancelled
+        await sleepUntil(lambda: task.done(), 0.1)
         assert task.done()
 
 
