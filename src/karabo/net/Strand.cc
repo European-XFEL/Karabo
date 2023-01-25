@@ -68,14 +68,21 @@ namespace karabo {
             if (m_guaranteeToRun) {
                 // We are being destructed, so there is no shared pointer left pointing to us.
                 // ==> No need for mutex protection.
-                while (!m_tasks.empty()) {
-                    try {
-                        m_tasks.front()();
-                    } catch (const std::exception& e) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Caught exception in posted method during destruction: "
-                                                   << e.what();
-                    }
-                    m_tasks.pop();
+                if (!m_tasks.empty()) {
+                    auto runTasks = [tasks{std::move(m_tasks)}]() mutable { // mutable to be able to modify 'tasks'
+                        while (!tasks.empty()) {
+                            try {
+                                tasks.front()();
+                            } catch (const std::exception& e) {
+                                KARABO_LOG_FRAMEWORK_ERROR << "Caught exception in method posted from destructor: "
+                                                           << e.what();
+                            }
+                            tasks.pop();
+                        }
+                    };
+                    // Do not block the destructor and also ensure that tasks run in a thread of the given io_context
+                    // (destructor might be called in a 'foreign' thread)
+                    m_ioContext->post(runTasks);
                 }
             }
         }
