@@ -1,12 +1,10 @@
 import threading
 import time
-from unittest import skipIf
 
 from karabo.bound import (
     INPUT_CHANNEL, INT32_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
     OVERWRITE_ELEMENT, Hash, Schema, SignalSlotable)
 from karabo.integration_tests.utils import BoundDeviceTestCase
-from karabo.middlelayer_api.broker import jms
 
 max_timeout = 20    # in seconds
 max_timeout_ms = max_timeout * 1000
@@ -18,7 +16,6 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
     server_id = None
     devClass = None
 
-    @skipIf(not jms, reason="Not supported yet")
     def test_channel_injection(self):
         # test that injected input/output channels automatically get connected
 
