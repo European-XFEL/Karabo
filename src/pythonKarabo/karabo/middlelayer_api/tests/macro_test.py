@@ -1,7 +1,7 @@
 import sys
 import time
 import weakref
-from asyncio import Future, TimeoutError, ensure_future
+from asyncio import Future, TimeoutError, ensure_future, wait_for
 
 import pytest
 import pytest_asyncio
@@ -641,12 +641,31 @@ def test_waituntil(deviceTest):
         d.counter = 0
         assert d.counter == 0
         executeNoWait(d, "count")
-        # Busy CI, increase the number, before was 10
         waitUntil(lambda: d.counter > 15)
         assert d.counter == 16
+        # If the above fails again with d.counter > 16 it may be due to threads
+        # used in this synchronous test. Maybe better these asserts:
+        # assert d.counter > 15
+        # assert d.counter < 30  # count stops at 29
         with pytest.raises(TimeoutError):
             waitUntil(lambda: d.counter > 40, timeout=0.1)
         waitUntil(lambda: d.state == State.UNKNOWN)
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+@run_test
+async def test_waituntil_async(deviceTest):
+    """test the waitUntil function in coroutine"""
+    with (await getDevice("remote")) as d:
+        await setWait(d, counter=0)
+        assert d.counter == 0
+        executeNoWait(d, "count")
+        await waitUntil(lambda: d.counter > 15)
+        assert d.counter == 16
+        with pytest.raises(TimeoutError):
+            await wait_for(waitUntil(lambda: d.counter > 40), timeout=0.1)
+        await waitUntil(lambda: d.state == State.UNKNOWN)
 
 
 @pytest.mark.timeout(30)
