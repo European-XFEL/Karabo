@@ -452,17 +452,23 @@ async def test_output_change_schema(deviceTest):
             await proxy.sendData()
         await waitUntil(lambda: receiver.received > 0)
         assert receiver.received > 0
+
         # We received data and now change the schema
-        data_desc = output.schema.data.descriptor
-        assert data_desc.displayedName == ""
+        output_schema = proxy.output.schema
+        assert output_schema.data.descriptor.displayedName == ""
         await output_device.changeSchema("TestDisplayed")
-        # We set the counter to zero!
-        await receiver.resetCounter()
+
+        # Wait for schema arrival
+        await sleepUntil(
+            lambda: output_schema.data.descriptor.
+            displayedName == "TestDisplayed")
+        assert output_schema.data.descriptor.displayedName == "TestDisplayed"
+
         # Changing schema closes output channel, hence we wait
         # for connection
         await waitUntil(lambda: len(output.connections) > 0)
-        data_desc = output.schema.data.descriptor
-        assert data_desc.displayedName == "TestDisplayed"
+        # We set the counter to zero!
+        await receiver.resetCounter()
         assert receiver.received == 0
         for _ in range(NUM_DATA):
             await proxy.sendData()
