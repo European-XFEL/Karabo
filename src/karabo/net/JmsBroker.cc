@@ -18,12 +18,7 @@ namespace karabo {
 
 
         JmsBroker::JmsBroker(const karabo::util::Hash& config)
-            : Broker(config),
-              m_connection(),
-              m_producerChannel(),
-              m_consumerChannel(),
-              m_heartbeatConsumerChannel(),
-              m_logConsumerChannel() {
+            : Broker(config), m_connection(), m_producerChannel(), m_consumerChannel(), m_heartbeatConsumerChannel() {
             Hash jmsConfig("brokers", m_availableBrokerUrls);
             m_connection = Configurator<JmsConnection>::create("JmsConnection", jmsConfig);
         }
@@ -37,8 +32,7 @@ namespace karabo {
               m_connection(o.m_connection),
               m_producerChannel(),
               m_consumerChannel(),
-              m_heartbeatConsumerChannel(),
-              m_logConsumerChannel() {}
+              m_heartbeatConsumerChannel() {}
 
 
         Broker::Pointer JmsBroker::clone(const std::string& instanceId) {
@@ -118,7 +112,6 @@ namespace karabo {
         void JmsBroker::stopReading() {
             if (m_consumerChannel) m_consumerChannel->stopReading();
             if (m_heartbeatConsumerChannel) m_heartbeatConsumerChannel->stopReading();
-            if (m_logConsumerChannel) m_logConsumerChannel->stopReading();
         }
 
 
@@ -139,23 +132,6 @@ namespace karabo {
                 m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats", selector);
             }
             m_heartbeatConsumerChannel->startReading(handler, errorNotifier);
-        }
-
-
-        /**
-         * JMS subscription.
-         * 'selector' is SQL-like expression on properties (in header)
-         *   "target = 'log'"
-         *
-         * @param handler       - success handler
-         * @param errorNotifier - error handler
-         */
-        void JmsBroker::startReadingLogs(const consumer::MessageHandler& handler,
-                                         const consumer::ErrorNotifier& errorNotifier) {
-            if (!m_logConsumerChannel) {
-                m_logConsumerChannel = m_connection->createConsumer(m_topic, "target = 'log'");
-            }
-            m_logConsumerChannel->startReading(handler, errorNotifier);
         }
 
     } // namespace net

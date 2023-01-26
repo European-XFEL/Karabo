@@ -352,12 +352,12 @@ void Broker_Test::_testPublishSubscribeAsync() {
 }
 
 
-void Broker_Test::testReadingHeartbeatsAndLogs() {
-    _loopFunction(__FUNCTION__, [this] { this->_testReadingHeartbeatsAndLogs(); });
+void Broker_Test::testReadingHeartbeats() {
+    _loopFunction(__FUNCTION__, [this] { this->_testReadingHeartbeats(); });
 }
 
 
-void Broker_Test::_testReadingHeartbeatsAndLogs() {
+void Broker_Test::_testReadingHeartbeats() {
     //    'signalInstanceId' => bob STRING
     //    'signalFunction' => signalHeartbeat STRING
     //    'slotInstanceIds' => __none__ STRING
@@ -392,9 +392,11 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
 
     auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
+    auto promBeats = std::make_shared<std::promise<bool>>();
+    auto futBeats = promBeats->get_future();
 
     constexpr int maxLoop = 10;
-
+    int counter = 0;
     // Ensure the subscriber is receiving messages
     alice->startReading(
           [prom](Hash::Pointer h, Hash::Pointer data) {
@@ -412,38 +414,22 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
           [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
     alice->startReadingHeartbeats(
-          [prom](Hash::Pointer h, Hash::Pointer d) {
+          [promBeats, maxLoop, &counter](Hash::Pointer h, Hash::Pointer d) {
               try {
                   CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalHeartbeat");
                   CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
                   CPPUNIT_ASSERT(d->has("a1"));
                   CPPUNIT_ASSERT(d->has("a2"));
                   CPPUNIT_ASSERT(d->has("a3"));
+                  if (++counter == maxLoop) promBeats->set_value(true);
               } catch (const std::exception& e) {
                   std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
-                  prom->set_value(false);
+                  promBeats->set_value(false);
               }
           },
-          [prom](karabo::net::consumer::Error ec, const std::string& message) {
+          [promBeats](karabo::net::consumer::Error ec, const std::string& message) {
               std::clog << "Heartbeat error: " << message << std::endl;
-              prom->set_value(false);
-          });
-
-    alice->startReadingLogs(
-          [prom](Hash::Pointer h, Hash::Pointer d) {
-              try {
-                  CPPUNIT_ASSERT(h->get<std::string>("target") == "log");
-                  CPPUNIT_ASSERT(d->has("message"));
-                  const std::string& cache = d->get<std::string>("message");
-                  CPPUNIT_ASSERT(cache.find("test message") != std::string::npos);
-              } catch (const std::exception& e) {
-                  std::clog << __FILE__ << ":" << __LINE__ << "  " << e.what() << std::endl;
-                  prom->set_value(false);
-              }
-          },
-          [prom](karabo::net::consumer::Error ec, const std::string& message) {
-              std::clog << "LogError: " << message << std::endl;
-              prom->set_value(false);
+              promBeats->set_value(false);
           });
 
     {
@@ -473,12 +459,6 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
             // Bob sends heartbeat
             data->set<int>("c", i + 1);
             CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain + "_beats", header, data, 0, 0));
-            // write 'log' message
-            std::ostringstream oss;
-            oss << "test message " << (i + 1);
-            auto h1 = boost::make_shared<Hash>("target", "log");
-            auto d1 = boost::make_shared<Hash>("message", oss.str());
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h1, d1, 0, 0));
         }
 
         Hash::Pointer h2 = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
@@ -490,7 +470,9 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
-    bool result = fut.get();
+    const bool resultBeats = futBeats.get();
+    CPPUNIT_ASSERT(resultBeats);
+    const bool result = fut.get();
     CPPUNIT_ASSERT(result);
     t.join(); // join  ... otherwise terminate() called
 

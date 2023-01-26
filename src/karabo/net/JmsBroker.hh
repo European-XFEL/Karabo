@@ -131,17 +131,6 @@ namespace karabo {
                   const consumer::MessageHandler& handler,
                   const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            /**
-             * JMS subscription.
-             * 'selector' is SQL-like expression on properties (in header)
-             *   "target = 'log'"
-             *
-             * @param messageHandler - message handler
-             * @param errorNotifier - error handler
-             */
-            void startReadingLogs(const consumer::MessageHandler& messageHandler,
-                                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
-
             void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
                        const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) override;
 
@@ -153,7 +142,6 @@ namespace karabo {
             karabo::net::JmsProducer::Pointer m_producerChannel;
             karabo::net::JmsConsumer::Pointer m_consumerChannel;
             karabo::net::JmsConsumer::Pointer m_heartbeatConsumerChannel;
-            karabo::net::JmsConsumer::Pointer m_logConsumerChannel;
         };
 
     } // namespace net
