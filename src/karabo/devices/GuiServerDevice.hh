@@ -50,7 +50,6 @@ namespace karabo {
                 // key in map is the serverId, values in set are classIds
                 std::map<std::string, std::set<std::string>> requestedClassSchemas;
                 karabo::util::Version clientVersion;
-                bool sendLogs;
                 // The userId for a GUI Client session. If the client session
                 // uses user authentication this will be the authenticated
                 // user; otherwise it will be the user running the GUI client
@@ -61,14 +60,11 @@ namespace karabo {
                 // userId directly in the logs.
                 std::string oneTimeToken;
 
-                ChannelData() : clientVersion("0.0.0"), sendLogs(true){};
+                ChannelData() : clientVersion("0.0.0"){};
 
                 ChannelData(const karabo::util::Version& version, const std::string& userId = "",
                             const std::string& oneTimeToken = "")
-                    : clientVersion(version),
-                      sendLogs(clientVersion <= karabo::util::Version("2.11.1")),
-                      userId(userId),
-                      oneTimeToken(oneTimeToken){};
+                    : clientVersion(version), userId(userId), oneTimeToken(oneTimeToken){};
             };
 
             enum NewInstanceAttributeUpdateEvents {
@@ -107,7 +103,6 @@ namespace karabo {
 
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_networkMutex;
-            mutable boost::mutex m_forwardLogsMutex;
             mutable boost::mutex m_pendingAttributesMutex;
             mutable boost::mutex m_pendingInstantiationsMutex;
             // TODO: remove this once "fast slot reply policy" is enforced
@@ -115,10 +110,8 @@ namespace karabo {
 
             boost::asio::deadline_timer m_deviceInitTimer;
             boost::asio::deadline_timer m_networkStatsTimer;
-            boost::asio::deadline_timer m_forwardLogsTimer;
             boost::asio::deadline_timer m_checkConnectionTimer;
 
-            karabo::net::Broker::Pointer m_loggerConsumer;
             NetworkMap m_networkConnections;
             // Next map<string, ...> not unordered before use of C++14 because we erase from it while looping over it.
             std::map<std::string, std::map<WeakChannelPointer, bool>> m_readyNetworkConnections;
@@ -130,10 +123,6 @@ namespace karabo {
 
             mutable boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
-            karabo::util::Hash m_loggerInput;
-            std::vector<karabo::util::Hash> m_logCache;
-
-            krb_log4cpp::Priority::Value m_loggerMinForwardingPriority;
 
             std::set<std::string> m_projectManagers;
             mutable boost::shared_mutex m_projectManagerMutex;
@@ -183,11 +172,6 @@ namespace karabo {
             void startNetworkMonitor();
 
             /**
-             * Starts the deadline timer which forwards the cached log messages
-             */
-            void startForwardingLogs();
-
-            /**
              * Starts the deadline timer which monitors connection queues
              *
              * @param currentSuspects Hash with pending message counts - keys are bad client addresses
@@ -205,11 +189,6 @@ namespace karabo {
              * @param message
              * @param prio
              */
-
-            /**
-             * Perform forwarding logs
-             */
-            void forwardLogs(const boost::system::error_code& error);
 
             /**
              * Deferred disconnect handler launched by a deadline timer.
@@ -382,7 +361,7 @@ namespace karabo {
              *      projectListProjectsWithDevice  onProjectListProjectsWithDevice
              *      projectListDomains             onProjectListDomains
              *      requestGeneric                 onRequestGeneric
-             *      subscribeLogs                  onSubscribeLogs
+             *      subscribeLogs                  <no action anymore>
              *      setLogPriority                 onSetLogPriority
              *      =============================  =========================
              *
@@ -695,9 +674,7 @@ namespace karabo {
             void onSubscribeNetwork(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * registers the client connected on ``channel`` to the system logs
-             * in case ``subscribe`` is true.
-             * If ``subscribe`` is set to false, the logs will not be sent to the client.
+             * Kept to reply back that log subscription not supported anymore after 2.16.X
              *
              * @param channel
              * @param info
@@ -793,8 +770,6 @@ namespace karabo {
                                     const karabo::util::Schema& classSchema);
 
             void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema);
-
-            void logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 

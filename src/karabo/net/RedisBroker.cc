@@ -613,12 +613,5 @@ namespace karabo {
             registerRedisTopic(topic, handler, errorNotifier);
         }
 
-
-        void RedisBroker::startReadingLogs(const consumer::MessageHandler& handler,
-                                           const consumer::ErrorNotifier& errorNotifier) {
-            std::string topic = m_topic + "/log";
-            registerRedisTopic(topic, handler, errorNotifier);
-        }
-
     } // namespace net
 } // namespace karabo

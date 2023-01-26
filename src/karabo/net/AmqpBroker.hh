@@ -64,15 +64,6 @@ namespace karabo {
              *     slotInstanceGone     -- to announce device death,
              *     slotPing             -- to trigger sending their status by all devices received such message
              *
-             *
-             *  The logging
-             *  -----------
-             *  exchange    = <domain>.log
-             *  routing_key = ""
-             *  queue       = <m_instanceId>
-             *
-             *  this is a place where all printing directed
-             *
              *  GUI debug
              *  ---------
              *  exchange    = karaboGuiDebug
@@ -147,17 +138,6 @@ namespace karabo {
                   const consumer::MessageHandler& handler,
                   const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            /**
-             * AMQP subscription.
-             * Subscribe to the exchange:
-             *   "m_domain.log"
-             *
-             * @param handler       - success handler
-             * @param errorNotifier - error handler
-             */
-            void startReadingLogs(const consumer::MessageHandler& handler,
-                                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
-
             void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
                        const karabo::util::Hash::Pointer& body, const int priority = 4,
                        const int timeToLive = 0) override;
@@ -183,10 +163,6 @@ namespace karabo {
             karabo::net::AmqpClient::Pointer m_heartbeatClient;
             karabo::net::consumer::MessageHandler m_heartbeatConsumerHandler;
             karabo::net::consumer::ErrorNotifier m_heartbeatErrorNotifier;
-
-            karabo::net::AmqpClient::Pointer m_logClient;
-            karabo::net::consumer::MessageHandler m_logConsumerHandler;
-            karabo::net::consumer::ErrorNotifier m_logErrorNotifier;
 
            private:
             karabo::net::Strand::Pointer m_handlerStrand;
