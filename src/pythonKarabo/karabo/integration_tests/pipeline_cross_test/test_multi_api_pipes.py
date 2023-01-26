@@ -335,6 +335,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
 
+        # wait until receiver is connected
+        res = self.waitUntilEqual("receiver", "input.missingConnections", [],
+                                  self._max_timeout)
+        self.assertTrue(res,
+                        "Receiver didn't connect within {self._max_timeout} s")
+
         start_time = time()
 
         self.dc.execute("sender", "startWritingOutput")
@@ -399,6 +405,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
 
+        # wait until receiver is connected
+        res = self.waitUntilEqual("receiver", "input.missingConnections", [],
+                                  self._max_timeout)
+        self.assertTrue(res,
+                        "Receiver didn't connect within {self._max_timeout} s")
+
         start_time = time()
 
         self.dc.execute("sender", "startWritingOutput")
@@ -454,6 +466,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
 
+        # wait until receiver is connected
+        res = self.waitUntilEqual("receiver", "input.missingConnections", [],
+                                  self._max_timeout)
+        self.assertTrue(res,
+                        "Receiver didn't connect within {self._max_timeout} s")
+
         start_time = time()
 
         self.dc.execute("sender", "startWritingOutput")
@@ -486,20 +504,22 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         sender_delay_ms = 1.0/sender_freq * 1000
         if (sender_delay_ms - processing_time > self._drop_noDrop_margin):
-            # Receiver is faster than sender by a margin. Almost no drop is expected.
-            is_in_range = 0.90 * out_count < inputCounter <= out_count
+            # Receiver is faster than sender by a margin and sender started
+            # after receiver claimed to be connected.
+            # No drop is expected, but hickups are not excluded, so 5% margin:
+            is_in_range = 0.95 * out_count < inputCounter <= out_count
             # Safety loop to work around the two problems noted above
             counter = 0
             while not is_in_range and counter < 50:
                 sleep(0.1)
                 inputCounter = self.dc.get("receiver", "inputCounter")
                 out_count = self.dc.get("sender", "outputCounter")
-                is_in_range = 0.90 * out_count < inputCounter <= out_count
+                is_in_range = 0.95 * out_count < inputCounter <= out_count
                 counter += 1
 
             self.assertTrue(is_in_range,
                             "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]."
-                            .format(inputCounter, 0.90 * out_count, out_count))
+                            .format(inputCounter, 0.95 * out_count, out_count))
         else:
             # Receiver is not much faster (or is slower) than the sender. Some drop is expected.
             # Assert that at least some data has arrived.
@@ -555,7 +575,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         """
         Wait until property 'propertyName' of device 'deviceId' equals
         'whatItShouldBe'.
-        Try up to 'timeOut' seconds and wait 0.25 seconds between each try.
+        Try up to 'timeOut' seconds and wait 0.1 seconds between each try.
         """
         start = datetime.now()
         while (datetime.now() - start).seconds < timeout:
@@ -567,7 +587,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
             if res == whatItShouldBe:
                 return True
             else:
-                sleep(.25)
+                sleep(.1)
 
         # Maybe we failed due to DeviceClient caching bug? Try direct call!
         # TODO: Remove once the DeviceClient bug is solved.
