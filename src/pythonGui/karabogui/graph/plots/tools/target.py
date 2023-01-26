@@ -59,6 +59,8 @@ class CrossTargetController(QObject):
                 fmt = "%d/%m/%Y"
             timestamp = datetime.fromtimestamp(value)
             return timestamp.strftime(fmt)
+        elif axis.logMode:
+            return convert_log(value)
         return float_to_string(value, precision=3)
 
     def _get_y_value(self, value):
@@ -69,6 +71,8 @@ class CrossTargetController(QObject):
             return get_state_string(value)
         elif isinstance(axis, AlarmAxisItem):
             return get_alarm_string(value)
+        elif axis.logMode:
+            return convert_log(value)
         return float_to_string(value, precision=3)
 
     # -----------------------------------------------------------------------
@@ -104,3 +108,11 @@ class CrossTargetController(QObject):
         self.legend.setParentItem(None)
         self.legend.deleteLater()
         self.legend = None
+
+
+def convert_log(value):
+    """Return the e-annotation of the given value with 3 precisions."""
+    try:
+        return f"{10 ** value:.3e}"
+    except Exception:
+        return str(value)
