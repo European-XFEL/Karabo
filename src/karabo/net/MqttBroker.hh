@@ -122,17 +122,6 @@ namespace karabo {
                   const consumer::MessageHandler& handler,
                   const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            /**
-             * Deprecated! MQTT subscription.
-             * Subscribe to topic:
-             *   "m_domain/log"
-             *
-             * @param handler       - success handler
-             * @param errorNotifier - error handler
-             */
-            void startReadingLogs(const consumer::MessageHandler& handler,
-                                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
-
             void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
                        const karabo::util::Hash::Pointer& body, const int priority = 4,
                        const int timeToLive = 0) override;

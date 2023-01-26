@@ -177,15 +177,6 @@ namespace karabo {
                                                 const consumer::ErrorNotifier& errorNotifier) = 0;
 
             /**
-             * Set up handlers for processing log messages using special path.
-             *
-             * @param handler       - read message handler
-             * @param errorNotifier - error handler
-             */
-            virtual void startReadingLogs(const consumer::MessageHandler& handler,
-                                          const consumer::ErrorNotifier& errorNotifier) = 0;
-
-            /**
              * Send message to broker
              *
              * @param topic
