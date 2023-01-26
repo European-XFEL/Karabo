@@ -132,19 +132,6 @@ namespace karabo {
                   .commit();
 
             INT32_ELEMENT(expected)
-                  .key("forwardLogInterval")
-                  .displayedName("Log Interval")
-                  .description("Time interval between the forwarding of logs.")
-                  .unit(Unit::SECOND)
-                  .metricPrefix(MetricPrefix::MILLI)
-                  .assignmentOptional()
-                  .defaultValue(1000)
-                  .reconfigurable()
-                  .minInc(500)
-                  .maxInc(5000)
-                  .commit();
-
-            INT32_ELEMENT(expected)
                   .key("checkConnectionsInterval")
                   .displayedName("Check Connections Interval")
                   .description(
@@ -164,16 +151,6 @@ namespace karabo {
                   .description("The number of clients currently connected to the server.")
                   .readOnly()
                   .initialValue(0)
-                  .commit();
-
-            STRING_ELEMENT(expected)
-                  .key("logForwardingLevel")
-                  .displayedName("Log Forwarding Level")
-                  .description("The lowest log message level which will be forwarded to GUI clients.")
-                  .options({"ERROR", "WARN", "INFO", "DEBUG"})
-                  .assignmentOptional()
-                  .defaultValue("INFO")
-                  .reconfigurable()
                   .commit();
 
             NODE_ELEMENT(expected)
@@ -318,7 +295,6 @@ namespace karabo {
             : Device<>(config),
               m_deviceInitTimer(EventLoop::getIOService()),
               m_networkStatsTimer(EventLoop::getIOService()),
-              m_forwardLogsTimer(EventLoop::getIOService()),
               m_checkConnectionTimer(EventLoop::getIOService()),
               m_timeout(config.get<int>("timeout")),
               m_authClient(config.get<std::string>("authServer")) {
@@ -341,9 +317,6 @@ namespace karabo {
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
 
             m_isReadOnly = config.get<bool>("isReadOnly");
-            m_loggerInput = config;
-            m_loggerMinForwardingPriority =
-                  krb_log4cpp::Priority::getPriorityValue(config.get<std::string>("logForwardingLevel"));
         }
 
 
@@ -386,16 +359,10 @@ namespace karabo {
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
-                m_loggerConsumer = getConnection();
-                m_loggerConsumer->startReadingLogs(
-                      bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
-                      consumer::ErrorNotifier());
-
                 m_guiDebugProducer = getConnection();
 
                 startDeviceInstantiation();
                 startNetworkMonitor();
-                startForwardingLogs();
                 startMonitorConnectionQueues(karabo::util::Hash());
 
                 // TODO: remove this once "fast slot reply policy" is enforced
@@ -462,8 +429,6 @@ namespace karabo {
 
         void GuiServerDevice::postReconfigure() {
             remote().setDeviceMonitorInterval(get<int>("propertyUpdateInterval"));
-            m_loggerMinForwardingPriority =
-                  krb_log4cpp::Priority::getPriorityValue(get<std::string>("logForwardingLevel"));
 
             // One might also want to react on possible changes of "delayOnInput",
             // i.e. change delay value for existing input channels.
@@ -484,14 +449,6 @@ namespace karabo {
             m_networkStatsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::collectNetworkStats, this,
                                                      boost::asio::placeholders::error));
         }
-
-
-        void GuiServerDevice::startForwardingLogs() {
-            m_forwardLogsTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("forwardLogInterval")));
-            m_forwardLogsTimer.async_wait(
-                  bind_weak(&karabo::devices::GuiServerDevice::forwardLogs, this, boost::asio::placeholders::error));
-        }
-
 
         void GuiServerDevice::startMonitorConnectionQueues(const Hash& currentSuspects) {
             const int interval = get<int>("checkConnectionsInterval");
@@ -534,27 +491,6 @@ namespace karabo {
                      "networkPerformance.pipelineBytesWritten", static_cast<unsigned long long>(pipeBytesWritten)));
 
             startNetworkMonitor();
-        }
-
-
-        void GuiServerDevice::forwardLogs(const boost::system::error_code& error) {
-            if (error) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Log forwarding was cancelled!";
-                return;
-            }
-            boost::mutex::scoped_lock lock(m_forwardLogsMutex);
-            if (m_logCache.size() > 0) {
-                Hash h("type", "log");
-                std::vector<Hash>& messages = h.bindReference<std::vector<Hash>>("messages");
-                messages.swap(m_logCache);
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                // Broadcast to all GUIs
-                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    if (it->second.sendLogs && it->first && it->first->isOpen())
-                        it->first->writeAsync(h, REMOVE_OLDEST);
-                }
-            }
-            startForwardingLogs();
         }
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
@@ -841,7 +777,7 @@ namespace karabo {
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
                     } else if (type == "subscribeLogs") {
-                        onSubscribeLogs(channel, info);
+                        onSubscribeLogs(channel, info); // just replying failure since after 2.16.X
                     } else if (type == "setLogPriority") {
                         onSetLogPriority(channel, info);
                     } else {
@@ -1685,31 +1621,8 @@ namespace karabo {
 
 
         void GuiServerDevice::onSubscribeLogs(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            Hash h("type", "subscribeLogsReply", "success", false);
-            try {
-                const bool subscribe = info.get<bool>("subscribe");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeLogs : " << (subscribe ? "subscribe" : "unsubscribe");
-                auto chan = channel.lock();
-                if (chan) {
-                    boost::mutex::scoped_lock lock(m_channelMutex);
-                    ChannelIterator itChannelData = m_channels.find(chan);
-                    if (itChannelData != m_channels.end()) {
-                        itChannelData->second.sendLogs = subscribe;
-                        h.set<bool>("success", true);
-                    } else {
-                        std::string& failTxt =
-                              h.set("reason", "Channel missing its ChannelData. It should never happen.")
-                                    .getValue<std::string>();
-                        KARABO_LOG_FRAMEWORK_WARN << failTxt;
-                    }
-                }
-            } catch (const std::exception& e) {
-                // TODO: As of 2.14.0, the GUI ignores the failure reason, so no need to provide details separated from
-                //       main message by 'm_errorDetailsDelim' using karabo::util::Exception.
-                std::string& failTxt = h.set("reason", std::string("Problem in onSubscribeLogs(): ") += e.what())
-                                             .getValue<std::string>();
-                KARABO_LOG_FRAMEWORK_ERROR << failTxt;
-            }
+            Hash h("type", "subscribeLogsReply", "success", false, //
+                   "reason", "Log subscription not supported anymore since 2.17.0");
             safeClientWrite(channel, h);
         }
 
@@ -2018,27 +1931,6 @@ namespace karabo {
 
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in schemaUpdatedHandler(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::logHandler(const karabo::util::Hash::Pointer& header,
-                                         const karabo::util::Hash::Pointer& body) {
-            try {
-                // Filter the messages before caching!
-                boost::mutex::scoped_lock lock(m_forwardLogsMutex);
-                const std::vector<util::Hash>& inMessages = body->get<std::vector<util::Hash>>("messages");
-                for (const util::Hash& msg : inMessages) {
-                    const krb_log4cpp::Priority::Value priority(
-                          krb_log4cpp::Priority::getPriorityValue(msg.get<std::string>("type")));
-                    // The lower the number, the higher the priority
-                    if (priority <= m_loggerMinForwardingPriority) {
-                        m_logCache.push_back(msg);
-                    }
-                }
-
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.what();
             }
         }
 

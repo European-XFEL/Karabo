@@ -18,7 +18,7 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConnectDisconnect);
     CPPUNIT_TEST(testPublishSubscribe);
     CPPUNIT_TEST(testPublishSubscribeAsync);
-    CPPUNIT_TEST(testReadingHeartbeatsAndLogs);
+    CPPUNIT_TEST(testReadingHeartbeats);
     CPPUNIT_TEST(testReadingGlobalCalls);
     CPPUNIT_TEST(testReverseOrderedPublishSubscribe);
     CPPUNIT_TEST(testProducerRestartConsumerContinues);
@@ -38,8 +38,8 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     void _testPublishSubscribe();
     void testPublishSubscribeAsync();
     void _testPublishSubscribeAsync();
-    void testReadingHeartbeatsAndLogs();
-    void _testReadingHeartbeatsAndLogs();
+    void testReadingHeartbeats();
+    void _testReadingHeartbeats();
     void testReadingGlobalCalls();
     void _testReadingGlobalCalls(const std::vector<std::string>& brokerAddress);
     void testReverseOrderedPublishSubscribe();
