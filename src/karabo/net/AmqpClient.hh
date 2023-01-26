@@ -906,8 +906,6 @@ namespace karabo {
             // Possible IDs in case of SignalSlotable's <instanceId>:
             // <instanceId>         -- regular instanceId
             // <instanceId>:beats   -- for reading heartbeats, for instance, GuiServer
-            // <instanceId>:rdlog   -- for reading log messages, for instance, GuiServer
-            // <instanceId>:logger  -- for writing log messages, NetworkAppender
             std::string m_instanceId;
             std::shared_ptr<AMQP::TcpChannel> m_publisher; // Shared channel for publishing
             std::unordered_map<std::string, AmqpTransceiver::Pointer> m_transceivers;

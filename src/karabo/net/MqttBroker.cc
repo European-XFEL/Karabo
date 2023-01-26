@@ -612,12 +612,5 @@ namespace karabo {
             registerMqttTopic(topic, SubQos::AtMostOnce, handler, errorNotifier);
         }
 
-
-        void MqttBroker::startReadingLogs(const consumer::MessageHandler& handler,
-                                          const consumer::ErrorNotifier& errorNotifier) {
-            std::string topic = m_topic + "/log";
-            registerMqttTopic(topic, SubQos::AtMostOnce, handler, errorNotifier);
-        }
-
     } // namespace net
 } // namespace karabo
