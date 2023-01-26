@@ -67,11 +67,10 @@ void GuiServer_Test::tearDown() {
 
 void GuiServer_Test::appTestRunner() {
     // bring up a GUI server
-    std::pair<bool, std::string> success =
-          m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
-                                      Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.2.3",
-                                           "forwardLogInterval", 500, "timeout", 0),
-                                      KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(
+          "testGuiVersionServer", "GuiServerDevice",
+          Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.2.3", "timeout", 0),
+          KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     waitForCondition(

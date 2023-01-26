@@ -36,8 +36,6 @@ namespace karabo {
               m_clientErrorNotifier(),
               m_heartbeatConsumerHandler(),
               m_heartbeatErrorNotifier(),
-              m_logConsumerHandler(),
-              m_logErrorNotifier(),
               m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
               m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
                                        std::chrono::system_clock::now().time_since_epoch())
@@ -192,23 +190,6 @@ namespace karabo {
                 }
             } else if (target == "karaboGuiDebug") {
                 exchange = "karaboGuiDebug";
-
-            } else if (target == m_topic && header->has("target") && header->get<std::string>("target") == "log") {
-                exchange = m_topic + ".log";
-                // Use m_logClient if exists ...
-                if (m_logClient) {
-                    auto msg = boost::make_shared<Hash>("header", *header, "body", *body);
-                    boost::system::error_code ec = m_logClient->publish(exchange, routingkey, msg);
-                    if (ec) {
-                        std::ostringstream oss;
-                        oss << "\"" << m_instanceId << "\" : Failed to publish log msg to \"" << exchange
-                            << "\" exchange with routing key = \"" << routingkey << "\" : code #" << ec.value()
-                            << " -- " << ec.message();
-                        throw KARABO_NETWORK_EXCEPTION(oss.str());
-                    }
-                    return;
-                }
-
             } else if (target == m_topic) {
                 if (!header->has("signalFunction")) {
                     throw KARABO_LOGIC_EXCEPTION("Header has to define \"signalFunction\"");
@@ -365,7 +346,7 @@ namespace karabo {
             if (m_topic.empty() || m_instanceId.empty()) return;
             m_client->close();
             if (m_heartbeatClient) m_heartbeatClient->close();
-            if (m_logClient) m_logClient->close();
+
             // clear handlers as well
             m_clientConsumerHandler = karabo::net::consumer::MessageHandler();
             m_clientErrorNotifier = karabo::net::consumer::ErrorNotifier();
@@ -398,39 +379,6 @@ namespace karabo {
             const std::string exchange = m_topic + ".signals";
             const std::string bindingKey = "*.signalHeartbeat";
             boost::system::error_code ec = m_heartbeatClient->subscribe(exchange, bindingKey);
-            if (ec) {
-                std::ostringstream oss;
-                oss << "Failed to subscribe to exchange -> \"" << exchange << "\", bindingkey->\"" << bindingKey
-                    << "\" : code #" << ec.value() << " -- " << ec.message();
-                throw KARABO_NETWORK_EXCEPTION(oss.str());
-            }
-        }
-
-
-        void AmqpBroker::startReadingLogs(const consumer::MessageHandler& handler,
-                                          const consumer::ErrorNotifier& errorNotifier) {
-            m_logConsumerHandler = handler;
-            m_logErrorNotifier = errorNotifier;
-
-            if (!m_logClient) {
-                Hash config("brokers", m_availableBrokerUrls);
-                config.set("instanceId", m_instanceId + ":rdlog");
-                config.set("domain", m_topic);
-                m_logClient = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config);
-                boost::system::error_code ec = m_logClient->connect();
-                if (ec) {
-                    std::ostringstream oss;
-                    oss << "Failed to connect to AMQP broker: code #" << ec.value() << " -- " << ec.message();
-                    throw KARABO_NETWORK_EXCEPTION(oss.str());
-                }
-            }
-
-            auto readHandler = bind_weak(&AmqpBroker::amqpReadHashHandler, this, _1, _2, handler, errorNotifier);
-            m_logClient->registerConsumerHandler(readHandler);
-
-            const std::string exchange = m_topic + ".log";
-            const std::string bindingKey = "";
-            boost::system::error_code ec = m_logClient->subscribe(exchange, bindingKey);
             if (ec) {
                 std::ostringstream oss;
                 oss << "Failed to subscribe to exchange -> \"" << exchange << "\", bindingkey->\"" << bindingKey
