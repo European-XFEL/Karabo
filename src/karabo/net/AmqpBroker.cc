@@ -17,6 +17,7 @@
 
 
 using namespace karabo::util;
+using namespace boost::placeholders;
 
 #define AMQP_CLIENT_CLASS "AmqpClient"
 
