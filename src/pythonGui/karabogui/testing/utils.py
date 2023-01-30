@@ -131,14 +131,11 @@ def flushed_registry():
     registrymod._controller_registry.clear()
     model_registry = registrymod._controller_models.copy()
     registrymod._controller_models.clear()
-    klass_registry = registrymod._controller_klasses.copy()
-    registrymod._controller_klasses.clear()
 
     yield
 
     registrymod._controller_registry = controller_registry
     registrymod._controller_models = model_registry
-    registrymod._controller_klasses = klass_registry
 
 
 def get_property_proxy(schema, name, device_id="TestDevice"):

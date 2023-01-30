@@ -12,15 +12,12 @@ from .util import get_class_const_trait
 # Module global registry
 _controller_registry = defaultdict(set)
 _controller_models = defaultdict(set)
-# klass name to controller mapping
-_controller_klasses = dict()
 
 
 def get_compatible_controllers(binding_instance, can_edit=False):
     """Returns a list of `BaseBindingController` subclasses which are capable
     of creating a view for the given `BaseBinding` object instance.
     """
-
     def check_compatibility(klass):
         if can_edit == get_class_const_trait(klass, '_can_edit'):
             checker = get_class_const_trait(klass, '_is_compatible')
@@ -37,16 +34,10 @@ def get_compatible_controllers(binding_instance, can_edit=False):
     return klasses
 
 
-def get_controller_klass(klass_name):
-    """Return the appropriate controller klass for a `klass_name`"""
-    return _controller_klasses[klass_name]
-
-
 def get_model_controller(scene_model):
     """Given a scene model instance, return the appropriate controller class
     to use in the scene view.
     """
-
     def _with_attribute(controllers, attr_name, attr_value):
         for klass in controllers:
             if attr_value == get_class_const_trait(klass, attr_name):
@@ -104,7 +95,6 @@ class register_binding_controller(object):
                              with binding instances whose timestamp is None.
                              see `BaseBindingController.finish_initialization`
     """
-
     def __init__(self, *, ui_name='', klassname='', binding_type=(),
                  is_compatible=None, priority=0, can_edit=False,
                  can_show_nothing=True):
@@ -143,10 +133,6 @@ class register_binding_controller(object):
         _controller_models[model_klass].add(klass)
         for t in self.binding_type:
             _controller_registry[t].add(klass)
-
-        # Register klass name to klass
-        assert klass.__name__ not in _controller_klasses
-        _controller_klasses[klass.__name__] = klass
         return klass
 
 
