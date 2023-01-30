@@ -15,6 +15,7 @@
 // temp change to trigger CI
 
 #include <boost/algorithm/string.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -53,6 +54,7 @@ namespace karabo {
         using namespace karabo::net;
         using namespace karabo::xms;
         using namespace krb_log4cpp;
+        using namespace boost::placeholders;
 
         void DeviceServer::expectedParameters(Schema& expected) {
             STRING_ELEMENT(expected)

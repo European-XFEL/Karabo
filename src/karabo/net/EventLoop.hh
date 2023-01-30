@@ -9,6 +9,7 @@
 #define KARABO_NET_EVENTLOOP_HH
 
 #include <boost/asio.hpp>
+#include <boost/core/noncopyable.hpp>
 #include <boost/function/function_fwd.hpp>
 #include <boost/thread.hpp>
 #include <map>
