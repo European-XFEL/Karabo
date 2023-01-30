@@ -5,6 +5,7 @@
 using namespace std;
 using namespace karabo::net;
 using namespace karabo::util;
+using namespace boost::placeholders;
 
 namespace bp = boost::python;
 
