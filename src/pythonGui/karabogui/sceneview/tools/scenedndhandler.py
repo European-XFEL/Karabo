@@ -14,10 +14,11 @@ from karabo.common.enums import Capabilities
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DeviceSceneLinkModel, LabelModel, SceneLinkModel)
 from karabo.common.scenemodel.const import SceneTargetWindow
+from karabo.native import AccessMode
 from karabogui import messagebox
 from karabogui.binding.api import ImageBinding, SlotBinding
 from karabogui.controllers.api import (
-    get_class_const_trait, get_controller_klass, get_scene_model_class)
+    get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.fonts import get_font_metrics
 from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
 from karabogui.sceneview.utils import round_down_to_grid
@@ -59,35 +60,27 @@ class ConfigurationDropHandler(SceneDnDHandler):
             items_data = mime_data.data('tree_items').data()
             items = json.loads(items_data.decode())
 
-        is_online = False
-        if mime_data.data('online_device'):
-            is_online = mime_data.data('online_device').data()
-
         # Create the proxies first
         proxies = [get_proxy(*item['key'].split('.', 1)) for item in items]
+
         # Handle the case when dropped on an existing scene widget
         pos = event.pos()
         widget = scene_view.widget_at_position(pos)
-        if widget is not None and is_online and widget.add_proxies(proxies):
+        if widget is not None and widget.add_proxies(proxies):
             return
 
         # Handle the case when dropped as new scene widgets
         models = []
         for item, proxy in zip(items, proxies):
-            model = self._create_model_from_name(item, proxy, pos)
+            if proxy.binding is None:
+                continue
+
+            model = self._create_model_from_parameter_item(item, proxy, pos)
             models.append(model)
             pos += QPoint(0, _STACKED_WIDGET_OFFSET)
         scene_view.add_models(*models, initialize=True)
 
-    def insert_model_layout(self, klass, key, layout_model):
-        model_klass = get_scene_model_class(klass)
-        model = model_klass(keys=[key])
-        if hasattr(model, 'klass'):
-            model.klass = get_class_const_trait(klass, '_klassname')
-        layout_model.children.append(model)
-        return model
-
-    def _create_model_from_name(self, item, proxy, pos):
+    def _create_model_from_parameter_item(self, item, proxy, pos):
         """Create the scene models for a single item
         """
 
@@ -101,13 +94,12 @@ class ConfigurationDropHandler(SceneDnDHandler):
                 model.klass = get_class_const_trait(klass, '_klassname')
             return model
 
-        binding = item["binding"]
-        if binding in ("SlotBinding", "ImageBinding"):
+        if isinstance(proxy.binding, _NO_LABEL_BINDINGS):
             # Note: Some bindings do not require a label widget and will
-            # only appear with one display widget
-            if klass := get_controller_klass(item['display_widget_class']):
-                return _create_model(klass, proxy.key)
-            return
+            # only appear with one widget
+            klasses = get_compatible_controllers(proxy.binding)
+            if klasses:
+                return _create_model(klasses[0], proxy.key)
 
         # Horizonal layout
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
@@ -117,14 +109,23 @@ class ConfigurationDropHandler(SceneDnDHandler):
         label_model = LabelModel(text=item['label'], foreground='#000000')
         layout_model.children.append(label_model)
 
+        def insert_model_layout(klass, key, layout_model):
+            model_klass = get_scene_model_class(klass)
+            model = model_klass(keys=[key])
+            if hasattr(model, 'klass'):
+                model.klass = get_class_const_trait(klass, '_klassname')
+            layout_model.children.append(model)
+
         # Add the display and editable widgets, as needed
-        klass = get_controller_klass(item['display_widget_class'])
-        self.insert_model_layout(klass, proxy.key, layout_model)
+        klasses = get_compatible_controllers(proxy.binding)
+        if klasses:
+            insert_model_layout(klasses[0], proxy.key, layout_model)
 
         # Only editable if RECONFIGURABLE
-        if name := item.get('edit_widget_class'):
-            if klass := get_controller_klass(name):
-                self.insert_model_layout(klass, proxy.key, layout_model)
+        if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
+            klasses = get_compatible_controllers(proxy.binding, can_edit=True)
+            if klasses:
+                insert_model_layout(klasses[0], proxy.key, layout_model)
 
         return layout_model
 
