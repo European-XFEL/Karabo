@@ -540,28 +540,12 @@ namespace karabo {
                     }
                     break;
 
-                case eCloseChannel: {
-                    auto successCb = [this, wSelf]() {
-                        auto self = wSelf.lock();
-                        if (!self) return;
-                        m_state = eEnd;
-                        moveStateMachine();
-                    };
-                    auto failureCb = [this, wSelf](const char* message) {
-                        auto self = wSelf.lock();
-                        if (!self) return;
-                        // Keep earlier error if any...
-                        if (m_ec == KARABO_ERROR_CODE_SUCCESS) {
-                            // Earlier it was no errors.  Just now.
-                            m_ec = AmqpCppErrc::eCloseChannelError;
-                            m_error = "Channel closure: ";
-                            m_error += message;
-                        }
-                        m_state = eEnd;
-                        moveStateMachine();
-                    };
-                    m_channel->close().onSuccess(successCb).onError(failureCb);
-                } break;
+                case eCloseChannel:
+                    // Don't call channel close() directly...
+                    // Channel destructor calls close()
+                    m_state = eEnd;
+                    moveStateMachine();
+                    break;
 
                 case eEnd:
                     m_connection = nullptr;
@@ -577,11 +561,9 @@ namespace karabo {
                         }
                     }
                     break;
+
                 case eMax: // to please the compiler and still do not have to add 'default:'
                     break;
-                    // default:
-
-                    //     break;
             }
         }
 
@@ -865,11 +847,7 @@ namespace karabo {
               m_amqp(std::make_shared<AmqpSingleton>(EventLoop::getIOService().get_executor().context(), urls)) {}
 
 
-        AmqpConnector::~AmqpConnector() {
-            // transceivers should not outlive AmqpConnector object
-            m_transceivers.clear();
-            m_amqp.reset();
-        }
+        AmqpConnector::~AmqpConnector() {}
 
 
         void AmqpConnector::onDropConnectorCallback(const std::string& message) {
@@ -1144,6 +1122,7 @@ namespace karabo {
                     ++it;
                 }
             }
+            m_publisher.reset();
             if (m_transceivers.empty()) m_amqp->unregisterConnector(shared_from_this());
             return KARABO_ERROR_CODE_SUCCESS;
         }
