@@ -29,6 +29,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::core;
+        using namespace boost::placeholders;
 
 
         void AlarmService::expectedParameters(Schema& expected) {

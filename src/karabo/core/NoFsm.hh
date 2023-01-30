@@ -8,7 +8,7 @@
 #ifndef KARABO_CORE_NOFSM_HH
 #define KARABO_CORE_NOFSM_HH
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <karabo/util/ClassInfo.hh>
 #include <vector>
