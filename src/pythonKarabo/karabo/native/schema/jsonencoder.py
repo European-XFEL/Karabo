@@ -3,7 +3,9 @@ from numbers import Integral, Real
 
 from numpy import ndarray
 
-from karabo.native import Hash
+from karabo.native.data import Hash
+
+__all__ = ["KaraboJSONEncoder"]
 
 
 class KaraboJSONEncoder(json.JSONEncoder):
