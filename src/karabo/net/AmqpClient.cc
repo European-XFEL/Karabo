@@ -12,6 +12,7 @@
 using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::log;
+using namespace boost::placeholders;
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::AmqpClient)

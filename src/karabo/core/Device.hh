@@ -1720,6 +1720,7 @@ namespace karabo {
                                                 const std::string& timeServerId) {
                 using namespace karabo::util;
                 using namespace karabo::net;
+                using namespace boost::placeholders;
 
                 //
                 // First set all parameters (which could not yet be set in constructor) and init the SignalSlotable
@@ -2010,6 +2011,7 @@ namespace karabo {
             void prepareInputChannel(const std::string& path) {
                 KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << path << "'";
                 using karabo::xms::InputChannel;
+                using namespace boost::placeholders;
                 InputChannel::Handlers handlers;
                 // If there was already an InputChannel, "rescue" any registered handlers for new channel
                 InputChannel::Pointer channel = getInputChannelNoThrow(path);

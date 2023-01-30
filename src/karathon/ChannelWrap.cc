@@ -14,6 +14,7 @@ namespace bp = boost::python;
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::net;
+using namespace boost::placeholders;
 
 namespace karathon {
 
