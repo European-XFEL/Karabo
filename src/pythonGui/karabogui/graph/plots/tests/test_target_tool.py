@@ -1,6 +1,11 @@
+import numpy as np
 from pyqtgraph import PlotItem
 
+from karabogui.graph.plots.base import KaraboPlotView
 from karabogui.graph.plots.tools import CrossTargetController
+
+X_ARRAY = np.arange(10)
+Y_ARRAY = X_ARRAY ** 2
 
 
 def test_logMode(gui_app):
@@ -19,3 +24,17 @@ def test_logMode(gui_app):
     assert controller._get_y_value(1) == "1.000e+01"
     assert controller._get_y_value(2) == "1.000e+02"
     assert controller._get_y_value(2.823) == "6.653e+02"
+
+
+def test_legend_color(gui_app):
+    """Test the Target tool legend color is black"""
+    widget = KaraboPlotView()
+    plot = widget.add_curve_item()
+    plot.setData(X_ARRAY, Y_ARRAY)
+    plot_item = widget.plotItem
+
+    target_tool = CrossTargetController(plot_item)
+    target_tool.activate()
+    legend = target_tool.legend
+    legend_color = legend._label.opts.get("color")
+    assert legend_color == "k"

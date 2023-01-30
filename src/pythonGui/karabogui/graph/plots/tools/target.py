@@ -91,7 +91,7 @@ class CrossTargetController(QObject):
         self.h_line = InfiniteLine(angle=0, pen=pen, movable=False)
         self.plotItem.addItem(self.v_line, ignoreBounds=True)
         self.plotItem.addItem(self.h_line, ignoreBounds=True)
-        self.legend = CoordsLegend()
+        self.legend = CoordsLegend(color='k')
         self.legend.setParentItem(self.plotItem.vb)
         self.legend.anchor(itemPos=(1, 0), parentPos=(1, 0), offset=(-5, 5))
         self.proxy = SignalProxy(self.plotItem.scene().sigMouseMoved,
