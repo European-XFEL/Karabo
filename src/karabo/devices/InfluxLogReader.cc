@@ -49,6 +49,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::net;
         using namespace karabo::xms;
+        using namespace boost::placeholders;
 
         namespace nl = nlohmann;
 

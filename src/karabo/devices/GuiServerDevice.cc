@@ -26,6 +26,7 @@ using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xms;
+using namespace boost::placeholders;
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, karabo::devices::GuiServerDevice)
