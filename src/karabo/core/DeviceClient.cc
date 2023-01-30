@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/bind/bind.hpp>
 #include <mutex>
 
 #include "Device.hh"
@@ -26,6 +27,7 @@
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
+using namespace boost::placeholders;
 
 
 namespace karabo {

@@ -25,6 +25,8 @@ namespace karabo {
         using namespace karabo::io;
         using namespace karabo::net;
         using namespace karabo::util;
+        using namespace boost::placeholders;
+
 
         const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
 

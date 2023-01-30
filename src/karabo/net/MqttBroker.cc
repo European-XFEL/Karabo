@@ -17,6 +17,7 @@
 
 
 using namespace karabo::util;
+using namespace boost::placeholders;
 
 
 #define MQTT_CLIENT_CLASS "MqttCppClient"

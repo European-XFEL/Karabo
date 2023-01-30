@@ -32,6 +32,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::xms;
+        using namespace boost::placeholders;
 
 
         void DataLogger::expectedParameters(Schema& expected) {
