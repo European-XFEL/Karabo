@@ -56,10 +56,7 @@ class JmsBroker(Broker):
         m.data = encodeBinary(h)
         p = openmq.Properties()
         p["signalFunction"] = "signalHeartbeat"
-        # Note: C++ adds
-        # p["signalInstanceId"] = self.deviceId # redundant and unused
-        # p["slotInstanceIds"] = "__none__" # unused
-        # p["slotFunctions"] = "__none__" # unused
+        p["signalInstanceId"] = self.deviceId
         p["__format"] = "Bin"
         m.properties = p
         self.hbproducer.send(m, 1, _MSG_PRIORITY_LOW, _MSG_TIME_TO_LIVE)
@@ -76,20 +73,10 @@ class JmsBroker(Broker):
                   self.deviceId, self.info)
 
         async def heartbeat():
+            interval = self.info["heartbeatInterval"]
             try:
-                first = True
                 while True:
-                    # Permanently send heartbeats, but first one not
-                    # immediately: Those interested in us just got informed.
-                    interval = self.info["heartbeatInterval"]
-                    # Protect against any bad interval that causes spinning
-                    sleepInterval = abs(interval) if interval != 0 else 10
-                    if first:
-                        # '//2' protects change of 'tracking factor' close to 1
-                        # '+1' protects against 0 if sleepInterval is 1
-                        sleepInterval = sleepInterval // 2 + 1
-                        first = False
-                    await sleep(sleepInterval)
+                    await sleep(interval)
                     self.heartbeat(interval)
             except CancelledError:
                 pass
