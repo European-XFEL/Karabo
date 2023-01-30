@@ -12,10 +12,9 @@ from karabo.common.api import (
 from karabo.native import AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
-    BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
-    DeviceClassProxy, FloatBinding, ImageBinding, IntBinding,
-    ListOfNodesBinding, NodeBinding, StringBinding, VectorHashBinding,
-    WidgetNodeBinding, get_binding_value, get_editor_value)
+    BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding, FloatBinding,
+    ImageBinding, IntBinding, ListOfNodesBinding, NodeBinding, StringBinding,
+    VectorHashBinding, WidgetNodeBinding, get_binding_value, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 from karabogui.indicators import (
     ERROR_COLOR_ALPHA, OK_COLOR, UNKNOWN_COLOR_ALPHA)
@@ -50,28 +49,23 @@ def dragged_configurator_items(proxies):
         if proxy.binding is None:
             continue
 
-        # Check whether we have an online or offline device and build a key
-        online_device = not isinstance(proxy.root_proxy, DeviceClassProxy)
-        if online_device:
-            key = proxy.key
-        else:
-            key = f"{proxy.root_proxy.device_id}.{proxy.key}"
-
         # Collect the relevant information
         binding = proxy.binding
         item_type = _get_item_type(binding)
-        default_name = proxy.path.split(".")[-1]
+        default_name = proxy.path.split('.')[-1]
         data = {
-            "key": key,
-            "label": binding.displayed_name or default_name,
-            "type": item_type,
-            "binding": type(binding).__name__
+            'key': proxy.key,
+            'label': binding.displayed_name or default_name,
+            'type': item_type,
         }
-        if factories := get_compatible_controllers(binding, can_edit=False):
-            data["display_widget_class"] = factories[0].__name__
+
+        factories = get_compatible_controllers(binding, can_edit=False)
+        if factories:
+            data['display_widget_class'] = factories[0].__name__
         if binding.access_mode is AccessMode.RECONFIGURABLE:
-            if factories := get_compatible_controllers(binding, can_edit=True):
-                data["edit_widget_class"] = factories[0].__name__
+            factories = get_compatible_controllers(binding, can_edit=True)
+            if factories:
+                data['edit_widget_class'] = factories[0].__name__
         # Add it to the list of dragged items
         dragged.append(data)
 
@@ -79,11 +73,10 @@ def dragged_configurator_items(proxies):
         return None
 
     mimeData = QMimeData()
-    mimeData.setData("source_type", bytearray("ParameterTreeWidget",
-                                              encoding="utf-8"))
-    mimeData.setData("online_device", bytearray(online_device))
-    mimeData.setData("tree_items", bytearray(json.dumps(dragged),
-                                             encoding="utf-8"))
+    mimeData.setData('source_type', bytearray('ParameterTreeWidget',
+                                              encoding='UTF-8'))
+    mimeData.setData('tree_items', bytearray(json.dumps(dragged),
+                                             encoding='UTF-8'))
     return mimeData
 
 
@@ -154,8 +147,8 @@ def get_device_state_string(device_proxy):
     """
     state_binding = device_proxy.state_binding
     if state_binding is None:
-        return ""
-    return get_binding_value(state_binding, "")
+        return ''
+    return get_binding_value(state_binding, '')
 
 
 def get_device_locked_string(device_proxy):
@@ -163,8 +156,8 @@ def get_device_locked_string(device_proxy):
     """
     locked_binding = device_proxy.locked_binding
     if locked_binding is None:
-        return ""
-    return get_binding_value(locked_binding, "")
+        return ''
+    return get_binding_value(locked_binding, '')
 
 
 def get_icon(binding):
@@ -213,21 +206,21 @@ def get_proxy_value(index, proxy, is_edit_col=False):
     """
     is_editable = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
     if is_edit_col and not is_editable:
-        return ""
+        return ''
 
     binding = proxy.binding
     if isinstance(binding, ChoiceOfNodesBinding):
-        return binding.choice or ""
+        return binding.choice or ''
     if isinstance(binding, ListOfNodesBinding):
         # Use the class_id to represent each node in the ListOfNodes
         val = [node.class_id for node in get_binding_value(binding, [])]
         return val
     if isinstance(binding, (BindingRoot, NodeBinding, VectorHashBinding)):
-        return ""
+        return ''
 
     value = _proxy_value(proxy, is_edit_col)
     if isinstance(value, (bytes, bytearray)):
-        return ""
+        return ''
 
     return value
 
@@ -272,11 +265,11 @@ def _get_editable_attributes(binding):
         value = attributes.get(name)
         if value is not None:
             # Skip blank units
-            if name == KARABO_SCHEMA_UNIT_SYMBOL and value == "":
+            if name == KARABO_SCHEMA_UNIT_SYMBOL and value == '':
                 continue
             # Skip metric prefixes with no associated units
-            if (name == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL and value == ""
-                    and attributes.get(KARABO_SCHEMA_UNIT_SYMBOL, "") == ""):
+            if (name == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL and value == ''
+                    and attributes.get(KARABO_SCHEMA_UNIT_SYMBOL, '') == ''):
                 continue
             names.append(name)
     return tuple(names)
@@ -288,8 +281,8 @@ def _proxy_value(proxy, is_edit_col):
     yet applied.
     """
     if is_edit_col:
-        return get_editor_value(proxy, "")
-    return get_binding_value(proxy, "")
+        return get_editor_value(proxy, '')
+    return get_binding_value(proxy, '')
 
 
 def threshold_triggered(value, limit_low, limit_high):

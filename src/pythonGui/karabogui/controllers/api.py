@@ -6,8 +6,8 @@ from .arrays import (
 from .base import BaseBindingController
 from .baselineedit import BaseLineEditController
 from .registry import (
-    get_class_const_trait, get_compatible_controllers, get_controller_klass,
-    get_model_controller, get_scene_model_class, register_binding_controller)
+    get_class_const_trait, get_compatible_controllers, get_model_controller,
+    get_scene_model_class, register_binding_controller)
 from .trendmodel import (
     HIDDEN, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME, Curve,
     get_start_end_date_time)
