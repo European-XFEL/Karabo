@@ -295,6 +295,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         is_special = isinstance(binding, SPECIAL_BINDINGS)
         if is_special or (binding is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
+
         column = index.column()
         if column in (1, 2):
             flags |= Qt.ItemNeverHasChildren
@@ -365,13 +366,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         NOTE: flags() is controlling which indices show up in this method. We
         don't have to do so many checks here.
         """
-        # Only gather valid proxies for indices in the first column
-        # (Qt passes indices for each column in a row)
-        klass = (isinstance(self.root, DeviceClassProxy)
-                 and not isinstance(self.root, ProjectDeviceProxy))
-        if len(indices) == 0 or klass:
+        if len(indices) == 0 or isinstance(self.root, DeviceClassProxy):
             return None
 
+        # Only gather valid proxies for indices in the first column
+        # (Qt passes indices for each column in a row)
         proxies = [self.index_ref(idx) for idx in indices
                    if idx.column() == 0 and self.index_ref(idx) is not None]
         return dragged_configurator_items(proxies)
