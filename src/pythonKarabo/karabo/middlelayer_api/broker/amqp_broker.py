@@ -135,10 +135,7 @@ class AmqpBroker(Broker):
 
     async def heartbeat(self, interval):
         header = Hash("signalFunction", "signalHeartbeat")
-        # Note: C++ adds
-        header["signalInstanceId"] = self.deviceId  # redundant and unused
-        header["slotInstanceIds"] = "__none__"  # unused
-        header["slotFunctions"] = "__none__"  # unused
+        header["signalInstanceId"] = self.deviceId
         header["__format"] = "Bin"
         body = Hash()
         body["a1"] = self.deviceId
@@ -161,20 +158,10 @@ class AmqpBroker(Broker):
                               self.deviceId, self.info)
 
         async def heartbeat():
+            interval = self.info["heartbeatInterval"]
             try:
-                first = True
                 while True:
-                    # Permanently send heartbeats, but first one not
-                    # immediately: Those interested in us just got informed.
-                    interval = self.info["heartbeatInterval"]
-                    # Protect against any bad interval that causes spinning
-                    sleepInterval = abs(interval) if interval != 0 else 10
-                    if first:
-                        # '//2' protects change of 'tracking factor' close to 1
-                        # '+1' protects against 0 if sleepInterval is 1
-                        sleepInterval = sleepInterval // 2 + 1
-                        first = False
-                    await sleep(sleepInterval)
+                    await sleep(interval)
                     await self.heartbeat(interval)
             except CancelledError:
                 pass
