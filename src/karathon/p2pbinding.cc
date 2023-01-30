@@ -48,7 +48,7 @@ void exportp2p() {
         bp::class_<ErrorCode>("ErrorCode", "This class keeps error condition: error code and error message.",
                               bp::init<>())
               .def("value", &ErrorCode::value, "Returns error code")
-              .def("message", &ErrorCode::message, "Returns error message");
+              .def("message", (std::string(ErrorCode::*)() const) & ErrorCode::message, "Returns error message");
     }
 
     {

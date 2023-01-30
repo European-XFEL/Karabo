@@ -14,6 +14,7 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/util/SimpleElement.hh"
+using namespace boost::placeholders;
 
 
 using namespace karabo::util;

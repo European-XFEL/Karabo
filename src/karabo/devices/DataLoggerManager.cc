@@ -85,6 +85,7 @@ namespace karabo {
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
+        using namespace boost::placeholders;
         using karabo::xms::SLOT_ELEMENT;
 
 

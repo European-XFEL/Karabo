@@ -32,7 +32,7 @@
 #include <unordered_set>
 
 using namespace karabo;
-
+using namespace boost::placeholders;
 
 class BrokerStatistics : public boost::enable_shared_from_this<BrokerStatistics> {
    public:
