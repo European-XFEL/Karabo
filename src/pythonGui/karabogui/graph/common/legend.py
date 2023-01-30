@@ -38,9 +38,9 @@ class KaraboLegend(LegendItem):
 
 
 class CoordsLegend(KaraboLegend):
-    def __init__(self):
+    def __init__(self, color='w'):
         super(CoordsLegend, self).__init__()
-        self._label = LabelItem(color='w', size="8pt")
+        self._label = LabelItem(color=color, size="8pt")
         self.layout.addItem(self._label, 0, 0)
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.hide()
