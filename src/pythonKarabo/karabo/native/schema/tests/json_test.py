@@ -3,7 +3,7 @@ from json import dumps
 
 import numpy
 
-from karabo.middlelayer import (
+from karabo.native import (
     AccessMode, BoolValue, EnumValue, Hash, KaraboJSONEncoder, NoneValue,
     QuantityValue, StringValue, VectorStringValue)
 

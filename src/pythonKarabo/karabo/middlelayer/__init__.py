@@ -34,7 +34,6 @@ from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.eventloop import (
     EventLoop, KaraboFuture, NoEventLoop, synchronize, synchronize_notimeout)
 from karabo.middlelayer_api.injectable import Injectable
-from karabo.middlelayer_api.jsonencoder import KaraboJSONEncoder
 from karabo.middlelayer_api.logger import CacheLog
 from karabo.middlelayer_api.macro import (
     EventThread, Macro, MacroSlot, Monitor, RemoteDevice)
@@ -59,20 +58,21 @@ from karabo.native import (
     Configurable, DaqDataType, DaqPolicy, Descriptor, Double, EncodingType,
     Enumable, EnumValue, Float, Hash, HashByte, HashElement, HashList,
     HashMergePolicy, HashType, Image, ImageData, Int8, Int16, Int32, Int64,
-    Integer, KaraboError, KaraboValue, LeafType, ListOfNodes, MetaRegistry,
-    MetricPrefix, NDArray, Node, NodeType, NoneValue, Number, NumpyVector,
-    OldProject, Overwrite, QuantityValue, RegexString, Registry, Schema,
-    Simple, Slot, String, StringValue, TableValue, TimeMixin, Timestamp, Type,
-    TypeHash, TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, Vector,
-    VectorBool, VectorChar, VectorCharValue, VectorComplexDouble,
-    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorRegexString, VectorString,
-    VectorStringValue, VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64,
-    Weak, convert_old_project, daysAgo, decodeBinary, decodeXML, dictToHash,
-    dtype_from_number, encodeBinary, encodeXML, get_array_data,
-    get_default_value, get_descriptor_from_data, get_hash_type_from_data,
-    get_image_data, get_instance_parent, get_timestamp, has_changes,
-    hashToDict, hashtype_from_string, hoursAgo, is_equal, isSet, loadFromFile,
-    minutesAgo, newest_timestamp, read_project_model, sanitize_table_schema,
-    saveToFile, simple_deepcopy, string_from_hashtype, unit_registry as unit,
+    Integer, KaraboError, KaraboJSONEncoder, KaraboValue, LeafType,
+    ListOfNodes, MetaRegistry, MetricPrefix, NDArray, Node, NodeType,
+    NoneValue, Number, NumpyVector, OldProject, Overwrite, QuantityValue,
+    RegexString, Registry, Schema, Simple, Slot, String, StringValue,
+    TableValue, TimeMixin, Timestamp, Type, TypeHash, TypeSchema, UInt8,
+    UInt16, UInt32, UInt64, Unit, Vector, VectorBool, VectorChar,
+    VectorCharValue, VectorComplexDouble, VectorComplexFloat, VectorDouble,
+    VectorFloat, VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
+    VectorRegexString, VectorString, VectorStringValue, VectorUInt8,
+    VectorUInt16, VectorUInt32, VectorUInt64, Weak, convert_old_project,
+    daysAgo, decodeBinary, decodeXML, dictToHash, dtype_from_number,
+    encodeBinary, encodeXML, get_array_data, get_default_value,
+    get_descriptor_from_data, get_hash_type_from_data, get_image_data,
+    get_instance_parent, get_timestamp, has_changes, hashToDict,
+    hashtype_from_string, hoursAgo, is_equal, isSet, loadFromFile, minutesAgo,
+    newest_timestamp, read_project_model, sanitize_table_schema, saveToFile,
+    simple_deepcopy, string_from_hashtype, unit_registry as unit,
     write_project_model, writeBinary, writeXML)
