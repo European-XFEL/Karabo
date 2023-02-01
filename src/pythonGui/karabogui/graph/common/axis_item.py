@@ -1,5 +1,3 @@
-import time
-
 from pyqtgraph import AxisItem as PgAxisItem, DateAxisItem
 from qtpy.QtCore import Qt, Signal
 
@@ -23,7 +21,7 @@ class AxisItem(PgAxisItem):
         "autoExpandTextSpace": False,
         "tickTextWidth": 50,
         "tickTextHeight": 24,
-        'tickFont': get_axis_font(size=10)}
+        "tickFont": get_axis_font(size=10)}
 
     def __init__(self, orientation, showValues=True):
         """Base class for pretty axis items.
@@ -33,7 +31,7 @@ class AxisItem(PgAxisItem):
         :param showValues: Set if it will show ticks and labels.
             Usually major axis has the ticks (bottom and left for normal plots)
         """
-        super(AxisItem, self).__init__(orientation, showValues=showValues)
+        super().__init__(orientation, showValues=showValues)
         self.enableAutoSIPrefix(False)
         if showValues:
             self.setStyle(**self.axisStyle)
@@ -43,20 +41,19 @@ class AxisItem(PgAxisItem):
             self.axisDoubleClicked.emit()
             event.accept()
             return
-        super(AxisItem, self).mouseDoubleClickEvent(event)
+        super().mouseDoubleClickEvent(event)
 
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
         """Reimplemented because we don't want labels for minor axes"""
         if not self.style["showValues"]:
             return
-        super(AxisItem, self).setLabel(text=text, units=units,
-                                       unitPrefix=unitPrefix, **args)
+        super().setLabel(text=text, units=units, unitPrefix=unitPrefix, **args)
 
     def showLabel(self, show=True):
         """Always do not show label if it is not a tick axis"""
         if not self.style["showValues"]:
             show = False
-        super(AxisItem, self).showLabel(show)
+        super().showLabel(show)
 
     def mouseDragEvent(self, event):
         """Reimplemented function of PyQt
@@ -71,16 +68,6 @@ class AxisItem(PgAxisItem):
         event.ignore()
 
 
-def getOffsetFromUtc():
-    """Retrieve the utc offset respecting the daylight saving time"""
-    ts = time.localtime()
-    if ts.tm_isdst:
-        utc_offset = time.altzone
-    else:
-        utc_offset = time.timezone
-    return utc_offset
-
-
 class TimeAxisItem(DateAxisItem):
     axisDoubleClicked = Signal()
 
@@ -88,25 +75,21 @@ class TimeAxisItem(DateAxisItem):
         "autoExpandTextSpace": False,
         "tickTextWidth": 50,
         "tickTextHeight": 24,
-        'tickFont': get_axis_font(size=10)}
+        "tickFont": get_axis_font(size=10)}
 
     def __init__(self, orientation):
-        super(TimeAxisItem, self).__init__(orientation)
+        super().__init__(orientation)
         self.setStyle(**self.axisStyle)
-        # ----- Patch PyQtGraph <= 0.12.0 --------
-        # https://github.com/pyqtgraph/pyqtgraph/pull/1694
-        self.utcOffset = getOffsetFromUtc()
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.axisDoubleClicked.emit()
             event.accept()
             return
-        super(TimeAxisItem, self).mouseDoubleClickEvent(event)
+        super().mouseDoubleClickEvent(event)
 
     def mouseDragEvent(self, event):
-        """Reimplemented function of PyQt
-        """
+        """Reimplemented function of PyQt"""
         event.ignore()
 
 
@@ -114,13 +97,10 @@ class StateAxisItem(AxisItem):
     """The State Axis Item for displaying Karabo States as major ticks"""
 
     axisStyle = {"autoExpandTextSpace": True,
-                 'tickFont': get_axis_font(size=9)}
+                 "tickFont": get_axis_font(size=9)}
 
     def tickStrings(self, values, scale, spacing):
-        """Return the state names as a function of integers values
-
-        NOTE: Always cast the value as integer due to PyQtGraph protection!
-        """
+        """Return the state names as a function of integers values"""
         return [get_state_string(value) for value in values]
 
 
@@ -128,23 +108,20 @@ class AlarmAxisItem(AxisItem):
     """The Alarm Axis Item for displaying Karabo Alarms as major ticks"""
 
     axisStyle = {"autoExpandTextSpace": True,
-                 'tickFont': get_axis_font(size=9)}
+                 "tickFont": get_axis_font(size=9)}
 
     def tickStrings(self, values, scale, spacing):
-        """Return the alarm names as a function of integers values
-
-        NOTE: Always cast the value as integer due to PyQtGraph protection!
-        """
+        """Return the alarm names as a function of integers values"""
         return [get_alarm_string(value) for value in values]
 
 
 class AuxPlotAxisItem(AxisItem):
     """The AxisItem for the aux plots in the image widgets"""
     axisStyle = {"autoExpandTextSpace": False,
-                 'tickFont': get_axis_font(size=9)}
+                 "tickFont": get_axis_font(size=9)}
 
     def __init__(self, orientation, showValues=True):
-        super(AuxPlotAxisItem, self).__init__(orientation, showValues)
+        super().__init__(orientation, showValues)
 
     # ---------------------------------------------------------------------
     # PyQtGraph methods
@@ -155,7 +132,7 @@ class AuxPlotAxisItem(AxisItem):
             self.setFixedWidth(Y_AXIS_WIDTH)
             self.picture = None
         else:
-            super(AuxPlotAxisItem, self)._updateWidth()
+            super()._updateWidth()
 
     def _updateHeight(self):
         """Reimplemented function to match known height of main plot"""
@@ -167,7 +144,7 @@ class AuxPlotAxisItem(AxisItem):
             self.setFixedHeight(height)
             self.picture = None
         else:
-            super(AuxPlotAxisItem, self)._updateHeight()
+            super()._updateHeight()
 
 
 def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
