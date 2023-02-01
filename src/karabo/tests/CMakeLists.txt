@@ -3,9 +3,9 @@
 # Variables that influence the configuration behavior and that should be
 # explicitly set at project configuration and generation time:
 #
-# CMAKE_PREFIX_PATH: when the target named "karabo" (the Karabo Shared Library 
+# CMAKE_PREFIX_PATH: when the target named "karabo" (the Karabo Shared Library
 #                    target) is not known, this variable value should have the
-#                    root directory of the external build (and run) time 
+#                    root directory of the external build (and run) time
 #                    dependencies of the karabo shared library.
 #
 
@@ -97,6 +97,7 @@ set(logTestRunner_FILES
 set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Broker_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/EventLoop_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/InfluxDbClient_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/JmsConnection_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/MQTcpNetworking.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/MqttClient_Test.cc
