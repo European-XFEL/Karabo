@@ -214,3 +214,16 @@ def test_deprecated_file_system_model():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert isinstance(read_model, api.LineEditModel)
+
+
+def test_list():
+    traits = _geometry_traits()
+    traits["font_size"] = 18
+    traits["font_weight"] = "bold"
+
+    model = api.DisplayListModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+
+    assert read_model.font_size == 18
+    assert read_model.font_weight == "bold"
