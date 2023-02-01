@@ -32,10 +32,15 @@ class TestPreviewDialog(GuiTestCase):
             dialog._swap_view()
             self.assertEqual(dialog.ui_swap.text(), "Show Configuration")
             self.assertEqual(dialog.ui_existing.toPlainText(),
-                             "\nstringProperty\nfoo\n")
+                             "\navailableScenes\n['scene']\n"
+                             "readOnlyProperty\n0\n"
+                             "state\nON\n"
+                             "stringProperty\nfoo\n")
             self.assertEqual(dialog.ui_retrieved.toPlainText(),
-                             "\nstringProperty\nbar\n")
-
+                             "\navailableScenes\nRemoved from configuration\n"
+                             "readOnlyProperty\nRemoved from configuration\n"
+                             "state\nRemoved from configuration\n"
+                             "stringProperty\nbar\n")
             save_path = "karabogui.dialogs.configuration_preview." \
                         "getSaveFileName"
             open_path = "karabogui.dialogs.configuration_preview.open"
