@@ -1,5 +1,5 @@
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QFrame
+from qtpy.QtWidgets import QAction, QDialog, QFrame
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayListModel
@@ -7,6 +7,8 @@ from karabogui.binding.api import (
     VectorBinding, VectorCharBinding, VectorHashBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.dialogs.format_label import FormatLabelDialog
+from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 from karabogui.widgets.hints import ElidingLabel
@@ -33,8 +35,31 @@ class DisplayList(BaseBindingController):
         sheet = style_sheet.format(ALL_OK_COLOR)
         widget.setStyleSheet(sheet)
 
+        action = QAction("Format field...", widget)
+        action.triggered.connect(self._format_field)
+        widget.addAction(action)
+
         return widget
 
     def value_update(self, proxy):
         value = get_binding_value(proxy, [])
         self.widget.setText(",".join(str(v) for v in value))
+
+    def _format_field(self):
+        dialog = FormatLabelDialog(font_size=self.model.font_size,
+                                   font_weight=self.model.font_weight,
+                                   parent=self.widget)
+        if dialog.exec() == QDialog.Accepted:
+            self.model.trait_set(
+                font_size=dialog.font_size, font_weight=dialog.font_weight)
+            self._apply_format()
+
+    def _apply_format(self, widget=None):
+        if widget is None:
+            widget = self.widget
+
+        # Apply font formatting
+        font = widget.font()
+        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
+        font.setBold(self.model.font_weight == "bold")
+        widget.setFont(font)
