@@ -9,6 +9,7 @@
 
 #include "HttpResponse.hh"
 
+#include <boost/algorithm/string.hpp>
 #include <cassert>
 #include <cstring>
 
@@ -51,30 +52,31 @@ namespace karabo {
 
             while (posEnd > posBegin) {
                 size_t posSeparator = line.find(": ", posBegin);
-                const std::string& key = line.substr(posBegin, posSeparator - posBegin);
+                std::string key = line.substr(posBegin, posSeparator - posBegin);
+                boost::to_lower(key);
                 size_t posValue = posSeparator + 2;
                 assert(posBegin < posEnd && posBegin < posValue && posValue < posEnd);
                 std::string val = line.substr(posValue, posEnd - posValue);
 
-                if (key == "Content-Type") {
+                if (key == "content-type") {
                     contentType = val;
-                } else if (key == "Request-Id") {
+                } else if (key == "request-id") {
                     requestId = val;
-                } else if (key == "X-Request-Id") {
+                } else if (key == "x-request-id") {
                     xRequestId = val;
-                } else if (key == "Date") {
+                } else if (key == "date") {
                     date = val;
-                } else if (key == "X-Influxdb-Build") {
+                } else if (key == "x-influxdb-build") {
                     build = val;
-                } else if (key == "X-Influxdb-Version") {
+                } else if (key == "x-influxdb-version") {
                     version = val;
-                } else if (key == "X-Influxdb-Error") {
+                } else if (key == "x-influxdb-error") {
                     xError = val;
-                } else if (key == "Connection") {
+                } else if (key == "connection") {
                     connection = val;
-                } else if (key == "Transfer-Encoding") {
+                } else if (key == "transfer-encoding") {
                     transferEncoding = val;
-                } else if (key == "Content-Length") {
+                } else if (key == "content-length") {
                     contentLength = std::atoi(val.c_str());
                 }
                 posBegin = posEnd + 2;
