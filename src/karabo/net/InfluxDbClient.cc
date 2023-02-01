@@ -38,7 +38,7 @@ namespace karabo {
 
         boost::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
-        const unsigned int InfluxDbClient::k_connTimeoutMs = 1500u;
+        const unsigned int InfluxDbClient::k_connTimeoutMs = 3500u;
 
         void InfluxDbClient::expectedParameters(karabo::util::Schema& expected) {
             STRING_ELEMENT(expected)
