@@ -72,7 +72,7 @@ class DisplayLabelModel(BaseWidgetObjectData):
                          **traits)
 
 
-class DisplayListModel(BaseWidgetObjectData):
+class DisplayListModel(DisplayLabelModel):
     """A model for DisplayList"""
 
 
@@ -387,6 +387,7 @@ def _deprecated_filesystem_reader(element):
 @register_scene_reader("DisplayList")
 def _display_list_reader(element):
     traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
     return DisplayListModel(**traits)
 
 
@@ -404,6 +405,8 @@ def _editable_list_reader(element):
 def _display_list_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "DisplayList")
+    write_font_format_data(model, element)
+    return element
 
 
 @register_scene_writer(EditableListModel)
