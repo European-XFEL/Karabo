@@ -1069,6 +1069,7 @@ namespace karabo {
             AmqpTransceiver::Pointer t(nullptr);
             while (!t) {
                 if (paths.size() == 0 || ec) {
+                    if (paths.size() == 0) m_publisher.reset();
                     post(boost::bind(onComplete, ec));
                     return;
                 }
@@ -1088,6 +1089,7 @@ namespace karabo {
                 std::lock_guard<std::mutex> lock(m_transceiversMutex);
                 for (auto it = m_transceivers.begin(); it != m_transceivers.end(); ++it) paths.push(it->first);
                 if (paths.size() == 0) {
+                    m_publisher.reset();
                     post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
                     return;
                 }
