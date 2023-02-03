@@ -230,11 +230,12 @@ class MacroPanel(BasePanelWidget):
 
     @Slot()
     def on_save(self):
+        default_file_name = self.model.simple_name.replace("/", "_")
         fn = getSaveFileName(
                 caption="Save macro to file",
                 filter="Python files (*.py)",
                 suffix="py",
-                selectFile=self.model.simple_name + ".py")
+                selectFile=default_file_name + ".py")
         if not fn:
             return
 
