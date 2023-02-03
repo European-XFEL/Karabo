@@ -21,6 +21,7 @@ class DeviceFilterModel(QSortFilterProxyModel):
         self.setFilterRole(Qt.DisplayRole)
         self.setFilterKeyColumn(0)
         self.setRecursiveFilteringEnabled(True)
+        self.setDynamicSortFilter(False)
         self.setSourceModel(source_model)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
