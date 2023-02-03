@@ -11,13 +11,13 @@
 #include <boost/algorithm/string.hpp>
 #include <nlohmann/json.hpp>
 
+#include "BeastClient.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/StringTools.hh"
 
 using namespace std;
 using namespace karabo::util;
-namespace belle = OB::Belle;
 
 namespace karabo {
     namespace net {
@@ -28,7 +28,7 @@ namespace karabo {
             if (!m_authServerUrl.empty()) {
                 const auto& urlParts = parseUrl(authServerUrl);
                 const string& protocol = boost::algorithm::to_lower_copy(urlParts.get<0>());
-                if (protocol != "http" && protocol != "https") {
+                if (protocol != "https") {
                     throw KARABO_PARAMETER_EXCEPTION("Unsupported protocol, '" + protocol + "' in authServerUrl, '" +
                                                      authServerUrl + "'.");
                 }
@@ -71,56 +71,42 @@ namespace karabo {
                 });
             }
 
-            belle::Client cli{m_authServerHost, m_authServerPort, m_useSSL};
-
-            // TODO: change to verify_peer once real certificates are used.
-            cli.ssl_context().set_verify_mode(boost::asio::ssl::verify_none);
-
-            belle::Headers reqHeaders;
-            reqHeaders.set(belle::Header::user_agent, "Karabo User Auth Client");
-            reqHeaders.set(belle::Header::content_type, "application/json");
-
+            const std::string host = m_authServerHost;
+            const std::string port = toString(m_authServerPort);
+            assert(m_useSSL);
+            const std::string target("/authorize_once_tk");
             const string reqBody{"{\"tk\": \"" + token + "\", \"topic\": \"" + topic + "\"}"};
+            int version = 11; // HTTP 1.1
 
-            cli.on_http(belle::Method::post, "/authorize_once_tk", reqHeaders, reqBody,
-                        [handler](belle::Client::Http_Ctx& httpCtx) {
-                            // Handle response
-                            if (httpCtx.res.result() != belle::Status::ok) {
-                                // An error occurred at the http level.
-                                handler(OneTimeTokenAuthorizeResult{
-                                      .success = false,
-                                      .userId = "",
-                                      .accessLevel = Schema::OBSERVER,
-                                      .errMsg = string(httpCtx.res.reason().data(), httpCtx.res.reason().size())});
-                            } else {
-                                try {
-                                    nl::json respObj = nl::json::parse(httpCtx.res.body());
-                                    // The AuthServer processed the request and generated a valid response - pass the
-                                    // response to the handler.
-                                    Schema::AccessLevel level = Schema::OBSERVER;
-                                    if (!respObj["visib_level"].is_null()) {
-                                        level = respObj["visib_level"];
-                                    }
-                                    handler(OneTimeTokenAuthorizeResult{
-                                          .success = static_cast<bool>(respObj["success"]),
-                                          .userId = respObj["user"].is_null() ? "" : respObj["user"],
-                                          .accessLevel = static_cast<Schema::AccessLevel>(level),
-                                          .errMsg = respObj["error_msg"].is_null() ? "" : respObj["error_msg"]});
+            httpsPost(host, port, target, reqBody, version, [handler](bool success, const std::string& response) {
+                if (!success) {
+                    handler(OneTimeTokenAuthorizeResult{
+                          .success = false, .userId = "", .accessLevel = Schema::OBSERVER, .errMsg = response});
+                } else {
+                    try {
+                        nl::json respObj = nl::json::parse(response);
+                        // The AuthServer processed the request and generated a valid response - pass the
+                        // response to the handler.
+                        Schema::AccessLevel level = Schema::OBSERVER;
+                        if (!respObj["visib_level"].is_null()) {
+                            level = respObj["visib_level"];
+                        }
+                        handler(OneTimeTokenAuthorizeResult{
+                              .success = static_cast<bool>(respObj["success"]),
+                              .userId = respObj["user"].is_null() ? "" : respObj["user"],
+                              .accessLevel = static_cast<Schema::AccessLevel>(level),
+                              .errMsg = respObj["error_msg"].is_null() ? "" : respObj["error_msg"]});
 
-                                } catch (const std::exception& e) {
-                                    // Problem parsing the JSON response (probably invalid JSON)
-                                    handler(OneTimeTokenAuthorizeResult{
-                                          .success = false,
-                                          .userId = "",
-                                          .accessLevel = Schema::OBSERVER,
-                                          .errMsg = "Error parsing JSON response: " + string(e.what()) +
-                                                    "\nResponse:\n" + httpCtx.res.body()});
-                                }
-                            }
-                        });
-
-            // Submit the request and handle the response.
-            cli.connect();
+                    } catch (const std::exception& e) {
+                        // Problem parsing the JSON response (probably invalid JSON)
+                        handler(OneTimeTokenAuthorizeResult{.success = false,
+                                                            .userId = "",
+                                                            .accessLevel = Schema::OBSERVER,
+                                                            .errMsg = "Error parsing JSON response: " +
+                                                                      string(e.what()) + "\nResponse:\n" + response});
+                    }
+                }
+            });
         }
     } // namespace net
 } // namespace karabo
