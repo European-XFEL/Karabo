@@ -163,6 +163,9 @@ class TestCase(GuiTestCase):
     def test_rowCount_root(self):
         self.assertEqual(self.device_model.rowCount(), 1)
 
+    def test_dynamics_sorting(self):
+        assert not self.model.dynamicSortFilter()
+
     def test_update_topo(self):
         """Add a device to the system model"""
 
