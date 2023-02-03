@@ -13,10 +13,10 @@
 #ifndef KARABO_NET_USERAUTHCLIENT_HH
 #define KARABO_NET_USERAUTHCLIENT_HH
 
-#include <belle.hh>
 #include <boost/function.hpp>
 #include <string>
 
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/Schema.hh"
 
 namespace karabo {
@@ -60,7 +60,6 @@ namespace karabo {
             // The base path for the AuthServer web api - will usually be blank.
             std::string m_authServerPath;
             bool m_useSSL;
-            OB::Belle::Client m_cli;
         };
     } // namespace net
 } // namespace karabo
