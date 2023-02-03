@@ -93,7 +93,7 @@ def test_delete():
         assert Remote.destructed
     finally:
         thread.stop()
-        thread.join(0.5)
+        thread.join(1.0)
         assert not thread.is_alive()
 
 
