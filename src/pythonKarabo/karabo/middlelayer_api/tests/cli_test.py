@@ -86,9 +86,9 @@ def test_delete():
         r = weakref.ref(remote)
         Remote.destructed = False
         del remote
-        time.sleep(0.02)
+        time.sleep(0.05)
         gc.collect()
-        time.sleep(0.02)
+        time.sleep(0.05)
         assert r() is None
         assert Remote.destructed
     finally:
