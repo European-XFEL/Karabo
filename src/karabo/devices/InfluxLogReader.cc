@@ -689,7 +689,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onSchemaForDigest, this, _1, ctxt));
+                m_influxClient->queryDb(queryStr,
+                                        bind_weak(&InfluxLogReader::onSchemaForDigest, this, _1, ctxt, digest));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying schema for digest");
                 ctxt->aReply.error(errMsg);
@@ -698,7 +699,8 @@ namespace karabo {
 
 
         void InfluxLogReader::onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
-                                                const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+                                                const boost::shared_ptr<ConfigFromPastContext> &ctxt,
+                                                const std::string &digest) {
             bool errorHandled = handleHttpResponseError(schemaResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -713,9 +715,11 @@ namespace karabo {
                 const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (value.is_null()) {
                     // No schema corresponding to the digest has been found - it's not possible to go ahead.
-                    const std::string errMsg = "Failed to query schema";
-                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                    ctxt->aReply.error(errMsg);
+                    const std::string errMsg = "Failed to query schema: data missing for given point in time.";
+                    const std::string details("No schema for digest " + digest + ".");
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg << " for " << ctxt->deviceId << " at "
+                                               << ctxt->atTime.toIso8601Ext() << ". (" << details << ")";
+                    ctxt->aReply.error(errMsg, details);
                     return;
                 } else {
                     encodedSch = value.get<std::string>();
