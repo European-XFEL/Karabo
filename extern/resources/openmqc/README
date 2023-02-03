@@ -1,12 +1,12 @@
 source: https://https://git.xfel.eu/gitlab/Karabo/openmq/
-tag: 5.1.4-XFEL
+tag: 5.1.4.1-XFEL
 path: mq/src/share/cclient
 
 
 ```
 cd mq/src/share
-mkdir openmqc-5.1.4
-cp MakefileCClient openmqc-5.1.4/Makefile
-cp -r cclient openmqc-5.1.4/.
-tar cf openmqc-5.1.4.tar openmqc-5.1.4
+mkdir openmqc-5.1.4.1
+cp MakefileCClient openmqc-5.1.4.1/Makefile
+cp -r cclient openmqc-5.1.4.1/.
+tar cf openmqc-5.1.4.1.tar openmqc-5.1.4.1
 ```
