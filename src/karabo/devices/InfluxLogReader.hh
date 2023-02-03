@@ -192,7 +192,7 @@ namespace karabo {
 
             void asyncSchemaForDigest(const std::string &digest, const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
-                                   const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+                                   const boost::shared_ptr<ConfigFromPastContext> &ctxt, const std::string &digest);
 
 
             void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
