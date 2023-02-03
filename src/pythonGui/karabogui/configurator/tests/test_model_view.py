@@ -11,7 +11,7 @@ from karabogui.binding.api import (
     DeviceProxy, ProjectDeviceProxy, ProxyStatus, apply_default_configuration,
     build_binding)
 from karabogui.configurator.api import (
-    ConfigurationTreeModel, ConfigurationTreeView)
+    ConfigurationTreeModel, ConfigurationTreeView, ConfiguratorFilterModel)
 from karabogui.testing import GuiTestCase
 
 
@@ -146,6 +146,13 @@ class TestConfiguratorProjectDevice(GuiTestCase):
 
         warn_bar_index = bar_index.child(0, 0)
         assert warn_bar_index.parent() == bar_index
+
+    def test_swap(self):
+        self.view.swap_models()
+        self.assertIsInstance(self.view.model(), ConfiguratorFilterModel)
+        self.assertFalse(self.view.model().dynamicSortFilter())
+        self.view.swap_models()
+        self.assertNotIsInstance(self.view.model(), ConfiguratorFilterModel)
 
 
 class TestConfiguratorDevice(GuiTestCase):
