@@ -35,9 +35,12 @@ class FindToolBar(QWidget):
         self.replace_all_button.clicked.connect(self.requestReplaceAll)
         self.show_replace_tool_button.toggled.connect(
             self.set_replace_widgets_visibility)
-        self.find_line_edit.findChild(QToolButton).setIcon(icons.close_small)
-        self.replace_line_edit.findChild(
-            QToolButton).setIcon(icons.close_small)
+        button = self.find_line_edit.findChild(QToolButton)
+        if button is not None:
+            button.setIcon(icons.close_small)
+        button = self.replace_line_edit.findChild(QToolButton)
+        if button is not None:
+            button.setIcon(icons.close_small)
 
     @Slot(bool)
     def set_replace_widgets_visibility(self, visible):
