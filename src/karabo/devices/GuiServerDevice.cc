@@ -2095,7 +2095,7 @@ namespace karabo {
                 for (const auto& keyAndChannel : inputs) {
                     Hash& oneChannelInfo = channelsInfo.bindReference<Hash>(keyAndChannel.first); // key is 'local' id
                     const InputChannel::Pointer& inputChannel = keyAndChannel.second;
-                    for (const std::pair<std::string, net::ConnectionStatus>& oneConnection :
+                    for (const std::pair<const std::string, net::ConnectionStatus>& oneConnection :
                          inputChannel->getConnectionStatus()) {
                         oneChannelInfo.set("id", inputChannel->getInstanceId()); // instanceId is unique in system
                         std::string& status = oneChannelInfo.bindReference<std::string>("status");
