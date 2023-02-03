@@ -44,9 +44,10 @@ class Tests(TestCase):
         slow_func()
         after = time.time()
         diff = after - before
-        # https://git.xfel.eu/Karabo/Framework/-/jobs/357337 showed a
-        # diff of 0.2084, so relax delta a bit further
-        self.assertAlmostEqual(diff, sleep_time, delta=0.25)
+        # Some tests on CI showed diffs of 0.2084 or even 0.42559.
+        # Indeed, we cannot guarantee any wall clock time diff...
+        self.assertGreaterEqual(diff, sleep_time)
+        self.assertLess(diff, 1.)  # not a real guarantee
 
 
 if __name__ == "__main__":
