@@ -158,6 +158,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # to trigger potential race conditions.
         for index, (devid, cfg) in enumerate(start_info):
             self.start_device_nowait(apis[index], 1, devid, cfg)
+            # Add API to start_info for debugging
+            start_info[index] = (devid, cfg, apis[index])
 
         # Up to three minutes waiting for devices to come (CI failed with one)
         max_waits = min(100 * num_of_forwarders, 1800)
@@ -179,13 +181,29 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # If instantiation of any device failed, cleanup by killing the ones that have been instantiated.
         # This is needed for tests with Bound Python devices - during test development, several processes
         # corresponding to python devices in failed test runs weren't killed after the test finished.
+        # Also collect logs of servers on which devices failed (seen in CI)
+        missing = ""
+        logs = ""
         if len(devices_present) < len(start_info):
-            for devid, _ in start_info:
+            caller = SignalSlotable("debugHelper")
+            caller.start()
+            failedApis = set()
+            for devid, _, api in start_info:
+                failedApis.update(api)
                 self.dc.killDeviceNoWait(devid)
+                if devid in devices_not_present:
+                    missing += f"{devid} ({api}), "  # add API as debug info
+
+            for failedApi in failedApis:
+                req = caller.request(self.serverId(api, 1),
+                                     "slotLoggerContent", Hash("logs", 500))
+                res = req.waitForReply(self._max_timeout * 1000)[0]
+                for h in res["content"]:
+                    logs += str(h) + "\n"
 
         self.assertTrue(len(devices_present) == len(start_info),
                         f"Couldn't instantiate all {len(start_info)} devices: "
-                        f"'{devices_not_present}' not instantiated.")
+                        f"'{missing[:-2]}' not instantiated.\nLogs:\n {logs}")
         print("========== all instantiated ===============")
 
         # Waits for all the chained output channels to be properly connected before sending
@@ -364,8 +382,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # Test that duration and frequency match by +25/-50%:
         cycle_time = max(1.0/sender_freq, processing_time/1000.0)  # for wait, processing_time "holds" the sender.
         expected_out_count = elapsed_time / cycle_time
-        # 0.75 * expected_out_count fails sometimes,
-        # e.g. in https://git.xfel.eu/Karabo/Framework/-/jobs/329889
+        # 0.75 * expected_out_count failed sometimes in CI
         min_expected = 0.5 * expected_out_count
         max_expected = 1.25 * expected_out_count
         self.assertTrue(min_expected < out_count < max_expected,
