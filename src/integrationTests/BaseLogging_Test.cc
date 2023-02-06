@@ -245,7 +245,15 @@ void BaseLogging_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
 
     // Start central event-loop
-    m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
+    auto work = []() {
+        try {
+            EventLoop::work();
+        } catch (const karabo::util::TimeoutException& e) {
+            // Looks like thread joining fails sometimes...
+            std::clog << "Timeout from EventLoop::work(): " << e << std::endl;
+        }
+    };
+    m_eventLoopThread = boost::thread(work);
 
     // Create and start server
     Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "FATAL");
@@ -275,11 +283,7 @@ void BaseLogging_Test::tearDown() {
 
     EventLoop::stop();
     if (m_eventLoopThread.joinable()) {
-        bool joined = m_eventLoopThread.try_join_for(boost::chrono::seconds(10));
-        if (!joined) {
-            std::clog << "\nWARNING: Event loop thread join timed out.\n"
-                      << "Thread(s) in the event loop: " << EventLoop::getNumberOfThreads() << std::endl;
-        }
+        m_eventLoopThread.join();
     }
 
     // Clean up directory - you may want to comment out these lines for debugging
