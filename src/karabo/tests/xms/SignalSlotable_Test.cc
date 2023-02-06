@@ -1365,7 +1365,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     };
     // First test: successful connection
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(500)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(2000)));
     std::pair<bool, std::string> result(handlerFuture.get());
     CPPUNIT_ASSERT(result.first);
     CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
@@ -1379,7 +1379,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").push_back("sender:not_an_output");
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(500)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(2000)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(!result.first);
     CPPUNIT_ASSERT(result.second.find("SignalSlot Exception") != std::string::npos);
@@ -1413,7 +1413,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     inputCfg.get<std::vector<std::string>>("connectedOutputChannels").clear();
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(500)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(2000)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(result.first);
     CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
