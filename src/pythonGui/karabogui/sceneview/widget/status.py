@@ -35,28 +35,23 @@ class InstanceStatusWidget(KaraboSceneWidget, QSvgWidget):
         self.device_id = model.keys[0].split(".", 1)[0]
         super().__init__(model=model, parent=parent)
         self.status = ProxyStatus.OFFLINE
-        self.setToolTip(self.getToolTip())
         self.proxy = get_topology().get_device(self.device_id)
         self.proxy.on_trait_change(self.proxy_online_change, "online")
         self.proxy.on_trait_change(self.proxy_status_change,
                                    "topology_node:status")
         self.proxy_online_change(self.proxy.online)
-        if self.proxy.online:
-            self.proxy_status_change(self.proxy.topology_node.status)
-
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def getToolTip(self):
         return f"{self.device_id} - {self.status.name}"
 
     def proxy_online_change(self, online):
-        if not online:
-            svg = SVG_OFFLINE
-            self.status = ProxyStatus.OFFLINE
-        else:
+        if online and self.proxy.topology_node is not None:
             svg = SVG_STATUS[self.proxy.topology_node.status]
             self.status = self.proxy.topology_node.status
-
+        else:
+            svg = SVG_OFFLINE
+            self.status = ProxyStatus.OFFLINE
         self.setToolTip(self.getToolTip())
         self.load(svg)
 
