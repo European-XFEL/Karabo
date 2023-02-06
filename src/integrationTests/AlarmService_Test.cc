@@ -44,7 +44,8 @@ void AlarmService_Test::setUp() {
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient->initialize();
 
     // unlink persisted alarms if they exist
     if (boost::filesystem::exists(std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml")) {
