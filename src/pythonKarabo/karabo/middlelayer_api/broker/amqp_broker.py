@@ -17,6 +17,12 @@ from karabo.native import (
 from ..eventloop import EventLoop
 from .base import Broker
 
+_QARGUMENTS = {
+    "x-max-length": 100_000,  # Number of max messages in the queue
+    "x-overflow": "drop-head",  # Drop oldest messages
+    "x-message-ttl": 120_000  # 120 seconds expiry time [ms]
+}
+
 
 def ensure_running(func):
     """Ensure a running eventloop for `func`"""
@@ -85,7 +91,8 @@ class AmqpBroker(Broker):
             # Exception raised since the queue not found on the broker
             # The channel is not valid anymore, so create the new one
             self.channel = await self.connection.channel()
-        declare_ok = await self.channel.queue_declare(name, auto_delete=True)
+        declare_ok = await self.channel.queue_declare(
+            name, auto_delete=True, arguments=_QARGUMENTS)
         # The received queue name (either input or generated) is ...
         self.queue = declare_ok.queue
         # create main exchange : <domain>.slots
@@ -429,8 +436,9 @@ class AmqpBroker(Broker):
     async def consume_beats(self, device):
         """Heartbeat method for the device server"""
         device = weakref.ref(device)
+
         declare_ok = await self.channel.queue_declare(
-            auto_delete=True)
+            auto_delete=True, arguments=_QARGUMENTS)
         self.heartbeat_queue = declare_ok.queue
         consume_ok = await self.channel.basic_consume(
             self.heartbeat_queue, partial(self.on_heartbeat, device),
