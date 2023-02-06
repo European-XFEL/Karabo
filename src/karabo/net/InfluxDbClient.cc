@@ -169,6 +169,12 @@ namespace karabo {
         }
 
 
+        std::string InfluxDbClient::influxVersion() {
+            boost::mutex::scoped_lock lock(m_influxVersionMutex);
+            return m_influxVersion;
+        }
+
+
         void InfluxDbClient::tryNextRequest(boost::mutex::scoped_lock& requestQueueLock) {
             if (!m_active) { // activate processing
                 m_active = true;
@@ -231,6 +237,10 @@ namespace karabo {
                 std::ostringstream oss;
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
                 const std::string errMsg = oss.str();
+                {
+                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    m_influxVersion.clear();
+                }
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Synthesizes a 503 (Service Unavailable) response and sends it back to the client.
                 if (action != nullptr) {
@@ -365,6 +375,10 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_responseHandlersMutex);
                     m_registeredInfluxResponseHandlers.clear();
                 }
+                {
+                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    m_influxVersion.clear();
+                }
                 if (hook) hook(false); // false means connection failed
                 return;
             } else {
@@ -374,7 +388,10 @@ namespace karabo {
             }
 
             std::ostringstream oss;
-            oss << "InfluxDbClient : connection to \"" << m_url << "\" established";
+            // NOTE: At this point the connection has been established at the TCP level; no
+            //       HTTP response with a header indicating the Influx server version has
+            //       been received.
+            oss << "InfluxDbClient : connection to Influx Server at\"" << m_url << "\" established";
             KARABO_LOG_FRAMEWORK_INFO << oss.str();
 
             if (hook) hook(true); // true means connected successfuly.
@@ -417,6 +434,18 @@ namespace karabo {
                     if (m_response.requestId.empty()) {
                         m_response.requestId = flyingId;
                         m_response.contentType = "application/json";
+                    }
+                    if (!m_response.version.empty() && m_influxVersion != m_response.version) {
+                        // Note: the test above for the m_influxVersion can be outside of the mutex protection
+                        // because of the one-request-at-a-time policy enforced by the InfluxDbClient.
+                        // As the external access to m_influxVersion is read-only and all the internal writes
+                        // happen on different phases of the processing of a single request, the possible
+                        // race conditions are all between external reads and internal writes. Internal reads
+                        // and writes won't concur with each other.
+                        boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                        m_influxVersion = m_response.version;
+                        KARABO_LOG_FRAMEWORK_INFO << "Connected Influx instance has version '" << m_influxVersion
+                                                  << "'.\n";
                     }
                     m_response.payloadArrived = true;
                     if (m_response.transferEncoding == "chunked") {
@@ -566,6 +595,10 @@ namespace karabo {
                 std::ostringstream oss;
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
                 const std::string errMsg = oss.str();
+                {
+                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    m_influxVersion.clear();
+                }
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Synthesizes a 503 (Service Unavailable) response and sends it back to the client.
                 if (action != nullptr) {
@@ -613,6 +646,10 @@ namespace karabo {
                 std::ostringstream oss;
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
                 const std::string errMsg = oss.str();
+                {
+                    boost::mutex::scoped_lock lock(m_influxVersionMutex);
+                    m_influxVersion.clear();
+                }
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Synthesizes a 503 (Service Unavailable) response and sends it back to the client.
                 if (action != nullptr) {

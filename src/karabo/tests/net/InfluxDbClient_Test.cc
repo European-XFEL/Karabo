@@ -11,12 +11,14 @@
 #include <memory>
 #include <string>
 
+#include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/StringTools.hh"
 
+using karabo::log::Logger;
 using karabo::net::EventLoop;
 using karabo::net::HttpResponse;
 using karabo::net::InfluxDbClient;
@@ -29,6 +31,11 @@ using std::string;
 CPPUNIT_TEST_SUITE_REGISTRATION(InfluxDbClient_Test);
 
 void InfluxDbClient_Test::setUp() {
+    // Output messages logged during the test to the test output.
+    Hash config("priority", "INFO");
+    Logger::configure(config);
+    Logger::useOstream();
+
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
 
     // Instantiates an InfluxDbClient
@@ -80,14 +87,19 @@ void InfluxDbClient_Test::tearDown() {
 }
 
 void InfluxDbClient_Test::testShowDatabases() {
+    std::clog << "Testing InfluxDbClient execution of SHOW DATABASES ..." << std::endl;
     auto prom = std::make_shared<std::promise<HttpResponse>>();
     std::future<HttpResponse> fut = prom->get_future();
     m_influxClient->queryDb("SHOW DATABASES", [prom](const HttpResponse& resp) { prom->set_value(resp); });
     auto status = fut.wait_for(std::chrono::milliseconds(3500));
     if (status != std::future_status::ready) {
         CPPUNIT_ASSERT_MESSAGE("Timed out waiting for reply of SHOW DATABASES query", false);
+    } else {
+        std::clog << " ... command submitted to Influx '" << m_influxClient->influxVersion() << "' at '"
+                  << m_influxClient->serverUrl() << "'." << std::endl;
     }
     auto resp = fut.get();
     CPPUNIT_ASSERT_EQUAL_MESSAGE("SHOW DATABASES failed", 200, resp.code);
     CPPUNIT_ASSERT_MESSAGE("SHOW MESSAGE returned an empty response.", resp.payload.length() > 0);
+    std::clog << "OK" << std::endl;
 }
