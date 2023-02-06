@@ -1016,6 +1016,9 @@ async def test_async_slot_macro(deviceTest):
         # We can cancel our tasks
         ensure_future(local.asyncSleep())
         await d.cancel()
+        # A cancellation creates another task for the a cancel action
+        # we wait and assert here, this should be very quick
+        await sleepUntil(lambda: local.cancelled_slot is not None, 0.2)
         assert local.cancelled_slot == Local.asyncSleep
         assert d.state == State.PASSIVE
 
