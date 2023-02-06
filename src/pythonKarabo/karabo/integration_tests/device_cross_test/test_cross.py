@@ -190,7 +190,7 @@ class Tests(DeviceTest):
                 </input>
             </root>""")
         self.process.stdin.close()
-
+        # And get a new proxy!
         proxy = await getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive inital value from bound device")
