@@ -1174,6 +1174,14 @@ class Tests(TestCase):
             class B(Configurable):
                 table = VectorHash(defaultValue=[])
 
+        # Try operations with KaraboValue's
+        a = A(Hash("table", [Hash("name", "bla",
+                                  "number", 5, "counter", 2,
+                                  "vectorString", ["Itchy", "Burns"])]))
+        # numpy.delete is not supported by pint
+        with pytest.raises(TypeError):
+            a.table.pop(QuantityValue(numpy.int32(0)))
+
     def test_overwrite(self):
         class Mandy(Configurable):
             number = Int32(displayedName="whatever", minExc=7,
