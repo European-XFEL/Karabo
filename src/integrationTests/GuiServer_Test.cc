@@ -127,6 +127,9 @@ void GuiServer_Test::appTestRunner() {
     success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
+    // TODO: Reactive the tests below as soon as Belle is replaced by pure Boost Beast
+
+    /*
     const std::string authServerAddr = "127.0.0.1";
     const int authServerPort = 8052;
 
@@ -154,6 +157,7 @@ void GuiServer_Test::appTestRunner() {
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
     }
+    */
 }
 
 
