@@ -64,11 +64,6 @@ stages:
   tags:
     - KaraboFramework
 
-.image_ubuntu18_: &image_ubuntu18
-  image: europeanxfel/karabo-ci:ubuntu-18-002
-  tags:
-    - KaraboFramework
-
 .image_debian10_: &image_debian10
   image: europeanxfel/karabo-ci:debian-10-002
   tags:
@@ -328,10 +323,6 @@ release build ubuntu22:
   <<: *image_ubuntu22
   <<: *release-build
 
-release build ubuntu18:
-  <<: *image_ubuntu18
-  <<: *release-build
-
 release build miniconda:
   <<: *image_miniconda
   <<: *release-build-conda
@@ -370,10 +361,6 @@ prerelease build ubuntu20:
 
 prerelease build ubuntu22:
   <<: *image_ubuntu22
-  <<: *prerelease-build
-
-prerelease build ubuntu18:
-  <<: *image_ubuntu18
   <<: *prerelease-build
 
 prerelease build miniconda:
@@ -416,10 +403,6 @@ nightly build ubuntu22:
   <<: *image_ubuntu22
   <<: *nightly-build
 
-nightly build ubuntu18:
-  <<: *image_ubuntu18
-  <<: *nightly-build
-
 nightly build miniconda-osx64:
   before_script:
     - ci/miniconda/cleanup.sh
@@ -460,10 +443,6 @@ deps build ubuntu22:
   <<: *image_ubuntu22
   <<: *deps-build
 
-deps build ubuntu18:
-  <<: *image_ubuntu18
-  <<: *deps-build
-
 # Dependencies build tests
 
 cpp_deps tests almalinux8:
@@ -476,10 +455,6 @@ cpp_deps tests centos7:
 
 cpp_deps tests debian10:
   <<: *image_debian10
-  <<: *deps-tests
-
-cpp_deps tests ubuntu18:
-  <<: *image_ubuntu18
   <<: *deps-tests
 
 cpp_deps tests ubuntu20:
@@ -500,10 +475,6 @@ python_deps tests centos7:
 
 python_deps tests debian10:
   <<: *image_debian10
-  <<: *deps-tests
-
-python_deps tests ubuntu18:
-  <<: *image_ubuntu18
   <<: *deps-tests
 
 python_deps tests ubuntu20:
@@ -536,10 +507,6 @@ python_unit tests ubuntu22:
   <<: *image_ubuntu22
   <<: *python-unit-tests
 
-python_unit tests ubuntu18:
-  <<: *image_ubuntu18
-  <<: *python-unit-tests
-
 cpp_unit tests almalinux8:
   <<: *image_almalinux8
   <<: *cpp-unit-tests
@@ -558,10 +525,6 @@ cpp_unit tests ubuntu20:
 
 cpp_unit tests ubuntu22:
   <<: *image_ubuntu22
-  <<: *cpp-unit-tests
-
-cpp_unit tests ubuntu18:
-  <<: *image_ubuntu18
   <<: *cpp-unit-tests
 
 gui_unit tests miniconda:
@@ -622,10 +585,6 @@ python_integration tests ubuntu22:
   <<: *image_ubuntu22
   <<: *integration-tests
 
-python_integration tests ubuntu18:
-  <<: *image_ubuntu18
-  <<: *integration-tests
-
 cpp_integration tests almalinux8:
   <<: *image_almalinux8
   <<: *integration-tests
@@ -640,10 +599,6 @@ cpp_integration tests ubuntu20:
 
 cpp_integration tests ubuntu22:
   <<: *image_ubuntu22
-  <<: *integration-tests
-
-cpp_integration tests ubuntu18:
-  <<: *image_ubuntu18
   <<: *integration-tests
 
 # Scheduled coverage tests
@@ -674,8 +629,4 @@ long tests ubuntu20:
 
 long tests ubuntu22:
   <<: *image_ubuntu22
-  <<: *long-tests
-
-long tests ubuntu18:
-  <<: *image_ubuntu18
   <<: *long-tests
