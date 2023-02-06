@@ -82,7 +82,19 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
 
         # Check that the signalAlarmUpdate arrived as expected
         # Its signal_id is known, the signal_payload needs to be "assembled".
-        self.assertEqual(signal_id, dev_id)
+        # HACK: Due to ordering, alarm signal should have arrived before
+        #       the reconfigure slot reply. But the immediate 'assertEqual'
+        #       sometimes fails - get info whether it would work "later".
+        waitTime = 1.
+        while signal_id != dev_id and waitTime > 0.:
+            waitTime -= 0.05
+            sleep(0.05)
+
+        # HACK end
+        self.assertEqual(signal_id, dev_id, f"waited {1 - waitTime} seconds")
+        # HACK part: For now still fail if waiting was needed
+        self.assertEqual(1., waitTime)
+
         # Global alarm should be raised...
         devProps, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.WARN)
