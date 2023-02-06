@@ -26,7 +26,7 @@ stages:
   services:
     - name: europeanxfel/existdb:2.2
       alias: existdb_host
-    - name: influxdb:1.7.8
+    - name: influxdb:1.8.0
       alias: influxdb_host
   variables:
     INFLUXDB_DB: "InfluxLogTest"
