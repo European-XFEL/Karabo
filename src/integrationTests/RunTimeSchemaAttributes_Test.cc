@@ -29,11 +29,13 @@ void RunTimeSchemaAttributes_Test::setUp() {
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
+    m_deviceClient->initialize();
 }
 
 
 void RunTimeSchemaAttributes_Test::tearDown() {
+    m_deviceClient.reset();
     m_deviceServer.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
