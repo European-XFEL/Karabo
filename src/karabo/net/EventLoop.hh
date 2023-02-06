@@ -62,16 +62,22 @@ namespace karabo {
              *
              *  The system signals SIGINT and SIGTERM will be caught and trigger the following actions:
              *  - a signal handler set via setSignalHandler is called,
-             *  - and the event loop is stopped.
+             *  - and EventLoop::stop() is called.
+             *
+             *  Must not be called in parallel to itself or to run().
+
+             * If one or more tasks are in deadlock and thus their threads cannot be joined at
+             * the end, a karabo::util::TimeoutException is thrown.
              */
             static void work();
 
             /** Start the event loop and block until all work posted to its io service is
              *  completed or until EventLoop::stop() is called.
              *
-             *  This function may be called in a separate thread, which blocks upon joining
-             *  until all work has been processed or stop has been called.
-             *  Must not be called in parallel to each other.
+             *  Must not be called in parallel to itself or to work().
+             *
+             * If one or more tasks are in deadlock and thus their threads cannot be joined at
+             * the end, a karabo::util::TimeoutException is thrown.
              */
             static void run();
 
@@ -122,6 +128,8 @@ namespace karabo {
 
             /**
              * Clears the thread pool and joins the threads
+             *
+             * If joining fails repeatedly, throws karabo::util::TimeoutException.
              */
             void clearThreadPool();
 
