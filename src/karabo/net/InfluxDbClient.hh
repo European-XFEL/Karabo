@@ -82,6 +82,22 @@ namespace karabo {
             }
 
             /**
+             * @brief The version of the InfluxDb server the client is connected to.
+             *
+             * @return std::string the connected InfluxDb server version (empty if no server is currently connected).
+             */
+            std::string influxVersion();
+
+            /**
+             * @brief The url of the InfluxDb server the client is connected to (or supposed to connect to).
+             *
+             * @return std::string the InfluxDb server url.
+             */
+            std::string serverUrl() noexcept {
+                return m_url;
+            }
+
+            /**
              * HTTP request "GET /query ..." to InfluxDB server is registered in internal queue.
              * Can be called with connection to InfluxDB or without. Blocking if no connection exists.
              * Otherwise non-blocking.
@@ -270,6 +286,8 @@ namespace karabo {
             std::string m_hostname;
             std::string m_dbname;
             std::string m_durationUnit;
+            boost::mutex m_influxVersionMutex;
+            std::string m_influxVersion;
             static boost::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
             static const unsigned int k_connTimeoutMs;
