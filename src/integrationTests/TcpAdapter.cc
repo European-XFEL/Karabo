@@ -196,15 +196,15 @@ namespace karabo {
     std::future_status TcpAdapter::waitFor(const std::string& type,
                                            const std::function<bool(const karabo::util::Hash&)>& callback,
                                            unsigned int timeoutInMs) {
-        auto cbPromise = std::promise<void>();
-        auto cbFuture = cbPromise.get_future();
+        auto cbPromise = std::make_shared<std::promise<void>>();
+        auto cbFuture = cbPromise->get_future();
         {
             boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
             // create a lambda function to be attached to the m_callback
-            m_callback = [&cbPromise, &type, &callback](const karabo::util::Hash& newData) {
+            m_callback = [cbPromise, type, callback](const karabo::util::Hash& newData) {
                 if (newData.has("type") && newData.get<std::string>("type") == type) {
                     if (callback(newData)) {
-                        cbPromise.set_value();
+                        cbPromise->set_value();
                     }
                 }
             };
