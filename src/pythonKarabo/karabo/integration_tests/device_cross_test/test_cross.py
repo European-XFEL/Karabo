@@ -352,12 +352,13 @@ class Tests(DeviceTest):
         await proxy.send()
         # XXX: This was working without any wait or sleep in jms
         await sleepUntil(lambda: self.device.channelcount == 1)
+        await sleepUntil(lambda: self.device.rawchannelcount == 1)
         self.assertEqual(self.device.channelcount, 1)
+        self.assertEqual(self.device.rawchannelcount, 1)
         self.assertFalse(isSet(self.device.channeldata.d))
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
         self.assertTrue(self.device.channelmeta.timestamp)
-        self.assertEqual(self.device.rawchannelcount, 1)
 
         self.assertEqual(self.device.rawchannelmeta.source,
                          "boundDevice:output2")
@@ -374,6 +375,7 @@ class Tests(DeviceTest):
         self.assertTrue(self.device.rawchannelmeta.timestamp)
 
         await proxy.send()
+        await sleepUntil(lambda: self.device.channelcount == 2)
         self.assertEqual(self.device.channelcount, 2)
 
         await proxy.end()
@@ -384,9 +386,10 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.channelcount, 2)
 
         await proxy.send()
+        await sleepUntil(lambda: self.device.channelcount == 3)
+        self.assertEqual(self.device.channelcount, 3)
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
-        self.assertEqual(self.device.channelcount, 3)
 
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
