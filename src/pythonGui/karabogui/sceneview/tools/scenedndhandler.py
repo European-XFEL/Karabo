@@ -109,9 +109,10 @@ class ConfigurationDropHandler(SceneDnDHandler):
         label_model = LabelModel(text=item['label'], foreground='#000000')
         layout_model.children.append(label_model)
 
-        def insert_model_layout(klass, key, layout_model):
+        def insert_model_layout(klass, proxy, layout_model):
             model_klass = get_scene_model_class(klass)
-            model = model_klass(keys=[key])
+            model = model_klass(keys=[proxy.key])
+            klass.initialize_model(proxy, model)
             if hasattr(model, 'klass'):
                 model.klass = get_class_const_trait(klass, '_klassname')
             layout_model.children.append(model)
@@ -119,13 +120,13 @@ class ConfigurationDropHandler(SceneDnDHandler):
         # Add the display and editable widgets, as needed
         klasses = get_compatible_controllers(proxy.binding)
         if klasses:
-            insert_model_layout(klasses[0], proxy.key, layout_model)
+            insert_model_layout(klasses[0], proxy, layout_model)
 
         # Only editable if RECONFIGURABLE
         if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
             klasses = get_compatible_controllers(proxy.binding, can_edit=True)
             if klasses:
-                insert_model_layout(klasses[0], proxy.key, layout_model)
+                insert_model_layout(klasses[0], proxy, layout_model)
 
         return layout_model
 
