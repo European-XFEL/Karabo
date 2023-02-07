@@ -1,18 +1,18 @@
 import socket
 from asyncio import (
     Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,
-    get_event_loop, sleep)
+    sleep)
 from struct import pack
-from unittest import main
-from unittest.mock import Mock
 from zlib import adler32
 
+import pytest
+import pytest_asyncio
 from psutil import net_if_addrs
 
 from karabo.middlelayer import (
-    Hash, Int32, NetworkInput, NetworkOutput, Proxy, background, encodeBinary)
-from karabo.middlelayer_api.pipeline import Channel, RingQueue
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+    Channel, Hash, Int32, NetworkInput, NetworkOutput, Proxy, RingQueue,
+    background, encodeBinary)
+from karabo.middlelayer.testing import event_loop, run_test
 
 
 class ChecksumTransport(WriteTransport):
@@ -37,19 +37,19 @@ class FakeTimestamp:
         return {"a": 3}
 
 
-class TestChannel(DeviceTest):
+class ChannelContext:
+
     sample_data = [(Hash("a", 5), FakeTimestamp()),
                    (Hash("b", 7), FakeTimestamp())]
     eos_channel = ""
 
-    def setUp(self):
-        loop = get_event_loop()
-        self.reader = StreamReader(loop=loop)
-        self.writer = StreamWriter(ChecksumTransport(), None, None, loop=loop)
-        self.channel = Channel(self.reader, self.writer, "channelname")
+    def __init__(self, channel) -> None:
+        self.channel = channel
+        self.reader = channel.reader
+        self.writer = channel.writer
 
     def assertChecksum(self, checksum):
-        self.assertEqual(self.writer.transport.checksum, checksum)
+        assert self.writer.transport.checksum == checksum
 
     def feedHash(self, hsh):
         encoded = encodeBinary(hsh)
@@ -59,85 +59,13 @@ class TestChannel(DeviceTest):
     def feedRequest(self):
         self.feedHash(Hash("reason", "update"))
 
-    @async_tst
-    async def test_ring_queue(self):
-        size = 5
-        ring = RingQueue(size)
-        # Drop 0
-        for i in range(size + 1):
-            ring.put_nowait(i)
-
-        self.assertEqual(ring.qsize(), size)
-        items = [ring.get_nowait() for _ in range(size)]
-        self.assertEqual(items, [1, 2, 3, 4, 5])
-
-        ring = RingQueue(size)
-        for i in range(size + 1):
-            ring.put_nowait(i)
-
-        items = []
-        for _ in range(size):
-            item = await ring.get()
-            items.append(item)
-        self.assertEqual(items, [1, 2, 3, 4, 5])
-
-    async def sleep(self):
-        for _ in range(10):
-            await sleep(0)
-
-    @async_tst
-    async def test_readBytes(self):
-        self.reader.feed_data(b"\04\00\00\00abcd")
-        data = await self.channel.readBytes()
-        self.assertEqual(data, b"abcd")
-
-    @async_tst
-    async def test_readHash(self):
-        self.feedHash(Hash("a", 5))
-        data = await self.channel.readHash()
-        self.assertEqual(data["a"], 5)
-
-    def test_writeHash(self):
-        h = Hash("b", 7)
-        self.channel.writeHash(h)
-        self.assertChecksum(124256394)
-
-    def test_writeSize(self):
-        self.channel.writeSize(218)
-        self.assertChecksum(57409755)
-
-    @async_tst
-    async def test_nextChunk(self):
-        future = Future()
-        task = background(self.channel.nextChunk(future))
-        await self.sleep()
-        self.assertChecksum(1)
-        future.set_result(self.sample_data)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        self.assertFalse(task.done())
-        self.feedHash(Hash("reason", "update"))
-        await task
-
-    @async_tst
-    async def test_nextChunk_eof(self):
-        future = Future()
-        task = background(self.channel.nextChunk(future))
-        await self.sleep()
-        self.reader.feed_eof()
-        try:
-            await task
-        except IncompleteReadError as error:
-            self.assertFalse(error.partial)
-        else:
-            self.fail()
-
-    async def handler(self, data, meta):
-        self.data.append(data)
-        self.meta.append(meta)
-
-    async def eos_handler(self, name):
-        self.eos_channel = name
+    async def write_something(self, output, number=10):
+        output.channelName = "channelname"
+        task = background(output.serve(self.reader, self.writer))
+        for i in range(number):
+            output.writeChunkNoWait(self.sample_data)
+            await self.sleep()
+        return task
 
     def feedTestData(self):
         encoded = encodeBinary(Hash("a", 7))
@@ -148,327 +76,443 @@ class TestChannel(DeviceTest):
         for i in range(3):
             self.reader.feed_data(encoded)
 
-    @async_tst
-    async def test_processChunk(self):
-        network = NetworkInput({})
-        network.handler = self.handler
-        network.raw = False
-        await network._run()
+    def test_writeHash(self):
+        h = Hash("b", 7)
+        self.channel.writeHash(h)
+        self.assertChecksum(124256394)
 
-        class Test(Proxy):
-            a = Int32()
+    async def handler(self, data, meta):
+        self.data.append(data)
+        self.meta.append(meta)
 
-        task = background(network.processChunk(self.channel, Test))
-        self.feedTestData()
-        self.data = []
-        self.meta = []
-        self.assertTrue((await task))
-        self.assertEqual(len(self.data), 3)
-        self.assertEqual(self.data[1].a, 7)
-        self.assertEqual(len(self.meta), 3)
-        self.assertEqual(self.meta[2].source, "a")
-        self.assertFalse(self.meta[0].timestamp)
+    async def eos_handler(self, name):
+        self.eos_channel = name
 
-    @async_tst
-    async def test_processChunk_raw(self):
-        network = NetworkInput({})
-        network.raw = True
-        network.handler = self.handler
-        await network._run()
-        task = background(network.processChunk(self.channel, None))
-        self.feedTestData()
-        self.data = []
-        self.meta = []
-        self.assertTrue((await task))
-        self.assertEqual(len(self.data), 3)
-        self.assertEqual(self.data[1]["a"], 7)
-        self.assertEqual(len(self.meta), 3)
-        self.assertEqual(self.meta[2].source, "a")
-        self.assertFalse(self.meta[0].timestamp)
+    async def sleep(self):
+        for _ in range(10):
+            await sleep(0)
 
-    @async_tst
-    async def test_processChunk_eos(self):
-        network = NetworkInput({})
-        network.raw = True
-        network.handler = self.handler
-        network.end_of_stream_handler = self.eos_handler
-        await network._run()
-        self.assertEqual(self.eos_channel, "")
-        task = background(network.processChunk(self.channel, None))
-        self.feedHash(Hash("endOfStream", True))
-        self.reader.feed_data(b"\0\0\0\0")
-        self.data = []
-        self.meta = []
-        self.assertTrue((await task))
-        self.assertEqual(self.data, [])
-        self.assertEqual(self.eos_channel, "channelname")
-        self.assertEqual(len(self.meta), 0)
 
-    @async_tst
-    async def test_processChunk_eof(self):
-        network = NetworkInput({})
-        network.parent = Mock()
-        await network._run()
-        self.reader.feed_eof()
-        self.assertFalse((await network.processChunk(self.channel, None)))
+@pytest_asyncio.fixture(scope="function")
+async def channelContext(event_loop: event_loop):
+    reader = StreamReader(loop=event_loop)
+    writer = StreamWriter(ChecksumTransport(), None, None, loop=event_loop)
+    channel = Channel(reader, writer, "channelname")
+    ctx = ChannelContext(channel)
+    yield ctx
 
-    async def write_something(self, output, number=10):
-        output.channelName = "channelname"
-        task = background(output.serve(self.reader, self.writer))
-        for i in range(number):
-            output.writeChunkNoWait(self.sample_data)
-            await self.sleep()
-        return task
 
-    @async_tst
-    async def test_shared_queue(self):
-        output = NetworkOutput({"noInputShared": "queue"})
-        # Initialize
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
-                           "onSlowness", "queue", "instanceId", "Test"))
-        task = await self.write_something(output)
-        self.assertChecksum(3020956469)
-        for checksum in [452019817, 881158557, 14388433, 2145693701]:
-            self.feedRequest()
-            await self.sleep()
-            self.assertChecksum(checksum)
-        self.reader.feed_eof()
+@run_test
+def test_writeSize(channelContext):
+    channelContext.channel.writeSize(218)
+    channelContext.assertChecksum(57409755)
+
+
+@run_test
+async def test_ring_queue(event_loop):
+    size = 5
+    ring = RingQueue(size)
+    # Drop 0
+    for i in range(size + 1):
+        ring.put_nowait(i)
+
+    assert ring.qsize() == size
+    items = [ring.get_nowait() for _ in range(size)]
+    assert items == [1, 2, 3, 4, 5]
+
+    ring = RingQueue(size)
+    for i in range(size + 1):
+        ring.put_nowait(i)
+
+    items = []
+    for _ in range(size):
+        item = await ring.get()
+        items.append(item)
+    assert items == [1, 2, 3, 4, 5]
+
+
+@run_test
+async def test_readBytes(channelContext):
+    channelContext.reader.feed_data(b"\04\00\00\00abcd")
+    data = await channelContext.channel.readBytes()
+    assert data == b"abcd"
+
+
+@run_test
+async def test_readHash(channelContext):
+    channelContext.feedHash(Hash("a", 5))
+    data = await channelContext.channel.readHash()
+    assert data["a"] == 5
+
+
+@run_test
+async def test_nextChunk(channelContext):
+    future = Future()
+    task = background(channelContext.channel.nextChunk(future))
+    await channelContext.sleep()
+    channelContext.assertChecksum(1)
+    future.set_result(channelContext.sample_data)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    assert not task.done()
+    channelContext.feedHash(Hash("reason", "update"))
+    await task
+
+
+@run_test
+async def test_nextChunk_eof(channelContext):
+    future = Future()
+    task = background(channelContext.channel.nextChunk(future))
+    await channelContext.sleep()
+    channelContext.reader.feed_eof()
+    try:
         await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_shared_drop(self):
-        output = NetworkOutput({"noInputShared": "drop"})
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
-                           "onSlowness", "drop", "instanceId", "Test"))
-        task = await self.write_something(output)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        self.feedRequest()
-        await self.sleep()
-        self.feedRequest()
-        for _ in range(100):
-            self.assertChecksum(452019817)
-            await self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        await self.sleep()
-        self.assertChecksum(881158557)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_shared_queue_drop(self):
-        output = NetworkOutput({"noInputShared": "queueDrop"})
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
-                           "onSlowness", "queueDrop", "instanceId", "Test"))
-        task = await self.write_something(output, 200)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        self.feedRequest()
-        await self.sleep()
-        self.feedRequest()
-        await self.sleep()
-        for _ in range(100):
-            self.assertChecksum(881158557)
-            await self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        await self.sleep()
-        self.assertChecksum(881158557)
-        for i in range(200):
-            output.writeChunkNoWait(self.sample_data)
-        await self.sleep()
-        self.assertChecksum(881158557)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    def test_shared_throw(self):
-        with self.assertRaises(ValueError):
-            output = NetworkOutput({"noInputShared": "throw"})  # noqa
-
-    @async_tst
-    async def test_shared_wait(self):
-        output = NetworkOutput({"noInputShared": "wait"})
-        output.channelName = "channelname"
-        await output._run()
-        task = background(output.serve(self.reader, self.writer))
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
-                           "onSlowness", "wait", "instanceId", "Test"))
-        await self.sleep()
-        await output.writeChunk([(Hash("a", 5), FakeTimestamp())])
-        await self.sleep()
-        self.feedRequest()
-        await self.sleep()
-        await output.writeChunk(self.sample_data)
-        await output.writeChunk(self.sample_data)
-        waiter = background(output.writeChunk(self.sample_data))
-        await self.sleep()
-        self.assertFalse(waiter.done())
-        self.feedRequest()
-        await self.sleep()
-        self.assertTrue(waiter.done())
-        self.assertChecksum(2194103602)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_copy_queue(self):
-        output = NetworkOutput({"noInputShared": "drop"})
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "queue", "instanceId", "Test"))
-        task = await self.write_something(output)
-        self.assertChecksum(3020956469)
-        for checksum in [452019817, 881158557, 14388433, 2145693701]:
-            self.feedRequest()
-            await self.sleep()
-            self.assertChecksum(checksum)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_copy_drop(self):
-        output = NetworkOutput({"noInputShared": "drop"})
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "drop", "instanceId", "Test"))
-        task = await self.write_something(output)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        self.feedRequest()
-        await self.sleep()
-        for _ in range(100):
-            self.assertChecksum(3020956469)
-            await self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        self.feedRequest()
-        await self.sleep()
-        self.assertChecksum(452019817)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_copy_queue_drop(self):
-        output = NetworkOutput({"noInputShared": "drop"})
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "queueDrop", "instanceId", "Test"))
-        task = await self.write_something(output, 200)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        # Write like crazy, we do not have a request and roll!
-        output.writeChunkNoWait(self.sample_data)
-        output.writeChunkNoWait(self.sample_data)
-        output.writeChunkNoWait(self.sample_data)
-        self.assertChecksum(3020956469)
-        self.feedRequest()
-        await self.sleep()
-        for _ in range(100):
-            self.assertChecksum(452019817)
-            await self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        self.feedRequest()
-        await self.sleep()
-        self.assertChecksum(881158557)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_copy_queue_drop_large_max_queue(self):
-        """Test the queue drop with a high max queue length"""
-        output = NetworkOutput({"noInputShared": "queueDrop"})
-        await output._run()
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "queueDrop", "instanceId", "Test",
-                           "maxQueueLength", 200))
-        task = await self.write_something(output, 200)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_copy_throw(self):
-        output = NetworkOutput({"noInputShared": "drop"})
-        await output._run()
-        output.channelName = "channelname"
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "throw", "instanceId", "Test"))
-        task = await self.write_something(output)
-        await self.sleep()
-        self.assertChecksum(3020956469)
-        self.feedRequest()
-        await self.sleep()
-        for _ in range(100):
-            self.assertChecksum(3020956469)
-            await self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        self.feedRequest()
-        await self.sleep()
-        self.assertChecksum(452019817)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_copy_wait(self):
-        output = NetworkOutput({"noInputShared": "drop"})
-        await output._run()
-        output.channelName = "channelname"
-        task = background(output.serve(self.reader, self.writer))
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "wait", "instanceId", "Test"))
-        await output.writeChunk(self.sample_data)
-        await self.sleep()
-        await output.writeChunk(self.sample_data)
-        self.feedRequest()
-        await self.sleep()
-        await output.writeChunk(self.sample_data)
-        await output.writeChunk(self.sample_data)
-        waiter = background(output.writeChunk(self.sample_data))
-        await self.sleep()
-        self.assertFalse(waiter.done())
-        self.feedRequest()
-        await self.sleep()
-        self.assertTrue(waiter.done())
-        self.assertChecksum(881158557)
-        self.reader.feed_eof()
-        await task
-        self.assertTrue(self.writer.transport.closed)
-
-    @async_tst
-    async def test_get_information(self):
-        net_segment = None
-        ip_address = None
-        for interface in net_if_addrs().values():
-            for nic in interface:
-                if nic.family != socket.AF_INET:
-                    continue
-                ip_address = nic.address
-                addrs = ip_address.split(".")
-                net_root = '.'.join(addrs[:-1])
-                net_segment = f"{net_root}.0/24"
-
-        self.assertIsNotNone(net_segment)
-        self.assertIsNotNone(ip_address)
-        output = NetworkOutput({"hostname": net_segment})
-        await output._run()
-        response = output.getInformation('channelName')
-        self.assertIn("connectionType", response)
-        self.assertIn("port", response)
-        self.assertEqual(response["hostname"], ip_address)
-        self.assertEqual(output.address, ip_address)
+    except IncompleteReadError as error:
+        assert not error.partial
+    else:
+        channelContext.fail()
 
 
-if __name__ == "__main__":
-    main()
+@run_test
+async def test_processChunk(channelContext):
+    network = NetworkInput({})
+    network.handler = channelContext.handler
+    network.raw = False
+    await network._run()
+
+    class Test(Proxy):
+        a = Int32()
+
+    task = background(network.processChunk(channelContext.channel, Test))
+    channelContext.feedTestData()
+    channelContext.data = []
+    channelContext.meta = []
+    assert (await task)
+    assert len(channelContext.data) == 3
+    assert channelContext.data[1].a == 7
+    assert len(channelContext.meta) == 3
+    assert channelContext.meta[2].source == "a"
+    assert not channelContext.meta[0].timestamp
+
+
+@run_test
+async def test_processChunk_raw(channelContext):
+    network = NetworkInput({})
+    network.raw = True
+    network.handler = channelContext.handler
+    await network._run()
+    task = background(network.processChunk(channelContext.channel, None))
+    channelContext.feedTestData()
+    channelContext.data = []
+    channelContext.meta = []
+    assert (await task)
+    assert len(channelContext.data) == 3
+    assert channelContext.data[1]["a"] == 7
+    assert len(channelContext.meta) == 3
+    assert channelContext.meta[2].source == "a"
+    assert not channelContext.meta[0].timestamp
+
+
+@run_test
+async def test_processChunk_eos(channelContext):
+    network = NetworkInput({})
+    network.raw = True
+    network.handler = channelContext.handler
+    network.end_of_stream_handler = channelContext.eos_handler
+    await network._run()
+    assert channelContext.eos_channel == ""
+    task = background(network.processChunk(channelContext.channel, None))
+    channelContext.feedHash(Hash("endOfStream", True))
+    channelContext.reader.feed_data(b"\0\0\0\0")
+    channelContext.data = []
+    channelContext.meta = []
+    assert (await task)
+    assert channelContext.data == []
+    assert channelContext.eos_channel == "channelname"
+    assert len(channelContext.meta) == 0
+
+
+@run_test
+async def test_processChunk_eof(channelContext, mocker):
+    network = NetworkInput({})
+    network.parent = mocker.Mock()
+    await network._run()
+    channelContext.reader.feed_eof()
+    assert not (await network.processChunk(channelContext.channel, None))
+
+
+@run_test
+async def test_shared_queue(channelContext):
+    output = NetworkOutput({"noInputShared": "queue"})
+    # Initialize
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "shared",
+             "onSlowness", "queue", "instanceId", "Test"))
+    task = await channelContext.write_something(output)
+    channelContext.assertChecksum(3020956469)
+    for checksum in [452019817, 881158557, 14388433, 2145693701]:
+        channelContext.feedRequest()
+        await channelContext.sleep()
+        channelContext.assertChecksum(checksum)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_shared_drop(channelContext):
+    output = NetworkOutput({"noInputShared": "drop"})
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "shared",
+             "onSlowness", "drop", "instanceId", "Test"))
+    task = await channelContext.write_something(output)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    channelContext.feedRequest()
+    for _ in range(100):
+        channelContext.assertChecksum(452019817)
+        await channelContext.sleep()
+    output.writeChunkNoWait(channelContext.sample_data)
+    await channelContext.sleep()
+    channelContext.assertChecksum(881158557)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_shared_queue_drop(channelContext):
+    output = NetworkOutput({"noInputShared": "queueDrop"})
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "shared",
+             "onSlowness", "queueDrop", "instanceId", "Test"))
+    task = await channelContext.write_something(output, 200)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    for _ in range(100):
+        channelContext.assertChecksum(881158557)
+        await channelContext.sleep()
+    output.writeChunkNoWait(channelContext.sample_data)
+    await channelContext.sleep()
+    channelContext.assertChecksum(881158557)
+    for i in range(200):
+        output.writeChunkNoWait(channelContext.sample_data)
+    await channelContext.sleep()
+    channelContext.assertChecksum(881158557)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+def test_shared_throw(channelContext):
+    with pytest.raises(ValueError):
+        output = NetworkOutput({"noInputShared": "throw"})  # noqa
+
+
+@run_test
+async def test_shared_wait(channelContext):
+    output = NetworkOutput({"noInputShared": "wait"})
+    output.channelName = "channelname"
+    await output._run()
+    task = background(
+        output.serve(
+            channelContext.reader,
+            channelContext.writer))
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "shared",
+             "onSlowness", "wait", "instanceId", "Test"))
+    await channelContext.sleep()
+    await output.writeChunk([(Hash("a", 5), FakeTimestamp())])
+    await channelContext.sleep()
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    await output.writeChunk(channelContext.sample_data)
+    await output.writeChunk(channelContext.sample_data)
+    waiter = background(output.writeChunk(channelContext.sample_data))
+    await channelContext.sleep()
+    assert not waiter.done()
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    assert waiter.done()
+    channelContext.assertChecksum(2194103602)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_copy_queue(channelContext):
+    output = NetworkOutput({"noInputShared": "drop"})
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "copy",
+             "onSlowness", "queue", "instanceId", "Test"))
+    task = await channelContext.write_something(output)
+    channelContext.assertChecksum(3020956469)
+    for checksum in [452019817, 881158557, 14388433, 2145693701]:
+        channelContext.feedRequest()
+        await channelContext.sleep()
+        channelContext.assertChecksum(checksum)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_copy_drop(channelContext):
+    output = NetworkOutput({"noInputShared": "drop"})
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "copy",
+             "onSlowness", "drop", "instanceId", "Test"))
+    task = await channelContext.write_something(output)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    for _ in range(100):
+        channelContext.assertChecksum(3020956469)
+        await channelContext.sleep()
+    output.writeChunkNoWait(channelContext.sample_data)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    channelContext.assertChecksum(452019817)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_copy_queue_drop(channelContext):
+    output = NetworkOutput({"noInputShared": "drop"})
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "copy",
+             "onSlowness", "queueDrop", "instanceId", "Test"))
+    task = await channelContext.write_something(output, 200)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    # Write like crazy, we do not have a request and roll!
+    output.writeChunkNoWait(channelContext.sample_data)
+    output.writeChunkNoWait(channelContext.sample_data)
+    output.writeChunkNoWait(channelContext.sample_data)
+    channelContext.assertChecksum(3020956469)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    for _ in range(100):
+        channelContext.assertChecksum(452019817)
+        await channelContext.sleep()
+    output.writeChunkNoWait(channelContext.sample_data)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    channelContext.assertChecksum(881158557)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_copy_queue_drop_large_max_queue(channelContext):
+    """Test the queue drop with a high max queue length"""
+    output = NetworkOutput({"noInputShared": "queueDrop"})
+    await output._run()
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "copy",
+             "onSlowness", "queueDrop", "instanceId", "Test",
+             "maxQueueLength", 200))
+    task = await channelContext.write_something(output, 200)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_copy_throw(channelContext):
+    output = NetworkOutput({"noInputShared": "drop"})
+    await output._run()
+    output.channelName = "channelname"
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "copy",
+             "onSlowness", "throw", "instanceId", "Test"))
+    task = await channelContext.write_something(output)
+    await channelContext.sleep()
+    channelContext.assertChecksum(3020956469)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    for _ in range(100):
+        channelContext.assertChecksum(3020956469)
+        await channelContext.sleep()
+    output.writeChunkNoWait(channelContext.sample_data)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    channelContext.assertChecksum(452019817)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_copy_wait(channelContext):
+    output = NetworkOutput({"noInputShared": "drop"})
+    await output._run()
+    output.channelName = "channelname"
+    task = background(
+        output.serve(
+            channelContext.reader,
+            channelContext.writer))
+    channelContext.feedHash(
+        Hash("reason", "hello", "dataDistribution", "copy",
+             "onSlowness", "wait", "instanceId", "Test"))
+    await output.writeChunk(channelContext.sample_data)
+    await channelContext.sleep()
+    await output.writeChunk(channelContext.sample_data)
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    await output.writeChunk(channelContext.sample_data)
+    await output.writeChunk(channelContext.sample_data)
+    waiter = background(output.writeChunk(channelContext.sample_data))
+    await channelContext.sleep()
+    assert not waiter.done()
+    channelContext.feedRequest()
+    await channelContext.sleep()
+    assert waiter.done()
+    channelContext.assertChecksum(881158557)
+    channelContext.reader.feed_eof()
+    await task
+    assert channelContext.writer.transport.closed
+
+
+@run_test
+async def test_get_information(channelContext):
+    net_segment = None
+    ip_address = None
+    for interface in net_if_addrs().values():
+        for nic in interface:
+            if nic.family != socket.AF_INET:
+                continue
+            ip_address = nic.address
+            addrs = ip_address.split(".")
+            net_root = '.'.join(addrs[:-1])
+            net_segment = f"{net_root}.0/24"
+
+    assert net_segment is not None
+    assert ip_address is not None
+    output = NetworkOutput({"hostname": net_segment})
+    await output._run()
+    response = output.getInformation('channelName')
+    assert "connectionType" in response
+    assert "port" in response
+    assert response["hostname"] == ip_address
+    assert output.address == ip_address
