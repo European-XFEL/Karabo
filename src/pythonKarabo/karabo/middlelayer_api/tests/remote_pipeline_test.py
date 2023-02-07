@@ -826,6 +826,7 @@ async def test_injected_output_channel_connection(event_loop):
             assert input_proxy.received > 0
             await sleepUntil(lambda: receiver.received > 0)
             assert receiver.received > 0
+            await sleepUntil(lambda: received is True)
             assert received
 
             # Kill the device and bring up again
