@@ -61,6 +61,13 @@ class BaseBindingController(HasStrictTraits):
         """
         raise NotImplementedError
 
+    @staticmethod
+    def initialize_model(proxy, model):
+        """Implemented by subclasses to initialize a model from a proxy.
+
+        This method is only invoked on controller creation
+        """
+
     def destroy_widget(self):
         """Implemented by subclasses to clean up anything in the widget which
         is otherwise not automatically cleaned up.
