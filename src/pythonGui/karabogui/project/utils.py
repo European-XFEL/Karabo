@@ -460,7 +460,15 @@ def run_macro(macro_model, parent=None):
         messagebox.show_error(html, title="The Macro cannot be started",
                               parent=parent)
         return
-
+    if macro_model.modified:
+        options = (QMessageBox.Yes | QMessageBox.No)
+        title = "Run Unsaved Macro?"
+        text = (
+            "The Macro is not saved in the Project. Do you really want to run "
+            "Macro?")
+        reply = QMessageBox.question(parent, title, text, options)
+        if reply == QMessageBox.No:
+            return
     # Backward compatibility, only servers with `MetaMacro` class of 2.16.X
     # have the project property
     serverId = macro_servers[0]
