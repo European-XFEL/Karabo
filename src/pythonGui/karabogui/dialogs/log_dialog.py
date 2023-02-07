@@ -4,6 +4,8 @@ from qtpy.QtWidgets import QDialog
 
 from karabo.common.api import WeakMethodRef
 from karabogui import messagebox
+from karabogui.events import (
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.request import call_device_slot
 from karabogui.util import get_spin_widget
 from karabogui.widgets.log import LogWidget
@@ -34,6 +36,19 @@ class LogDialog(QDialog):
         self.ui_request.clicked.connect(self.request_logger_data)
         self.ui_fetching_data.setVisible(False)
         self.request_logger_data()
+        self.event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_broadcasts(self.event_map)
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
+
+    def done(self, result):
+        """Stop listening for broadcast events"""
+        unregister_from_broadcasts(self.event_map)
+        super().done(result)
 
     def request_handler(self, success, reply):
         self.spin_widget.setVisible(False)
