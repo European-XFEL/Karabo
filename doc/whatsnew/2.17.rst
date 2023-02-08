@@ -2,16 +2,19 @@
 What's New in Karabo 2.17.0
 ***************************
 
-Preliminary! Release scheduled for the 19.05.2023.
+Preliminary! Release scheduled for the 19.05.2023. Merge-log until 2.17.0a6.
 
-..
-  Generate the Merge log with ``git log --merges --pretty=format:"- %s%b" N.(N-1).0..N.N.0rc(LAST RC) --reverse``
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
 - MDL: New `Configurable` coroutine function `set_setter(h, only_changes=False)` provided. This is the analogon to `Configurable.set`, but calling
   the internal `setter` functions for the descriptors.
+- ALL API: A new slot `slotGetConfigurationSlice` is available that provides the configuration of selected paths.
+- ALL API: The device property `lastCommand` will now also show the `senderId`, e.g.  "calledSlot <- DEVICE/THAT/CALLED"
+- MDL: `slotGetProperties` function provided that calls `slotGetConfigurationSlice`. The function takes a list of paths or a single path as input.
+- GUI: A new code editor with linting based on QScintilla is provided
+- Ubuntu 22 Support: Backported to 2.16.4
 
 Features
 ++++++++
@@ -36,91 +39,244 @@ Change of behaviour
 - GUI: Device scene links cannot be created from the device property `availableScenes` anymore. They become a scene tool widget and
   have to be created from the scene panel toolbar or via dragging a device onto a scene.
   Device scene links don't trigger itself monitoring of a device.
-- MDL: Log-events do not generate a broker message anymore. For logging messages, please retrieve the last log messages on demand via the karabo gui client
-       interface or view the local log file.
+- ALL API: Log-events do not generate a broker message anymore. For logging messages, please retrieve the last log messages on demand via the karabo gui client
+  interface or view the local log file.
 - MDL: Provide set_setter on Configurable
 - GUI Server: Remove 'requestFromSlot' and update integration tests.
 - C++: Add deviceId to exception message of Device::get
 
+
 Detailed Merge-Log
 ++++++++++++++++++
+
 
 Graphical User Interface
 ========================
 
-- GUI: Prevent VectorBool to be considered for TableVectorButton
-- GUI: Reconfigurable tables become state aware
-- GUI: Flake base binding controller
-- GUI: Better handling of Bool editing in the List Edit Dialog.
-- GUI: Provide simple background task engine
-- GUI: Provide toolbar in Configuration Editor when in cinema mode
-- GUI: Add validator again to list regex edit
-- GUI: Provide option to retrieve default scene on TableStringButton
-- GUI: Toggle configurator property alarm coloring
-- GUI: Add logger to karabogui api
-- GUI: Move test out of unittest framework.
-- GUI: Put index ref protection in filter model
-- GUI: Use native filtering in Configurator filter model
-- GUI: Improve image node validation
-- GUI: Allow to sort by time in project dialog
-- GUI: Update dependencies for the GUI: Priority to external conda-forge
-- GUI: Remove not required column in project view
-- GUI: Use native recursive filtering in the navigation models
-- GUI: Data type casting for config singleton
-- GUI: Minor optimization on device filter model selection
-- GUI: DeviceSceneLink becomes a SceneTool widget
-- GUI: Add offline information to device scene link
-- GUI: OK button should accept the KaraboMessageBox dialog.
+- GUI: Flake base binding controller !6933
+- GUI: Better handling of Bool editing in the List Edit Dialog. !6910
+- GUI: Provide simple background task engine !6932
+- GUI: Provide toolbar in Configuration Editor when in cinema mode !6940
+- GUI: Add validator again to list regex edit !6939
+- GUI: Minor optimization on device filter model selection !6979
+- GUI: Reconfigurable tables become state aware !6919
+- GUI: Prevent VectorBool to be considered for TableVectorButton !6921
+- GUI Server: Remove 'requestFromSlot' and update integration tests. !6903
+- GUI: Update dependencies for the GUI: Priority to external conda-forge !6920
+- GUI: Remove not required column in project view !6957
+- GUI: Put index ref protection in filter model !6959
+- GUI: Use native filtering in Configurator filter model !6966
+- GUI: Improve image node validation !6964
+- GUI: Allow to sort by time in project dialog !6965
+- GUI: Use native recursive filtering in the navigation models !6977
+- GUI: Data type casting for config singleton !6971
+- GUI: Add logger to karabogui api !6952
+- GUI: Move test out of unittest framework. !6953
+- GUI: Provide option to retrieve default scene on TableStringButton !6942
+- GUI: Toggle configurator property alarm coloring !6937
+- GUI: DeviceSceneLink becomes a SceneTool widget !6987
+- GUI: Align reason text for messagebox !7092
+- GUI: Macro Editor - Find Toolbar : Validate the search string !7139
+- GUI: Improvements in Macro editor Find Toolbar. !7135
+- GUI: Make configurator flags more performant !7142
+- GUI: Add offline information to device scene link !6991
+- GUI: OK button should accept the KaraboMessageBox dialog. !6993
+- GUI: Rename Table Device Dialog to Topology Device Dialog !6997
+- GUI: Group Link tasks in a menu !6994
+- GUI: Implement InstanceStatus widget !6996
+- GUI: Add objectName to ColorBarWidget !7003
+- GUI: Cleanup the trendline implementation from Qwt !7004
+- GUI: Provide a parent for macro report message box !7033
+- GUI: Fix pathparser transport to Python 3.8 !7037
+- GUI: Add AccessMode to Configurator Popup !7041
+- GUI: Move priority to own conda mirror again !7034
+- GUI: AlarmModel parent index alignment !7035
+- GUI: Remove archive warning from getConfigurationFromPast !7086
+- GUI: Change copyright notice for about dialog !7087
+- GUI: Scintilla based Macro editor. !7082
+- GUI: Enhance scintilla editor with scripting in background !7089
+- GUI: Enable to build scenes with offline devices !7146
+- GUI: Fix table binding default value extraction !7158
+- GUI: linter for Macro editor. !7160
+- GUI: Icons for Code Quality Check buttons. !7175
+- GUI: Tests for linters in Macro Editor !7176
+- GUI: Fix macro template for code quality !7165
+- GUI: Manually create scintilla api for autocompletion !7090
+- GUI: Crosshair roi at full integer pixel position. !7095
+- GUI: Find and Replace for scintilla-editor. !7102
+- GUI: Scintilla Editor - Allow to mix tab and spaces. !7113
+- GUI: Highlight the search hits in the Macro editor. !7121
+- GUI: Protect edit of table controller when there is no binding !7145
+- GUI: Fix slice for RGB images !7148
+- Common: Refactor link reader and writer for the models !6992
+
 
 MDL/Native core
 ===============
 
-- Common: Cleanup scene link models
-- MDL: Add create_instanceId to testing namespace and enhance
-- MDL: Protect NoEventLoop from launching tasks when beingoing down
-- MDL: Don't start the AsyncTimer again when the loop is closed, provide success feedback and is_running method
-- MDL: Bulk update of prints via timer
-- MDL: Provide slotGetConfigurationSlice to get single properties via a remote call
-- MDL: Assignment.INTERNAL in sanitize_write_configuration
-- MDL: Rely on instanceGone to remove Child of server
-- MDL: Make sure macro instances destruct their print timer at the end
-- MDL: Provide set_setter on Configurable
-- MDL: Provide convenient async timer handling. They are always stopped and destroyed.
-- ikarabo: Command lines don't have a logger
-- MDL: Provide a test for loop equal None in timer destruction
-- MDL: Deprecate and remove network logging
-- NATIVE: Implement Enum helpers from Schema
+- Native: Implement Enum helpers from Schema !6990
+- Native: validate defaultValue for VectorString !7005
+- Native: Allow None as default for VectorRegexString !7007
+- Native: Allow RegexString to have None as default Closes #18 !7008
+- Native: Protect hash repr from unknown hash types !7012
+- MDL: Protect NoEventLoop from launching tasks when going down !6938
+- MDL: Don't start the AsyncTimer again when the loop is closed, provide success feedback and is_running method !6946
+- MDL: Add create_instanceId to testing namespace and enhance !6941
+- Use 'aiormq' package for AMQP MDL integration !7045
+- MDL: Refactor heartbeat mixin test !7061
+- MDL: Choose automatic acknowledgement and disable publisher confirms !7069
+- MDL: Optimize lock access in signal binding and unbinding !7070
+- MDL: Remove flakyness of output reconnect test !7072
+- MDL: Change order of shutdown cleanup !7071
+- MDL-AIORMQ: Only subscribe to broadcast messages when required !7074
+- MDL: Enhance pytest loop tests with instance attachment !7065
+- MDL: Cleanup amqp broker !6999
+- MDL: Set event loop in async device test !6918
+- MDL: Assignment.INTERNAL in sanitize_write_configuration !6955
+- MDL: Rely on instanceGone to remove Child of server !6960
+- MDL: Bulk update of prints via timer !6883
+- MDL: Provide slotGetConfigurationSlice to get single properties via a remote call !6842
+- MDL: Make sure macro instances destruct their print timer at the end !6974
+- MDL: Provide set_setter on Configurable !6975
+- MDL: Provide a test for loop equal None in timer destruction !6984
+- MDL: Deprecate and remove network logging !6985
+- MDL: Remove log methods from all brokers !6998
+- MDL: Set correct parenthesis on publish !7016
+- MDL: Use multiple connections - revert using a single connection !7017
+- MDL: Align AMQP Connection with JMS !7019
+- MDL: Maintain exit stack with asyncio event instead !7021
+- MDL: Remove manual shutdown of executor and trust the loop stop !7020
+- MDL: Provide async send, call and emit for AMQP !7023
+- MDL: Use asynchronous heartbeat in AMQPCloses #27 and #26 !7024
+- MDL: Provide async disconnect and connect in AMQP !7027
+- MDL: Remove flakyness from pipeline reconnection test in AMQP !7025
+- MDL: Refactor AsyncDeviceTest and event_loop !7055
+- MDL: Attach pid to server logger message and attach instance to task !7049
+- MDL: Fix the flakyness of the monitor shutdown test !7100
+- MDL: Move utils test to pytest infrastructure !7103
+- MDL: Move synchronization test to pytest !7104
+- MDL: Include caller in lastCommand !7112
+- MDL: Stabilize injected output channel injection test !7110
+- MDL: Teardown wait tests with state unknown in macro test !7111
+- MDL: Make sure the MacroSlot updates on cancellation !7107
+- MDL: Fix flaky device node test !7117
+- MDL: Adjust macro waituntil test !7119
+- MDL: Adjust once more the remote pipeline injection test !7118
+- MDL: Align signalfunction parsing for amqp !7115
+- MDL: Provide countdown context manager and use in cancellation of macros !7116
+- MDL: Ensure future for publish on amqp, not call soon !7109
+- MDL: One more addition to the flaky print test !7106
+- MDL: Formally set eventloop to None after thread is done !7125
+- MDL: Allow Assignment.INTERNAL descriptors to have no default value !7126
+- MDL: Synchronously shutdown device on ikarabo exit !7124
+- MDL: Use async context to enter remote device for macros !7131
+- MDL: Protect ikarabo shutdown from exceptions !7133
+- MDL: Provide a consume_beats for the device server !7134
+- MDL: Port client test to pytest !7137
+- MDL: Add Device server and cache log to namespace !7140
+- MDL: Refactor Monitor test and provide assertLogs and run test decorator !7060
+- MDL: Refactor inject node test !7063
+- MDL: Refactor json test for pytest !7062
+- MDL: Refactor macro test for pytest !7064
+- MDL: String formatting in amqp broker !7075
+- MDL: Remove all amqp broker extra treatment !7077
+- MDL: Mark async fixture with pytest_asyncio !7093
+- MDL: relax flaky test of timeit decorator !7096
+- MDL: Await to stop heartbeat_task explicitly for jms !7097
+- MDL: Align flakyness of device timer test !7099
+- MDL: Provide isStringSet and directly use in getDevice and connectDevice !7094
+- MDL: Fix flaky print macro test !7098
+- MDL: Refactor remote device test !7079
+- MDL: Unify broker interface !7083
+- MDL: Refactor remote pipeline test for pytest !7080
+- MDL: Refactor device_test for pytest !7084
+- MDL: Provide convenient async timer handling. They are always stopped and destroyed. !6976
+- MDL: Suggestion to use deviceId as a queue name !7143
+- MDL: Align macro slot state update for AMQP !7162
+- MDL: Provide slot reply test with state update !7161
+- MDL: Provide a device ordering test for slots and properties !7132
+- MDL: Test order between slot calls and signal emission !7152
+- MDL: Move message order test code out of PropertyTestMDL !7156
+- MDL: Remove flakyness of output change schema test !7155
+- MDL: Provide Heartbeat consume implementation for AMQP !7136
+- MDL: Add a test for a mandatory vector !7157
+- Common: Cleanup scene link models !6988
+- ikarabo: Command lines don't have a logger !6913
+- AMQP: Activate integration tests again !7073
+- Remove archive from instanceInfo completely. Closes #61 !7174
 
 
 Bound/cpp core
 ==============
 
-- C++: Report ill-formed requestGeneric info back to GUI client
-- Framework: Better message for no schema found while getting past config.
-- C++/Bound: Add flag to avoid NDArray data copy even if pipeline queues
-- C++: Allow Device::writeChannel to specify safeNDArray for OutputChannel::update
-- C++: Add deviceId to exception message of Device::get
-- C++: Properly construct and initialize DeviceClient
-- C++: InfluxDataLogger to log vector Hash rejection in detail
+- C++: Report ill-formed requestGeneric info back to GUI client !6917
+- C++: Fixed data logger connection failure handling !7001
+- C++: Fix initial topology gathering of the GuiServer !7029
+- C++: Track senderId in lastCommand !7031
+- C++: Add Device::slotGetConfigurationSlice and Device::getCurrentConfigurationSlice !7032
+- C++: Allow Device::writeChannel to specify safeNDArray for OutputChannel::update !6968
+- C++: Add deviceId to exception message of Device::get !6978
+- C++: Protect factory against two libs with the same class !7058
+- C++: Less coupling in JMS test !7091
+- C++: Event loop improvements, e.g. directly add new threads !7067
+- C++: Try to avoid hanging Strand_Test !7120
+- C++: Use Ninja as the Generator if it is available. !7122
+- C++: Implement AMQP connection failover with RabbitMQ cluster !6667
+- C++: Add missing weak ptr protections in SignalSlotable !7144
+- C++: Properly construct and initialize DeviceClient !6982
+- C++: Suggestion to fix message ordering issue for AMQP !7153
+- C++: Do not start threads before event loop is started !7150
+- C++/Bound: By default, global alarm condition should not need acknowledgement !6970
+- C++/Bound: Add flag to avoid NDArray data copy even if pipeline queues !6935
+- C++/Bound: Remove sending logs to broker !7022
+- C++/Bound: Improve device templates !7177
+- Bound: Add order test !7164
+- Bound: Add slotGetConfigurationSlice !7039
+- Bound: Track senderId in lastCommand !7042
+- Bound: fix slotLoggerContent if server has no devices !7046
+- Bound: Allow setting a handler for SIGTERM and SIGINT !7043
+- Bound: Streamline device running, less threads !7050
+- Bound: Fix for silent plugin load failure for Bound Python device server. !7044
+- Remove archive from instanceInfo completely. Closes #61 !7174
 
 
 Core Devices
 ============
 
-- GUI Server: Remove 'requestFromSlot' and update integration tests.
+- DataLogger: Better message for no schema found while getting past config. !6926
+- DaemonManager: Protect from faulty webservers ... !7085
+- InfluxDataLogger: to log vector Hash rejection in detail !6989
+- Python influx: Remove a few deprecation warnings and code quality !7159
 
 
 Dependencies, Documentation and Tools
 =====================================
 
-- DEP: Update openmqc to version 5.1.4.1 (fix for compilation on GCC 11.3).
-- CI: Add build and test jobs for Ubuntu22.
-- DOC: fix MDL library description
-- DOC: add a CI test for the documentation
-- DOC: Document 2.16 release
-- Documentation 2.16.X: Split Core Devices
-- Add more highlights to doc 2.16
-- DOC: 2.16 add feature and bugfixes section
-- More documentation for 2.16.X
-- DOCS: remove duplication for C++ in 2.16
-- Start documenting 2.17
+- Tests: Skip Python integration tests on CI for AMQP broker !7066
+- DEP: Update openmqc to version 5.1.4.1 (fix for compilation on GCC 11.3). !6936
+- DEPS: Update miniconda image !7053
+- DEPS: Maintain tag folder for cmake and netbeans build in karabo install !7078
+- DEPS: Add qscintilla dependancy !7081
+- DEPS: Remove Conda environment-based build !7151
+- DEPS: Add Conan Package Manager as an external Framework dependency. !7173
+- Conda: Update mirror on demand !7009
+- DOC: fix MDL library description !6922
+- DOC: add a CI test for the documentation !6923
+- DOC: Document 2.16 release !6927
+- DOC: 2.16 add feature and bugfixes section !6931
+- DOC: More documentation for 2.16.X !6934
+- DOC: remove duplication for C++ in 2.16 !6945
+- DOC: document 2.16.1 and 2.17 !7006
+- DOC: More details about safeNDArray option in 2.16.1 !7010
+- DOC: Fix omission about the need to run 'auto_build_all.sh'  before opening project in VSCode. !7172
+- DOC: Documentation 2.16.X: Split Core Devices !6928
+- DOC: Add more highlights to doc 2.16 !6929
+- DOC: Start documenting 2.17 !6981
+- DOC: Document 2.16: MDL detail !7011
+- DOC: document 2.16.2 !7048
+- DOC: Fix test_doc ci step !7052
+- DOC: Adjust removed 'gitlab' from urls, update supported platforms !7056
+- DOC: Fix gitlab link !7051
+- CI: Add build and test jobs for Ubuntu22. !6924
+- TOOLS: remove tags on karabo install !7018
+- TOOLS: Fix typo in karabo-kill help message. !7000
