@@ -212,6 +212,7 @@ class SceneControllerHandler(SceneWidgetHandler):
         # Ignore width and height for correct layout recalculation
         traits['height'] = traits['width'] = 0
         new_model = model_klass(**traits)
+        klass.initialize_model(self.widget.widget_controller.proxy, new_model)
         scene_view.replace_model(old_model, new_model)
 
     def _change_widget_proxies(self):
