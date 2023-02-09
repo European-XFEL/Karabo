@@ -80,7 +80,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if oldproxy is not None:
             oldproxy.on_trait_change(self._config_update, 'config_update',
                                      remove=True)
-            oldproxy.on_trait_change(self._schema_update, 'schema_update',
+            oldproxy.on_trait_change(self._config_update, 'schema_update',
                                      remove=True)
         try:
             self.beginResetModel()
@@ -93,7 +93,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if proxy is not None:
             proxy.on_trait_change(self._config_update, 'config_update')
-            proxy.on_trait_change(self._schema_update, 'schema_update')
+            proxy.on_trait_change(self._config_update, 'schema_update')
 
     def apply_changes(self):
         """Send all modified properties to the remote device.
@@ -179,13 +179,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def _attr_backref(self, binding):
         """Return the PropertyProxy for a given BaseBinding"""
         return self._attr_backreferences.get(binding)
-
-    def _schema_update(self):
-        """Notify the view of a schema update"""
-        self.layoutAboutToBeChanged.emit(
-            [], QAbstractItemModel.VerticalSortHint)
-        self.layoutChanged.emit()
-        self.notify_of_modifications()
 
     def _config_update(self):
         """Notify the view of item updates.
