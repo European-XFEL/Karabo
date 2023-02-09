@@ -76,7 +76,6 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         self.assertIsInstance(self.model, ConfigurationTreeModel)
         self.model.root = root
         self.model._config_update()
-        self.model._schema_update()
 
     def test_basics(self):
         # This is constant
@@ -167,8 +166,6 @@ class TestConfiguratorDevice(GuiTestCase):
         self.model = self.view.model()
         self.assertIsInstance(self.model, ConfigurationTreeModel)
         self.model.root = root
-        self.model._config_update()
-        self.model._schema_update()
 
     def test_get_property_proxy_data(self):
         state_index = self.model.index(0, 0)
