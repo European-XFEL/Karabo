@@ -238,16 +238,6 @@ namespace karathon {
             return this->connect(signalFunction, slotFunction);
         }
 
-        void registerInstanceNewHandlerPy(const bp::object& handler) {
-            registerInstanceNewHandler(
-                  HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceNew"));
-        }
-
-        void registerInstanceGoneHandlerPy(const bp::object& handler) {
-            registerInstanceGoneHandler(
-                  HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceGone"));
-        }
-
         void registerSlotCallGuardHandlerPy(const bp::object& handler) {
             registerSlotCallGuardHandler(
                   HandlerWrap<const std::string&, const std::string&>(handler, "slot call guard"));
