@@ -893,9 +893,9 @@ async def test_cancel(deviceTest):
         # Finally, sleep for long enough that the macro runs in to the
         # karabo sleep which CAN be interrupted.
         await sleepUntil(lambda: local.slept_count == 1, 1)
-        assert local.cancelled_slot == Local.sleepalot
         assert local.slept_count == 1
         await sleepUntil(lambda: task.done(), 0.1)
+        assert local.cancelled_slot == Local.sleepalot
 
         # cancel during karabo.sleep
         local.cancelled_slot = None
@@ -907,10 +907,10 @@ async def test_cancel(deviceTest):
         await d.cancel()
         await sleepUntil(lambda: local.slept_count == 2, 1)
         assert local.slept_count == 2
-        assert local.cancelled_slot == Local.sleepalot
         # Sleep, but only short to show that the task was cancelled
         await sleepUntil(lambda: task.done(), 0.1)
         assert task.done()
+        assert local.cancelled_slot == Local.sleepalot
 
 
 @pytest.mark.timeout(30)
