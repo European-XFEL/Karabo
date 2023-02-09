@@ -1295,21 +1295,6 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::registerInstanceNewHandler(const InstanceInfoHandler& instanceNewHandler) {
-            m_instanceNewHandler = instanceNewHandler;
-        }
-
-
-        void SignalSlotable::registerInstanceGoneHandler(const InstanceInfoHandler& instanceGoneHandler) {
-            m_instanceGoneHandler = instanceGoneHandler;
-        }
-
-
-        void SignalSlotable::registerInstanceUpdatedHandler(const InstanceInfoHandler& instanceUpdatedHandler) {
-            m_instanceUpdatedHandler = instanceUpdatedHandler;
-        }
-
-
         void SignalSlotable::registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler) {
             m_slotCallGuardHandler = slotCallGuardHandler;
         }

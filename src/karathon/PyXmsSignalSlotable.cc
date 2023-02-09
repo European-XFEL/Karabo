@@ -97,10 +97,6 @@ void exportPyXmsSignalSlotable() { // exposing karabo::xms::SignalSlotable
                (bp::arg("update"), bp::arg("remove") = false))
           .def("getInstanceInfo",
                static_cast<karabo::util::Hash (SignalSlotable::*)() const>(&SignalSlotable::getInstanceInfo))
-          .def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy, (bp::arg("handler")))
-
-          .def("registerInstanceGoneHandler", &SignalSlotableWrap::registerInstanceGoneHandlerPy, (bp::arg("handler")))
-
           .def("registerSlotCallGuardHandler", &SignalSlotableWrap::registerSlotCallGuardHandlerPy,
                (bp::arg("handler")))
 
