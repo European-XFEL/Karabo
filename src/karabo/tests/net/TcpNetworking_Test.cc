@@ -817,6 +817,23 @@ void TcpNetworking_Test::setUp() {}
 
 void TcpNetworking_Test::tearDown() {}
 
+void TcpNetworking_Test::testConfig() {
+    karabo::util::Hash cfg("hostname", "localhost", "port", 12345u); // default is client
+    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::util::Hash("Tcp", cfg)));
+
+    karabo::util::Hash cfg2("url", "tcp://localhost:12345"); // default is client
+    CPPUNIT_ASSERT_NO_THROW(karabo::net::Connection::create(karabo::util::Hash("Tcp", cfg2)));
+
+    karabo::util::Hash cfg3("url", "localhost:12345"); // do not forget the protocol
+    bool failed = false;
+    try {
+        karabo::net::Connection::create(karabo::util::Hash("Tcp", cfg3));
+    } catch (const karabo::util::NetworkException& e) {
+        CPPUNIT_ASSERT(e.userFriendlyMsg().find("does not start with 'tcp'") != std::string::npos);
+        failed = true;
+    }
+    CPPUNIT_ASSERT(failed);
+}
 
 void TcpNetworking_Test::testClientServer() {
     using namespace std;
