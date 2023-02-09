@@ -68,9 +68,6 @@ namespace karabo {
             // Forward
             class AsyncReply;
 
-            typedef boost::function<void(const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/)>
-                  InstanceInfoHandler;
-
             typedef boost::function<void(const std::string& /*slotFunction*/, const std::string& /*callee*/)>
                   SlotCallGuardHandler;
 
@@ -211,15 +208,6 @@ namespace karabo {
             void updateInstanceInfo(const karabo::util::Hash& update, bool remove = false);
 
             karabo::util::Hash getInstanceInfo() const;
-
-            // TODO This hook is dead-code currently, bring back in shape with event-loop refactoring
-            void registerInstanceNewHandler(const InstanceInfoHandler& instanceNewHandler);
-
-            // TODO This hook is dead-code currently, bring back in shape with event-loop refactoring
-            void registerInstanceGoneHandler(const InstanceInfoHandler& instanceGoneHandler);
-
-            // TODO This hook is dead-code currently, bring back in shape with event-loop refactoring
-            void registerInstanceUpdatedHandler(const InstanceInfoHandler& instanceUpdatedHandler);
 
             void registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler);
 
@@ -797,11 +785,6 @@ namespace karabo {
             mutable boost::mutex m_pipelineChannelsMutex;
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
-
-            // InstanceInfo Handlers
-            InstanceInfoHandler m_instanceNewHandler;
-            InstanceInfoHandler m_instanceGoneHandler;
-            InstanceInfoHandler m_instanceUpdatedHandler;
 
             SlotCallGuardHandler m_slotCallGuardHandler;
             UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
