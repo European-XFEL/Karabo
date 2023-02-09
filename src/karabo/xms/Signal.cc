@@ -59,9 +59,11 @@ namespace karabo {
         }
 
 
-        void Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
             boost::mutex::scoped_lock lock(m_registeredSlotsMutex);
-            m_registeredSlots[slotInstanceId].insert(slotFunction);
+            // Note: m_registeredSlots[slotInstanceId] is a set<std::string> and set<..>::insert(arg) returns an
+            //       std::pair where second tells whether arg was already in the set or is newly added.
+            return m_registeredSlots[slotInstanceId].insert(slotFunction).second;
         }
 
 
