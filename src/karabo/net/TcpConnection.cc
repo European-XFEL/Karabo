@@ -62,7 +62,9 @@ namespace karabo {
             STRING_ELEMENT(expected)
                   .key("url")
                   .displayedName("URL")
-                  .description("URL format is tcp://hostname:port. This style has precedence.")
+                  .description(
+                        "URL format is tcp://hostname:port. This style has precedence over specifying hostname and "
+                        "port.")
                   .assignmentOptional()
                   .defaultValue("")
                   .commit();
@@ -112,7 +114,9 @@ namespace karabo {
             } else {
                 const boost::tuple<std::string, std::string, std::string, std::string, std::string> parts =
                       parseUrl(url);
-                assert(parts.get<0>() == "tcp");
+                if (parts.get<0>() != "tcp") {
+                    throw KARABO_NETWORK_EXCEPTION(("url '" + url) += "' does not start with 'tcp'");
+                }
                 m_hostname = parts.get<1>();
                 m_port = fromString<unsigned int>(parts.get<2>());
             }
