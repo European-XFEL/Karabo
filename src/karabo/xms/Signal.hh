@@ -69,7 +69,13 @@ namespace karabo {
                 m_argsType = std::type_index(typeid(std::tuple<Args...>));
             }
 
-            void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
+            /**
+             * Register a slot to receive an emitted signal
+             * @param slotInstanceId id of the instance of the slot
+             * @param slotFunction name of the slot
+             * @return bool whether freshly registered (false means: was already registered)
+             */
+            bool registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
             /**
              * Undo registration of a slot
