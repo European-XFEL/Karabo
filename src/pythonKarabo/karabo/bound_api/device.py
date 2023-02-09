@@ -3,7 +3,6 @@ __date__ = "$Jul 30, 2012 9:03:51 PM$"
 
 import copy
 import os
-import re
 import signal
 import socket
 import sys
@@ -349,9 +348,6 @@ class PythonDevice(NoFsm):
 
         # For broker error handler
         self.lastBrokerErrorStamp = 0
-
-        # Initialize regular expression object
-        self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
 
         self.initClassId()
         self.initSchema()
@@ -1351,7 +1347,7 @@ class PythonDevice(NoFsm):
                 statuses = ("error", "unknown")
                 if self._ss.getInstanceInfo()["status"] in statuses:
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
-        # reply new state to interested event initiators
+        # place new state as default reply to interested event initiators
         self._ss.reply(stateName)
 
     def noStateTransition(self, currentState, currentEvent):
@@ -1708,6 +1704,7 @@ class PythonDevice(NoFsm):
         if result:
             self.preReconfigure(validated)
             self._applyReconfiguration(validated)
+            self.postReconfigure()
         else:
             raise ValueError(error)
 
@@ -1727,7 +1724,6 @@ class PythonDevice(NoFsm):
             self._ss.emit("signalStateChanged", reconfiguration, self.deviceid)
         else:
             self._ss.emit("signalChanged", reconfiguration, self.deviceid)
-        self.postReconfigure()
 
     def slotGetSchema(self, onlyCurrentState):
         # state lock!
