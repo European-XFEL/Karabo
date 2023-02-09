@@ -1055,20 +1055,10 @@ namespace karabo {
         void SignalSlotable::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             if (instanceId == m_instanceId) return;
 
-            // Have to check whether this instance is tracked
-
-            // Several cases:
-            // a) instance is not tracked
-            //    Fine. New guy in the system
-            // b) instance is tracked, countdown > 0:
-            //    The guy died without saying goodbye and came quickly back.
-            //    No one has seen him dying and everyone believed he was fine. Only now we know that this wasn't the
-            //    case.
-            // c) instance is tracked, countdown < 0:
-            //    This guy silently died, and the system got note of that. Now he is back!
-
-            // This will ensure that all old connections (maintained as part of the signal) are erased
-            cleanSignals(instanceId);
+            // In the past, we called cleanSignals(instanceId) here to ensure that all old connections (maintained as
+            // part of the signal) are erased. But since instanceNew broadcasts have no order guarantee with other slot
+            // calls, 'instanceId' might have already connected to one of our signals before we process its instanceNew
+            // here. So the cleaning can wrongly erase a connection that has just been created.
 
             if (m_trackAllInstances) {
                 // If it was already tracked, this call will overwrite it (= reset countdown)
