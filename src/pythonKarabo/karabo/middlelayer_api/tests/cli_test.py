@@ -75,6 +75,17 @@ class Other(Device):
             await sleep(0.02)
 
 
+def sleepUntil(condition, timeout=1):
+    """A synchronously sleeping block"""
+    total = timeout
+    interval = 0.05
+    while not condition():
+        time.sleep(interval)
+        total -= interval
+        if total < 0:
+            break
+
+
 @pytest.mark.timeout(30)
 def test_delete():
     thread = EventThread()
@@ -86,7 +97,7 @@ def test_delete():
         r = weakref.ref(remote)
         Remote.destructed = False
         del remote
-        time.sleep(0.05)
+        sleepUntil(lambda: Remote.destructed)
         gc.collect()
         time.sleep(0.05)
         assert r() is None
