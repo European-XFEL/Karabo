@@ -17,7 +17,7 @@ from karabo.native import (
 from ..eventloop import EventLoop
 from .base import Broker
 
-_QARGUMENTS = {
+_QBEATS_ARGUMENTS = {
     "x-max-length": 100_000,  # Number of max messages in the queue
     "x-overflow": "drop-head",  # Drop oldest messages
     "x-message-ttl": 120_000  # 120 seconds expiry time [ms]
@@ -53,6 +53,7 @@ class AmqpBroker(Broker):
         self.connection = None
         self.deviceId = deviceId
         self.classId = classId
+        self.brokerId = None
         # Interest in receiving broadcasts
         self.broadcast = broadcast
         self.logger = logging.getLogger(deviceId)
@@ -81,18 +82,19 @@ class AmqpBroker(Broker):
             routing_key = <deviceId>
             queue = <deviceId>
         """
-        name = f'{self.domain}.{self.deviceId}'
+        self.brokerId = f"{self.domain}.{self.deviceId}"
         try:
-            await self.channel.queue_declare(name, passive=True)
+            await self.channel.queue_declare(self.brokerId, passive=True)
             # If no exception raised the the queue name exists already ...
             # To continue  just use generated queue name...
-            name = ""
+            timestamp = time.monotonic().hex()[4:-4]
+            self.brokerId = f"{self.domain}.{self.deviceId}:{timestamp}"
         except aiormq.exceptions.ChannelNotFoundEntity:
             # Exception raised since the queue not found on the broker
             # The channel is not valid anymore, so create the new one
             self.channel = await self.connection.channel()
         declare_ok = await self.channel.queue_declare(
-            name, auto_delete=True, arguments=_QARGUMENTS)
+            self.brokerId, auto_delete=True)
         # The received queue name (either input or generated) is ...
         self.queue = declare_ok.queue
         # create main exchange : <domain>.slots
@@ -436,9 +438,9 @@ class AmqpBroker(Broker):
     async def consume_beats(self, device):
         """Heartbeat method for the device server"""
         device = weakref.ref(device)
-
+        name = f"{self.brokerId}:beats"
         declare_ok = await self.channel.queue_declare(
-            auto_delete=True, arguments=_QARGUMENTS)
+            name, auto_delete=True, arguments=_QBEATS_ARGUMENTS)
         self.heartbeat_queue = declare_ok.queue
         consume_ok = await self.channel.basic_consume(
             self.heartbeat_queue, partial(self.on_heartbeat, device),
