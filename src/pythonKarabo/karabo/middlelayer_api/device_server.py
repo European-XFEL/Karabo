@@ -527,7 +527,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
             futures = {instanceId: dev.slotKillDevice()
                        for instanceId, dev in self.deviceInstanceMap.items()}
-            done, *errors = await allCompleted(**futures, timeout=10)
+            done, *errors = await allCompleted(**futures, timeout=15)
             # SlotKillDevice returns a success boolean if all tasks could be
             # destroyed on time
             if not all(list(done.values())):
