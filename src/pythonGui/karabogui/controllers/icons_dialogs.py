@@ -180,17 +180,17 @@ class IconItem(IconData):
         except URLError:
             # Revert changes
             self.trait_setq(image=old_url)
-            messagebox.show_error("Pasted image is invalid.", parent=self)
+            messagebox.show_error("Pasted image is invalid.")
         except IconFileSizeLimitError:
             self.trait_setq(image=old_url)
             message = ("Desired file exceeds the file size limit of "
                        "{size_limit} KB [{file_size:.2f} KB]."
                        .format(size_limit=int(ICON_FILE_SIZE_LIMIT / 1024),
                                file_size=file_size / 1024))
-            messagebox.show_error(message, parent=self)
+            messagebox.show_error(message)
         except IconError:
             self.trait_setq(image=old_url)
-            messagebox.show_error("Could not read image.", parent=self)
+            messagebox.show_error("Could not read image.")
         else:
             self.data = data
 
@@ -201,7 +201,7 @@ class IconItem(IconData):
             if not pixmap.loadFromData(self.data):
                 raise IconError
         except (KeyError, IconError):
-            messagebox.show_error("Could not read image.", parent=self)
+            messagebox.show_error("Could not read image.")
             pixmap = icons.no.pixmap(DEFAULT_SIZE, DEFAULT_SIZE)
 
         return pixmap
