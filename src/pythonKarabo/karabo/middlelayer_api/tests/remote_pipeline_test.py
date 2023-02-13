@@ -660,8 +660,7 @@ async def test_zero_sockets_output_close(deviceTest):
 async def test_pipeline_context(deviceTest):
     """Test the operation of a pipeline context channel"""
     output_device = Sender({"_deviceId_": "ContextSender"})
-    await output_device.startInstance()
-    try:
+    async with AsyncDeviceContext(output_device=output_device) as ctx:
         proxy = await getDevice("ContextSender")
         assert isAlive(proxy)
         await proxy.startSending()
@@ -673,20 +672,20 @@ async def test_pipeline_context(deviceTest):
             assert channel.is_alive()
             await proxy.stopSending()
 
+            await ctx.shutdown()
             # Start fresh to reconnect
-            await output_device.slotKillDevice()
             # XXX: wait for instanceGone signal
             await sleepUntil(lambda: not channel.is_alive())
             assert not channel.is_alive()
 
             output_device = Sender({"_deviceId_": "ContextSender"})
-            await output_device.startInstance()
+            await ctx.device_context(output_device=output_device)
             # Wait for connection
-            # NOTE: `proxy` is not being updated here. But it is fine,
-            #       since we are awaiting the connection and the device
-            #       will be implicitly online.
             await channel.wait_connected()
             assert channel.is_alive()
+
+            # Proxy alive depends on instanceNew
+            await waitUntil(lambda: isAlive(proxy))
 
             # Get data again
             data = None
@@ -707,8 +706,6 @@ async def test_pipeline_context(deviceTest):
         assert repr(data) is not None
         assert repr(meta) is not None
         assert isinstance(meta, PipelineMetaData)
-    finally:
-        await output_device.slotKillDevice()
 
 
 @pytest.mark.timeout(30)
