@@ -16,7 +16,7 @@
 #include <boost/function.hpp>
 #include <string>
 
-#include "karabo/net/EventLoop.hh"
+#include "karabo/net/HttpClient.hh"
 #include "karabo/util/Schema.hh"
 
 namespace karabo {
@@ -54,12 +54,7 @@ namespace karabo {
                                        const AuthOneTimeTokenHandler& handler);
 
            private:
-            std::string m_authServerUrl;
-            std::string m_authServerHost;
-            unsigned short m_authServerPort;
-            // The base path for the AuthServer web api - will usually be blank.
-            std::string m_authServerPath;
-            bool m_useSSL;
+            karabo::net::HttpClient m_cli;
         };
     } // namespace net
 } // namespace karabo
