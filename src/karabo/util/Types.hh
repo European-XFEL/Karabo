@@ -21,7 +21,8 @@
 // linking problems with libstdc are seen.
 // Here we bail out if such a compiler version is detected.
 
-#ifdef __GNUC__
+// Accept clang as it is used by many IDE tools.
+#if defined(__GNUC__) && !defined(__clang__)
 #if __GNUC__ < 7
 #error Compiling Karabo with gcc requires at least gcc version 7.
 #endif
