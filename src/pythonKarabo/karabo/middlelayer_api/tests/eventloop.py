@@ -212,15 +212,7 @@ class AsyncDeviceContext:
         return self
 
     async def __aexit__(self, exc_type, exc, exc_tb):
-        devices = [d for d in self.instances.values()
-                   if not isinstance(d, MiddleLayerDeviceServer)]
-        if devices:
-            await gather(*(d.slotKillDevice() for d in devices))
-
-        servers = [s for s in self.instances.values()
-                   if isinstance(s, MiddleLayerDeviceServer)]
-        if servers:
-            await gather(*(s.slotKillDevice() for s in servers))
+        await self.shutdown()
         # Shutdown time
         await sleep(SHUTDOWN_TIME)
 
@@ -237,6 +229,18 @@ class AsyncDeviceContext:
         self.instances.update(devices)
         await gather(*(d.startInstance() for d in devices.values()))
         await self.wait_online(devices)
+
+    async def shutdown(self):
+        devices = [d for d in self.instances.values()
+                   if not isinstance(d, MiddleLayerDeviceServer)]
+        if devices:
+            await gather(*(d.slotKillDevice() for d in devices))
+
+        servers = [s for s in self.instances.values()
+                   if isinstance(s, MiddleLayerDeviceServer)]
+        if servers:
+            await gather(*(s.slotKillDevice() for s in servers))
+        self.instances = {}
 
     def __getitem__(self, instance):
         """Convenience method to get an instance from the context"""
