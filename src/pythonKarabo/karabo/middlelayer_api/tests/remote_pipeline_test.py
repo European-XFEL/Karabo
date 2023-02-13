@@ -312,30 +312,28 @@ async def test_output_reconnect(deviceTest):
         proxy.output.connect()
         # Send more often as our proxy has a drop setting and we are busy
         # in tests.
-        for _ in range(NUM_DATA):
-            await proxy.sendData()
+        await sleepUntil(lambda: connected is True)
+        await proxy.sendData()
+        await sleepUntil(lambda: received is True)
         assert received
         assert connected
         # We received data and now kill the device
         await output_device.slotKillDevice()
         await waitUntil(lambda: not isAlive(proxy))
         assert not isAlive(proxy)
+        # Set the received and connected to false!
+        received = False
+        connected = False
         # The device is gone, now we instantiate the device with same
         # deviceId to see if the output automatically reconnects
         output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
         await waitUntil(lambda: isAlive(proxy))
-        assert received
-        # Set the received and connected to false!
-        received = False
-        connected = False
-        assert not connected
-        assert not received
         # Wait a few seconds because the reconnect will wait seconds
         # as well before attempt
-        await sleep(2)
-        for _ in range(NUM_DATA):
-            await proxy.sendData()
+        await sleepUntil(lambda: connected is True)
+        await proxy.sendData()
+        await sleepUntil(lambda: received is True)
         # Our reconnect was successful, we are receiving data via the
         # output channel
         assert received
