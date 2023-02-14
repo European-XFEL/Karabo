@@ -1,7 +1,7 @@
 import warnings
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, Float, Int, List, String
+from traits.api import Bool, Enum, Float, Instance, Int, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -124,7 +124,7 @@ class NDArrayGraphModel(BasePlotModel):
     """A model for the NDArray Graph"""
 
     half_samples = Int(6000)
-    roi_items = List(BaseROIData)
+    roi_items = List(Instance(BaseROIData))
     roi_tool = Int(0)
     offset = Float(0.0)
     step = Float(1.0)
@@ -149,7 +149,7 @@ class VectorGraphModel(BasePlotModel):
     """A model for the Vector Graph"""
 
     half_samples = Int(6000)
-    roi_items = List(BaseROIData)
+    roi_items = List(Instance(BaseROIData))
     roi_tool = Int(0)
     offset = Float(0.0)
     step = Float(1.0)
