@@ -355,9 +355,9 @@ def test_macro_slotter_sync(deviceTest):
         d.startSync()
         assert d.state == State.ACTIVE
         d.cancel()
-        assert localMacro.cancelled_slot is LocalMacroSlot.startSync
         waitUntil(lambda: d.state == State.PASSIVE)
         assert d.state == State.PASSIVE
+        assert localMacro.cancelled_slot is LocalMacroSlot.startSync
 
         localMacro.cancelled_slot = None
 
@@ -372,9 +372,9 @@ def test_macro_slotter_sync(deviceTest):
         d.node.startSync()
         assert d.state == State.ACTIVE
         d.cancel()
-        assert localMacro.cancelled_slot is LocalMacroSlot.node.cls.startSync
         waitUntil(lambda: d.state == State.PASSIVE)
         assert d.state == State.PASSIVE
+        assert localMacro.cancelled_slot is LocalMacroSlot.node.cls.startSync
 
         localMacro.cancelled_slot = None
 
