@@ -249,7 +249,8 @@ class BasePanelWidget(QFrame):
         toolbar_layout.setSpacing(0)
         # Make the first toolbars expand to fill all horizontal space
         toolbar_layout.setStretch(toolbar_layout.count() - 1, 1)
-        toolbar.setVisible(False)
+        # Default visibility is set to True and updated on container setting
+        toolbar.setVisible(True)
 
         # Setup some visual characteristics of the toolbar container
         stylesheet = 'QWidget#{} {{background-color: rgb(180,180,180); }}'
