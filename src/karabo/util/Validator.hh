@@ -129,7 +129,7 @@ namespace karabo {
             Validator();
 
             /**
-             * Copy constructor
+             * Copy constructor will just take over other's validation rules
              * @param other
              */
             Validator(const Validator& other);

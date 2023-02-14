@@ -38,11 +38,7 @@ namespace karabo {
               m_hasReconfigurableParameter(false) {}
 
 
-        Validator::Validator(const Validator& other) {
-            setValidationRules(other.getValidationRules());
-            boost::unique_lock<boost::shared_mutex> lock(other.m_rollingStatMutex);
-            m_parameterRollingStats = other.m_parameterRollingStats;
-        }
+        Validator::Validator(const Validator& other) : Validator(other.getValidationRules()) {}
 
 
         Validator::Validator(const ValidationRules rules) : m_hasReconfigurableParameter(false) {
