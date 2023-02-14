@@ -27,9 +27,7 @@ namespace karabo {
 
         // Init static members
         boost::mutex Exception::m_mutex;
-        // circular buffer to avoid leakage if trace is never cleared
-        boost::circular_buffer<Exception::ExceptionInfo> Exception::m_trace(100);
-        bool Exception::m_hasUnhandled = false;
+        std::map<boost::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> Exception::m_trace;
 
 
         Exception::Exception(const string& message, const string& type, const string& filename, const string& function,
@@ -64,8 +62,9 @@ namespace karabo {
 
         void Exception::addToTrace(const ExceptionInfo& value) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
-            m_hasUnhandled = true;
-            m_trace.push_back(value);
+            boost::circular_buffer<ExceptionInfo>& buffer = Exception::m_trace[boost::this_thread::get_id()];
+            if (buffer.empty()) buffer.set_capacity(100u); // limit size in case never cleared
+            buffer.push_back(value);
         }
 
 
@@ -76,8 +75,7 @@ namespace karabo {
 
         void Exception::clearTrace() {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
-            Exception::m_hasUnhandled = false;
-            Exception::m_trace.clear();
+            Exception::m_trace.erase(boost::this_thread::get_id());
         }
 
 
@@ -146,13 +144,14 @@ namespace karabo {
 
         void Exception::showTrace(ostream& os) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
-            if (m_trace.empty()) return;
+            auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
+            if (currentBuffer.empty()) return;
             ostringstream oss;
             oss << "Exception with trace (listed from inner to outer):" << endl;
-            for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
+            for (unsigned int i = 0; i < currentBuffer.size(); ++i) {
                 string fill(i * 3, ' ');
                 oss << fill << i + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
-                format(oss, Exception::m_trace[i], fill);
+                format(oss, currentBuffer[i], fill);
                 oss << fill << "}" << endl << endl;
             }
             os << oss.str();
@@ -160,12 +159,13 @@ namespace karabo {
 
 
         ostream& operator<<(ostream& os, const Exception& exception) {
-            Exception::showTrace(os); // no-op if m_trace is empty
+            Exception::showTrace(os); // no-op if m_trace[boost::this_thread::get_id()] is empty
 
             {
                 boost::mutex::scoped_lock lock(Exception::m_mutex);
-                string fill(Exception::m_trace.size() * 3, ' ');
-                os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
+                auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
+                string fill(currentBuffer.size() * 3, ' ');
+                os << fill << currentBuffer.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
                 Exception::format(os, exception.m_exceptionInfo, fill);
                 os << fill << "}" << endl << endl;
             }
@@ -208,10 +208,12 @@ namespace karabo {
             bool hasMsg = !m_exceptionInfo.message.empty();
             {
                 boost::mutex::scoped_lock lock(Exception::m_mutex);
+                auto& currentBuffer = Exception::m_trace[boost::this_thread::get_id()];
+
                 unsigned int j = 0;
-                for (size_t i = Exception::m_trace.size(); i > 0; --i) {
+                for (size_t i = currentBuffer.size(); i > 0; --i) {
                     // Caveat: Do not loop "...i = ...size() - 1; i >= 0;" - that's end endless due to unsigend-ness
-                    const Exception::ExceptionInfo& myException = Exception::m_trace[i - 1]; // ...so we need -1 here
+                    const Exception::ExceptionInfo& myException = currentBuffer[i - 1]; // ...so we need -1 here
                     if (!myException.message.empty()) {
                         if (hasMsg) {
                             err << "\n";
