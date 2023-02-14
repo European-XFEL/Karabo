@@ -1,7 +1,7 @@
 import warnings
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Float, Int, String
+from traits.api import Bool, Float, Instance, Int, String
 from traits.trait_types import List
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
@@ -22,7 +22,7 @@ class KaraboImageModel(BaseWidgetObjectData):
     aux_plots = Int(0)
     colormap = String("none")
 
-    roi_items = List(BaseROIData)
+    roi_items = List(Instance(BaseROIData))
     roi_tool = Int(0)
 
     x_scale = Float(1.0)
@@ -72,7 +72,7 @@ class VectorRollGraphModel(BaseWidgetObjectData):
     # Image trait base
     aux_plots = Int(0)
     colormap = String("none")
-    roi_items = List(BaseROIData)
+    roi_items = List(Instance(BaseROIData))
     roi_tool = Int(0)
     x_label = String("X-axis")
     x_units = String("pixels")
