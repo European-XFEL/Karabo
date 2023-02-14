@@ -7,10 +7,12 @@
 
 #include "karabo/net/EventLoop.hh"
 
+#include <boost/algorithm/string_regex.hpp>
 #include <csignal>
 
 #include "EventLoop_Test.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/util/Exception.hh"
 
 
 using namespace karabo::util;
@@ -132,4 +134,81 @@ void EventLoop_Test::testAddThreadDirectly() {
     // Check that indeed 'answer' unblocked 'question'
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, status);
     CPPUNIT_ASSERT(future.get());
+}
+
+void EventLoop_Test::testExceptionTrace() {
+    // Test thread safety of karabo::util::Exception's trace here and not in Exception_Test since requires event loop
+    using karabo::util::Exception;
+
+    boost::thread t(boost::bind(&EventLoop::work));
+
+    const int nParallel = 10;
+    EventLoop::addThread(nParallel);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // now all threads should be available
+
+
+    std::vector<std::promise<std::string>> promises(nParallel);
+    std::vector<std::future<std::string>> futures;
+    for (int i = 0; i < nParallel; ++i) {
+        futures.push_back(promises[i].get_future());
+    }
+
+    boost::function<void(int)> func = [&promises](int n) {
+        const std::string strN(karabo::util::toString(n));
+        try {
+            try {
+                try {
+                    try {
+                        try {
+                            try {
+                                throw KARABO_CAST_EXCEPTION(strN + ": problem");
+                            } catch (const Exception&) {
+                                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(strN + ": propagated 1"));
+                            }
+                        } catch (const Exception&) {
+                            KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(strN + ": propagated 2"));
+                        }
+                    } catch (const Exception&) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(strN + ": propagated 3"));
+                    }
+                } catch (const Exception&) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(strN + ": propagated 4"));
+                }
+            } catch (const Exception&) {
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(strN + ": propagated 5"));
+            }
+        } catch (const Exception& e) {
+            promises[n].set_value(e.userFriendlyMsg());
+        }
+    };
+
+    // Now start executing all exception handling in parallel
+    for (int i = 0; i < nParallel; ++i) {
+        EventLoop::getIOService().post(boost::bind(func, i));
+    }
+
+    // Collect all traces
+    std::vector<std::string> exceptionTxts(nParallel);
+    for (int i = 0; i < nParallel; ++i) {
+        exceptionTxts[i] = futures[i].get();
+    }
+
+    // Stop loop and join thread before tests to avoid that failures leave dangling event loop thread behind
+    EventLoop::stop();
+    t.join(); // collects all threads added
+
+    // Finally collect that exception traces contain al 'their' messages
+    for (int i = 0; i < nParallel; ++i) {
+        std::vector<std::string> split;
+        std::string numStr(karabo::util::toString(i));
+        boost::algorithm::split_regex(split, exceptionTxts[i], boost::regex("because: "));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Trace for " + numStr + " is " + exceptionTxts[i], //
+                                     6ul, split.size());                                // 6 exceptions
+        numStr += ": ";
+        for (const std::string& singleMsg : split) {
+            // All exception messages were prepended with 'their' number
+            // (exception order within trace is tested in Exception_Test::testTraceOrder)
+            CPPUNIT_ASSERT_MESSAGE(singleMsg + " does not start with " + numStr, boost::starts_with(singleMsg, numStr));
+        }
+    }
 }
