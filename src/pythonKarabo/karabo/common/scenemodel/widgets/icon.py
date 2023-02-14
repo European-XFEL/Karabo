@@ -1,9 +1,10 @@
 import base64
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Bytes, HasStrictTraits, Instance, List, String
+from traits.api import Bool, Bytes, Instance, List, String
 
-from karabo.common.scenemodel.bases import BaseWidgetObjectData
+from karabo.common.scenemodel.bases import (
+    BaseSavableModel, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.exceptions import SceneWriterException
 from karabo.common.scenemodel.io_utils import (
@@ -23,7 +24,7 @@ class DisplayIconsetModel(BaseWidgetObjectData):
     data = Bytes
 
 
-class IconData(HasStrictTraits):
+class IconData(BaseSavableModel):
     """A base class for Icon (Item) data."""
 
     # XXX: Not sure what this is...
