@@ -1,12 +1,17 @@
 import argparse
 
+from traits.api import Instance, List
+
+from karabo.common.api import BaseSavableModel
 from karabo.common.scenemodel.api import FixedLayoutChildData, read_scene
 
 
-def code_for(model, children=None):
+def code_for(model, key, children=None):
     """Generate the Python code which can build a scene model object.
+
+    :param key: the key under which more children items can be found
     """
-    ignored_traits = ('children', 'uuid')
+    ignored_traits = (key, 'uuid')
     traits = []
     for name in sorted(model.copyable_trait_names()):
         value = getattr(model, name)
@@ -20,10 +25,29 @@ def code_for(model, children=None):
         traits.append('{}={}'.format(name, repr(value)))
 
     if children:
-        traits.append('children=[{}]'.format(', '.join(children)))
+        traits.append('{}=[{}]'.format(key, ', '.join(children)))
 
     klass_name = model.__class__.__name__
     return klass_name, '{}({})'.format(klass_name, ', '.join(traits))
+
+
+def _list_of_savable(trait):
+    if not isinstance(trait.trait_type, List):
+        return False
+    inner_type = trait.inner_traits[0].trait_type
+    if not isinstance(inner_type, Instance):
+        return False
+    if not issubclass(inner_type.klass, BaseSavableModel):
+        return False
+    return True
+
+
+def _find_children(obj):
+    children = [name for name in obj.copyable_trait_names()
+                if _list_of_savable(obj.trait(name))]
+    if not children:
+        children.append("children")
+    return children
 
 
 def convert_scene_model_to_code(model, name='scene'):
@@ -33,17 +57,21 @@ def convert_scene_model_to_code(model, name='scene'):
     code = []
     classes = set()
 
-    children = getattr(model, 'children', [])
+    # Note: Compatibility, not all models have a `children` list, but others.
+    # If we find multiple children, we still choose `children`
+    keys = _find_children(model)
+    key = "children" if len(keys) > 1 else keys[0]
+    children = getattr(model, key, [])
     child_names = []
     for i, child in enumerate(children):
         child_name = name + str(i)
         child_names.append(child_name)
-        child_cls, child_stmts = convert_scene_model_to_code(child,
-                                                             name=child_name)
+        child_cls, child_stmts = convert_scene_model_to_code(
+            child, name=child_name)
         code.extend(child_stmts)
         classes.update(child_cls)
 
-    klass_name, stmt = code_for(model, children=child_names)
+    klass_name, stmt = code_for(model, key, children=child_names)
     code.append('{} = {}'.format(name, stmt))
     classes.add(klass_name)
 
