@@ -86,5 +86,5 @@ def test_image_graph_model():
 
     # Assert ROI data
     for orig, read in zip(model.roi_items, read_model.roi_items):
-        for trait in orig.class_visible_traits():
+        for trait in orig.copyable_trait_names():
             assert getattr(orig, trait) == getattr(read, trait)
