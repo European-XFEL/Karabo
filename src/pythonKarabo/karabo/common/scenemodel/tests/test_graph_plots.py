@@ -110,7 +110,7 @@ def test_vector_graph():
     _assert_geometry_traits(read_model)
     # Assert ROI data
     for orig, read in zip(model.roi_items, read_model.roi_items):
-        for trait in orig.class_visible_traits():
+        for trait in orig.copyable_trait_names():
             assert getattr(orig, trait) == getattr(read, trait)
 
     assert read_model.half_samples == 10000
@@ -146,7 +146,7 @@ def test_ndarray_graph():
 
     # Assert ROI data
     for orig, read in zip(model.roi_items, read_model.roi_items):
-        for trait in orig.class_visible_traits():
+        for trait in orig.copyable_trait_names():
             assert getattr(orig, trait) == getattr(read, trait)
 
     assert read_model.half_samples == 10000
