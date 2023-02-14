@@ -75,8 +75,11 @@ class HeartBeatMixin(Configurable):
         underlying devices and eventually channel a topology event.
         """
         # This method is only called when we are tracking!
-        instance_type = info['type']
+        instance_type = info["type"]
         if instanceId not in self.systemTopology[instance_type]:
+            # Resurrection, refresh instanceInfo directly
+            info = await self._ss.request(
+                instanceId, "slotPing", instanceId, 1, True)
             await self._topology_changed(new=[(instanceId, info)], gone=[])
             await self._add_instance(instanceId, info)
         else:
@@ -96,11 +99,11 @@ class HeartBeatMixin(Configurable):
         instances = []
         for instanceId, _, info in self.systemTopology["device"].iterall():
             if (actual_time - Timestamp.fromHashAttributes(info) >
-                    self.numBeats * info['heartbeatInterval']):
+                    self.numBeats * info["heartbeatInterval"]):
                 instances.append((instanceId, info))
         for instanceId, _, info in self.systemTopology["server"].iterall():
             if (actual_time - Timestamp.fromHashAttributes(info) >
-                    self.numBeats * info['heartbeatInterval']):
+                    self.numBeats * info["heartbeatInterval"]):
                 instances.append((instanceId, info))
         for instanceId, info in instances:
             self._remove_instance(instanceId, info)
@@ -150,7 +153,7 @@ class HeartBeatMixin(Configurable):
         self._remove_server_children(instanceId, info)
         self.systemTopology[info["type"]].pop(instanceId, None)
 
-    async def _topology_changed(self, new=[], gone=[]):
+    async def _topology_changed(self, new, gone):
         """Channel the topology tracking information
 
         This method will send out `slotInstanceGone and `slotInstanceNew`
