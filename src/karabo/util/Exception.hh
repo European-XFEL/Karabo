@@ -19,6 +19,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 
@@ -48,22 +49,6 @@ namespace karabo {
              */
             virtual ~Exception() throw(){};
 
-            /**
-             * Tells if any exceptions were memorized, but aren't handled (inspected) yet
-             */
-            static bool hasUnhandled() {
-                return Exception::m_hasUnhandled;
-            }
-
-            /**
-             * Tells if any exceptions were memorized, but aren't handled (inspected) yet
-             * @param e Exception object (use the << operator to get information in case of error)
-             * @return true in case of no error, false otherwise
-             */
-            bool operator!() {
-                return !hasUnhandled();
-            }
-
             template <class T>
             static void rethrow(const T& exception) {
                 Exception::memorize();
@@ -81,7 +66,7 @@ namespace karabo {
             static void memorize();
 
             /**
-             * Clears the trace of memorized messages..
+             * Clears the trace of memorized messages for current thread
              */
             static void clearTrace();
 
@@ -148,7 +133,7 @@ namespace karabo {
             typedef struct {
                 std::string type;
                 std::string message;
-                std::string details; // some exception provide further details
+                std::string details; // some exception types provide further details
                 std::string filename;
                 std::string function;
                 std::string lineNumber;
@@ -173,15 +158,14 @@ namespace karabo {
             static void format(std::ostream& os, const ExceptionInfo& exceptionInfo, const std::string& spacing);
 
             /**
-             * Adds exception information to trace
+             * Adds exception information to trace for current thread
              */
             static void addToTrace(const ExceptionInfo& value);
 
             ExceptionInfo m_exceptionInfo;
             mutable std::string m_detailedMsg;
             static boost::mutex m_mutex;
-            static boost::circular_buffer<ExceptionInfo> m_trace;
-            static bool m_hasUnhandled;
+            static std::map<boost::thread::id, boost::circular_buffer<Exception::ExceptionInfo>> m_trace;
         };
 
 
