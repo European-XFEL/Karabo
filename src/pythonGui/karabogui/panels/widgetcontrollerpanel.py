@@ -46,7 +46,10 @@ class WidgetControllerPanel(BasePanelWidget):
         """Returns a QWidget containing the main content of the panel"""
         widget = QWidget(self)
         self.controller.create(self)
-        self.controller.set_read_only(False)
+        is_editable = False
+        if self.model.parent_component == "EditableApplyLaterComponent":
+            is_editable = True
+        self.controller.set_read_only(not is_editable)
         self.controller.binding_update(self.proxy)
         self.controller.finish_initialization()
         self.controller.show()

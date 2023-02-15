@@ -2,14 +2,14 @@ from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.display_types import (
     KARABO_SCHEMA_DISPLAY_TYPE_ALARM, KARABO_SCHEMA_DISPLAY_TYPE_STATE)
 from karabo.common.scenemodel.api import (
-    AlarmGraphModel, HistoricTextModel, StateGraphModel, TrendGraphModel,
-    VectorGraphModel, WebCamGraphModel, get_alarm_graph_scene, get_image_scene,
-    get_state_graph_scene, get_text_history_scene, get_trendline_scene,
-    get_vector_scene)
+    AlarmGraphModel, HistoricTextModel, StateGraphModel, TableElementModel,
+    TrendGraphModel, VectorGraphModel, WebCamGraphModel, get_alarm_graph_scene,
+    get_image_scene, get_state_graph_scene, get_text_history_scene,
+    get_trendline_scene, get_vector_scene)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, ImageBinding, IntBinding, NDArrayBinding,
-    NodeBinding, PipelineOutputBinding, StringBinding, VectorNumberBinding,
-    VectorStringBinding)
+    NodeBinding, PipelineOutputBinding, StringBinding, VectorHashBinding,
+    VectorNumberBinding, VectorStringBinding)
 
 
 def _iter_binding(node, base=""):
@@ -109,6 +109,9 @@ def get_property_proxy_model(proxy, include_images=True):
 
     if isinstance(binding, (StringBinding, VectorStringBinding)):
         return HistoricTextModel(**_get_widget_attributes(proxy.key))
+
+    elif isinstance(binding, VectorHashBinding):
+        return TableElementModel(**_get_widget_attributes(proxy.key))
 
     elif isinstance(binding, (BoolBinding, FloatBinding, IntBinding)):
         return TrendGraphModel(**_get_plot_attributes(proxy))
