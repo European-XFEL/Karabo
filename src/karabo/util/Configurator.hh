@@ -109,12 +109,11 @@ namespace karabo {
                 if (!ctrIt_isInserted.second) { // So there was already something in the map
                     // Registering same constructor type again for a derived class smells like asking for trouble:
                     // Could come when loading different libs witht different versions of the same class
-                    std::cerr << "Attempt to register constructor key '" << ctorKey()
-                              << "' a second time for class '" + classId + "'!\n"
-                              << "Probably the class is in different libraries.\n"
-                              << " ==> Directly bailing out due to potentially conflicting class versions."
-                              << std::endl;
-                    exit(1);
+                    std::cerr
+                          << "WARN: Refuse to register constructor key '" << ctorKey()
+                          << "' a second time for class '" + classId + "'!\n"
+                          << "      Better check whether different libraries provide different versions of that class."
+                          << std::endl;
                 }
             }
 
@@ -140,12 +139,11 @@ namespace karabo {
                 if (!ctrIt_isInserted.second) { // So there was already something in the map
                     // Registering same constructor type again for a derived class smells like asking for trouble:
                     // Could come when loading different libs with different versions of the same class
-                    std::cerr << "Attempt to register constructor key '" << ctorKey<A1>()
-                              << "' a second time for class '" + classId + "'!\n"
-                              << "Probably the class is in different libraries.\n"
-                              << " ==> Directly bailing out due to potentially conflicting class versions."
-                              << std::endl;
-                    exit(1);
+                    std::cerr
+                          << "WARN: Refuse to register constructor key '" << ctorKey<A1>()
+                          << "' a second time for class '" + classId + "'!\n"
+                          << "      Better check whether different libraries provide different versions of that class."
+                          << std::endl;
                 }
             }
 
