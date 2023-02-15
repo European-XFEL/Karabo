@@ -7,6 +7,23 @@ from setuptools import find_packages, setup
 CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
 VERSION_FILE_PATH = os.path.join(CURRENT_FOLDER, 'karabo', '_version.py')
 ROOT_FOLDER = os.path.dirname(os.path.dirname(CURRENT_FOLDER))
+# Karabo can be installed in different optional configurations
+# until optional dependencies
+# https://setuptools.pypa.io/en/latest/
+# userguide/dependency_management.html#optional-dependencies
+# are not implemented, one can tune this configurations with an
+# environment variable called BUILD_KARABO_SUBMODULE.
+# this can be set to:
+# - NATIVE
+#   to install only the common module and
+#   the native hash and schema binding module
+# - MDL
+#   to install the modules in NATIVE plus the
+#   asyncio devices library middlelayer
+# - anything else:
+#   to install all modules.
+SUBMODULE = os.environ.get('BUILD_KARABO_SUBMODULE', '')
+
 
 install_args = {
     'name': 'karabo',
@@ -17,7 +34,7 @@ install_args = {
     'url': 'http://karabo.eu',
 }
 
-if os.environ.get('BUILD_KARABO_SUBMODULE', '') == 'NATIVE':
+if SUBMODULE == 'NATIVE':
     # We're building the GUI, so we don't need to package everything
     install_args['packages'] = find_packages(include=[
         'karabo', 'karabo.common*', 'karabo.native*', 'karabo.testing*'
@@ -31,7 +48,7 @@ if os.environ.get('BUILD_KARABO_SUBMODULE', '') == 'NATIVE':
         'karabo.testing': ['resources/*.*'],
     }
 
-elif os.environ.get('BUILD_KARABO_SUBMODULE', '') == 'MDL':
+elif SUBMODULE == 'MDL':
     install_args['packages'] = find_packages(include=[
         'karabo', 'karabo.common*', 'karabo.native*', 'karabo.testing*',
         'karabo.interactive*', 'karabo.middlelayer_api*',
@@ -50,7 +67,8 @@ elif os.environ.get('BUILD_KARABO_SUBMODULE', '') == 'MDL':
 
     install_args['entry_points'] = {
         'console_scripts': [
-            'karabo-middlelayerserver=karabo.middlelayer_api.device_server:DeviceServer.main',
+            'karabo=karabo.interactive.karabo:main',
+            'karabo-middlelayerserver=karabo.middlelayer_api.device_server:MiddleLayerDeviceServer.main',
             'ikarabo=karabo.interactive.ikarabo:main',
         ],
         'karabo.middlelayer_device': [
