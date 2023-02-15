@@ -9,7 +9,7 @@ from itertools import count
 import pytest
 
 from karabo.common.states import State
-from karabo.middlelayer.testing import assertLogs, setEventLoop
+from karabo.middlelayer.testing import assertLogs, setEventLoop, sleepUntil
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     callNoWait, findDevices, getClients, getDevice, getDevices, shutdown)
@@ -75,7 +75,7 @@ class Other(Device):
             await sleep(0.02)
 
 
-def sleepUntil(condition, timeout=1):
+def sleepSync(condition, timeout=1):
     """A synchronously sleeping block"""
     total = timeout
     interval = 0.05
@@ -97,7 +97,7 @@ def test_delete():
         r = weakref.ref(remote)
         Remote.destructed = False
         del remote
-        sleepUntil(lambda: Remote.destructed)
+        sleepSync(lambda: Remote.destructed)
         gc.collect()
         time.sleep(0.05)
         assert r() is None
@@ -200,9 +200,12 @@ def test_topology():
             assert "other" not in getDevices()
             assert "other" not in getClients()
             assert "other" not in getDevices("tserver")
-
             await other.startInstance()
-            await sleep(0.1)
+
+            def other_online():
+                return "other" in getDevices()
+
+            await sleepUntil(other_online)
             assert "other" in getDevices()
             assert "other" in getDevices("tserver")
             assert "other" not in findDevices("beep")
