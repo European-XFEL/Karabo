@@ -645,7 +645,8 @@ void SignalSlotable_Test::_testConnectAsync() {
     CPPUNIT_ASSERT(!connectTimeout);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT(connectFailedMsg.find("signalInstance has no signal 'NOT_A_signal'.") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
+                           connectFailedMsg.find("signalInstance has no signal 'NOT_A_signal'.") != std::string::npos);
 
     ///////////////////////////////////////////////////////////////////////////
     // Test failureHandler again - now non-existing slot gives same exception type, but other message
@@ -662,7 +663,8 @@ void SignalSlotable_Test::_testConnectAsync() {
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
-    CPPUNIT_ASSERT(connectFailedMsg.find("slotInstance has no slot 'NOT_A_slot'.") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
+                           connectFailedMsg.find("slotInstance has no slot 'NOT_A_slot'.") != std::string::npos);
 
     ///////////////////////////////////////////////////////////////////////////
     // Another test for failureHandler - non-existing signalInstanceId gives TimeoutException
@@ -675,7 +677,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(105));
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
-    CPPUNIT_ASSERT(connectFailedMsg.empty());
+    CPPUNIT_ASSERT_MESSAGE("Message: " + connectFailedMsg, connectFailedMsg.empty());
 
     ///////////////////////////////////////////////////////////////////////////
     // Final test for failureHandler - non-existing slotInstanceId gives again TimeoutException
@@ -688,7 +690,7 @@ void SignalSlotable_Test::_testConnectAsync() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(55));
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
-    CPPUNIT_ASSERT(connectFailedMsg.empty());
+    CPPUNIT_ASSERT_MESSAGE("Message: " + connectFailedMsg, connectFailedMsg.empty());
 }
 
 
@@ -778,6 +780,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
         } catch (const karabo::util::SignalSlotException& e) {
             connectFailedMsg = e.what();
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+            connectFailedMsg = "unknown exception";
         }
     };
 
@@ -796,7 +799,8 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     CPPUNIT_ASSERT(!connectTimeout);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT(connectFailedMsg.find("signalA_slotB has no signal 'NOT_A_signal'.") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
+                           connectFailedMsg.find("signalA_slotB has no signal 'NOT_A_signal'.") != std::string::npos);
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
@@ -823,7 +827,8 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     CPPUNIT_ASSERT(!connectTimeout);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
-    CPPUNIT_ASSERT(connectFailedMsg.find("signalB_slotA has no slot 'NOT_A_slot'.") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg,
+                           connectFailedMsg.find("signalB_slotA has no slot 'NOT_A_slot'.") != std::string::npos);
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
@@ -849,7 +854,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
     CPPUNIT_ASSERT(connectTimeout);
-    CPPUNIT_ASSERT(connectFailedMsg.empty());
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg, connectFailedMsg.empty());
 
     // Clean up established connections (synchronously)
     for (const SignalSlotConnection& con : connections) {
@@ -873,7 +878,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
     CPPUNIT_ASSERT(connectTimeout);
-    CPPUNIT_ASSERT(connectFailedMsg.empty());
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + connectFailedMsg, connectFailedMsg.empty());
 }
 
 
@@ -1196,7 +1201,8 @@ void SignalSlotable_Test::_testAsyncReply() {
     CPPUNIT_ASSERT(receivedError);
     CPPUNIT_ASSERT(!receivedSuccess);
     // The text we have is part of the full exception message that e.g. also contains the time stamp
-    CPPUNIT_ASSERT(errorText.find("Something nasty to be expected!") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full error text: " + errorText,
+                           errorText.find("Something nasty to be expected!") != std::string::npos);
     CPPUNIT_ASSERT(remoteError);
 
     //
@@ -1316,7 +1322,7 @@ void SignalSlotable_Test::_testRegisterSlotTwice() {
     tester->start();
     // Synchronous request to avoid sleeps in test - assert that no timeout happens.
     // Our slot functions do not place any answers, so an empty one will be added.
-    // Note: With timeout 500, failure in https://git.xfel.eu/Karabo/Framework/-/jobs/273579
+    // Note: With timeout 500, seen a failure in a CI job.
     CPPUNIT_ASSERT_NO_THROW(tester->request("instance", "slot").timeout(slotCallTimeout).receive());
 
     CPPUNIT_ASSERT(firstIsCalled);
@@ -1382,9 +1388,11 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(2000)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(!result.first);
-    CPPUNIT_ASSERT(result.second.find("SignalSlot Exception") != std::string::npos);
-    CPPUNIT_ASSERT(result.second.find("Failed to create 1 out of 2 connections of an InputChannel") !=
-                   std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + result.second,
+                           result.second.find("SignalSlot Exception") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(
+          "Full message: " + result.second,
+          result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos);
 
     // Reset handler again
     handlerPromise = std::promise<std::pair<bool, std::string>>();
@@ -1400,9 +1408,11 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(12500)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(!result.first);
-    CPPUNIT_ASSERT(result.second.find("SignalSlot Exception") != std::string::npos);
-    CPPUNIT_ASSERT(result.second.find("Failed to create 1 out of 2 connections of an InputChannel") !=
-                   std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("Full message: " + result.second,
+                           result.second.find("SignalSlot Exception") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(
+          "Full message: " + result.second,
+          result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos);
 
     // Reset handler once more
     handlerPromise = std::promise<std::pair<bool, std::string>>();
@@ -1415,7 +1425,7 @@ void SignalSlotable_Test::_testAsyncConnectInputChannel() {
     receiver->asyncConnectInputChannel(inputChannel, handler);
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(2000)));
     result = handlerFuture.get();
-    CPPUNIT_ASSERT(result.first);
+    CPPUNIT_ASSERT_MESSAGE("Failure reason: " + result.second, result.first);
     CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
 }
 
