@@ -1539,9 +1539,7 @@ namespace karabo {
             const string loggerId = DATALOGGER_PREFIX + deviceId;
             boost::mutex::scoped_lock lock(m_loggerMapMutex);
             if (m_loggerMap.has(loggerId)) {
-                static int i = 0;
-                return DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) +=
-                       "-" + m_loggerMap.get<string>(loggerId);
+                return DATALOGREADER_PREFIX + ("0-" + m_loggerMap.get<string>(loggerId));
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Cannot determine DataLogReaderId: No '" << loggerId << "' in map for '"
                                            << deviceId << "'";                      // Full details in log file, ...
