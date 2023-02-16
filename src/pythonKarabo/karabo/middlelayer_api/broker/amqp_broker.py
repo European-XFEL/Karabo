@@ -18,7 +18,7 @@ from ..eventloop import EventLoop
 from .base import Broker
 
 _QBEATS_ARGUMENTS = {
-    "x-max-length": 100_000,  # Number of max messages in the queue
+    "x-max-length": 12_000,  # Number of max messages in the queue
     "x-overflow": "drop-head",  # Drop oldest messages
     "x-message-ttl": 120_000  # 120 seconds expiry time [ms]
 }
