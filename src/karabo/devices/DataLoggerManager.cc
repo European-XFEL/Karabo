@@ -1014,6 +1014,9 @@ namespace karabo {
 
 
         void DataLoggerManager::instantiateReaders(const std::string& serverId) {
+            // For now we continue to instantiate all DATALOGREADERS_PER_SERVER log reader instances per server.
+            // But that is only since clients running in releases before 2.17.0 assume their existence.
+            // Once no pre-2.17.0 clients are supported anymore, switch to a single reader per server.
             for (unsigned int i = 0; i < DATALOGREADERS_PER_SERVER; ++i) {
                 const std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
                 if (!remote().exists(readerId).first) {
