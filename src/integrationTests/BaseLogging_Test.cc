@@ -640,27 +640,30 @@ void BaseLogging_Test::testDropBadData() {
         CPPUNIT_ASSERT_EQUAL(static_cast<int>(i) + 10000, cfg.get<int>("value"));
         CPPUNIT_ASSERT_EQUAL(std::vector<int>(), cfg.get<vector<int>>("vector"));
         const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
-        // thi
+
         CPPUNIT_ASSERT_MESSAGE(
               "'value' has wrong time stamp: " + stamp.toIso8601() + " instead of " + inAlmostAFortnite.toIso8601(),
               stamp == inAlmostAFortnite);
 
         // Flush Data
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
-        // small sleep to make sure the data is on the DB
-        boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
+        // Get config back - but it may take a while till data is store, so try a few times
+        // (some CI failed with fixed 250 ms of sleep)
         Schema schema;
         bool configAtTimepoint;
         std::string configTimepoint;
-        try {
-            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, inAFortnite.toIso8601())
-                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                  .receive(cfg, schema, configAtTimepoint, configTimepoint);
-        } catch (const std::exception& e) {
-            CPPUNIT_ASSERT_MESSAGE(string("Unexpected exception: ") += e.what(), false);
-        }
-        CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
+        cfg.clear();
+        int maxTime = 2000;
+        do {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+            maxTime -= 50;
+            CPPUNIT_ASSERT_NO_THROW(
+                  m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, inAFortnite.toIso8601())
+                        .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                        .receive(cfg, schema, configAtTimepoint, configTimepoint));
+        } while (!cfg.has("value") && maxTime >= 0);
+        CPPUNIT_ASSERT_MESSAGE("'value' is missing from configuration: " + toString(cfg), cfg.has("value"));
         const Epochstamp received = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
         // the data is stored in the influxDB and has lower resolution (microsecond) what Epochstamp offers
         // (attosecond). We therefore compare the time difference. TimeDuration will always be positive (sic).
@@ -690,21 +693,29 @@ void BaseLogging_Test::testDropBadData() {
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive());
 
-    // Take care that all data arrives at influx - sleeping 250 ms proofed not to be enough even locally
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1250));
 
     // Get back bad data
-    // vectorUpdateTime2 is to early, future data gets timestamp after it, using inAFortnite might create intereference
+    // vectorUpdateTime2 is to early, future data gets timestamp after it, using inAFortnite might create interference
     // between different test runs, so create a new stamp:
     const Epochstamp whenFlushed;
     Hash badDataAllDevices;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot
-                ->request(dlreader0, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
-                //(inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                .receive(badDataAllDevices));
+    int maxTime = 2000;
+    while (maxTime >= 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        maxTime -= 100;
+        CPPUNIT_ASSERT_NO_THROW(
+              m_sigSlot
+                    ->request(dlreader0, "slotGetBadData", before.toIso8601Ext(), whenFlushed.toIso8601Ext())
+                    //(inAFortnite + TimeDuration(1, 0, 0, 0, 0)).toIso8601Ext())
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                    .receive(badDataAllDevices));
+        if (badDataAllDevices.has(deviceId) &&
+            badDataAllDevices.get<std::vector<Hash>>(deviceId).size() == numCycles + 3ul) {
+            break;
+        }
+    }
+
     CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size()); // Just our test device is a bad guy...
     CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
     const std::vector<Hash>& badData = badDataAllDevices.get<std::vector<Hash>>(deviceId);
