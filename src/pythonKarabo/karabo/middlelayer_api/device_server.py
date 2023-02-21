@@ -27,7 +27,8 @@ from .logger import CacheLog, build_logger_node
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
 from .signalslot import SignalSlotable, coslot, slot
-from .synchronization import allCompleted, background, firstCompleted
+from .synchronization import (
+    FutureDict, allCompleted, background, firstCompleted)
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.
@@ -598,6 +599,10 @@ class BoundDeviceServer(DeviceServerBase):
                     "as they made problems",
         defaultValue=[], requiredAccessLevel=AccessLevel.EXPERT)
 
+    def __init__(self, configuration):
+        super().__init__(configuration)
+        self._process_futures = FutureDict()
+
     async def scanPluginsOnce(self):
         changes = await super(BoundDeviceServer, self).scanPluginsOnce()
         if not self.boundNamespace:
@@ -713,7 +718,7 @@ class BoundDeviceServer(DeviceServerBase):
         # the defaults from the environment.
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
-        future = self._new_device_futures[deviceId]
+        future = self._process_futures[deviceId]
         # the device ID is a parameter on the commandline only such that
         # one can identify via ps which process corresponds to which device
         process = await create_subprocess_exec(
@@ -730,6 +735,12 @@ class BoundDeviceServer(DeviceServerBase):
             return True, deviceId
         else:
             return False, deviceId
+
+    @slot
+    def slotDeviceUp(self, instanceId):
+        """Track devices that are up and running"""
+        self.logger.info(f"Bound device {instanceId} is now up and running")
+        self._process_futures[instanceId] = True
 
     @coslot
     async def slotKillServer(self):
