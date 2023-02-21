@@ -58,15 +58,32 @@ def test_text_dialog_options(gui_app):
     binding = StringBinding(
         attributes={"options": ["one", "two", "three"]})
     dialog = icons_dialogs.TextDialog(items=[], binding=binding)
+
+    assert dialog.stack.currentWidget() == dialog.textOptionsPage
     value_list = dialog.valueList
-    items = [value_list.item(i).text() for i in range(value_list.count())]
-    assert items == binding.options
+    # The binding options are showed in a combobox and not added to the
+    # list widget.
+    assert value_list.count() == 0
+    assert len(dialog.itemsComboBox) == 3
+    for i in range(3):
+        assert dialog.itemsComboBox.itemText(i) == binding.options[i]
+
+    # The items in the controller's model are added to the list widget.
+    item1 = icons_dialogs.IconItem(value="one")
+    item2 = icons_dialogs.IconItem(value="two")
+
+    dialog = icons_dialogs.TextDialog(items=[item1, item2],
+                                      binding=binding)
+    value_list = dialog.valueList
+    assert value_list.count() == 2
 
 
 def test_text_dialog_no_options(gui_app):
     """String property without options"""
     binding = StringBinding()
     dialog = icons_dialogs.TextDialog(items=[], binding=binding)
+    assert dialog.stack.currentWidget() == dialog.textPage
+
     value_list = dialog.valueList
     items = [value_list.item(i).text() for i in range(value_list.count())]
     assert items == []
