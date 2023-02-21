@@ -1,6 +1,6 @@
 __enable_gcc7() {
     # for the Centos7 build
-    DIST_MAJOR=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    DIST_MAJOR=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
     if [[ $1 = "CentOS" && $DIST_MAJOR = "7" ]]; then
         source /opt/rh/devtoolset-7/enable
     fi
@@ -55,5 +55,5 @@ if [[ $TARGET_OS == "miniconda-osx64" ]]; then
     return 0
 fi
 
-REL_OS_NAME=$(lsb_release -is)
+REL_OS_NAME=$LSB_RELEASE_DIST
 __lang_setting $REL_OS_NAME
