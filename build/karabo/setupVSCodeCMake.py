@@ -17,17 +17,42 @@ def git_root() -> str:
     return res.stdout.decode("utf-8").strip()
 
 
+def _get_lsb_release_info() -> Dict[str, str]:
+    resp: Dict[str, str] = {}
+    if os.path.exists("/etc/os-release"):
+        # /etc/os-release contains distribution and version info for both
+        # Debian and RHEL based Linux distributions. Use it as the primary
+        # source for distribution and version info.
+        with open("/etc/os-release") as f:
+            for line in f:
+                if line.upper().startswith("NAME="):
+                    dist_name = line[5:].replace('"', '').split()[0].strip()
+                    resp["LSB_RELEASE_DIST"] = dist_name
+                elif line.upper().startswith("VERSION_ID="):
+                    version = line[11:].replace('"', '').split(".")[0].strip()
+                    resp["LSB_RELEASE_VERSION"] = version
+                if len(resp) == 2:
+                    # All the keys of interest have been found.
+                    break
+    else:
+        # Uses lsb_release command as a second option
+        res = subprocess.run(["lsb_release", "-is"], capture_output=True)
+        resp["LSB_RELEASE_DIST"] = res.stdout.decode("utf-8").strip()
+        res = subprocess.run(["lsb_release", "-rs"], capture_output=True)
+        resp["LSB_RELEASE_VERSION"] = res.stdout.decode(
+            "utf-8").strip().split(sep=".")[0]
+    return resp
+
+
 def cmake_settings(build_type: str,
                    build_unit_tests: bool,
                    build_integration_tests: bool,
                    build_long_tests: bool) -> Dict[str, Union[str, Dict]]:
 
     arch = os.uname().machine
-    res = subprocess.run(["lsb_release", "-is"], capture_output=True)
-    distro_id = res.stdout.decode("utf-8").strip()
-    res = subprocess.run(["lsb_release", "-rs"], capture_output=True)
-    distro_release = res.stdout.decode("utf-8").strip()
-    distro_release_major = distro_release.split(sep=".")[0]
+    lsb_release_info = _get_lsb_release_info()
+    distro_id = lsb_release_info["LSB_RELEASE_DIST"]
+    distro_release_major = lsb_release_info["LSB_RELEASE_VERSION"]
     base_dir = git_root()
     cmake_prefix_path = (
         f"{base_dir}/extern/{distro_id}-{distro_release_major}-{arch}")
