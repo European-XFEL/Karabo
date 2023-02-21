@@ -61,9 +61,10 @@ echo
 
 MACHINE=$(uname -m)
 OS=$(uname -s)
+source "$KARABO/../../set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
-    DISTRO_ID=( $(lsb_release -is) )
-    DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    DISTRO_ID=( $LSB_RELEASE_DIST )
+    DISTRO_RELEASE=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
 fi
 
 DEPVERSION=$(git rev-parse --short HEAD)

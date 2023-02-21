@@ -7,6 +7,7 @@ import multiprocessing
 import os
 import subprocess
 import sys
+from typing import Dict
 
 from pkg_resources import iter_entry_points
 
@@ -294,6 +295,29 @@ def checkout(args):
                   .format(os.path.abspath(path)))
 
 
+def _get_lsb_release_info() -> Dict[str, str]:
+    resp: Dict[str, str] = {}
+    if os.path.exists("/etc/os-release"):
+        # /etc/os-release contains distribution and version info for both
+        # Debian and RHEL based Linux distributions. Use it as the primary
+        # source for distribution and version info.
+        with open("/etc/os-release") as f:
+            for line in f:
+                if line.upper().startswith("NAME="):
+                    dist_name = line[5:].replace('"', '').split()[0].rstrip()
+                    resp["LSB_RELEASE_DIST"] = dist_name
+                elif line.upper().startswith("VERSION_ID="):
+                    version = line[11:].replace('"', '').split(".")[0].rstrip()
+                    resp["LSB_RELEASE_VERSION"] = version
+    else:
+        # Uses lsb_release command as a second option
+        resp["LSB_RELEASE_DIST"] = run_cmd(
+            'lsb_release -is').decode("utf-8").rstrip()
+        resp["LSB_RELEASE_VERSION"] = run_cmd(
+            'lsb_release -rs').decode("utf-8").split('.')[0].rstrip()
+    return resp
+
+
 def download(args):
     """
     attempts the download of a package
@@ -304,9 +328,9 @@ def download(args):
         return None
     with pushd_popd():
         karabo_tag = run_cmd('cat VERSION').decode("utf-8").rstrip()
-        dist_name = run_cmd('lsb_release -is').decode("utf-8").rstrip()
-        dist_ver = run_cmd(
-            'lsb_release -rs').decode("utf-8").split('.')[0].rstrip()
+        lsb_release_info = _get_lsb_release_info()
+        dist_name = lsb_release_info["LSB_RELEASE_DIST"]
+        dist_ver = lsb_release_info["LSB_RELEASE_VERSION"]
         arch_name = os.uname().machine
         filename = '{device}-{tag}-{ktag}-{dist_name}-' \
                    '{dist_ver}-{arch}-{config}.sh'.format(device=args.device,
