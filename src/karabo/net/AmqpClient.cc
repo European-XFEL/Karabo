@@ -1382,14 +1382,20 @@ namespace karabo {
             m_connector->sendAsync(exchange, routingKey, payload, cb);
 
             // Set timeout avoiding to block forever ... but still with the hope for recovering ...
-            auto status = futur.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
+            int timeoutCount = m_amqpRequestTimeout * 10;
+            std::future_status status;
+            do {
+                status = futur.wait_for(std::chrono::milliseconds(100));
+                --timeoutCount;
+            } while (status != std::future_status::ready && timeoutCount > 0 && isConnected());
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
             boost::system::error_code ec = futur.get();
+            if (!isConnected()) return ec;
             // Destroy payload later
             auto timer = std::make_shared<boost::asio::deadline_timer>(m_connector->getContext());
-            timer->expires_from_now(boost::posix_time::seconds(m_amqpRequestTimeout));
+            timer->expires_from_now(boost::posix_time::milliseconds(100));
             timer->async_wait([payload, timer](const boost::system::error_code& ec) mutable { payload.reset(); });
             return ec;
         }
