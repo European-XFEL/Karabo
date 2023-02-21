@@ -403,21 +403,15 @@ class TextDialog(_BaseIconDialog):
         self.stack.setCurrentWidget(self.textPage)
 
         if binding.options:
-            self._updateWidgetVisibility()
-            self.valueList.clear()
-            for option in binding.options:
-                item = IconItem(value=option)
-                self.items.append(item)
-                self.valueList.addItem(option)
-
-    def _updateWidgetVisibility(self):
-        for widget in (self.textValue, self.addValue, self.deleteValue,
-                       self.infoMessage):
-            widget.setVisible(False)
+            self.stack.setCurrentWidget(self.textOptionsPage)
+            self.itemsComboBox.addItems(list(binding.options))
 
     @Slot()
     def on_addValue_clicked(self):
-        entry_value = self.textValue.text().strip()
+        if self.stack.currentWidget() == self.textPage:
+            entry_value = self.textValue.text().strip()
+        else:
+            entry_value = self.itemsComboBox.currentText()
         # Check if entry is already existing
         if entry_value in [item.value for item in self.items]:
             message = "Cannot add new condition; it already exists."

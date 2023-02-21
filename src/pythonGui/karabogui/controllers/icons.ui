@@ -222,6 +222,18 @@ space will be removed.</string>
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="textOptionsPage">
+           <widget class="QComboBox" name="itemsComboBox">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>20</y>
+              <width>168</width>
+              <height>26</height>
+             </rect>
+            </property>
+           </widget>
+          </widget>
          </widget>
         </item>
         <item>
