@@ -120,9 +120,10 @@ echo "### INFO Building is preferentially parallelized into $NUM_CORES threads."
 echo
 
 OS=$(uname -s)
+source "$scriptDir/../set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
-    DISTRO_ID=( $(lsb_release -is) )
-    DISTRO_RELEASE=$(lsb_release -rs)
+    DISTRO_ID=( $LSB_RELEASE_DIST )
+    DISTRO_RELEASE=$LSB_RELEASE_VERSION
 fi
 
 
