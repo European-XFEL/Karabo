@@ -19,6 +19,7 @@ LATEST_RELEASE_TAG=latest_build
 LATEST_PRERELEASE_TAG=latest_prerelease_build
 NIGHTLY_TAG=Nightly
 
+
 __check_existence() {
     local status=$(curl --silent --head -r 0-0 "$1" | head -n 1)
     local fileNotFound=$(echo $status | grep 404)
@@ -71,8 +72,8 @@ __release_build() {
 
     case "$1" in
         debian*|ubuntu*|centos*|almalinux*)
-            export REL_OS_NAME=$(lsb_release -is)
-            export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+            export REL_OS_NAME=$LSB_RELEASE_DIST
+            export REL_OS_VERS_LONG=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
             export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
             export REL_LATEST_NAME=karabo-$LATEST_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
             export REL_ARTIFACT_DEST_PATH=$FRAMEWORK_DEST_DIR/$REL_ARTIFACT_NAME
@@ -96,7 +97,7 @@ __release_build() {
 
 __deps_build() {
     pushd extern
-    export DEPS_BASE_NAME=$(lsb_release -is)-$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    export DEPS_BASE_NAME=$LSB_RELEASE_DIST-$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
     export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
     bash build.sh -q $DEPS_BASE_NAME CI
     $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
