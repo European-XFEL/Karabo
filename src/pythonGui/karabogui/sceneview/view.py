@@ -210,12 +210,23 @@ class SceneView(QWidget):
             if item is None or item.is_editable:
                 event.ignore()
                 return
-            # Either retrieve a device provided scene or create a generic one
             proxy_selecting = isinstance(self.current_tool, ProxySelectionTool)
             proxy = item.widget_controller.proxy
             if proxy_selecting:
-                retrieve_default_scene(proxy.root_proxy.device_id)
+                pos = self.mapFromGlobal(QCursor.pos())
+                device = None
+                controller = self.controller_at_position(pos)
+                if controller is not None:
+                    proxy = controller.widget_controller.proxy.root_proxy
+                    if isinstance(proxy, DeviceProxy) and proxy.online:
+                        device = proxy
+                broadcast_event(KaraboEvent.RaiseEditor, {"proxy": device})
             else:
+                # If we having a control modifier, we ask for the scene
+                if event.modifiers() & Qt.ControlModifier:
+                    retrieve_default_scene(proxy.root_proxy.device_id)
+                    return
+                # Get a controller widget
                 model = get_property_proxy_model(proxy, include_images=False)
                 if model is not None:
                     data = {"model": model}
@@ -236,16 +247,6 @@ class SceneView(QWidget):
             self.set_cursor('none')
             self.enable_mouse_event_handling(False)
             self.set_tool(None)
-            if event.modifiers() & Qt.ControlModifier:
-                pos = self.mapFromGlobal(QCursor.pos())
-                device = None
-                controller = self.controller_at_position(pos)
-                if controller is not None:
-                    proxy = controller.widget_controller.proxy.root_proxy
-                    if isinstance(proxy, DeviceProxy) and proxy.online:
-                        device = proxy
-
-                broadcast_event(KaraboEvent.RaiseEditor, {"proxy": device})
 
     def dragEnterEvent(self, event):
         if not self.design_mode:
