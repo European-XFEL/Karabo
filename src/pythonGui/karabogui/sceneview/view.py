@@ -7,7 +7,7 @@ import time
 from contextlib import contextmanager
 
 from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, QTimer, Signal, Slot
-from qtpy.QtGui import QBrush, QColor, QCursor, QPainter, QPalette, QPen
+from qtpy.QtGui import QBrush, QColor, QPainter, QPalette, QPen
 from qtpy.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 import karabogui.access as krb_access
@@ -213,13 +213,9 @@ class SceneView(QWidget):
             proxy_selecting = isinstance(self.current_tool, ProxySelectionTool)
             proxy = item.widget_controller.proxy
             if proxy_selecting:
-                pos = self.mapFromGlobal(QCursor.pos())
                 device = None
-                controller = self.controller_at_position(pos)
-                if controller is not None:
-                    proxy = controller.widget_controller.proxy.root_proxy
-                    if isinstance(proxy, DeviceProxy) and proxy.online:
-                        device = proxy
+                if isinstance(proxy, DeviceProxy) and proxy.online:
+                    device = proxy
                 broadcast_event(KaraboEvent.RaiseEditor, {"proxy": device})
             else:
                 # If we having a control modifier, we ask for the scene
