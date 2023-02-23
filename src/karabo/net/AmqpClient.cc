@@ -416,7 +416,6 @@ namespace karabo {
                         auto self = wSelf.lock();
                         if (!self) return;
                         if (m_channel) {
-                            m_channel->ack(deliveryTag);
                             if (m_state >= eCreateConsumer && m_onMessage) {
                                 // PROCESS INCOMING MESSAGES
                                 m_onMessage(message, deliveryTag, redelivered);
@@ -433,7 +432,11 @@ namespace karabo {
                         m_state = eShutdown;
                         moveStateMachine();
                     };
-                    m_channel->consume(m_recvQueue).onSuccess(successCb).onReceived(receivedCb).onError(failureCb);
+                    // Automatic acknowledgement
+                    m_channel->consume(m_recvQueue, AMQP::noack)
+                          .onSuccess(successCb)
+                          .onReceived(receivedCb)
+                          .onError(failureCb);
                 } break;
 
                 case eReady:
