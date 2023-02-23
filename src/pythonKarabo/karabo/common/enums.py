@@ -24,6 +24,13 @@ class Interfaces(IntEnum):
     # ...
 
 
+class ServerFlags(IntEnum):
+    Development = 1
+    # add future serverFlags as bit maskable properties:
+    # FUTURE_FLAG = 2
+    # ...
+
+
 class InstanceStatus(Enum):
     NONE = "none"
     OK = "ok"

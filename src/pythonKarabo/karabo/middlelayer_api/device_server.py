@@ -14,7 +14,7 @@ from subprocess import PIPE
 import numpy
 
 from karabo import __version__ as karaboVersion
-from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT
+from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, Int32,
     KaraboError, Node, String, TimeMixin, VectorString, decodeBinary,
@@ -103,6 +103,13 @@ class DeviceServerBase(SignalSlotable):
 
     instanceCount = 1
 
+    serverFlags = VectorString(
+        defaultValue=[],
+        description="ServerFlags describing the device server, "
+                    "the values must correspond to the enum ServerFlags",
+        assignment=Assignment.INTERNAL,
+        accessMode=AccessMode.INITONLY)
+
     def __init__(self, configuration):
         super().__init__(configuration)
         if not isSet(self.hostName):
@@ -132,6 +139,16 @@ class DeviceServerBase(SignalSlotable):
         info["lang"] = "python"
         info["log"] = self.log.level
         info.merge(self.deviceClassesHash())
+
+        serverFlags = 0
+        for flag in self.serverFlags.value:
+            if flag in ServerFlags.__members__:
+                serverFlags |= ServerFlags[flag]
+            else:
+                raise NotImplementedError(
+                    f"Provided serverFlag is not supported: {flag}")
+        info["serverFlags"] = serverFlags
+
         return info
 
     async def _run(self, **kwargs):
