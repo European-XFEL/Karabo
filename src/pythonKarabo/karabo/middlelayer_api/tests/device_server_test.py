@@ -36,6 +36,12 @@ async def test_device_server(event_loop: event_loop, subtests):
             try:
                 server.is_server = True
                 await server.startInstance(broadcast=True)
+
+                info = await getInstanceInfo(serverId)
+                # Check the serverFlags, None set
+                assert info["serverFlags"] == 0
+
+                # And the time info
                 th = server.slotGetTime(Hash())
                 keys = list(th.keys())
                 assert "reference" in keys
@@ -65,7 +71,8 @@ async def test_device_server(event_loop: event_loop, subtests):
 
             configuration = {"deviceClasses": ["PropertyTestMDL"],
                              "timeServerId": "KaraboTimeServer",
-                             "scanPlugins": False}
+                             "scanPlugins": False,
+                             "serverFlags": ["Development"]}
             server = create_device_server(serverId, config=configuration)
             assert server is not None
             try:
@@ -89,6 +96,10 @@ async def test_device_server(event_loop: event_loop, subtests):
                 assert isinstance(schema, Schema)
 
                 info = await getInstanceInfo(serverId)
+                # Check the serverFlags
+                assert info["serverFlags"] == 1
+
+                # And the log level
                 assert info["log"] == "INFO"
                 assert server.log.level == "INFO"
                 device = list(server.deviceInstanceMap.values())[0]
