@@ -13,8 +13,8 @@ from karabo.middlelayer.testing import (
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
-    getDevice, getInstanceInfo, getProperties, getSchema, lock, setNoWait,
-    setWait, updateDevice, waitUntil, waitUntilNew, waitWhile)
+    getDevice, getProperties, getSchema, lock, setNoWait, setWait,
+    updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.macro import Macro, MacroSlot
 from karabo.middlelayer_api.pipeline import OutputChannel, PipelineContext
@@ -477,17 +477,6 @@ async def test_destruct_macro_timer(event_loop):
     await macro.slotKillDevice()
     assert not macro.stackTimer.is_running()
     assert macro.stackTimer.loop is None
-
-
-@pytest.mark.timeout(30)
-@run_test
-def test_archive(deviceTest):
-    """test the archive setting of a macro"""
-    with getDevice("remote") as d:
-        with pytest.raises(AttributeError):
-            _ = d.archive
-    info = getInstanceInfo("local")
-    assert not info["archive"]
 
 
 @pytest.mark.timeout(30)

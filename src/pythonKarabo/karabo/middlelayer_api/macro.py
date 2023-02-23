@@ -110,6 +110,7 @@ class RemoteDevice:
     This `RemoteDevice` does not appear in the Schema, but creates
     a proxy that can be used under the key specified in the code.
     """
+
     def __init__(self, id, timeout=5):
         self.id = id
         self.timeout = timeout
@@ -300,7 +301,6 @@ class Macro(Device):
         info["type"] = "macro" if self._has_server else "client"
         info["project"] = self.project
         info["module"] = self.module
-        info["archive"] = False
         return info
 
     async def _run(self, **kwargs):
