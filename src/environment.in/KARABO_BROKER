@@ -1,1 +1,1 @@
-tcp://exfl-broker:7777
+amqp://xfel:karabo@exflctrl01:5672
