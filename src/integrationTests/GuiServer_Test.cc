@@ -49,7 +49,7 @@ void GuiServer_Test::setUp() {
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
-    // Create and start server
+    // Create and start server, but don't scan plugins
     Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
