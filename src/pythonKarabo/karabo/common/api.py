@@ -46,7 +46,7 @@ from .display_types import (
     KARABO_SCHEMA_DISPLAY_TYPE_HEX, KARABO_SCHEMA_DISPLAY_TYPE_IMAGEDATA,
     KARABO_SCHEMA_DISPLAY_TYPE_OCT, KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR,
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES, KARABO_SCHEMA_DISPLAY_TYPE_STATE)
-from .enums import Capabilities, InstanceStatus, Interfaces
+from .enums import Capabilities, InstanceStatus, Interfaces, ServerFlags
 from .module import create_module
 from .sanity_check import has_sub_imports
 from .savable import BaseSavableModel, set_initialized_flag, set_modified_flag
