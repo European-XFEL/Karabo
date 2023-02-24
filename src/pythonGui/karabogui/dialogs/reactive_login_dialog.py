@@ -196,9 +196,11 @@ class ReactiveLoginDialog(QDialog):
         if self._tcp_socket.state() != QTcpSocket.UnconnectedState:
             self._tcp_socket.abort()
 
+        self._queried_port = self.edit_port.text()
+        if not self._queried_port:
+            return
         self._requesting = True
         self._queried_host = self.combo_hostname.currentText()
-        self._queried_port = self.edit_port.text()
         self._topic = ""
         self._error = None
         self.login_type = LoginType.UNKNOWN
