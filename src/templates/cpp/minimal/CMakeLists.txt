@@ -34,9 +34,6 @@ if (NOT DEFINED ENV{KARABO} OR NOT EXISTS $ENV{KARABO})
   endif()
 endif()
 
-set(CMAKE_PREFIX_PATH
-    ${CMAKE_PREFIX_PATH} $ENV{KARABO} $ENV{KARABO}/extern)
-
 find_package(PkgConfig)
 set(ENV{PKG_CONFIG_PATH} "$ENV{KARABO}/lib:$ENV{PKG_CONFIG_PATH}")
 pkg_check_modules(karabo IMPORTED_TARGET karaboDependencies>=1.0)
