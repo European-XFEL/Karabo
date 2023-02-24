@@ -42,7 +42,7 @@ safeRunCommand cmake \
     -DCMAKE_BUILD_TYPE=$1 \
     -DBoost_NO_BOOST_CMAKE=ON \
     -DBoost_NO_SYSTEM_PATHS=ON \
-    -DCMAKE_PREFIX_PATH=$KARABO/extern \
+    -DCMAKE_PREFIX_PATH=\"$KARABO\;$KARABO/extern\" \
     -DCMAKE_INSTALL_PREFIX=$TARGET_DIR \
     -DBUILD_TESTS=0 \
     -B $BUILD_DIR .
