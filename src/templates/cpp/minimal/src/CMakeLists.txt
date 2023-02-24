@@ -20,9 +20,9 @@ target_compile_options(
            -Wno-deprecated-declarations -Wall)
 
 target_include_directories(
-    ${CMAKE_PROJECT_NAME} SYSTEM
+    ${CMAKE_PROJECT_NAME}
     PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}
  )
 
 target_link_libraries(

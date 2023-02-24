@@ -16,9 +16,12 @@ Compiling
      ``cd $KARABO/devices/__PACKAGE_NAME__``
      ``mkdir build``
      ``cd build``
-     ``cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=$KARABO/extern ..``
+     ``cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="$KARABO;$KARABO/extern" ..``
 
-   CMAKE_BUILD_TYPE can also be set to "Release".
+   CMAKE_BUILD_TYPE can also be set to ``Release``.
+
+   The double quotes around the value of ``CMAKE_PREFIX_PATH`` are required.
+
 
 3. Build the device:
 
@@ -30,25 +33,7 @@ Compiling
 Testing
 =======
 
-After a successfull build, a shared library is generated here:
-
-``dist/<configuration>/<system>/lib__PACKAGE_NAME__.so``
-
-And a soft-link to the ``lib__PACKAGE_NAME__.so`` file is created in the
-``$KARABO/plugins`` folder.
-
 To run the tests, go to the tests directory in your build tree and use ``ctest``:
 
     ``cd $KARABO/devices/__PACKAGE_NAME__/build/__PACKAGE_NAME__``
     ``ctest -VV``
-
-Running
-=======
-
-If you want to manually start a server using this device, simply type:
-
-``karabo-cppserver serverId=cppServer/1 deviceClasses=__CLASS_NAME__``
-
-Or just use (a properly configured):
-
-``karabo-start``
