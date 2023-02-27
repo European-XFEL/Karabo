@@ -1,12 +1,15 @@
+import ast
 import base64
 from functools import partial
+from json import dumps
 
 import numpy as np
 
-from .hash import Schema, get_hash_type_from_data
+from .hash import HashList, Schema, get_hash_type_from_data
 from .typenums import HashType
+from .utils import dictToHash, hashToDict
 from .xml_reader import decodeXML
-from .xml_writer import yield_xml_hash, yield_xml_vector_hash
+from .xml_writer import yield_xml_hash
 
 __all__ = ['hashtype_from_string', 'string_from_hashtype']
 
@@ -27,11 +30,11 @@ def string_from_simple(data):
 
 
 def string_from_hash(data):
-    return "".join(yield_xml_hash(data))
+    return dumps(hashToDict(data))
 
 
 def string_from_vector_hash(data):
-    return "".join(yield_xml_vector_hash(data))
+    return dumps([hashToDict(h) for h in data])
 
 
 def string_from_numpy_vector(data):
@@ -106,6 +109,7 @@ _STRING_CONVERTER = {
     HashType.ByteArray: string_from_bytearray,
 }
 
+
 # --------------- HashType Conversion ---------------
 #
 
@@ -158,11 +162,16 @@ def numpy_vector_from_string(s, numpy=None):
 
 
 def hash_from_string(s):
-    raise NotImplementedError
+    """Convert a dictionary form from string to a Hash"""
+    return dictToHash(ast.literal_eval(s))
 
 
 def vector_hash_from_string(s):
-    raise NotImplementedError
+    if s:
+        dicts = ast.literal_eval(s)
+        return HashList(dictToHash(d) for d in dicts)
+    else:
+        return HashList([])
 
 
 def list_from_string(s):
