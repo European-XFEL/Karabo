@@ -2,7 +2,7 @@ from unittest import TestCase, main
 
 import numpy as np
 
-from ..hash import HashType
+from ..hash import Hash, HashList, HashType
 from ..str_converter import hashtype_from_string, string_from_hashtype
 
 
@@ -104,6 +104,42 @@ class ConverTests(TestCase):
         self.assertEqual(hash_d, None)
         string_d = string_from_hashtype(hash_d)
         self.assertEqual(string_d, "None")
+
+    def test_hash(self):
+        d = '{"marty": "mcfly", "thunder": "lightning", "cars": 3}'
+        hash_d = hashtype_from_string(HashType.Hash, d)
+        self.assertEqual(hash_d, Hash("marty", "mcfly",
+                                      "thunder", "lightning",
+                                      "cars", 3))
+        string_d = string_from_hashtype(hash_d)
+        self.assertEqual(string_d, d)
+
+    def test_hashlist(self):
+        d = '[{"marty": "mcfly", "thunder": "lightning"}, {"doc": "brown"}]'
+        hash_d = hashtype_from_string(HashType.VectorHash, d)
+        assert isinstance(hash_d, HashList)
+        self.assertEqual(hash_d, HashList([Hash("marty", "mcfly",
+                                                "thunder", "lightning"),
+                                           Hash("doc", "brown")]))
+        string_d = string_from_hashtype(hash_d)
+        self.assertEqual(string_d, d)
+
+        # Edge case empty list
+        for d in ["", "[]"]:
+            hash_d = hashtype_from_string(HashType.VectorHash, d)
+            assert isinstance(hash_d, HashList)
+            self.assertEqual(len(hash_d), 0)
+            string_d = string_from_hashtype(hash_d)
+            self.assertEqual(string_d, "[]")
+
+        # Single element in HashList
+        d = '[{"marty": "mcfly", "thunder": "lightning"}]'
+        hash_d = hashtype_from_string(HashType.VectorHash, d)
+        assert isinstance(hash_d, HashList)
+        self.assertEqual(hash_d, HashList([Hash("marty", "mcfly",
+                                                "thunder", "lightning")]))
+        string_d = string_from_hashtype(hash_d)
+        self.assertEqual(string_d, d)
 
 
 if __name__ == "__main__":
