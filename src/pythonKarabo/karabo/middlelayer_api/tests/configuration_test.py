@@ -7,6 +7,7 @@ from karabo.middlelayer_api.configuration import (
     attr_fast_deepcopy, config_changes, extract_modified_schema_attributes,
     is_equal, sanitize_init_configuration, sanitize_write_configuration,
     validate_init_configuration)
+from karabo.middlelayer_api.macro import MacroSlot
 from karabo.native import (
     AccessMode, Assignment, Configurable, Double, Hash, Int32, MetricPrefix,
     Node, Overwrite, Schema, Slot, Unit)
@@ -60,6 +61,10 @@ class Object(Configurable):
     @Slot()
     async def move(self):
         """Dummy move slot"""
+
+    @MacroSlot()
+    async def moveMacro(self):
+        """Dummy move macro slot"""
 
 
 def test_validate_init_configuration():
@@ -126,8 +131,12 @@ def test_sanitize_init_configuration():
     assert "initOnlyDouble" in sanitized
     assert "internalInitOnlyDouble" in config
     assert "internalInitOnlyDouble" not in sanitized
-    assert "move" in config
+
+    # No Slots in configuration
+    assert "move" not in config
     assert "move" not in sanitized
+    assert "moveMacro" not in config
+    assert "moveMacro" not in sanitized
 
     # ------------------------------------------------------------
     # Check runtime configuration!
@@ -155,8 +164,12 @@ def test_sanitize_init_configuration():
     assert "internalInitOnlyDouble" not in sanitized
     assert "integerWithOptions" in run_time_conf
     assert "integerWithOptions" not in sanitized
-    assert "move" in run_time_conf
+
+    # No Slots in configuration
+    assert "move" not in run_time_conf
     assert "move" not in sanitized
+    assert "moveMacro" not in config
+    assert "moveMacro" not in sanitized
 
 
 def test_config_changes():
