@@ -162,6 +162,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             a = getattr(self, k, None)
             if isSet(a):
                 v = getattr(type(self), k)
+                if isinstance(v, Slot):
+                    continue
                 value, attrs = v.toDataAndAttrs(a)
                 r.setElement(k, value, attrs)
         return r
@@ -389,7 +391,10 @@ class Node(Descriptor):
         for k in self.cls._allattrs:
             a = getattr(instance, k, None)
             if isSet(a):
-                value, attrs = getattr(self.cls, k).toDataAndAttrs(a)
+                desc = getattr(self.cls, k)
+                if isinstance(desc, Slot):
+                    continue
+                value, attrs = desc.toDataAndAttrs(a)
                 r.setElement(k, value, attrs)
         return r, {}
 
