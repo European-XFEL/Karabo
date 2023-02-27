@@ -141,7 +141,11 @@ class ProxyBase(_ProxyBase):
                 if descr is None:
                     # Unsupported types, ListOfNodes, ChoiceOfNodes
                     continue
-                if isinstance(descr, ProxyNodeBase):  # recurse Nodes
+                if isinstance(descr, ProxySlotBase):
+                    # Slots don't appear in Configuration
+                    continue
+                elif isinstance(descr, ProxyNodeBase):
+                    # recurse Nodes
                     recurse(getattr(proxy, descr.key))
                 else:
                     value = getattr(proxy, key, None)
