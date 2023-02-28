@@ -104,6 +104,9 @@ add_subdirectory(karabo ${CMAKE_BINARY_DIR}/karabo)
 # The build of the Karathon Library (used by the Bound Python API).
 add_subdirectory(karathon ${CMAKE_BINARY_DIR}/karathon)
 
+# The build of the Karabind Library (used by the Bound Python API).
+add_subdirectory(karabind ${CMAKE_BINARY_DIR}/karabind)
+
 # The build of the Karabo C++ Device Server (karabo-cppserver).
 add_subdirectory(deviceServer ${CMAKE_BINARY_DIR}/karabo/deviceServer)
 
@@ -150,7 +153,8 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
                     "${CMAKE_CURRENT_SOURCE_DIR}/deviceServer/*"
                     "${CMAKE_CURRENT_SOURCE_DIR}/brokerMessageLogger/*"
                     "${CMAKE_CURRENT_SOURCE_DIR}/karathon/*"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/integrationTests/*"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/karabind/*"
+		    "${CMAKE_CURRENT_SOURCE_DIR}/integrationTests/*"
                     "${CMAKE_CURRENT_SOURCE_DIR}/cppLongTests/*"
                     "*/karabo-extern-deps/*"
         )
