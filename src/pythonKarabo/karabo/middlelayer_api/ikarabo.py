@@ -21,6 +21,10 @@ from .signalslot import coslot
 
 
 class DeviceClient(Macro, DeviceClientBase):
+    # The command line device client will not wait
+    # to come online for collecting topology
+    wait_topology = False
+
     @property
     def __all__(self):
         return list(self.systemTopology["device"])

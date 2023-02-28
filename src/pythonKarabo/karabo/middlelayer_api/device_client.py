@@ -40,6 +40,7 @@ class DeviceClientBase(Device):
     keeps track of all the other devices in this Karabo installation. Without
     inheriting from this class, listing other devices is impossible."""
     abstract = True
+    wait_topology = True
 
     def __init__(self, configuration):
         # "unknown" is default type for bare C++ SignalSlotable
@@ -54,7 +55,10 @@ class DeviceClientBase(Device):
         self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
         # We are collecting all the instanceInfo's and wait for their arrival
         # before the device comes online.
-        await sleep(3)
+        # Some clients, such as ikarabo, don't want to wait this additional
+        # time
+        if self.wait_topology:
+            await sleep(3)
 
     @coslot
     async def slotInstanceNew(self, instanceId, info):
