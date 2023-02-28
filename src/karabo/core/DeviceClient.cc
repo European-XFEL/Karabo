@@ -1265,9 +1265,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Failed to find data log reader for logger '" << loggerId << "'";
             } else {
                 // Assemble the instanceId of a log reader
-                static int i = 0; // just choose an 'arbitrary' reader
-                (dataLogReader += util::DATALOGREADER_PREFIX) += toString(i++ % util::DATALOGREADERS_PER_SERVER) +=
-                      "-" + dataLogServer;
+                ((dataLogReader += util::DATALOGREADER_PREFIX) += "0-") += dataLogServer;
             }
 
             return dataLogReader;
