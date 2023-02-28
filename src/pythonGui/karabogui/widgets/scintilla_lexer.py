@@ -41,7 +41,7 @@ class PythonLexer(QsciLexerPython):
         super().__init__(parent)
 
         # Set font
-        font = get_qfont("Source Code Pro,12,-1,5,50,0,0,0,0,0")
+        font = get_qfont("Source Code Pro,10,-1,5,50,0,0,0,0,0")
         for item, color in COLOR_MAP.items():
             self.setColor(color, item)
             self.setFont(font, item)
