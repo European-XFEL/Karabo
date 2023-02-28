@@ -364,10 +364,7 @@ async def _getLogReaderId(deviceId):
         if did not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))
-    # randomly select the logReader
-    # the modulo of the last millisecond is sufficient for this application
-    log_reader_number = int(1000 * time()) % 2
-    return f"DataLogReader{log_reader_number}-{instance.loggerMap[did]}"
+    return f"DataLogReader0-{instance.loggerMap[did]}"
 
 
 @synchronize
