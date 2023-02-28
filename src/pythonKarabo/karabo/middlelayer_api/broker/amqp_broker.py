@@ -87,7 +87,7 @@ class AmqpBroker(Broker):
             await self.channel.queue_declare(self.brokerId, passive=True)
             # If no exception raised the the queue name exists already ...
             # To continue  just use generated queue name...
-            timestamp = time.monotonic().hex()[4:-4]
+            timestamp = hex(int(time.monotonic() * 1000000000))[2:]
             self.brokerId = f"{self.domain}.{self.deviceId}:{timestamp}"
         except aiormq.exceptions.ChannelNotFoundEntity:
             # Exception raised since the queue not found on the broker
