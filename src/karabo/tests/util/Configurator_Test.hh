@@ -23,13 +23,22 @@ class Base {
     static void expectedParameters(karabo::util::Schema& s);
 
     Base(const karabo::util::Hash& hash);
+    Base(const karabo::util::Hash& hash, int extra);
 
     virtual ~Base();
+
+    virtual int getLevel() {
+        return 0;
+    }
+    virtual int getExtra() {
+        return m_extra0;
+    }
 
     boost::shared_ptr<Aggregated>& getAggregated();
 
    private:
     boost::shared_ptr<Aggregated> m_aggregated;
+    int m_extra0 = -1;
 };
 
 class Aggregated {
@@ -52,9 +61,14 @@ class Aggregated {
 
 class Configurator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Configurator_Test);
-    CPPUNIT_TEST(test);
+    CPPUNIT_TEST(testAggregated);
+    CPPUNIT_TEST(testInheritanceChain);
+    CPPUNIT_TEST(testInheritanceChainWithExtra);
     CPPUNIT_TEST_SUITE_END();
 
+    void testAggregated();
+    void testInheritanceChain();
+    void testInheritanceChainWithExtra();
     void test();
 };
 
