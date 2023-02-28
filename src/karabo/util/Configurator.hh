@@ -68,6 +68,25 @@ namespace karabo {
                 karabo::util::Hash config = rootedConfiguration.begin()->getValue<Hash>();
                 return std::make_pair(classId, config);
             }
+
+            // See Emile Cormier's answer at
+            // https://stackoverflow.com/questions/20162903/template-parameter-packs-access-nth-type-and-nth-element
+            template <int N, typename... Ts>
+            using NthTypeOf = typename std::tuple_element<N, std::tuple<Ts...>>::type;
+
+            /// @brief classId of last class - Classes must not be empty
+            ///
+            /// This last class must have the static method classInfo() as provided when using the macro
+            /// 'KARABO_CLASSINFO' in the public section of class declaration
+            ///
+            /// @return classId of the last class of the parameter pack 'Classes'
+            template <class... Classes>
+            std::string getLastClassId() {
+                constexpr size_t size = sizeof...(Classes);
+                using LastType = NthTypeOf<size - 1, Classes...>;
+                return LastType::classInfo().getClassId();
+            }
+
         } // namespace confTools
 
 
@@ -155,6 +174,43 @@ namespace karabo {
             static void registerSchemaFunction(const std::string& classId) {
                 confTools::PointerToSchemaDescriptionFunction p = confTools::getSchemaDescriptionFunction<T>(0);
                 if (p) Configurator::init().m_schemaFuncRegistry[classId].push_back(p);
+            }
+
+            // The following works, but is C++17. Though it works even for C++14 with gcc 9.4.0, just producing tons of
+            // warnings that ‘if constexpr’ only available with ‘-std=c++17’:
+            //
+            // template <class A1, class... As>
+            // static void registerSchemaFunctions(const std::string& classId) {
+            //     registerSchemaFunction<A1>(classId);
+            //     if constexpr (sizeof...(As) > 0) registerSchemaFunctions<As...>(classId);
+            // }
+            // So we need a recursion trick with a private helper object:
+           private:
+            template <typename...> // Empty parameter pack with empty implementation as end of recursion
+            struct RegisterSchemaFunctionsImpl {
+                static void reg(const std::string& classId){};
+            };
+
+            template <typename Head, typename... Tail>
+            struct RegisterSchemaFunctionsImpl<Head, Tail...> {
+                static void reg(const std::string& classId) {
+                    registerSchemaFunction<Head>(classId);
+                    RegisterSchemaFunctionsImpl<Tail...>::reg(classId);
+                };
+            };
+
+           public:
+            /**
+             * Register the schema decription functions for classId in the factory
+             *
+             * The parameter pack 'A' typically is the list of all the classes in the inheritance chain of 'classId',
+             * including itself at the end.
+             *
+             * @param classId identifying the class in the factory
+             */
+            template <class... A>
+            static void registerSchemaFunctions(const std::string& classId) {
+                RegisterSchemaFunctionsImpl<A...>::reg(classId);
             }
 
             /**
@@ -455,217 +511,95 @@ namespace karabo {
             }
         };
 
-        template <class Base>
-        struct ConfiguratorMember1 {
-            ConfiguratorMember1(int) {
-                std::string classId(Base::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
+        template <class Base, class... Subs>
+        struct ConfiguratorMember {
+            ConfiguratorMember(int) {
+                const std::string classId(confTools::getLastClassId<Base, Subs...>());
+
+                // Register last class of inheritance chain
+                constexpr size_t nSubs = sizeof...(Subs);
+                using LastType = confTools::NthTypeOf<nSubs, Base, Subs...>;
+                Configurator<Base>::template registerClass<LastType>(classId);
+
+                // Register the schema functions of all levels for this last class
+                Configurator<Base>::template registerSchemaFunctions<Base, Subs...>(classId);
             }
 
-            virtual ~ConfiguratorMember1() {}
+            virtual ~ConfiguratorMember() {}
         };
 
-        template <class Base>
-        struct RegisterConfigurator1 {
-            static const ConfiguratorMember1<Base> registerMe;
-        };
-
-        template <class Base, class Sub1>
-        struct ConfiguratorMember2 {
-            ConfiguratorMember2(int) {
-                std::string classId(Sub1::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-            }
-
-            virtual ~ConfiguratorMember2() {}
-        };
-
-        template <class Base, class Sub1>
-        struct RegisterConfigurator2 {
-            static const ConfiguratorMember2<Base, Sub1> registerMe;
-        };
-
-        template <class Base, class Sub1, class Sub2>
-        struct ConfiguratorMember3 {
-            ConfiguratorMember3(int) {
-                std::string classId(Sub2::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub2>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub2>(classId);
-            }
-
-            virtual ~ConfiguratorMember3() {}
-        };
-
-        template <class Base, class Sub1, class Sub2>
-        struct RegisterConfigurator3 {
-            static const ConfiguratorMember3<Base, Sub1, Sub2> registerMe;
-        };
-
-        template <class Base, class Sub1, class Sub2, class Sub3>
-        struct ConfiguratorMember4 {
-            ConfiguratorMember4(int) {
-                std::string classId(Sub3::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub3>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub2>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub3>(classId);
-            }
-
-            virtual ~ConfiguratorMember4() {}
-        };
-
-        template <class Base, class Sub1, class Sub2, class Sub3>
-        struct RegisterConfigurator4 {
-            static const ConfiguratorMember4<Base, Sub1, Sub2, Sub3> registerMe;
-        };
-
-        template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
-        struct ConfiguratorMember5 {
-            ConfiguratorMember5(int) {
-                std::string classId(Sub4::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub4>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub2>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub3>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub4>(classId);
-            }
-
-            virtual ~ConfiguratorMember5() {}
-        };
-
-        template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
-        struct RegisterConfigurator5 {
-            static const ConfiguratorMember5<Base, Sub1, Sub2, Sub3, Sub4> registerMe;
+        template <class Base, class... Subs>
+        struct RegisterConfigurator {
+            static const ConfiguratorMember<Base, Subs...> registerMe;
         };
 
         // Allow to register statically constructor with one more argument
-        template <class Base, class A1>
-        struct ConfiguratorWithArgMember1 {
-            ConfiguratorWithArgMember1(int) {
-                std::string classId(Base::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Base, A1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
+        template <class Base, class A1, class... Subs>
+        struct ConfiguratorWithArgMember {
+            ConfiguratorWithArgMember(int) {
+                const std::string classId(confTools::getLastClassId<Base, Subs...>());
+
+                // Register last class of inheritance chain
+                constexpr size_t nSubs = sizeof...(Subs);
+                using LastType = confTools::NthTypeOf<nSubs, Base, Subs...>;
+                Configurator<Base>::template registerClass<LastType, A1>(classId);
+
+                // Register the schema functions of all levels for this last class
+                Configurator<Base>::template registerSchemaFunctions<Base, Subs...>(classId);
             }
 
-            virtual ~ConfiguratorWithArgMember1() {}
+            virtual ~ConfiguratorWithArgMember() {}
         };
 
-        template <class Base, class A1>
-        struct RegisterConfiguratorWithArg1 {
-            static const ConfiguratorWithArgMember1<Base, A1> registerMe;
-        };
-
-        template <class Base, class A1, class Sub1>
-        struct ConfiguratorWithArgMember2 {
-            ConfiguratorWithArgMember2(int) {
-                std::string classId(Sub1::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub1, A1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-            }
-
-            virtual ~ConfiguratorWithArgMember2() {}
-        };
-
-        template <class Base, class A1, class Sub1>
-        struct RegisterConfiguratorWithArg2 {
-            static const ConfiguratorWithArgMember2<Base, A1, Sub1> registerMe;
-        };
-
-        template <class Base, class A1, class Sub1, class Sub2>
-        struct ConfiguratorWithArgMember3 {
-            ConfiguratorWithArgMember3(int) {
-                std::string classId(Sub2::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub2, A1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub2>(classId);
-            }
-
-            virtual ~ConfiguratorWithArgMember3() {}
-        };
-
-        template <class Base, class A1, class Sub1, class Sub2>
-        struct RegisterConfiguratorWithArg3 {
-            static const ConfiguratorWithArgMember3<Base, A1, Sub1, Sub2> registerMe;
-        };
-
-        template <class Base, class A1, class Sub1, class Sub2, class Sub3>
-        struct ConfiguratorWithArgMember4 {
-            ConfiguratorWithArgMember4(int) {
-                std::string classId(Sub3::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub3, A1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub2>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub3>(classId);
-            }
-
-            virtual ~ConfiguratorWithArgMember4() {}
-        };
-
-        template <class Base, class A1, class Sub1, class Sub2, class Sub3>
-        struct RegisterConfiguratorWithArg4 {
-            static const ConfiguratorWithArgMember4<Base, A1, Sub1, Sub2, Sub3> registerMe;
-        };
-
-        template <class Base, class A1, class Sub1, class Sub2, class Sub3, class Sub4>
-        struct ConfiguratorWithArgMember5 {
-            ConfiguratorWithArgMember5(int) {
-                std::string classId(Sub4::classInfo().getClassId());
-                Configurator<Base>::template registerClass<Sub4, A1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Base>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub1>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub2>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub3>(classId);
-                Configurator<Base>::template registerSchemaFunction<Sub4>(classId);
-            }
-
-            virtual ~ConfiguratorWithArgMember5() {}
-        };
-
-        template <class Base, class A1, class Sub1, class Sub2, class Sub3, class Sub4>
-        struct RegisterConfiguratorWithArg5 {
-            static const ConfiguratorWithArgMember5<Base, A1, Sub1, Sub2, Sub3, Sub4> registerMe;
+        template <class Base, class A1, class... Subs>
+        struct RegisterConfiguratorWithArg {
+            static const ConfiguratorWithArgMember<Base, A1, Subs...> registerMe;
         };
 
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_1(base) \
     template <>                                    \
-    const karabo::util::ConfiguratorMember1<base> karabo::util::RegisterConfigurator1<base>::registerMe(1);
+    const karabo::util::ConfiguratorMember<base> karabo::util::RegisterConfigurator<base>::registerMe(1);
 
-#define _KARABO_REGISTER_FOR_CONFIGURATION_2(base, sub1)                                                             \
-    template <>                                                                                                      \
-    const karabo::util::ConfiguratorMember2<base, sub1> karabo::util::RegisterConfigurator2<base, sub1>::registerMe( \
-          1);
+#define _KARABO_REGISTER_FOR_CONFIGURATION_2(base, sub1) \
+    template <>                                          \
+    const karabo::util::ConfiguratorMember<base, sub1> karabo::util::RegisterConfigurator<base, sub1>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_3(base, sub1, sub2) \
     template <>                                                \
-    const karabo::util::ConfiguratorMember3<base, sub1, sub2>  \
-          karabo::util::RegisterConfigurator3<base, sub1, sub2>::registerMe(1);
+    const karabo::util::ConfiguratorMember<base, sub1, sub2>   \
+          karabo::util::RegisterConfigurator<base, sub1, sub2>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_4(base, sub1, sub2, sub3) \
     template <>                                                      \
-    const karabo::util::ConfiguratorMember4<base, sub1, sub2, sub3>  \
-          karabo::util::RegisterConfigurator4<base, sub1, sub2, sub3>::registerMe(1);
+    const karabo::util::ConfiguratorMember<base, sub1, sub2, sub3>   \
+          karabo::util::RegisterConfigurator<base, sub1, sub2, sub3>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_5(base, sub1, sub2, sub3, sub4) \
     template <>                                                            \
-    const karabo::util::ConfiguratorMember5<base, sub1, sub2, sub3, sub4>  \
-          karabo::util::RegisterConfigurator5<base, sub1, sub2, sub3, sub4>::registerMe(1);
+    const karabo::util::ConfiguratorMember<base, sub1, sub2, sub3, sub4>   \
+          karabo::util::RegisterConfigurator<base, sub1, sub2, sub3, sub4>::registerMe(1);
 
-#define _KARABO_REGISTER_FOR_CONFIGURATION_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC
+#define _KARABO_REGISTER_FOR_CONFIGURATION_6(base, sub1, sub2, sub3, sub4, sub5) \
+    template <>                                                                  \
+    const karabo::util::ConfiguratorMember<base, sub1, sub2, sub3, sub4, sub5>   \
+          karabo::util::RegisterConfigurator<base, sub1, sub2, sub3, sub4, sub5>::registerMe(1);
 
+#define _KARABO_REGISTER_FOR_CONFIGURATION_7(base, sub1, sub2, sub3, sub4, sub5, sub6) \
+    template <>                                                                        \
+    const karabo::util::ConfiguratorMember<base, sub1, sub2, sub3, sub4, sub5, sub6>   \
+          karabo::util::RegisterConfigurator<base, sub1, sub2, sub3, sub4, sub5, sub6>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_N(x0, x1, x2, x3, x4, x5, x6, x7, FUNC, ...) FUNC
+
+// If an 8 level deep inheritance chain is needed:
+// * Add _KARABO_REGISTER_FOR_CONFIGURATION_8,
+// * extend the above _KARABO_REGISTER_FOR_CONFIGURATION_N with x8,
+// * and add _KARABO_REGISTER_FOR_CONFIGURATION_8 to the below KARABO_REGISTER_FOR_CONFIGURATION.
 #define KARABO_REGISTER_FOR_CONFIGURATION(...)                                                                  \
     _KARABO_REGISTER_FOR_CONFIGURATION_N(                                                                       \
-          , ##__VA_ARGS__, _KARABO_REGISTER_FOR_CONFIGURATION_5(__VA_ARGS__),                                   \
+          , ##__VA_ARGS__, _KARABO_REGISTER_FOR_CONFIGURATION_7(__VA_ARGS__),                                   \
+          _KARABO_REGISTER_FOR_CONFIGURATION_6(__VA_ARGS__), _KARABO_REGISTER_FOR_CONFIGURATION_5(__VA_ARGS__), \
           _KARABO_REGISTER_FOR_CONFIGURATION_4(__VA_ARGS__), _KARABO_REGISTER_FOR_CONFIGURATION_3(__VA_ARGS__), \
           _KARABO_REGISTER_FOR_CONFIGURATION_2(__VA_ARGS__), _KARABO_REGISTER_FOR_CONFIGURATION_1(__VA_ARGS__), \
           _KARABO_REGISTER_FOR_CONFIGURATION_0(__VA_ARGS__))
@@ -673,33 +607,47 @@ namespace karabo {
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_1(a1, base) \
     template <>                                              \
-    const karabo::util::ConfiguratorWithArgMember1<base, a1> \
-          karabo::util::RegisterConfiguratorWithArg1<base, a1>::registerMe(1);
+    const karabo::util::ConfiguratorWithArgMember<base, a1>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_2(a1, base, sub1) \
     template <>                                                    \
-    const karabo::util::ConfiguratorWithArgMember2<base, a1, sub1> \
-          karabo::util::RegisterConfiguratorWithArg2<base, a1, sub1>::registerMe(1);
+    const karabo::util::ConfiguratorWithArgMember<base, a1, sub1>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1, sub1>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_3(a1, base, sub1, sub2) \
     template <>                                                          \
-    const karabo::util::ConfiguratorWithArgMember3<base, a1, sub1, sub2> \
-          karabo::util::RegisterConfiguratorWithArg3<base, a1, sub1, sub2>::registerMe(1);
+    const karabo::util::ConfiguratorWithArgMember<base, a1, sub1, sub2>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1, sub1, sub2>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_4(a1, base, sub1, sub2, sub3) \
     template <>                                                                \
-    const karabo::util::ConfiguratorWithArgMember4<base, a1, sub1, sub2, sub3> \
-          karabo::util::RegisterConfiguratorWithArg4<base, a1, sub1, sub2, sub3>::registerMe(1);
+    const karabo::util::ConfiguratorWithArgMember<base, a1, sub1, sub2, sub3>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1, sub1, sub2, sub3>::registerMe(1);
 
 #define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_5(a1, base, sub1, sub2, sub3, sub4) \
     template <>                                                                      \
-    const karabo::util::ConfiguratorWithArgMember5<base, a1, sub1, sub2, sub3, sub4> \
-          karabo::util::RegisterConfiguratorWithArg5<base, a1, sub1, sub2, sub3, sub4>::registerMe(1);
+    const karabo::util::ConfiguratorWithArgMember<base, a1, sub1, sub2, sub3, sub4>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1, sub1, sub2, sub3, sub4>::registerMe(1);
 
-#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_N(x0, x1, x2, x3, x4, x5, FUNC, ...) FUNC
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_6(a1, base, sub1, sub2, sub3, sub4, sub5) \
+    template <>                                                                            \
+    const karabo::util::ConfiguratorWithArgMember<base, a1, sub1, sub2, sub3, sub4, sub5>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1, sub1, sub2, sub3, sub4, sub5>::registerMe(1);
 
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_7(a1, base, sub1, sub2, sub3, sub4, sub5, sub6) \
+    template <>                                                                                  \
+    const karabo::util::ConfiguratorWithArgMember<base, a1, sub1, sub2, sub3, sub4, sub5, sub6>  \
+          karabo::util::RegisterConfiguratorWithArg<base, a1, sub1, sub2, sub3, sub4, sub5, sub6>::registerMe(1);
+
+#define _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_N(x0, x1, x2, x3, x4, x5, x6, x7, FUNC, ...) FUNC
+
+// If an 8 level deep inheritance chain is needed with an extra constructor argument:
+// See comments above for KARABO_REGISTER_FOR_CONFIGURATION an follow likewise.
 #define KARABO_REGISTER_FOR_CONFIGURATION_ADDON(a1, ...)                                                    \
     _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_N(, ##__VA_ARGS__,                                             \
+                                               _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_7(a1, __VA_ARGS__), \
+                                               _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_6(a1, __VA_ARGS__), \
                                                _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_5(a1, __VA_ARGS__), \
                                                _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_4(a1, __VA_ARGS__), \
                                                _KARABO_REGISTER_FOR_CONFIGURATION_ADDON_3(a1, __VA_ARGS__), \
