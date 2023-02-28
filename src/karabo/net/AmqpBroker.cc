@@ -365,6 +365,7 @@ namespace karabo {
                 Hash config("brokers", m_availableBrokerUrls);
                 config.set("instanceId", m_instanceId + ":beats");
                 config.set("domain", m_topic);
+                config.set("applyQueueArgs", true);
                 m_heartbeatClient = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config);
                 boost::system::error_code ec = m_heartbeatClient->connect();
                 if (ec) {
