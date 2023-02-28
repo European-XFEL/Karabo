@@ -91,6 +91,13 @@ namespace karabo {
               {eReady, eShutdown}};
 
 
+        void AmqpTransceiver::setQueueArguments(AMQP::Table& args) {
+            args["x-max-length"] = 12000;       // Queue Length Limit https://www.rabbitmq.com/maxlength.html
+            args["x-overflow"] = "drop-head";   // This is a default policy
+            args["x-message-ttl"] = 120 * 1000; // message time-to-live in milliseconds
+        }
+
+
         AmqpTransceiver::AmqpTransceiver(const std::string& exchange, const std::string& queue_,
                                          const std::string& route_in, bool listener)
             : m_state(eEnd),
@@ -274,8 +281,11 @@ namespace karabo {
                             if (!self) return;
                             if (m_state != eCheckQueue) return;
                             // queue exist!  Normally we should NOT be here. Some other application uses this name
-                            // Solution: let's create queue with broker generated name ...
-                            m_queue.clear();
+                            // Solution: try to follow MDL solution adding suffix...
+                            auto dur = std::chrono::steady_clock::now().time_since_epoch().count();
+                            std::ostringstream oss;
+                            oss << std::hex << dur;
+                            m_queue += ":" + oss.str();
                             m_queueExist = false;
                             m_recvQueue.clear();
                             m_state = eCreateQueue;
@@ -374,7 +384,12 @@ namespace karabo {
                             m_state = eCloseChannel;
                             moveStateMachine();
                         };
-                        m_channel->declareQueue(m_queue, AMQP::autodelete).onSuccess(successCb).onError(failureCb);
+                        // Assign optional queue arguments to configure the queue if requested
+                        AMQP::Table args;
+                        if (m_connector->applyQueueArgs()) AmqpTransceiver::setQueueArguments(args);
+                        m_channel->declareQueue(m_queue, AMQP::autodelete, args)
+                              .onSuccess(successCb)
+                              .onError(failureCb);
                     }
                     break;
 
@@ -841,13 +856,14 @@ namespace karabo {
         //------------------------------------------------------------------------------------ AmqpConnector
 
 
-        AmqpConnector::AmqpConnector(const std::vector<std::string>& urls, const std::string& id)
+        AmqpConnector::AmqpConnector(const std::vector<std::string>& urls, const std::string& id, bool queueArgsFlag)
             : m_urls(urls),
               m_instanceId(id),
               m_transceivers(),
               m_connectorActivated(true),
               m_activateMutex(),
-              m_amqp(std::make_shared<AmqpSingleton>(EventLoop::getIOService().get_executor().context(), urls)) {}
+              m_amqp(std::make_shared<AmqpSingleton>(EventLoop::getIOService().get_executor().context(), urls)),
+              m_queueArgsFlag(queueArgsFlag) {}
 
 
         AmqpConnector::~AmqpConnector() {}
@@ -1184,6 +1200,15 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue(false)
                   .commit();
+
+            BOOL_ELEMENT(expected)
+                  .key("applyQueueArgs")
+                  .displayedName("Apply queue arguments")
+                  .description(
+                        "Flag indicating the optional queue arguments should be applied while creating a AMQP queue")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
         }
 
 
@@ -1197,7 +1222,8 @@ namespace karabo {
               m_serializerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
               m_strand(boost::make_shared<Strand>(EventLoop::getIOService())),
               m_onRead(),
-              m_skipFlag(input.get<bool>("skipFlag")) {}
+              m_skipFlag(input.get<bool>("skipFlag")),
+              m_queueArgsFlag(input.has("applyQueueArgs") ? input.get<bool>("applyQueueArgs") : false) {}
 
 
         AmqpClient::~AmqpClient() {}
@@ -1207,7 +1233,7 @@ namespace karabo {
             // Create connector object which blocks only if no connection is established before.
             // Otherwise it doesn't block and uses beforehand established connection
             std::string connectorId = m_domain + "." + m_instanceId;
-            m_connector = boost::make_shared<AmqpConnector>(m_brokerUrls, connectorId);
+            m_connector = boost::make_shared<AmqpConnector>(m_brokerUrls, connectorId, m_queueArgsFlag);
             // At this point we always have successfully established connection.
             // If m_brokerUrls contains no valid AMQP brokers, the previous statement blocks forever.
             return KARABO_ERROR_CODE_SUCCESS;
