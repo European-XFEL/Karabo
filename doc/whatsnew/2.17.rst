@@ -2,12 +2,13 @@
 What's New in Karabo 2.17.0
 ***************************
 
-Preliminary! Release scheduled for the 19.05.2023. Merge-log until 2.17.0a6.
+Preliminary! Release scheduled for the 19.05.2023. Merge-log until 2.17.0a8.
 
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
+- **Add support to AlmaLinux 9.** !7256
 - MDL: New `Configurable` coroutine function `set_setter(h, only_changes=False)` provided. This is the analogon to `Configurable.set`, but calling
   the internal `setter` functions for the descriptors.
 - ALL API: A new slot `slotGetConfigurationSlice` is available that provides the configuration of selected paths.
@@ -29,10 +30,12 @@ Bugfixes
 Breaking Changes
 ++++++++++++++++
 
+- Drop Ubuntu18 support from CI
 
 Change of behaviour
 +++++++++++++++++++
 
+- **Change default broker address to AMQP**
 - GUI: By default the property alarm color for devices in the `Configurator` is now disabled. This is intended as the
   `Configurator` can only evaluate static alarms defined by the device schema. To view property specific alarms, please use the alarm panel.
   To turn this feature back on, please use the *Application Configuration dialog** accessible via the menu bar of the client.
@@ -53,6 +56,30 @@ Detailed Merge-Log
 Graphical User Interface
 ========================
 
+
+- GUI: Icons Widget-TextDialog. Show items in a Combobox. !7275
+- GUI: Enable hovering over selected widgets !7179
+- GUI: Target tool show log values. !7167
+- Revert "GUI: Enable to build scenes with offline devices" !7190
+- GUI: Change Target Tool Legend color. !7191
+- GUI: Cleanup the code from axis item !7199
+- GUI: Change font size/weight for List widget. Closes #136 !7194
+- GUI: Provide full information on changes of configuration in dialog !7188
+- GUI: Clean up time label test !7200
+- GUI: Disable dynamic sorting on Topology Tree.Closes #152 !7211
+- GUI: Set the dynamicSortFilter to False in Configurator and test the swap model !7182
+- GUI: Handle slash in the file name on saving Macro.Closes #146 !7208
+- GUI: Graceful toolbutton in testing of scintilla editor !7213
+- GUI: Question Dialog on running unsaved Macro.Closes #158 !7225
+- GUI: Close log dialog on disconnect !7235
+- GUI: Initialize models with defaults from bindings if desired !7234
+- GUI: Change schema handling in configurator !7237
+- GUI: Optimize status widget !7223
+- GUI: Icons Widget - Show the messagebox with no parent !7247
+- GUI: Provide a toolbar in cinema mode !7178
+- GUI: Provide a table controller panel on double click in configurator !7253
+- GUI: Cleanup double click event in scene view !7279
+- GUI: Move editor to double click and not device scene !7271
 - GUI: Flake base binding controller !6933
 - GUI: Better handling of Bool editing in the List Edit Dialog. !6910
 - GUI: Provide simple background task engine !6932
@@ -204,7 +231,36 @@ MDL/Native core
 - ikarabo: Command lines don't have a logger !6913
 - AMQP: Activate integration tests again !7073
 - Remove archive from instanceInfo completely. Closes #61 !7174
-
+- MDL: Increase join timeout in cli test: test_delete !7216
+- MDL: Robust timeit test !7215
+- MDL: Move KaraboJSONEncoder to native data !7192
+- MDL: Make NoEventLoop awaitable to cycle the loop !7123
+- MDL: Configure AMQP Broker queues with expiry time and max length !7217
+- MDL: Adjust macro cancel async slot test with sleepUntil !7222
+- MDL: Another flaky delete_test fix for CLI !7219
+- MDL: Adjust pipeline injected channel test with sleep !7233
+- MDL: Transport pipeline test to pytest !7128
+- MDL: Again fix the flaky delete and cancel tests !7245
+- MDL: Close all proxies on instance shutdown quickly !7232
+- MDL: Only drop for heartbeat queue and align the queue name !7249
+- MDL: Fix another flaky pipeline context test !7250
+- Native: Provide test for popping value from Table with QuantityValue !7141
+- MDL: Fix another flaky output channel test !7248
+- MDL: Heartbeat mixin calls for instanceInfo on zombie !7138
+- MDL test: Delay assert in macro_test !7257
+- Common: Scene2py can consider a different children name !7243
+- MDL: Align flaky topology cli test !7258
+- MDL: Enable optional dependencies for MDL only installations !7154
+- MDL: Add slotDeviceUp to bound server !7273
+- MDL: Align heartbeat queue for max length !7267
+- MDL: Remove 'archive' key from the instanceInfo for macros. !7283
+- MDL: Add timestamp to messages from openmqc !7180
+- MDL: Fix flakyness of macro cancel test !7169
+- MDL: Add async waitUntil test for macro !7166
+- MDL: Remove output schema test flakyness !7183
+- MDL: Remove pipeline channels graceful on cancellation !7170
+- MDL: Cleanup heartbeat implementation !7147
+- MDL: Test cross waits for raw channel count !7231
 
 Bound/cpp core
 ==============
@@ -238,6 +294,41 @@ Bound/cpp core
 - Bound: Streamline device running, less threads !7050
 - Bound: Fix for silent plugin load failure for Bound Python device server. !7044
 - Remove archive from instanceInfo completely. Closes #61 !7174
+- C++: Add clang exception to gcc detection. !7252
+- C++: UserAuth with HttpClient based on Boost Beast wrapping libraries. !7246
+- C++: Properly copy a Validator !7244
+- C++: Broker shortcut without access of static map !7130
+- C++: thread correctness of exception trace !7255
+- C++: Only complain (no bail out) if constructor is registered a 2nd time !7261
+- C++: Add failure messages on test failures !7265
+- C++ tests: Less fixed sleep in data logger integration test !7268
+- C++: AMQP - Fix C++ device server's shutdown delays !7272
+- C++/Bound: Use auto acknowlegdement mode in AMQP !7262
+- C++: More cautious Strand destructor fixes Python integration test !7184
+- C++: Remove broker logging support !7185
+- C++: Adapt to requirements of next Boost releases !7189
+- C++: Fix a bug in the parsing of HTTP headers by the InfluxDbClient and add a test. !7196
+- C++: AMQP - Fix bug while shutting down C++ devices !7193
+- C++: Add missing publisher resets !7204
+- C++: Influx log reader reports details if schema not found !7203
+- C++: Implement user authentication by pure 'beast' !7209
+- C++: Better event loop shutdown protection for integration tests !7218
+- C++ Test: Increase timeout for channel connection !7221
+- C++: Fix compiler warning about unexpected copy !7202
+- C++: Expose Influx server version in InfluxDbClient. Update the CI version of Influx to 1.8.0 (latest OSS). !7212
+- C++ Tests: Fix TcpAdapter::waitFor !7226
+- C++ Tests: Clean client handling !7227
+- C++: Temporarily disable broken GUI Server authorize token integration test. !7228
+- C++: Remove signal cleaning on instanceNewFixes alarm test flakiness. !7238
+- C++: Do not assert, but throw on wrong URL on Tcp config !7241
+- Bound: remove unused regex variable !7242
+- C++/Bound: Remove unused handlers for instanceNew/Gone/Updated !7239
+- C++: Signal::registerSlot with return value and unit test !7240
+- C++: More robost pipeline test !7186
+- C++ Tests: Debug output when devices do not get up in  test_chain_receivers !7187
+- C++ Tests: Add debug info to alarm integration test !7229
+- C++ Tests: Fix code added for debugging !7230
+
 
 
 Core Devices
@@ -252,6 +343,8 @@ Core Devices
 Dependencies, Documentation and Tools
 =====================================
 
+- Add support to AlmaLinux 9. !7256
+- Drop Ubuntu18 support from CI !7220
 - Tests: Skip Python integration tests on CI for AMQP broker !7066
 - DEP: Update openmqc to version 5.1.4.1 (fix for compilation on GCC 11.3). !6936
 - DEPS: Update miniconda image !7053
@@ -277,6 +370,8 @@ Dependencies, Documentation and Tools
 - DOC: Fix test_doc ci step !7052
 - DOC: Adjust removed 'gitlab' from urls, update supported platforms !7056
 - DOC: Fix gitlab link !7051
+- DOC: Document 2.17. until alpha 6 !7236
 - CI: Add build and test jobs for Ubuntu22. !6924
 - TOOLS: remove tags on karabo install !7018
 - TOOLS: Fix typo in karabo-kill help message. !7000
+- TOOLS: Add Python and IDE related entries to MDL/Bound Python .gitignore templates. !7276
