@@ -130,9 +130,10 @@ def test_set_numbers_float_conversion():
     # Test rounding of floating point values
     set_numbers(("x", "y", "height", "width"), model, element)
     assert element.get("x") == "0"
-    assert element.get("y") == "0.2"
+    # Since 2.17.X casted to integers for compatibility
+    assert element.get("y") == "0"
     assert element.get("height") == "10"
-    assert element.get("width") == "10.05"
+    assert element.get("width") == "10"
 
 
 def test_reading():
