@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum, Float, Instance, Int
+from traits.api import CInt, Enum, Instance, Int
 
 from .bases import BaseLayoutData, BaseLayoutModel, BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG
@@ -38,13 +38,13 @@ class FixedLayoutChildData(BaseLayoutData):
     """Data for each child of a FixedLayoutModel"""
 
     # The X-coordinate of the child
-    x = Float
+    x = CInt
     # The Y-coordinate of the child
-    y = Float
+    y = CInt
     # The height of the child
-    height = Float
+    height = CInt
     # The width of the child
-    width = Float
+    width = CInt
 
 
 class GridLayoutModel(BaseLayoutModel):
