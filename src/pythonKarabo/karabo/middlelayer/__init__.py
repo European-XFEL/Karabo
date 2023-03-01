@@ -32,7 +32,8 @@ from karabo.middlelayer_api.device_client import (
 from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.eventloop import (
-    EventLoop, KaraboFuture, NoEventLoop, synchronize, synchronize_notimeout)
+    EventLoop, KaraboFuture, NoEventLoop, global_sync, synchronize,
+    synchronize_notimeout)
 from karabo.middlelayer_api.injectable import Injectable
 from karabo.middlelayer_api.logger import CacheLog
 from karabo.middlelayer_api.macro import (

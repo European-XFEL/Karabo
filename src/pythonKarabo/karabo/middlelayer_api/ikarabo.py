@@ -14,7 +14,7 @@ from karabo.native import Node
 
 from . import device_client
 from .device_client import DeviceClientBase
-from .eventloop import NoEventLoop
+from .eventloop import NoEventLoop, set_global_sync
 from .logger import build_logger_node
 from .macro import EventThread, Macro
 from .signalslot import coslot
@@ -88,6 +88,7 @@ first_param = re.compile("\"[^\"]*\"|'[^']*'")
 def start_device_client():
     global devices
 
+    set_global_sync()
     thread = EventThread()
     thread.start()
 

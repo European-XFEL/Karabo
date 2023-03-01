@@ -13,7 +13,7 @@ from karabo.middlelayer.testing import assertLogs, setEventLoop, sleepUntil
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     callNoWait, findDevices, getClients, getDevice, getDevices, shutdown)
-from karabo.middlelayer_api.eventloop import NoEventLoop
+from karabo.middlelayer_api.eventloop import NoEventLoop, global_sync
 from karabo.middlelayer_api.ikarabo import (
     DeviceClient, connectDevice, start_device_client)
 from karabo.middlelayer_api.macro import EventThread, Macro, RemoteDevice
@@ -120,9 +120,12 @@ def test_remote_timeout():
     try:
         # start a thread with event loop and then try
         # to run the device
+        assert not global_sync()
         thread = start_device_client()
+        assert global_sync()
         with assertLogs("NoRemote"):
             NoRemote(_deviceId_="NoRemote")
+
     finally:
         if thread is not None:
             thread.stop()
