@@ -12,7 +12,7 @@ SVG_DEF_REGEX = re.compile(r"url\(\#(.*?)\)")
 
 
 def get_numbers(names, element):
-    """Read a list of integer values from an `Element` instance."""
+    """Read a list of float values from an `Element` instance."""
     return {name: float(element.get(name)) for name in names}
 
 
