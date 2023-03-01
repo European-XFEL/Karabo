@@ -46,11 +46,11 @@ class HashHtmlParser(HTMLParser):
 
 def test_numpy_number():
     dtype = dtype_from_number(1)
-    assert dtype == np.bool
+    assert dtype == np.bool_
     dtype = dtype_from_number(2)
-    assert dtype == np.object
+    assert dtype == np.object_
     dtype = dtype_from_number(3)
-    assert dtype == np.object
+    assert dtype == np.object_
     dtype = dtype_from_number(4)
     assert dtype == np.int8
     dtype = dtype_from_number(5)
