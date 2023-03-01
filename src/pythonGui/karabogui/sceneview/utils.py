@@ -86,7 +86,7 @@ def calc_rotated_point(x, y, angle=0, scale=1):
     rotated_x = x * cos + y * sin
     rotated_y = - x * sin + y * cos
 
-    return QPoint(rotated_x * scale, rotated_y * scale)
+    return QPoint(int(rotated_x * scale), int(rotated_y * scale))
 
 
 def add_offset(model, x=0, y=0):
