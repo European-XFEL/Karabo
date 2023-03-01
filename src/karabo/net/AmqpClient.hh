@@ -44,7 +44,6 @@ enum class AmqpCppErrc {
     eCreateConsumerError,
     eConsumerCancelError,
     eUnbindQueueError,
-    eCloseChannelError,
     eDrop
 };
 
@@ -86,9 +85,6 @@ namespace karabo {
 
            public:
             typedef boost::shared_ptr<AmqpTransceiver> Pointer;
-
-            typedef std::function<void(const AMQP::Message& message, int16_t code, const std::string& description)>
-                  BounceCallback;
 
             AmqpTransceiver(const std::string& exchange, const std::string& queue_, const std::string& route_in,
                             bool listener);
