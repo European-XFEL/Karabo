@@ -1,5 +1,5 @@
 from pytest import raises as assert_raises
-from traits.api import TraitError
+from traits.api import TraitError, Undefined
 
 from .. import api
 from .utils import (
@@ -227,3 +227,53 @@ def test_list():
 
     assert read_model.font_size == 18
     assert read_model.font_weight == "bold"
+
+
+def test_display_float_alarm_models():
+    # Check default model
+    for model_klass in [api.DisplayFloatModel, api.DisplayAlarmFloatModel]:
+        default_model = model_klass()
+        assert default_model.font_size == api.SCENE_FONT_SIZE
+        assert default_model.font_weight == api.SCENE_FONT_WEIGHT
+        assert default_model.fmt == "g"
+        assert default_model.decimals == "8"
+
+        # Check valid input, labels
+        input_size = 7
+        input_weight = "bold"
+        input_fmt = "f"
+        input_decimals = "4"
+        valid_model = model_klass(
+            font_size=input_size, font_weight=input_weight,
+            decimals=input_decimals,
+            fmt=input_fmt)
+        assert valid_model.font_size == input_size
+        assert valid_model.font_weight == input_weight
+        assert valid_model.fmt == input_fmt
+        assert valid_model.decimals == input_decimals
+
+        # Check invalid input
+        assert_raises(TraitError, api.DisplayFloatModel, font_size=1)
+        assert_raises(TraitError, api.DisplayFloatModel, font_weight="foo")
+
+        # Check round trip
+        read_model = single_model_round_trip(valid_model)
+        assert read_model.font_size == input_size
+        assert read_model.font_weight == input_weight
+        assert read_model.fmt == input_fmt
+        assert read_model.decimals == input_decimals
+
+    model = api.DisplayAlarmFloatModel(alarmLow=1.2, warnHigh=6.5,
+                                       warnLow=5.2, alarmHigh=7.9)
+    read_model = single_model_round_trip(model)
+    assert read_model.alarmLow == 1.2
+    assert read_model.warnLow == 5.2
+    assert read_model.warnHigh == 6.5
+    assert read_model.alarmHigh == 7.9
+
+    model = api.DisplayAlarmFloatModel(alarmLow=1.2, alarmHigh=7.9)
+    read_model = single_model_round_trip(model)
+    assert read_model.alarmLow == 1.2
+    assert read_model.warnLow is Undefined
+    assert read_model.warnHigh is Undefined
+    assert read_model.alarmHigh == 7.9

@@ -1,16 +1,18 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, Int, String
+from traits.api import Bool, Enum, Float, Int, String, Undefined
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
-    NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_SIZES, SCENE_FONT_WEIGHT,
-    SCENE_FONT_WEIGHTS, WIDGET_ELEMENT_TAG)
+    DEFAULT_DECIMALS, DEFAULT_FORMAT, NS_KARABO, SCENE_FONT_SIZE,
+    SCENE_FONT_SIZES, SCENE_FONT_WEIGHT, SCENE_FONT_WEIGHTS,
+    WIDGET_ELEMENT_TAG)
 from karabo.common.scenemodel.io_utils import (
-    get_numbers, read_base_widget_data, read_empty_display_editable_widget,
-    read_font_format_data, set_numbers, write_base_widget_data,
-    write_font_format_data)
+    get_numbers, read_alarm_data, read_base_widget_data,
+    read_empty_display_editable_widget, read_font_format_data,
+    read_value_format_data, set_numbers, write_alarm_data,
+    write_base_widget_data, write_font_format_data, write_value_format_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
@@ -55,25 +57,39 @@ class HistoricTextModel(BaseWidgetObjectData):
     """
 
 
-class DisplayLabelModel(BaseWidgetObjectData):
+class BaseLabelModel(BaseWidgetObjectData):
     """A model for DisplayLabel"""
 
     font_size = Enum(*SCENE_FONT_SIZES)
     font_weight = Enum(*SCENE_FONT_WEIGHTS)
 
-    def __init__(
-            self,
-            font_size=SCENE_FONT_SIZE,
-            font_weight=SCENE_FONT_WEIGHT,
-            **traits
-    ):
-        # We set the default values as Enum doesn't set this straightforwardly
-        super().__init__(font_size=font_size, font_weight=font_weight,
-                         **traits)
+    def _font_size_default(self):
+        return SCENE_FONT_SIZE
+
+    def _font_weight_default(self):
+        return SCENE_FONT_WEIGHT
 
 
-class DisplayListModel(DisplayLabelModel):
+class DisplayLabelModel(BaseLabelModel):
+    """A model for the DisplayLabel """
+
+
+class DisplayListModel(BaseLabelModel):
     """A model for DisplayList"""
+
+
+class DisplayFloatModel(BaseLabelModel):
+    """A model for DisplayFloat"""
+    fmt = String(DEFAULT_FORMAT)
+    decimals = String(DEFAULT_DECIMALS)
+
+
+class DisplayAlarmFloatModel(DisplayFloatModel):
+    """A model for the Display Alarm Float Model"""
+    alarmHigh = Float(Undefined)
+    alarmLow = Float(Undefined)
+    warnHigh = Float(Undefined)
+    warnLow = Float(Undefined)
 
 
 class DisplayTextLogModel(BaseWidgetObjectData):
@@ -171,14 +187,12 @@ class SliderModel(BaseEditWidget):
 
 class TickSliderModel(BaseEditWidget):
     """A model for TickSlider"""
-
     ticks = Int(1)
     show_value = Bool(True)
 
 
-class DisplayTimeModel(DisplayLabelModel):
+class DisplayTimeModel(BaseLabelModel):
     """A model for the time widget"""
-
     time_format = String("%H:%M:%S")
 
 
@@ -298,6 +312,46 @@ def _display_label_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, "DisplayLabel")
     write_font_format_data(model, element)
+
+    return element
+
+
+@register_scene_reader("DisplayFloat")
+def _display_float_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
+    traits.update(read_value_format_data(element))
+
+    return DisplayFloatModel(**traits)
+
+
+@register_scene_writer(DisplayFloatModel)
+def _display_float_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "DisplayFloat")
+    write_font_format_data(model, element)
+    write_value_format_data(model, element)
+
+    return element
+
+
+@register_scene_reader("DisplayAlarmFloat")
+def _display_alarm_float_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
+    traits.update(read_value_format_data(element))
+    traits.update(read_alarm_data(element))
+
+    return DisplayAlarmFloatModel(**traits)
+
+
+@register_scene_writer(DisplayAlarmFloatModel)
+def _display_alarm_float_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "DisplayAlarmFloat")
+    write_font_format_data(model, element)
+    write_value_format_data(model, element)
+    write_alarm_data(model, element)
 
     return element
 
