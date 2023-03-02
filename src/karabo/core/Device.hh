@@ -1872,7 +1872,7 @@ namespace karabo {
                 } catch (const std::exception& e) {
                     const std::string exceptionTxt(e.what());
                     KARABO_LOG_ERROR << "The instance with deviceId " << this->getInstanceId()
-                                     << "is going down due to an exception in initialization ..." << exceptionTxt;
+                                     << " is going down due to an exception in initialization ..." << exceptionTxt;
                     // Indicate in the status and kill the device
                     set("status", std::string("Initialization failed: ") += exceptionTxt);
                     this->call("", "slotKillDevice");
