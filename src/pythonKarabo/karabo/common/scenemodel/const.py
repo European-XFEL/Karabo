@@ -86,3 +86,7 @@ ARROW_HEAD = {
     "ref_x": 0,
     "ref_y": 3,
 }
+
+# Float formatting constants
+DEFAULT_FORMAT = "g"
+DEFAULT_DECIMALS = "8"
