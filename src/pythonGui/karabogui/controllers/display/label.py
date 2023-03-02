@@ -4,124 +4,111 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
-from traits.api import Instance, String, Tuple
+
+from qtpy.QtWidgets import QAction, QDialog
+from traits.api import Instance, Undefined
 
 from karabo.common.api import (
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
-from karabo.common.scenemodel.api import DisplayLabelModel
+from karabo.common.scenemodel.api import (
+    DisplayAlarmFloatModel, DisplayFloatModel, DisplayLabelModel,
+    build_model_config)
 from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
-    get_binding_value, get_dtype_format)
+    get_dtype_format)
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, register_binding_controller)
-from karabogui.dialogs.format_label import FormatLabelDialog
-from karabogui.fonts import get_font_size_from_dpi
+    BaseFloatController, BaseLabelController, register_binding_controller)
+from karabogui.dialogs.api import AlarmDialog
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
-from karabogui.util import generateObjectName
-from karabogui.widgets.hints import Label
 
-BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
-                 IntBinding)
+BINDING_TYPES = (StringBinding, CharBinding, ComplexBinding, IntBinding,
+                 FloatBinding)
 
 
 @register_binding_controller(ui_name="Value Field",
                              klassname="DisplayLabel",
                              binding_type=BINDING_TYPES, priority=20)
-class DisplayLabel(BaseBindingController):
-    # The scene data model class for this controller
+class DisplayLabel(BaseLabelController):
     model = Instance(DisplayLabelModel, args=())
-    # Internal traits
-    _bg_color = Tuple(ALL_OK_COLOR)
-    _internal_widget = Instance(QLabel, allow_none=True)
-    _style_sheet = String
-    _fmt = String
 
-    def create_widget(self, parent):
-        self._internal_widget = Label(parent)
-        widget = add_unit_label(self.proxy, self._internal_widget,
-                                parent=parent)
-        widget.setFrameStyle(QFrame.Box | QFrame.Plain)
+    def binding_update_proxy(self, proxy):
+        self.fmt = get_dtype_format(proxy.binding)
 
-        objectName = generateObjectName(self)
-        self._style_sheet = ("QWidget#{}".format(objectName) +
-                             " {{ background-color : rgba{}; }}")
-        widget.setObjectName(objectName)
-        sheet = self._style_sheet.format(ALL_OK_COLOR)
-        widget.setStyleSheet(sheet)
-
-        # Add an action for formatting options
-        format_action = QAction("Format field..", widget)
-        format_action.triggered.connect(self._format_field)
-        widget.addAction(format_action)
-        self._apply_format(widget)
-
-        return widget
-
-    def clear_widget(self):
-        """Clear the internal widget when the device goes offline"""
-        self._internal_widget.clear()
-
-    def binding_update(self, proxy):
-        self._fmt = get_dtype_format(proxy.binding)
-        self.widget.update_unit_label(proxy)
-
-    def value_update(self, proxy):
-        binding = proxy.binding
-        value = get_binding_value(proxy, "")
-        if value == "" or isinstance(binding, StringBinding):
-            # Early bail out for Long binary data (e.g. image) or
-            # if the property is not set (Undefined)
-            self._internal_widget.setText(value[:255])
-            return
-
-        self._check_alarms(binding, value)
-        if isinstance(binding, FloatBinding):
-            # Yes, we dance with numpy types, hence, we have to do a str
-            # conversion first before we go for float casting!
-            value = float(str(value))
-
-        ret = self._fmt.format(value)
-        self._internal_widget.setText(ret)
-
-    def _check_alarms(self, binding, value):
-        attributes = binding.attributes
+    def value_update_proxy(self, proxy, value):
+        attributes = proxy.binding.attributes
         alarm_low = attributes.get(KARABO_ALARM_LOW)
         alarm_high = attributes.get(KARABO_ALARM_HIGH)
         warn_low = attributes.get(KARABO_WARN_LOW)
         warn_high = attributes.get(KARABO_WARN_HIGH)
         if ((alarm_low is not None and value < alarm_low) or
                 (alarm_high is not None and value > alarm_high)):
-            self._bg_color = PROPERTY_ALARM_COLOR
+            self.bg_color = PROPERTY_ALARM_COLOR
         elif ((warn_low is not None and value < warn_low) or
               (warn_high is not None and value > warn_high)):
-            self._bg_color = PROPERTY_WARN_COLOR
+            self.bg_color = PROPERTY_WARN_COLOR
         else:
-            self._bg_color = ALL_OK_COLOR
-        sheet = self._style_sheet.format(self._bg_color)
+            self.bg_color = ALL_OK_COLOR
+        sheet = self.style_sheet.format(self.bg_color)
         self.widget.setStyleSheet(sheet)
 
-    # -----------------------------------------------------------------------
-    # Formatting methods
 
-    def _format_field(self):
-        dialog = FormatLabelDialog(font_size=self.model.font_size,
-                                   font_weight=self.model.font_weight,
-                                   parent=self.widget)
+@register_binding_controller(ui_name="Float Field",
+                             klassname="DisplayFloat",
+                             binding_type=(FloatBinding, ComplexBinding),
+                             priority=10)
+class DisplayFloat(BaseFloatController):
+    model = Instance(DisplayFloatModel, args=())
+
+
+@register_binding_controller(ui_name="Alarm Float Field",
+                             klassname="DisplayAlarmFloat",
+                             binding_type=(FloatBinding, ComplexBinding),
+                             priority=0)
+class DisplayAlarmFloat(BaseFloatController):
+    model = Instance(DisplayAlarmFloatModel, args=())
+
+    def create_widget(self, parent):
+        widget = super().create_widget(parent)
+        alarm_action = QAction("Configure alarms", widget)
+        alarm_action.triggered.connect(self._alarm_dialog)
+        widget.addAction(alarm_action)
+
+        return widget
+
+    @staticmethod
+    def initialize_model(proxy, model):
+        """Initialize the formatting from the binding of the proxy"""
+        super(DisplayAlarmFloat, DisplayAlarmFloat).initialize_model(
+            proxy, model)
+        attributes = proxy.binding.attributes
+        traits = {}
+        for key in [KARABO_ALARM_LOW, KARABO_WARN_LOW,
+                    KARABO_WARN_HIGH, KARABO_ALARM_HIGH]:
+            traits[key] = attributes.get(key, Undefined)
+        model.trait_set(**traits)
+
+    def value_update_proxy(self, proxy, value):
+        model = self.model
+        alarm_low = model.alarmLow
+        alarm_high = model.alarmHigh
+        warn_low = model.warnLow
+        warn_high = model.warnHigh
+        if ((alarm_low is not Undefined and value < alarm_low) or
+                (alarm_high is not Undefined and value > alarm_high)):
+            self.bg_color = PROPERTY_ALARM_COLOR
+        elif ((warn_low is not Undefined and value < warn_low) or
+              (warn_high is not Undefined and value > warn_high)):
+            self.bg_color = PROPERTY_WARN_COLOR
+        else:
+            self.bg_color = ALL_OK_COLOR
+        sheet = self.style_sheet.format(self.bg_color)
+        self.widget.setStyleSheet(sheet)
+
+    def _alarm_dialog(self):
+        binding = self.proxy.binding
+        config = build_model_config(self.model)
+        dialog = AlarmDialog(binding, config, parent=self.widget)
         if dialog.exec() == QDialog.Accepted:
-            self.model.trait_set(font_size=dialog.font_size,
-                                 font_weight=dialog.font_weight)
-            self._apply_format()
-
-    def _apply_format(self, widget=None):
-        """The widget is passed as an argument in create_widget as it is not
-           yet bound to self.widget then"""
-        if widget is None:
-            widget = self.widget
-
-        # Apply font formatting
-        font = widget.font()
-        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
-        font.setBold(self.model.font_weight == "bold")
-        widget.setFont(font)
+            self.model.trait_set(**dialog.values)
+            self.value_update(self.proxy)
