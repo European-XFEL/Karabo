@@ -158,6 +158,7 @@ class Configuration(QObject):
     gui_servers = Item(default=[], q_set=True, group=NETWORK)
     reactive_login = Item(
         default=False, q_set=True, dtype=bool, editable=True, group=NETWORK)
+    macro_development = Item(q_set=True, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
