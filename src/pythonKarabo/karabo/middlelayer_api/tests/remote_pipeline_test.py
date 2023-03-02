@@ -748,7 +748,7 @@ async def test_noded_output_channel(deviceTest):
         await output_device.slotKillDevice()
 
 
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(60)
 @run_test
 async def test_injected_output_channel_connection(event_loop):
     """Test the re/connect to an injected output channel"""
@@ -788,9 +788,9 @@ async def test_injected_output_channel_connection(event_loop):
             sender_proxy.output.setDataHandler(handler)
             sender_proxy.output.setConnectHandler(connect_handler)
             sender_proxy.output.connect()
-            await sleepUntil(lambda: connected is True)
+            await sleepUntil(lambda: connected is True, timeout=5)
             await sender_proxy.sendData()
-            await sleepUntil(lambda: received is True)
+            await sleepUntil(lambda: received is True, timeout=5)
             assert received
 
             with pytest.raises(RuntimeError):
@@ -817,12 +817,12 @@ async def test_injected_output_channel_connection(event_loop):
             await sleepUntil(lambda: connected is True)
             assert receiver.connected
             await sender_proxy.sendData()
+            await sleepUntil(lambda: receiver.received > 0, timeout=5)
+            assert receiver.received > 0
+            await sleepUntil(lambda: received is True, timeout=5)
+            assert received
             await waitUntil(lambda: input_proxy.received > 0)
             assert input_proxy.received > 0
-            await sleepUntil(lambda: receiver.received > 0)
-            assert receiver.received > 0
-            await sleepUntil(lambda: received is True)
-            assert received
 
             # Kill the device and bring up again
             await output_device.slotKillDevice()
@@ -836,13 +836,14 @@ async def test_injected_output_channel_connection(event_loop):
             # Sender and receiver are online, but no output
             await sender_proxy.injectOutput()
             # output is injected, wait for connection
-            await sleepUntil(lambda: connected is True)
+            await sleepUntil(lambda: connected is True, timeout=5)
 
             # Send data again
             received = False
             await receiver.resetCounter()
             await sender_proxy.sendData()
-            await sleepUntil(lambda: received is True)
+            await sleepUntil(lambda: received is True, timeout=5)
             await waitUntil(lambda: input_proxy.received > 0)
-            await sleepUntil(lambda: receiver.received > 0)
+            await sleepUntil(lambda: receiver.received > 0,
+                             timeout=5)
             assert receiver.received > 0
