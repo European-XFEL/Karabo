@@ -439,40 +439,55 @@ def show_no_configuration():
     broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': None})
 
 
-def run_macro(macro_model, parent=None):
-    """Request to run a macro by validating and sending an instantiate"""
+def run_macro(macro_model, parent=None, serverId=None):
+    """
+    Request to run a macro by validating and sending an instantiate. A
+    running MacroServer's id can optionally be passed.
+
+    :param macro_model:  Model of the Macro.
+    :type macro_model: karabo.common.project.macro.MacroModel
+    :param parent: Parent for the QMessageBox.
+    :type parent: QObject
+    :param serverId: serverId of a running Macro Server.
+    :type serverId: Str
+    """
     instance_id = macro_model.instance_id
     h = Hash("code", macro_model.code,
              "module", macro_model.simple_name,
              "uuid", macro_model.uuid)
 
-    macro_servers = get_macro_servers()
-    if not macro_servers:
-        messagebox.show_error("No Macro server found in system topology. "
-                              "Macro cannot be started.")
-        return
-
-    report = validate_macro(macro_model.code)
-    if report:
-        fails = create_list_string(report)
-        html = ("Please check the macro validation report and rename function "
-                f"names or remove forbidden imports:{fails}")
-        messagebox.show_error(html, title="The Macro cannot be started",
-                              parent=parent)
-        return
-    if macro_model.modified:
-        options = (QMessageBox.Yes | QMessageBox.No)
-        title = "Run Unsaved Macro?"
-        text = (
-            "The Macro is not saved in the Project. Do you really want to run "
-            "Macro?")
-        reply = QMessageBox.question(parent, title, text, options)
-        if reply == QMessageBox.No:
+    if serverId is None:
+        report = validate_macro(macro_model.code)
+        if report:
+            fails = create_list_string(report)
+            html = (f"Please check the macro validation report and rename "
+                    f"function names or remove forbidden imports:{fails}")
+            messagebox.show_error(html, title="The Macro cannot be started",
+                                  parent=parent)
             return
+        macro_servers = get_macro_servers()
+        if not macro_servers:
+            messagebox.show_error("No Macro server found in system topology. "
+                                  "Macro cannot be started.")
+            return
+        if macro_model.modified:
+            options = (QMessageBox.Yes | QMessageBox.No)
+            title = "Run Unsaved Macro?"
+            text = (
+                "The Macro is not saved in the Project. Do you really want to "
+                "run Macro?")
+            reply = QMessageBox.question(parent, title, text, options)
+            if reply == QMessageBox.No:
+                return
+        serverId = macro_servers[0]
     # Backward compatibility, only servers with `MetaMacro` class of 2.16.X
     # have the project property
-    serverId = macro_servers[0]
     attrs = get_topology().get_attributes(f"server.{serverId}")
+    if attrs is None:
+        messagebox.show_error(
+            f"No Macro server found with serverId '{serverId}' in system "
+            f"topology. Macro cannot be started.", parent=parent)
+        return
     version = attrs.get("karaboVersion", "0.0.0")
     if version_compatible(version, 2, 16):
         h["project"] = macro_model.project_name
