@@ -4,6 +4,7 @@
 from .arrays import (
     DIMENSIONS, get_array_data, get_dimensions_and_encoding, get_image_data)
 from .base import BaseBindingController
+from .baselabel import BaseFloatController, BaseLabelController
 from .baselineedit import BaseLineEditController
 from .registry import (
     get_class_const_trait, get_compatible_controllers, get_model_controller,

@@ -49,7 +49,8 @@ from .widgets.icon import (
 from .widgets.links import DeviceSceneLinkModel, SceneLinkModel, WebLinkModel
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
-    CheckBoxModel, ComboBoxModel, DaemonManagerModel, DirectoryModel,
+    BaseLabelModel, CheckBoxModel, ComboBoxModel, DaemonManagerModel,
+    DirectoryModel, DisplayAlarmFloatModel, DisplayFloatModel,
     DisplayLabelModel, DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
     EditableChoiceElementModel, EditableComboBoxModel,
     EditableListElementModel, EditableListModel, EditableRegexListModel,

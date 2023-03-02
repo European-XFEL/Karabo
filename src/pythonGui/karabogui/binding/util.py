@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs
+
 import numpy as np
 from numpy import log10
 from traits.api import Undefined
@@ -6,6 +8,7 @@ from karabo.common import const
 from karabo.common.api import (
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC)
+from karabo.common.scenemodel.const import DEFAULT_DECIMALS, DEFAULT_FORMAT
 from karabo.native import Hash, Timestamp, is_equal, simple_deepcopy
 
 from . import binding_types as types
@@ -272,6 +275,21 @@ def get_dtype_format(binding):
                 fmt = "{:.1f}"
 
     return fmt
+
+
+def get_binding_format(binding):
+    """Read the initial format information from a binding"""
+    display = binding.display_type.split("|")
+    if display[0] != "format" or len(display) != 2:
+        return DEFAULT_FORMAT, DEFAULT_DECIMALS
+
+    parsed = parse_qs(display[1], keep_blank_values=False)
+    attrs = {name: opt[0] for name, opt in parsed.items()}
+
+    fmt = attrs.get("fmt", DEFAULT_FORMAT)
+    frac = attrs.get("decimals", DEFAULT_DECIMALS)
+
+    return fmt, frac
 
 
 # Binding class utils
