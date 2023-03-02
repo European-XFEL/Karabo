@@ -1,5 +1,6 @@
 # flake8: noqa
 from .about import AboutDialog
+from .alarm_dialog import AlarmDialog
 from .client_topology import ClientTopologyDialog
 from .configuration import ConfigurationDialog
 from .configuration_comparison import ConfigComparisonDialog
@@ -11,6 +12,7 @@ from .data_view_dialog import DataViewDialog
 from .debug_run_dialog import DebugRunDialog
 from .device_capability import DeviceCapabilityDialog
 from .font_dialog import FontDialog
+from .format_fmt import FormatFmtDialog
 from .format_label import FormatLabelDialog
 from .listedit import ListEditDialog
 from .log_dialog import LogDialog
