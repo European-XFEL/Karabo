@@ -34,3 +34,19 @@ def test_confirmation_dialog(gui_app, mocker):
     assert arg1 == parent
     assert arg2 == title
     assert arg3 == text
+
+
+def test_run_macro(gui_app, mocker):
+    macro_model = MacroModel()
+    message_box = mocker.patch("karabogui.project.utils.messagebox")
+    run_macro(macro_model)
+    message = ("No Macro server found in system topology. Macro cannot be "
+               "started.")
+    assert message_box.show_error.call_count == 1
+    message_box.show_error.assert_called_with(message)
+
+    run_macro(macro_model, serverId="foo")
+    assert message_box.show_error.call_count == 2
+    message = ("No Macro server found with serverId 'foo' in system topology."
+               " Macro cannot be started.")
+    message_box.show_error.assert_called_with(message, parent=None)
