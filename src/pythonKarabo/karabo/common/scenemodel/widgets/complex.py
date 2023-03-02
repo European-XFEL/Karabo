@@ -125,6 +125,7 @@ class FilterTableElementModel(BaseDisplayEditableWidget):
     resizeToContents = Bool(False)
     sortingEnabled = Bool(False)
     filterKeyColumn = Int(0)
+    showFilterKeyColumn = Bool(False)
 
 
 @register_scene_reader("DisplayCommand", version=2)
@@ -356,6 +357,10 @@ def _filter_table_element_reader(element):
     traits["sortingEnabled"] = sortingEnabled
     filterKeyColumn = int(element.get(NS_KARABO + "filterKeyColumn", 0))
     traits["filterKeyColumn"] = filterKeyColumn
+    showFilterKeyColumn = element.get(NS_KARABO + "showFilterKeyColumn", "")
+    showFilterKeyColumn = showFilterKeyColumn.lower() == "true"
+    traits["showFilterKeyColumn"] = showFilterKeyColumn
+
     return FilterTableElementModel(**traits)
 
 
@@ -368,5 +373,7 @@ def _filter_table_element_writer(model, parent):
     element.set(NS_KARABO + "sortingEnabled",
                 str(model.sortingEnabled).lower())
     element.set(NS_KARABO + "filterKeyColumn", str(model.filterKeyColumn))
+    element.set(NS_KARABO + "showFilterKeyColumn",
+                str(model.showFilterKeyColumn))
 
     return element
