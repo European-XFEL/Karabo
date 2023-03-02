@@ -276,22 +276,23 @@ namespace karabo {
             }
 
            private:
-            State m_state;                                // current state
-            boost::shared_ptr<AmqpConnector> m_connector; // pointer to the parent
-            std::string m_exchange;                       // echange point
-            std::string m_queue;                          // queue name for incoming messages
-            std::string m_recvQueue;                      // queue name received from broker
-            std::string m_route;                          // routing (binding) key
-            std::string m_consumerTag;                    // subscriber tag on the AMQP broker
-            bool m_listener;                              // flag indicating that transceiver is a receiver
-            bool m_queueExist;                            // flag indicating that queue is known on the broker
-            AmqpCppMessageCallback m_onMessage;           // callback for incoming messages
-            AMQP::TcpConnection* m_connection;            // AMQP tcp connection raw pointer
-            std::shared_ptr<AMQP::TcpChannel> m_channel;  // channel associated with transceiver
-            std::string m_error;                          // last detailed error message
-            boost::system::error_code m_ec;               // error code
-            std::list<AsyncHandler> m_completeHandlers;   // Current list of complete handlers
-            std::mutex m_completeHandlersMutex;           // Protect the list
+            State m_state;                              // current state
+            boost::weak_ptr<AmqpConnector> m_connector; // pointer to the parent - weak_ptr to avoid cyclic reference
+                                                        // (if empty, parent is [being] destructed, so safe to bail out)
+            std::string m_exchange;                     // echange point
+            std::string m_queue;                        // queue name for incoming messages
+            std::string m_recvQueue;                    // queue name received from broker
+            std::string m_route;                        // routing (binding) key
+            std::string m_consumerTag;                  // subscriber tag on the AMQP broker
+            bool m_listener;                            // flag indicating that transceiver is a receiver
+            bool m_queueExist;                          // flag indicating that queue is known on the broker
+            AmqpCppMessageCallback m_onMessage;         // callback for incoming messages
+            AMQP::TcpConnection* m_connection;          // AMQP tcp connection raw pointer
+            std::shared_ptr<AMQP::TcpChannel> m_channel; // channel associated with transceiver
+            std::string m_error;                         // last detailed error message
+            boost::system::error_code m_ec;              // error code
+            std::list<AsyncHandler> m_completeHandlers;  // Current list of complete handlers
+            std::mutex m_completeHandlersMutex;          // Protect the list
         };
 
 
