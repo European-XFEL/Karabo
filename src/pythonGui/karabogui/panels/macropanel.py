@@ -5,17 +5,19 @@
 #############################################################################
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
-from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
+from qtpy.QtWidgets import QDialog, QMenu, QPlainTextEdit, QSplitter
 
 import karabogui.access as krb_access
+from karabo.common.api import ServerFlags
 from karabo.common.project.api import write_macro
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
+from karabogui.dialogs.api import DebugRunDialog
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.project.utils import run_macro
-from karabogui.singletons.api import get_topology
+from karabogui.singletons.api import get_config, get_topology
 from karabogui.util import getSaveFileName
 from karabogui.widgets.scintilla_editor import CodeBook
 from karabogui.widgets.toolbar import ToolBar
@@ -71,6 +73,7 @@ class MacroPanel(BasePanelWidget):
         """
         toolbar = ToolBar(parent=self)
         toolbar.addAction(icons.run, "Run", self.on_run)
+        toolbar.addAction(icons.logDebug, "Debug Run", self.on_debug_run)
         toolbar.addAction(icons.save, "Save", self.on_save)
         toolbar.addSeparator()
         toolbar.addAction(icons.zoomIn, "Increase font", self.increaseFont)
@@ -227,6 +230,30 @@ class MacroPanel(BasePanelWidget):
             return
 
         run_macro(self.model)
+
+    @Slot()
+    def on_debug_run(self):
+        """
+        Show a dialog with MacroServers with "Development" serverflag and
+        run the Macro on the selected macro server.
+        """
+        topology = get_topology()
+        servers = []
+
+        def visitor(node):
+            attributes = node.attributes
+            if attributes.get("lang") == "macro" and (
+                    attributes.get("serverFlags", 0)
+                    & ServerFlags.Development == ServerFlags.Development):
+                servers.append(node.path)
+
+        topology.visit_system_tree(visitor)
+
+        dialog = DebugRunDialog(serverIds=servers, parent=self)
+        if dialog.exec() == QDialog.Accepted:
+            server_id = dialog.comboBox.currentText()
+            run_macro(self.model, serverId=server_id)
+            get_config()['macro_development'] = server_id
 
     @Slot()
     def on_save(self):
