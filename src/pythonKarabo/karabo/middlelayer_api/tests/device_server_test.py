@@ -21,8 +21,8 @@ class FaultyDevice(Device):
         raise RuntimeError("Not allowed to start")
 
 
-@pytest.mark.asyncio
 @pytest.mark.timeout(90)
+@pytest.mark.asyncio
 async def test_device_server(event_loop: event_loop, subtests):
     async with AsyncDeviceContext():
         with subtests.test("Test that we can instantiate a server without "
