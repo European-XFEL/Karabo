@@ -101,7 +101,7 @@ namespace karabo {
         AmqpTransceiver::AmqpTransceiver(const std::string& exchange, const std::string& queue_,
                                          const std::string& route_in, bool listener)
             : m_state(eEnd),
-              m_connector(nullptr),
+              m_connector(),
               m_exchange(exchange),
               m_queue(queue_),
               m_route(route_in),
@@ -125,7 +125,8 @@ namespace karabo {
 
         void AmqpTransceiver::sendAsync(const std::shared_ptr<std::vector<char>>& payload, const std::string& route,
                                         const AsyncHandler& onComplete) {
-            m_connector->post(bind_weak(&AmqpTransceiver::_sendAsync, this, payload, route, onComplete));
+            AmqpConnector::Pointer ptr(m_connector.lock());
+            if (ptr) ptr->post(bind_weak(&AmqpTransceiver::_sendAsync, this, payload, route, onComplete));
         }
 
 
@@ -197,7 +198,8 @@ namespace karabo {
 
 
         void AmqpTransceiver::stopAsync(const AsyncHandler& onComplete) {
-            m_connector->post(bind_weak(&AmqpTransceiver::_stopAsync, this, onComplete));
+            AmqpConnector::Pointer ptr(m_connector.lock());
+            if (ptr) ptr->post(bind_weak(&AmqpTransceiver::_stopAsync, this, onComplete));
         }
 
 
@@ -385,8 +387,9 @@ namespace karabo {
                             moveStateMachine();
                         };
                         // Assign optional queue arguments to configure the queue if requested
+                        AmqpConnector::Pointer ptr(m_connector.lock());
                         AMQP::Table args;
-                        if (m_connector->applyQueueArgs()) AmqpTransceiver::setQueueArguments(args);
+                        if (ptr && ptr->applyQueueArgs()) AmqpTransceiver::setQueueArguments(args);
                         m_channel->declareQueue(m_queue, AMQP::autodelete, args)
                               .onSuccess(successCb)
                               .onError(failureCb);
@@ -454,15 +457,17 @@ namespace karabo {
                           .onError(failureCb);
                 } break;
 
-                case eReady:
+                case eReady: {
+                    AmqpConnector::Pointer connector(m_connector.lock());
+                    if (!connector) return; // parent (being) destructed
                     if (!m_listener) {
                         // Connection problem should be caught and handled by ConnectionHandler object
                         // so remove callback below
                         m_channel->onError(nullptr);
                         // Check and possibly assign shared publisher to use single channel
-                        auto publisher = m_connector->getPublisher();
+                        auto publisher = connector->getPublisher();
                         if (!publisher || !publisher->usable()) {
-                            m_connector->setPublisher(m_channel);
+                            connector->setPublisher(m_channel);
                         } else {
                             m_channel->close();
                             m_channel = publisher;
@@ -472,11 +477,11 @@ namespace karabo {
                         // Call completion handlers registered so far...
                         std::lock_guard<std::mutex> lock(m_completeHandlersMutex);
                         while (!m_completeHandlers.empty()) {
-                            m_connector->post(std::bind(m_completeHandlers.front(), KARABO_ERROR_CODE_SUCCESS));
+                            connector->post(std::bind(m_completeHandlers.front(), KARABO_ERROR_CODE_SUCCESS));
                             m_completeHandlers.pop_front();
                         }
                     }
-                    break;
+                } break;
 
                 case eShutdown:
                     if (m_listener) {
@@ -572,9 +577,11 @@ namespace karabo {
                     m_queueExist = false;
                     m_channel.reset();
                     {
+                        AmqpConnector::Pointer connector(m_connector.lock());
+                        if (!connector) return; // parent (being) destructed, bail out
                         std::lock_guard<std::mutex> lock(m_completeHandlersMutex);
                         while (!m_completeHandlers.empty()) {
-                            m_connector->post(std::bind(m_completeHandlers.front(), KARABO_ERROR_CODE_SUCCESS));
+                            connector->post(std::bind(m_completeHandlers.front(), KARABO_ERROR_CODE_SUCCESS));
                             m_completeHandlers.pop_front();
                         }
                     }
