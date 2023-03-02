@@ -1,7 +1,11 @@
 import re
 from collections.abc import Sequence
 
-from .const import NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_WEIGHT
+from traits.api import Undefined
+
+from .const import (
+    DEFAULT_DECIMALS, DEFAULT_FORMAT, NS_KARABO, SCENE_FONT_SIZE,
+    SCENE_FONT_WEIGHT)
 from .exceptions import SceneWriterException
 
 SVG_DEF_REGEX = re.compile(r"url\(\#(.*?)\)")
@@ -91,6 +95,38 @@ def write_font_format_data(model, element):
         element.set(NS_KARABO + "font_size", str(model.font_size))
     if model.font_weight != SCENE_FONT_WEIGHT:
         element.set(NS_KARABO + "font_weight", model.font_weight)
+
+
+def read_alarm_data(element):
+    """Read the alarm attributes"""
+    traits = {}
+    for key in ("warnLow", "warnHigh", "alarmLow", "alarmHigh"):
+        value = element.get(NS_KARABO + key, "")
+        traits[key] = float(value) if value else Undefined
+    return traits
+
+
+def write_alarm_data(model, element):
+    # Write only existing alarm information
+    for key in ("warnLow", "warnHigh", "alarmLow", "alarmHigh"):
+        value = getattr(model, key)
+        if value is Undefined:
+            continue
+        element.set(NS_KARABO + key, str(value))
+
+
+def read_value_format_data(element):
+    """Read the formatting data of the models"""
+    traits = {}
+    traits["fmt"] = element.get(NS_KARABO + "fmt", DEFAULT_FORMAT)
+    traits["decimals"] = element.get(NS_KARABO + "decimals", DEFAULT_DECIMALS)
+    return traits
+
+
+def write_value_format_data(model, element):
+    """Write the value formatting to the element"""
+    element.set(NS_KARABO + "fmt", model.fmt)
+    element.set(NS_KARABO + "decimals", model.decimals)
 
 
 def get_defs_id(value):

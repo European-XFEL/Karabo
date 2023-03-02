@@ -28,8 +28,8 @@ from .proxy import (
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .util import (
     REFERENCE_TYPENUM_TO_DTYPE, attr_fast_deepcopy, get_binding_array_value,
-    get_binding_value, get_dtype_format, get_editor_value, get_min_max,
-    get_min_max_size, get_native_min_max, has_min_max_attributes,
+    get_binding_format, get_binding_value, get_dtype_format, get_editor_value,
+    get_min_max, get_min_max_size, get_native_min_max, has_min_max_attributes,
     is_signed_vector_integer, is_unsigned_vector_integer, is_vector_floating,
     is_vector_integer, realign_hash)
 from .validate import (

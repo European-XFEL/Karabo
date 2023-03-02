@@ -39,21 +39,21 @@ class TestDisplayLabel(GuiTestCase):
         controller = DisplayLabel(proxy=self.string)
         controller.create(None)
         set_proxy_value(self.string, "string", "hello")
-        assert controller._internal_widget.text() == "hello"
+        assert controller.internal_widget.text() == "hello"
 
     def test_alarm_color(self):
         controller = DisplayLabel(proxy=self.alarms)
         controller.create(None)
         set_proxy_value(self.alarms, 'alarms', 0.75)
-        assert controller._internal_widget.text() == '0.75'
-        assert controller._bg_color == ALL_OK_COLOR
+        assert controller.internal_widget.text() == '0.75'
+        assert controller.bg_color == ALL_OK_COLOR
         set_proxy_value(self.alarms, 'alarms', 3.0)
-        assert controller._bg_color == PROPERTY_ALARM_COLOR
+        assert controller.bg_color == PROPERTY_ALARM_COLOR
         set_proxy_value(self.alarms, 'alarms', 1.5)
-        assert controller._bg_color == PROPERTY_WARN_COLOR
+        assert controller.bg_color == PROPERTY_WARN_COLOR
 
     def test_wrong_format(self):
         controller = DisplayLabel(proxy=self.faulty)
         controller.create(None)
         set_proxy_value(self.faulty, "faulty", 0.25)
-        assert controller._internal_widget.text() == "0.25"
+        assert controller.internal_widget.text() == "0.25"
