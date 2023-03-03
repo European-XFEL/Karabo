@@ -334,3 +334,27 @@ class TestSystemTopology(GuiTestCase):
             servers = get_macro_servers()
             assert len(servers) == 1
             assert servers[0] == "karabo/macroServer"
+
+            h = Hash()
+            h["server.karabo/macroServer1"] = None
+            h["server.karabo/macroServer1", ...] = {
+                "host": "BIG_IRON",
+                "deviceClasses": ["Macro", "MetaMacro"],
+                "lang": "macro",
+                "type": "server",
+                "serverId": "karabo/macroServer1",
+                "heartbeatInterval": 20,
+                "karaboVersion": "2.13.0",
+                "visibility": 4,
+                "log": "INFO",
+                "serverFlags": 1,
+                "visibilities": [4, 4],
+            }
+            changes = Hash("new", h, "update", Hash(), "gone", Hash())
+            topology.topology_update(changes)
+
+            servers = get_macro_servers(False)
+            assert len(servers) == 1
+            servers = get_macro_servers(True)
+            assert len(servers) == 2
+            assert servers[1] == "karabo/macroServer1"
