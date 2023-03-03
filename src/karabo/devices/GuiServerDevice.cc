@@ -778,7 +778,7 @@ namespace karabo {
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
                     } else if (type == "subscribeLogs") {
-                        onSubscribeLogs(channel, info); // just replying failure since after 2.16.X
+                        onSubscribeLogs(channel, info);
                     } else if (type == "setLogPriority") {
                         onSetLogPriority(channel, info);
                     } else {
@@ -1620,7 +1620,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onSubscribeLogs(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            Hash h("type", "subscribeLogsReply", "success", false, //
+            Hash h("type", "subscribeLogsReply", "success", true, // Put to false in 2.18.X
                    "reason", "Log subscription not supported anymore since 2.17.0");
             safeClientWrite(channel, h);
         }
