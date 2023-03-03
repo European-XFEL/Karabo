@@ -13,6 +13,7 @@ from karabo.middlelayer_api.device_client import (
     listConfigurationFromName, listDevicesWithConfiguration, printHistory,
     saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
+from karabo.middlelayer_api.eventloop import global_sync
 from karabo.middlelayer_api.ikarabo import connectDevice, getDevice
 from karabo.middlelayer_api.pipeline import PipelineContext, PipelineMetaData
 from karabo.middlelayer_api.synchronization import sleep
