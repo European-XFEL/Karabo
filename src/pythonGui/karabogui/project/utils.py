@@ -467,8 +467,8 @@ def run_macro(macro_model, parent=None, serverId=None):
             return
         macro_servers = get_macro_servers()
         if not macro_servers:
-            messagebox.show_error("No Macro server found in system topology. "
-                                  "Macro cannot be started.")
+            messagebox.show_error("No (stable) Macro server found in system "
+                                  "topology. Macro cannot be started.")
             return
         if macro_model.modified:
             options = (QMessageBox.Yes | QMessageBox.No)
