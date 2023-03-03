@@ -6,6 +6,7 @@
 from collections import Counter
 from copy import deepcopy
 
+from karabo.common.api import ServerFlags
 from karabo.native import Hash
 from karabogui.singletons.api import get_topology
 
@@ -27,16 +28,18 @@ def is_device_online(deviceId):
     return _is_online("device", deviceId)
 
 
-def get_macro_servers():
+def get_macro_servers(development=False):
     """ get an ordered list of macro servers
 
     Walk the system topology and return a list of
     macro servers ordered from least to most loaded
+
+    :param development: Denote if development macro servers should be included
+                        The default is `False`
     """
     topology = get_topology()
-    # macro_server is a Counter object that will contain
-    # one entry per macro server set to the number of macros
-    # in that macro server + 1
+    # macro_server is a Counter object that will contain one entry per macro
+    # server set to the number of macros in that macro server + 1
     macro_servers = Counter()
     # macro_servers_set contains all server of `macro` type.
     macro_servers_set = set()
@@ -44,18 +47,17 @@ def get_macro_servers():
     def visitor(node):
         nonlocal macro_servers
         attrs = node.attributes
-        if (attrs.get('type') == 'server'
-                and attrs.get('lang', '') == 'macro'):
-            macro_servers[attrs['serverId']] += 1
+        if attrs.get("type") == "server" and attrs.get("lang") == "macro":
+            # Exclude development servers
+            if (not development and attrs.get("serverFlags", 0)
+                    & ServerFlags.Development == ServerFlags.Development):
+                return
+            macro_servers[attrs["serverId"]] += 1
             macro_servers_set.add(node.node_id)
-        elif (attrs.get('type') == 'macro'
-              and attrs.get('serverId') is not None
-              and attrs.get('serverId') != '__none__'):
-            macro_servers[attrs['serverId']] += 1
 
     topology.visit_system_tree(visitor)
-    return [server
-            for server in sorted(macro_servers, key=macro_servers.get)
+
+    return [server for server in sorted(macro_servers, key=macro_servers.get)
             if server in macro_servers_set]
 
 
