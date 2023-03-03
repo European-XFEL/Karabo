@@ -18,6 +18,19 @@ from karabo.native import KaraboValue, unit_registry as unit
 
 # Number of threads that can be scheduled in the thread pool executor.
 _NUM_THREADS = 200
+_SYNC_LOOP = False
+
+
+def set_global_sync():
+    """Set the global sync loop singleton. This function is only called
+    from internal applications"""
+    global _SYNC_LOOP
+    _SYNC_LOOP = True
+
+
+def global_sync():
+    """Return an indicator if the main thread runs in sync"""
+    return _SYNC_LOOP
 
 
 def ensure_coroutine(coro):
