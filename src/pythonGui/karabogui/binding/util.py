@@ -152,7 +152,7 @@ REFERENCE_TYPENUM_TO_DTYPE = {
     16: 'int64',
     18: 'uint64',
     20: 'float32',
-    22: 'float64'
+    22: 'float64',
 }
 
 
@@ -183,7 +183,11 @@ def get_binding_array_value(binding, default=None):
     if pixels is None:
         return default, Timestamp()
 
-    arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
+    arr_type = REFERENCE_TYPENUM_TO_DTYPE.get(node.type.value)
+    if arr_type is None:
+        # Unknown or not supported data type
+        return default, Timestamp()
+
     value = np.frombuffer(pixels, dtype=arr_type)
     timestamp = node.data.timestamp
     # Note: Current traits always casts to 1dim
