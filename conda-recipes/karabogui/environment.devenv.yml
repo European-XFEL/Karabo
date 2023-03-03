@@ -10,8 +10,7 @@ channels:
 {{ conda_local_channel }}
 
 dependencies:
-  - python=3.8.13=h6244533_0 # [win]
-  - python=3.8.* # [not win]
+  - python=3.8.*
   # for tests and building
   - flake8=3.8.4
   - isort=5.8.0
