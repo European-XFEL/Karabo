@@ -40,8 +40,8 @@ def test_run_macro(gui_app, mocker):
     macro_model = MacroModel()
     message_box = mocker.patch("karabogui.project.utils.messagebox")
     run_macro(macro_model)
-    message = ("No Macro server found in system topology. Macro cannot be "
-               "started.")
+    message = ("No (stable) Macro server found in system topology. Macro"
+               " cannot be started.")
     assert message_box.show_error.call_count == 1
     message_box.show_error.assert_called_with(message)
 
