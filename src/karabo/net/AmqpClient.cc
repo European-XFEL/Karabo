@@ -923,7 +923,7 @@ namespace karabo {
                                                             const std::string& bindingKey, bool listener) {
             std::lock_guard<std::mutex> lock(m_transceiversMutex);
             if (m_transceivers.empty()) m_amqp->registerConnector(shared_from_this());
-            std::string key = transceiverKey(exchange, bindingKey, listener);
+            const std::string key = transceiverKey(exchange, bindingKey, listener);
             auto it = m_transceivers.find(key);
             if (it != m_transceivers.end()) {
                 auto t = it->second;
@@ -1065,6 +1065,29 @@ namespace karabo {
                 paths.pop();
             }
             open(t, bind_weak(&AmqpConnector::_onOpen, this, _1, paths, onComplete));
+        }
+
+
+        void AmqpConnector::removeSubscription(const std::string& exchange, const std::string& routingKey,
+                                               const AsyncHandler& onComplete) {
+            const std::string key = transceiverKey(exchange, routingKey, true);
+            std::lock_guard<std::mutex> lock(m_transceiversMutex);
+            auto it = m_transceivers.find(key);
+            if (it != m_transceivers.end()) {
+                auto& t = it->second;
+                auto weakSelf(weak_from_this());
+                t->stopAsync([this, weakSelf, onComplete, key](const boost::system::error_code ec) {
+                    auto self = weakSelf.lock();
+                    if (self) {
+                        std::lock_guard<std::mutex> lock(m_transceiversMutex);
+                        m_transceivers.erase(key);
+                    }
+                    onComplete(ec);
+                });
+            } else {
+                // no subscription found, so report sucess that now unsubscribed (logic like elsewhere in Amqp classes)
+                post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+            }
         }
 
 
