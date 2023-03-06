@@ -8,7 +8,8 @@ from tempfile import mkstemp
 from pycodestyle import Checker, StyleGuide
 from pyflakes.api import check
 from qtpy.Qsci import QsciAPIs, QsciScintilla
-from qtpy.QtCore import QRegularExpression, Qt, Signal, Slot
+from qtpy.QtCore import (
+    Property as pyqtProperty, QRegularExpression, Qt, Signal, Slot)
 from qtpy.QtGui import QColor, QKeySequence
 from qtpy.QtWidgets import QShortcut, QVBoxLayout, QWidget
 
@@ -365,6 +366,16 @@ class CodeEditor(QsciScintilla):
             line_start, col_start, line_end, col_end, STYLE_ISSUE_INDICATOR
         )
         self.has_annotation = False
+
+    @pyqtProperty(str)
+    def textForSquish(self):
+        """
+        This is only for the Squish test. Squish can't normally access a
+        method in a custom Qt Widget, unless it is a Slot or Property.
+        Wrapping this method with pyqtProperty so that Squish can read
+        access the editor text as a property.
+        """
+        return super().text()
 
 
 class FlakeReporter:
