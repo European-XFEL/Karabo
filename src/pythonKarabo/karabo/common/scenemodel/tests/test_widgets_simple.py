@@ -277,3 +277,20 @@ def test_display_float_alarm_models():
     assert read_model.warnLow is Undefined
     assert read_model.warnHigh is Undefined
     assert read_model.alarmHigh == 7.9
+
+    # And the integers ...
+
+    model = api.DisplayAlarmIntegerModel(alarmLow=1, warnHigh=6,
+                                         warnLow=5, alarmHigh=7)
+    read_model = single_model_round_trip(model)
+    assert read_model.alarmLow == 1
+    assert read_model.warnLow == 5
+    assert read_model.warnHigh == 6
+    assert read_model.alarmHigh == 7
+
+    model = api.DisplayAlarmIntegerModel(alarmLow=1, alarmHigh=8)
+    read_model = single_model_round_trip(model)
+    assert read_model.alarmLow == 1
+    assert read_model.warnLow is Undefined
+    assert read_model.warnHigh is Undefined
+    assert read_model.alarmHigh == 8
