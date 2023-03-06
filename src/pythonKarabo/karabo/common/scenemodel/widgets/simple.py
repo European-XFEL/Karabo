@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, Float, Int, String, Undefined
+from traits.api import Bool, CInt, Enum, Float, Int, String, Undefined
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
@@ -90,6 +90,14 @@ class DisplayAlarmFloatModel(DisplayFloatModel):
     alarmLow = Float(Undefined)
     warnHigh = Float(Undefined)
     warnLow = Float(Undefined)
+
+
+class DisplayAlarmIntegerModel(BaseLabelModel):
+    """A model for the Display Alarm Float Model"""
+    alarmHigh = CInt(Undefined)
+    alarmLow = CInt(Undefined)
+    warnHigh = CInt(Undefined)
+    warnLow = CInt(Undefined)
 
 
 class DisplayTextLogModel(BaseWidgetObjectData):
@@ -351,6 +359,25 @@ def _display_alarm_float_writer(model, parent):
     write_base_widget_data(model, element, "DisplayAlarmFloat")
     write_font_format_data(model, element)
     write_value_format_data(model, element)
+    write_alarm_data(model, element)
+
+    return element
+
+
+@register_scene_reader("DisplayAlarmInteger")
+def _display_alarm_integer_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
+    traits.update(read_alarm_data(element))
+
+    return DisplayAlarmIntegerModel(**traits)
+
+
+@register_scene_writer(DisplayAlarmIntegerModel)
+def _display_alarm_integer_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, "DisplayAlarmInteger")
+    write_font_format_data(model, element)
     write_alarm_data(model, element)
 
     return element
