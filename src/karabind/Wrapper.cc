@@ -13,6 +13,7 @@
 #include <boost/filesystem.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/complex.h>
 #include "PyTypes.hh"
 
 using namespace std;
@@ -85,6 +86,10 @@ namespace karabind {
                     return py::cast(boost::any_cast<std::vector<float>>(operand));
                 } else if (operand.type() == typeid(std::vector<double>)) {
                     return py::cast(boost::any_cast<std::vector<double>>(operand));
+                } else if (operand.type() == typeid(std::vector<std::complex<float>>)) {
+                    return py::cast(boost::any_cast<std::vector<std::complex<float>>>(operand));
+                } else if (operand.type() == typeid(std::vector<std::complex<double>>)) {
+                    return py::cast(boost::any_cast<std::vector<std::complex<double>>>(operand));
                 } else if (operand.type() == typeid(std::vector<std::string>)) {
                     return py::cast(boost::any_cast<std::vector<std::string>>(operand));
                 } else if (operand.type() == typeid(std::vector<karabo::util::CppNone>)) {
@@ -274,6 +279,10 @@ namespace karabind {
                 if (py::isinstance<py::float_>(list0)) {
                     any = o.cast<std::vector<double>>();
                     return karabo::util::Types::VECTOR_DOUBLE;
+                }
+                if (PyComplex_Check(list0.ptr())) {
+                    any = o.cast<std::vector<std::complex<double>>>();
+                    return karabo::util::Types::VECTOR_COMPLEX_DOUBLE;
                 }
                 if (py::isinstance<py::str>(list0)) {
                     any = o.cast<std::vector<std::string>>();
