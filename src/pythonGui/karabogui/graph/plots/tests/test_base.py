@@ -2,7 +2,6 @@ import os
 from unittest.mock import patch
 
 import numpy as np
-from qtpy.QtCore import QPointF
 
 from karabogui.graph.common.api import CrosshairROI, ROITool, safe_log10
 from karabogui.testing import GuiTestCase
@@ -315,7 +314,6 @@ class TestPlotViewRestore(_BasePlotTest):
         x, y = crosshair.coords
         self.assertEqual(x, 15)
         self.assertEqual(y, 15)
-        assert crosshair.center == QPointF(15.000000, 15.000000)
 
         # Check if tool button is checked
         self.assertTrue(toolbar.buttons[ROITool(roi_tool).name].isChecked())

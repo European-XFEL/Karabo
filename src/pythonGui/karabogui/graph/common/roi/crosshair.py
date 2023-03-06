@@ -16,9 +16,12 @@ class CrosshairROI(KaraboROI):
         """Reimplementation of pyqtgraph CrosshairROI to support transforms
         and add a few fixes/performance improvements:
 
+        - Correct position according to snap rules
+          (+ scale/2, where scale = 1)
         - Force redraw the crosshair shape with sigRegionChanged"""
 
-        super().__init__(pos, size, name, scaleSnap, translateSnap, pen=pen)
+        super().__init__(pos + 0.5, size, name, scaleSnap, translateSnap,
+                         pen=pen)
         self._shape = None
         self._path = None
         self.sigRegionChanged.connect(self.redraw)
@@ -44,7 +47,7 @@ class CrosshairROI(KaraboROI):
 
     @property
     def coords(self):
-        return tuple(self._absolute_position)
+        return tuple(self._absolute_position - (self._scaling / 2))
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -106,6 +109,10 @@ class CrosshairROI(KaraboROI):
     def getSnapPosition(self, pos, snap=None):
         """Patching to support snapping based on scaling"""
         scaled_pos = np.floor(np.array(pos) / self._scaling) * self._scaling
+
+        # This time, we want half-integer values (middle of the pixel).
+        scaled_pos += self._scaling / 2
+
         return Point(*scaled_pos)
 
     # ---------------------------------------------------------------------
