@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/complex.h>
 #include <pybind11/stl_bind.h>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Hash.hh>
@@ -48,6 +49,16 @@ namespace karabind {
                     return py::cast(self.getValueAs<float>());
                 case Types::DOUBLE:
                     return py::cast(self.getValueAs<double>());
+                case Types::COMPLEX_FLOAT:
+                {
+                    auto val = self.getValueAs<std::complex<float>>();
+                    return py::cast(val);
+                }
+                case Types::COMPLEX_DOUBLE:
+                {
+                    auto val = self.getValueAs<std::complex<double>>();
+                    return py::cast(val);
+                }
                 case Types::STRING:
                     return py::cast(self.getValueAs<std::string>());
                 case Types::VECTOR_BOOL:
@@ -70,6 +81,20 @@ namespace karabind {
                     return py::cast(self.getValueAs<long long, std::vector>());
                 case Types::VECTOR_UINT64:
                     return py::cast(self.getValueAs<unsigned long long, std::vector>());
+                case Types::VECTOR_FLOAT:
+                    return py::cast(self.getValueAs<float, std::vector>());
+                case Types::VECTOR_DOUBLE:
+                    return py::cast(self.getValueAs<double, std::vector>());
+                case Types::VECTOR_COMPLEX_FLOAT:
+                {
+                    auto val = self.getValueAs<std::complex<float>, std::vector>();
+                    return py::cast(val);
+                }
+                case Types::VECTOR_COMPLEX_DOUBLE:
+                {
+                    auto val = self.getValueAs<std::complex<double>, std::vector>();
+                    return py::cast(val);
+                }
                 default:
                     break;
             }
