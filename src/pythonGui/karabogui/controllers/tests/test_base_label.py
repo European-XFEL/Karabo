@@ -6,7 +6,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)
 from karabogui.testing import set_proxy_value
 
-from ..baselabel import BaseFloatController, BaseLabelController
+from ..baselabel import BaseLabelController, FormatMixin
 
 
 class Object(Configurable):
@@ -46,7 +46,11 @@ def test_base_label_controller(gui_app, mocker):
     assert model.font_size == 9
 
 
-def test_base_float_controller(gui_app, mocker):
+class BaseFloatController(FormatMixin, BaseLabelController):
+    """A class to test the base format mixin"""
+
+
+def test_format_mixin(gui_app, mocker):
     schema = Object.getClassSchema()
     binding = build_binding(schema)
     device = DeviceClassProxy(binding=binding, server_id="Fake",
