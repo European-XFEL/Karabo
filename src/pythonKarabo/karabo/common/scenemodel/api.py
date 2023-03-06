@@ -50,15 +50,15 @@ from .widgets.links import DeviceSceneLinkModel, SceneLinkModel, WebLinkModel
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
     BaseLabelModel, CheckBoxModel, ComboBoxModel, DaemonManagerModel,
-    DirectoryModel, DisplayAlarmFloatModel, DisplayFloatModel,
-    DisplayLabelModel, DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
-    EditableChoiceElementModel, EditableComboBoxModel,
-    EditableListElementModel, EditableListModel, EditableRegexListModel,
-    EditableRegexModel, EditableSpinBoxModel, FileInModel, FileOutModel,
-    GlobalAlarmModel, HexadecimalModel, HistoricTextModel, InstanceStatusModel,
-    IntLineEditModel, LabelModel, LampModel, LineEditModel,
-    RunConfiguratorModel, SliderModel, StickerModel, TickSliderModel,
-    WidgetNodeModel)
+    DirectoryModel, DisplayAlarmFloatModel, DisplayAlarmIntegerModel,
+    DisplayFloatModel, DisplayLabelModel, DisplayListModel,
+    DisplayTextLogModel, DisplayTimeModel, EditableChoiceElementModel,
+    EditableComboBoxModel, EditableListElementModel, EditableListModel,
+    EditableRegexListModel, EditableRegexModel, EditableSpinBoxModel,
+    FileInModel, FileOutModel, GlobalAlarmModel, HexadecimalModel,
+    HistoricTextModel, InstanceStatusModel, IntLineEditModel, LabelModel,
+    LampModel, LineEditModel, RunConfiguratorModel, SliderModel, StickerModel,
+    TickSliderModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, convert_from_svg_image, convert_to_svg_image)
