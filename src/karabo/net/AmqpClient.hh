@@ -1089,11 +1089,7 @@ namespace karabo {
             }
 
             void removeSubscription(const std::string& exchange, const std::string& routingKey,
-                                    const AsyncHandler& onComplete) {
-                std::string queue = this->getRecvQueueName();
-                auto t = transceiver(exchange, m_instanceId, routingKey, true);
-                t->stopAsync(onComplete);
-            }
+                                    const AsyncHandler& onComplete);
 
             /**
              * @brief activate asynchronously all transceivers: bringing them to 'ready' state.
