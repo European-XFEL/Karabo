@@ -58,6 +58,11 @@ class TestSystemTopology(GuiTestCase):
             assert more_foo_klass.status == ProxyStatus.REQUESTED
             assert network.onGetClassSchema.call_count == 1
 
+            # Make sure we can request when server leaves topology
+            assert "FooClass" in topology._requested_classes["swerver"]
+            topology.instance_gone(Hash("server", Hash("swerver", "")))
+            assert "swerver" not in topology._requested_classes
+
     def test_get_device_simple(self):
         network = Mock()
         topology = SystemTopology()
