@@ -81,7 +81,6 @@ class RedisBroker(Broker):
         for i, a in enumerate(args):
             body['a{}'.format(i + 1)] = a
         header['signalInstanceId'] = self.deviceId
-        header['__format'] = 'Bin'
         header['producerTimestamp'] = self.timestamp
         self.incrementOrderNumbers(topic, header)
         m = b''.join([encodeBinary(header), encodeBinary(body)])
@@ -111,7 +110,6 @@ class RedisBroker(Broker):
         header["signalInstanceId"] = self.deviceId  # redundant and unused
         header["slotInstanceIds"] = "__none__"      # unused
         header["slotFunctions"] = "__none__"        # unused
-        header["__format"] = "Bin"
         body = Hash()
         body["a1"] = self.deviceId
         body["a2"] = interval
