@@ -128,8 +128,6 @@ class AmqpBroker(Broker):
         for i, a in enumerate(arguments):
             body[f"a{i + 1}"] = a
         header["signalInstanceId"] = self.deviceId
-        header["__format"] = "Bin"
-        header["producerTimestamp"] = self.timestamp
         return b"".join([encodeBinary(header), encodeBinary(body)])
 
     @ensure_running
@@ -145,7 +143,6 @@ class AmqpBroker(Broker):
     async def heartbeat(self, interval):
         header = Hash("signalFunction", "signalHeartbeat")
         header["signalInstanceId"] = self.deviceId
-        header["__format"] = "Bin"
         body = Hash()
         body["a1"] = self.deviceId
         body["a2"] = interval
