@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from traits.api import (
-    Bool, Dict, HasStrictTraits, Instance, Property, Set, on_trait_change)
+    Bool, Dict, HasStrictTraits, Instance, Property, on_trait_change)
 
 from karabo.native import Hash
 from karabogui.binding.api import (
@@ -40,8 +40,8 @@ class SystemTopology(HasStrictTraits):
     # Mapping of server_id-> {class_id: Schema}
     _class_schemas = Dict
 
-    # Tracking of requested Class Schemas for (server id, class id)
-    _requested_class_schemas = Set
+    # Tracking of requested Class Schemas for {server id: set()} -> class id
+    _requested_classes = Dict
 
     # Mapping of device_id -> DeviceProxy
     _device_proxies = Dict
@@ -69,7 +69,7 @@ class SystemTopology(HasStrictTraits):
         self._class_proxies.clear()
         self._class_schemas.clear()
         self._device_proxies.clear()
-        self._requested_class_schemas = set()
+        self._requested_classes.clear()
 
     def clear_project_devices(self):
         """Called by project model on closing project"""
@@ -100,9 +100,10 @@ class SystemTopology(HasStrictTraits):
             if attrs and class_id in attrs.get('deviceClasses', ()):
                 # NOTE: The server is online and has the device class we want
                 # but we only request if it was not previously requested!
-                request = key not in self._requested_class_schemas
+                request = class_id not in self._requested_classes.setdefault(
+                    server_id, set())
                 if request:
-                    self._requested_class_schemas.add(key)
+                    self._requested_classes[server_id].add(class_id)
                     proxy.refresh_schema()
                 else:
                     proxy.status = ProxyStatus.REQUESTED
@@ -203,17 +204,17 @@ class SystemTopology(HasStrictTraits):
         proxy = mapping.get(device_id)
         if proxy is not None and not len(proxy.binding.value) > 0:
             schema = self.get_schema(server_id, class_id)
-            if schema is None:
-                # We only request if it was not previously requested!
-                if proxy.status not in NO_CLASS_STATUSES:
-                    request = key not in self._requested_class_schemas
-                    if request:
-                        self._requested_class_schemas.add(key)
-                        proxy.refresh_schema()
-                    else:
-                        proxy.status = ProxyStatus.REQUESTED
-            else:
+            if schema is not None:
                 build_binding(schema, existing=proxy.binding)
+            elif proxy.status not in NO_CLASS_STATUSES:
+                # We only request if it was not previously requested!
+                request = class_id not in self._requested_classes.setdefault(
+                    server_id, set())
+                if request:
+                    self._requested_classes[server_id].add(class_id)
+                    proxy.refresh_schema()
+                else:
+                    proxy.status = ProxyStatus.REQUESTED
 
     def remove_project_device_proxy(self, device_id, server_id, class_id):
         """Remove the project device proxy for a given instance.
@@ -286,8 +287,7 @@ class SystemTopology(HasStrictTraits):
             # We used to print 'Unrequested schema for classId {} arrived'.
             return
 
-        if key in self._requested_class_schemas:
-            self._requested_class_schemas.remove(key)
+        self._requested_classes.setdefault(server_id, set()).discard(class_id)
 
         proxies = []
         if key not in self._class_proxies.keys():
@@ -461,6 +461,8 @@ class SystemTopology(HasStrictTraits):
                     proxy.binding.value.clear_namespace()
 
             self._class_schemas.setdefault(instance_id, {}).clear()
+            # And erase all potential requested class schemas
+            self._requested_classes.pop(instance_id, None)
             # Update status of all offline project device proxies
             self._project_device_proxies_server_update(instance_id)
 
