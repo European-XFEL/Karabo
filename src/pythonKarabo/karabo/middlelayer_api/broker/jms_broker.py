@@ -43,7 +43,6 @@ class JmsBroker(Broker):
         m = openmq.BytesMessage()
         m.data = encodeBinary(hash)
         p['signalInstanceId'] = self.deviceId
-        p['__format'] = 'Bin'
         m.properties = p
         self.producer.send(m, 1, _MSG_PRIORITY_HIGH, _MSG_TIME_TO_LIVE)
 
@@ -57,7 +56,6 @@ class JmsBroker(Broker):
         p = openmq.Properties()
         p["signalFunction"] = "signalHeartbeat"
         p["signalInstanceId"] = self.deviceId
-        p["__format"] = "Bin"
         m.properties = p
         self.hbproducer.send(m, 1, _MSG_PRIORITY_LOW, _MSG_TIME_TO_LIVE)
 
