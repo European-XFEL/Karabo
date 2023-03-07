@@ -10,6 +10,7 @@ from functools import partial
 from itertools import count
 
 import aiormq
+import numpy
 
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
@@ -64,8 +65,6 @@ class AmqpBroker(Broker):
         self.consumer_tag = None  # tag returned by consume method
         self.heartbeat_queue = None
         self.heartbeat_consumer_tag = None
-        # Connection birth time representing device ID incarnation.
-        self.timestamp = time.time() * 1000000 // 1000  # float
         self.exit_event = asyncio.Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
@@ -127,6 +126,8 @@ class AmqpBroker(Broker):
         body = Hash()
         for i, a in enumerate(arguments):
             body[f"a{i + 1}"] = a
+        # Add timestamp (epoch in ms) when message is sent
+        header["MQTimestamp"] = numpy.int64(time.time() * 1000)
         header["signalInstanceId"] = self.deviceId
         return b"".join([encodeBinary(header), encodeBinary(body)])
 
