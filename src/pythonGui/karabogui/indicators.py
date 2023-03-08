@@ -74,8 +74,7 @@ STATE_COLORS = {
 
 
 def get_instance_info_icon(status):
-    """Return an instance info icon which reflects the given `DeviceStatus`
-    """
+    """Return an instance info icon which reflects the given `DeviceStatus`"""
     if not isinstance(status, InstanceStatus):
         status = InstanceStatus(status)
 
