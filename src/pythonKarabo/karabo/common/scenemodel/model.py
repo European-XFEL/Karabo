@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Constant, Dict, Float, Instance, Int, List, String
+from traits.api import CInt, Constant, Dict, Instance, Int, List, String
 
 from karabo.common.api import BaseSavableModel, walk_traits_object
 # avoid karabo.common.project.api due to circular imports...
@@ -25,9 +25,9 @@ class SceneModel(BaseProjectObjectModel):
     # Extra attributes from the SVG file that we want to preserve.
     extra_attributes = Dict(transient=True)
     # The width of the scene in pixels
-    width = Float(SCENE_MIN_WIDTH)
+    width = CInt(SCENE_MIN_WIDTH)
     # The height of the scene in pixels
-    height = Float(SCENE_MIN_HEIGHT)
+    height = CInt(SCENE_MIN_HEIGHT)
     # All the objects in the scene
     children = List(Instance(BaseSceneObjectData))
 
