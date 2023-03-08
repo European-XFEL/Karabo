@@ -5,7 +5,7 @@
 
 from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QDialog, QHBoxLayout, QHeaderView,
+    QAbstractItemView, QAction, QComboBox, QDialog, QHBoxLayout, QHeaderView,
     QInputDialog, QLayout, QLineEdit, QMenu, QPushButton, QVBoxLayout, QWidget)
 from traits.api import Bool, Dict, Instance, Type, Undefined, WeakRef
 
@@ -16,6 +16,7 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, has_options, is_proxy_allowed)
 from karabogui.dialogs.api import TopologyDeviceDialog
+from karabogui.util import SignalBlocker
 
 from .delegates import (
     TableButtonDelegate, get_display_delegate, get_table_delegate)
@@ -466,6 +467,7 @@ class BaseTableController(BaseBindingController):
 
 class BaseFilterTableController(BaseTableController):
     searchLabel = Instance(QLineEdit)
+    columnCombo = Instance(QComboBox)
 
     def create_widget(self, parent):
         table_widget = super().create_widget(parent)
@@ -480,13 +482,18 @@ class BaseFilterTableController(BaseTableController):
         hor_layout.setContentsMargins(0, 0, 0, 0)
         hor_layout.setSizeConstraint(QLayout.SetNoConstraint)
 
+        self.columnCombo = QComboBox(widget)
+        self.columnCombo.setVisible(False)
+        self.columnCombo.setToolTip("Active search column")
+
         self.searchLabel = QLineEdit(widget)
         self.searchLabel.setToolTip(
-            f"Search column: {self.model.filterKeyColumn}")
+            f"Persisted search column: {self.model.filterKeyColumn}")
 
         clear_button = QPushButton("Clear Filter", parent=widget)
         clear_button.clicked.connect(self.searchLabel.clear)
 
+        hor_layout.addWidget(self.columnCombo)
         hor_layout.addWidget(self.searchLabel)
         hor_layout.addWidget(clear_button)
 
@@ -495,12 +502,13 @@ class BaseFilterTableController(BaseTableController):
         widget_layout.addWidget(table_widget)
         widget.setLayout(widget_layout)
 
-        ac_column_filter = QAction("Set Filter Column", table_widget)
+        ac_column_filter = QAction("Set Default Filter Column", table_widget)
         ac_column_filter.triggered.connect(self._change_filter_column)
         widget.addAction(ac_column_filter)
 
         # Widgets in extensions might not have this model setting
-        if "sortingEnabled" in self.model.copyable_trait_names():
+        traits_names = self.model.copyable_trait_names()
+        if "sortingEnabled" in traits_names:
             enabled = self.model.sortingEnabled
             if enabled:
                 table_widget.setSortingEnabled(True)
@@ -511,6 +519,15 @@ class BaseFilterTableController(BaseTableController):
             ac_sort.setChecked(enabled)
             ac_sort.triggered.connect(self._change_sorting_enabled)
             widget.addAction(ac_sort)
+
+        if "showFilterKeyColumn" in traits_names:
+            enabled = self.model.showFilterKeyColumn
+            self.columnCombo.setVisible(enabled)
+            ac_show = QAction("Show Filter Column Toggle", table_widget)
+            ac_show.setCheckable(True)
+            ac_show.setChecked(enabled)
+            ac_show.triggered.connect(self._change_show_combo)
+            widget.addAction(ac_show)
 
         return widget
 
@@ -524,8 +541,18 @@ class BaseFilterTableController(BaseTableController):
         filter_model.setFilterCaseSensitivity(False)
         filter_model.setFilterFixedString("")
         self.searchLabel.textChanged.connect(filter_model.setFilterFixedString)
+        self.columnCombo.currentIndexChanged.connect(
+            filter_model.setFilterKeyColumn)
 
         return filter_model
+
+    def binding_update(self, proxy):
+        super().binding_update(proxy)
+        columns = list(map(str, range(self.tableModel().columnCount())))
+        with SignalBlocker(self.columnCombo):
+            self.columnCombo.clear()
+            self.columnCombo.addItems(columns)
+            self.columnCombo.setCurrentIndex(self.model.filterKeyColumn)
 
     def _change_filter_column(self):
         max_col = len(self.getBindings())
@@ -537,7 +564,9 @@ class BaseFilterTableController(BaseTableController):
             self.model.filterKeyColumn = column
             filter_model = self.tableWidget().model()
             filter_model.setFilterKeyColumn(column)
-            self.searchLabel.setToolTip(f"Search column: {column}")
+            self.searchLabel.setToolTip(f"Persisted search column: {column}")
+            with SignalBlocker(self.columnCombo):
+                self.columnCombo.setCurrentIndex(column)
 
     def _change_sorting_enabled(self):
         enabled = not self.model.sortingEnabled
@@ -545,3 +574,8 @@ class BaseFilterTableController(BaseTableController):
         self.tableWidget().setSortingEnabled(enabled)
         if enabled:
             self.tableWidget().sortByColumn(0, Qt.AscendingOrder)
+
+    def _change_show_combo(self):
+        enabled = not self.model.showFilterKeyColumn
+        self.model.showFilterKeyColumn = enabled
+        self.columnCombo.setVisible(enabled)

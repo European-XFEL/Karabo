@@ -639,10 +639,11 @@ class TestFilterTableModelView(GuiTestCase):
 
     def test_table_actions(self):
         actions = self.controller.widget.actions()
-        self.assertEqual(len(actions), 3)
+        self.assertEqual(len(actions), 4)
         self.assertEqual(actions[0].text(), "Resize To Contents")
-        self.assertEqual(actions[1].text(), "Set Filter Column")
+        self.assertEqual(actions[1].text(), "Set Default Filter Column")
         self.assertEqual(actions[2].text(), "Sorting Enabled")
+        self.assertEqual(actions[3].text(), "Show Filter Column Toggle")
 
         self.assertEqual(self.model.filterKeyColumn, 0)
         path = "karabogui.controllers.table.controller.QInputDialog"
@@ -654,6 +655,10 @@ class TestFilterTableModelView(GuiTestCase):
         self.assertFalse(self.controller.model.sortingEnabled)
         actions[2].trigger()
         self.assertTrue(self.controller.model.sortingEnabled)
+
+        self.assertFalse(self.controller.model.showFilterKeyColumn)
+        actions[3].trigger()
+        self.assertTrue(self.controller.model.showFilterKeyColumn)
 
     def test_model_data(self):
         model = self.controller.tableWidget().model()
