@@ -1,6 +1,6 @@
 from random import randint
 
-from traits.api import Enum, Float, Instance, Int, List, Range, String
+from traits.api import CInt, Enum, Float, Instance, Int, List, Range, String
 
 from karabo.common.api import BaseSavableModel
 
@@ -22,13 +22,13 @@ class BaseLayoutModel(BaseSceneObjectData):
     """A common base class for all layouts"""
 
     # The X-coordinate of the layout
-    x = Float
+    x = CInt
     # The Y-coordinate of the layout
-    y = Float
+    y = CInt
     # The height of the layout
-    height = Float
+    height = CInt
     # The width of the layout
-    width = Float
+    width = CInt
     # The children of the layout
     children = List(Instance(BaseSceneObjectData))
 
@@ -68,13 +68,13 @@ class BaseWidgetObjectData(BaseSceneObjectData):
     # The possible component type for a parent of the controller
     parent_component = String
     # The X-coordinate of the controller
-    x = Float
+    x = CInt
     # The Y-coordinate of the controller
-    y = Float
+    y = CInt
     # The height of the controller
-    height = Float
+    height = CInt
     # The width of the controller
-    width = Float
+    width = CInt
 
     def _parent_component_default(self):
         """If this method is not overridden by a derived class, return the

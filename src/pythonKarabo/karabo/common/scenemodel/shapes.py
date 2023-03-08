@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Any, Dict, Float, Instance, List, Property, String
+from traits.api import Any, CInt, Dict, Float, Instance, List, Property, String
 
 from .bases import BaseSceneObjectData, BaseShapeObjectData, XMLElementModel
 from .const import ARROW_HEAD, NS_SVG
@@ -15,17 +15,17 @@ class LineModel(BaseShapeObjectData):
     """A line which can appear in a scene"""
 
     # The X-coordinate of the first point
-    x1 = Float
+    x1 = CInt
     # The Y-coordinate of the first point
-    y1 = Float
+    y1 = CInt
     # The X-coordinate of the second point
-    x2 = Float
+    x2 = CInt
     # The Y-coordinate of the second point
-    y2 = Float
+    y2 = CInt
 
     # Add x and y to follow the generic object interface
-    x = Property(Float)
-    y = Property(Float)
+    x = Property(CInt)
+    y = Property(CInt)
 
     def _get_x(self):
         return min([self.x1, self.x2])
@@ -89,13 +89,13 @@ class RectangleModel(BaseShapeObjectData):
     """A rectangle which can appear in a scene"""
 
     # The X-coordinate of the rect
-    x = Float
+    x = CInt
     # The Y-coordinate of the rect
-    y = Float
+    y = CInt
     # The height of the rect
-    height = Float
+    height = CInt
     # The width of the rect
-    width = Float
+    width = CInt
 
 
 class XMLDefsModel(XMLElementModel):
