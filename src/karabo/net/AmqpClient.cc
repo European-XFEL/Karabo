@@ -56,9 +56,6 @@ namespace { // anonymous namespace
             case AmqpCppErrc::eUnbindQueueError:
                 return "error unbinding queue";
 
-            case AmqpCppErrc::eCloseChannelError:
-                return "error closing channel";
-
             case AmqpCppErrc::eDrop:
                 return "channel dropped error";
 
