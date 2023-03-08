@@ -6,7 +6,6 @@ from qtpy.QtWidgets import QApplication
 from karabogui.singletons.api import get_mediator
 
 
-# Enum for karabo broadcast event senders
 class KaraboEvent(Enum):
     AccessLevelChanged = "Global Access Level changed"
     BigDataProcessing = "Big data delay"
