@@ -8,7 +8,7 @@ import sys
 import weakref
 from asyncio import (
     CancelledError, TimeoutError, ensure_future, gather, get_event_loop,
-    shield, wait_for)
+    wait_for)
 from collections import defaultdict
 
 from karabo.native import (
@@ -19,7 +19,7 @@ from .eventloop import ensure_coroutine
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
 from .synchronization import FutureDict, firstCompleted
-from .utils import countdown, get_karabo_version, get_property
+from .utils import get_karabo_version, get_property
 
 
 class Signal(object):
@@ -425,16 +425,9 @@ class SignalSlotable(Configurable):
             self.__removed = True
             self.device_server.removeChild(self.deviceId)
 
-        async with countdown(5, False):
-            # Stop all timers!
-            for timer in list(self._timers):
-                timer.destroy()
-
-            # Finish up all proxies cleanly!
-            proxies = [shield(proxy.delete_proxy())
-                       for proxy in self._proxies.values()]
-            if proxies:
-                await gather(*proxies, return_exceptions=True)
+        # Stop all timers!
+        for timer in list(self._timers):
+            timer.destroy()
 
         if self._ss is not None:
             # Returns success
