@@ -6,6 +6,7 @@ import time
 import weakref
 from asyncio import (
     CancelledError, Lock, TimeoutError, ensure_future, gather, sleep, wait_for)
+from contextlib import suppress
 from functools import partial
 from itertools import count
 
@@ -404,6 +405,8 @@ class AmqpBroker(Broker):
         if self.heartbeat_consumer_tag is not None:
             await self.channel.basic_cancel(self.heartbeat_consumer_tag)
             self.heartbeat_consumer_tag = None
+        with suppress(BaseException):
+            await self.exitStack.aclose()
         self.exit_event.set()
         await self._stop_heartbeat()
         await self.async_unsubscribe_all()
