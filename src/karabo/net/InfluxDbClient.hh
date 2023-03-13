@@ -243,8 +243,10 @@ namespace karabo {
              * @param requestId the unique identifier of the HTTP request whose
              *                  response could not be processed (needed to update
              *                  the internal bookeeping of the InfluxDb client).
+             *
+             * @param logEsError if true (default), log as info, else as error
              */
-            void handleHttpReadError(const std::string& errMsg, const std::string& requestId);
+            void handleHttpReadError(const std::string& errMsg, const std::string& requestId, bool logAsError = true);
 
            private:
             std::string m_url;

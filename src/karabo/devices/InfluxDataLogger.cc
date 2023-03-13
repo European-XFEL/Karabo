@@ -505,12 +505,6 @@ namespace karabo {
             // Before checking client status: enables buffering of property updates in handleChanged:
             m_currentSchema = schema;
 
-            if (!m_dbClientRead->isConnected()) {
-                m_dbClientRead->connectDbIfDisconnected();
-                KARABO_LOG_FRAMEWORK_WARN << "Skip schema updated: DB connection is requested...";
-                return;
-            }
-
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
                   karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
             m_archive.clear();
