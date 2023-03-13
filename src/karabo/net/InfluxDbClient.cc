@@ -375,6 +375,7 @@ namespace karabo {
 
             std::ostringstream oss;
             oss << "InfluxDbClient : connection to \"" << m_url << "\" established";
+
             KARABO_LOG_FRAMEWORK_INFO << oss.str();
 
             if (hook) hook(true); // true means connected successfuly.
@@ -391,9 +392,18 @@ namespace karabo {
             }
 
             if (ec) {
+                bool logAsError = true;
                 std::ostringstream oss;
-                oss << "Reading response from InfluxDB failed: code #" << ec.value() << " -- " << ec.message();
-                handleHttpReadError(oss.str(), flyingId);
+                if (ec.value() == 2) { // ec.message() == "End of file"
+                    // Influx cluster used for reading at EuXFEL disconnects after 2 s idle connection.
+                    // Since we reconnect, just log as INFO, not as ERROR.
+                    logAsError = false;
+                    oss << "InfluxDB " << m_url << " disconnected";
+                } else {
+                    oss << "Reading response from InfluxDB " << m_url << " failed: code #" << ec.value() << " -- "
+                        << ec.message();
+                }
+                handleHttpReadError(oss.str(), flyingId, logAsError);
                 return;
             }
 
@@ -527,8 +537,9 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::handleHttpReadError(const std::string& errMsg, const std::string& requestId) {
-            KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+        void InfluxDbClient::handleHttpReadError(const std::string& errMsg, const std::string& requestId,
+                                                 bool logAsError) {
+            (logAsError ? KARABO_LOG_FRAMEWORK_ERROR : KARABO_LOG_FRAMEWORK_INFO) << errMsg;
             {
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                 m_dbChannel.reset();
