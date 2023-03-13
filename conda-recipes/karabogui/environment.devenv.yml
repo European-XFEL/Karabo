@@ -22,7 +22,7 @@ dependencies:
   - setuptools
   - setuptools_scm
   # GUI
-  - qtpy=2.1.0
+  - qtpy=2.3.0
   - pyqtgraph=0.13.1
   - qt-main=5.15
   - pyqt=5.15.7
