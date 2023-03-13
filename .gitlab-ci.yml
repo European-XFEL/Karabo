@@ -158,6 +158,24 @@ stages:
   only:
     - schedules
 
+.manual_build_conda_dependency_update: &manual-build-conda-dependency-update
+  stage: build
+  script:
+    - conda config --add channels conda-forge
+    - >
+      python ci/miniconda pack karabogui
+      --ci --clean --upload-env
+      -E karaboEnvironments
+      --upload-to-mirror
+      -c $KARABO_CONDA_CHANNEL
+      -P $KARABO_CONDA_CHANNEL_PATH/nightly
+      -C $KARABO_CONDA_CHANNEL_PATH/mirror
+      --index-mirror
+  only:
+    variables:
+      - $REFRESH_MIRROR
+  when: manual
+
 .nightly_build: &nightly-build
   <<: *build
   only:
@@ -547,6 +565,24 @@ gui_unit tests miniconda-win64:
   tags:
     - Win10
   <<: *gui-unit-tests
+
+gui_dependency_updates build miniconda:
+  <<: *image_miniconda
+  <<: *manual-build-conda-dependency-update
+
+gui_dependency_updates build miniconda-osx64:
+  before_script:
+    - ci/miniconda/cleanup.sh
+  tags:
+    - macos
+  <<: *manual-build-conda-dependency-update
+
+gui_dependency_updates build miniconda-win64:
+  before_script:
+    - ci/miniconda/cleanup.cmd
+  tags:
+    - Win10
+  <<: *manual-build-conda-dependency-update
 
 # Post-merge integration test builds
 
