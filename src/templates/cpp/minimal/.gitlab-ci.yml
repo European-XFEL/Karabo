@@ -1,7 +1,8 @@
 .test_build_template: &test_build
   script:
-    - export REL_OS_NAME=$(lsb_release -is)
-    - export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    - source ./set_os_info.sh
+    - export REL_OS_NAME=$OS_DIST
+    - export REL_OS_VERS_LONG=$OS_MAJOR_VERSION
     - export BUILD_TYPE=Debug
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
     - curl http://exflserv05.desy.de/karabo/karaboFramework/tags/$KARABO_TAG/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
@@ -20,17 +21,15 @@
     expire_in: 1 week
 
 ##### Test build #####
-test:centos7:
-  image: europeanxfel/karabo-ci:centos-7gcc7
+test:almalinux9:
+  image: europeanxfel/karabo-ci:almalinux-9-002
   before_script:
-    - source /opt/rh/devtoolset-7/enable
     - export KARABO_TAG="latest_build"
   <<: *test_build
 
-test:centos7latest:
-  image: europeanxfel/karabo-ci:centos-7gcc7
+test:almalinux9latest:
+  image: europeanxfel/karabo-ci:almalinux-9-002
   before_script:
-    - source /opt/rh/devtoolset-7/enable
     - export KARABO_TAG="latest_prerelease_build"
   <<: *test_build
 
