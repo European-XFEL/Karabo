@@ -184,8 +184,8 @@ namespace karabo {
 
             STRING_ELEMENT(expected)
                   .key("logger.InfluxDataLogger.urlWrite")
-                  .displayedName("Logger influxdb URL")
-                  .description("URL should be given in form: tcp://host:port")
+                  .displayedName("Logger InfluxDB URL")
+                  .description("URL for writing")
                   .assignmentOptional()
                   .defaultValue("tcp://localhost:8086")
                   .init()
@@ -193,10 +193,21 @@ namespace karabo {
 
             STRING_ELEMENT(expected)
                   .key("logger.InfluxDataLogger.urlRead")
-                  .displayedName("Reader influxdb URL")
-                  .description("URL should be given in form: tcp://host:port")
+                  .displayedName("Reader InfluxDB URL")
+                  .description("URL for reading configurations and schema from past (typically longer retention time)")
                   .assignmentOptional()
                   .defaultValue("tcp://localhost:8086")
+                  .init()
+                  .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.urlReadPropHistory")
+                  .displayedName("Reader InfluxDB URL (Prop History)")
+                  .description(
+                        "URL for reading property history (typically shorter retention time)."
+                        "If empty (default), use value of 'Reader InfluxDB URL'.")
+                  .assignmentOptional()
+                  .defaultValue(std::string())
                   .init()
                   .commit();
 
@@ -1029,7 +1040,9 @@ namespace karabo {
                     } else if (m_logger == "InfluxDataLogger") {
                         hash.set("classId", "InfluxLogReader");
                         hash.set("deviceId", readerId);
-                        config.set("url", get<string>("logger.InfluxDataLogger.urlRead"));
+                        config.set("urlConfigSchema", get<string>("logger.InfluxDataLogger.urlRead"));
+                        // Schema description assumes that InfluxLogReader treats empty value of "urlReadPropHistory"
+                        config.set("urlPropHistory", get<string>("logger.InfluxDataLogger.urlReadPropHistory"));
                         config.set("dbname", get<string>("logger.InfluxDataLogger.dbname"));
                     }
                     hash.set("configuration", config);
@@ -1254,6 +1267,7 @@ namespace karabo {
             Hash config(get<Hash>("logger." + m_logger));
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
+            config.erase("urlReadPropHistory"); // logger needs read address only for schema
 
             const std::string loggerId(serverIdToLoggerId(serverId));
             const Hash hash("classId", m_logger, "deviceId", loggerId, "configuration", config);
