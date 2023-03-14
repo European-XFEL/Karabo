@@ -246,7 +246,8 @@ namespace karabo {
              */
             karabo::util::Epochstamp toEpoch(unsigned long long timeFromInflux) const;
 
-            karabo::net::InfluxDbClient::Pointer m_influxClient;
+            karabo::net::InfluxDbClient::Pointer m_influxClientPropHist;
+            karabo::net::InfluxDbClient::Pointer m_influxClientFromPast;
             std::string m_durationUnit;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_hashSerializer;
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
