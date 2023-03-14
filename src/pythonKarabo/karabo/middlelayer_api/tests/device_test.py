@@ -9,11 +9,13 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
     waitUntil, waitWhile)
-from karabo.middlelayer.testing import AsyncDeviceContext, event_loop, run_test
+from karabo.middlelayer.testing import (
+    AsyncDeviceContext, event_loop, run_test, sleepUntil)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, get_instance, getProperties, getSchema)
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
+from karabo.middlelayer_api.signalslot import coslot
 from karabo.middlelayer_api.utils import AsyncTimer, get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
@@ -591,6 +593,7 @@ async def test_atimer_destruct(deviceTest):
 
     class TimerDevice(Device):
         __version__ = "1.2.3"
+        killed = False
 
         async def onInitialization(self):
             self.timer = AsyncTimer(self.timer_callback, 0.1)
@@ -600,6 +603,13 @@ async def test_atimer_destruct(deviceTest):
         async def timer_callback(self):
             global counter
             counter += 1
+
+        async def slotKillDevice(self, message=None):
+            ret = await super().slotKillDevice(message)
+            self.killed = True
+            return ret
+
+        slotKillDevice = coslot(slotKillDevice, passMessage=True)
 
     device = TimerDevice({"_deviceId_": "timerDeviceTest"})
     await device.startInstance()
@@ -619,7 +629,7 @@ async def test_atimer_destruct(deviceTest):
     await sleep(0.2)
     assert counter > 0
     device.__del__()
-    await sleep(0.2)
+    await sleepUntil(lambda: device.killed, 5)
     old_counter = counter
     await sleep(0.2)
     assert counter == old_counter
