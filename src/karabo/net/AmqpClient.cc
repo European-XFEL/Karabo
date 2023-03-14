@@ -946,9 +946,6 @@ namespace karabo {
             if (!this->ready()) {
                 // Connection is broken ...
                 post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
-            } else if (t->ready()) {
-                // transceiver is in eReady state  ... done
-                post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
             } else {
                 std::string recvQueue;
                 if (t->isListener()) recvQueue = getRecvQueueName(); // existing queue name
@@ -1044,7 +1041,12 @@ namespace karabo {
                     sendAsyncDelayed(exchange, routingKey, data, onComplete);
                 }
             };
-            open(t, cb);
+            if (t->ready()) {
+                // Directly call the "callback" - not the most elegant way, but little overhead
+                cb(KARABO_ERROR_CODE_SUCCESS);
+            } else {
+                open(t, cb);
+            }
         }
 
 
@@ -1058,7 +1060,8 @@ namespace karabo {
                 }
                 const std::string& key = paths.front();
                 std::lock_guard<std::mutex> lock(m_transceiversMutex);
-                if (m_transceivers.find(key) != m_transceivers.end()) t = m_transceivers.at(key);
+                auto it = m_transceivers.find(key);
+                if (it != m_transceivers.end()) t = it->second;
                 paths.pop();
             }
             open(t, bind_weak(&AmqpConnector::_onOpen, this, _1, paths, onComplete));
