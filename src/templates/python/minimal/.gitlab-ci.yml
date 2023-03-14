@@ -1,7 +1,8 @@
 .test_build_template: &test_build
   script:
-    - export REL_OS_NAME=$(lsb_release -is)
-    - export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    - source ./set_os_info.sh
+    - export REL_OS_NAME=$OS_DIST
+    - export REL_OS_VERS_LONG=$OS_MAJOR_VERSION
     - export REL_PROJECT_NAME=$CI_PROJECT_NAME
     - export REL_TAG=$CI_BUILD_REF_NAME
     - export BUILD_TYPE=Debug
@@ -16,17 +17,15 @@
     - python -m isort --check .
     - pytest .
 
-test:centos7:release:
-  image: europeanxfel/karabo-ci:centos-7gcc7
+test:almalinux9:release:
+  image: europeanxfel/karabo-ci:almalinux-9-002
   before_script:
-    - source /opt/rh/devtoolset-7/enable
     - export KARABO_TAG="latest_build"
   <<: *test_build
 
-test:centos7:prerelease:
-  image: europeanxfel/karabo-ci:centos-7gcc7
+test:almalinux9:prerelease:
+  image: europeanxfel/karabo-ci:almalinux-9-002
   before_script:
-    - source /opt/rh/devtoolset-7/enable
     - export KARABO_TAG="latest_prerelease_build"
   <<: *test_build
 
