@@ -94,9 +94,20 @@ namespace karabo {
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
             STRING_ELEMENT(expected)
-                  .key("url")
-                  .displayedName("Influxdb URL")
-                  .description("URL should be given in form: tcp://host:port")
+                  .key("urlPropHistory")
+                  .displayedName("URL for Property History")
+                  .description(
+                        "URL of InfluxDB used for slotGetPropertyHistory (typically shorter retention time).\n"
+                        "If empty (default), use value of 'URL for Config. and Schema'")
+                  .assignmentOptional()
+                  .defaultValue(std::string())
+                  .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("urlConfigSchema")
+                  .displayedName("URL for Config. and Schema")
+                  .description(
+                        "URL of InfluxDB used for slotGetConfigurationFromPast (typically longer retention time).\n")
                   .assignmentOptional()
                   .defaultValue("tcp://localhost:8086")
                   .commit();
@@ -154,17 +165,19 @@ namespace karabo {
             } else {
                 dbPassword = "admpwd";
             }
-
             const std::string dbName(cfg.get<std::string>("dbname"));
-            const std::string url(cfg.get<std::string>("url"));
+            const std::string urlConfigPast(cfg.get<std::string>("urlConfigSchema"));
+            std::string urlPropHistory(cfg.get<std::string>("urlPropHistory"));
+            if (urlPropHistory.empty()) {
+                urlPropHistory = urlConfigPast;
+            }
 
-            Hash dbClientCfg;
-            dbClientCfg.set<std::string>("dbname", dbName);
-            dbClientCfg.set<std::string>("url", url);
-            dbClientCfg.set<std::string>("durationUnit", "u");
-            dbClientCfg.set<std::string>("dbUser", dbUser);
-            dbClientCfg.set<std::string>("dbPassword", dbPassword);
-            m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
+            Hash dbClientCfg("dbname", dbName, "durationUnit", "u", "dbUser", dbUser, "dbPassword", dbPassword);
+            dbClientCfg.set("url", urlPropHistory);
+            m_influxClientPropHist = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
+            dbClientCfg.set("url", std::move(urlConfigPast));
+            m_influxClientFromPast = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
+
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
         }
 
@@ -223,7 +236,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onDataCountForProperty, this, _1, ctxt));
+                m_influxClientPropHist->queryDb(queryStr,
+                                                bind_weak(&InfluxLogReader::onDataCountForProperty, this, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying data count for property");
                 // As this is in the same thread at which the slot call started, if we send the async reply directly,
@@ -329,7 +343,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "", ctxt));
+                m_influxClientPropHist->queryDb(queryStr,
+                                                bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "", ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying property values");
                 ctxt->aReply.error(errMsg);
@@ -346,8 +361,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "sample_", ctxt));
+                m_influxClientPropHist->queryDb(
+                      queryStr, bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "sample_", ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying property values samples");
                 ctxt->aReply.error(errMsg);
@@ -395,7 +410,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onMeanPropertyValues, this, _1, ctxt));
+                m_influxClientPropHist->queryDb(queryStr,
+                                                bind_weak(&InfluxLogReader::onMeanPropertyValues, this, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying property values samples");
                 ctxt->aReply.error(errMsg);
@@ -494,8 +510,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onLastLoginFormatBeforeTime, this, _1, ctxt));
+                m_influxClientFromPast->queryDb(
+                      queryStr, bind_weak(&InfluxLogReader::onLastLoginFormatBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying last login before time");
                 boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
@@ -563,7 +579,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onLastLogoutBeforeTime, this, _1, ctxt));
+                m_influxClientFromPast->queryDb(queryStr,
+                                                bind_weak(&InfluxLogReader::onLastLogoutBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying last logout before time");
                 ctxt->aReply.error(errMsg);
@@ -623,8 +640,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onLastSchemaDigestBeforeTime, this, _1, ctxt));
+                m_influxClientFromPast->queryDb(
+                      queryStr, bind_weak(&InfluxLogReader::onLastSchemaDigestBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying last schema digest before time");
                 ctxt->aReply.error(errMsg);
@@ -689,8 +706,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onSchemaForDigest, this, _1, ctxt, digest));
+                m_influxClientFromPast->queryDb(queryStr,
+                                                bind_weak(&InfluxLogReader::onSchemaForDigest, this, _1, ctxt, digest));
             } catch (const std::exception &e) {
                 const std::string errMsg = onException("Error querying schema for digest");
                 ctxt->aReply.error(errMsg);
@@ -810,8 +827,8 @@ namespace karabo {
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfo, _1, ctxt));
+                m_influxClientFromPast->queryDb(
+                      queryStr, bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfo, _1, ctxt));
             } catch (const std::exception &e) {
                 const auto errMsg = onException("Error querying property value before time");
                 ctxt->aReply.error(errMsg);
@@ -1072,7 +1089,9 @@ namespace karabo {
                   << " AND time <= " << epochAsMicrosecString(to) << m_durationUnit;
             const std::string queryStr = query.str();
             try {
-                m_influxClient->queryDb(queryStr, bind_weak(&InfluxLogReader::onGetBadData, this, _1, aReply));
+                // Not a priory clear which client to use. Since this slot is called so rarely, dare to use the one
+                // querying the database with the typically longer retention policy.
+                m_influxClientFromPast->queryDb(queryStr, bind_weak(&InfluxLogReader::onGetBadData, this, _1, aReply));
             } catch (const std::exception &e) {
                 std::string details(e.what());
                 std::string errMsg("Error querying for bad data");
