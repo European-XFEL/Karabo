@@ -190,7 +190,7 @@ namespace karabo {
                     return;
                 }
             } else if (target == "karaboGuiDebug") {
-                exchange = "karaboGuiDebug";
+                exchange = m_topic + ".karaboGuiDebug";
             } else if (target == m_topic) {
                 if (!header->has("signalFunction")) {
                     throw KARABO_LOGIC_EXCEPTION("Header has to define \"signalFunction\"");
