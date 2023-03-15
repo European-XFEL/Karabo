@@ -28,15 +28,13 @@ from .widgets.complex import (
 # deprecated widgets
 # Graph widgets
 from .widgets.graph_image import (
-    DetectorGraphModel, DisplayAlignedImageModel, DisplayImageElementModel,
-    DisplayImageModel, ImageGraphModel, ScientificImageModel,
-    VectorRollGraphModel, WebCamGraphModel, WebcamImageModel)
+    DetectorGraphModel, ImageGraphModel, VectorRollGraphModel,
+    WebCamGraphModel)
 from .widgets.graph_plots import (
-    AlarmGraphModel, BasePlotModel, DisplayPlotModel, LinePlotModel,
-    MultiCurveGraphModel, MultiCurvePlotModel, NDArrayGraphModel,
+    AlarmGraphModel, BasePlotModel, MultiCurveGraphModel, NDArrayGraphModel,
     ScatterGraphModel, StateGraphModel, TrendGraphModel, VectorBarGraphModel,
     VectorFillGraphModel, VectorGraphModel, VectorHistGraphModel,
-    VectorScatterGraphModel, VectorXYGraphModel, XYPlotModel, XYVectorModel)
+    VectorScatterGraphModel, VectorXYGraphModel)
 from .widgets.graph_utils import (
     BaseROIData, CrossROIData, RectROIData, build_graph_config,
     build_model_config, read_axes_set, read_base_karabo_image_model,
