@@ -31,12 +31,18 @@ class BinaryParser(object):
         return read_binary_hash(self)
 
 
-def decodeBinary(data):
+def decodeBinary(data: bytes):
+    """Decode a binary hash object `data` and return a Hash"""
     parser = BinaryParser()
     return parser.read(data)
 
 
-def decodeBinaryPos(data):
+def decodeBinaryPos(data: bytes):
+    """Decode a binary hash object `data`
+
+    This function will return a decoded Hash as well as the position of the
+    parser in a tuple.
+    """
     parser = BinaryParser()
     return parser.read(data), parser.pos
 
