@@ -66,9 +66,9 @@ namespace karabo {
              *
              *  GUI debug
              *  ---------
-             *  exchange    = karaboGuiDebug
+             *  exchange    = <domain>.karaboGuiDebug
              *  routing_key = ""
-             *  queue       = karaboGuiDebug                      <-- GUI debug queue
+             *  queue       = <as gui debug listener defines>
              *
              *   GUI debugging channel
              *
