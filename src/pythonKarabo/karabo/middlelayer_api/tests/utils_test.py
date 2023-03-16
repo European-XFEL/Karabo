@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 
 from karabo.common.states import State
-from karabo.middlelayer.testing import event_loop
+from karabo.middlelayer.testing import assertLogs, event_loop
 from karabo.middlelayer_api.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
 from karabo.middlelayer_api.utils import (
-    AsyncTimer, build_karabo_value, countdown, profiler)
+    AsyncTimer, build_karabo_value, countdown, profiler, suppress)
 from karabo.native import (
     Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
     String, StringValue, Timestamp, Unit, VectorDouble, unit_registry as unit)
@@ -457,3 +457,13 @@ async def test_countdown(event_loop):
         assert ctx is not None
         await asyncio.sleep(0.2)
     assert ctx.expired
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+def test_suppress(utilsTest):
+    loop = asyncio.get_event_loop()
+    instanceId = loop.instance().deviceId
+    with assertLogs(instanceId, "ERROR"):
+        with suppress(RuntimeError):
+            raise RuntimeError("Error")
