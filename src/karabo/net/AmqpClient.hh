@@ -81,13 +81,11 @@ namespace karabo {
         class AmqpTransceiver : public boost::enable_shared_from_this<AmqpTransceiver> {
             friend class AmqpConnector;
 
-            static void setQueueArguments(AMQP::Table& args);
-
            public:
             typedef boost::shared_ptr<AmqpTransceiver> Pointer;
 
             AmqpTransceiver(const std::string& exchange, const std::string& queue_, const std::string& route_in,
-                            bool listener);
+                            bool listener, const AMQP::Table& queueArgs);
 
             virtual ~AmqpTransceiver();
 
@@ -289,6 +287,7 @@ namespace karabo {
             boost::system::error_code m_ec;              // error code
             std::list<AsyncHandler> m_completeHandlers;  // Current list of complete handlers
             std::mutex m_completeHandlersMutex;          // Protect the list
+            AMQP::Table m_queueArgs;                     // arguments for AMQP queue
         };
 
 
@@ -915,15 +914,16 @@ namespace karabo {
             std::mutex m_activateMutex;
             // Shared pointer to AmqpSingleton singleton (AMQP broker connection)
             std::shared_ptr<AmqpSingleton> m_amqp;
-            bool m_queueArgsFlag;
 
+            AMQP::Table m_queueArgs;
 
             AmqpConnector() = delete;
             AmqpConnector(const AmqpConnector&) = delete;
 
 
            public:
-            explicit AmqpConnector(const std::vector<std::string>& urls, const std::string& id, bool flag);
+            explicit AmqpConnector(const std::vector<std::string>& urls, const std::string& id,
+                                   const AMQP::Table& queueArgs);
             virtual ~AmqpConnector();
 
             const std::shared_ptr<AmqpSingleton>& getSingleton() const noexcept {
@@ -995,10 +995,6 @@ namespace karabo {
              */
             boost::asio::io_context& getContext() noexcept {
                 return m_amqp->ioContext();
-            }
-
-            bool applyQueueArgs() const noexcept {
-                return m_queueArgsFlag;
             }
 
            private:
@@ -1154,7 +1150,7 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected);
 
-            AmqpClient(const karabo::util::Hash& input);
+            AmqpClient(const karabo::util::Hash& input, const AMQP::Table& queueArgs);
 
             virtual ~AmqpClient();
 
@@ -1304,7 +1300,7 @@ namespace karabo {
             karabo::net::Strand::Pointer m_strand;
             AmqpReadHashHandler m_onRead;
             bool m_skipFlag;
-            bool m_queueArgsFlag;
+            AMQP::Table m_queueArgs;
         };
     } // namespace net
 } // namespace karabo
