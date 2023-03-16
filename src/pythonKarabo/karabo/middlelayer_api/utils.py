@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager, contextmanager
 from functools import reduce, wraps
@@ -346,3 +347,29 @@ async def countdown(delay=5, exception=True):
     except asyncio.TimeoutError:
         if exception:
             raise
+
+
+class suppress:
+    """A contextmanager to suppress exceptions in a context
+
+    Note: On exception, a log message to the instance logger is generated
+    """
+    def __init__(self, *exceptions):
+        self._exceptions = exceptions
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        suppressed = exc_type is not None and issubclass(
+            exc_type, self._exceptions)
+        if suppressed:
+            try:
+                logger = asyncio.get_event_loop().instance().logger
+            except BaseException:
+                # Make absolutely sure that this the log message is done!
+                logger = logging.getLogger()
+            text = "Suppressed exception ..."
+            logger.error(text, exc_info=(exc_type, exc_value, exc_tb))
+
+        return suppressed
