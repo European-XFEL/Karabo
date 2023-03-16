@@ -6,7 +6,6 @@ import time
 import weakref
 from asyncio import (
     CancelledError, Lock, TimeoutError, ensure_future, gather, sleep, wait_for)
-from contextlib import suppress
 from functools import partial
 from itertools import count
 
@@ -17,6 +16,7 @@ from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
 from ..eventloop import EventLoop
+from ..utils import suppress
 from .base import Broker
 
 _QBEATS_ARGUMENTS = {
@@ -398,10 +398,12 @@ class AmqpBroker(Broker):
 
     async def _on_stop_tasks(self):
         if self.consumer_tag is not None:
-            await self.channel.basic_cancel(self.consumer_tag)
+            with suppress(BaseException):
+                await self.channel.basic_cancel(self.consumer_tag)
             self.consumer_tag = None
         if self.heartbeat_consumer_tag is not None:
-            await self.channel.basic_cancel(self.heartbeat_consumer_tag)
+            with suppress(BaseException):
+                await self.channel.basic_cancel(self.heartbeat_consumer_tag)
             self.heartbeat_consumer_tag = None
         with suppress(BaseException):
             await self.exitStack.aclose()
