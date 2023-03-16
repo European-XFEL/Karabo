@@ -19,11 +19,10 @@ from ..eventloop import EventLoop
 from ..utils import suppress
 from .base import Broker
 
-_QBEATS_ARGUMENTS = {
-    "x-max-length": 12_000,  # Number of max messages in the queue
-    "x-overflow": "drop-head",  # Drop oldest messages
-    "x-message-ttl": 120_000  # 120 seconds expiry time [ms]
-}
+_OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
+_TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
+_BEATS_QSIZE = 12_000
+_CONSUME_QSIZE = 100_000
 
 
 def ensure_running(func):
@@ -93,8 +92,13 @@ class AmqpBroker(Broker):
             # Exception raised since the queue not found on the broker
             # The channel is not valid anymore, so create the new one
             self.channel = await self.connection.channel()
+
+        arguments = {
+            "x-max-length": _CONSUME_QSIZE,
+            "x-overflow": _OVERFLOW_POLICY,
+            "x-message-ttl": _TIME_TO_LIVE}
         declare_ok = await self.channel.queue_declare(
-            self.brokerId, auto_delete=True)
+            self.brokerId, auto_delete=True, arguments=arguments)
         # The received queue name (either input or generated) is ...
         self.queue = declare_ok.queue
         # create main exchange : <domain>.slots
@@ -442,8 +446,12 @@ class AmqpBroker(Broker):
         """Heartbeat method for the device server"""
         device = weakref.ref(device)
         name = f"{self.brokerId}:beats"
+        arguments = {
+            "x-max-length": _BEATS_QSIZE,
+            "x-overflow": _OVERFLOW_POLICY,
+            "x-message-ttl": _TIME_TO_LIVE}
         declare_ok = await self.channel.queue_declare(
-            name, auto_delete=True, arguments=_QBEATS_ARGUMENTS)
+            name, auto_delete=True, arguments=arguments)
         self.heartbeat_queue = declare_ok.queue
         consume_ok = await self.channel.basic_consume(
             self.heartbeat_queue, partial(self.on_heartbeat, device),
