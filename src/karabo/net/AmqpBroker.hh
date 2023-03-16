@@ -79,6 +79,11 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& s);
 
+            /**
+             * Fill argument with default AMQP message queue creation arguments
+             */
+            static void defaultQueueArgs(AMQP::Table& args);
+
             explicit AmqpBroker(const karabo::util::Hash& configuration = karabo::util::Hash());
 
             virtual ~AmqpBroker();
@@ -166,8 +171,6 @@ namespace karabo {
 
            private:
             karabo::net::Strand::Pointer m_handlerStrand;
-            // producer timestamp is a "marker" of AmqpBroker instance incarnation for m_instanceId in time
-            const double m_timestamp; // timestamp used by this instance when in producer role
         };
 
     } // namespace net

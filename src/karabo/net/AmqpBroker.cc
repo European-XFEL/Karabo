@@ -8,6 +8,8 @@
 
 #include "karabo/net/AmqpBroker.hh"
 
+#include <amqpcpp/table.h>
+
 #include <chrono>
 
 #include "karabo/log/Logger.hh"
@@ -30,6 +32,13 @@ namespace karabo {
         void AmqpBroker::expectedParameters(karabo::util::Schema& s) {}
 
 
+        void AmqpBroker::defaultQueueArgs(AMQP::Table& args) {
+            args.set("x-max-length", 100'000)     // Queue limit
+                  .set("x-overflow", "drop-head") // drop oldest if limit reached
+                  .set("x-message-ttl", 120'000); // message time-to-live in ms
+        }
+
+
         AmqpBroker::AmqpBroker(const karabo::util::Hash& config)
             : Broker(config),
               m_client(),
@@ -37,33 +46,32 @@ namespace karabo {
               m_clientErrorNotifier(),
               m_heartbeatConsumerHandler(),
               m_heartbeatErrorNotifier(),
-              m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
-              m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
-                                       std::chrono::system_clock::now().time_since_epoch())
-                                       .count())) {
+              m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())) {
             Hash amqpConfig("brokers", m_availableBrokerUrls);
             amqpConfig.set("instanceId", m_instanceId);
             amqpConfig.set("domain", m_topic);
-
-            m_client = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, amqpConfig);
+            AMQP::Table queueArgs;
+            defaultQueueArgs(queueArgs);
+            m_client = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, amqpConfig, queueArgs);
         }
 
 
         AmqpBroker::~AmqpBroker() {
             stopReading();
+            m_heartbeatClient.reset();
             m_client.reset();
         }
 
 
         AmqpBroker::AmqpBroker(const AmqpBroker& o, const std::string& newInstanceId)
             : Broker(o, newInstanceId),
-              m_client(Configurator<AmqpClient>::create(
-                    AMQP_CLIENT_CLASS,
-                    Hash("brokers", m_availableBrokerUrls, "instanceId", newInstanceId, "domain", m_topic))),
-              m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
-              m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
-                                       std::chrono::system_clock::now().time_since_epoch())
-                                       .count())) {}
+              m_client(),
+              m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())) {
+            const Hash config("brokers", m_availableBrokerUrls, "instanceId", newInstanceId, "domain", m_topic);
+            AMQP::Table queueArgs;
+            defaultQueueArgs(queueArgs);
+            m_client = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config, queueArgs);
+        }
 
 
         Broker::Pointer AmqpBroker::clone(const std::string& instanceId) {
@@ -365,8 +373,11 @@ namespace karabo {
                 Hash config("brokers", m_availableBrokerUrls);
                 config.set("instanceId", m_instanceId + ":beats");
                 config.set("domain", m_topic);
-                config.set("applyQueueArgs", true);
-                m_heartbeatClient = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config);
+                AMQP::Table queueArgs;
+                defaultQueueArgs(queueArgs);
+                queueArgs.set("x-max-length", 12'000); // overwrite queue limit to be shorter
+                m_heartbeatClient = Configurator<AmqpClient>::create(AMQP_CLIENT_CLASS, config, queueArgs);
+
                 boost::system::error_code ec = m_heartbeatClient->connect();
                 if (ec) {
                     std::ostringstream oss;
