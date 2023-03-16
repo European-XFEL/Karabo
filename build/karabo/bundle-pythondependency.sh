@@ -15,7 +15,7 @@ DEPNAME=`basename $originalPwd`
 DISTDIR=$originalPwd/package
 PACKAGENAME=$DEPNAME-$KARABOVERSION
 
-source "$KARABO/../../set_lsb_release_info.sh"
+source "$KARABO/bin/.set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $LSB_RELEASE_DIST )
     DISTRO_RELEASE=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
@@ -64,4 +64,3 @@ chmod a+x $INSTALLSCRIPT
 cd $originalPwd
 
 exit 0
-
