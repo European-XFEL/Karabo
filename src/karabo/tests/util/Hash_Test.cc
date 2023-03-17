@@ -15,6 +15,7 @@
 #include <karabo/util/Schema.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <stack>
+#include <vector>
 
 #include "karabo/util/ToLiteral.hh"
 
@@ -1096,6 +1097,31 @@ void Hash_Test::testGetAs() {
     {
         Hash h("a", std::complex<double>(1.2, 0.5));
         CPPUNIT_ASSERT(h.getAs<string>("a") == "(1.2,0.5)");
+    }
+    {
+        // getAs as a container
+        Hash h("a", std::vector<unsigned short>({2, 3, 5, 7, 11}));
+        const auto result = h.getAs<std::string, std::vector>("a");
+        CPPUNIT_ASSERT_MESSAGE("Result is " + karabo::util::toString(result),
+                               result == std::vector<std::string>({"2", "3", "5", "7", "11"}));
+    }
+    {
+        // There is some extra treatment of STRING as source in Element::getValueAs<T>
+        Hash h("a", "5");
+        CPPUNIT_ASSERT_EQUAL(5, h.getAs<int>("a"));
+    }
+    {
+        // There is some extra treatment of STRING as source in Element::getValueAs<CONT<T>>
+        Hash h("a", "5,6, 7 ");
+        const auto result = h.getAs<int, std::vector>("a");
+        CPPUNIT_ASSERT_MESSAGE("Result is: " + karabo::util::toString(result), std::vector<int>({5, 6, 7}) == result);
+    }
+    {
+        // There is some extra treatment of empty string as source for containers
+        Hash h("a", std::string());
+        const auto result = h.getAs<std::string, std::vector>("a");
+        // Empty string becomes empty vector of strings and not vector with a single empty string
+        CPPUNIT_ASSERT_EQUAL(0ul, result.size());
     }
 }
 
