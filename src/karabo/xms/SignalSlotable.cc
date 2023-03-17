@@ -1009,7 +1009,7 @@ namespace karabo {
             KARABO_SYSTEM_SIGNAL("signalInstanceUpdated", string, Hash);
 
             // Global ping listener
-            KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
+            KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*unused*/)
 
             // Global instance new notification
             KARABO_SLOT(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
@@ -1118,6 +1118,10 @@ namespace karabo {
             if (instanceId == m_instanceId) return;
 
             emit("signalInstanceUpdated", instanceId, instanceInfo);
+            if (m_trackAllInstances) {
+                // Merge the new instanceInfo (ignoring case of a shrunk instanceInfo...)
+                addTrackedInstance(instanceId, instanceInfo);
+            }
         }
 
 
@@ -1152,13 +1156,14 @@ namespace karabo {
         }
 
 
-        Hash SignalSlotable::getAvailableInstances(bool activateTracking) {
+        Hash SignalSlotable::getAvailableInstances(bool /*unused*/) {
             KARABO_LOG_FRAMEWORK_DEBUG << "getAvailableInstances";
             if (!m_trackAllInstances) {
                 boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
                 m_trackedInstances.clear();
             }
-            call("*", "slotPing", m_instanceId, 0, activateTracking);
+            // Note: 3rd argument of slotPing is ignored, kept for backward compatibility
+            call("*", "slotPing", m_instanceId, 0, true);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             // Since we block here for a long time, add a thread to ensure that all slotPingAnswer can be processed.
@@ -1185,7 +1190,14 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPing(const std::string& instanceId, int rand, bool trackPingedInstance) {
+        void SignalSlotable::slotPing(const std::string& instanceId, int rand, bool /*unused*/) {
+            // The value of 'rand' distinguishes between different use cases of slotPing:
+            // - 0: call slotPingAnswer of 'instanceId', indicating we are part of the topology
+            //      (but do not do that if still in the booting phase as indicated by a non-zero m_randPing)
+            // - 1: (and instanceId matches my id), simply reply back my instanceInfo
+            // - else: rand is the m_randPing of the instance that is booting and calls me with its instanceId.
+            //         If that id is identical to mine, I either ask myself (m_randPing == rand) and just ignore this
+            //         slot call or reply my existence so the caller knows it must not come up.
             if (rand != 0) {
                 // case 1) Called by an instance that is coming up: rand is his m_randPing before it gets 'valid',
                 // case 2) or by SignalSlotable::exists: rand is 1
@@ -1290,12 +1302,18 @@ namespace karabo {
                                            const Hash& instanceInfo) {
             if (m_trackAllInstances) {
                 if (!hasTrackedInstance(instanceId)) {
-                    // Notify about new instance
-                    emit("signalInstanceNew", instanceId, instanceInfo);
-                    // if (m_instanceAvailableAgainHandler) m_instanceAvailableAgainHandler(instanceId, instanceInfo);
+                    KARABO_LOG_FRAMEWORK_INFO << "Tracking instances, but received heart beat from unknown '"
+                                              << instanceId << "'";
+                    // Resurrected after not sending heartbeats anymore, or heartbeat arrived before
+                    // slotPingAnswer/instanceNew.
+
+                    // Post-2.17.X versions may not send full instanceInfo with the heartbeat:
+                    // Ping the resurrected instance which will call back on slotPingAnswer that cares about tracking
+                    call(instanceId, "slotPing", m_instanceId, 0, /*unused*/ true);
+                } else {
+                    // Merge the potentially partial instanceInfo and re-set the countdown
+                    addTrackedInstance(instanceId, instanceInfo);
                 }
-                // This overwrites the old entry and resets the countdown
-                addTrackedInstance(instanceId, instanceInfo);
             }
         }
 
@@ -1865,13 +1883,21 @@ namespace karabo {
                                            << "'heartbeatInterval': " << instanceInfo;
                 return;
             }
+            const int countdown = beatsNode->getValue<int>();
 
             boost::mutex::scoped_lock lock(m_trackedInstancesMutex);
-            Hash h;
-            h.set("instanceInfo", instanceInfo);
-            // Initialize countdown with the heartbeat interval
-            h.set("countdown", beatsNode->getValue<int>());
-            m_trackedInstances.set(instanceId, h);
+            boost::optional<Hash::Node&> node = m_trackedInstances.find(instanceId);
+            if (node) {
+                // A known instance:
+                // We might be here from a heartbeat that sends incomplete instanceInfo, so merge what is available.
+                Hash& instanceHash = node->getValue<Hash>();
+                instanceHash.get<Hash>("instanceInfo").merge(instanceInfo);
+                instanceHash.set("countdown", countdown);
+            } else {
+                // A new instance to be added
+                Hash h("instanceInfo", instanceInfo, "countdown", countdown);
+                m_trackedInstances.set(instanceId, std::move(h));
+            }
         }
 
 
