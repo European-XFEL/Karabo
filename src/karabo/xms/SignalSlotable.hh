@@ -169,7 +169,7 @@ namespace karabo {
 
             void trackAllInstances();
 
-            karabo::util::Hash getAvailableInstances(const bool activateTracking = false);
+            karabo::util::Hash getAvailableInstances(bool /*unused*/ = false);
 
             /**
              * This is a synchronous call with timeout in milliseconds return vector of device signals.
