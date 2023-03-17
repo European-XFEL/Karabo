@@ -767,7 +767,10 @@ namespace karabo {
                                             "\". Cowardly refusing to cast.");
 
             try {
-                return ValueType(karabo::util::fromString<ValueType>(this->getValueAsString()));
+                // Avoid extra copy if source is already string:
+                const std::string& value =
+                      (srcType == Types::STRING ? this->getValue<std::string>() : this->getValueAsString());
+                return ValueType(karabo::util::fromString<ValueType>(value));
             } catch (...) {
                 KARABO_RETHROW_AS(
                       KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType) +=
@@ -788,7 +791,9 @@ namespace karabo {
                                             "\". Cowardly refusing to cast.");
 
             try {
-                std::string value = this->getValueAsString();
+                // Avoid extra copy if source is already string:
+                const std::string& value =
+                      (srcType == Types::STRING ? this->getValue<std::string>() : this->getValueAsString());
 
                 if (value.empty()) return Cont<T>();
 
