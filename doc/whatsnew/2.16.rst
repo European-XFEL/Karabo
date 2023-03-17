@@ -1,4 +1,68 @@
 ***************************
+What's New in Karabo 2.16.5
+***************************
+
+This patch release fixes the `Windows` installation of the karaboGui and
+aligns the key strokes on `Scenes` to avoid that they coincide with the Ubuntu workspace swapping.
+Another mandatory fix for the data loggers is provided. Since the new influx database cluster disconnects after
+two seconds of idle connection, most schema updates (including the initial schema) were erroneously discarded.
+A minor fix to enable starting bound devices on middlelayer servers is provided as well.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- Datalogger: Better message for no schema found while getting past config (2.16.X Cherry Pick) !7224
+- GUI: Move editor to double click and not device scene (Cherry-pick hotfix 2.16.X) !7274
+- GUI: Icons Widget-TextDialog: Show items in a Combobox (Cherry-pick hotfix 2.16.X) !7278
+- GUI: Cleanup double click event in scene view (Cherry-pick) !7280
+- GUI: Align the python version on the hotfix branch (Cherry-pick hotfix 2.16.X) !7303
+- GUI: Update qtpy on hotfix branch 2.16.X !7323
+- C++: Fix influx schema writing if disconnected (BACKPORT to 2.16.X) !7327
+- MDL: Add slotDeviceUp to bound server (Cherry-pick hotfix) !7277
+
+
+***************************
+What's New in Karabo 2.16.4
+***************************
+
+This patch release provides the first **Ubuntu 22** support. Furthermore, it fixes
+a bug in the data logging machinery that occurred after the influx database was upgraded.
+Besides, minor improvements in the graphical user interface are provided.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- MDL: Add timestamp to messages from openmqc (backport 2.16.X) !7181
+- C++: Fix a bug in the parsing of HTTP headers by the InfluxDbClient and add a test (2.16.X hotfix). !7198
+- GUI: Fix slice for RGB images (Cherry-pick hotfix 2.16.X) !7197
+- GUI: Provide full information on changes of configuration in dialog (Cherry-pick hotfix 2.16.X) !7201
+- GUI: Target tool show log values. (Cherry-pick 2.16.X) !7214
+- DEP: Update openmqc to version 5.1.4.1 (fix for compilation on GCC 11.3). (Cherry-pick hotfix 2.16.X) !7206
+
+
+***************************
+What's New in Karabo 2.16.3
+***************************
+
+This patch release mainly improves the middlelayer api by allowing `noDefaultValue` (NoneValue) on properties
+that have an `Assignment.INTERNAL` declaration.
+A minor fix is provided for the bound api on requesting the latest logs of a device server.
+If no devices have been running on the server, the slot call did not return previously.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- Bound: fix slotLoggerContent if server has no devices (backport to 2.16.X) !7047
+- MDL: AsyncDeviceTest and Eventloop with SignalSlotable, adjust template (cherrypick 2.16.3) !7059
+- DOC: Remove 'gitlab' from urls, update supported platforms and device templates (backport to 2.16.3) !7057
+- GUI: Change copyright notice for about dialog (cherry-pick 2.16.3) !7088
+- MDL: Allow Assignment.INTERNAL descriptors to have no default value (Cherry-pick 2.16.X) !7127
+- MDL: Skip AMQP tests for 2.16.X !7129
+
+
+***************************
 What's New in Karabo 2.16.2
 ***************************
 
