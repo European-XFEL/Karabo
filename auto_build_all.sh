@@ -413,7 +413,6 @@ pushd $FRAMEWORK_BUILD_DIR
 # of Karabo as it is used to compile some other dependencies, like the
 # MQTT client lib.
 safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
-      -Dpybind11_ROOT=$(${EXTERN_DEPS_DIR}/bin/pybind11-config --cmakedir) \
       -DBUILD_UNIT_TESTING=$BUILD_UNIT_TESTING \
       -DBUILD_INTEGRATION_TESTING=$BUILD_INTEGRATION_TESTING \
       -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
