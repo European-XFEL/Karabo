@@ -18,6 +18,8 @@
 #include "StringTools.hh"
 #include "repositoryVersion"
 
+// Temporary change to trigger CI build.
+
 namespace karabo {
 
     namespace util {
