@@ -21,8 +21,17 @@ find_package(
     COMPONENTS Interpreter Development NumPy
 )
 
+message(STATUS "Found Python interpreter '${Python3_EXECUTABLE}'.")
 message(STATUS "Found NumPy version '${Python3_NumPy_VERSION}'.")
 message(STATUS "NumPy include dirs = '${Python3_NumPy_INCLUDE_DIRS}'")
+
+# Sets pybind11_DIR with the directory that contains the "pybind11Config.cmake"
+# file - according to pybind11 documentation (available at
+# https://pybind11.readthedocs.io/en/stable/compiling.html#building-with-cmake)
+# this is a requirement for the find_package(pybind11 ) command to succeed.
+file(GLOB_RECURSE PYBIND11_CFG_PATH ${CMAKE_PREFIX_PATH}/pybind11Config.cmake)
+get_filename_component(pybind11_DIR ${PYBIND11_CFG_PATH} DIRECTORY)
+message(STATUS "pybind11_DIR is '${pybind11_DIR}'")
 
 # Here we are using 'pybind11' package instead of Boost Python
 find_package(pybind11 CONFIG REQUIRED)
