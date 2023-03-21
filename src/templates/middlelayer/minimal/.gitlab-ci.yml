@@ -12,7 +12,7 @@
     - bash karabo.sh --prefix=/root
     - source /root/karabo/activate
     - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
-    - karabo -g https://$XFEL_TOKEN@git.xfel.eu install $REL_PROJECT_NAME $REL_TAG
+    - karabo -g https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu install $REL_PROJECT_NAME $REL_TAG
     - pushd $CI_PROJECT_DIR
     - pip install pytest-cov
     - pip install -e .
