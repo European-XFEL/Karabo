@@ -288,8 +288,7 @@ void DeviceClient_Test::testMonitorChannel() {
     trackerPromise = std::promise<karabo::net::ConnectionStatus>();
     trackerFuture = trackerPromise.get_future();
     CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
-    // Check that we are connected:
-    // With just sleep 50ms  failed in https://git.xfel.eu/Karabo/Framework/-/jobs/171924
+    // Check that we are connected (CI failed once with just waiting 50 ms):
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
                          static_cast<int>(trackerFuture.get()));
@@ -327,15 +326,27 @@ void DeviceClient_Test::testMonitorChannel() {
     success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest", Hash("deviceId", "TestedDevice3"),
                                           KRB_TEST_MAX_TIMEOUT);
 
+    // Re-use the above InputChannelHandlers object ('handlers'), now with input instead of data handler
+    handlers.dataHandler.clear();
     int sizeMsg = 0;
     int dataCounter = 0;
-    auto inputHandler = [&dataCounter, &sizeMsg](const InputChannel::Pointer& channel) {
+    handlers.inputHandler = [&dataCounter, &sizeMsg](const InputChannel::Pointer& channel) {
         sizeMsg = channel->size();
         const Hash::Pointer& data = channel->read(0);
         data->get("node.int32", dataCounter);
     };
-    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice3", "output", InputChannel::DataHandler(),
-                                                          Hash(), InputChannel::InputHandler(), inputHandler));
+    // We re-use the handlers.statusTracker, but have to reset promise and future
+    trackerPromise = std::promise<karabo::net::ConnectionStatus>();
+    trackerFuture = trackerPromise.get_future();
+    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor(
+          "TestedDevice3:output", handlers,
+          Hash("onSlowness", "queue"))); // "queue" excludes data loss (default is "drop")
+
+    // Take care that connection is established before sending data
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::net::ConnectionStatus::CONNECTED),
+                         static_cast<int>(trackerFuture.get()));
+
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
@@ -345,11 +356,11 @@ void DeviceClient_Test::testMonitorChannel() {
         if (dataCounter == 3) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
-    // Failed in https://git.xfel.eu/Karabo/Framework/-/jobs/289683 with maxIterWait = 1000 and sleepPerIter = 5
     CPPUNIT_ASSERT_EQUAL(3, dataCounter);
     CPPUNIT_ASSERT_EQUAL(1, sizeMsg);
 
     // Final clean-up
+    CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice3:output"));
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
