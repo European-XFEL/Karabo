@@ -264,6 +264,34 @@ def system_hash():
     return h
 
 
+def development_system_hash():
+    h = Hash()
+
+    h["server.devserver"] = None
+    h["server.devserver", ...] = {
+        "host": "BIG_IRON",
+        "visibility": AccessLevel.OBSERVER,
+        "deviceClasses": ["MetaMacro"],
+        "type": "server",
+        "lang": "macro",
+        "serverFlags": 1,
+        "visibilities": [AccessLevel.OBSERVER]
+    }
+
+    h["server.stableserver"] = None
+    h["server.stableserver", ...] = {
+        "host": "BIG_IRON",
+        "visibility": AccessLevel.OBSERVER,
+        "deviceClasses": ["MetaMacro"],
+        "type": "server",
+        "lang": "macro",
+        "serverFlags": 0,
+        "visibilities": [AccessLevel.OBSERVER]
+    }
+
+    return h
+
+
 def device_hash():
     """Generate a device hash which will be built into a device tree
     """
@@ -389,6 +417,7 @@ def get_device_schema():
 def check_renderer_against_svg(renderer, svgfile):
     """Yeah... Check an SVG for elements which we suspect it should have.
     """
+
     def _get_path_ids(filename):
         tree = parse(filename)
         ids = []

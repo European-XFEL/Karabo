@@ -16,7 +16,7 @@ from karabogui.dialogs.api import DebugRunDialog
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
-from karabogui.project.utils import run_macro
+from karabogui.project.utils import run_macro, run_macro_debug
 from karabogui.singletons.api import get_config, get_topology
 from karabogui.util import getSaveFileName
 from karabogui.widgets.scintilla_editor import CodeBook
@@ -225,11 +225,11 @@ class MacroPanel(BasePanelWidget):
             if e.filename == self.model.simple_name:
                 self.ui_editor.moveCursorToLine(e.lineno, e.offset)
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
-                    e.msg, e.text, " " * e.offset, e.filename, e.lineno)
+                e.msg, e.text, " " * e.offset, e.filename, e.lineno)
             messagebox.show_warning(formatted_msg, title=type(e).__name__)
             return
 
-        run_macro(self.model)
+        run_macro(self.model, parent=self)
 
     @Slot()
     def on_debug_run(self):
@@ -248,21 +248,26 @@ class MacroPanel(BasePanelWidget):
                 servers.append(node.path)
 
         topology.visit_system_tree(visitor)
+        if not servers:
+            messagebox.show_error(
+                "No (development) Macro server found in system "
+                "topology. Macro cannot be started.")
+            return
 
         dialog = DebugRunDialog(serverIds=servers, parent=self)
         if dialog.exec() == QDialog.Accepted:
             server_id = dialog.comboBox.currentText()
-            run_macro(self.model, serverId=server_id)
-            get_config()['macro_development'] = server_id
+            run_macro_debug(self.model, serverId=server_id, parent=self)
+            get_config()["macro_development"] = server_id
 
     @Slot()
     def on_save(self):
         default_file_name = self.model.simple_name.replace("/", "_")
         fn = getSaveFileName(
-                caption="Save macro to file",
-                filter="Python files (*.py)",
-                suffix="py",
-                selectFile=default_file_name + ".py")
+            caption="Save macro to file",
+            filter="Python files (*.py)",
+            suffix="py",
+            selectFile=default_file_name + ".py")
         if not fn:
             return
 
