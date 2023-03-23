@@ -242,3 +242,27 @@ def test_check_style():
     feedback = check_style(REAL_CODE)
     assert feedback == {
         2: [{'message': 'expected 2 blank lines, found 0', 'code': 'E302'}]}
+
+
+def test_result_count(gui_app, mocker):
+    """
+    Search result text should be updated on code changes only if Find toolbar
+    is visible.
+    """
+
+    code_book = CodeBook(code=MULTILINE_CODE)
+    code_editor = code_book.code_editor
+    find_toolbar = code_book.find_toolbar
+    find_toolbar.find_line_edit.setText("is")
+    is_visible = mocker.patch.object(find_toolbar, "isVisible")
+
+    # Find toolbar is hidden.
+    is_visible.return_value = False
+    new_code = MULTILINE_CODE.replace("This", "")
+    code_editor.setText(new_code)
+    assert find_toolbar.result_label.text() == "2 Results"
+
+    # Find toolbar is shown.
+    is_visible.return_value = True
+    code_editor.setText(new_code)
+    assert find_toolbar.result_label.text() == "1 Result"
