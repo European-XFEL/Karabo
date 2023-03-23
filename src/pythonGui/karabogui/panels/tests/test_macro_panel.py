@@ -3,7 +3,8 @@ from qtpy.QtWidgets import QDialog
 from karabo.common.project.macro import MacroModel
 from karabogui.panels.macropanel import MacroPanel
 from karabogui.singletons.configuration import Configuration
-from karabogui.testing import singletons
+from karabogui.testing import development_system_hash, singletons
+from karabogui.topology.api import SystemTopology
 
 
 def test_save_dialog(gui_app, mocker):
@@ -35,18 +36,20 @@ def test_on_debug_run(gui_app, mocker):
     model = MacroModel(simple_name="macro_foo")
     panel = MacroPanel(model=model)
 
-    mock_run = mocker.patch("karabogui.panels.macropanel.run_macro")
+    topology = SystemTopology()
+    topology.initialize(development_system_hash())
+    config = Configuration()
+
+    mock_run = mocker.patch("karabogui.panels.macropanel.run_macro_debug")
     mock_dialog = mocker.patch("karabogui.panels.macropanel.DebugRunDialog")
 
     mock_dialog().exec.return_value = QDialog.Rejected
-    panel.on_debug_run()
-    assert mock_run.call_count == 0
-
-    config = Configuration()
-    with singletons(configuration=config):
+    with singletons(topology=topology, configuration=config):
+        panel.on_debug_run()
+        assert mock_run.call_count == 0
         mock_dialog().exec.return_value = QDialog.Accepted
-        mock_dialog().comboBox.currentText.return_value = "DummyMacroServer"
+        mock_dialog().comboBox.currentText.return_value = "devserver"
         panel.on_debug_run()
         mock_run.assert_called_once_with(
-            model, serverId="DummyMacroServer")
-        assert config['macro_development'] == "DummyMacroServer"
+            model, serverId="devserver", parent=panel)
+        assert config['macro_development'] == "devserver"
