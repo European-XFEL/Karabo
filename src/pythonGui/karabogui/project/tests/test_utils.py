@@ -25,12 +25,12 @@ def test_confirmation_dialog(gui_app, mocker):
     title = "Run Unsaved Macro?"
     text = (
         "The Macro is not saved in the Project. Do you really want to run "
-        "Macro?")
+        "the Macro?")
     parent = None
     assert mock_question.call_count == 1
 
     args = mock_question.call_args
-    arg1, arg2, arg3, _ = args[0]
+    arg1, arg2, arg3, *_ = args[0]
     assert arg1 == parent
     assert arg2 == title
     assert arg3 == text
@@ -45,8 +45,8 @@ def test_run_macro(gui_app, mocker):
     assert message_box.show_error.call_count == 1
     message_box.show_error.assert_called_with(message)
 
-    run_macro(macro_model, serverId="foo")
+    run_macro(macro_model)
     assert message_box.show_error.call_count == 2
-    message = ("No Macro server found with serverId 'foo' in system topology."
-               " Macro cannot be started.")
-    message_box.show_error.assert_called_with(message, parent=None)
+    message = ("No (stable) Macro server found in system topology. "
+               "Macro cannot be started.")
+    message_box.show_error.assert_called_with(message)
