@@ -293,6 +293,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>show_replace_tool_button</tabstop>
+  <tabstop>find_line_edit</tabstop>
+  <tabstop>replace_line_edit</tabstop>
+  <tabstop>find_previous</tabstop>
+  <tabstop>find_next</tabstop>
+  <tabstop>match_case</tabstop>
+  <tabstop>replace_button</tabstop>
+  <tabstop>replace_all_button</tabstop>
+  <tabstop>close_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
