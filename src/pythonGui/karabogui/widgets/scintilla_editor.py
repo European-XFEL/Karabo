@@ -61,6 +61,7 @@ class CodeBook(QWidget):
             code_editor.setText(code)
 
         code_editor.textChanged.connect(self.codeChanged)
+        code_editor.textChanged.connect(self._mayHighlight)
         code_editor.resultFound.connect(self.updateResultText)
         code_editor.qualityChecked.connect(self.qualityChecked)
 
@@ -148,6 +149,17 @@ class CodeBook(QWidget):
     def clearIndicators(self):
         self.code_editor.clearAnnotations()
         self.code_editor.clearAllIndicators()
+
+    @Slot()
+    def _mayHighlight(self):
+        """
+        Update the search highlight on code change, if Find Toolbar is open.
+        """
+        if not self.find_toolbar.isVisible():
+            return
+        text = self.find_toolbar.find_line_edit.text()
+        match_case = self.find_toolbar.match_case.isChecked()
+        self._highlight(text, match_case)
 
 
 class CodeEditor(QsciScintilla):
