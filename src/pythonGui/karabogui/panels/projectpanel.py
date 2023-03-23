@@ -47,6 +47,7 @@ class ProjectPanel(BasePanelWidget):
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.LoginUserChanged: self._event_access_level,
             KaraboEvent.SystemTopologyUpdate: self._event_system_topology,
+            KaraboEvent.ShowProjectDevice: self._event_show_project_device,
         }
         register_for_broadcasts(event_map)
 
@@ -180,6 +181,15 @@ class ProjectPanel(BasePanelWidget):
             visible = version_compatible(version, 2, 12)
         self._manager_version = visible
         self.load_with_device_action.setVisible(visible)
+
+    def _event_show_project_device(self, data):
+        """Event to show a project device """
+        model = self.tree_view.model()
+        nodes = model.findNodes(data.get("deviceId"), full_match=True)
+        assert len(nodes) <= 1
+        if nodes:
+            # Select first entry
+            model.selectNode(nodes[0])
 
     # -----------------------------------------------------------------------
 
