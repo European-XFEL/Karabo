@@ -193,12 +193,14 @@ class BaseSeriesGraph(BaseBindingController):
 
         dialog = RequestTimeDialog(start=start, end=end, parent=self.widget)
         if dialog.exec() == QDialog.Accepted:
-            # Convert to again to set the interval
+            # Convert again to set the interval
             self._button_scale = False
             self._uncheck_button()
             start, end = dialog.get_start_and_end_time()
             self.set_time_interval(start, end, force=True)
-            self._plot.plotItem.setRange(xRange=(start, end))
+            # Remove padding to avoid showing many values outside the
+            # selected time-range on X-axis
+            self._plot.plotItem.setRange(xRange=(start, end), padding=0)
 
     def _purge_curves(self):
         """Purge all curves and request historic again"""
