@@ -439,47 +439,67 @@ def show_no_configuration():
     broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': None})
 
 
-def run_macro(macro_model, parent=None, serverId=None):
+def run_macro(macro_model, parent=None):
     """
-    Request to run a macro by validating and sending an instantiate. A
-    running MacroServer's id can optionally be passed.
+    Request to run a macro by validating and sending an instantiate.
 
     :param macro_model:  Model of the Macro.
     :type macro_model: karabo.common.project.macro.MacroModel
     :param parent: Parent for the QMessageBox.
     :type parent: QObject
-    :param serverId: serverId of a running Macro Server.
-    :type serverId: Str
     """
+    macro_servers = get_macro_servers()
+    if not macro_servers:
+        messagebox.show_error("No (stable) Macro server found in system "
+                              "topology. Macro cannot be started.")
+        return
+
+    if macro_model.modified:
+        options = (QMessageBox.Yes | QMessageBox.No)
+        title = "Run Unsaved Macro?"
+        text = (
+            "The Macro is not saved in the Project. Do you really want to "
+            "run the Macro?")
+        reply = QMessageBox.question(parent, title, text, options,
+                                     QMessageBox.Yes)
+        if reply == QMessageBox.No:
+            return
+
+    serverId = macro_servers[0]
+    _run_macro(macro_model, serverId, parent)
+
+
+def run_macro_debug(macro_model, serverId, parent=None):
+    """Request to run a macro by validating and sending an instantiate.
+
+    This method doesn't ask for modification of the macro
+
+    :param macro_model: Model of the Macro.
+    :type macro_model: karabo.common.project.macro.MacroModel
+    :param serverId: serverId of a development macro server.
+    :type serverId: Str
+    :param parent: Parent for the QMessageBox.
+    :type parent: QObject
+    """
+    _run_macro(macro_model, serverId, parent)
+
+
+def _run_macro(macro_model, serverId, parent):
+    """Run a macro implementation to instantiate a macro"""
+    report = validate_macro(macro_model.code)
+    if report:
+        fails = create_list_string(report)
+        html = (f"Please check the macro validation report and rename "
+                f"function names or remove forbidden imports:{fails}")
+        messagebox.show_error(html, title="The Macro cannot be started",
+                              parent=parent)
+        return
+
     instance_id = macro_model.instance_id
     h = Hash("code", macro_model.code,
              "module", macro_model.simple_name,
              "uuid", macro_model.uuid)
 
-    if serverId is None:
-        report = validate_macro(macro_model.code)
-        if report:
-            fails = create_list_string(report)
-            html = (f"Please check the macro validation report and rename "
-                    f"function names or remove forbidden imports:{fails}")
-            messagebox.show_error(html, title="The Macro cannot be started",
-                                  parent=parent)
-            return
-        macro_servers = get_macro_servers()
-        if not macro_servers:
-            messagebox.show_error("No (stable) Macro server found in system "
-                                  "topology. Macro cannot be started.")
-            return
-        if macro_model.modified:
-            options = (QMessageBox.Yes | QMessageBox.No)
-            title = "Run Unsaved Macro?"
-            text = (
-                "The Macro is not saved in the Project. Do you really want to "
-                "run Macro?")
-            reply = QMessageBox.question(parent, title, text, options)
-            if reply == QMessageBox.No:
-                return
-        serverId = macro_servers[0]
     # Backward compatibility, only servers with `MetaMacro` class of 2.16.X
     # have the project property
     attrs = get_topology().get_attributes(f"server.{serverId}")
