@@ -84,21 +84,24 @@ def test_replace(gui_app):
         assert code_editor.getCursorPosition() == (line, index)
 
     assert_mouse_position(0, 0)
-
+    match_case = False
     # Replace first occurrence
-    code_editor.replace_text("number", "Line", match_case=False)
+    code_editor.replace_text("number", "Line", match_case)
     assert_mouse_position(3, 4)
     assert code_editor.selectedText() == "Line"
     expected = MULTILINE_CODE.replace("Number", "Line", 1)
     assert code_editor.text() == expected
 
     # Replace all
-    code_editor.replace_all("Number", "Line", match_case=False)
+    code_editor.highlight("Number", match_case)
+    code_editor.replace_all("Number", "Line", match_case)
     expected = MULTILINE_CODE.replace("Number", "Line")
     assert code_editor.text() == expected
 
     # Case-sensitive replace. Should not change the 'lines' in 2nd line
-    code_editor.replace_all("Line", "Number", match_case=True)
+    match_case = True
+    code_editor.highlight("Line", match_case)
+    code_editor.replace_all("Line", "Number", match_case)
     assert code_editor.text() == MULTILINE_CODE
 
     # Undo should revert all the replaces together.

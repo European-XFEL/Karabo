@@ -220,6 +220,7 @@ class CodeEditor(QsciScintilla):
         self.setIndicatorForegroundColor(QColor("red"), ERROR_INDICATOR)
         self.setIndicatorForegroundColor(QColor("blue"), STYLE_ISSUE_INDICATOR)
         self.has_annotation = False
+        self.hit_count = 0
 
     @Slot(str, bool, bool)
     def find_match(self, text, match_case, find_backward):
@@ -248,12 +249,17 @@ class CodeEditor(QsciScintilla):
             self.replace(new_text)
 
     def replace_all(self, text, new_text, match_case):
-        """ Recursively replace a text with a new text."""
+        """
+        Recursively replace a text with a new text. Replace all would work
+        only if the search text is already highlighted - which always
+        happen first in the workflow.
+        """
         found = self.find_match(text, match_case, find_backward=False)
         if found:
             self.beginUndoAction()
-            while self.findNext():
-                self.replace(new_text)
+            for _ in range(self.hit_count):
+                if self.findNext():
+                    self.replace(new_text)
             self.endUndoAction()
 
     @Slot(str, bool)
@@ -290,6 +296,7 @@ class CodeEditor(QsciScintilla):
                 line_start, index_start, line_end, index_end,
                 HIGHLIGHT_INDICATOR)
             hit_count += 1
+        self.hit_count = hit_count
         self.resultFound.emit(hit_count)
 
     def clearHighlight(self):
@@ -302,7 +309,8 @@ class CodeEditor(QsciScintilla):
                 HIGHLIGHT_INDICATOR
             )
         self._highlights.clear()
-        self.resultFound.emit(0)
+        self.hit_count = 0
+        self.resultFound.emit(self.hit_count)
 
     def _range_from_position(self, start_position, end_position):
         """
