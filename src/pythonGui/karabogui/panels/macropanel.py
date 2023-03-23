@@ -42,9 +42,9 @@ class MacroPanel(BasePanelWidget):
 
         # Hook up a trait handler for the panel window title
         self.model.on_trait_change(self.set_title, 'simple_name')
-        # Connect all running macros
+        # Connect all running macros, but don't select them
         for instance in model.instances:
-            self.connect(instance)
+            self.connect(instance, select=False)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -151,7 +151,7 @@ class MacroPanel(BasePanelWidget):
             for instance in self.model.instances:
                 self.disconnect(instance)
 
-    def connect(self, macro_instance):
+    def connect(self, macro_instance, select=True):
         if macro_instance not in self.already_connected:
             macro_proxy = get_topology().get_device(macro_instance)
             self.ui_console.moveCursor(QTextCursor.End)
@@ -163,6 +163,9 @@ class MacroPanel(BasePanelWidget):
                 # if the proxy is already populated trigger the action
                 self.finish_connection(macro_proxy,
                                        name='schema_update', new=None)
+        if select:
+            broadcast_event(KaraboEvent.ShowProjectDevice,
+                            {"deviceId": macro_instance})
 
     def disconnect(self, macro_instance):
         if macro_instance in self.already_connected:
