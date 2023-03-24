@@ -256,9 +256,19 @@ class CodeEditor(QsciScintilla):
         return found
 
     def replace_text(self, text, new_text, match_case):
-        """ Replace the text with new_text."""
-        if self.find_match(text, match_case, find_backward=False):
-            self.replace(new_text)
+        """
+        Replace the first hit of search text with 'new_text' and select the
+        next hit. If the search text is not selected already, just select
+        the next hit.
+        """
+        if self.hasSelectedText():
+            selected_text = self.selectedText()
+            if not match_case:
+                selected_text = selected_text.lower()
+                text = text.lower()
+            if selected_text == text:
+                self.replaceSelectedText(new_text)
+        self.find_match(text, match_case, find_backward=False)
 
     def replace_all(self, text, new_text, match_case):
         """
