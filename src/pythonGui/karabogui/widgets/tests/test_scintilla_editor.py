@@ -85,10 +85,15 @@ def test_replace(gui_app):
 
     assert_mouse_position(0, 0)
     match_case = False
-    # Replace first occurrence
+    # When no selection, just selects the next hit.
     code_editor.replace_text("number", "Line", match_case)
-    assert_mouse_position(3, 4)
-    assert code_editor.selectedText() == "Line"
+    assert_mouse_position(3, 6)
+    assert code_editor.selectedText() == "Number"
+
+    # Replace first occurrence and select the next
+    code_editor.replace_text("number", "Line", match_case)
+    assert_mouse_position(4, 6)
+    assert code_editor.selectedText() == "Number"
     expected = MULTILINE_CODE.replace("Number", "Line", 1)
     assert code_editor.text() == expected
 
