@@ -9,91 +9,100 @@
 
 #include "__CLASS_NAME__.hh"
 
-#include <boost/shared_ptr.hpp>
-#include <gtest/gtest.h>
 #include <thread>
 #include <utility>
+#include <boost/shared_ptr.hpp>
+#include <gtest/gtest.h>
 
-#include "karabo/core/DeviceClient.hh"
-#include "karabo/core/DeviceServer.hh"
-#include "karabo/net/EventLoop.hh"
 #include "karabo/util/Hash.hh"
-#include "karabo/util/PluginLoader.hh"
 
+#include "testrunner.hh"
 
-#define DEVICE_SERVER_ID "testDeviceSrvCpp"
 #define TEST_DEVICE_ID   "test__CLASS_NAME__"
-#define LOG_PRIORITY     "FATAL"  // Can also be "DEBUG", "INFO" or "ERROR"
 
-#define DEV_CLI_TIMEOUT_SEC 2
-
+using namespace ::testing;
 
 /**
  * @brief Test fixture for the __CLASS_NAME__ device class.
+ *        Any mandatory configuration for the device needs to be
+ *        added here. Additionally, one can derive other test fixtures
+ *        from this default one to create fixtures with different
+ *        instantiation configurations or different mocking behaviour.
  */
-class __CLASS_NAME__Fixture: public testing::Test {
+class __CLASS_NAME__DefaultCfg: public KaraboDeviceFixture {
 protected:
 
-    __CLASS_NAME__Fixture() = default;
+    __CLASS_NAME__DefaultCfg(): KaraboDeviceFixture() {}
 
-    void SetUp( ) {
-        m_eventLoopThread = std::thread(&karabo::net::EventLoop::work);
+    void SetUp( ) override {
+        /**
+         * Add configuration for this 'DefaultCfg' test fixture
+         * to the devCfg hash here
+         */
 
-        // Load the library dynamically
-        const karabo::util::Hash& pluginConfig = karabo::util::Hash("pluginDirectory", ".");
-        karabo::util::PluginLoader::create("PluginLoader", pluginConfig)->update();
+        karabo::util::Hash devCfg("deviceId", TEST_DEVICE_ID,
+                                  "_deviceId_", TEST_DEVICE_ID);
 
-        // Instantiate C++ Device Server.
-        karabo::util::Hash config("serverId", DEVICE_SERVER_ID,
-                                  "scanPlugins", true,
-                                  "Logger.priority", LOG_PRIORITY);
-        m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
-        m_deviceSrv->finalizeInternalInitialization();
-        // Instantiate Device Client.
-        m_deviceCli = boost::make_shared<karabo::core::DeviceClient>(std::string(), false);
-        m_deviceCli->initialize();
+        /**
+         * Instantiate device without device server so the device pointer
+         * is returned and accessible for use with googlemock
+         *
+         * Because some features are not fully supported in this case, the device under
+         * test will behave differently compared to one instantiated within a device server
+         *
+         * Known limitations of the unit test device
+         *
+         *   - It does not receive time ticks since the device server calls slotTimeTick directly
+         *     (which is not exposed as a slot...)
+         *   - onTimeTick(tracinId, seco, frac, period) will never get called
+         *   - onTimeUpdate will never get called
+         */
+        // instantiate the device to be tested
+        //karabo::core::BaseDevice::Pointer baseDevice;
+        //baseDevice = instantiateAndGetPointer("__CLASS_NAME__", TEST_DEVICE_ID, devCfg);
+        // cast the BaseDevice::Pointer to the derived class Pointer
+        //deviceUnderTest = boost::dynamic_pointer_cast<karabo::__CLASS_NAME__>(baseDevice);
+
+        /**
+         * Instantiate device inside a device server
+         *
+         * Recommended method if not using googletest/googlemock expectations
+         */
+        // instantiate the device to be tested
+        instantiateWithDeviceServer("__CLASS_NAME__", TEST_DEVICE_ID, devCfg);
+
+        /**
+         * Add default expectations for this test fixture here
+         */
+
     }
 
-    void TearDown( ) {
-        m_deviceCli.reset();
-        m_deviceSrv.reset();
-        karabo::net::EventLoop::stop();
-        m_eventLoopThread.join();
+    void TearDown( ) override {
+        /**
+         * Shutdown the device
+         */
+        // test the preDestruction() hook
+        m_deviceCli->execute(TEST_DEVICE_ID, "slotKillDevice");
+        // test device class destruction
+        deviceUnderTest.reset();
     }
 
-    void instantiateTestDevice(const karabo::util::Hash& devSpecificCfg) {
-        karabo::util::Hash devCfg("deviceId", TEST_DEVICE_ID);
-        devCfg.merge(devSpecificCfg);
-
-        std::pair<bool, std::string> success =
-            m_deviceCli->instantiate(DEVICE_SERVER_ID, "__CLASS_NAME__",
-                                     devCfg, DEV_CLI_TIMEOUT_SEC);
-
-        ASSERT_TRUE(success.first)
-            << "Error instantiating '" << TEST_DEVICE_ID << "':\n"
-            << success.second;
-    }
-
-    void deinstantiateTestDevice() {
-        std::pair<bool, std::string> success = m_deviceCli->killDevice(TEST_DEVICE_ID, DEV_CLI_TIMEOUT_SEC);
-
-        ASSERT_TRUE(success.first) << "Failed to deinstantiate device '" << TEST_DEVICE_ID << "':\n" << success.second;
-    }
-
-    std::thread m_eventLoopThread;
-
-    karabo::core::DeviceServer::Pointer m_deviceSrv;
-    karabo::core::DeviceClient::Pointer m_deviceCli;
+    karabo::__CLASS_NAME__::Pointer deviceUnderTest;
 };
 
 
-// TODO: Give the test case a proper name (not "testScaffold")
-TEST_F(__CLASS_NAME__Fixture, testScaffold){
+// test only that device instantiates
+TEST_F(__CLASS_NAME__DefaultCfg, testDeviceInstantiation) {
 
-    // TODO: Provide a non-empty config for the device under test.
-    instantiateTestDevice(karabo::util::Hash());
+    karabo::util::Hash result = m_deviceCli->get(TEST_DEVICE_ID);
+    std::string cls = result.get<std::string>("classId");
+    std::string clsVer = result.get<std::string>("classVersion");
 
-    // TODO: Define a test body.
+    std::cout << std::endl;
+    std::cout << "Device under test is class " << cls;
+    std::cout << ", version " << clsVer;
+    std::cout << std::endl;
+    std::cout << std::endl;
 
-    deinstantiateTestDevice();
+    ASSERT_STREQ(cls.c_str(), "__CLASS_NAME__");
 }
