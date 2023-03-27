@@ -18,7 +18,8 @@ from karabogui.indicators import LOCKED_COLOR
 Item = namedtuple('Item', ['proxy', 'action'])
 DEFAULT_TEXT = 'NO TEXT'
 
-CONFIRM_STYLE = 'QToolButton {{ font-size: {}pt; font: bold; color: {}; }}'
+CONFIRM_STYLE = ('QToolButton{{font-size: {}pt; font: bold;}}'
+                 'QToolButton:enabled{{color: {};}}')
 TOOL_STYLE = 'QToolButton {{ font-size: {}pt; font: {} }}'
 
 
