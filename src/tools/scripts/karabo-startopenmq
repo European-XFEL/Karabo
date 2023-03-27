@@ -1,4 +1,5 @@
 #!/bin/bash
+
 cd $(dirname $0)
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
