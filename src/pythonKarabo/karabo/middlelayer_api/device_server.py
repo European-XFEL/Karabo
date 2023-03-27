@@ -258,12 +258,13 @@ class DeviceServerBase(SignalSlotable):
         """
         return {}
 
-    @coslot
-    async def slotKillServer(self):
-        await self.slotKillDevice()
+    async def slotKillServer(self, message=None):
+        await self.slotKillDevice(message)
         # Stop event loop on the next cycle ...
         await sleep(0.1)
         get_event_loop().call_soon(self.stopEventLoop)
+
+    slotKillServer = coslot(slotKillServer, passMessage=True)
 
     @slot
     def slotGetClassSchema(self, classId):
@@ -542,8 +543,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
                          f"from {instanceId}.")
         if self.deviceInstanceMap:
             # first check if there are device instances to be removed
-
-            futures = {instanceId: dev.slotKillDevice()
+            futures = {instanceId: dev.slotKillDevice(message)
                        for instanceId, dev in self.deviceInstanceMap.items()}
             done, *errors = await allCompleted(**futures, timeout=10)
             # SlotKillDevice returns a success boolean if all tasks could be
@@ -561,7 +561,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
                     f"were shutdown: {devices} --- {errors.values()}")
 
         # then kill the server
-        await super(MiddleLayerDeviceServer, self).slotKillServer()
+        await super(MiddleLayerDeviceServer, self).slotKillServer(message)
 
         return self.serverId
 
@@ -759,8 +759,7 @@ class BoundDeviceServer(DeviceServerBase):
         self.logger.info(f"Bound device {instanceId} is now up and running")
         self._process_futures[instanceId] = True
 
-    @coslot
-    async def slotKillServer(self):
+    async def slotKillServer(self, message=None):
         for device in self.processes:
             self._ss.emit("call", {device: ["slotKillDevice"]})
         try:
@@ -772,9 +771,11 @@ class BoundDeviceServer(DeviceServerBase):
             for p in self.processes.values():
                 p.kill()
         self.processes.clear()
-        await super(BoundDeviceServer, self).slotKillServer()
+        await super(BoundDeviceServer, self).slotKillServer(message)
 
         return self.serverId
+
+    slotKillServer = coslot(slotKillServer, passMessage=True)
 
 
 class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
