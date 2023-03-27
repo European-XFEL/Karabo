@@ -255,12 +255,13 @@ class Manager(QObject):
             # Delete any request of instantiating devices
             self._awaiting_instantiations.clear()
 
-            # Any pending requests are effectively timed-out
-            pending = list(self._request_handlers.keys())
-            for token in pending:
-                self.handle_requestGeneric(
-                    False, request=Hash("token", token),
-                    reason="Karabo GUI Client disconnect. Erasing request.")
+            # Any pending requests are effectively timed-out and removed
+            pending = len(self._request_handlers)
+            if pending:
+                get_logger().error(
+                    f"Erased <b>{pending}</b> pending generic requests due to "
+                    "client disconnect.")
+            self._request_handlers.clear()
 
     def handle_subscribeLogsReply(self, **info):
         """Handle the subscribe logs reply of the gui server"""
