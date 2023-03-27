@@ -165,9 +165,9 @@ class TestDisplayCommand(GuiTestCase):
             self.assertTrue(controller.model.requires_confirmation)
             self.assertIn("bold", widget.styleSheet())
             if not IS_MAC_SYSTEM:
-                self.assertIn("QToolButton { font-size: 10pt; font: bold; "
-                              "color: rgb(255, 145, 255); }",
-                              widget.styleSheet())
+                sh = ("QToolButton{font-size: 10pt; font: bold;}"
+                      "QToolButton:enabled{color: rgb(255, 145, 255);}")
+                self.assertIn(sh, widget.styleSheet())
 
             # We don"t want to execute
             QMessageBox.question = MagicMock(return_value=QMessageBox.No)
