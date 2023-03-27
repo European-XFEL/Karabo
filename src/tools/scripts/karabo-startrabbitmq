@@ -1,0 +1,55 @@
+#!/bin/bash
+
+function startRabbitMQ() {
+  # check the RabbtitMQ docker image with the web admin interface enabled.
+  IMAGE=rabbitmq:3-management
+  CONTAINER=karabo_rabbitmq
+  RABBIT_HOST="$(hostname)_rabbit"
+
+  # check if the rabbitmq image is already available
+  docker images $IMAGE --format "{{.Repository}}:{{.Tag}}" | grep $IMAGE > /dev/null
+  if [[ $? -ne 0 ]]; then
+    # pull in case we miss this image
+    docker pull $IMAGE 
+    if [[ $? -ne 0 ]]; then
+      echo "ERROR: is docker installed?"
+      exit 1
+    fi
+  fi
+
+  # Check if the rabbitmq image is already running and exit quietly in that case.
+  docker ps --filter name=$CONTAINER | grep $CONTAINER > /dev/null
+  if [[ $? -eq 0 ]]; then
+    exit 0
+  fi
+
+  docker ps --all --filter name=$CONTAINER | grep $CONTAINER > /dev/null
+  # if no container from the image is running, start it.
+  if [[ $? -ne 0 ]]; then
+    docker run -d -p 5672:5672 -p 15672:15672 -e RABBITMQ_DEFAULT_USER=karabo -e RABBITMQ_DEFAULT_PASS=karabo --hostname "$RABBIT_HOST" --name $CONTAINER $IMAGE > /dev/null
+  else
+    docker start $CONTAINER > /dev/null
+  fi
+
+  if [[ $? -eq 0 ]]; then
+    echo "---------------------------------------------------------------"
+    echo "RabbitMQ broker was started in a container."
+    echo ""
+    echo "You can access its web admin at: \"http://localhost:15672\""
+    echo "The user and the password for the web admin are both \"karabo\""
+    exit 0
+  else
+    echo "----------------------------------------------"
+    echo "Error starting the RabbitMQ broker's container"
+    exit 1
+  fi
+}
+
+cd "$(dirname "$0")" || exit
+
+if [ -z "$KARABO" ]; then
+  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+  exit 1
+fi
+
+startRabbitMQ "$@"
