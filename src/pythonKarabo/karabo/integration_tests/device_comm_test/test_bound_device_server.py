@@ -45,9 +45,11 @@ class TestDeviceServer(BoundDeviceTestCase):
         with self.subTest(msg="test logger content"):
             serverId = "testLogServer"
             class_ids = ["SceneProvidingDevice", "StuckLoggerDevice"]
+
             self.start_server("bound", serverId, class_ids,
                               namespace="karabo.bound_device_test",
-                              logLevel="INFO")
+                              logLevel="INFO", serverFlags="Development")
+
             cfg = Hash("classId", "SceneProvidingDevice",
                        "deviceId", "ProperlyLoggingDevice",
                        "configuration", Hash())
@@ -97,6 +99,11 @@ class TestDeviceServer(BoundDeviceTestCase):
             (h,) = sigSlot.request(serverId, "slotPing", serverId,
                                    1, True).waitForReply(self._max_timeoutMs)
             self.assertEqual(h["log"], "INFO")
+
+        with self.subTest("Test serverFlags"):
+            req = sigSlot.request(serverId, "slotPing", serverId, 1, True)
+            (h, ) = req.waitForReply(self._max_timeoutMs)
+            self.assertEqual(1, h["serverFlags"])
 
         with self.subTest(msg="test slow init"):
             serverId = "testServerSlow"
