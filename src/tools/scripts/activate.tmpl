@@ -117,3 +117,27 @@ fi
 if [ -n "$BASH" -o -n "$ZSH_VERSION" ] ; then
     hash -r
 fi
+
+karabo_complete () {
+    karabo-check &> /dev/null # will start the supervisor - if not running
+    #             list servers | get names       | concatenate     | strip color codes
+    completions=$(karabo-check | cut -d ':' -f 1 | paste -sd ' ' - | sed -e 's/\x1b\[[0-9;]*m//g')
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    COMPREPLY=($(compgen -W "${completions}" -- "${cur}"))
+}
+
+# Enable zsh's bash compatibility mode to use bash's autocompletion functions
+if [ -n "$ZSH_VERSION" ] ; then
+    autoload bashcompinit
+    bashcompinit
+fi
+
+if [ -n "$BASH"  -o -n "$ZSH_VERSION" ]; then
+    complete -W"--help -h" -F karabo_complete karabo-check
+    complete -W"--help -h" -F karabo_complete karabo-start
+    complete -W"--help -h"  -F karabo_complete karabo-stop
+    complete -W"--help -h -l -dx .svscan -u -d -o -x" -F karabo_complete karabo-kill
+    complete -W"--help -h" -F karabo_complete karabo-remove-deviceserver
+    complete -W"--help -h" -F karabo_complete karabo-gterm
+    complete -W"--help -h" -F karabo_complete karabo-xterm
+fi
