@@ -642,7 +642,12 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
                       const util::TimeValue& interval) {
     // Skip message body deserialization: "skipFlag"
     const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
-    net::AmqpClient::Pointer client = util::Configurator<net::AmqpClient>::create("AmqpClient", config);
+    AMQP::Table queueArgs;
+    queueArgs
+          .set("x-max-length", 10'000)    // Queue limit
+          .set("x-overflow", "drop-head") // drop oldest if limit reached
+          .set("x-message-ttl", 30'000);  // message time-to-live in ms
+    net::AmqpClient::Pointer client = util::Configurator<net::AmqpClient>::create("AmqpClient", config, queueArgs);
 
     // Connect and subscribe
     auto ec = client->connect();
