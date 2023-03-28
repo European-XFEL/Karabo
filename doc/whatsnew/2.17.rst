@@ -2,7 +2,7 @@
 What's New in Karabo 2.17.0
 ***************************
 
-Preliminary! Release scheduled for the 19.05.2023. Merge-log until 2.17.0a8.
+Preliminary! Release scheduled for the 19.05.2023. Merge-log until 2.17.0rc5.
 
 
 Summary – Release highlights
@@ -15,12 +15,19 @@ Summary – Release highlights
 - ALL API: The device property `lastCommand` will now also show the `senderId`, e.g.  "calledSlot <- DEVICE/THAT/CALLED"
 - MDL: `slotGetProperties` function provided that calls `slotGetConfigurationSlice`. The function takes a list of paths or a single path as input.
 - GUI: A new code editor with linting based on QScintilla is provided
+- GUI: Macros can be run in debug mode. This mode starts the macros on a selected macro server that
+  is running in development mode.
+- GUI: A new set of widgets (controllers) is provided for floating points (formatting)
+- GUI: Addition of dedicated alarm widgets for numbers (floats and integers)
 - Ubuntu 22 Support: Backported to 2.16.4
 
 Features
 ++++++++
 
 - `InstanceStatus` Widget can be added to the scene
+- Device servers (scriptMDL): Can be started with serverFlags description (Enum)
+- InfluxLogger readers can have two URL addresses, one dedicated for history of a
+  single property and one for retrieval of the schema and full configuration of a device.
 
 Bugfixes
 ++++++++
@@ -42,9 +49,15 @@ Change of behaviour
 - GUI: Device scene links cannot be created from the device property `availableScenes` anymore. They become a scene tool widget and
   have to be created from the scene panel toolbar or via dragging a device onto a scene.
   Device scene links don't trigger itself monitoring of a device.
+- GUI: A macro is selected now in the project panel if started and connected (view of code panel)
+- GUI-Common: Geometry traits (width, height, x, y, ...) are now casted integers. This is fully backward and forward compatible with
+  the previous float setting. Hence, in device provided scenes these values appear as integers from now on.
 - ALL API: Log-events do not generate a broker message anymore. For logging messages, please retrieve the last log messages on demand via the karabo gui client
   interface or view the local log file.
+- ALL API: Heartbeat resurrection: If a device suddenly appears to sent a heartbeat, the listening device will request the full instance info manually.
+  This is a preparation to avoid sending the full `instanceInfo` with every heartbeat in an upcoming release.
 - MDL: Provide set_setter on Configurable
+- MDL: slotGetConfiguration does not contain `Slots` as keys
 - GUI Server: Remove 'requestFromSlot' and update integration tests.
 - C++: Add deviceId to exception message of Device::get
 
@@ -56,7 +69,24 @@ Detailed Merge-Log
 Graphical User Interface
 ========================
 
-
+- GUI: Resolve "Macro Editor: Adjust font size"Closes #204 !7291
+- GUI: Protect reactive login dialog from not set port number !7288
+- GUI: Provide server development flag visibility on server icons !7286
+- GUI: Use serverFlags on macro's to start a macro on a development macro server"Closes #199 !7292
+- GUI: Provide floating controllers for formatting and alarms !7293
+- GUI: Handle exception when using NDARRAY_ELEMENT without type !7301
+- GUI: Prevent stable macros to run on development macro servers !7305
+- GUI: Add AlarmInteger controllers !7304
+- GUI: Make sure we can always request a class schema when a server goes down !7315
+- GUI: Provide option to show the filter key column in FilterTableElement and toggle quickly Closes #142 !7306
+- GUI: Show error on debug run if no development server is present !7351
+- GUI: Define macro toolbar tabbing order !7354
+- GUI: Set time range exact on RequestDialog in trendline Closes #191 !7264
+- GUI: Show a macro after successful instantiation !7302
+- GUI: Macro Editor: Replace functionality replaces the next occurrence instead of current selection Closes #245 !7353
+- GUI: Replace All should not replace a text more than once. Closes #243 !7349
+- GUI: Macro Editor - Find Toolbar should update the search hit count on code changes Closes #244 !7350
+- GUI: Expose method to get MacroEditor text, to Squish !7311
 - GUI: Icons Widget-TextDialog. Show items in a Combobox. !7275
 - GUI: Enable hovering over selected widgets !7179
 - GUI: Target tool show log values. !7167
@@ -136,7 +166,24 @@ Graphical User Interface
 - GUI: Protect edit of table controller when there is no binding !7145
 - GUI: Fix slice for RGB images !7148
 - Common: Refactor link reader and writer for the models !6992
-
+- MDL: Provide option to declare servers as development servers with serverFlags (playground) !7281
+- MDL: Provide Hash and HashList from/toString !7289
+- MDL: Slots don't appear in Configurations !7254
+- MDL: Don't wait for topology collection in ikarabo !7259
+- MDL: Change decorator order device server test !7296
+- MDL: Put more timeouts in output channel schema test !7307
+- MDL: Provide global sync singleton !7299
+- MDL: Remove unused fields from broker headers !7318
+- MDL: Add timestamp to AMQP header !7319
+- MDL: Explicitly close exitstack on exit !7314
+- MDL: Fix race in timer test for AMQP !7329
+- MDL: Add decodeBinaryPos to namespace !7324
+- MDL: Suppress exceptions but post them on the logger !7336
+- MDL: Split device server tests and move the heartbeat test to flaky !7320
+- MDL: Provide queue arguments for classic consume !7335
+- Native: Remove a few numpy warnings in native tests !7297
+- Common: Convert geometry traits to casting integers !7298
+- Common: Remove old plot widget models !7341 !7321
 
 MDL/Native core
 ===============
@@ -265,6 +312,23 @@ MDL/Native core
 Bound/cpp core
 ==============
 
+
+- C++: Improvements and updates to the template files for new C++ devices. !7284
+- C++: Establish limits on the AMQP queues !7285
+- C++: support long inheritance chain in configurator !7263
+- C++: Remove AmqpTransceiver if subscription removed !7310
+- C++: Break reference cycle preventing destruction of Amqp classes !7300
+- C++: Remove unused AMQP stuff !7294
+- C++: Fix influx schema writing if disconnected !7326
+- C++: Amqp with less event loop posts when sending !7316
+- C++: Optional second URL read address for InfluxDB !7330
+- C++ test: Longer timeout for pipeline test !7331
+- C++: Prefix amqp exchange for karaboGuiDebug with topic !7332
+- C++: Skip avoidable string copy in Element::getValueAs !7340
+- C++: Prepare for reduced instanceInfo in future releases !7337
+- C++ AMQP: Queue limit also for normal queue !7334
+- C++: find_package for pybind11 not depending on variable set from "auto_build_all.sh". !7342
+- C++ Test: Await connection before sending data !7343
 - C++: Report ill-formed requestGeneric info back to GUI client !6917
 - C++: Fixed data logger connection failure handling !7001
 - C++: Fix initial topology gathering of the GuiServer !7029
@@ -328,7 +392,9 @@ Bound/cpp core
 - C++ Tests: Debug output when devices do not get up in  test_chain_receivers !7187
 - C++ Tests: Add debug info to alarm integration test !7229
 - C++ Tests: Fix code added for debugging !7230
-
+- BIND: karabind - bound python on pybind11, part 1. !7295
+- BIND: Extend test attributes !7309
+- BIND: Add karabind TODO !7347
 
 
 Core Devices
@@ -338,6 +404,8 @@ Core Devices
 - DaemonManager: Protect from faulty webservers ... !7085
 - InfluxDataLogger: to log vector Hash rejection in detail !6989
 - Python influx: Remove a few deprecation warnings and code quality !7159
+- All API: Clients use only first data log readers per logger server !7266
+- GUI Server: Send a success subscribe log reply !7308
 
 
 Dependencies, Documentation and Tools
@@ -371,7 +439,12 @@ Dependencies, Documentation and Tools
 - DOC: Adjust removed 'gitlab' from urls, update supported platforms !7056
 - DOC: Fix gitlab link !7051
 - DOC: Document 2.17. until alpha 6 !7236
+- DOC: Document until alpha 8 !7287
+- DOC: Document more the 2.16.X releasesCloses #229 !7338
 - CI: Add build and test jobs for Ubuntu22. !6924
+- CI: Fix the gitlab CI setup in the templates for new devices on AlmaLinux9. !7328
+- CI: Framework - use CI_JOB_TOKEN instead of requiring XFEL_TOKEN to be defined in every project !7345
+- CI: Fix for "set_lsb_release_info.sh" not found from ".bundle*" scripts in "$KARABO/bin". !7333
 - TOOLS: remove tags on karabo install !7018
 - TOOLS: Fix typo in karabo-kill help message. !7000
 - TOOLS: Add Python and IDE related entries to MDL/Bound Python .gitignore templates. !7276
