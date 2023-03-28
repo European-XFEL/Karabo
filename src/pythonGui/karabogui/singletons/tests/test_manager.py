@@ -387,14 +387,17 @@ class TestManager(GuiTestCase):
                 )
 
                 # Check that handlers are all called when network disconnects
-                with patch.object(manager, 'handle_requestGeneric'):
+                target = 'karabogui.singletons.manager.get_logger'
+
+                with patch(target) as logger:
                     manager._request_handlers = {'bob': 'super_request'}
                     manager.onServerConnectionChanged(False)
-                    manager.handle_requestGeneric.assert_called_with(
-                        False, request=Hash('token', 'bob'),
-                        reason='Karabo GUI Client disconnect. '
-                               'Erasing request.')
+                    logger().error.assert_called_with(
+                        'Erased <b>1</b> pending generic requests due to '
+                        'client disconnect.')
                 topology.clear.assert_called_with()
+                # No further requests
+                assert not manager._request_handlers
 
     def test_handle_device_configuration(self):
         topology = Mock()
