@@ -15,7 +15,7 @@ import traceback
 from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
-from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, State
+from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags, State
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
@@ -111,6 +111,15 @@ class DeviceServer(object):
             .displayedName("Plugin Namespace")
             .description("Namespace to search for plugins")
             .assignmentOptional().defaultValue(DEFAULT_NAMESPACE)
+            .expertAccess()
+            .commit(),
+
+            VECTOR_STRING_ELEMENT(expected).key("serverFlags")
+            .displayedName("Server Flags")
+            .description("ServerFlags describing the device server, "
+                         "the values must correspond to the enum ServerFlags")
+            .assignmentOptional()
+            .defaultValue([])
             .expertAccess()
             .commit(),
 
@@ -236,6 +245,17 @@ class DeviceServer(object):
         info["visibility"] = self.visibility
         info["lang"] = "bound"
         info["log"] = config.get("Logger.priority")
+
+        self.serverFlags = config.get("serverFlags")
+        serverFlags = 0
+        for flag in self.serverFlags:
+            if flag in ServerFlags.__members__:
+                serverFlags |= ServerFlags[flag]
+            else:
+                raise NotImplementedError(
+                    f"Provided serverFlag is not supported: {flag}")
+        info["serverFlags"] = serverFlags
+
         devicesInfo, scanLogs = self.scanPlugins(self.pluginNamespace)
         info.merge(devicesInfo)
 
