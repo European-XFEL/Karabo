@@ -24,5 +24,5 @@ def get_language_icon(node):
     develop = (attrs.get("serverFlags", 0)
                & ServerFlags.Development == ServerFlags.Development)
 
-    icons = _SERVER_DEVELOPMENT if develop else _SERVER_STABLE
-    return icons.get(language, None)
+    icon_dict = _SERVER_DEVELOPMENT if develop else _SERVER_STABLE
+    return icon_dict.get(language, None)
