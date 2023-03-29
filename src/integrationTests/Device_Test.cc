@@ -388,7 +388,8 @@ void Device_Test::setUp() {
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
     {
-        Hash config("serverId", "testServerDevice", "scanPlugins", false, "Logger.priority", "FATAL");
+        Hash config("serverId", "testServerDevice", "scanPlugins", false, "Logger.priority", "FATAL", "serverFlags",
+                    std::vector<std::string>{"Development"});
         m_deviceServer = DeviceServer::create("DeviceServer", config);
         m_deviceServer->finalizeInternalInitialization();
     }
@@ -414,7 +415,7 @@ void Device_Test::appTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Now all possible individual tests.
-    testInstanceInfoLog();
+    testInstanceInfoServer();
     testGetTimestamp();
     testSchemaInjection();
     testSchemaWithAttrUpdate();
@@ -439,8 +440,8 @@ void Device_Test::appTestRunner() {
     testBadInit();
 }
 
-void Device_Test::testInstanceInfoLog() {
-    std::clog << "Testing instanceInfoLog round trip for deviceServer" << std::flush;
+void Device_Test::testInstanceInfoServer() {
+    std::clog << "Testing instanceInfo and configuration round trip for deviceServer" << std::flush;
 
     auto sigSlotA = m_deviceServer;
     const int timeOutInMs = 250;
@@ -450,6 +451,8 @@ void Device_Test::testInstanceInfoLog() {
                                   .timeout(timeOutInMs)
                                   .receive(h));
     CPPUNIT_ASSERT_EQUAL(h.get<std::string>("log"), std::string("FATAL"));
+    CPPUNIT_ASSERT(h.get<int>("serverFlags") == 1ul);
+
     CPPUNIT_ASSERT_NO_THROW(
           sigSlotA->request("testServerDevice", "slotLoggerPriority", "INFO").timeout(timeOutInMs).receive());
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("testServerDevice", "slotPing", "testServerDevice", 1, true)
