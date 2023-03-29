@@ -61,6 +61,7 @@ namespace karabo {
                                 std::vector<RejectedData>& rejectedPathReasons);
 
             void checkSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
+                                 const boost::shared_ptr<std::vector<char>>& schemaArchive,
                                  const karabo::net::HttpResponse& o);
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
@@ -100,12 +101,13 @@ namespace karabo {
              * based on its digest.
              *
              * @param schemaDigest The digest (assumed unique) of the new schema to be saved.
+             * @param schemaArchive The serialised schema to be saved
              *
              * @return true If the new schema has been successfuly submitted for logging.
              * @return false If the logging of the new schema has not been submitted for logging. Currently, this
              * happens if logging the new schema would be above the allowed schema logging rate threshold for a device.
              */
-            bool logNewSchema(const std::string& schemaDigest);
+            bool logNewSchema(const std::string& schemaDigest, const std::vector<char>& schemaArchive);
 
             /**
              * @brief Logs the given set of rejected data in the __BAD__DATA__ measurement and to the Karabo log. To
@@ -129,7 +131,6 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
 
-            std::vector<char> m_archive;
             int m_maxTimeAdvance;
             size_t m_maxVectorSize;
             unsigned long long m_secsOfLogOfRejectedData; // epoch seconds of last logging of rejected data
