@@ -45,6 +45,13 @@ namespace karabo {
 
     namespace core {
 
+        enum class ServerFlags {
+
+            DEVELOPMENT = (1u << 0),
+            // add future flags as bitmask:
+            // SOME_OTHER_SERVER_FLAG = (1u << 1),
+        };
+
         // template class Runner<DeviceServer>;
 
         using namespace std;
@@ -174,6 +181,17 @@ namespace karabo {
                   .assignmentOptional()
                   .defaultValue("")
                   .commit();
+
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("serverFlags")
+                  .displayedName("Server Flags")
+                  .description(
+                        "ServerFlags describing the device server, "
+                        "the values must correspond to the enum ServerFlags")
+                  .assignmentOptional()
+                  .defaultValue({})
+                  .init()
+                  .commit();
         }
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config)
@@ -238,6 +256,16 @@ namespace karabo {
             instanceInfo.set("lang", "cpp");
             instanceInfo.set("visibility", m_visibility);
             instanceInfo.set("log", config.get<std::string>("Logger.priority"));
+
+            int flags = 0;
+            const std::vector<std::string>& serverFlags = config.get<std::vector<std::string>>("serverFlags");
+            for (const std::string& flag : serverFlags)
+                if (flag == "Development") {
+                    flags |= static_cast<int>(ServerFlags::DEVELOPMENT);
+                } else {
+                    throw KARABO_LOGIC_EXCEPTION("Provided serverFlag is not supported: " + flag);
+                }
+            instanceInfo.set("serverFlags", flags);
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo);
