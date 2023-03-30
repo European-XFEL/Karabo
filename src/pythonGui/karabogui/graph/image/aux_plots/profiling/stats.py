@@ -1,6 +1,9 @@
 from traits.api import Constant, Dict
 
-from ..base.stats import BaseStats, table_body, table_header, table_row
+from karabogui.graph.common.formatting import (
+    table_body, table_header, table_row)
+
+from ..base.stats import BaseStats
 
 
 class ProfileStats(BaseStats):

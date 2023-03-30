@@ -1,6 +1,8 @@
 from traits.api import Constant
 
-from ..base.stats import BaseStats, table_body, table_row
+from karabogui.graph.common.formatting import table_body, table_row
+
+from ..base.stats import BaseStats
 
 
 class HistogramStats(BaseStats):
