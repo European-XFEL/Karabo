@@ -541,19 +541,35 @@ namespace karabo {
                                                const HttpResponse& o) {
             // Not running in Strand anymore - take care not to access any potentially changing data members!
 
-            // TODO: Do error handling ...
-            //...
-            bool schemaLogged = false;
-            nl::json j = nl::json::parse(o.payload);
-            auto count = j["results"][0]["series"][0]["values"][0][1];
-            if (count.is_null()) {
-                // digest hasn't been found:  json is '{"results":[{"statement_id":0}]}'.
-                schemaLogged = logNewSchema(schDigest, *schemaArchive);
-            } else {
-                // digest has been found - schema already logged.
-                schemaLogged = true;
+            bool schemaInDb = false;
+            if (o.code < 300) {
+                // HTTP request with query to retrieve schema by digest succeeded.
+                try {
+                    nl::json j = nl::json::parse(o.payload);
+                    auto count = j["results"][0]["series"][0]["values"][0][1];
+                    if (!count.is_null()) {
+                        // at least one schema with the digest has been found.
+                        // When the digest isn't found, the response json is '{"results":[{"statement_id":0}]}'.
+                        schemaInDb = true;
+                    }
+                } catch (const nl::json::exception& je) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Error checking if schema with digest '" << schDigest
+                                               << "' is already saved for device '" << m_deviceToBeLogged << "': '"
+                                               << je.what() << "'.";
+                }
             }
-            if (schemaLogged) {
+            if (!schemaInDb) {
+                // Schema not in db, or query request failed or query results could not be parsed.
+                // In any of those cases, try to log the schema in the database.
+
+                // Note: if the schema was already in the database, but the query request failed or returned an
+                // unparseable response, requesting to save it again won't cause any harm appart from taking some extra
+                // space. Not saving when in doubt would be the really harmful outcome, as that would lead to failures
+                // in retrieving past device configurations.
+                schemaInDb = logNewSchema(schDigest, *schemaArchive);
+            }
+
+            if (schemaInDb) {
                 const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
                 std::stringstream ss;
                 ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << schDigest << "\" " << ts
