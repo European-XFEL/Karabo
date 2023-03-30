@@ -6,10 +6,9 @@
 import webbrowser
 
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import (
-    QApplication, QComboBox, QDialog, QLineEdit, QMessageBox, QStyle,
-    QStyledItemDelegate, QStyleOptionFrame, QStyleOptionProgressBar)
+    QApplication, QComboBox, QDialog, QMessageBox, QStyle, QStyledItemDelegate,
+    QStyleOptionFrame, QStyleOptionProgressBar)
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabo.native import Hash, is_equal
@@ -25,6 +24,7 @@ from karabogui.request import (
     call_device_slot, get_scene_from_server, retrieve_default_scene)
 from karabogui.topology.api import is_device_online
 from karabogui.util import SignalBlocker, get_reason_parts
+from karabogui.widgets.edits import LineEditEditor
 
 from .button_delegate import TableButtonDelegate
 from .utils import (
@@ -262,23 +262,6 @@ class ComboBoxDelegate(QStyledItemDelegate):
         only emitted when the editor finished.
         """
         self.commitData.emit(self.sender())
-
-
-class LineEditEditor(QLineEdit):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._normal_palette = self.palette()
-        self._error_palette = QPalette(self._normal_palette)
-        self._error_palette.setColor(QPalette.Text, Qt.red)
-        self.textChanged.connect(self._check_background)
-
-    @Slot(str)
-    def _check_background(self, text):
-        acceptable_input = self.hasAcceptableInput()
-        palette = (self._normal_palette if acceptable_input
-                   else self._error_palette)
-        self.setPalette(palette)
 
 
 class NumberDelegate(QStyledItemDelegate):
