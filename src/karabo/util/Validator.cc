@@ -136,7 +136,7 @@ namespace karabo {
                     continue;
                 }
 
-                string key(it->getKey());
+                const string& key = it->getKey();
 
                 string currentScope;
                 if (scope.empty()) currentScope = key;
@@ -189,6 +189,15 @@ namespace karabo {
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
+                    if (hasClassAttribute && it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID) == "Slot") {
+                        // Slot nodes should not appear in the validated output nor in the input.
+                        // Tolerate empty node input for backward compatibility, though.
+                        if (userHasNode && (user.getType(key) != Types::HASH || !user.get<Hash>(key).empty())) {
+                            report << "There is configuration provided for Slot '" << currentScope << "'" << endl;
+                            return;
+                        }
+                        continue;
+                    }
                     if (!userHasNode) {
                         if (m_injectDefaults) {
                             Hash::Node& workNode = working.set(key, Hash()); // Insert empty node
