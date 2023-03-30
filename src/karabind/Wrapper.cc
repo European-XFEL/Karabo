@@ -1,26 +1,135 @@
 /*
  * File:   Wrapper.cc
- * Author: esenov
+ * Author: CONTROLS DEV group
  *
- * Created on March 17, 2013, 11:06 PM
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include "Wrapper.hh"
 
+#include <pybind11/complex.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include <boost/filesystem.hpp>
+#include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 
-#include <boost/filesystem.hpp>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/complex.h>
 #include "PyTypes.hh"
 
 using namespace std;
 
-namespace karabind {
 
+namespace karabind {
     namespace wrapper {
+        namespace detail {
+
+            // Define this macro to guarantee the same conversion rules for 2 types:
+            // 'karabo::util::Hash::Node' and 'karabo::util::Hash::Attributes::Node'
+            // (both are based on `karabo::util::Element` class with different template args)
+#define CAST_ELEMENT_TO_PY(T)                                                                   \
+    py::object castElementToPy(const T& self, const karabo::util::Types::ReferenceType& type) { \
+        using namespace karabo::util;                                                           \
+        switch (type) {                                                                         \
+            case Types::BOOL:                                                                   \
+                return py::cast(self.getValueAs<bool>());                                       \
+            case Types::CHAR:                                                                   \
+                return py::cast(self.getValueAs<char>());                                       \
+            case Types::INT8:                                                                   \
+                return py::cast(self.getValueAs<signed char>());                                \
+            case Types::UINT8:                                                                  \
+                return py::cast(self.getValueAs<unsigned char>());                              \
+            case Types::INT16:                                                                  \
+                return py::cast(self.getValueAs<short>());                                      \
+            case Types::UINT16:                                                                 \
+                return py::cast(self.getValueAs<unsigned short>());                             \
+            case Types::INT32:                                                                  \
+                return py::cast(self.getValueAs<int>());                                        \
+            case Types::UINT32:                                                                 \
+                return py::cast(self.getValueAs<unsigned int>());                               \
+            case Types::INT64:                                                                  \
+                return py::cast(self.getValueAs<long long>());                                  \
+            case Types::UINT64:                                                                 \
+                return py::cast(self.getValueAs<unsigned long long>());                         \
+            case Types::FLOAT:                                                                  \
+                return py::cast(self.getValueAs<float>());                                      \
+            case Types::DOUBLE:                                                                 \
+                return py::cast(self.getValueAs<double>());                                     \
+            case Types::COMPLEX_FLOAT:                                                          \
+                return py::cast(self.getValueAs<std::complex<float>>());                        \
+            case Types::COMPLEX_DOUBLE:                                                         \
+                return py::cast(self.getValueAs<std::complex<double>>());                       \
+            case Types::STRING:                                                                 \
+                return py::cast(self.getValueAs<std::string>());                                \
+            case Types::VECTOR_BOOL:                                                            \
+                return py::cast(self.getValueAs<bool, std::vector>());                          \
+            case Types::VECTOR_CHAR: {                                                          \
+                const auto& v = self.getValueAs<char, std::vector>();                           \
+                return py::bytearray(v.data(), v.size());                                       \
+            }                                                                                   \
+            case Types::VECTOR_INT8: {                                                          \
+                const auto& v = self.getValueAs<signed char, std::vector>();                    \
+                return py::bytearray(reinterpret_cast<const char*>(v.data()), v.size());        \
+            }                                                                                   \
+            case Types::VECTOR_UINT8: {                                                         \
+                const auto& v = self.getValueAs<unsigned char, std::vector>();                  \
+                return py::bytearray(reinterpret_cast<const char*>(v.data()), v.size());        \
+            }                                                                                   \
+            case Types::VECTOR_INT16:                                                           \
+                return py::cast(self.getValueAs<short, std::vector>());                         \
+            case Types::VECTOR_UINT16:                                                          \
+                return py::cast(self.getValueAs<unsigned short, std::vector>());                \
+            case Types::VECTOR_INT32:                                                           \
+                return py::cast(self.getValueAs<int, std::vector>());                           \
+            case Types::VECTOR_UINT32:                                                          \
+                return py::cast(self.getValueAs<unsigned int, std::vector>());                  \
+            case Types::VECTOR_INT64:                                                           \
+                return py::cast(self.getValueAs<long long, std::vector>());                     \
+            case Types::VECTOR_UINT64:                                                          \
+                return py::cast(self.getValueAs<unsigned long long, std::vector>());            \
+            case Types::VECTOR_FLOAT:                                                           \
+                return py::cast(self.getValueAs<float, std::vector>());                         \
+            case Types::VECTOR_DOUBLE:                                                          \
+                return py::cast(self.getValueAs<double, std::vector>());                        \
+            case Types::VECTOR_COMPLEX_FLOAT:                                                   \
+                return py::cast(self.getValueAs<std::complex<float>, std::vector>());           \
+            case Types::VECTOR_COMPLEX_DOUBLE:                                                  \
+                return py::cast(self.getValueAs<std::complex<double>, std::vector>());          \
+            case Types::VECTOR_STRING:                                                          \
+                return py::cast(self.getValueAs<std::string, std::vector>());                   \
+            default:                                                                            \
+                break;                                                                          \
+        }                                                                                       \
+        std::ostringstream oss;                                                                 \
+        oss << "Type " << Types::to<karabo::util::ToLiteral>(type) << " is not yet supported";  \
+        throw KARABO_NOT_SUPPORTED_EXCEPTION(oss.str());                                        \
+    }
+
+            // NOTE: Use of metaprogramming here directly does not work: compiler failsto deduce substitutions
+            // correctly. It can be implemented using some indirection but it is more verbose and we stick with above
+            // macro. We need the following Node types ...
+            CAST_ELEMENT_TO_PY(karabo::util::Hash::Attributes::Node)
+            CAST_ELEMENT_TO_PY(karabo::util::Hash::Node)
+
+        } // namespace detail
+
+
+        karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype) {
+            using namespace karabo::util;
+            Types::ReferenceType targetType = Types::UNKNOWN;
+            if (py::isinstance<py::str>(otype)) {
+                const std::string& stype = otype.cast<std::string>();
+                targetType = Types::from<FromLiteral>(stype);
+            } else if (py::isinstance<PyTypes::ReferenceType>(otype)) {
+                PyTypes::ReferenceType ptype = otype.cast<PyTypes::ReferenceType>();
+                targetType = PyTypes::to(ptype);
+            } else {
+                throw KARABO_PARAMETER_EXCEPTION("Argument type is not supported. Valid types: 'str' and 'Types'");
+            }
+            return targetType;
+        }
+
 
         py::object castAnyToPy(const boost::any& operand) {
             try {
@@ -103,7 +212,9 @@ namespace karabind {
                 } else if (operand.type() == typeid(std::vector<karabo::util::Hash::Pointer>)) {
                     return py::cast(boost::any_cast<std::vector<karabo::util::Hash::Pointer>>(operand));
                 }
-                throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
+                std::ostringstream oss;
+                oss << "Failed to convert inner Hash type: " << operand.type().name() << " to python";
+                throw KARABO_PYTHON_EXCEPTION(oss.str());
             } catch (const boost::bad_any_cast& e) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
             }
@@ -225,21 +336,16 @@ namespace karabind {
                 any = o.cast<std::vector<karabo::util::Hash::Pointer>>();
                 return karabo::util::Types::VECTOR_HASH_POINTER;
             }
-            //         if (py::isinstance<py::array>(o)) {
-            //             PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(o.ptr());
-            //             karabo::util::NDArray nd = fromPyArrayToNDArray(arr);
-            //             any = reinterpret_cast<karabo::util::Hash&>(nd);
-            //             return karabo::util::Types::HASH;
-            //         }
             if (py::isinstance<py::list>(o)) {
-                const auto& vo = o.cast<std::vector<py::object>>();
-                size_t size = vo.size();
+                // python list object ...
+                py::list lo = o.cast<py::list>();
+                size_t size = py::len(lo);
                 if (size == 0) {
                     any = std::vector<std::string>();
                     return karabo::util::Types::VECTOR_STRING;
                 }
-                py::object list0 = vo[0];
-                if (list0 == py::none()) {
+                py::object list0 = lo[0];
+                if (list0.is_none()) {
                     any = std::vector<karabo::util::CppNone>(size, karabo::util::CppNone());
                     return karabo::util::Types::VECTOR_NONE;
                 }
@@ -251,8 +357,9 @@ namespace karabind {
                     // First item is an integer - assume that all items are!
                     karabo::util::Types::ReferenceType broadestType = karabo::util::Types::INT32;
                     for (size_t i = 0; i < size; ++i) {
-                        const karabo::util::Types::ReferenceType type = bestIntegerType(vo[i]);
-                        // This relies on the fact that the enums ReferenceType have the order INT32, UINT32, INT64, UINT64
+                        const karabo::util::Types::ReferenceType type = bestIntegerType(lo[i]);
+                        // This relies on the fact that the enums ReferenceType have the order INT32, UINT32, INT64,
+                        // UINT64
                         if (type > broadestType) {
                             broadestType = type;
                             // Stop loop if cannot get broader...
@@ -289,7 +396,11 @@ namespace karabind {
                     return karabo::util::Types::VECTOR_STRING;
                 }
                 if (py::isinstance<karabo::util::Hash>(list0)) {
-                    any = o.cast<std::vector<karabo::util::Hash>>();
+                    // convert py::list of Hash into VectorHash object since we use `bind_vector`:
+                    // vho = VectorHash(list_of_Hash) like VectorHash([Hash(...), Hash(...),...])
+                    // TODO: Check if py::implicitly_convertable can be used...
+                    auto vho = py::module_::import("karabind").attr("VectorHash")(o);
+                    any = vho.cast<std::vector<karabo::util::Hash>>();
                     return karabo::util::Types::VECTOR_HASH;
                 }
                 if (py::isinstance<karabo::util::Hash::Pointer>(list0)) {
@@ -307,6 +418,6 @@ namespace karabind {
             }
             throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
         }
-}
+    } // namespace wrapper
 
 } // namespace karabind
