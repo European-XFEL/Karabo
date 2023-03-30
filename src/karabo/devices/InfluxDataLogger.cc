@@ -33,7 +33,6 @@ namespace karabo {
               m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
               m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
               m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
-              m_archive(),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
               m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
               m_secsOfLogOfRejectedData(0ull),
@@ -507,14 +506,16 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
                   karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
-            m_archive.clear();
-            serializer->save(schema, m_archive);
-            const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
+            auto archive(boost::make_shared<std::vector<char>>());
+            // Avoid re-allocations - small devices need around 10'000 bytes, DataLoggerManager almost 20'000
+            archive->reserve(20'000);
+            serializer->save(schema, *archive);
+            const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(archive->data());
 
             // Calculate 'digest' of serialized schema
             const std::size_t DIGEST_LENGTH = 20;
             unsigned char obuf[DIGEST_LENGTH];
-            SHA1(uarchive, m_archive.size(), obuf);
+            SHA1(uarchive, archive->size(), obuf);
             std::ostringstream dss;
             for (size_t i = 0; i < DIGEST_LENGTH; ++i) dss << std::hex << int(obuf[i]);
             std::string schDigest(dss.str());
@@ -523,12 +524,15 @@ namespace karabo {
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << schDigest
                 << "\"'";
             m_dbClientRead->queryDb(oss.str(),
-                                    bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, schDigest, _1));
+                                    bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, schDigest, archive, _1));
         }
 
 
         void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
+                                               const boost::shared_ptr<std::vector<char>>& schemaArchive,
                                                const HttpResponse& o) {
+            // Not running in Strand anymore - take care not to access any potentially changing data members!
+
             // TODO: Do error handling ...
             //...
             bool schemaLogged = false;
@@ -536,7 +540,7 @@ namespace karabo {
             auto count = j["results"][0]["series"][0]["values"][0][1];
             if (count.is_null()) {
                 // digest hasn't been found:  json is '{"results":[{"statement_id":0}]}'.
-                schemaLogged = logNewSchema(schDigest);
+                schemaLogged = logNewSchema(schDigest, *schemaArchive);
             } else {
                 // digest has been found - schema already logged.
                 schemaLogged = true;
@@ -553,10 +557,10 @@ namespace karabo {
         }
 
 
-        bool InfluxDeviceData::logNewSchema(const std::string& schemaDigest) {
+        bool InfluxDeviceData::logNewSchema(const std::string& schemaDigest, const std::vector<char>& schemaArchive) {
             // Encode serialized schema into Base64
-            const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
-            std::string base64Schema = base64Encode(uarchive, m_archive.size());
+            const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(schemaArchive.data());
+            std::string base64Schema = base64Encode(uarchive, schemaArchive.size());
             unsigned int newLogRate = newSchemaLogRate(base64Schema.size());
             if (newLogRate <= m_maxSchemaLogRateBytesSec) {
                 // New schema can be logged.
