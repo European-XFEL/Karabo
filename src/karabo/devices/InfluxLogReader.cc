@@ -1016,7 +1016,8 @@ namespace karabo {
                     std::vector<unsigned char> decoded;
                     base64Decode(valueAsString, decoded);
                     if (decoded.size() != 1ul) {
-                        throw KARABO_PARAMETER_EXCEPTION("Base64 Encoded char of wrong size: " + decoded.size());
+                        throw KARABO_PARAMETER_EXCEPTION("Base64 Encoded char of wrong size: " +
+                                                         karabo::util::toString(decoded.size()));
                     }
                     node = &hash.set(path, static_cast<char>(decoded[0]));
                     break;
