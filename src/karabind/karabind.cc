@@ -11,6 +11,8 @@ namespace py = pybind11;
 // util
 void exportPyUtilTypesReferenceType(py::module_ &);
 void exportPyUtilHashAttributes(py::module_ &);
+void exportPyUtilHashNode(py::module_ &);
+void exportPyUtilHash(py::module_ &);
 
 // io
 
@@ -28,6 +30,8 @@ PYBIND11_MODULE(karabind, m) {
     // util
     exportPyUtilTypesReferenceType(m);
     exportPyUtilHashAttributes(m);
+    exportPyUtilHashNode(m);
+    exportPyUtilHash(m);
 
     // io
 
