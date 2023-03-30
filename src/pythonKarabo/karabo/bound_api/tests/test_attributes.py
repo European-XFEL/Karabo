@@ -94,8 +94,8 @@ class Tests(unittest.TestCase):
                 ha.getNode('attr15').getType(), Types.VECTOR_INT64)
             # VECTOR_DOUBLE
             ha['attr16'] = [1.11111, 2.222222, 3.333333]
-            self.assertEqual(
-                ha.getNode('attr16').getType(), Types.VECTOR_DOUBLE)
+            self.assertEqual(ha.getNode('attr16').getType(),
+                             Types.VECTOR_DOUBLE)
             # VECTOR_COMPLEX_DOUBLE
             if Attributes is karabind.HashAttributes:
                 ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
@@ -103,8 +103,8 @@ class Tests(unittest.TestCase):
                                  Types.VECTOR_COMPLEX_DOUBLE)
                 self.assertEqual(ha.getType('attr17'),
                                  Types.VECTOR_COMPLEX_DOUBLE)
-                self.assertTrue(ha.isType('attr17',
-                                          Types.VECTOR_COMPLEX_DOUBLE))
+                self.assertTrue(
+                    ha.isType('attr17', Types.VECTOR_COMPLEX_DOUBLE))
                 self.assertTrue(ha.isType('attr17', "VECTOR_COMPLEX_DOUBLE"))
                 ha.erase('attr17')
                 ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
@@ -115,6 +115,8 @@ class Tests(unittest.TestCase):
             self.assertEqual(
                 ha.getNode('attr18').getType(), Types.VECTOR_STRING)
             self.assertEqual(len(ha), 17)
+            self.assertTrue('attr18' in ha)
+            self.assertFalse('attr17' in ha)
             self.assertFalse(ha.empty())
             # Get reference to node
             node6 = ha.getNode('attr6')
@@ -235,11 +237,11 @@ class Tests(unittest.TestCase):
             ha = Attributes()
             ha['a'] = 65
 
-            def current_type_is(type):
+            def current_type_is(reftype):
                 if Attributes is karabind.HashAttributes:
-                    self.assertEqual(ha.getType('a'), type)
+                    self.assertEqual(ha.getType('a'), reftype)
                 if Attributes is karathon.HashAttributes:
-                    self.assertEqual(ha.getNode('a').getType(), type)
+                    self.assertEqual(ha.getNode('a').getType(), reftype)
 
             current_type_is(Types.INT32)
             # Get as INT64
