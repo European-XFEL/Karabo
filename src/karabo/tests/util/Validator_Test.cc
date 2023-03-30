@@ -20,6 +20,7 @@
 #include "karabo/util/TableElement.hh"
 #include "karabo/util/Validator.hh"
 #include "karabo/util/VectorElement.hh"
+#include "karabo/xms/SlotElement.hh"
 
 using namespace karabo;
 using util::ALARM_ELEMENT;
@@ -29,6 +30,7 @@ using util::STRING_ELEMENT;
 using util::TABLE_ELEMENT;
 using util::VECTOR_CHAR_ELEMENT;
 using util::VECTOR_UINT8_ELEMENT;
+using xms::SLOT_ELEMENT;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Validator_Test);
 
@@ -391,4 +393,35 @@ void Validator_Test::testAlarms() {
     CPPUNIT_ASSERT(validated.getAttributes("goofyAlarm").has(KARABO_INDICATE_ALARM_SET));
 
     validated.clear();
+}
+
+void Validator_Test::testSlots() {
+    util::Schema s;
+    SLOT_ELEMENT(s).key("slot").commit();
+
+    // Slot does not appear in validated config.
+    util::Hash in, out;
+    util::Validator val;
+    std::pair<bool, std::string> res = val.validate(s, in, out);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT_MESSAGE(util::toString(out), out.empty());
+
+    // Empty node allowed for slot (for backward compatibility).
+    in.set("slot", util::Hash());
+    res = val.validate(s, in, out);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT_MESSAGE(util::toString(out), out.empty());
+
+    // Non-empty node not allowed for slot.
+    in.set("slot.a", 1);
+    res = val.validate(s, in, out);
+    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT_EQUAL(std::string("There is configuration provided for Slot 'slot'"), res.second);
+
+    // Other things than node not allowed for slot, either.
+    out.clear(); // just in case...
+    in.set("slot", "buh");
+    res = val.validate(s, in, out);
+    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT_EQUAL(std::string("There is configuration provided for Slot 'slot'"), res.second);
 }
