@@ -1,9 +1,8 @@
-from qtpy.QtGui import QValidator
 from traits.api import Undefined
 
 from karabogui.binding.api import FloatBinding
 
-from ..alarm_dialog import AlarmDialog, AlarmValidator
+from ..alarm_dialog import AlarmDialog
 
 
 def test_alarm_configuration_dialog(gui_app):
@@ -68,20 +67,3 @@ def test_alarm_configuration_dialog(gui_app):
     assert dialog.values["alarmHigh"] == 4.2
 
     dialog.destroy()
-
-
-def test_validator():
-    binding = FloatBinding()
-    validator = AlarmValidator(binding)
-
-    for value, state in (
-            ("", QValidator.Acceptable),
-            ("--", QValidator.Invalid),
-            ("==", QValidator.Invalid),
-            ("-+", QValidator.Invalid),
-            ("0", QValidator.Acceptable),
-            ("0.2", QValidator.Acceptable),
-            ("2.1", QValidator.Acceptable),
-    ):
-        ret, _, _ = validator.validate(value, 0)
-        assert ret == state

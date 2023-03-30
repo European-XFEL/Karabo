@@ -63,10 +63,10 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="edit_warnHigh"/>
+       <widget class="LineEditEditor" name="edit_warnHigh"/>
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="edit_warnLow"/>
+       <widget class="LineEditEditor" name="edit_warnLow"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_warnHigh">
@@ -76,10 +76,10 @@
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="edit_alarmLow"/>
+       <widget class="LineEditEditor" name="edit_alarmLow"/>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="edit_alarmHigh"/>
+       <widget class="LineEditEditor" name="edit_alarmHigh"/>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_alarmHigh">
@@ -103,6 +103,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LineEditEditor</class>
+   <extends>QLineEdit</extends>
+   <header>karabogui.widgets.edits</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>edit_alarmHigh</tabstop>
   <tabstop>edit_warnHigh</tabstop>
