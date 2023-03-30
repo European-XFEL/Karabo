@@ -19,7 +19,7 @@ from karabo.middlelayer import (
     setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, assertLogs, event_loop, run_test)
-from karabo.middlelayer_api.broker import mqtt, redis
+from karabo.middlelayer_api.broker import mqtt
 from karabo.middlelayer_api.logger import CacheLog
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -691,9 +691,6 @@ async def test_collect(deviceTest):
         d.once = 3
         d.once = 7
         d.once = 10
-    if redis:
-        await sleep(0.3)
-    else:
         await sleep(0.1)
     assert remote.once_value == 10
 
