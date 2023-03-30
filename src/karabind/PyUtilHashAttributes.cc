@@ -1,7 +1,7 @@
+#include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/complex.h>
-#include <pybind11/stl_bind.h>
+
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
@@ -13,99 +13,6 @@
 namespace py = pybind11;
 
 using namespace karabo::util;
-
-
-namespace karabind {
-
-    struct null_deleter {
-        void operator()(void const*) const {}
-    };
-
-    class HashAttributesNodeHelper {
-       public:
-        static py::object toObject(const Hash::Attributes::Node& self, const Types::ReferenceType& type) {
-            switch (type) {
-                case Types::BOOL:
-                    return py::cast(self.getValueAs<bool>());
-                case Types::CHAR:
-                    return py::cast(self.getValueAs<char>());
-                case Types::INT8:
-                    return py::cast(self.getValueAs<signed char>());
-                case Types::UINT8:
-                    return py::cast(self.getValueAs<unsigned char>());
-                case Types::INT16:
-                    return py::cast(self.getValueAs<short>());
-                case Types::UINT16:
-                    return py::cast(self.getValueAs<unsigned short>());
-                case Types::INT32:
-                    return py::cast(self.getValueAs<int>());
-                case Types::UINT32:
-                    return py::cast(self.getValueAs<unsigned int>());
-                case Types::INT64:
-                    return py::cast(self.getValueAs<long long>());
-                case Types::UINT64:
-                    return py::cast(self.getValueAs<unsigned long long>());
-                case Types::FLOAT:
-                    return py::cast(self.getValueAs<float>());
-                case Types::DOUBLE:
-                    return py::cast(self.getValueAs<double>());
-                case Types::COMPLEX_FLOAT:
-                {
-                    auto val = self.getValueAs<std::complex<float>>();
-                    return py::cast(val);
-                }
-                case Types::COMPLEX_DOUBLE:
-                {
-                    auto val = self.getValueAs<std::complex<double>>();
-                    return py::cast(val);
-                }
-                case Types::STRING:
-                    return py::cast(self.getValueAs<std::string>());
-                case Types::VECTOR_BOOL:
-                    return py::cast(self.getValueAs<bool, std::vector>());
-                case Types::VECTOR_CHAR:
-                    return py::cast(self.getValueAs<char, std::vector>());
-                case Types::VECTOR_INT8:
-                    return py::cast(self.getValueAs<signed char, std::vector>());
-                case Types::VECTOR_UINT8:
-                    return py::cast(self.getValueAs<unsigned char, std::vector>());
-                case Types::VECTOR_INT16:
-                    return py::cast(self.getValueAs<short, std::vector>());
-                case Types::VECTOR_UINT16:
-                    return py::cast(self.getValueAs<unsigned short, std::vector>());
-                case Types::VECTOR_INT32:
-                    return py::cast(self.getValueAs<int, std::vector>());
-                case Types::VECTOR_UINT32:
-                    return py::cast(self.getValueAs<unsigned int, std::vector>());
-                case Types::VECTOR_INT64:
-                    return py::cast(self.getValueAs<long long, std::vector>());
-                case Types::VECTOR_UINT64:
-                    return py::cast(self.getValueAs<unsigned long long, std::vector>());
-                case Types::VECTOR_FLOAT:
-                    return py::cast(self.getValueAs<float, std::vector>());
-                case Types::VECTOR_DOUBLE:
-                    return py::cast(self.getValueAs<double, std::vector>());
-                case Types::VECTOR_COMPLEX_FLOAT:
-                {
-                    auto val = self.getValueAs<std::complex<float>, std::vector>();
-                    return py::cast(val);
-                }
-                case Types::VECTOR_COMPLEX_DOUBLE:
-                {
-                    auto val = self.getValueAs<std::complex<double>, std::vector>();
-                    return py::cast(val);
-                }
-                default:
-                    break;
-            }
-            std::ostringstream oss;
-            oss << "Type " << int(type) << " is not yet supported";
-            throw KARABO_NOT_SUPPORTED_EXCEPTION(oss.str());
-        }
-    };
-
-} // namespace karabind
-
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::shared_ptr<T>);
 
@@ -123,8 +30,13 @@ void exportPyUtilHashAttributes(py::module_& m) {
     an.def("__str__", [](const Hash::Attributes::Node& self) -> std::string { return self.getKey(); });
 
     an.def(
-          "setValue", [](Hash::Attributes::Node& self, const py::object& o) { self.setValue(o); }, py::arg("value"),
-          "Set value for current node in attribute's container");
+          "setValue",
+          [](Hash::Attributes::Node& self, const py::object& o) {
+              boost::any any;
+              wrapper::castPyToAny(o, any);
+              self.setValue(any);
+          },
+          py::arg("value"), "Set value for current node in attribute's container");
 
     an.def(
           "getValue", [](const Hash::Attributes::Node& self) { return wrapper::castAnyToPy(self.getValueAsAny()); },
@@ -133,16 +45,8 @@ void exportPyUtilHashAttributes(py::module_& m) {
     an.def(
           "getValueAs",
           [](const Hash::Attributes::Node& self, const py::object& otype) {
-              using namespace karabo::util;
-              Types::ReferenceType type = Types::UNKNOWN;
-              if (py::isinstance<py::str>(otype)) {
-                  const std::string& stype = otype.cast<std::string>();
-                  type = Types::from<FromLiteral>(stype);
-              } else if (py::isinstance<PyTypes::ReferenceType>(otype)) {
-                  PyTypes::ReferenceType ptype = otype.cast<PyTypes::ReferenceType>();
-                  type = PyTypes::to(ptype);
-              }
-              return HashAttributesNodeHelper::toObject(self, type);
+              auto type = wrapper::pyObjectToCppType(otype);
+              return wrapper::detail::castElementToPy(self, type);
           },
           py::arg("type"), "Get value as a type given as an argument for current node");
 
@@ -158,15 +62,7 @@ void exportPyUtilHashAttributes(py::module_& m) {
     an.def(
           "setType",
           [](Hash::Attributes::Node& node, const py::object& otype) {
-              using namespace karabo::util;
-              Types::ReferenceType type = Types::UNKNOWN;
-              if (py::isinstance<py::str>(otype)) {
-                  std::string stype = otype.cast<std::string>();
-                  type = Types::from<FromLiteral>(stype);
-              } else if (py::isinstance<PyTypes::ReferenceType>(otype)) {
-                  PyTypes::ReferenceType ptype = otype.cast<PyTypes::ReferenceType>();
-                  type = PyTypes::to(ptype);
-              }
+              Types::ReferenceType type = wrapper::pyObjectToCppType(otype);
               node.setType(type);
           },
           py::arg("type"), "Set type for value kept in current node");
@@ -191,18 +87,9 @@ void exportPyUtilHashAttributes(py::module_& m) {
     a.def(
           "isType",
           [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& otype) -> py::bool_ {
-              using namespace karabo::util;
-              auto node = self.getNode(key);
-              Types::ReferenceType type = node.getType();
-              if (py::isinstance<py::str>(otype)) {
-                  std::string stype = otype.cast<std::string>();
-                  return (type == Types::from<FromLiteral>(stype));
-              }
-              if (py::isinstance<PyTypes::ReferenceType>(otype)) {
-                  PyTypes::ReferenceType ptype = otype.cast<PyTypes::ReferenceType>();
-                  return (type == PyTypes::to(ptype));
-              }
-              return false;
+              Types::ReferenceType targetType = wrapper::pyObjectToCppType(otype);
+              Types::ReferenceType type = self.getNode(key).getType();
+              return (type == targetType);
           },
           py::arg("key"), py::arg("type"),
           "Returns True if HashAttributes container has given \"key\" of reference \"type\"..");
@@ -272,17 +159,9 @@ void exportPyUtilHashAttributes(py::module_& m) {
     a.def(
           "getAs",
           [](karabo::util::Hash::Attributes& self, const std::string& key, const py::object& otype) {
-              using namespace karabo::util;
-              Types::ReferenceType rtype = Types::UNKNOWN;
-              if (py::isinstance<py::str>(otype)) {
-                  std::string stype = otype.cast<std::string>();
-                  rtype = Types::from<FromLiteral>(stype);
-              } else if (py::isinstance<PyTypes::ReferenceType>(otype)) {
-                  PyTypes::ReferenceType type = otype.cast<PyTypes::ReferenceType>();
-                  rtype = PyTypes::to(type);
-              }
+              Types::ReferenceType rtype = wrapper::pyObjectToCppType(otype);
               const auto& node = self.getNode(key);
-              return HashAttributesNodeHelper::toObject(node, rtype);
+              return wrapper::detail::castElementToPy(node, rtype);
           },
           py::arg("key"), py::arg("type"), "Get the value of the \"key\" attribute and convert it to type \"type\".");
 
