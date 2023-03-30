@@ -4,6 +4,7 @@ from traits.api import (
     Any, Array, ArrayOrNone, Bool, Dict, Function, Property, cached_property)
 
 from karabogui.graph.common.api import ImageRegion
+from karabogui.graph.common.fitting import gaussian_fit as gauss1d
 
 from ..base.analyzer import BaseAnalyzer
 
@@ -157,7 +158,3 @@ def gaussian_fit(x_data, y_data, offset=0):
         return p_f
     except (RuntimeError, TypeError):
         return None
-
-
-def gauss1d(x, height, x0, sigma, offset):
-    return height * np.exp(-0.5 * ((x - x0) / sigma) ** 2) + offset
