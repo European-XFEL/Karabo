@@ -5,7 +5,6 @@ import pytest
 import pytest_asyncio
 
 from karabo.middlelayer.testing import assertLogs, run_test
-from karabo.middlelayer_api.broker import amqp, redis
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 from karabo.middlelayer_api.tests.eventloop import (
@@ -85,10 +84,7 @@ def test_count(deviceTest):
     remA = deviceTest["remA"]
     remB = deviceTest["remB"]
 
-    if amqp or redis:
-        time.sleep(1.0)
-    else:
-        time.sleep(0.3)
+    time.sleep(0.3)
     for _ in range(30):
         assert local.division == remA.counter // remB.counter
         time.sleep(0.1)

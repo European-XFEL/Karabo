@@ -23,7 +23,6 @@
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
 #include <karabo/net/MqttClient.hh>
-#include <karabo/net/RedisClient.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
@@ -568,74 +567,6 @@ void startMqttMonitor(const std::vector<std::string>& brokers, const std::string
     net::EventLoop::work();
 }
 
-void startRedisMonitor(const std::vector<std::string>& brokers, const std::string& domain,
-                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
-                       const util::TimeValue& interval) {
-    // Skip message body deserialization: "skipFlag"
-    const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
-    net::RedisClient::Pointer client = util::Configurator<net::RedisClient>::create("RedisClient", config);
-
-    // Connect and subscribe
-    auto ec = client->connect();
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to connect to Redis broker at " + util::toString(brokers));
-    }
-
-    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
-    // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
-    // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
-    auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
-    util::Hash::Pointer body(boost::make_shared<util::Hash>());
-
-    auto readHandler = [stats, binSerializer, body](const boost::system::error_code ec, const std::string& topic,
-                                                    const util::Hash::Pointer& message) {
-        if (!ec) {
-            std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
-            if (message->has("raw")) {
-                raw.swap(message->get<std::vector<char>>("raw"));
-            } else {
-                binSerializer->save(message->get<util::Hash>("body"), raw); // body -> raw
-            }
-            stats->registerMessage(boost::make_shared<util::Hash>(message->get<util::Hash>("header")), body);
-        }
-    };
-
-    net::RedisTopicSubOptions subscriptions;
-    if (receivers.empty() && senders.empty()) {
-        // No input on commandline
-        subscriptions.emplace_back(domain + "/slots/*", readHandler);
-        subscriptions.emplace_back(domain + "/signals/*/*", readHandler);
-    } else {
-        for (const auto& rid : receivers) {
-            std::string topic = domain + "/slots/" + boost::replace_all_copy(rid, "/", "|");
-            subscriptions.emplace_back(topic, readHandler);
-        }
-        for (const auto& sid : senders) {
-            std::string topic = domain + "/signals/" + boost::replace_all_copy(sid, "/", "|") + "/*";
-            subscriptions.emplace_back(topic, readHandler);
-        }
-    }
-
-    std::cout << "\nStart monitoring signal and slot rates of \n   domain         '" << domain
-              << "'\n   on broker     '" << client->getBrokerUrl() << "',\n   ";
-    if (!receivers.empty()) {
-        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
-    }
-    if (!senders.empty()) {
-        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
-    }
-    std::cout << "interval is   " << interval << " s." << std::endl;
-
-    // subscribing means 'start reading'...
-    ec = client->subscribe(subscriptions);
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to REDIS broker");
-    }
-
-    if (debug) std::cout << "\n------------------ wait on work" << std::endl;
-    // Block forever
-    net::EventLoop::work();
-}
 
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
@@ -773,8 +704,6 @@ int main(int argc, const char** argv) {
             startMqttMonitor(brokers, topic, receivers, senders, interval);
         } else if (brkType == "amqp") {
             startAmqpMonitor(brokers, topic, receivers, senders, interval);
-        } else if (brkType == "redis") {
-            startRedisMonitor(brokers, topic, receivers, senders, interval);
         } else {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION(brkType + " not supported!");
         }

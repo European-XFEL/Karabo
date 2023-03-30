@@ -166,10 +166,6 @@ class Broker(ABC):
             from .mqtt_broker import MqttBroker
             return (MqttBroker.create_connection(hosts, connection),
                     MqttBroker)
-        elif scheme == "redis":
-            from .redis_broker import RedisBroker
-            return (RedisBroker.create_connection(hosts, connection),
-                    RedisBroker)
         elif scheme == "amqp":
             from .amqp_broker import AmqpBroker
             return (AmqpBroker.create_connection(hosts, connection),
