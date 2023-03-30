@@ -20,7 +20,6 @@
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
 #include <karabo/net/MqttClient.hh>
-#include <karabo/net/RedisClient.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/StringTools.hh>
 #include <karabo/xms/SignalSlotable.hh>
@@ -47,9 +46,6 @@ void printHelp(const char* execName) {
     cout << "                OpenMQ: selector string, e.g. \"slotInstanceIds LIKE '%|deviceId|%'\"" << endl;
     cout << "                MQTT:   comma separated list of MQTT subtopics," << endl;
     cout << "                        e.g. \"signals/+/signalChanged,global_slots,slots/INSTANCE|1\"" << endl;
-    cout << "                REDIS:  comma separated list of REDIS subtopics, " << endl;
-    cout << "                        possibly using glob style patterns: '*', '?', '[list]'" << endl;
-    cout << "                        e.g. \"signals/*/signalChanged,global_slots,slots/INSTANCE|1\"" << endl;
     cout << "                AMQP:   Selection criteria involves 2 values: exchange and binding key " << endl;
     cout << "                        separated by colon sign (:) and such pairs are comma separated. " << endl;
     cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
@@ -70,8 +66,7 @@ void jmsErrorNotifier(consumer::Error errCode, const string& errDesc) {
 }
 
 
-void mqttOrRedisMessageHandler(const boost::system::error_code ec, const std::string& topic,
-                               const Hash::Pointer& message) {
+void mqttMessageHandler(const boost::system::error_code ec, const std::string& topic, const Hash::Pointer& message) {
     if (ec) {
         cout << "Error " << ec.value() << ": " << ec.message() << endl;
     }
@@ -119,12 +114,11 @@ void logMqtt(const std::vector<std::string>& brokerUrls, const std::string& doma
 
     TopicSubOptions subscriptions;
     if (subtopics.empty()) {
-        subscriptions.emplace_back(domain + "/#", SubQos::AtMostOnce,
-                                   boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
+        subscriptions.emplace_back(domain + "/#", SubQos::AtMostOnce, boost::bind(&mqttMessageHandler, _1, _2, _3));
     } else {
         for (const string& t : fromString<string, vector>(subtopics)) {
             subscriptions.emplace_back(domain + "/" + t, SubQos::AtMostOnce,
-                                       boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
+                                       boost::bind(&mqttMessageHandler, _1, _2, _3));
         }
     }
     cout << "# Starting to consume messages..." << std::endl;
@@ -144,39 +138,6 @@ void logMqtt(const std::vector<std::string>& brokerUrls, const std::string& doma
     EventLoop::work(); // block for ever
 }
 
-void logRedis(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& subtopics) {
-    const Hash config("brokers", brokerUrls, "domain", domain);
-    RedisClient::Pointer client = Configurator<RedisClient>::create("RedisClient", config);
-
-    // Connect and subscribe
-    auto ec = client->connect();
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to connect to Redis broker at " + toString(brokerUrls));
-    }
-
-    RedisTopicSubOptions subscriptions;
-    if (subtopics.empty()) {
-        subscriptions.emplace_back(domain + "/*", boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
-    } else {
-        for (const string& t : fromString<string, vector>(subtopics)) {
-            subscriptions.emplace_back(domain + "/" + t, boost::bind(&mqttOrRedisMessageHandler, _1, _2, _3));
-        }
-    }
-
-    cout << "# Starting to consume messages..." << std::endl;
-    cout << "# Broker (REDIS): " << client->getBrokerUrl() << endl;
-    cout << "# Domain: " << domain << endl;
-    if (!subtopics.empty()) {
-        cout << "# Subtopics: " << subtopics << endl;
-    }
-    cout << endl;
-    ec = client->subscribe(subscriptions);
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to REDIS broker");
-    }
-
-    EventLoop::work(); // block for ever
-}
 
 void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& selector) {
     // AMQP: 'selector' string is sequence of pairs of exchange and binding key
@@ -293,8 +254,6 @@ int main(int argc, char** argv) {
             logMqtt(brokerUrls, topic, selector);
         } else if (brkType == "amqp") {
             logAmqp(brokerUrls, topic, selector);
-        } else if (brkType == "redis") {
-            logRedis(brokerUrls, topic, selector);
         } else {
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION(brkType + " not supported!");
         }
