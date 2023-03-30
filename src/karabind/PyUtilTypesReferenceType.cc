@@ -63,5 +63,4 @@ void exportPyUtilTypesReferenceType(py::module_& m) {
           .def_static("toType", &PyTypes::to, py::arg("Python_types"))
           .def_static("fromType", &PyTypes::from, py::arg("C++_types"))
           .def_static("category", &PyTypes::category, py::arg("C++_types int"));
-
 }
