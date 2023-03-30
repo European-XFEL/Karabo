@@ -19,6 +19,7 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testVectorCharVectorByteSize);
     CPPUNIT_TEST(testState);
     CPPUNIT_TEST(testAlarms);
+    CPPUNIT_TEST(testSlots);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -87,6 +88,10 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
      * and sets the indicate attribute
      */
     void testAlarms();
+    /**
+     * @brief Checks that the Validator::validate does not create nodes for slots
+     */
+    void testSlots();
 };
 
 #endif /* VALIDATOR_TEST_HH */
