@@ -166,7 +166,7 @@ stages:
     - conda config --add channels conda-forge
     - >
       python ci/miniconda pack karabogui
-      --ci --clean --upload-env
+      --ci --clean --test --upload-env
       -E karaboEnvironments
       --upload-to-mirror
       -c $KARABO_CONDA_CHANNEL
