@@ -8,6 +8,7 @@
 
 #include "TestKaraboAuthServer.hh"
 
+#include <belle.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/StringTools.hh>
 #include <nlohmann/json.hpp>
@@ -23,40 +24,63 @@ int TestKaraboAuthServer::VALID_ACCESS_LEVEL{static_cast<int>(Schema::AccessLeve
 
 string TestKaraboAuthServer::INVALID_TOKEN_MSG{"Invalid one-time token!"};
 
+class TestKaraboAuthServer::Impl {
+   public:
+    Impl(const std::string& addr, int port) : m_addr(addr), m_port(port) {}
 
-TestKaraboAuthServer::TestKaraboAuthServer(const std::string& addr, const int port) : m_addr(addr), m_port(port) {}
+    /**
+     * @brief Runs the web server.
+     *
+     * @note This blocks the executing thread until there are no more handlers queued in the server event loop. The
+     * internal Belle web server starts its own event loop and blocks the calling thread.
+     */
+    void run() {
+        // Sets up the server
+        m_srv.address(m_addr);
+        m_srv.port(m_port);
+        m_srv.threads(1);
+        m_srv.ssl(false);
+
+        // set default http headers
+        Belle::Headers headers;
+        headers.set(Belle::Header::server, "Belle");
+        headers.set(Belle::Header::cache_control, "private; max-age=0");
+        m_srv.http_headers(headers);
+
+        // The handler for token authorization requests
+        m_srv.on_http("/authorize_once_tk", Belle::Method::post, [](Belle::Server::Http_Ctx& ctx) {
+            nl::json respObj = nl::json::parse(ctx.req.body());
+            bool validToken = false;
+            if (!respObj["tk"].is_null()) {
+                const std::string reqTk = respObj["tk"];
+                if (reqTk == TestKaraboAuthServer::VALID_TOKEN) {
+                    validToken = true;
+                }
+            }
+            ctx.res.set("content-type", "application/json");
+            ctx.res.result(Belle::Status::ok);
+            ctx.res.body() = validToken ? R"({"success": true, "user": "John", "error_msg": "", "visib_level": )" +
+                                                toString(TestKaraboAuthServer::VALID_ACCESS_LEVEL) + "}"
+                                        : R"({"success": false, "user": "", "visib_level": 0, "error_msg": ")" +
+                                                TestKaraboAuthServer::INVALID_TOKEN_MSG + "\"}";
+        });
+
+        m_srv.listen();
+    }
+
+   private:
+    const std::string m_addr;
+    int m_port;
+    Belle::Server m_srv;
+};
+
+
+TestKaraboAuthServer::TestKaraboAuthServer(const std::string& addr, int port) {
+    m_impl = std::make_unique<Impl>(addr, port);
+}
+
+TestKaraboAuthServer::~TestKaraboAuthServer() = default;
 
 void TestKaraboAuthServer::run() {
-    // Sets up the server
-    m_srv.address(m_addr);
-    m_srv.port(m_port);
-    m_srv.threads(1);
-    m_srv.ssl(false);
-
-    // set default http headers
-    Belle::Headers headers;
-    headers.set(Belle::Header::server, "Belle");
-    headers.set(Belle::Header::cache_control, "private; max-age=0");
-    m_srv.http_headers(headers);
-
-    // The handler for token authorization requests
-    m_srv.on_http("/authorize_once_tk", Belle::Method::post, [](Belle::Server::Http_Ctx& ctx) {
-        nl::json respObj = nl::json::parse(ctx.req.body());
-        bool validToken = false;
-        if (!respObj["tk"].is_null()) {
-            const std::string reqTk = respObj["tk"];
-            if (reqTk == TestKaraboAuthServer::VALID_TOKEN) {
-                validToken = true;
-            }
-        }
-        const string respBody = validToken ? R"({"success": true, "user": "John", "error_msg": "", "visib_level": )" +
-                                                   toString(TestKaraboAuthServer::VALID_ACCESS_LEVEL) + "}"
-                                           : R"({"success": false, "user": "", "visib_level": 0, "error_msg": ")" +
-                                                   TestKaraboAuthServer::INVALID_TOKEN_MSG + "\"}";
-        ctx.res.set("content-type", "application/json");
-        ctx.res.result(Belle::Status::ok);
-        ctx.res.body() = move(respBody);
-    });
-
-    m_srv.listen();
+    m_impl->run();
 }

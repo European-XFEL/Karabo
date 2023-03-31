@@ -9,9 +9,8 @@
 #ifndef TESTKARABOAUTHSERVER_HH
 #define TESTKARABOAUTHSERVER_HH
 
-#include <belle.hh>
+#include <memory>
 #include <string>
-
 /**
  * @brief A bare-bones HTTP server that implements the one-time token validation endpoint of the KaraboAuthServer.
  * Created to mock the actual KaraboAuthServer for the integration tests of the GUI Server.
@@ -27,12 +26,19 @@ class TestKaraboAuthServer {
      */
     TestKaraboAuthServer(const std::string& addr, const int port);
 
+    // The destructor has to be declared even if it is the default
+    // to guarantee that the implementation class is fully defined
+    // by the time the destructor is defined.
+    // The destructor is defined in "TestKaraboAuthServer.cc" after the definition of
+    // the "Impl" implementation class. More details about this at:
+    // https://stackoverflow.com/questions/34072862/why-is-error-invalid-application-of-sizeof-to-an-incomplete-type-using-uniqu
+    ~TestKaraboAuthServer();
+
     /**
      * @brief Runs the web server.
      *
-     * @note This blocks the executing thread until there are no more handlers queued in the server event loop. The
-     * internal Belle web server starts its own event loop and blocks the calling thread.
-     *
+     * @note The current implementation blocks the calling thread. For further details, please
+     * look at the method TestKaraboAuthServer::Impl::run in "TestKaraboAuthServer.cc".
      */
     void run();
 
@@ -44,9 +50,8 @@ class TestKaraboAuthServer {
     static std::string INVALID_TOKEN_MSG;
 
    private:
-    OB::Belle::Server m_srv;
-    std::string m_addr;
-    int m_port;
+    class Impl; // Forward declaration of the implementation class
+    std::unique_ptr<Impl> m_impl;
 };
 
 #endif
