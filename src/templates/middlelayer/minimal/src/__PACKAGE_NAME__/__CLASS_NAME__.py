@@ -4,7 +4,7 @@
 # Created on __DATE__
 # from template '__TEMPLATE_ID__' of Karabo __KARABO_VERSION__
 #
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 
 from karabo.middlelayer import Device, Slot, String
