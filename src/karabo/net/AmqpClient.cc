@@ -447,17 +447,29 @@ namespace karabo {
                 case eReady: {
                     AmqpConnector::Pointer connector(m_connector.lock());
                     if (!connector) return; // parent (being) destructed
+                    auto publisher = connector->getPublisher();
                     if (!m_listener) {
                         // Connection problem should be caught and handled by ConnectionHandler object
                         // so remove callback below
                         m_channel->onError(nullptr);
                         // Check and possibly assign shared publisher to use single channel
-                        auto publisher = connector->getPublisher();
                         if (!publisher || !publisher->usable()) {
                             connector->setPublisher(m_channel);
                         } else {
                             m_channel->close();
                             m_channel = publisher;
+                        }
+                    } else {
+                        // m_listener == True
+                        // Keep only those channels that have created a consumer
+                        // In current design we create one consumer (one queue) per connector!
+                        if (m_consumerTag.empty()) {
+                            if (!publisher || !publisher->usable()) {
+                                connector->setPublisher(m_channel);
+                            } else {
+                                m_channel->close();
+                                m_channel = publisher;
+                            }
                         }
                     }
                     {
@@ -470,7 +482,41 @@ namespace karabo {
                     }
                 } break;
 
-                case eShutdown:
+                case eShutdown: {
+                    AmqpConnector::Pointer connector(m_connector.lock());
+                    if (!connector) return; // parent (being) destructed
+                    auto publisher = connector->getPublisher();
+                    if (m_channel == publisher) {
+                        m_channel.reset();
+                        // ... create a channel
+                        auto successCb = [this, wSelf]() {
+                            auto self = wSelf.lock();
+                            if (!self) return;
+                            if (m_state != eShutdown) return; // obsolete callback
+                            // call eShutdown again but with proper m_channel, so no cycling
+                            m_state = eShutdown;
+                            moveStateMachine();
+                        };
+                        auto failureCb = [this, wSelf](const char* message) {
+                            auto self = wSelf.lock();
+                            if (!self) return;
+                            // if (m_state != eShutdown) return; // obsolete callback
+                            m_error = "eShutdown: channel re-creation: ";
+                            m_error += message;
+                            m_ec = AmqpCppErrc::eCreateChannelError;
+                            m_state = eEnd;
+                            moveStateMachine();
+                        };
+                        if (m_connection && m_connection->usable()) {
+                            std::shared_ptr<AMQP::TcpChannel> channel =
+                                  std::make_shared<AMQP::TcpChannel>(m_connection);
+                            m_channel.swap(channel);
+                            m_channel->onReady(successCb);
+                            m_channel->onError(failureCb);
+                        } else {
+                            failureCb("eShutdown: no AMQP connection");
+                        }
+                    }
                     if (m_listener) {
                         if (m_consumerTag.empty()) {
                             m_state = eUnbindQueue;
@@ -498,7 +544,7 @@ namespace karabo {
                         m_state = eCloseChannel;
                         moveStateMachine();
                     }
-                    break;
+                } break;
 
                 case eUnbindQueue:
                     if (m_recvQueue.empty()) {
@@ -854,6 +900,7 @@ namespace karabo {
                                      const AMQP::Table& queueArgs)
             : m_urls(urls),
               m_instanceId(id),
+              m_publisher(),
               m_transceivers(),
               m_connectorActivated(true),
               m_activateMutex(),
@@ -1109,7 +1156,9 @@ namespace karabo {
             AmqpTransceiver::Pointer t(nullptr);
             while (!t) {
                 if (paths.size() == 0 || ec) {
-                    if (paths.size() == 0) m_publisher.reset();
+                    if (paths.size() == 0) {
+                        m_publisher.reset();
+                    }
                     post(boost::bind(onComplete, ec));
                     return;
                 }
