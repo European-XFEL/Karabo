@@ -206,7 +206,12 @@ class MainWindow(QMainWindow):
             if visible:
                 self._open_closable_panel(name)
 
-        self._set_window_title(topic=None)
+        self.title_info = {
+            "project": None,
+            "version": const.GUI_VERSION_LONG,
+            "topic": None
+        }
+        self._set_window_title()
         # Connect to some important network signals
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -226,6 +231,7 @@ class MainWindow(QMainWindow):
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.ProjectUpdated: self._event_project_updated,
             KaraboEvent.ServerNotification: self._event_server_notification,
+            KaraboEvent.ProjectName: self._event_project_title,
         }
         register_for_broadcasts(event_map)
 
@@ -251,7 +257,7 @@ class MainWindow(QMainWindow):
             container.setCurrentIndex(container.indexOf(tab))
 
             # Set a default title on disconnect
-            self._set_window_title(topic=None)
+            self._set_window_title(project=None, topic=None)
 
     def _event_big_data(self, data):
         """Show the big data latency including value set in the gui"""
@@ -322,12 +328,16 @@ class MainWindow(QMainWindow):
 
     # -----------------------------------------------------------------------
 
-    def _set_window_title(self, topic=None):
-        if topic is not None:
-            title = (f"European XFEL - Karabo GUI {const.GUI_VERSION_LONG} - "
-                     f"Topic: {topic}")
-        else:
-            title = f"European XFEL - Karabo GUI {const.GUI_VERSION_LONG}"
+    def _event_project_title(self, data):
+        name = data["simple_name"]
+        self._set_window_title(project=name)
+
+    def _set_window_title(self, **kwargs):
+        self.title_info.update(kwargs)
+        titles = ["Project: {}", "European XFEL - Karabo GUI {}", "Topic: {}"]
+        title = " - ".join([info.format(value) for info, value in
+                            zip(titles, self.title_info.values())
+                            if value is not None])
         if get_network().username and get_network().one_time_token:
             title = f"{title} - User: {get_network().username}"
         self.setWindowTitle(title)
@@ -346,7 +356,7 @@ class MainWindow(QMainWindow):
             topic = data["topic"]
             # Store this information in the config singleton!
             get_config()["broker_topic"] = topic
-            self._set_window_title(topic)
+            self._set_window_title(topic=topic)
 
             hostname = data["hostname"]
             hostport = data["hostport"]
