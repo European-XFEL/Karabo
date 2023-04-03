@@ -1,5 +1,4 @@
-from unittest import mock, skip
-
+import pytest
 from qtpy.QtWidgets import QGraphicsTextItem
 
 from karabo.native import EncodingType
@@ -10,6 +9,7 @@ from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.graph.common.api import Axes
 from karabogui.testing import GuiTestCase
+from karabogui.util import process_qt_events
 
 from ..detector_graph import DisplayDetectorGraph, FrameSlider
 
@@ -84,86 +84,84 @@ class TestFrameSlider(GuiTestCase):
         self.assertEqual(self.frame_slider.sl_cell.value(), 7)
 
 
-class TestDetectorGraph(GuiTestCase):
+@pytest.fixture
+def detectorGraphTest(gui_app, mocker):
+    schema = get_pipeline_schema()
+    binding = build_binding(schema)
+    root_proxy = DeviceProxy(binding=binding)
 
-    def setUp(self):
-        super(TestDetectorGraph, self).setUp()
+    output_proxy = PropertyProxy(root_proxy=root_proxy,
+                                 path='output.data')
+    img_proxy = PropertyProxy(root_proxy=root_proxy,
+                              path='output.data.image')
+    controller = DisplayDetectorGraph(proxy=img_proxy)
 
-        schema = get_pipeline_schema()
-        binding = build_binding(schema)
-        root_proxy = DeviceProxy(binding=binding)
+    mocker.patch.object(QGraphicsTextItem, 'setHtml')
+    controller.create(None)
+    yield controller, output_proxy
+    controller.destroy()
 
-        self.output_proxy = PropertyProxy(root_proxy=root_proxy,
-                                          path='output.data')
-        self.img_proxy = PropertyProxy(root_proxy=root_proxy,
-                                       path='output.data.image')
-        self.controller = DisplayDetectorGraph(proxy=self.img_proxy)
 
-        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
-            self.controller.create(None)
+@pytest.mark.skip(reason='Visibility tests are not working')
+def test_2d_image(detectorGraphTest):
+    """When a 2D image is supplied, the detector shouldn't show the
+    frameslider"""
+    controller, output_proxy = detectorGraphTest
+    frame_slider = controller._frame_slider
 
-    def tearDown(self):
-        super(TestDetectorGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+    # Assert initial state
+    assert not frame_slider.isVisible()
 
-    def _assert_image_shape(self, shape):
-        image = self.controller.widget.plot().imageItem.image
-        self.assertEqual(image.shape, shape)
+    image_hash = get_image_hash(dimZ=1)
+    apply_configuration(image_hash, output_proxy.binding)
 
-    @skip(reason='Visibility tests are not working')
-    def test_2d_image(self):
-        """When a 2D image is supplied, the detector shouldn't show the
-        frameslider"""
-        frame_slider = self.controller._frame_slider
+    process_qt_events()
+    process_qt_events()
+    assert frame_slider.isVisible()
 
-        # Assert initial state
-        self.assertFalse(frame_slider.isVisible())
+    image_hash = get_image_hash()
+    apply_configuration(image_hash, output_proxy.binding)
 
-        image_hash = get_image_hash(dimZ=1)
-        apply_configuration(image_hash, self.output_proxy.binding)
+    assert frame_slider.isVisible()
 
-        self.process_qt_events()
-        self.process_qt_events()
-        self.assertTrue(frame_slider.isVisible())
 
-        image_hash = get_image_hash()
-        apply_configuration(image_hash, self.output_proxy.binding)
+def test_detector_graph_basics(detectorGraphTest):
+    controller, output_proxy = detectorGraphTest
+    frame_slider = controller._frame_slider
 
-        self.assertTrue(frame_slider.isVisible())
+    # Assert initial state
+    assert not frame_slider.isVisible()
+    assert controller._axis == Axes.Z
+    assert controller._cell == 0
 
-    def test_basics(self):
-        frame_slider = self.controller._frame_slider
+    image_hash = get_image_hash(dimZ=5)
+    apply_configuration(image_hash, output_proxy.binding)
 
-        # Assert initial state
-        self.assertFalse(frame_slider.isVisible())
-        self.assertEqual(self.controller._axis, Axes.Z)
-        self.assertEqual(self.controller._cell, 0)
+    # Viewing through Z axis
+    image = controller.widget.plot().imageItem.image
+    assert image.shape == (30, 40)
+    assert frame_slider.sb_cell.maximum() == 4
+    assert frame_slider.sb_cell.value() == 0
 
-        image_hash = get_image_hash(dimZ=5)
-        apply_configuration(image_hash, self.output_proxy.binding)
+    # Let's modify the controller state through the frame slider
+    frame_slider.sb_cell.valueChanged.emit(4)
+    assert controller._cell == 4
 
-        # Viewing through Z axis
-        self._assert_image_shape((30, 40))
-        self.assertEqual(frame_slider.sb_cell.maximum(), 4)
-        self.assertEqual(frame_slider.sb_cell.value(), 0)
+    # Change axis, this should change the viewed image
+    frame_slider.axisChanged.emit('Y')
+    image = controller.widget.plot().imageItem.image
+    assert image.shape == (40, 5)
+    assert frame_slider.sb_cell.maximum() == 29
+    assert frame_slider.sb_cell.value() == 0
 
-        # Let's modify the controller state through the frame slider
-        frame_slider.sb_cell.valueChanged.emit(4)
-        self.assertEqual(self.controller._cell, 4)
 
-        # Change axis, this should change the viewed image
-        frame_slider.axisChanged.emit('Y')
-        self._assert_image_shape((40, 5))
-        self.assertEqual(frame_slider.sb_cell.maximum(), 29)
-        self.assertEqual(frame_slider.sb_cell.value(), 0)
+def test_detector_graph_yuv_image(detectorGraphTest):
+    controller, output_proxy = detectorGraphTest
+    image_hash = get_image_hash(dimZ=3, encoding=EncodingType.YUV)
+    apply_configuration(image_hash, output_proxy.binding)
 
-    def test_yuv_image(self):
-        image_hash = get_image_hash(dimZ=3, encoding=EncodingType.YUV)
-        apply_configuration(image_hash, self.output_proxy.binding)
-
-        image_node = self.controller._image_node
-        self.assertEqual(image_node.encoding, EncodingType.GRAY)
-        self.assertEqual(image_node.dim_x, 40)
-        self.assertEqual(image_node.dim_y, 30)
-        self.assertEqual(image_node.dim_z, 0)
+    image_node = controller._image_node
+    assert image_node.encoding is EncodingType.GRAY
+    assert image_node.dim_x == 40
+    assert image_node.dim_y == 30
+    assert image_node.dim_z == 0
