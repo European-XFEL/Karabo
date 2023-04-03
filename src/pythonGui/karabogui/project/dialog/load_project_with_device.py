@@ -84,6 +84,12 @@ class LoadProjectWithDeviceDialog(QDialog):
             domain = self.cmb_domain.currentText()
         return domain
 
+    @property
+    def simple_name(self):
+        item = self.tbl_projects.selectedItems()[0]
+        name = item.data(Qt.DisplayRole)
+        return name
+
     # -----------------------------------------------------------------------
     # Karabo Event Handlers
 
