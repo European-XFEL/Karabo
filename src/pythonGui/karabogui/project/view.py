@@ -314,6 +314,9 @@ class ProjectView(QTreeView):
             self.model().root_model = None
             broadcast_event(KaraboEvent.ProjectFilterUpdated,
                             {'status': False})
+            # And reset the object name
+            broadcast_event(KaraboEvent.ProjectName,
+                            {"simple_name": None})
 
     def update_is_trashed(self, project, project_controller):
         """ Mark the given `project` as (un-)trashed
