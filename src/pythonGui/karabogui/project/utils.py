@@ -210,6 +210,9 @@ def load_project(is_subproject=False, parent=None):
                 # EVERYTHING gets saved to the database in case the project was
                 # loaded from cache
                 set_modified_flag(model, value=True)
+            if not is_subproject:
+                broadcast_event(KaraboEvent.ProjectName,
+                                {"simple_name": dialog.simple_name})
             return model
     return None
 
@@ -235,6 +238,9 @@ def load_project_with_device(parent=None):
                              existing=model)
             db_conn.default_domain = domain
             db_conn.flush()
+            # Project name will be updated
+            broadcast_event(KaraboEvent.ProjectName,
+                            {"simple_name": dialog.simple_name})
             return model
     return None
 

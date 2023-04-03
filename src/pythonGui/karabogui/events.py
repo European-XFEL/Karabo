@@ -29,6 +29,7 @@ class KaraboEvent(Enum):
     RemoveAlarmServices = "Remove alarm services"
     RemoveDaemonService = "Remove daemon service"
     RemoveProjectModelViews = "Remove scene or macro views"
+    ProjectName = "Update main window project name"
     ProjectDBConnect = "Reestablish connection to project db"
     ProjectDomainsList = "Project domains list"
     ProjectAttributeUpdated = "Project attribute updated"
