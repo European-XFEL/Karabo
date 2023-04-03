@@ -13,7 +13,8 @@ from karabo.common.services import KARABO_PROJECT_MANAGER
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.actions import KaraboAction, build_qaction
-from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.events import (
+    KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.logger import get_logger
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
@@ -296,6 +297,8 @@ def _project_new_handler(project_view):
         item_model.root_model = model
         text = f"Creating new project <b>{dialog.simple_name}</b>"
         get_logger().info(text)
+        broadcast_event(KaraboEvent.ProjectName,
+                        {"simple_name": model.simple_name})
 
 
 def _project_save_handler(project_view):
@@ -311,6 +314,8 @@ def _project_save_handler(project_view):
         text = (f"Request to save project <b>{root_model.simple_name}</b> in "
                 "the project database")
         get_logger().info(text)
+        broadcast_event(KaraboEvent.ProjectName,
+                        {"simple_name": root_model.simple_name})
 
 
 def _project_trash_handler(project_view):
