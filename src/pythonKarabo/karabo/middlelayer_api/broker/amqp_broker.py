@@ -91,7 +91,8 @@ class AmqpBroker(Broker):
         except aiormq.exceptions.ChannelNotFoundEntity:
             # Exception raised since the queue not found on the broker
             # The channel is not valid anymore, so create the new one
-            self.channel = await self.connection.channel()
+            self.channel = await self.connection.channel(
+                publisher_confirms=False)
 
         arguments = {
             "x-max-length": _CONSUME_QSIZE,
