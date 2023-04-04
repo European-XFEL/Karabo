@@ -334,7 +334,7 @@ class MainWindow(QMainWindow):
 
     def _set_window_title(self, **kwargs):
         self.title_info.update(kwargs)
-        titles = ["Project: {}", "European XFEL - Karabo GUI {}", "Topic: {}"]
+        titles = ["{}", "European XFEL - Karabo GUI {}", "Topic: {}"]
         title = " - ".join([info.format(value) for info, value in
                             zip(titles, self.title_info.values())
                             if value is not None])
