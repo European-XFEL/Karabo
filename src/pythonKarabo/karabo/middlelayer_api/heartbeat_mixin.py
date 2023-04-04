@@ -3,7 +3,7 @@ from asyncio import ensure_future, gather, sleep
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, Timestamp, UInt32)
 
-from .signalslot import coslot, slot
+from .signalslot import slot
 
 SLOT_PING_SLEEP = 2
 
@@ -50,7 +50,7 @@ class HeartBeatMixin(Configurable):
     def slotPingAnswer(self, instanceId, info):
         self._update_instance_info(instanceId, info)
 
-    @coslot
+    @slot
     async def slotInstanceNew(self, instanceId, info):
         await super().slotInstanceNew(instanceId, info)
         if self.track:

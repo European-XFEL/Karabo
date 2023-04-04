@@ -6,8 +6,8 @@ import pytest_asyncio
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
-    PipelineMetaData, Slot, State, Timestamp, UInt32, background, call, coslot,
-    getDevice, isAlive, setWait, waitUntil)
+    PipelineMetaData, Slot, State, Timestamp, UInt32, background, call,
+    getDevice, isAlive, setWait, slot, waitUntil)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, event_loop, run_test, sleepUntil)
 
@@ -176,7 +176,7 @@ class Receiver(InputSchema, Device):
     def __init__(self, configuration):
         super().__init__(configuration)
 
-    @coslot
+    @slot
     async def connectInputChannel(self, output="alice", node=False):
         await self.input.connectChannel(f"{output}:output")
         if node:

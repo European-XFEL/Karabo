@@ -26,7 +26,7 @@ from .heartbeat_mixin import HeartBeatMixin
 from .logger import CacheLog, build_logger_node
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
-from .signalslot import SignalSlotable, coslot, slot
+from .signalslot import SignalSlotable, slot
 from .synchronization import (
     FutureDict, allCompleted, background, firstCompleted)
 
@@ -191,7 +191,7 @@ class DeviceServerBase(SignalSlotable):
         """
         return False
 
-    @coslot
+    @slot
     async def slotStartDevice(self, hash):
         classId, deviceId, config = self.parse(hash)
         if deviceId in self.deviceInstanceMap:
@@ -264,7 +264,7 @@ class DeviceServerBase(SignalSlotable):
         await sleep(0.1)
         get_event_loop().call_soon(self.stopEventLoop)
 
-    slotKillServer = coslot(slotKillServer, passMessage=True)
+    slotKillServer = slot(slotKillServer, passMessage=True)
 
     @slot
     def slotGetClassSchema(self, classId):
@@ -565,7 +565,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
         return self.serverId
 
-    slotKillServer = coslot(slotKillServer, passMessage=True)
+    slotKillServer = slot(slotKillServer, passMessage=True)
 
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
@@ -573,7 +573,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     def removeChild(self, deviceId):
         self.deviceInstanceMap.pop(deviceId, None)
 
-    @coslot
+    @slot
     async def slotInstanceNew(self, instanceId, info):
         await super(MiddleLayerDeviceServer, self).slotInstanceNew(
             instanceId, info)
@@ -775,7 +775,7 @@ class BoundDeviceServer(DeviceServerBase):
 
         return self.serverId
 
-    slotKillServer = coslot(slotKillServer, passMessage=True)
+    slotKillServer = slot(slotKillServer, passMessage=True)
 
 
 class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
