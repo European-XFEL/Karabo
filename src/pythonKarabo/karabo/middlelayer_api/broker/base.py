@@ -3,7 +3,7 @@ import time
 import traceback
 import weakref
 from abc import ABC, abstractmethod
-from asyncio import Future
+from asyncio import Future, iscoroutinefunction
 from contextlib import AsyncExitStack
 from functools import wraps
 
@@ -48,9 +48,14 @@ class Broker(ABC):
             weakself = weakref.ref(slot.__self__, delete)
             func = slot.__func__
 
-            @wraps(func)
-            def wrapper(*args):
-                return func(weakself(), *args)
+            if iscoroutinefunction(func):
+                @wraps(func)
+                async def wrapper(*args):
+                    return await func(weakself(), *args)
+            else:
+                @wraps(func)
+                def wrapper(*args):
+                    return func(weakself(), *args)
 
             self.slots[name] = wrapper
         else:
