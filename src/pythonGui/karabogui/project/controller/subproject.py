@@ -13,13 +13,14 @@ import karabogui.icons as icons
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     DeviceInstanceModel, ProjectModel, device_instance_exists)
+from karabo.common.project.utils import get_project_models
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.loading_watcher import ProjectLoadingWatcher
 from karabogui.project.utils import load_project
 from karabogui.singletons.api import get_project_model
-from karabogui.util import move_to_cursor
+from karabogui.util import create_list_string, move_to_cursor
 
 from .project_groups import ProjectSubgroupController
 
@@ -105,6 +106,7 @@ class SubprojectController(ProjectSubgroupController):
         """Make sure a subproject doesn't have conflicting device IDs
         """
         device_ids = []
+        duplicated = []
 
         def visitor(model):
             if isinstance(model, DeviceInstanceModel):
@@ -113,13 +115,18 @@ class SubprojectController(ProjectSubgroupController):
         # collect all the device ids in the project being added
         walk_traits_object(project, visitor)
 
-        # ... and make sure they don't already exist in any project
-        if device_instance_exists(root_project, device_ids):
-            # Computer says no....
+        for project in get_project_models(root_project):
+            if devices := device_instance_exists(project, device_ids):
+                duplicated.extend(devices)
+
+        if duplicated:
             msg = ('The subproject which you wish to load contains devices<br>'
                    'which already exist in the current project. Therefore <br>'
                    'it will not be added.')
-            messagebox.show_warning(msg, title='Device already exists')
+
+            details = create_list_string(set(duplicated))
+            messagebox.show_warning(msg, details=details,
+                                    title='Device already exists')
             return True
         return False
 
