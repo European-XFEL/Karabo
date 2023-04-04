@@ -252,6 +252,18 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.maxValueStringSize")
+                  .displayedName("Max String Size")
+                  .description(
+                        "Maximum size, in characters, for a property value to be inserted into Influx. "
+                        "(All values are feed to Influx as strings in a text format called Line Protocol)")
+                  .assignmentOptional()
+                  .defaultValue(MAX_INFLUX_VALUE_LENGTH - (MAX_INFLUX_VALUE_LENGTH / 10))
+                  .maxInc(MAX_INFLUX_VALUE_LENGTH)
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
                   .key("logger.InfluxDataLogger.maxPerDevicePropLogRate")
                   .displayedName("Max per Device Property Logging Rate (Kb/sec)")
                   .description(
