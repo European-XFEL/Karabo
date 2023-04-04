@@ -5,8 +5,10 @@
 #include <chrono>
 #include <future>
 #include <iostream>
-#include <karabo/net/InfluxDbClient.hh>
 #include <nlohmann/json.hpp>
+
+#include "karabo/net/InfluxDbClient.hh"
+#include "karabo/util/DataLogUtils.hh"
 
 // Precision is microseconds
 // for nanoseconds:  DUR is "ns",  PRECISION_FACTOR is 1'000'000'000
@@ -37,6 +39,7 @@ namespace karabo {
               m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
               m_maxVectorSize(input.get<unsigned int>("maxVectorSize")),
+              m_maxValueStringSize(input.get<unsigned int>("maxValueStringSize")),
               m_secsOfLogOfRejectedData(0ull),
               m_maxPropLogRateBytesSec(input.get<unsigned int>("maxPropLogRateBytesSec")),
               m_propLogRatePeriod(input.get<unsigned int>("propLogRatePeriod")),
@@ -196,7 +199,8 @@ namespace karabo {
                     // substract the 2 Epochstamp to get a TimeDuration.
                     const double dt = t.getEpochstamp() - nowish;
                     if (dt > m_maxTimeAdvance) {
-                        rejectedPaths.push_back(std::make_pair(path, "from far future " + t.toIso8601Ext()));
+                        rejectedPaths.push_back(
+                              RejectedData{RejectionType::FAR_AHEAD_TIME, path, "from far future " + t.toIso8601Ext()});
                         // timestamp seems unreliable, so we bail out before
                         continue;
                     }
@@ -260,7 +264,8 @@ namespace karabo {
                     value = toString(v);
                 } else if (type == Types::UINT64) {
                     const unsigned long long uv = leafNode.getValue<unsigned long long>();
-                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the results
+                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the
+                    // results
                     long long sv;
                     memcpy(&sv, &uv, sizeof(long long));
                     value = toString(sv);
@@ -288,8 +293,16 @@ namespace karabo {
                     } else {
                         oss << "vector of size " << toString(vectorSize);
                     }
-                    rejectedPaths.push_back(std::make_pair(path, oss.str()));
+                    rejectedPaths.push_back(RejectedData{RejectionType::TOO_MANY_ELEMENTS, path, oss.str()});
                     // All stamp manipulations done, we just skip logValue
+                    continue;
+                }
+
+                if (value.size() > m_maxValueStringSize) {
+                    rejectedPaths.push_back(RejectedData{RejectionType::VALUE_STRING_SIZE, path,
+                                                         std::string{"Metric value length, "} + toString(value.size()) +
+                                                               ", exceeds the maximum length allowed in Influx, " +
+                                                               toString(m_maxValueStringSize)});
                     continue;
                 }
 
@@ -299,10 +312,10 @@ namespace karabo {
                     logValue(query, deviceId, path, value, leafNode.getType(),
                              isFinite); // isFinite matters only for FLOAT/DOUBLE
                 } else {
-                    rejectedPaths.push_back(std::make_pair(
-                          deviceId, "Update of property '" + path + "' timestamped at '" + currentStamp.toIso8601Ext() +
-                                          "' would reach a logging rate of '" + toString(newRate / 1024) +
-                                          " Kb/sec'."));
+                    rejectedPaths.push_back(RejectedData{
+                          RejectionType::PROPERTY_WRITE_RATE, deviceId,
+                          "Update of property '" + path + "' timestamped at '" + currentStamp.toIso8601Ext() +
+                                "' would reach a logging rate of '" + toString(newRate / 1024) + " Kb/sec'."});
                 }
             }
             terminateQuery(query, lineTimestamp, rejectedPaths);
@@ -319,8 +332,8 @@ namespace karabo {
             const unsigned long long ts = m_loggingStartStamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
             ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
-               << Epochstamp().toIso8601Ext() << "\",format=1i";  // Older data (where timestamps were not ensured to be
-                                                                  // not older than 'ts') has no format specified.
+               << Epochstamp().toIso8601Ext() << "\",format=1i";  // Older data (where timestamps were not ensured to
+                                                                  // be not older than 'ts') has no format specified.
             auto deviceIdNode = configuration.find("_deviceId_"); // _deviceId_ as in DataLogger::slotChanged
             if (deviceIdNode) {                                   // Should always exist in case of m_pendingLogin
                 const Epochstamp devStartStamp = Epochstamp::fromHashAttributes(deviceIdNode->getAttributes());
@@ -404,7 +417,8 @@ namespace karabo {
                 case Types::VECTOR_DOUBLE:
                 case Types::VECTOR_COMPLEX_FLOAT:
                 case Types::VECTOR_COMPLEX_DOUBLE: {
-                    // empty strings shall be saved. They do not spoil the line protocol since they are between quotes
+                    // empty strings shall be saved. They do not spoil the line protocol since they are between
+                    // quotes
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
                     break;
                 }
@@ -476,8 +490,9 @@ namespace karabo {
 
             std::stringstream textSs;
             textSs << "Skipping " << rejects.size() << " log metric(s) for device '" << m_deviceToBeLogged << "':";
-            for (const std::pair<std::string, std::string>& reject : rejects) {
-                textSs << "\n'" << reject.first << "' (" << reject.second << ")";
+            for (const RejectedData& reject : rejects) {
+                textSs << "\n'" << static_cast<int>(reject.type) << ": '" << reject.dataPath << "' (" << reject.details
+                       << ")";
             }
             std::string text(textSs.str());
             const Epochstamp now;
@@ -503,7 +518,6 @@ namespace karabo {
             //       produce bad data stored here.
             badDataQuery << "__BAD__DATA__  " << m_deviceToBeLogged << "=\"" << text << "\" " << ts << "\n";
             m_dbClientWrite->enqueueQuery(badDataQuery.str());
-            // m_dbClientWrite->flushBatch(); // Should not be needed
         }
 
 
@@ -563,9 +577,9 @@ namespace karabo {
                 // In any of those cases, try to log the schema in the database.
 
                 // Note: if the schema was already in the database, but the query request failed or returned an
-                // unparseable response, requesting to save it again won't cause any harm appart from taking some extra
-                // space. Not saving when in doubt would be the really harmful outcome, as that would lead to failures
-                // in retrieving past device configurations.
+                // unparseable response, requesting to save it again won't cause any harm appart from taking some
+                // extra space. Not saving when in doubt would be the really harmful outcome, as that would lead to
+                // failures in retrieving past device configurations.
                 schemaInDb = logNewSchema(schDigest, *schemaArchive);
             }
 
@@ -586,7 +600,7 @@ namespace karabo {
             const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(schemaArchive.data());
             std::string base64Schema = base64Encode(uarchive, schemaArchive.size());
             unsigned int newLogRate = newSchemaLogRate(base64Schema.size());
-            if (newLogRate <= m_maxSchemaLogRateBytesSec) {
+            if (newLogRate <= m_maxSchemaLogRateBytesSec && base64Schema.size() <= m_maxValueStringSize) {
                 // New schema can be logged.
                 std::stringstream ss;
                 ss << m_deviceToBeLogged << "__SCHEMAS,"
@@ -598,12 +612,23 @@ namespace karabo {
 
                 return true;
             } else {
-                // New schema cannot be logged - would violate max schema logging rate threshold.
-                const RejectedData rejectedSch = std::make_pair(
-                      m_deviceToBeLogged + "::schema",
-                      "Update of schema with size '" + toString(base64Schema.size() / 1024) +
-                            " Kb' would reach a schema logging rate '" + toString(newLogRate / 1024) + " Kb/sec'.");
-                logRejectedDatum(rejectedSch);
+                if (newLogRate > m_maxSchemaLogRateBytesSec) {
+                    // New schema cannot be logged - would violate max schema logging rate threshold.
+                    logRejectedDatum(RejectedData{RejectionType::SCHEMA_WRITE_RATE, m_deviceToBeLogged + "::schema",
+                                                  "Update of schema with size '" +
+                                                        toString(base64Schema.size() / 1024) +
+                                                        " Kb' would reach a schema logging rate '" +
+                                                        toString(newLogRate / 1024) + " Kb/sec'."});
+                }
+                if (base64Schema.size() > m_maxValueStringSize) {
+                    // New schema cannot be logged - its serialized form is bigger than the maximum field value
+                    // length allowed by Influx. Note that for base64 encoded strings, using UTF-8, the number of
+                    // bytes equals the number of characters.
+                    logRejectedDatum(RejectedData{RejectionType::VALUE_STRING_SIZE, m_deviceToBeLogged + "::schema",
+                                                  "Size of schema serialized form, '" + toString(base64Schema.size()) +
+                                                        " characters' is bigger than the maximum allowed by Influx, '" +
+                                                        toString(m_maxValueStringSize) + "' characters'."});
+                }
                 return false;
             }
         }
@@ -675,6 +700,18 @@ namespace karabo {
                   .commit();
 
             UINT32_ELEMENT(expected)
+                  .key("maxValueStringSize")
+                  .displayedName("Max String Size")
+                  .description(
+                        "Maximum size, in characters, for a property value to be inserted into Influx. "
+                        "(All values are feed to Influx as strings in a text format called Line Protocol)")
+                  .assignmentOptional()
+                  .defaultValue(MAX_INFLUX_VALUE_LENGTH - (MAX_INFLUX_VALUE_LENGTH / 10))
+                  .maxInc(MAX_INFLUX_VALUE_LENGTH)
+                  .init()
+                  .commit();
+
+            UINT32_ELEMENT(expected)
                   .key("maxPerDevicePropLogRate")
                   .displayedName("Max per Device Property Logging Rate (Kb/sec)")
                   .description(
@@ -702,7 +739,8 @@ namespace karabo {
                   .key("maxSchemaLogRate")
                   .displayedName("Max Schema Logging Rate (Kb/sec)")
                   .description(
-                        "Schema updates for a device that would move its schema logging rate above this threshold are "
+                        "Schema updates for a device that would move its schema logging rate above this threshold "
+                        "are "
                         "skipped. Sizes are for the base64 encoded form of the binary serialized schema.")
                   .assignmentOptional()
                   .defaultValue(5 * 1024) // 5 Mb/s
@@ -811,6 +849,7 @@ namespace karabo {
             config.set("dbClientWritePointer", m_clientWrite);
             config.set("maxTimeAdvance", get<int>("maxTimeAdvance"));
             config.set("maxVectorSize", get<unsigned int>("maxVectorSize"));
+            config.set("maxValueStringSize", get<unsigned int>("maxValueStringSize"));
             config.set("maxPropLogRateBytesSec", get<unsigned int>("maxPerDevicePropLogRate") * 1024);
             config.set("propLogRatePeriod", get<unsigned int>("propLogRatePeriod"));
             config.set("maxSchemaLogRateBytesSec", get<unsigned int>("maxSchemaLogRate") * 1024);

@@ -67,6 +67,11 @@ namespace karabo {
         // replacement for '\n' in data logger files
         char const* const DATALOG_NEWLINE_MANGLE = ".KRB_NEWLINE.";
 
+
+        // Must be the same value configured for maximum allowed field size in the Influx
+        // instances for input via the line protocol.
+        const unsigned int MAX_INFLUX_VALUE_LENGTH = 2'097'152u;
+
         /**
          * A structure defining meta data as used by the data loggers
          */
