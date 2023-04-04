@@ -8,14 +8,13 @@ import sys
 import weakref
 from asyncio import (
     CancelledError, TimeoutError, ensure_future, gather, get_event_loop,
-    wait_for)
+    iscoroutinefunction, wait_for)
 from collections import defaultdict
 
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Descriptor,
     Hash, Int32, KaraboError, Node, Slot, String, TypeHash, Weak)
 
-from .eventloop import ensure_coroutine
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
 from .synchronization import FutureDict, firstCompleted
@@ -39,26 +38,16 @@ def _log_exception(func, device, message):
     logger.log(level, *logmessage, exc_info=True)
 
 
-def slot(f):
-    def inner(func, device, name, message, args):
-        try:
-            device._ss.reply(message, func(*args))
-        except BaseException as e:
-            device._ss.replyException(message, e)
-            _log_exception(func, device, message)
-    f.slot = inner
-    return f
-
-
-def coslot(f, passMessage=False):
-    f = ensure_coroutine(f)
+def slot(f, passMessage=False):
 
     def outer(func, device, name, message, args):
         broker = device._ss
 
         async def inner():
             try:
-                broker.reply(message, (await func(*args)))
+                is_coro = iscoroutinefunction(func)
+                ret = await func(*args) if is_coro else func(*args)
+                broker.reply(message, (ret))
             except BaseException as e:
                 broker.replyException(message, e)
                 _log_exception(func, device, message)
@@ -68,6 +57,10 @@ def coslot(f, passMessage=False):
 
     f.slot = outer
     return f
+
+
+# Backward compatibility
+coslot = slot
 
 
 class BoundSignal(object):
@@ -230,7 +223,7 @@ class SignalSlotable(Configurable):
         self._ss = loop.getBroker(self.deviceId, type(self).__name__,
                                   broadcast)
         self._sethash = {}
-        return loop.create_task(self._run(server=server), self)
+        return loop.create_task(self._run(server=server), instance=self)
 
     async def _assert_name_unique(self):
         """check that our device Id is unique
