@@ -25,7 +25,19 @@ namespace karabo {
         using AsyncHandler = boost::function<void()>;
         using InfluxResponseHandler = boost::function<void(const karabo::net::HttpResponse&)>;
 
-        using RejectedData = std::pair<std::string, std::string>; // Path, Reason
+        enum class RejectionType {
+            TOO_MANY_ELEMENTS = 0, // Vector property values with more elements than allowed.
+            VALUE_STRING_SIZE,     // Property values whose string form exceeds the maximum allowed.
+            PROPERTY_WRITE_RATE,   // Writes that would exceed the maximum property logging rate allowed for a device.
+            SCHEMA_WRITE_RATE,     // Writes that would exceed the maximum schema logging rate allowed for a device.
+            FAR_AHEAD_TIME         // Property values whose timestamps are too much in the future.
+        };
+
+        struct RejectedData {
+            RejectionType type;
+            std::string dataPath; // ${deviceId} || ${deviceId}.${propertyPath} || ${deviceId}"::schema"
+            std::string details;
+        };
 
         struct InfluxDeviceData : public karabo::devices::DeviceData {
             KARABO_CLASSINFO(InfluxDeviceData, "InfluxDataLoggerDeviceData", "2.6")
@@ -133,6 +145,7 @@ namespace karabo {
 
             int m_maxTimeAdvance;
             size_t m_maxVectorSize;
+            size_t m_maxValueStringSize;
             unsigned long long m_secsOfLogOfRejectedData; // epoch seconds of last logging of rejected data
 
             unsigned int m_maxPropLogRateBytesSec; // in bytes/sec.
