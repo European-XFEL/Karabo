@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER
 from karabo.middlelayer import (
     DaqPolicy, Device, Double, Hash, HashList, KaraboError, Slot, String, call,
-    connectDevice, coslot, getConfigurationFromName, getLastConfiguration,
+    connectDevice, getConfigurationFromName, getLastConfiguration,
     instantiateFromName, listConfigurationFromName,
     listDevicesWithConfiguration, saveConfigurationFromName, slot)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
@@ -66,7 +66,7 @@ class MockServer(Device):
         self.lastConfigDouble = DEFAULT_LAST_DOUBLE
         self.lastDeviceId = ""
 
-    @coslot
+    @slot
     async def slotStartDevice(self, info):
         """The info hash should contain
 
