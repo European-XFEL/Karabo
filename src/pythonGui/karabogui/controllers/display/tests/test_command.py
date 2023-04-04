@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock, Mock, patch
-
 from qtpy.QtWidgets import QDialog, QMessageBox, QToolButton
 
 from karabo.common.states import State
@@ -7,8 +5,7 @@ from karabo.native import AccessLevel, Configurable, Slot, String
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, apply_default_configuration, build_binding)
 from karabogui.const import IS_MAC_SYSTEM
-from karabogui.testing import (
-    GuiTestCase, click_button, set_proxy_value, singletons)
+from karabogui.testing import click_button, set_proxy_value, singletons
 from karabogui.topology.system_tree import SystemTreeNode
 
 from ..command import DisplayCommand
@@ -45,159 +42,163 @@ def get_slot_proxy(additional=False, klass=SlottedDevice):
         return slot_proxy
 
 
-class TestDisplayCommand(GuiTestCase):
-    def test_basics(self):
-        slot_proxy = get_slot_proxy()
-        controller = DisplayCommand(proxy=slot_proxy)
-        controller.create(None)
+def test_command_controller_basics(gui_app):
+    slot_proxy = get_slot_proxy()
+    controller = DisplayCommand(proxy=slot_proxy)
+    controller.create(None)
 
-        assert controller.widget is not None
-        assert isinstance(controller._button, QToolButton)
-        assert controller._actions[0].action.text() == "Call ME"
-        assert controller._actions[0].action.toolTip() == "dev.callme"
+    assert controller.widget is not None
+    assert isinstance(controller._button, QToolButton)
+    assert controller._actions[0].action.text() == "Call ME"
+    assert controller._actions[0].action.toolTip() == "dev.callme"
 
-        controller.destroy()
-        assert controller.widget is None
+    controller.destroy()
+    assert controller.widget is None
 
-    def test_trigger(self):
-        slot_proxy = get_slot_proxy()
-        controller = DisplayCommand(proxy=slot_proxy)
-        controller.create(None)
-        network = Mock()
-        with singletons(network=network):
-            controller._actions[0].action.trigger()
-            network.onExecute.assert_called_with("dev", "callme", False)
 
-    def test_macro_trigger(self):
-        slot_proxy = get_slot_proxy()
-        node = SystemTreeNode()
-        node.attributes = {"type": "macro"}
-        slot_proxy.root_proxy.topology_node = node
-        controller = DisplayCommand(proxy=slot_proxy)
-        controller.create(None)
-        network = Mock()
-        with singletons(network=network):
-            controller._actions[0].action.trigger()
-            network.onExecute.assert_called_with("dev", "callme", True)
+def test_command_controller_trigger(gui_app, mocker):
+    slot_proxy = get_slot_proxy()
+    controller = DisplayCommand(proxy=slot_proxy)
+    controller.create(None)
+    network = mocker.Mock()
+    with singletons(network=network):
+        controller._actions[0].action.trigger()
+        network.onExecute.assert_called_with("dev", "callme", False)
 
-    def test_additional_proxy(self):
-        slot_p1, slot_p2 = get_slot_proxy(additional=True)
-        controller = DisplayCommand(proxy=slot_p1)
-        controller.create(None)
 
-        assert controller.visualize_additional_property(slot_p2)
-        # no displayedName, should be path
-        assert controller._actions[1].action.text() == "yep"
-        assert len(controller._actions) == 2
-        assert slot_p2 in controller.proxies
-        assert slot_p2.key in controller.model.keys
+def test_command_controller_macro_trigger(gui_app, mocker):
+    slot_proxy = get_slot_proxy()
+    node = SystemTreeNode()
+    node.attributes = {"type": "macro"}
+    slot_proxy.root_proxy.topology_node = node
+    controller = DisplayCommand(proxy=slot_proxy)
+    controller.create(None)
+    network = mocker.Mock()
+    with singletons(network=network):
+        controller._actions[0].action.trigger()
+        network.onExecute.assert_called_with("dev", "callme", True)
 
-        assert controller.remove_additional_property(slot_p2)
-        assert len(controller._actions) == 1
-        assert slot_p2 not in controller.proxies
-        assert slot_p2.key not in controller.model.keys
 
-        # Already removed
-        assert not controller.remove_additional_property(slot_p2)
+def test_command_controller_additional_proxy(gui_app):
+    slot_p1, slot_p2 = get_slot_proxy(additional=True)
+    controller = DisplayCommand(proxy=slot_p1)
+    controller.create(None)
 
-    def test_state_change(self):
-        schema = SlottedDevice.getClassSchema()
-        binding = build_binding(schema)
-        apply_default_configuration(binding)
+    assert controller.visualize_additional_property(slot_p2)
+    # no displayedName, should be path
+    assert controller._actions[1].action.text() == "yep"
+    assert len(controller._actions) == 2
+    assert slot_p2 in controller.proxies
+    assert slot_p2.key in controller.model.keys
 
-        dev_proxy = DeviceProxy(device_id="dev", server_id="swerver",
-                                binding=binding)
-        slot_proxy = PropertyProxy(root_proxy=dev_proxy, path="yep")
-        controller = DisplayCommand(proxy=slot_proxy)
-        controller.create(None)
+    assert controller.remove_additional_property(slot_p2)
+    assert len(controller._actions) == 1
+    assert slot_p2 not in controller.proxies
+    assert slot_p2.key not in controller.model.keys
 
-        # device state is INIT
-        assert not controller._actions[0].action.isEnabled()
+    # Already removed
+    assert not controller.remove_additional_property(slot_p2)
 
-        set_proxy_value(slot_proxy, "state", State.ACTIVE.value)
-        # now `yep` should be enabled
-        assert controller._actions[0].action.isEnabled()
 
-    def test_button_finalization(self):
-        slot1, slot2 = get_slot_proxy(additional=True, klass=EmptyDevice)
+def test_command_controller_state_change(gui_app):
+    schema = SlottedDevice.getClassSchema()
+    binding = build_binding(schema)
+    apply_default_configuration(binding)
 
-        slotSchema = SlottedDevice()
+    dev_proxy = DeviceProxy(device_id="dev", server_id="swerver",
+                            binding=binding)
+    slot_proxy = PropertyProxy(root_proxy=dev_proxy, path="yep")
+    controller = DisplayCommand(proxy=slot_proxy)
+    controller.create(None)
 
-        controller = DisplayCommand(proxy=slot1)
-        controller.create(None)
-        controller.visualize_additional_property(slot2)
+    # device state is INIT
+    assert not controller._actions[0].action.isEnabled()
 
-        assert controller._actions[0].action.text() == "NO TEXT"
-        assert controller._actions[1].action.text() == "NO TEXT"
+    set_proxy_value(slot_proxy, "state", State.ACTIVE.value)
+    # now `yep` should be enabled
+    assert controller._actions[0].action.isEnabled()
 
-        # The device "comes online"
-        schema = slotSchema.getClassSchema()
-        build_binding(schema, existing=slot1.root_proxy.binding)
 
-        assert controller._actions[0].action.text() == "Call ME"
-        assert controller._actions[1].action.text() == "yep"
+def test_command_controller_button_finalization(gui_app):
+    slot1, slot2 = get_slot_proxy(additional=True, klass=EmptyDevice)
 
-        # The device "has schema injection"
-        slotSchema.callme.descriptor.displayedName = "Injected"
-        schema = slotSchema.getClassSchema()
-        build_binding(schema, existing=slot1.root_proxy.binding)
-        assert controller._actions[0].action.text() == "Injected"
-        assert controller._actions[1].action.text() == "yep"
+    slotSchema = SlottedDevice()
 
-    def test_confirmation_dialog(self):
-        slot_proxy = get_slot_proxy()
-        controller = DisplayCommand(proxy=slot_proxy)
-        controller.create(None)
-        network = Mock()
-        widget = controller.widget
+    controller = DisplayCommand(proxy=slot1)
+    controller.create(None)
+    controller.visualize_additional_property(slot2)
 
-        with singletons(network=network):
-            controller.model.requires_confirmation = False
-            button = controller._button
-            click_button(controller._button)
+    assert controller._actions[0].action.text() == "NO TEXT"
+    assert controller._actions[1].action.text() == "NO TEXT"
 
-            self.assertFalse(controller.model.requires_confirmation)
-            self.assertEqual(network.onExecute.call_count, 1)
-            self.assertFalse(controller.widget.font().bold())
+    # The device "comes online"
+    schema = slotSchema.getClassSchema()
+    build_binding(schema, existing=slot1.root_proxy.binding)
 
-        with singletons(network=network):
-            controller._requires_confirmation_slot()
-            self.assertTrue(controller.model.requires_confirmation)
-            self.assertIn("bold", widget.styleSheet())
-            if not IS_MAC_SYSTEM:
-                sh = ("QToolButton{font-size: 10pt; font: bold;}"
-                      "QToolButton:enabled{color: rgb(255, 145, 255);}")
-                self.assertIn(sh, widget.styleSheet())
+    assert controller._actions[0].action.text() == "Call ME"
+    assert controller._actions[1].action.text() == "yep"
 
-            # We don"t want to execute
-            QMessageBox.question = MagicMock(return_value=QMessageBox.No)
-            click_button(button)
-            self.assertEqual(network.onExecute.call_count, 1)
-            # We want to execute
-            QMessageBox.question = MagicMock(return_value=QMessageBox.Yes)
-            click_button(button)
-            self.assertEqual(network.onExecute.call_count, 2)
+    # The device "has schema injection"
+    slotSchema.callme.descriptor.displayedName = "Injected"
+    schema = slotSchema.getClassSchema()
+    build_binding(schema, existing=slot1.root_proxy.binding)
+    assert controller._actions[0].action.text() == "Injected"
+    assert controller._actions[1].action.text() == "yep"
 
+
+def test_command_controller_confirmation_dialog(gui_app, mocker):
+    slot_proxy = get_slot_proxy()
+    controller = DisplayCommand(proxy=slot_proxy)
+    controller.create(None)
+    network = mocker.Mock()
+    widget = controller.widget
+
+    with singletons(network=network):
+        controller.model.requires_confirmation = False
+        button = controller._button
+        click_button(controller._button)
+
+        assert not controller.model.requires_confirmation
+        assert network.onExecute.call_count == 1
+        assert not controller.widget.font().bold()
+
+    with singletons(network=network):
         controller._requires_confirmation_slot()
+        assert controller.model.requires_confirmation
+        assert "bold" in widget.styleSheet()
         if not IS_MAC_SYSTEM:
-            self.assertIn("QToolButton { font-size: 10pt; font: normal }",
-                          widget.styleSheet())
+            sh = ("QToolButton{font-size: 10pt; font: bold;}"
+                  "QToolButton:enabled{color: rgb(255, 145, 255);}")
+            assert sh in widget.styleSheet()
 
-        QMessageBox.question = MagicMock(return_value=QMessageBox.No)
+        # We don"t want to execute
+        QMessageBox.question = mocker.MagicMock(return_value=QMessageBox.No)
+        click_button(button)
+        assert network.onExecute.call_count == 1
+        # We want to execute
+        QMessageBox.question = mocker.MagicMock(return_value=QMessageBox.Yes)
+        click_button(button)
+        assert network.onExecute.call_count == 2
 
-        format_action = controller.widget.actions()[1]
-        path = "karabogui.controllers.display.command.FormatLabelDialog"
-        with patch(path) as dialog:
-            self.assertEqual(controller.model.font_size, 10)
-            if not IS_MAC_SYSTEM:
-                self.assertIn("QToolButton { font-size: 10pt; font: normal }",
-                              widget.styleSheet())
-            dialog().font_size = 14
-            dialog().font_weight = "bold"
-            dialog().exec.return_value = QDialog.Accepted
-            format_action.trigger()
-            self.assertEqual(controller.model.font_size, 14)
-            if not IS_MAC_SYSTEM:
-                self.assertIn(
-                    "QToolButton { font-size: 14pt; font: bold }",
-                    widget.styleSheet())
+    controller._requires_confirmation_slot()
+    if not IS_MAC_SYSTEM:
+        style = "QToolButton { font-size: 10pt; font: normal }"
+        assert style in widget.styleSheet()
+
+    QMessageBox.question = mocker.MagicMock(return_value=QMessageBox.No)
+
+    format_action = controller.widget.actions()[1]
+    path = "karabogui.controllers.display.command.FormatLabelDialog"
+    dialog = mocker.patch(path)
+    assert controller.model.font_size == 10
+    if not IS_MAC_SYSTEM:
+        style = "QToolButton { font-size: 10pt; font: normal }"
+        assert style in widget.styleSheet()
+    dialog().font_size = 14
+    dialog().font_weight = "bold"
+    dialog().exec.return_value = QDialog.Accepted
+    format_action.trigger()
+    assert controller.model.font_size == 14
+    if not IS_MAC_SYSTEM:
+        style = "QToolButton { font-size: 14pt; font: bold }"
+        assert style in widget.styleSheet()
