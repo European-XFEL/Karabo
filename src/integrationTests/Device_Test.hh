@@ -33,7 +33,7 @@ class Device_Test : public CPPUNIT_NS::TestFixture {
    private:
     void appTestRunner();
 
-    void testInstanceInfoLog();
+    void testInstanceInfoServer();
     void testGetTimestamp();
     void testSchemaInjection();
     void testGetconfigReconfig();
