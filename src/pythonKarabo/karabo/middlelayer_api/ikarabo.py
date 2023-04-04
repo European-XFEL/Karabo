@@ -17,7 +17,7 @@ from .device_client import DeviceClientBase
 from .eventloop import NoEventLoop, set_global_sync
 from .logger import build_logger_node
 from .macro import EventThread, Macro
-from .signalslot import coslot
+from .signalslot import slot
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -56,7 +56,7 @@ class DeviceClient(Macro, DeviceClientBase):
         if ip is not None:
             ip.ask_exit()
 
-    slotKillDevice = coslot(slotKillDevice, passMessage=True)
+    slotKillDevice = slot(slotKillDevice, passMessage=True)
 
 
 @functools.wraps(device_client.connectDevice)

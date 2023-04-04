@@ -12,7 +12,7 @@ from .alarm import AlarmMixin
 from .injectable import InjectMixin
 from .logger import build_logger_node
 from .pipeline import OutputChannel
-from .signalslot import Signal, SignalSlotable, coslot, slot
+from .signalslot import Signal, SignalSlotable, slot
 from .utils import get_property_hash
 
 
@@ -282,7 +282,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         await super(Device, self).slotReconfigure(reconfiguration)
         self.update()
 
-    slotReconfigure = coslot(slotReconfigure, passMessage=True)
+    slotReconfigure = slot(slotReconfigure, passMessage=True)
 
     def update(self):
         """Update the instanceInfo Hash according to the status info
@@ -347,7 +347,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         """Notfiy the network that our schema has changed"""
         self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
 
-    @coslot
+    @slot
     async def slotUpdateSchemaAttributes(self, updates):
         """Apply runtime attribute updates to the device
 
