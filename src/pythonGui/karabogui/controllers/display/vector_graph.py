@@ -11,15 +11,17 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import (
     VectorGraphModel, build_graph_config, restore_graph_config)
 from karabo.common.scenemodel.widgets.graph_plots import NDArrayGraphModel
+from karabogui import icons
 from karabogui.binding.api import VectorNumberBinding
 from karabogui.binding.binding_types import NDArrayBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.arrays import get_array_data
-from karabogui.graph.common.api import get_pen_cycler
+from karabogui.graph.common.api import create_button, get_pen_cycler
 from karabogui.graph.plots.api import (
     KaraboPlotView, TransformDialog, generate_baseline, generate_down_sample,
     get_view_range)
+from karabogui.graph.plots.dialogs.data_analysis import DataAnalysisDialog
 
 
 class BaseArrayGraph(BaseBindingController):
@@ -32,8 +34,9 @@ class BaseArrayGraph(BaseBindingController):
         widget.add_legend(visible=False)
         widget.add_cross_target()
         widget.add_roi()
-        widget.add_toolbar()
-        widget.restore(build_graph_config(self.model))
+        toolbar = widget.add_toolbar()
+        config = build_graph_config(self.model)
+        widget.restore(config)
         widget.enable_data_toggle()
         widget.enable_export()
 
@@ -45,7 +48,17 @@ class BaseArrayGraph(BaseBindingController):
         # Add first curve for the main proxy
         self._add_curve(self.proxy, widget=widget)
 
+        button = create_button(
+            icon=icons.data_analysis, checkable=False, tooltip="Data Analysis",
+            on_clicked=self.show_data_analysis_dialog)
+        toolbar.add_button(button)
         return widget
+
+    def show_data_analysis_dialog(self):
+        config = build_graph_config(self.model)
+        data_analysis_dialog = DataAnalysisDialog(
+            proxy=self.proxy, config=config, parent=self.widget)
+        data_analysis_dialog.show()
 
     def __pens_default(self):
         return get_pen_cycler()
