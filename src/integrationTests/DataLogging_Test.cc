@@ -367,6 +367,114 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
 }
 
 
+void DataLogging_Test::testInfluxMaxStringLength() {
+    std::clog << "Testing enforcing of max string value length for Influx ..." << std::endl;
+
+    const unsigned int maxStringLength = 8'192u;
+    const std::string belowLimitStr(maxStringLength / 2, 'B');
+    const std::string atLimitStr(maxStringLength, '@');
+    const std::string aboveLimitStr(maxStringLength * 2, 'A');
+
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    // DeviceID of device with rejected schema must be exclusive to this test.
+    // If that's not the case, it might already have been saved by another test
+    // in the database, and won't even be submitted to Influx.
+    const std::string deviceIdRejectedSchema = m_deviceId + "__REJECTED__SCHEMA";
+
+    const unsigned int afterFlushWait = 500u;
+
+    Epochstamp beforeServerInstantiation;
+
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    success = m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", deviceIdRejectedSchema),
+                                          KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    success = startDataLoggerManager("InfluxDataLogger", false, false, 5120u, 5u, 15'360u, 5u, maxStringLength);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated();
+
+    ///////  Checks that a string below the length limit is accepted
+    Epochstamp beforeBelowLimit;
+    m_deviceClient->set(m_deviceId, "stringProperty", belowLimitStr);
+    // Makes sure the data has been written to Influx
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    Epochstamp afterBelowLimit;
+
+    Hash badDataAllDevices;
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot
+                ->request(dlreader0, "slotGetBadData", beforeBelowLimit.toIso8601Ext(), afterBelowLimit.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+
+    ///////  Checks that a string whose length is exactly at the limit is accepted.
+    Epochstamp beforeAtLimit;
+    m_deviceClient->set(m_deviceId, "stringProperty", atLimitStr);
+    // Makes sure the data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    Epochstamp afterAtLimit;
+
+    badDataAllDevices.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot->request(dlreader0, "slotGetBadData", beforeAtLimit.toIso8601Ext(), afterAtLimit.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+
+
+    ///////  Checks that a string above the length limit is rejected with the proper code.
+    Epochstamp beforeAboveLimit;
+    m_deviceClient->set(m_deviceId, "stringProperty", aboveLimitStr);
+    // Makes sure the data has been written to Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+    Epochstamp afterAboveLimit;
+
+    badDataAllDevices.clear();
+    CPPUNIT_ASSERT_NO_THROW(
+          m_sigSlot
+                ->request(dlreader0, "slotGetBadData", beforeAboveLimit.toIso8601Ext(), afterAboveLimit.toIso8601Ext())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(badDataAllDevices));
+    CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size());
+    const auto deviceBadData = badDataAllDevices.get<std::vector<Hash>>(m_deviceId);
+    const std::string badDataInfo = deviceBadData[0].get<std::string>("info");
+
+    // [1] is the code for string metric values longer than the Influx limit.
+    CPPUNIT_ASSERT_MESSAGE(
+          "Expected pattern, \">> [1] 'stringProperty'\", not found in bad data description:\n'" + badDataInfo + "'",
+          badDataInfo.find(">> [1] 'stringProperty") != std::string::npos);
+
+    ///////  Checks that the PropertyTest device with the appended prefix had its schema rejected.
+    ///////  Uses the whole time range of the test.
+    badDataAllDevices.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
+                                  ->request(dlreader0, "slotGetBadData", beforeServerInstantiation.toIso8601Ext(),
+                                            afterAboveLimit.toIso8601Ext())
+                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                  .receive(badDataAllDevices));
+    CPPUNIT_ASSERT(badDataAllDevices.size() > 0ul);
+    const auto deviceBadSchema = badDataAllDevices.get<std::vector<Hash>>(deviceIdRejectedSchema);
+    const std::string badSchemaInfo = deviceBadSchema[0].get<std::string>("info");
+    // [1] is the code for string metric values longer than the Influx limit.
+    CPPUNIT_ASSERT_MESSAGE(
+          std::string{"Expected pattern, \">> [1] '"} + deviceIdRejectedSchema +
+                "::schema'\", not found in bad data description:\n'" + badSchemaInfo + "'",
+          badSchemaInfo.find(std::string{">> [1] '"} + deviceIdRejectedSchema + "::schema'") != std::string::npos);
+
+    std::clog << "OK" << std::endl;
+}
+
+
 void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     std::clog << "Testing enforcing of max per device property logging rate limit for Influx ..." << std::endl;
 
