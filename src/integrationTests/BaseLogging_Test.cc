@@ -346,12 +346,10 @@ void BaseLogging_Test::setPropertyTestSchema() {
 }
 
 
-std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std::string& loggerType,
-                                                                      bool useInvalidInfluxUrl, bool useInvalidDbName,
-                                                                      unsigned int maxPerDevicePropLogRate,
-                                                                      unsigned int propLogRatePeriod,
-                                                                      unsigned int maxSchemaLogRate,
-                                                                      unsigned int schemaLogRatePeriod) {
+std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
+      const std::string& loggerType, bool useInvalidInfluxUrl, bool useInvalidDbName,
+      unsigned int maxPerDevicePropLogRate, unsigned int propLogRatePeriod, unsigned int maxSchemaLogRate,
+      unsigned int schemaLogRatePeriod, unsigned int maxStringLength) {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
@@ -401,6 +399,7 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(const std:
         manager_conf.set("logger.InfluxDataLogger.propLogRatePeriod", propLogRatePeriod);
         manager_conf.set("logger.InfluxDataLogger.maxSchemaLogRate", maxSchemaLogRate);
         manager_conf.set("logger.InfluxDataLogger.schemaLogRatePeriod", schemaLogRatePeriod);
+        manager_conf.set("logger.InfluxDataLogger.maxValueStringSize", maxStringLength);
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");

@@ -1,8 +1,9 @@
 /*
- * File:   DataLoggerStructs.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
  * Created on July 17, 2015, 2:08 PM
+ *
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef DATALOGGERSTRUCTS_HH
@@ -70,7 +71,7 @@ namespace karabo {
 
         // Must be the same value configured for maximum allowed field size in the Influx
         // instances for input via the line protocol.
-        const unsigned int MAX_INFLUX_VALUE_LENGTH = 2'097'152u;
+        const unsigned int MAX_INFLUX_VALUE_LENGTH = 1048576u;
 
         /**
          * A structure defining meta data as used by the data loggers
