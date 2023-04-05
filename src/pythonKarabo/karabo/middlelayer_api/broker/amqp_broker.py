@@ -11,6 +11,7 @@ from itertools import count
 
 import aiormq
 import numpy
+from aiormq.base import TaskWrapper
 
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
@@ -23,6 +24,16 @@ _OVERFLOW_POLICY = "drop-head"  # Drop oldest messages
 _TIME_TO_LIVE = 120_000  # 120 seconds expiry time [ms]
 _BEATS_QSIZE = 12_000
 _CONSUME_QSIZE = 100_000
+
+
+class KaraboWrapper(TaskWrapper):
+    """The purpose of this class is to flag external tasks"""
+    def __init__(self, task) -> None:
+        super().__init__(task)
+        task.shielded = True
+
+
+aiormq.base.TaskWrapper = KaraboWrapper
 
 
 def ensure_running(func):
@@ -391,7 +402,9 @@ class AmqpBroker(Broker):
         """Reimplemented method of `Broker`"""
         await self._on_stop_tasks()
         me = asyncio.current_task(loop=None)
-        tasks = [t for t in self.tasks if t is not me]
+        tasks = [t for t in self.tasks if t is not me
+                 and not getattr(t, "shielded", False)]
+        me.add_done_callback(self.close_channel)
         for t in tasks:
             t.cancel()
         try:
@@ -400,6 +413,17 @@ class AmqpBroker(Broker):
             return True
         except TimeoutError:
             return False
+
+    def close_channel(self, cb):
+        """Close channel callback after slotKillDevice"""
+
+        async def closing_channel():
+            if self.channel is not None:
+                await self.channel.close()
+                self.channel = None
+            self.connection = None
+
+        ensure_future(closing_channel())
 
     async def _on_stop_tasks(self):
         if self.consumer_tag is not None:
