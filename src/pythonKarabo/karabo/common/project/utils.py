@@ -42,9 +42,9 @@ def find_parent_object(model, ancestor_model, search_klass):
 
 def device_instance_exists(project, instance_ids):
     """Check whether the a ``project`` already has a device[s] with the given
-    ``instance_ids`` and return ``True`` or ``False``
+    ``instance_ids`` and return the list of devices that are duplicated
     """
-    found = False
+    found = []
 
     # Allow one or more instance ids
     if isinstance(instance_ids, str):
@@ -54,7 +54,7 @@ def device_instance_exists(project, instance_ids):
         nonlocal found
         if isinstance(obj, DeviceInstanceModel):
             if obj.instance_id in instance_ids:
-                found = True
+                found.append(obj.instance_id)
 
     walk_traits_object(project, visitor)
     return found
