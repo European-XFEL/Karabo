@@ -39,23 +39,30 @@ def _log_exception(func, device, message):
 
 
 def slot(f, passMessage=False):
-
-    def outer(func, device, name, message, args):
-        broker = device._ss
-
-        async def inner():
+    is_coro = iscoroutinefunction(f)
+    if not is_coro:
+        def wrapper(func, device, name, message, args):
             try:
-                is_coro = iscoroutinefunction(func)
-                ret = await func(*args) if is_coro else func(*args)
-                broker.reply(message, (ret))
+                device._ss.reply(message, func(*args))
             except BaseException as e:
-                broker.replyException(message, e)
+                device._ss.replyException(message, e)
                 _log_exception(func, device, message)
-        if passMessage:
-            args.append(message)
-        get_event_loop().create_task(inner(), instance=device)
+    else:
+        def wrapper(func, device, name, message, args):
+            broker = device._ss
 
-    f.slot = outer
+            async def inner():
+                try:
+                    ret = await func(*args)
+                    broker.reply(message, (ret))
+                except BaseException as e:
+                    broker.replyException(message, e)
+                    _log_exception(func, device, message)
+            if passMessage:
+                args.append(message)
+            get_event_loop().create_task(inner(), instance=device)
+
+    f.slot = wrapper
     return f
 
 
