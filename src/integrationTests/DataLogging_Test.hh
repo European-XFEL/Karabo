@@ -19,6 +19,7 @@ class DataLogging_Test : public BaseLogging_Test {
     CPPUNIT_TEST(testInfluxMaxPerDevicePropLogRate);
     CPPUNIT_TEST(testInfluxMaxSchemaLogRate);
     CPPUNIT_TEST(testInfluxPropHistoryAveraging);
+    CPPUNIT_TEST(testInfluxMaxStringLength);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -69,6 +70,11 @@ class DataLogging_Test : public BaseLogging_Test {
      */
     void testInfluxPropHistoryAveraging();
 
+    /**
+     * @brief Checks that the maximum length allowed for a string value to be saved on Influx is being enforced and that
+     * all violations are being properly logged.
+     */
+    void testInfluxMaxStringLength();
 
     /**
      * Test that manager goes to ERROR if server list and loggermap.xml are inconsistent
