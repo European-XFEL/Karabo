@@ -489,10 +489,10 @@ namespace karabo {
             if (rejects.empty()) return;
 
             std::stringstream textSs;
-            textSs << "Skipping " << rejects.size() << " log metric(s) for device '" << m_deviceToBeLogged << "':";
+            textSs << "Skipping " << rejects.size() << " log metric(s) for device '" << m_deviceToBeLogged << "'";
             for (const RejectedData& reject : rejects) {
-                textSs << "\n'" << static_cast<int>(reject.type) << ": '" << reject.dataPath << "' (" << reject.details
-                       << ")";
+                textSs << " >> [" << static_cast<int>(reject.type) << "] '" << reject.dataPath << "' ("
+                       << reject.details << ") ";
             }
             std::string text(textSs.str());
             const Epochstamp now;
@@ -510,13 +510,16 @@ namespace karabo {
             }
             // Bad data is logged in a device independent measurement to simplify retrieval of all bad data.
             // DeviceId is the field name.
-            // NOTE: There is a potential name clash of this measurement and a potential device with
-            //       deviceId = "__BAD__DATA__".
-            //       But even if such a weird deviceId exists, it should more or less work since all properties of
-            //       it will have '-<Karabo-type>' appended to their field names. Then we would only clash between
-            //       properties of that device and other devices whose id ends with '-<Karabo-type>' and that
-            //       produce bad data stored here.
-            badDataQuery << "__BAD__DATA__  " << m_deviceToBeLogged << "=\"" << text << "\" " << ts << "\n";
+            // NOTES:
+            //       1. There is a potential name clash of this measurement and a potential device with
+            //          deviceId = "__BAD__DATA__".
+            //       2. Since the rejected data is itself a string value, we truncate it to stay within the
+            //          limit imposed by Influx.
+
+            // TODO: use StringView when the Framework migrates to C++ 17 or later.
+            const std::string& textToLog =
+                  (text.size() <= m_maxValueStringSize ? text : text.substr(m_maxValueStringSize));
+            badDataQuery << "__BAD__DATA__  " << m_deviceToBeLogged << "=\"" << textToLog << "\" " << ts << "\n";
             m_dbClientWrite->enqueueQuery(badDataQuery.str());
         }
 
@@ -706,7 +709,7 @@ namespace karabo {
                         "Maximum size, in characters, for a property value to be inserted into Influx. "
                         "(All values are feed to Influx as strings in a text format called Line Protocol)")
                   .assignmentOptional()
-                  .defaultValue(MAX_INFLUX_VALUE_LENGTH - (MAX_INFLUX_VALUE_LENGTH / 10))
+                  .defaultValue(MAX_INFLUX_VALUE_LENGTH)
                   .maxInc(MAX_INFLUX_VALUE_LENGTH)
                   .init()
                   .commit();
