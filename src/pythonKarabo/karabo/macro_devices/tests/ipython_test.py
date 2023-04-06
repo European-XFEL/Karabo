@@ -1,14 +1,14 @@
 import pickle
 from asyncio import Future, TimeoutError, wait_for
-from contextlib import contextmanager
 from datetime import datetime, timezone
 
-from flaky import flaky
+import pytest
+import pytest_asyncio
 
 from karabo.middlelayer import (
     Device, State, String, background, connectDevice, sleep, waitUntil,
     waitUntilNew)
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer.testing import AsyncDeviceContext, event_loop
 
 from ..ipython import IPythonKernel
 
@@ -108,34 +108,35 @@ class ClientDevice(Device):
         return ret
 
 
-class Tests(DeviceTest):
-    @classmethod
-    @contextmanager
-    def lifetimeManager(cls):
-        cls.dev = IPythonKernel({
-            "_deviceId_": "test_kernel"
-        })
-        cls.client = ClientDevice({
-            "_deviceId_": "test_kernel_device_client",
-            "ipythonId": "test_kernel"
-        })
-        with cls.deviceManager(cls.client, lead=cls.dev):
-            yield
+@pytest_asyncio.fixture()
+async def deviceTest(event_loop: event_loop):
+    dev = IPythonKernel({
+        "_deviceId_": "test_kernel"
+    })
+    client = ClientDevice({
+        "_deviceId_": "test_kernel_device_client",
+        "ipythonId": "test_kernel"
+    })
+    async with AsyncDeviceContext(client=client, dev=dev) as ctx:
+        yield ctx
 
-    @async_tst
-    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
-    async def test_init(self):
-        client = await connectDevice(self.client.deviceId)
-        await waitUntil(lambda: client.state == State.ACTIVE)
-        self.assertIsNotNone(self.client.remote)
-        await waitUntilNew(client.output)
-        assert client.output.value.startswith("IKarabo Version")
-        ret = await self.client.execute("print('hello')\n")
-        self.assertEqual(ret['status'], 'ok')
-        # this test is flaky, the test client interface seems to fail
-        # with ~1/20 chance.
-        try:
-            await wait_for(waitUntilNew(client.output), timeout=1)
-        except TimeoutError:
-            pass
-        self.assertEqual(client.output, 'hello\n')
+
+@pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
+@pytest.mark.timeout(30)
+@pytest.mark.asyncio
+async def test_init_macros(deviceTest):
+    client_dev = deviceTest["client"]
+    client = await connectDevice(client_dev.deviceId)
+    await waitUntil(lambda: client.state == State.ACTIVE)
+    assert client_dev.remote is not None
+    await waitUntilNew(client.output)
+    assert client.output.value.startswith("IKarabo Version")
+    ret = await client_dev.execute("print('hello')\n")
+    assert ret['status'] == 'ok'
+    # this test is flaky, the test client interface seems to fail
+    # with ~1/20 chance.
+    try:
+        await wait_for(waitUntilNew(client.output), timeout=1)
+    except TimeoutError:
+        pass
+    assert client.output == 'hello\n'
