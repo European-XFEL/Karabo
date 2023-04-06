@@ -364,7 +364,7 @@ class Macro(Device):
         for h in watchers:
             ensure_future(h)
 
-    async def printToConsole(self, data):
+    def printToConsole(self, data):
         """Put a data from the std out on the print stack"""
         sp = self.stacked_print
         if data == "\n" and sp and sp[-1] == "":
