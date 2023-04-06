@@ -5,7 +5,6 @@ from asyncio import Future, TimeoutError, ensure_future, wait_for
 
 import pytest
 import pytest_asyncio
-from flaky import flaky
 
 from karabo.common.states import State
 from karabo.middlelayer.testing import (
@@ -970,9 +969,9 @@ def test_lock(deviceTest):
         assert d.lockedBy == ""
 
 
+@pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @run_test
-@flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 def test_lock_nowait(deviceTest):
     with getDevice("remote") as d:
         with lock(d, wait_for_release=False):
