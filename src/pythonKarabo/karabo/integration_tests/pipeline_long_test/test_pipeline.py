@@ -6,8 +6,8 @@ import pytest
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device,
-    InputChannel, Int32, OutputChannel, Slot, State, UInt32, background,
-    coslot, sleep)
+    InputChannel, Int32, OutputChannel, Slot, State, UInt32, background, sleep,
+    slot)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, event_loop, sleepUntil)
 
@@ -50,7 +50,7 @@ class Receiver(Device):
     async def input(self, name):
         self.connected = False
 
-    @coslot
+    @slot
     async def connectInputChannel(self, output=""):
         await self.input.connectChannel(f"{output}:output")
 

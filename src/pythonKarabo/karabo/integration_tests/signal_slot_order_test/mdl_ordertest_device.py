@@ -2,7 +2,7 @@ from asyncio import wait_for
 
 from karabo.middlelayer import (
     AccessMode, Configurable, Device, Hash, Int32, Node, Overwrite, Signal,
-    Slot, State, String, UInt32, VectorInt32, background, coslot)
+    Slot, State, String, UInt32, VectorInt32, background, slot)
 
 
 class OrderTestNode(Configurable):
@@ -100,7 +100,7 @@ class MdlOrderTestDevice(Device):
         self.callNoWait(other, "slotCount", -1)  # Tell that loop is done
         self.state = State.NORMAL
 
-    @coslot
+    @slot
     async def slotCount(self, count):
         nCounts = len(self._counts)
         if count >= 0:
@@ -128,7 +128,7 @@ class MdlOrderTestDevice(Device):
             self.log.INFO(log)
             self.state = State.NORMAL
 
-    @coslot  # No need to expose to schema
+    @slot  # No need to expose to schema
     async def slotStartCount(self):
         self.state = State.STARTING
         other = self.stringProperty
