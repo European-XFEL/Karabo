@@ -10,14 +10,14 @@ daemontools libzmq nlohmann_json pugixml mqtt redisclient amqp libev belle-Cpp14
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
 six nose py pyparsing packaging toml more-itertools zipp importlib-metadata pluggy
 attrs colorama iniconfig atomicwrites pytest pytest_runner pytest_cov pytest_mock
-pytest_asyncio pytest_subtests pytest_timeout pillow sip backports backports_abc tornado
-dateutil ptyprocess pytz pexpect pyzmq markupsafe jinja2 pygments decorator traitlets parso
-ipython_genutils jedi pickleshare wcwidth backcall prompt_toolkit ipython tabulate
-jupyter_core jupyter_client ipykernel simplegeneric dill pkgconfig h5py pyusb
-parse jsonschema ecdsa tzlocal httplib2 traits pint nbformat isort
+pytest_asyncio pytest_subtests pytest_timeout pytest_rerunfailures pillow sip backports
+backports_abc tornado dateutil ptyprocess pytz pexpect pyzmq markupsafe jinja2 pygments
+decorator traitlets parso ipython_genutils jedi pickleshare wcwidth backcall
+prompt_toolkit ipython tabulate jupyter_core jupyter_client ipykernel simplegeneric
+dill pkgconfig h5py pyusb parse jsonschema ecdsa tzlocal httplib2 traits pint nbformat isort
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes flake8
-msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist
+msgpack msgpack-numpy pyyaml coverage matplotlib eulxml eulexist
 mqtt_python peewee async-timeout hiredis aioredis multidict yarl pamqp aiormq aio-pika
 pg8000 conan)
 
