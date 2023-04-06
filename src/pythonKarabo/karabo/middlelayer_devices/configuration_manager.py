@@ -21,7 +21,7 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy,
     DeviceClientBase, Hash, HashList, KaraboError, Overwrite, RegexString,
     Slot, State, String, Timestamp, UInt32, VectorHash, VectorString,
-    background, coslot, dictToHash, extract_modified_schema_attributes,
+    background, dictToHash, extract_modified_schema_attributes,
     sanitize_init_configuration, slot)
 
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
@@ -251,7 +251,7 @@ class ConfigurationManager(DeviceClientBase):
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.READONLY)
 
-    @coslot
+    @slot
     async def slotInstanceNew(self, instanceId, info):
         if info["type"] == "server":
             self._class_schemas.pop(instanceId, None)
@@ -298,7 +298,7 @@ class ConfigurationManager(DeviceClientBase):
     # Karabo Slot Interface
     # -----------------------------------------------------------------------
 
-    @coslot
+    @slot
     async def slotListConfigurationFromName(self, info):
         """Slot to list configurations from name
 
@@ -312,7 +312,7 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True, "items", items)
 
-    @coslot
+    @slot
     async def slotListConfigurationSets(self, info):
         """Slot to list configurations from name
 
@@ -333,7 +333,7 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True, "items", items)
 
-    @coslot
+    @slot
     async def slotGetConfigurationFromName(self, info):
         """Slot to get a configuration from name
 
@@ -365,7 +365,7 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True, "item", item)
 
-    @coslot
+    @slot
     async def slotGetLastConfiguration(self, info):
         """Slot to get a the last configuration
 
@@ -397,7 +397,7 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True, "item", item)
 
-    @coslot
+    @slot
     async def slotCheckConfigurationFromName(self, info):
         """Slot to check configuration(s) from name
            - name: the non-empty (and unique for the device) name to be
@@ -411,7 +411,7 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True, "taken", taken)
 
-    @coslot
+    @slot
     async def slotListDevices(self, info):
         """List deviceIds that are stored in the database for a priority
 
@@ -421,7 +421,7 @@ class ConfigurationManager(DeviceClientBase):
         devices = self.db.list_devices(priority=int(priority))
         return Hash("success", True, "item", devices)
 
-    @coslot
+    @slot
     async def slotSaveConfigurationFromName(self, info):
         """Slot to save configuration(s) from name
 
@@ -494,7 +494,7 @@ class ConfigurationManager(DeviceClientBase):
 
         return Hash("success", True)
 
-    @coslot
+    @slot
     async def slotInstantiateDevice(self, info):
         """Slot to instantiate a device via the configuration manager
 
