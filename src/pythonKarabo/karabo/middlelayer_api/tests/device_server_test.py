@@ -3,7 +3,6 @@ import uuid
 from asyncio import gather, sleep, wait
 
 import pytest
-from flaky import flaky
 
 from karabo.middlelayer.testing import (
     create_device_server, create_instanceId, event_loop)
@@ -25,7 +24,7 @@ class FaultyDevice(Device):
         raise RuntimeError("Not allowed to start")
 
 
-@flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
+@pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_device_server_no_plugins(event_loop: event_loop):
