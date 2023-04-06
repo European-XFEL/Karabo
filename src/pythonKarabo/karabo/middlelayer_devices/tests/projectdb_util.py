@@ -4,7 +4,7 @@ from asyncio import sleep, wait_for
 from uuid import uuid4
 
 from karabo.middlelayer import (
-    Device, Hash, String, call, connectDevice, coslot, updateDevice)
+    Device, Hash, String, call, connectDevice, slot, updateDevice)
 from karabo.middlelayer_api.tests.eventloop import async_tst
 from karabo.project_db.tests.util import create_hierarchy
 
@@ -18,13 +18,13 @@ class ConsumerDevice(Device):
     projectManagerUpdate = String(
         defaultValue="")
 
-    @coslot
+    @slot
     async def connectProject(self, instance):
         await self._ss.async_connect(instance, "signalProjectUpdate",
                                      self.slotProject)
         return True
 
-    @coslot
+    @slot
     async def slotProject(self, info_hash, deviceId):
         client = info_hash.get("client", "")
         self.client = client

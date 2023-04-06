@@ -15,7 +15,7 @@ from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, get_instance, getProperties, getSchema)
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
-from karabo.middlelayer_api.signalslot import coslot
+from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.utils import AsyncTimer, get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
@@ -609,7 +609,7 @@ async def test_atimer_destruct(deviceTest):
             self.killed = True
             return ret
 
-        slotKillDevice = coslot(slotKillDevice, passMessage=True)
+        slotKillDevice = slot(slotKillDevice, passMessage=True)
 
     device = TimerDevice({"_deviceId_": "timerDeviceTest"})
     await device.startInstance()

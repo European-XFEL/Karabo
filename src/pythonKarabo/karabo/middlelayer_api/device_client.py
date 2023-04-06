@@ -28,7 +28,7 @@ from .eventloop import synchronize
 from .proxy import (
     AutoDisconnectProxyFactory, DeviceClientProxyFactory, ProxyBase,
     ProxyNodeBase)
-from .signalslot import coslot, slot
+from .signalslot import slot
 from .synchronization import firstCompleted
 from .utils import get_property_hash
 
@@ -60,7 +60,7 @@ class DeviceClientBase(Device):
         if self.wait_topology:
             await sleep(3)
 
-    @coslot
+    @slot
     async def slotInstanceNew(self, instanceId, info):
         self.removeServerChildren(instanceId, info)
         self.updateSystemTopology(instanceId, info, "instanceNew")

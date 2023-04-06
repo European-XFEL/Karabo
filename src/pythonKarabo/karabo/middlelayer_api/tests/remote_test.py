@@ -14,7 +14,7 @@ from karabo.middlelayer import (
     AlarmCondition, Bool, Configurable, Device, DeviceNode, Float, Hash, Int32,
     KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
     Timestamp, Unit, VectorFloat, VectorInt16, VectorString, background, call,
-    connectDevice, coslot, disconnectDevice, execute, filterByTags, getDevice,
+    connectDevice, disconnectDevice, execute, filterByTags, getDevice,
     getInstanceInfo, getSchema, getTimeInfo, isAlive, isSet, lock, setNoWait,
     setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
 from karabo.middlelayer.testing import (
@@ -221,10 +221,10 @@ class Local(Device):
     async def onInitialization(self):
         self.state = State.ON
 
-    @coslot
+    @slot
     async def useSetWait(self, stringValue):
         """
-        'System' slot with argument (coslot) that uses
+        'System' slot with argument (slot) that uses
         'setWait' as example from device_client interface
         """
         await setWait("remote", "string", stringValue)
@@ -550,8 +550,8 @@ async def test_setnowait(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
-async def test_setwait_coslot(deviceTest):
-    """Test that setwait can be called in @coslot"""
+async def test_setwait_slot(deviceTest):
+    """Test that setwait can be called in @slot"""
     remote = deviceTest["remote"]
     remote.string = "none"
     await call("local", "useSetWait", "string value 42")
