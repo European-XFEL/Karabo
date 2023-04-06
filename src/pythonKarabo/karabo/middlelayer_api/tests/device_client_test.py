@@ -5,8 +5,9 @@ from datetime import datetime
 from unittest import main, mock
 
 from karabo.middlelayer import (
-    Device, DeviceClientBase, Hash, KaraboError, Schema, coslot,
-    getConfigurationFromPast, getInstanceInfo, getSchemaFromPast, getTopology)
+    Device, DeviceClientBase, Hash, KaraboError, Schema,
+    getConfigurationFromPast, getInstanceInfo, getSchemaFromPast, getTopology,
+    slot)
 from karabo.middlelayer_api.synchronization import background, synchronize
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -43,7 +44,7 @@ class DataLogReader(Device):
         info["TestInfo"] = "This is a karabo test info"
         return info
 
-    @coslot
+    @slot
     async def slotGetConfigurationFromPast(self, deviceId, timepoint):
         if deviceId == "aDeviceNotInHistory":
             raise KaraboError

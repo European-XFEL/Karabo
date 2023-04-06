@@ -11,7 +11,7 @@ from jupyter_client.manager import KernelManager
 
 from karabo.common.states import State
 from karabo.interactive.ikarabo import SCRIPT
-from karabo.middlelayer import Device, coslot
+from karabo.middlelayer import Device, slot
 from karabo.native import AccessLevel, AccessMode, Int32, Slot, VectorChar
 
 
@@ -126,8 +126,8 @@ class IPythonKernel(Device):
         info["type"] = "macro"
         return info
 
-    @coslot
-    async def slotKillDevice(self):
+    @slot
+    async def slotKillDevice(self, message=None):
         self.state = State.STOPPING
         if self.manager is not None and self.manager.has_kernel:
             try:
