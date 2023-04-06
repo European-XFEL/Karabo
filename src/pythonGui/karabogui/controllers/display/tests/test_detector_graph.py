@@ -8,80 +8,63 @@ from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.graph.common.api import Axes
-from karabogui.testing import GuiTestCase
 from karabogui.util import process_qt_events
 
 from ..detector_graph import DisplayDetectorGraph, FrameSlider
 
 
-class TestFrameSlider(GuiTestCase):
+# class to make available slot for signal test
+class DetectorGraphTestSlot:
+    def __init__(self):
+        self.value = None
 
-    def setUp(self):
-        super(TestFrameSlider, self).setUp()
+    def on_value_changed(self, value):
+        self.value = value
 
-        self.frame_slider = FrameSlider()
-        self.frame_slider.set_slider_maximum(10)
-        self.frame_slider.axisChanged.connect(self._on_axisChanged)
-        self.frame_slider.cellChanged.connect(self._on_cell_changed)
 
-        self._axis = None
-        self._cell = None
+def test_detector_graph_signals(gui_app):
+    # set up
+    axis = DetectorGraphTestSlot()
+    cell = DetectorGraphTestSlot()
 
-    def _on_axisChanged(self, value):
-        self._axis = value
+    frame_slider = FrameSlider()
+    frame_slider.set_slider_maximum(10)
+    frame_slider.axisChanged.connect(axis.on_value_changed)
+    frame_slider.cellChanged.connect(cell.on_value_changed)
 
-    def _on_cell_changed(self, value):
-        self._cell = value
+    # Test combobox
+    assert axis.value is None
+    cb_axis = frame_slider.cb_axis
+    cb_axis.setCurrentIndex(Axes['Y'].value)
+    cb_axis.currentIndexChanged['const QString &'].emit(axis.value)
+    assert axis.value == 'Y'
 
-    def _set_axis_value(self, axis):
-        """Sets the given value and emit the appropriate signal"""
-        cb_axis = self.frame_slider.cb_axis
-        cb_axis.setCurrentIndex(Axes[axis].value)
-        cb_axis.currentIndexChanged['const QString &'].emit(axis)
+    cb_axis.setCurrentIndex(Axes['X'].value)
+    cb_axis.currentIndexChanged['const QString &'].emit(axis.value)
+    assert axis.value == 'X'
 
-    def _set_slider_value(self, value):
-        """Sets the given slider position and emit the appropriate signal"""
-        self.frame_slider.sl_cell.setSliderPosition(value)
-        self.frame_slider.sl_cell.valueChanged.emit(value)
+    # Test slider
+    assert cell.value is None
+    frame_slider.sl_cell.setSliderPosition(0)
+    frame_slider.sl_cell.valueChanged.emit(0)
+    assert cell.value == 0
+    assert frame_slider.sb_cell.value() == 0
 
-    def _set_spinbox_value(self, value):
-        """Sets the given spinbox value and emit the appropriate signal"""
-        self.frame_slider.sb_cell.setValue(value)
-        self.frame_slider.sb_cell.valueChanged.emit(value)
+    frame_slider.sl_cell.setSliderPosition(7)
+    frame_slider.sl_cell.valueChanged.emit(7)
+    assert cell.value == 7
+    assert frame_slider.sb_cell.value() == 7
 
-    def test_combobox_axis(self):
-        """Assert combobox contents"""
-        cb_axis = self.frame_slider.cb_axis
-        for axis in list(Axes):
-            self.assertEqual(cb_axis.itemText(axis.value), axis.name)
+    # Test spinbox
+    frame_slider.sb_cell.setValue(0)
+    frame_slider.sb_cell.valueChanged.emit(0)
+    assert cell.value == 0
+    assert frame_slider.sl_cell.value() == 0
 
-    def test_signals(self):
-        # Test combobox
-        self.assertIsNone(self._axis)
-        self._set_axis_value('Y')
-        self.assertEqual(self._axis, 'Y')
-
-        self._set_axis_value('X')
-        self.assertEqual(self._axis, 'X')
-
-        # Test slider
-        self.assertIsNone(self._cell)
-        self._set_slider_value(0)
-        self.assertEqual(self._cell, 0)
-        self.assertEqual(self.frame_slider.sb_cell.value(), 0)
-
-        self._set_slider_value(7)
-        self.assertEqual(self._cell, 7)
-        self.assertEqual(self.frame_slider.sb_cell.value(), 7)
-
-        # Test spinbox
-        self._set_spinbox_value(0)
-        self.assertEqual(self._cell, 0)
-        self.assertEqual(self.frame_slider.sl_cell.value(), 0)
-
-        self._set_spinbox_value(7)
-        self.assertEqual(self._cell, 7)
-        self.assertEqual(self.frame_slider.sl_cell.value(), 7)
+    frame_slider.sb_cell.setValue(7)
+    frame_slider.sb_cell.valueChanged.emit(7)
+    assert cell.value == 7
+    assert frame_slider.sl_cell.value() == 7
 
 
 @pytest.fixture
@@ -103,7 +86,7 @@ def detectorGraphTest(gui_app, mocker):
 
 
 @pytest.mark.skip(reason='Visibility tests are not working')
-def test_2d_image(detectorGraphTest):
+def test_detector_graph_2d_image(detectorGraphTest):
     """When a 2D image is supplied, the detector shouldn't show the
     frameslider"""
     controller, output_proxy = detectorGraphTest
