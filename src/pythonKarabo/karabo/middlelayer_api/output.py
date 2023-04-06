@@ -15,10 +15,9 @@ class KaraboStream:
 
     def write(self, data):
         try:
-            loop = get_event_loop()
-            instance = loop.instance()
-            coro = instance.printToConsole(data)
-            loop.create_task(coro, instance=instance)
+            instance = get_event_loop().instance()
+            instance._ss.loop.call_soon_threadsafe(
+                instance.printToConsole, data)
         except BaseException:
             self.base.write(data)
 
