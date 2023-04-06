@@ -436,7 +436,7 @@ class SignalSlotable(Configurable):
         # No tasks are running
         return True
 
-    slotKillDevice = coslot(slotKillDevice, passMessage=True)
+    slotKillDevice = slot(slotKillDevice, passMessage=True)
 
     def __del__(self):
         if self._ss is not None and self._ss.loop.is_running():
@@ -454,7 +454,7 @@ class SignalSlotable(Configurable):
         """
         get_event_loop().stop()
 
-    @coslot
+    @slot
     async def slotConnectRemoteSignal(self, sigId, sigName, slotId, slotName):
         if self.deviceId != slotId:
             return
@@ -463,7 +463,7 @@ class SignalSlotable(Configurable):
             return
         await self._ss.async_connect(sigId, sigName, slot)
 
-    @coslot
+    @slot
     async def slotDisconnectRemoteSignal(self, sigId, sigName, slotId,
                                          slotName):
         if self.deviceId != slotId:
@@ -542,7 +542,7 @@ class SignalSlotable(Configurable):
             DeviceClientProxyFactory.updateSchema(d, schema)
         get_event_loop().something_changed()
 
-    @coslot
+    @slot
     async def slotInstanceNew(self, instanceId, info):
         if info["type"] == "server":
             for proxy in self._proxies.values():

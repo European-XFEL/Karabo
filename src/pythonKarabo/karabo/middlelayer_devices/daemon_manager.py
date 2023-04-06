@@ -16,7 +16,7 @@ from karabo.common.scenemodel.api import (
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy, Device,
     Double, Hash, Overwrite, State, String, UInt32, Unit, VectorHash,
-    VectorString, background, coslot, has_changes, sleep, slot)
+    VectorString, background, has_changes, sleep, slot)
 
 STATUS_PAGE = "{}/status.json"
 
@@ -267,7 +267,7 @@ class DaemonManager(Device):
                 self.services = table_value
             return True, table_value
 
-    @coslot
+    @slot
     async def requestAction(self, params):
         action = params.get("action", "missing")
         # only TableButton Action is implemented
