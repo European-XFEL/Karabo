@@ -2,7 +2,8 @@
 What's New in Karabo 2.17.0
 ***************************
 
-Preliminary! Release scheduled for the 19.05.2023. Merge-log until 2.17.0rc5.
+Release scheduled for the **26.05.2023**. Merge-log until 2.17.0rc6.
+This release candidate is public and for testing.
 
 
 Summary – Release highlights
@@ -19,15 +20,18 @@ Summary – Release highlights
   is running in development mode.
 - GUI: A new set of widgets (controllers) is provided for floating points (formatting)
 - GUI: Addition of dedicated alarm widgets for numbers (floats and integers)
+- GUI: Data Analysis dialog option provided for VectorGraph widgets
+- GUI: The mainwindow title bar reflects now the loaded project
 - Ubuntu 22 Support: Backported to 2.16.4
 
 Features
 ++++++++
 
 - `InstanceStatus` Widget can be added to the scene
-- Device servers (scriptMDL): Can be started with serverFlags description (Enum)
+- ALL API: Device servers: Can be started with serverFlags description (Enum)
 - InfluxLogger readers can have two URL addresses, one dedicated for history of a
   single property and one for retrieval of the schema and full configuration of a device.
+- karabo-startrabbitmq added to the framework to start a RabbitMQ broker locally in a docker container
 
 Bugfixes
 ++++++++
@@ -43,6 +47,7 @@ Change of behaviour
 +++++++++++++++++++
 
 - **Change default broker address to AMQP**
+- MDL: `coslot` is deprecated, use `slot` instead
 - GUI: By default the property alarm color for devices in the `Configurator` is now disabled. This is intended as the
   `Configurator` can only evaluate static alarms defined by the device schema. To view property specific alarms, please use the alarm panel.
   To turn this feature back on, please use the *Application Configuration dialog** accessible via the menu bar of the client.
@@ -57,9 +62,10 @@ Change of behaviour
 - ALL API: Heartbeat resurrection: If a device suddenly appears to sent a heartbeat, the listening device will request the full instance info manually.
   This is a preparation to avoid sending the full `instanceInfo` with every heartbeat in an upcoming release.
 - MDL: Provide set_setter on Configurable
-- MDL: slotGetConfiguration does not contain `Slots` as keys
+- ALL API: slotGetConfiguration does not contain `Slots` as keys
 - GUI Server: Remove 'requestFromSlot' and update integration tests.
 - C++: Add deviceId to exception message of Device::get
+- DEPS: jinja2, async_timeout and pytest_rerunfailures added or updated
 
 
 Detailed Merge-Log
@@ -165,23 +171,23 @@ Graphical User Interface
 - GUI: Highlight the search hits in the Macro editor. !7121
 - GUI: Protect edit of table controller when there is no binding !7145
 - GUI: Fix slice for RGB images !7148
+- GUI: Move shared code to common. !7376
+- GUI: Show development server icon for cpp !7372
+- GUI: Bugfix: set correct stylesheet for command with confirmation !7358
+- GUI: notify only on number of erased generic requests !7361
+- GUI: Remove slider note and add extensions note !7359
+- GUI: Provide more comfortable alarm configuration in alarm dialog !7370
+- GUI: Provide Project Name in main window title !7368
+- GUI: Transport checkbox test to pytest !7388
+- GUI: Transport detector graph test to pytest !7390
+- GUI: Transport list test to pytest !7389
+- GUI: Migrate AlarmController test to pytest !7380
+- GUI: Refactor command test to pytest !7379
+- GUI: Align mainwindow title, strip Project !7394
+- GUI: Provide feedback about duplicated devices in project load !7392
+- GUI: Data Analysis Dialog : initial Version !7356
+- GUI: Transport detector graph signal test to pytest !7405
 - Common: Refactor link reader and writer for the models !6992
-- MDL: Provide option to declare servers as development servers with serverFlags (playground) !7281
-- MDL: Provide Hash and HashList from/toString !7289
-- MDL: Slots don't appear in Configurations !7254
-- MDL: Don't wait for topology collection in ikarabo !7259
-- MDL: Change decorator order device server test !7296
-- MDL: Put more timeouts in output channel schema test !7307
-- MDL: Provide global sync singleton !7299
-- MDL: Remove unused fields from broker headers !7318
-- MDL: Add timestamp to AMQP header !7319
-- MDL: Explicitly close exitstack on exit !7314
-- MDL: Fix race in timer test for AMQP !7329
-- MDL: Add decodeBinaryPos to namespace !7324
-- MDL: Suppress exceptions but post them on the logger !7336
-- MDL: Split device server tests and move the heartbeat test to flaky !7320
-- MDL: Provide queue arguments for classic consume !7335
-- Native: Remove a few numpy warnings in native tests !7297
 - Common: Convert geometry traits to casting integers !7298
 - Common: Remove old plot widget models !7341 !7321
 
@@ -308,6 +314,30 @@ MDL/Native core
 - MDL: Remove pipeline channels graceful on cancellation !7170
 - MDL: Cleanup heartbeat implementation !7147
 - MDL: Test cross waits for raw channel count !7231
+- MDL: Unify slot and coslot !7393
+- MDL: No task for slot !7401
+- MDL: Close channel in AMQP !7400
+- MDL: Call soon in a macro and avoid creating a task !7403
+- MDL: Force publisher_confirms on channel recreation !7385
+- MDL: Forward message on slotKillServer to children to see who did shutdown the device !7355
+- MDL: Deprecate the coslot and use slot instead !7398
+- MDL: Provide option to declare servers as development servers with serverFlags (playground) !7281
+- MDL: Provide Hash and HashList from/toString !7289
+- MDL: Slots don't appear in Configurations !7254
+- MDL: Don't wait for topology collection in ikarabo !7259
+- MDL: Change decorator order device server test !7296
+- MDL: Put more timeouts in output channel schema test !7307
+- MDL: Provide global sync singleton !7299
+- MDL: Remove unused fields from broker headers !7318
+- MDL: Add timestamp to AMQP header !7319
+- MDL: Explicitly close exitstack on exit !7314
+- MDL: Fix race in timer test for AMQP !7329
+- MDL: Add decodeBinaryPos to namespace !7324
+- MDL: Suppress exceptions but post them on the logger !7336
+- MDL: Split device server tests and move the heartbeat test to flaky !7320
+- MDL: Provide queue arguments for classic consume !7335
+- Native: Remove a few numpy warnings in native tests !7297
+
 
 Bound/cpp core
 ==============
@@ -386,15 +416,26 @@ Bound/cpp core
 - C++: Remove signal cleaning on instanceNewFixes alarm test flakiness. !7238
 - C++: Do not assert, but throw on wrong URL on Tcp config !7241
 - Bound: remove unused regex variable !7242
+- Bound: Add serverFlags to device serverCloses #261 !7362
+- Bound: Move karabind tests in separate directory !7375
 - C++/Bound: Remove unused handlers for instanceNew/Gone/Updated !7239
 - C++: Signal::registerSlot with return value and unit test !7240
 - C++: More robost pipeline test !7186
 - C++ Tests: Debug output when devices do not get up in  test_chain_receivers !7187
 - C++ Tests: Add debug info to alarm integration test !7229
 - C++ Tests: Fix code added for debugging !7230
+- C++ Influx: Fix potential schema writing problem for quick schema injections !7369
+- C++/Bound: Slots should not appear in validated configs !6539
+- C++: Protections for HTTP error and for invalid HTTP response payload in "InfluxDeviceData::checkSchemaInDb". !7373
+- C++: Reject data ingestion in Influx for string field values exceeding the max allowed length. !7381
+- C++: Provide serverFlags option !7374
+- C++: Influx max string length unit test !7391
+- C++: AMQP: Close unused channels after initialization !7383
 - BIND: karabind - bound python on pybind11, part 1. !7295
 - BIND: Extend test attributes !7309
 - BIND: Add karabind TODO !7347
+- BIND3: Add karabo Hash/Hash::Node binding !7313
+- BIND: Move HashNode test to pytest !7377
 
 
 Core Devices
@@ -411,6 +452,11 @@ Core Devices
 Dependencies, Documentation and Tools
 =====================================
 
+- Framework: Add "karabo-startrabbitmq" script to support AMQP. !7357
+- Framework: Add auto-completion to Karabo commands !7260
+- FW: Feat/gtest refactor !7346
+- Framework: Make karabo-brokerrates working with AMQP !7365
+- Framework: Change licensing to Schenefeld !7384
 - Add support to AlmaLinux 9. !7256
 - Drop Ubuntu18 support from CI !7220
 - Tests: Skip Python integration tests on CI for AMQP broker !7066
@@ -441,6 +487,7 @@ Dependencies, Documentation and Tools
 - DOC: Document 2.17. until alpha 6 !7236
 - DOC: Document until alpha 8 !7287
 - DOC: Document more the 2.16.X releasesCloses #229 !7338
+- DOC: Document until rc5 !7360
 - CI: Add build and test jobs for Ubuntu22. !6924
 - CI: Fix the gitlab CI setup in the templates for new devices on AlmaLinux9. !7328
 - CI: Framework - use CI_JOB_TOKEN instead of requiring XFEL_TOKEN to be defined in every project !7345
@@ -448,3 +495,6 @@ Dependencies, Documentation and Tools
 - TOOLS: remove tags on karabo install !7018
 - TOOLS: Fix typo in karabo-kill help message. !7000
 - TOOLS: Add Python and IDE related entries to MDL/Bound Python .gitignore templates. !7276
+- DEPS: Test before uploading dependencies !7036
+- DEPS:: Remove RedisClients and their implementations !7364
+- DEPS: Update async timeout, jinja2 and add pytest rerunfailuresCloses #121, #120, and #112 !7404- C++: Belle dependency isolated in HTTP server implementation class. !7363
