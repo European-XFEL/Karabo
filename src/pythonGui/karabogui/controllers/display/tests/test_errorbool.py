@@ -1,11 +1,9 @@
-from unittest.mock import patch
-
 from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import ErrorBoolModel
 from karabo.native import Bool, Configurable, Hash
 from karabogui.binding.api import apply_configuration
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import get_class_property_proxy
 
 from ..errorbool import ERROR_BOOL, OK_BOOL, DisplayErrorBool
 
@@ -19,44 +17,34 @@ class Object(Configurable):
     prop = Bool(defaultValue=True)
 
 
-class TestErrorBool(GuiTestCase):
-    def setUp(self):
-        super(TestErrorBool, self).setUp()
+schema = Object.getClassSchema()
+new_schema = Object.getClassSchema()
 
-        schema = Object.getClassSchema()
-        new_schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.new_proxy = get_class_property_proxy(new_schema, 'prop')
-        self.model = ErrorBoolModel()
 
-    def test_basics(self):
-        controller = DisplayErrorBool(proxy=self.proxy, model=self.model)
-        controller.create(None)
-        assert controller.widget is not None
+def test_errorbool_controller(gui_app, mocker):
+    # setup
+    proxy = get_class_property_proxy(schema, "prop")
+    new_proxy = get_class_property_proxy(new_schema, "prop")
+    model = ErrorBoolModel()
+    target = "karabogui.controllers.display.errorbool.SvgWidget"
+    mocker.patch(target, new=MockQSvgWidget)
+    proxy.value = False
 
-        controller.destroy()
-        assert controller.widget is None
+    # basics
+    controller = DisplayErrorBool(proxy=proxy, model=model)
+    controller.create(None)
+    assert controller.widget is not None
 
-    def test_exercise_code_paths(self):
-        target = 'karabogui.controllers.display.errorbool.SvgWidget'
-        with patch(target, new=MockQSvgWidget):
-            self.proxy.value = False
+    # exercise code paths
+    apply_configuration(Hash("prop", True), proxy.root_proxy.binding)
+    assert controller.widget.loaded_data is OK_BOOL
+    apply_configuration(Hash("prop", False), proxy.root_proxy.binding)
+    assert controller.widget.loaded_data is ERROR_BOOL
+    controller.add_proxy(new_proxy)
+    assert controller.widget.loaded_data is ERROR_BOOL
+    apply_configuration(Hash("prop", True), proxy.root_proxy.binding)
+    assert controller.widget.loaded_data is OK_BOOL
 
-            controller = DisplayErrorBool(proxy=self.proxy, model=self.model)
-            controller.create(None)
-
-            apply_configuration(Hash('prop', True),
-                                self.proxy.root_proxy.binding)
-            self.assertEqual(controller.widget.loaded_data, OK_BOOL)
-
-            apply_configuration(Hash('prop', False),
-                                self.proxy.root_proxy.binding)
-            self.assertEqual(controller.widget.loaded_data, ERROR_BOOL)
-
-            controller.add_proxy(self.new_proxy)
-            self.assertEqual(controller.widget.loaded_data, ERROR_BOOL)
-
-            apply_configuration(Hash('prop', True),
-                                self.proxy.root_proxy.binding)
-
-            self.assertEqual(controller.widget.loaded_data, OK_BOOL)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
