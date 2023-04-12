@@ -67,7 +67,7 @@ def synchronize(coro):
     if wrapper.__doc__ is not None:
         if not wrapper.__doc__[-1] == "\n":
             wrapper.__doc__ += "\n"
-        wrapper.__doc__ += "\nThis is a synchronized coroutine.\n"
+        wrapper.__doc__ += "\n    This is a synchronized coroutine.\n"
     return wrapper
 
 
@@ -83,7 +83,7 @@ def synchronize_notimeout(coro):
     if wrapper.__doc__ is not None:
         if not wrapper.__doc__[-1] == "\n":
             wrapper.__doc__ += "\n"
-        wrapper.__doc__ += "\nThis is a synchronized coroutine.\n"
+        wrapper.__doc__ += "\n    This is a synchronized coroutine.\n"
     return wrapper
 
 
