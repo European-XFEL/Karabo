@@ -89,7 +89,7 @@ async def processEvents():
 async def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
-    if *delay* is a :cls:`~karabo.middlelayer.KaraboValue`, its unit is
+    if *delay* is a :class:`~karabo.middlelayer.KaraboValue`, its unit is
     respected.
 
     This method should be preferred over :func:`time.sleep`, as it is
