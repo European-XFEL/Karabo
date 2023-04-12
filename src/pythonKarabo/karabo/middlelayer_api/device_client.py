@@ -276,9 +276,9 @@ async def compareDeviceConfiguration(device_a, device_b):
 
     The changes are provided in a list for comparison::
 
-    -> h = compareDeviceConfiguration(device_a, device_b)
-    -> h
-    -> <disableEpsilonFeedback{}: [True, False]>
+        >>> h = compareDeviceConfiguration(device_a, device_b)
+        >>> h
+        <disableEpsilonFeedback{}: [True, False]>
 
     :returns: changes Hash
     """
@@ -303,9 +303,9 @@ async def compareDeviceWithPast(device, timepoint):
 
         changes = [PRESENT | PAST]
 
-        -> h = compareDeviceWithPast(device, minutesAgo(2))
-        -> h
-        -> <disableEpsilonFeedback{}: [True, False]>
+        >>> h = compareDeviceWithPast(device, minutesAgo(2))
+        >>> h
+        <disableEpsilonFeedback{}: [True, False]>
 
     :param timepoint: The timepoint to compare
 
@@ -331,11 +331,11 @@ async def compareConfigurationsFromPast(device, first_timepoint,
 
     The changes are provided in a list for comparison::
 
-    changes = [FIRST | SECOND]
+        changes = [FIRST | SECOND]
 
-    -> h = compareConfigurationsFromPast(device, daysAgo(7), daysAgo(14))
-    -> h
-    -> <disableEpsilonFeedback{}: [True, False]>
+        >>> h = compareConfigurationsFromPast(device, daysAgo(7), daysAgo(14))
+        >>> h
+        <disableEpsilonFeedback{}: [True, False]>
 
     :param first_timepoint: The first timepoint to compare
     :param second_timepoint: The second timepoint to compare
@@ -459,8 +459,7 @@ def getHistory(prop, begin,
 
 @synchronize
 async def printHistory(prop, begin, end=None, maxNumData=100):
-    """
-    Print the history of a device property.
+    """Print the history of a device property.
 
     See getHistory about arguments and their meaning and format
     """
