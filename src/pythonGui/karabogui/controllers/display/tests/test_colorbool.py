@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from qtpy.QtWidgets import QWidget
 
 from karabo.common.api import State
@@ -7,7 +5,7 @@ from karabo.common.scenemodel.api import ColorBoolModel
 from karabo.native import Bool, Configurable, Hash
 from karabogui.binding.api import apply_configuration
 from karabogui.indicators import STATE_COLORS
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import get_class_property_proxy
 
 from ..colorbool import DisplayColorBool
 
@@ -21,38 +19,31 @@ class Object(Configurable):
     prop = Bool(defaultValue=True)
 
 
-class TestDisplayColorBool(GuiTestCase):
-    def setUp(self):
-        super(TestDisplayColorBool, self).setUp()
+def test_colorbool(gui_app, mocker):
+    # set up
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    model = ColorBoolModel()
+    target = "karabogui.controllers.display.colorbool.SvgWidget"
+    mocker.patch(target, new=MockQSvgWidget)
+    proxy.value = False
 
-        schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.model = ColorBoolModel()
+    # test basics
+    controller = DisplayColorBool(proxy=proxy, model=model)
+    controller.create(None)
+    assert controller.widget is not None
 
-    def test_basics(self):
-        controller = DisplayColorBool(proxy=self.proxy, model=self.model)
-        controller.create(None)
-        assert controller.widget is not None
+    # exercise code paths
+    apply_configuration(Hash("prop", True),
+                        proxy.root_proxy.binding)
+    active = controller.icon.with_color(STATE_COLORS[State.ACTIVE])
+    assert controller.widget.loaded_data == bytearray(active, encoding="UTF-8")
 
-        controller.destroy()
-        assert controller.widget is None
+    apply_configuration(Hash("prop", False), proxy.root_proxy.binding)
+    passive = controller.icon.with_color(STATE_COLORS[State.PASSIVE])
+    assert controller.widget.loaded_data == bytearray(passive,
+                                                      encoding="UTF-8")
 
-    def test_exercise_code_paths(self):
-        target = 'karabogui.controllers.display.colorbool.SvgWidget'
-        with patch(target, new=MockQSvgWidget):
-            self.proxy.value = False
-
-            controller = DisplayColorBool(proxy=self.proxy, model=self.model)
-            controller.create(None)
-
-            apply_configuration(Hash('prop', True),
-                                self.proxy.root_proxy.binding)
-            active = controller.icon.with_color(STATE_COLORS[State.ACTIVE])
-            self.assertEqual(controller.widget.loaded_data,
-                             bytearray(active, encoding='UTF-8'))
-
-            apply_configuration(Hash('prop', False),
-                                self.proxy.root_proxy.binding)
-            passive = controller.icon.with_color(STATE_COLORS[State.PASSIVE])
-            self.assertEqual(controller.widget.loaded_data,
-                             bytearray(passive, encoding='UTF-8'))
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
