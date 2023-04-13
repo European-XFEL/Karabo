@@ -255,7 +255,8 @@ namespace karabo {
                   .key("logger.InfluxDataLogger.maxValueStringSize")
                   .displayedName("Max String Size")
                   .description(
-                        "Maximum size, in characters, for a property value to be inserted into Influx. "
+                        "Maximum size, in characters, for a property value to be inserted into Influx and for a schema "
+                        "chunk. "
                         "(All values are feed to Influx as strings in a text format called Line Protocol)")
                   .assignmentOptional()
                   .defaultValue(MAX_INFLUX_VALUE_LENGTH - (MAX_INFLUX_VALUE_LENGTH / 10))
