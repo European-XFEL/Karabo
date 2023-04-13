@@ -16,6 +16,7 @@ from karabo.influxdb.dlutils import device_id_from_path, escape_measurement
 from karathon import BinarySerializerSchema, TextSerializerSchema
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
+MAX_SCHEMA_TRUNK_SIZE = 1_048_576  # in bytes
 
 
 class DlSchema2Influx():
@@ -131,23 +132,61 @@ class DlSchema2Influx():
                             if "series" not in rs_obj['results'][0]:
                                 # the schema is not yet in the database;
                                 # include it in the batch to be saved.
+                                # the schema is saved in chunks of up to
+                                # MAX_SCHEMA_TRUNK_SIZE bytes.
                                 sch_b = (
                                     base64.b64encode(b_schema).decode('utf-8')
                                 )
-                                data.append(
+                                sch_size = len(sch_b)
+                                num_full_chunks = (
+                                    sch_size // MAX_SCHEMA_TRUNK_SIZE)
+                                last_chunk_size = (
+                                    sch_size % MAX_SCHEMA_TRUNK_SIZE)
+                                total_chunks = num_full_chunks
+                                if last_chunk_size > 0:
+                                    total_chunks += 1
+                                data_row = (
                                     '{m}__SCHEMAS,digest="{d}" '
                                     'digest_start="{ds}",'
                                     'schema_size={sch_sz}i,'
-                                    'schema="{sch}" {t}'
+                                    'n_schema_chunks={n_chunks}i'
                                     .format(
                                         m=safe_m,
                                         d=digest,
                                         ds=digest[0:8],
-                                        sch_sz=len(sch_b),
-                                        sch=sch_b,
-                                        t=line_fields["timestamp"]
+                                        sch_sz=sch_size,
+                                        n_chunks=total_chunks
+                                    ))
+                                for i in range(0, num_full_chunks):
+                                    offset = i*MAX_SCHEMA_TRUNK_SIZE
+                                    key = "schema"
+                                    if i > 0:
+                                        key += "_" + str(i)
+                                    data_row += (
+                                        ',{sch_key}="{sch_chunk}"'
+                                        .format(
+                                            sch_key=key,
+                                            sch_chunk=(
+                                                sch_b[offset:offset +
+                                                      MAX_SCHEMA_TRUNK_SIZE]
+                                            ))
                                     )
-                                )
+                                if last_chunk_size > 0:
+                                    offset = (
+                                        num_full_chunks*MAX_SCHEMA_TRUNK_SIZE)
+                                    key = "schema"
+                                    if num_full_chunks > 0:
+                                        key += "_" + str(num_full_chunks)
+                                    data_row += (
+                                        ',{sch_key}="{sch_chunk}"'
+                                        .format(
+                                            sch_key=key,
+                                            sch_chunk=sch_b[offset:]
+                                        ))
+
+                                data_row += f" {line_fields['timestamp']}"
+
+                                data.append(data_row)
 
                             schema_digests.add(digest)
 
