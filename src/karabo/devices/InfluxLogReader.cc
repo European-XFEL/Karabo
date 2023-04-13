@@ -53,6 +53,7 @@ namespace karabo {
 
         namespace nl = nlohmann;
 
+
         PropertyHistoryContext::PropertyHistoryContext(const std::string &deviceId, const std::string &property,
                                                        const karabo::util::Epochstamp &from,
                                                        const karabo::util::Epochstamp &to, int maxDataPoints,
@@ -700,9 +701,8 @@ namespace karabo {
                                                    const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT LAST(schema) FROM \"" << ctxt->deviceId << "__SCHEMAS\" WHERE \"digest\" = '\""
-                     << digest << "\"' ";
-
+            iqlQuery << "SELECT * FROM \"" << ctxt->deviceId << "__SCHEMAS\" WHERE \"digest\"='\"" << digest
+                     << "\"' ORDER BY time DESC LIMIT 1";
             const std::string queryStr = iqlQuery.str();
 
             try {
@@ -729,18 +729,32 @@ namespace karabo {
             std::string encodedSch;
             try {
                 nl::json respObj = nl::json::parse(schemaResp.payload);
-                const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
-                if (value.is_null()) {
-                    // No schema corresponding to the digest has been found - it's not possible to go ahead.
-                    const std::string errMsg = "Failed to query schema: data missing for given point in time.";
-                    const std::string details("No schema for digest " + digest + ".");
-                    KARABO_LOG_FRAMEWORK_ERROR << errMsg << " for " << ctxt->deviceId << " at "
-                                               << ctxt->atTime.toIso8601Ext() << ". (" << details << ")";
-                    ctxt->aReply.error(errMsg, details);
-                    return;
-                } else {
-                    encodedSch = value.get<std::string>();
+                // Creates a map with the columns in the response - the columns names
+                // are the keys and the columns indexes are the values. The first column,
+                // index 0, is the time and is skipped since it won't be used.
+                std::map<std::string, int> colMap;
+                const auto &respColumns = respObj["results"][0]["series"][0]["columns"];
+                for (size_t i = 1; i < respColumns.size(); i++) {
+                    colMap[respColumns[i].get<std::string>()] = i;
                 }
+                // Initializes a reference to the values of the single "record" retrieved from Influx.
+                // It can be assumed that there is a single "record" in the response because the query
+                // that generated the response uses "ORDER BY time DESC" followed by "LIMIT 1".
+                const auto &respValues = respObj["results"][0]["series"][0]["values"][0];
+
+                int schemaChunks = 1;
+                if (colMap.find("n_schema_chunks") != colMap.end()) {
+                    schemaChunks = respValues[colMap["n_schema_chunks"]].get<int>();
+                }
+
+                std::stringstream base64Sch;
+                base64Sch << respValues[colMap["schema"]].get<std::string>();
+                for (int i = 1; i < schemaChunks; i++) {
+                    base64Sch << respValues[colMap["schema_" + karabo::util::toString(i)]].get<std::string>();
+                }
+
+                encodedSch = base64Sch.str();
+
             } catch (const std::exception &e) {
                 std::ostringstream oss;
                 oss << "Error retrieving schema by digest for device '" << ctxt->deviceId << "' at '"
