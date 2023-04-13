@@ -3,6 +3,11 @@
 #include <openssl/sha.h>
 
 #include <chrono>
+// TODO: When the Framework migrates to C++ 17 or later, change this to
+//       "#include <string_view>".
+//       GCC's libstdc++ provides "std::experimental::string_view"
+//       for C++ 14 or later.
+#include <experimental/string_view>
 #include <future>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -599,39 +604,50 @@ namespace karabo {
 
 
         bool InfluxDeviceData::logNewSchema(const std::string& schemaDigest, const std::vector<char>& schemaArchive) {
+            // TODO: replace the line below by "using std::string_view" once
+            //       the Framework is migrated to C++ 17 or later.
+            using std::experimental::string_view;
             // Encode serialized schema into Base64
             const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(schemaArchive.data());
-            std::string base64Schema = base64Encode(uarchive, schemaArchive.size());
-            unsigned int newLogRate = newSchemaLogRate(base64Schema.size());
-            if (newLogRate <= m_maxSchemaLogRateBytesSec && base64Schema.size() <= m_maxValueStringSize) {
-                // New schema can be logged.
+            const std::string base64Schema = base64Encode(uarchive, schemaArchive.size());
+            const std::size_t schemaSize = base64Schema.size();
+            unsigned int newLogRate = newSchemaLogRate(schemaSize);
+            if (newLogRate <= m_maxSchemaLogRateBytesSec) {
+                // Log the new schema in chunks of up to "m_maxValueStringSize" bytes.
+                // The first chunk is named "schema" for full backwards compatibility. The remaining
+                // chunks are numbered starting from 1: "schema_1" is the second chunk, "schema_2" is
+                // the third chunk and so on.
+                const int nFullChunks = schemaSize / m_maxValueStringSize;
+                const int lastChunkSize = schemaSize % m_maxValueStringSize;
                 std::stringstream ss;
                 ss << m_deviceToBeLogged << "__SCHEMAS,"
                    << "digest=\"" << schemaDigest << "\" digest_start=\"" << schemaDigest.substr(0, 8)
-                   << "\",schema_size=" << base64Schema.size() << "i,schema=\"" << base64Schema << "\"\n";
+                   << "\",schema_size=" << schemaSize
+                   << "i,n_schema_chunks=" << nFullChunks + (lastChunkSize > 0 ? 1 : 0) << "i";
+                for (int i = 0; i < nFullChunks; i++) {
+                    ss << ",schema" << (i > 0 ? "_" + karabo::util::toString(i) : "") << "=\""
+                       << string_view(base64Schema.data() + (i * m_maxValueStringSize), m_maxValueStringSize) << "\"";
+                }
+                if (lastChunkSize > 0) {
+                    // Write the last chunk of the schema.
+                    ss << ",schema" << (nFullChunks > 0 ? "_" + karabo::util::toString(nFullChunks) : "") << "=\""
+                       << string_view(base64Schema.data() + (nFullChunks * m_maxValueStringSize), lastChunkSize)
+                       << "\"";
+                }
+                ss << "\n";
+
                 // Flush what was accumulated before ...
                 m_dbClientWrite->flushBatch();
                 m_dbClientWrite->enqueueQuery(ss.str());
 
                 return true;
             } else {
-                if (newLogRate > m_maxSchemaLogRateBytesSec) {
-                    // New schema cannot be logged - would violate max schema logging rate threshold.
-                    logRejectedDatum(RejectedData{RejectionType::SCHEMA_WRITE_RATE, m_deviceToBeLogged + "::schema",
-                                                  "Update of schema with size '" +
-                                                        toString(base64Schema.size() / 1024) +
-                                                        " Kb' would reach a schema logging rate '" +
-                                                        toString(newLogRate / 1024) + " Kb/sec'."});
-                }
-                if (base64Schema.size() > m_maxValueStringSize) {
-                    // New schema cannot be logged - its serialized form is bigger than the maximum field value
-                    // length allowed by Influx. Note that for base64 encoded strings, using UTF-8, the number of
-                    // bytes equals the number of characters.
-                    logRejectedDatum(RejectedData{RejectionType::VALUE_STRING_SIZE, m_deviceToBeLogged + "::schema",
-                                                  "Size of schema serialized form, '" + toString(base64Schema.size()) +
-                                                        " characters' is bigger than the maximum allowed by Influx, '" +
-                                                        toString(m_maxValueStringSize) + "' characters'."});
-                }
+                // New schema cannot be logged - would violate max schema logging rate threshold.
+                logRejectedDatum(RejectedData{RejectionType::SCHEMA_WRITE_RATE, m_deviceToBeLogged + "::schema",
+                                              "Update of schema with size '" + toString(base64Schema.size() / 1024) +
+                                                    " Kb' would reach a schema logging rate '" +
+                                                    toString(newLogRate / 1024) + " Kb/sec'."});
+
                 return false;
             }
         }
@@ -706,7 +722,8 @@ namespace karabo {
                   .key("maxValueStringSize")
                   .displayedName("Max String Size")
                   .description(
-                        "Maximum size, in characters, for a property value to be inserted into Influx. "
+                        "Maximum size, in characters, for a property value to be inserted into Influx and for a "
+                        "schema chunk. "
                         "(All values are feed to Influx as strings in a text format called Line Protocol)")
                   .assignmentOptional()
                   .defaultValue(MAX_INFLUX_VALUE_LENGTH)
