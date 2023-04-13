@@ -211,6 +211,7 @@ stages:
       - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
       - merge_requests
     changes:
+      - "src/karabo/core/**/*"
       - "src/karabo/devices/**/*"
       - "src/integrationTests/**/*"
       - "src/pythonKarabo/karabo/integration_tests/**/*"
