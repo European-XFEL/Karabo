@@ -145,7 +145,12 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     //     "exchange1:bindingKey1,exchange2:bindingKey2,..."
 
     const Hash config("brokers", brokerUrls, "domain", domain);
-    AmqpClient::Pointer client = Configurator<AmqpClient>::create("AmqpClient", config);
+    AMQP::Table queueArgs;
+    queueArgs
+          .set("x-max-length", 10'000)    // Queue limit
+          .set("x-overflow", "drop-head") // drop oldest if limit reached
+          .set("x-message-ttl", 30'000);  // message time-to-live in ms
+    AmqpClient::Pointer client = Configurator<AmqpClient>::create("AmqpClient", config, queueArgs);
 
     // Connect and subscribe
     auto ec = client->connect();
