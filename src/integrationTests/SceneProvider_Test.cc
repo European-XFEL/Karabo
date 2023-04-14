@@ -85,11 +85,9 @@ void SceneProvider_Test::testInstanceInfo() {
     CPPUNIT_ASSERT(topo.has("device"));
     const Hash& device = topo.get<Hash>("device");
     CPPUNIT_ASSERT(device.hasAttribute("sceneProvider", "capabilities"));
-    CPPUNIT_ASSERT(
-          (device.getAttribute<unsigned int>("sceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 1u);
+    CPPUNIT_ASSERT((device.getAttribute<int>("sceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 1u);
     CPPUNIT_ASSERT(device.hasAttribute("noSceneProvider", "capabilities"));
-    CPPUNIT_ASSERT(
-          (device.getAttribute<unsigned int>("noSceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 0u);
+    CPPUNIT_ASSERT((device.getAttribute<int>("noSceneProvider", "capabilities") & karabo::core::PROVIDES_SCENES) == 0u);
     std::clog << "Tested scene providers identified in instanceInfo.. Ok" << std::endl;
 }
 
