@@ -17,6 +17,7 @@ if __name__ == '__main__':
         'author_email': 'karabo@xfel.eu',
         'description': 'This is the Karabo GUI',
         'url': 'http://karabo.eu',
+        'license': "GPLv3+",
         'packages': find_packages(),
         'package_data': {
             "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
