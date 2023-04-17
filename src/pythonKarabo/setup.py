@@ -32,6 +32,7 @@ install_args = {
     'author_email': 'karabo@xfel.eu',
     'description': 'This is the Python interface of the Karabo control system',
     'url': 'http://karabo.eu',
+    'license': "MPL2",
 }
 
 if SUBMODULE == 'NATIVE':
