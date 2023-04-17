@@ -1,4 +1,4 @@
-{% set xfel_conda_channel = os.environ.get('XFEL_CONDA_CHANNEL', 'exflserv05.desy.de') %}
+{% set xfel_conda_channel = os.environ.get('XFEL_CONDA_CHANNEL', 'exflctrl01.desy.de') %}
 {% set conda_local_channel = os.environ.get('CONDA_LOCAL_CHANNEL_ENV', '') %}
 name: karabogui
 
