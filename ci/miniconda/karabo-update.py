@@ -11,7 +11,7 @@ import argparse
 
 from conda.cli.python_api import Commands, run_command
 
-KARABO_CHANNEL = "http://exflserv05.desy.de/karabo/channel"
+KARABO_CHANNEL = "http://exflctrl01.desy.de/karabo/channel"
 
 
 def main(args, conda_args):

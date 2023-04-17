@@ -426,9 +426,10 @@ class Builder:
                     f"rm -f {plat_dir}/current_repodata.json*")
             cmds.append(
                 f"conda index {dir_} --check-md5 --no-progress")
-        # TODO: Skip after exflserv05 is decommissioned
+
         if os.environ.get('MIRROR_HOSTNAME', None) == "exflctrl01":
-            # a version of this script is available in the conda-recipes repository
+            # a version of this script is available in the conda-recipes
+            # repository
             cmds.append("python ~/rebuild_index.py")
         # end workaround
         command = "; ".join(cmds)

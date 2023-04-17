@@ -21,7 +21,7 @@ dependencies should first be installed. This is handled automatically by the
 ``auto_build_all.sh`` script.
 
 The already-built dependencies will be downloaded from
-http://exflserv05.desy.de/karabo/karaboDevelopmentDeps/. They will be unpacked
+http://exflctrl01.desy.de/karabo/karaboDevelopmentDeps/. They will be unpacked
 and certain file paths within will be rewritten to match the environment where
 the framework is being built.
 
@@ -89,7 +89,7 @@ script, and should be made there when adding/removing/updating dependencies.
 In order to test the built result, you can create a feature branch with name
 format of ``deps-mr-<package>`` and push it to the framework repository. The
 CI runner will pick up this branch and create the a new dependency package at
-http://exflserv05.desy.de/karabo/karaboDevelopmentDeps
+http://exflctrl01.desy.de/karabo/karaboDevelopmentDeps
 
 Once the dependency package is created, you can try verify it by clean building
 the framework locally using this package:
@@ -491,7 +491,7 @@ manually add these environment variables each time the job is executed
 set to be %USERPROFILE%.
 
 Also, for the Windows CI as we don't have an easy-to-use tool like `sshpass`
-we have created an RSA key and added it to our linux server (*exflserv05*). The
+we have created an RSA key and added it to our linux server (*exflctrl01*). The
 key on Windows is located on `%USERPROFILE%\.ssh\win-cwrsync`.
 
 Code used for building the recipe
