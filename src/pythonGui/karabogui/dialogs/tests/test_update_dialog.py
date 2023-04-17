@@ -84,7 +84,7 @@ class TestCase(GuiTestCase):
     def test_outgoing_messages(self, get_mock):
         """Tests if the outgoing messages are called with the right
         parameters"""
-        expected_wheel = ('http://exflserv05.desy.de/karabo/karaboExtensions'
+        expected_wheel = ('http://exflctrl01.desy.de/karabo/karaboExtensions'
                           '/tags/0.0.0/GUIExtensions-0.0.0-py3-none-any.whl')
         remote_server = EXTENSIONS_URL_TEMPLATE.format(KARABO_CHANNEL)
 

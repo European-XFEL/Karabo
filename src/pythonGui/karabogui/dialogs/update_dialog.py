@@ -22,7 +22,7 @@ _TAG_REGEX = r'^\d+.\d+.\d+$'
 _PKG_NAME = 'GUIExtensions'
 _WHEEL_TEMPLATE = 'GUIExtensions-{}-py3-none-any.whl'
 EXTENSIONS_URL_TEMPLATE = 'http://{}/karabo/karaboExtensions/tags/'
-KARABO_CHANNEL = 'exflserv05.desy.de'
+KARABO_CHANNEL = 'exflctrl01.desy.de'
 
 UNDEFINED_VERSION = 'Undefined'
 
