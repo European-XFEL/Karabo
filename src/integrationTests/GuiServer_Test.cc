@@ -1226,6 +1226,12 @@ void GuiServer_Test::testSlotNotify() {
     }
     CPPUNIT_ASSERT(tcpAdapter2->connected());
     std::vector<Hash> messages(tcpAdapter2->getAllMessages("notification"));
+    timeout = 1000;
+    while (messages.empty() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        timeout -= 2;
+        messages = tcpAdapter2->getAllMessages("notification");
+    }
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(messages), 1ul, messages.size());
 
     CPPUNIT_ASSERT(messages[0].has("message"));
