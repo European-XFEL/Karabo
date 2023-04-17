@@ -4,13 +4,13 @@ set -e
 set -o pipefail
 
 if [ "${KARABO_UPLOAD_HOST}" == "" ]; then
-    KARABO_UPLOAD_HOST=xkarabo@exflserv05
+    KARABO_UPLOAD_HOST=xkarabo@exflctrl01
 fi
 if [ "${KARABO_UPLOAD_DIR}" == "" ]; then
     KARABO_UPLOAD_DIR=/var/www/html/karabo
 fi
 if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
-    KARABO_UPLOAD_CURL_PREFIX=http://exflserv05.desy.de/karabo
+    KARABO_UPLOAD_CURL_PREFIX=http://exflctrl01.desy.de/karabo
 fi
 
 

@@ -20,7 +20,7 @@ If one of the option is for you simply follow the few steps below:
 Get and install Karabo Framework
 ===================================
 
-A self extracting shell script is available `here <http:exflserv05.desy.de/karabo/karaboFramework/tags>`_.
+A self extracting shell script is available `here <http:exflctrl01.desy.de/karabo/karaboFramework/tags>`_.
 
 Select the correct installer for your operating system and download it to some local folder.
 
