@@ -1,10 +1,38 @@
 Contributing Code to Karabo Framework
 =====================================
 
-There is a guide available on the Karabo Framework Redmine Wiki:
+External contributors, i.e. anyone not contractually associated to
+the European XFEL GmbH, are asked to sign a Contributor License
+Agreement (CLA):
+
+- people contributing as individuals should sign the Individual CLA
+- people contributing on behalf of an organization should sign 
+  the Entity CLA.
+
+The CLAs can be found in the `Contributor_License_Agreement.md` and
+`Entity_Contributor_License_Agreement.md` documents located in
+the root folder of this repository. 
+Please send signed CLAs to opensource [at] xfel.eu. We'll get in
+touch with you then. 
+We ask for your understanding that because Karabo is critical to perform 
+outstanding science at the European XFEL, we cannot accept external 
+contributions without a CLA in place. Importantly, with signing the CLA
+you acknowledge that
+
+* European XFEL retains all copyrights of Karabo,
+* European XFEL may relicense Karabo under other appropriate open source licenses
+  which the Free Software Foundation classifies as Free Software licenses. 
+
+However, you are welcome to already 
+suggest modifications you'd like to contribute by opening a merge/pull 
+request before you send the CLA.
+
+Internal contributors, i.e. anyone contractually associated to the 
+European XFEL, can find guidelines on internal contributions in 
+the Karabo Framework Redmine Wiki:
 https://in.xfel.eu/redmine/projects/karabo-library/wiki/Developing_the_framework_using_git
 
-Additionally please follow these Guideline:
+Additionally, everyone is asked to follow these guidelines:
 
 Gitlab
 ======
@@ -12,11 +40,11 @@ Gitlab
 Large(r) merge requests:
 ------------------------
 
-There is a recurrent problem of tradeoff between „complete“ merge requests,
-e.g. fully implementing and defining a larger addition to the framework,
-and smaller, often easier to review merge requests,
-which would mean breaking the additions into smaller chunks, frequently 
-not fully functional on their own. As a solutution please merge to separate 
+There is a recurrent tradeoff between „complete“ merge requests,
+e.g. MRs fully implementing and defining a larger addition to the framework,
+and smaller, often easier to review, merge requests. The latter
+would mean to break the additions into smaller chunks, frequently 
+not fully functional on their own. A solution is to merge to separate 
 feature branches:
 
 1. Create a new (longer lived) feature branch for your larger project
@@ -30,13 +58,14 @@ feature branches:
    something which breaks the python bindings, but would like to split C++ and
    binding refactoring into separate MRs.
    
-4. When you feature branch is complete and consistent, create a MR to merge
-   the feature branch into master.
+4. When your feature branch is complete and consistent, create a single MR to merge
+   the feature branch into master, and indicate that is has been reviewed
+   in smaller increments already.
 
-What does WIP mean?
--------------------
+What does WIP/Draft mean?
+-------------------------
 
-WIP means work in progress and should be used to indicate MRs that you would
+WIP, or Draft, means work in progress and should be used to indicate MRs that you would
 like to share with a selected group of people you work together with and get
 their opinion. You should explicitly let the people know that they should
 collaborate with you on the WIP MR. Everyone else can ignore WIP MRs,
@@ -51,11 +80,15 @@ unit tests. All private methods should be documented such that another
 adding documentation to existing code directly used or touched during your 
 refactoring.
 
-C++11
-=====
+C++ Standard
+============
 
-C++11 usage is now (officially) supported for framework code. The following
-guidelines are suggested:
+C++14 usage is supported for framework code. However, to support legacy packages, 
+the C++ headers of Karabo currently do not use any C++14 features and allow 
+a package (e.g. a device) to be compiled using the C++11 standard. 
+It is however discouraged to build Karabo C++ Packages using the C++11 standard.
+
+Additionally, the following guidelines are suggested:
 
 - Feel free to use new features where they make sense. E.g. use auto to shorten
   iterator syntax in loops, e.g. 
@@ -80,7 +113,7 @@ guidelines are suggested:
   comment to these lines to aid people less experienced with C++11 features in
   the review.
   
-- We currently do not encourage to use newly introduced numerical types, e.g. 
+- We currently do not encourage to use C++11-introduced numerical types, e.g. 
   `uint64_t` as the Karabo type system has not been fully prepared for them.
 
 
@@ -91,7 +124,7 @@ General - Tools
 ---------------
 
 - First and foremost, programming should be done *PEP8* conform.
-  Additionally, if *PEP8* is undefined and for further examples, the
+  Additionally, if there is no *PEP8* definition and for further examples, the
   `google style guide <https://google.github.io/styleguide/pyguide.html>`_
   can be looked up.
 - Per convention, `strings` should be created with `"`.
