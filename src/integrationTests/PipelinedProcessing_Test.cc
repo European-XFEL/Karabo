@@ -1439,6 +1439,8 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
 
     // Makes sure the sender is not sending any data before starting the test run.
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    // Assure that receiver is connected.
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
 
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
@@ -1469,6 +1471,8 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
     configAfterDisc.set("processingTime", 5);
     instantiateDeviceWithAssert("PipeReceiverDevice", configAfterDisc);
     CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    // Assure that new incarnation of receiver is connected.
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
 
     // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
     // has been properly cleared after the receiver disconnected.
@@ -1499,9 +1503,12 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    // check for connection?
 
     // Makes sure the sender is not sending any data before starting the test run.
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    // Assure that receiver is connected.
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
 
     // call sender's slot
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
@@ -1532,6 +1539,8 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     instantiateDeviceWithAssert("PipeReceiverDevice", configAfterDisc);
     CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    // Assure that receiver is connected.
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
 
     // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
     // has been properly cleared after the receiver disconnected.
@@ -1583,6 +1592,8 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     m_deviceClient->set(m_sender, "copyAllData", copy);
     // make sure the sender has stopped sending data
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    // Assure that receiver is connected.
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
     // Then call its slot
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
