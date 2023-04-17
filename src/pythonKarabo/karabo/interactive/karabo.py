@@ -220,7 +220,7 @@ def parse_commandline():
 
     parser.add_argument('-r', '--repo',
                         type=str,
-                        default='http://exflserv05.desy.de/karabo/'
+                        default='http://exflctrl01.desy.de/karabo/'
                                 'karaboDevices/',
                         help='URL to the binary repository')
 

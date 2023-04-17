@@ -31,7 +31,7 @@ source "$scriptDir/../set_lsb_release_info.sh"
 BUILD_MARKER_NAME=".marker.txt"
 DEPS_MARKER_NAME=".deps_tag.txt"
 if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
-    KARABO_UPLOAD_CURL_PREFIX=http://exflserv05.desy.de/karabo
+    KARABO_UPLOAD_CURL_PREFIX=http://exflctrl01.desy.de/karabo
 fi
 DEP_URL_BASE="${KARABO_UPLOAD_CURL_PREFIX}/karaboDevelopmentDeps"
 DEPS_OS_IDENTIFIER=$LSB_RELEASE_DIST$(echo $LSB_RELEASE_VERSION | sed -r 's/^([0-9]+).*/\1/')
