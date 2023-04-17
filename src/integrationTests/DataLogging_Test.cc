@@ -175,10 +175,6 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     //       the influx logger test. The generated file logging tests would them be temporary
     //       CI artifacts passed from one stage to the other.
 
-    // FIXME: the schema migration in "dlschema2influx.py" has been broken for a while, but the tests
-    //        have failed to make that explicit before the introduction of schema chunking. The
-    //        migration tests are being temporarily bypassed until "dlschema2influx.py" is fixed.
-    /*
     const boost::filesystem::path migratorPackageBase("../../../src/pythonKarabo");
     boost::system::error_code ec;
     if (boost::filesystem::exists(migratorPackageBase, ec)) {
@@ -186,8 +182,6 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     } else {
         std::clog << "Migrator script not available - skipping migration test." << std::endl;
     }
-    */
-    std::clog << "Migration test being skipped until 'dlschema2influx.py' is fixed." << std::endl;
 
     testMaxNumDataHistory();
     testDropBadData();
