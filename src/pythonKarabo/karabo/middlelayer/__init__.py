@@ -15,10 +15,10 @@ from karabo.middlelayer_api import numeric
 from karabo.middlelayer_api.configuration import (
     config_changes, extract_modified_schema_attributes,
     sanitize_init_configuration, sanitize_write_configuration)
-from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.device import Device, DeviceClientBase
 # Middlelayer api
 from karabo.middlelayer_api.device_client import (
-    DeviceClientBase, Queue, call, callNoWait, compareConfigurationsFromPast,
+    Queue, call, callNoWait, compareConfigurationsFromPast,
     compareDeviceConfiguration, compareDeviceWithPast, connectDevice,
     disconnectDevice, execute, executeNoWait, filterByTags, findDevices,
     findServers, getClasses, getClassSchema, getClients, getConfiguration,
@@ -37,7 +37,7 @@ from karabo.middlelayer_api.eventloop import (
 from karabo.middlelayer_api.injectable import Injectable
 from karabo.middlelayer_api.logger import CacheLog
 from karabo.middlelayer_api.macro import (
-    EventThread, Macro, MacroSlot, Monitor, RemoteDevice)
+    EventThread, Macro, MacroSlot, Monitor, RemoteDevice, TopologyMacro)
 from karabo.middlelayer_api.pipeline import (
     Channel, InputChannel, NetworkInput, NetworkOutput, OutputChannel,
     OutputProxy, PipelineContext, PipelineMetaData, RingQueue)

@@ -23,80 +23,12 @@ from karabo.native import (
     Hash, KaraboError, KaraboValue, Schema, Timestamp, isStringSet)
 
 from .configuration import config_changes, sanitize_init_configuration
-from .device import Device
 from .eventloop import synchronize
 from .proxy import (
     AutoDisconnectProxyFactory, DeviceClientProxyFactory, ProxyBase,
     ProxyNodeBase)
-from .signalslot import slot
 from .synchronization import firstCompleted
 from .utils import get_property_hash
-
-
-class DeviceClientBase(Device):
-    """Keep track of other devices
-
-    A :class:`~karabo.middlelayer.Device` which also inherits from this class
-    keeps track of all the other devices in this Karabo installation. Without
-    inheriting from this class, listing other devices is impossible."""
-    abstract = True
-    wait_topology = True
-
-    def __init__(self, configuration):
-        # "unknown" is default type for bare C++ SignalSlotable
-        self.systemTopology = Hash("device", Hash(), "server", Hash(),
-                                   "macro", Hash(), "client", Hash(),
-                                   "unknown", Hash())
-        self.loggerMap = Hash()
-        super().__init__(configuration)
-
-    async def _run(self, **kwargs):
-        await super()._run(**kwargs)
-        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
-        # We are collecting all the instanceInfo's and wait for their arrival
-        # before the device comes online.
-        # Some clients, such as ikarabo, don't want to wait this additional
-        # time
-        if self.wait_topology:
-            await sleep(3)
-
-    @slot
-    async def slotInstanceNew(self, instanceId, info):
-        self.removeServerChildren(instanceId, info)
-        self.updateSystemTopology(instanceId, info, "instanceNew")
-        await super().slotInstanceNew(instanceId, info)
-
-    @slot
-    def slotInstanceUpdated(self, instanceId, info):
-        self.updateSystemTopology(instanceId, info, "instanceUpdated")
-        super().slotInstanceUpdated(instanceId, info)
-
-    @slot
-    def slotInstanceGone(self, instanceId, info):
-        self.removeServerChildren(instanceId, info)
-        self.systemTopology[info["type"]].pop(instanceId, None)
-        return super().slotInstanceGone(instanceId, info)
-
-    @slot
-    def slotPingAnswer(self, deviceId, info):
-        self.updateSystemTopology(deviceId, info, None)
-
-    def removeServerChildren(self, instanceId, info):
-        """Cleanup the device children from the server
-        """
-        if info["type"] == "server":
-            devices = [k for k, v, a in self.systemTopology["device"].iterall()
-                       if a["serverId"] == instanceId]
-            for deviceId in devices:
-                self.systemTopology["device"].pop(deviceId, None)
-
-    def updateSystemTopology(self, instanceId, info, task):
-        type = info["type"]
-        ret = Hash(type, Hash())
-        ret[type][instanceId] = Hash()
-        ret[type][instanceId, ...] = dict(info.items())
-        self.systemTopology.merge(ret)
-        return ret
 
 
 class OneShotQueue(asyncio.Future):

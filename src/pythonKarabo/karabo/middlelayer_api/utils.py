@@ -10,8 +10,9 @@ from weakref import WeakMethod, ref
 import numpy as np
 from async_timeout import timeout
 
-from karabo.middlelayer_api.eventloop import ensure_coroutine
 from karabo.native import Hash, MetricPrefix, NumpyVector, QuantityValue, Unit
+
+from .eventloop import ensure_coroutine
 
 
 def get_karabo_version():

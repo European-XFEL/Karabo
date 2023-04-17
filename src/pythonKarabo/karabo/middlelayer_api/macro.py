@@ -15,7 +15,7 @@ from karabo.native import (
     AccessLevel, AccessMode, Attribute, DaqPolicy, Descriptor, Hash, Int32,
     Slot, String, VectorString)
 
-from .device import Device
+from .device import Device, DeviceClientBase
 from .device_client import getDevice, waitUntilNew
 from .eventloop import EventLoop
 from .signalslot import slot
@@ -449,3 +449,7 @@ class Macro(Device):
         return Hash("type", "deviceMacro",
                     "origin", self.deviceId,
                     "payload", payload)
+
+
+class TopologyMacro(Macro, DeviceClientBase):
+    """A utils class for creating macros with topology access"""
