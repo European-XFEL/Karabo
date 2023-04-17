@@ -13,14 +13,13 @@ from karabo._version import version
 from karabo.native import Node
 
 from . import device_client
-from .device_client import DeviceClientBase
 from .eventloop import NoEventLoop, set_global_sync
 from .logger import build_logger_node
-from .macro import EventThread, Macro
+from .macro import EventThread, TopologyMacro
 from .signalslot import slot
 
 
-class DeviceClient(Macro, DeviceClientBase):
+class DeviceClient(TopologyMacro):
     # The command line device client will not wait
     # to come online for collecting topology
     wait_topology = False
