@@ -5,7 +5,8 @@ from karabo.common.states import State
 from karabo.macro_api.device_interface import (
     listCameras, listDeviceInstantiators, listMotors, listProcessors,
     listTriggers)
-from karabo.middlelayer_api.device_client import DeviceClientBase, getDevice
+from karabo.middlelayer_api.device import DeviceClientBase
+from karabo.middlelayer_api.device_client import getDevice
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.native import Int32, VectorString
 
