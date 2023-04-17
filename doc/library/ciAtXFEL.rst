@@ -33,28 +33,28 @@ Dependencies binaries
 The dependency system of Karabo is described :ref:`here <installation/dependency_management>`.
 
 For convenience, the dependencies are built for each supported Operating system
-and uploaded to the XFEL internal server `here <http://exflserv05.desy.de/karabo/karaboDevelopmentDeps/>`__.
+and uploaded to the XFEL internal server `here <http://exflctrl01.desy.de/karabo/karaboDevelopmentDeps/>`__.
 
 Framework binaries
 ++++++++++++++++++
 
 The Framework is built against all supported operating systems and bundled in
-a binary file that can be found `here <http://exflserv05.desy.de/karabo/karaboFramework/tags>`_ 
+a binary file that can be found `here <http://exflctrl01.desy.de/karabo/karaboFramework/tags>`_ 
 as discussed in :ref:`here <installation/binary>`
 
 In addition to the url tag location, the CI will create a link to a standard
 location that always points to the latest build.
 
-The address http://exflserv05.desy.de/karabo/karaboFramework/tags/latest_build
+The address http://exflctrl01.desy.de/karabo/karaboFramework/tags/latest_build
 contains the latest release build matching the `N.N.N` format.
 
-The address http://exflserv05.desy.de/karabo/karaboFramework/tags/latest_prerelease_build
+The address http://exflctrl01.desy.de/karabo/karaboFramework/tags/latest_prerelease_build
 contains the latest prerelease build.
 Alpha releases, and release candidates will be linked to this address.
 
 In addition to these builds that are generated from a tag on the git repository,
 a nightly build is generated every day and upoaded to this address
-http://exflserv05.desy.de/karabo/karaboFramework/nightly
+http://exflctrl01.desy.de/karabo/karaboFramework/nightly
 
 Conda Packages
 ++++++++++++++
