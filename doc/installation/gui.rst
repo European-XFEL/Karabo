@@ -42,21 +42,21 @@ You can find your configuration file location typing ``conda info`` on your term
 
 From your terminal, add the needed channels executing the following commands::
 
-    conda config --add channels http://exflserv05.desy.de/karabo/channel
-    conda config --add channels http://exflserv05.desy.de/karabo/channel/mirror/conda-forge
+    conda config --add channels http://exflctrl01.desy.de/karabo/channel
+    conda config --add channels http://exflctrl01.desy.de/karabo/channel/mirror/conda-forge
 
 .. _framework/remote_installation:
 
 Remote installations
 ---------------------
 
-The channel ``http://exflserv05.desy.de/karabo/channel`` is not open to
+The channel ``http://exflctrl01.desy.de/karabo/channel`` is not open to
 the public until Karabo will be released. For this reason if one is installing
 from a network outside the DESY internal network, some SSH tunneling is needed.
 Two options exist (but should not be mixed):
 
-The first option is to create the tunnel to ``exflserv05``
-(e.g. via ``ssh <user>@bastion.desy.de -L 8081:exflserv05.desy.de:80``),
+The first option is to create the tunnel to ``exflctrl01``
+(e.g. via ``ssh <user>@bastion.desy.de -L 8081:exflctrl01.desy.de:80``),
 and then configure
 the following channel definitions on your local machine (may be from a new terminal)::
 

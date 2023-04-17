@@ -14,7 +14,7 @@ Installing Outside of DESY Network
 Setting up SSH Connection using PuTTy
 -------------------------------------
 
-Since the installation process accesses ``http://exflserv05.desy.de``, which is only accessible
+Since the installation process accesses ``http://exflctrl01.desy.de``, which is only accessible
 inside DESY network, there is a need to configure an SSH tunnel to Bastion.
 
 1. In ``Sessions``, configure the destination hostname/port as such:
