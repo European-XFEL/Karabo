@@ -5,7 +5,7 @@
  *
  * Created on April 24, 2015, 2:32 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "PyXmsInputOutputChannel.hh"

@@ -4,7 +4,7 @@
  * Author: <irina.kozlova@xfel.eu>
  * Modified (2 May 2013): <burkhard.heisen@xfel.eu>
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include <boost/pointer_cast.hpp>

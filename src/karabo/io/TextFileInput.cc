@@ -5,7 +5,7 @@
  *
  * Created on January 16, 2011, 8:49 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "TextFileInput.hh"

@@ -1,5 +1,5 @@
 """The karabo schema package.
-Copyright (c) 2020, European X-Ray Free-Electron Laser Facility GmbH
+Copyright (c) European X-Ray Free-Electron Laser Facility GmbH Schenefeld.
 All rights reserved.
 """
 # flake8: noqa

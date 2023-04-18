@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on September 16, 2016
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 
 from qtpy.QtCore import QModelIndex, Slot
