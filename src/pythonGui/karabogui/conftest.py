@@ -10,7 +10,7 @@ from karabogui.background import create_background_timer
 from karabogui.controllers.api import populate_controller_registry
 
 
-@pytest.fixture()
+@pytest.fixture(scope="package")
 def gui_app():
     os.environ["KARABO_TEST_GUI"] = "1"
     if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
