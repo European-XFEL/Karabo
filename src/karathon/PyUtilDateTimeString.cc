@@ -3,7 +3,7 @@
  *
  * Author: <luis.maia@xfel.eu>
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 #include <boost/python.hpp>
 #include <karabo/util/DateTimeString.hh>

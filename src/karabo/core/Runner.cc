@@ -142,7 +142,7 @@ namespace karabo {
                       << " #                     Karabo Device Server\n"
                       << " #\n"
                       << " # Karabo-Version: " << karabo::util::Version::getVersion() << "\n"
-                      << " # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.\n"
+                      << " # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.\n"
                       << " ##################################################################\n\n";
             if (what.empty()) {
                 std::cout << "Usage: " << programName << " [<option> | <configuration>]\n\n";

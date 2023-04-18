@@ -5,7 +5,7 @@
  *
  * Created on February 7, 2011, 10:49 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_XMS_SIGNAL_HH

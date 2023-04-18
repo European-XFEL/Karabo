@@ -2,7 +2,7 @@
  * $Id$
  *
  * File:   AmqpBroker.cc
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  * Created on May 19, 2020, 16:08 PM
  */
 

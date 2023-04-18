@@ -2,7 +2,7 @@
  * File:   Wrapper.cc
  * Author: CONTROLS DEV group
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "Wrapper.hh"

@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <raul.costa@xfel.eu>
 # Created on August 26, 2021
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 
 from qtpy import uic

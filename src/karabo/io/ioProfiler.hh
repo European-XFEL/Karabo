@@ -5,7 +5,7 @@
  *
  * Created on February 25, 2012, 21:04 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_IO_IOPROFILER_HH

@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <andrea.parenti@xfel.eu>
 # Created on June 13, 2017
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import inspect
 import warnings

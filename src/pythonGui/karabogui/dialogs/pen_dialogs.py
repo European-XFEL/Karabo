@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <martin.teichmann@xfel.eu>
 # Created on March 19, 2014
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from qtpy import uic
 from qtpy.QtCore import QSize, Qt, Slot

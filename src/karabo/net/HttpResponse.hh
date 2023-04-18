@@ -4,7 +4,7 @@
  *
  * Created on November, 15, 2019, 15:07.
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef HTTPRESPONSE_HH

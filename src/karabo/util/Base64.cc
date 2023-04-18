@@ -3,7 +3,7 @@
  *
  * Author: <andrea.parenti@xfel.eu>
  *
- * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "Base64.hh"

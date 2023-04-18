@@ -4,7 +4,7 @@
  *
  * Created on February 8, 2013, 6:03 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 

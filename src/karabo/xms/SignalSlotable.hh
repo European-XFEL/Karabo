@@ -5,7 +5,7 @@
  *
  * Created on February 6, 2011, 2:25 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_CORE_SIGNALSLOTABLE_HH
