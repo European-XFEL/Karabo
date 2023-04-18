@@ -1234,10 +1234,26 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     Schema schema;
     bool configAtTimepoint;
     string configTimepoint;
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterPropSet)
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(conf, schema, configAtTimepoint, configTimepoint));
-    CPPUNIT_ASSERT(conf.has(noDefaultProp));
+
+    int nTries = NUM_RETRY;
+    while (conf.empty() && nTries > 0) {
+        try {
+            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterPropSet)
+                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                  .receive(conf, schema, configAtTimepoint, configTimepoint);
+        } catch (const RemoteException& e) {
+            const std::string errMsg = e.detailedMsg();
+            // Tolerate only exception with following text that may come if file logger's disk IO is pretty slow
+            auto errExpect = "Requested time point for device configuration is earlier than anything logged.";
+            CPPUNIT_ASSERT_MESSAGE(errMsg, errMsg.find(errExpect) != std::string::npos);
+            boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+            m_sigSlot->call(karabo::util::DATALOGGER_PREFIX + m_server, "flush");
+            --nTries;
+        } catch (const std::exception& e) {
+            CPPUNIT_ASSERT_MESSAGE(e.what(), false); // do not tolerate any other exception
+        }
+    }
+    CPPUNIT_ASSERT_MESSAGE(toString(conf), conf.has(noDefaultProp));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Value for '" + noDefaultProp + "' differs from expected.", 12,
                                  conf.get<int>(noDefaultProp));
 
@@ -1786,6 +1802,14 @@ void BaseLogging_Test::testNans() {
     // save this instant as a iso string
     Epochstamp es_beforeWrites;
     std::string beforeWrites = es_beforeWrites.toIso8601();
+    // In this test we do not care about problems that the file data logger has with the first history request nor about
+    // any potential interference created by indexing files on-the-fly when we continue to write that property.
+    // Therefore we trigger direct index creation for the needed properties before they get updated.
+    for (const std::string& property : std::vector<std::string>({"int32Property", "floatProperty", "doubleProperty"})) {
+        const Hash params("from", beforeWrites, "to", Epochstamp().toIso8601(), "maxNumData",
+                          static_cast<int>(max_set * 2));
+        m_sigSlot->call(dlreader0, "slotGetPropertyHistory", deviceId, property, params); // fire-and-forget...
+    }
 
     // Collect stamps for when each bad floating point has been set (once) - to later test slotGetConfigurationFromPast.
     // Use std::min with max_set as protection (max_set _should_ always be larger...)
@@ -1875,7 +1899,7 @@ void BaseLogging_Test::testNans() {
         }
 
         Epochstamp afterLastCheck;
-        if (static_cast<size_t>(property_pair.second) == history.size()) {
+        if (property_pair.second == history.size()) {
             std::clog << "\ntestNans: History size check for property '" << property_pair.first << "' succeeded after "
                       << numChecks << " attempt(s) ranging from " << beforeFirstCheck.toIso8601() << " to "
                       << afterLastCheck.toIso8601() << " ("
