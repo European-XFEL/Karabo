@@ -1,12 +1,11 @@
-from unittest import skipIf
-from unittest.mock import patch
+import pytest
 
 from karabo.common.scenemodel.api import ScatterGraphModel
 from karabo.native import Configurable, Double, Hash, Timestamp
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.const import IS_WINDOWS_SYSTEM
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
+    get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
 from ..scatter_graph import DisplayScatterGraph
 
@@ -16,96 +15,96 @@ class Object(Configurable):
     y = Double()
 
 
-class TestScatterGraph(GuiTestCase):
-    def setUp(self):
-        super(TestScatterGraph, self).setUp()
+@pytest.fixture
+def scatter_graph_setup(gui_app):
+    schema = Object.getClassSchema()
+    x = get_class_property_proxy(schema, "x")
+    device = x.root_proxy
+    y = PropertyProxy(root_proxy=device, path="y")
+    controller = DisplayScatterGraph(proxy=x)
+    controller.create(None)
+    controller.visualize_additional_property(y)
+    assert controller.widget is not None
+    yield controller, x, y
 
-        schema = Object.getClassSchema()
-        self.x = get_class_property_proxy(schema, 'x')
-        device = self.x.root_proxy
-        self.y = PropertyProxy(root_proxy=device, path='y')
-        self.controller = DisplayScatterGraph(proxy=self.x)
-        self.controller.create(None)
-        self.controller.visualize_additional_property(self.y)
-        self.assertIsNotNone(self.controller.widget)
+    controller.destroy()
+    assert controller.widget is None
 
-    def tearDown(self):
-        super(TestScatterGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
 
-    @skipIf(IS_WINDOWS_SYSTEM,
-            reason="curve.getData returns empty arrays in Windows")
-    def test_scatter_graph_basics(self):
-        set_proxy_value(self.x, 'x', 2.1)
-        set_proxy_value(self.y, 'y', 3.2)
-        curve = self.controller._plot
-        self.assertEqual(list(curve.getData()), [2.1, 3.2])
+@pytest.mark.skipif(IS_WINDOWS_SYSTEM,
+                    reason="curve.getData returns empty arrays in Windows")
+def test_scatter_graph_basics(scatter_graph_setup):
+    controller, x, y = scatter_graph_setup
+    set_proxy_value(x, "x", 2.1)
+    set_proxy_value(y, "y", 3.2)
+    curve = controller._plot
+    assert list(curve.getData()) == [2.1, 3.2]
 
-    @skipIf(IS_WINDOWS_SYSTEM,
-            reason="curve.getData returns empty arrays in Windows")
-    def test_scatter_timestamp(self):
-        timestamp = Timestamp()
-        set_proxy_value(self.x, 'x', 2.1)
-        h = Hash('y', 3.2)
-        set_proxy_hash(self.y, h, timestamp)
-        curve = self.controller._plot
-        self.assertEqual(list(curve.getData()), [2.1, 3.2])
-        h = Hash('y', 13.2)
-        set_proxy_hash(self.y, h, timestamp)
-        self.assertEqual(list(curve.getData()), [2.1, 3.2])
 
-    def test_deque(self):
-        controller = DisplayScatterGraph(proxy=self.x,
-                                         model=ScatterGraphModel())
-        controller.create(None)
-        action = controller.widget.actions()[10]
-        self.assertEqual(action.text(), 'Queue Size')
+@pytest.mark.skipif(IS_WINDOWS_SYSTEM,
+                    reason="curve.getData returns empty arrays in Windows")
+def test_scatter_timestamp(scatter_graph_setup):
+    controller, x, y = scatter_graph_setup
+    timestamp = Timestamp()
+    set_proxy_value(x, "x", 2.1)
+    h = Hash("y", 3.2)
+    set_proxy_hash(y, h, timestamp)
+    curve = controller._plot
+    assert list(curve.getData()) == [2.1, 3.2]
+    h = Hash("y", 13.2)
+    set_proxy_hash(y, h, timestamp)
+    assert list(curve.getData()) == [2.1, 3.2]
 
-        dsym = 'karabogui.controllers.display.scatter_graph.QInputDialog'
-        with patch(dsym) as QInputDialog:
-            QInputDialog.getInt.return_value = 20, True
-            action.trigger()
-            self.assertEqual(controller.model.maxlen, 20)
-            self.assertEqual(controller._x_values.maxlen, 20)
-            self.assertEqual(controller._y_values.maxlen, 20)
-        controller.destroy()
 
-    def test_pointsize(self):
-        controller = DisplayScatterGraph(proxy=self.x,
-                                         model=ScatterGraphModel())
-        controller.create(None)
-        action = controller.widget.actions()[11]
-        self.assertEqual(action.text(), 'Point Size')
+def test_deque(mocker, scatter_graph_setup):
+    controller, x, _ = scatter_graph_setup
+    controller = DisplayScatterGraph(proxy=x, model=ScatterGraphModel())
+    controller.create(None)
+    action = controller.widget.actions()[10]
+    assert action.text() == "Queue Size"
 
-        dsym = 'karabogui.controllers.display.scatter_graph.QInputDialog'
-        with patch(dsym) as QInputDialog:
-            QInputDialog.getDouble.return_value = 2.7, True
-            action.trigger()
-            self.assertEqual(controller.model.psize, 2.7)
-            self.assertEqual(controller._plot.opts['size'], 2.7)
-        controller.destroy()
+    path = "karabogui.controllers.display.scatter_graph.QInputDialog.getInt"
+    mocker.patch(path, return_value=(20, True))
+    action.trigger()
+    assert controller.model.maxlen == 20
+    assert controller._x_values.maxlen == 20
+    assert controller._y_values.maxlen == 20
 
-    def test_removal_property(self):
-        controller = DisplayScatterGraph(proxy=self.x,
-                                         model=ScatterGraphModel())
-        controller.create(None)
-        controller.visualize_additional_property(self.y)
-        # Put a few values
-        set_proxy_value(self.x, 'x', 2.1)
-        set_proxy_value(self.y, 'y', 3.2)
-        set_proxy_value(self.x, 'x', 5.3)
-        set_proxy_value(self.y, 'y', 4.6)
 
-        if not IS_WINDOWS_SYSTEM:
-            self.assertIsNotNone(controller._last_x_value)
-            self.assertGreater(len(controller._x_values), 0)
-            self.assertGreater(len(controller._y_values), 0)
+def test_pointsize(mocker, scatter_graph_setup):
+    controller, x, _ = scatter_graph_setup
+    controller = DisplayScatterGraph(proxy=x, model=ScatterGraphModel())
+    controller.create(None)
+    action = controller.widget.actions()[11]
+    assert action.text() == "Point Size"
 
-        self.assertTrue(controller.remove_additional_property(self.y))
-        self.assertIsNone(controller._y_proxy)
-        self.assertIsNone(controller._last_x_value)
-        self.assertEqual(len(controller._x_values), 0)
-        self.assertEqual(len(controller._y_values), 0)
+    path = "karabogui.controllers.display.scatter_graph.QInputDialog.getDouble"
+    mocker.patch(path, return_value=(2.7, True))
+    action.trigger()
+    assert controller.model.psize == 2.7
+    assert controller._plot.opts["size"] == 2.7
 
-        self.assertFalse(controller.remove_additional_property(self.y))
+
+def test_removal_property(scatter_graph_setup):
+    controller, x, y = scatter_graph_setup
+    controller = DisplayScatterGraph(proxy=x, model=ScatterGraphModel())
+    controller.create(None)
+    controller.visualize_additional_property(y)
+    # Put a few values
+    set_proxy_value(x, "x", 2.1)
+    set_proxy_value(y, "y", 3.2)
+    set_proxy_value(x, "x", 5.3)
+    set_proxy_value(y, "y", 4.6)
+
+    if not IS_WINDOWS_SYSTEM:
+        assert controller._last_x_value is not None
+        assert len(controller._x_values) > 0
+        assert len(controller._y_values) > 0
+
+    assert controller.remove_additional_property(y)
+    assert controller._y_proxy is None
+    assert controller._last_x_value is None
+    assert len(controller._x_values) == 0
+    assert len(controller._y_values) == 0
+
+    assert not controller.remove_additional_property(y)
