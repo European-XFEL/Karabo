@@ -21,7 +21,7 @@
  *    template<> class B<float, std::string>
  *    etc.
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 

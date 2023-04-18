@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <dennis.goeries@xfel.eu>
 # Created on June 10, 2020
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 
 from qtpy.QtCore import QLocale, QSize, Qt

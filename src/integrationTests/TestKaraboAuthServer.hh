@@ -3,7 +3,7 @@
  *
  * Created on 09.09.2022
  *
- * Copyright(C) European XFEL GmbH Hamburg.All rights reserved.
+ * Copyright(C) European XFEL GmbH Schenefeld.All rights reserved.
  */
 
 #ifndef TESTKARABOAUTHSERVER_HH

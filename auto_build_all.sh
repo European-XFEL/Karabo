@@ -3,7 +3,7 @@
 # Script for automated building and packaging of the entire karaboFramework.
 # Uses cmake 3.14+ for building the C++ components of the karaboFramework.
 #
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #
 
 # Help function for checking successful execution of commands

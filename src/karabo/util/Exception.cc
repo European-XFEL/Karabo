@@ -5,7 +5,7 @@
  *
  * Created on July 15, 2010, 11:17 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "Exception.hh"

@@ -5,7 +5,7 @@
  *
  * Created on November 6, 2015
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include <boost/algorithm/string/split.hpp>

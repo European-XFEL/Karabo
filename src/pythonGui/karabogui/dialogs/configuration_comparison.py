@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <dennis.goeries@xfel.eu>
 # Created on June 3, 2021
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from qtpy import uic
 from qtpy.QtCore import Qt, Slot

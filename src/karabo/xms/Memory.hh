@@ -6,7 +6,7 @@
  *
  * Created on June 05, 2012, 12:44 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_XMS_MEMORY_HH
