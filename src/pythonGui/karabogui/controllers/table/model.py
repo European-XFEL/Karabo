@@ -8,6 +8,7 @@ from qtpy.QtGui import QBrush, QColor
 from karabo.native import AccessMode, Hash
 from karabogui.binding.api import BoolBinding, VectorBinding, get_default_value
 from karabogui.indicators import get_state_color
+from karabogui.util import create_table_string
 
 from .utils import (
     create_mime_data, is_state_display_type, list2string, quick_table_copy,
@@ -80,7 +81,7 @@ class TableModel(QAbstractTableModel):
     def _build_tooltip(self, attributes):
         """Build a tooltip according to the attributes"""
         selection = ["displayedName", "defaultValue", "valueType",
-                     "description", "unitSymbol", "metricPrefixSymbol",
+                     "unitSymbol", "metricPrefixSymbol",
                      "minInc", "maxInc", "minExc", "maxExc", "options"]
         info = {}
         for akey in selection:
@@ -88,11 +89,11 @@ class TableModel(QAbstractTableModel):
             if avalue is not None:
                 info.update({akey: str(avalue)})
 
-        return ("<table>" +
-                "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
-                        format(attr, str(value))
-                        for attr, value in info.items())
-                + "</table>")
+        table = create_table_string(info)
+        if description := attributes.get("description"):
+            header = f"<center><i>{description}</i></center><hr>"
+            table = header + table
+        return table
 
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractTableModel"""
