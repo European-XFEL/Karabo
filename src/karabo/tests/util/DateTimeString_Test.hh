@@ -4,7 +4,7 @@
  *
  * Created on March 19, 2014, 11:01 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef DATETIMESTRING_TEST_HH

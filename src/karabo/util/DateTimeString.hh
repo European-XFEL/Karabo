@@ -4,7 +4,7 @@
  *
  * Created on March 19, 2014, 3:32 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_DATETIMESTRING_HH

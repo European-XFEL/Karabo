@@ -7,7 +7,7 @@
  * Created on July 1, 2011, 11:12 AM
  * Major re-design on January 30, 2013, 17:22 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_GENERIC_ELEMENT_HH

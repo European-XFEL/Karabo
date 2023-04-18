@@ -6,7 +6,7 @@
  *
  * Created on June 3, 2011, 9:47 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 

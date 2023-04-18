@@ -1,7 +1,7 @@
 #############################################################################
 # Author: degon & costar
 # Created on August 21, 2020, 11:42 AM
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import os
 import os.path as op

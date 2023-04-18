@@ -1,7 +1,7 @@
 /*
  * Author: <krzysztof.wrona@xfel.eu>
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARATHON_DIMSWRAP_HH

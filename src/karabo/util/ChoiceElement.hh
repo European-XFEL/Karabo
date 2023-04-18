@@ -8,7 +8,7 @@
  *
  * Major re-design on February 30, 2013, 17:22 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 
