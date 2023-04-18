@@ -1,8 +1,10 @@
+import pytest
+
 from karabo.common.scenemodel.api import build_model_config
 from karabo.native import Bool, Configurable, Int32
 from karabogui.binding.api import PropertyProxy, build_binding
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, get_property_proxy, set_proxy_value)
+    get_class_property_proxy, get_property_proxy, set_proxy_value)
 
 from ..multicurvegraph import DisplayMultiCurveGraph
 
@@ -13,93 +15,87 @@ class Object(Configurable):
     value = Int32()
 
 
-class TestMultiCurveGraph(GuiTestCase):
-    def setUp(self):
-        super(TestMultiCurveGraph, self).setUp()
+@pytest.fixture
+def multicurvegraph_setup(gui_app):
+    schema = Object.getClassSchema()
+    reset = get_class_property_proxy(schema, "reset")
+    device = reset.root_proxy
 
-        schema = Object.getClassSchema()
-        self.reset = get_class_property_proxy(schema, 'reset')
-        device = self.reset.root_proxy
+    index = PropertyProxy(root_proxy=device, path="index")
+    value = PropertyProxy(root_proxy=device, path="value")
 
-        self.index = PropertyProxy(root_proxy=device, path='index')
-        self.value = PropertyProxy(root_proxy=device, path='value')
+    controller = DisplayMultiCurveGraph(proxy=index)
+    controller.create(None)
+    controller.visualize_additional_property(reset)
+    controller.visualize_additional_property(value)
 
-        self.controller = DisplayMultiCurveGraph(proxy=self.index)
-        self.controller.create(None)
-        self.controller.visualize_additional_property(self.reset)
-        self.controller.visualize_additional_property(self.value)
+    yield controller, reset, index, value
 
-    def tearDown(self):
-        super(TestMultiCurveGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+    controller.destroy()
+    assert controller.widget is None
 
-    def test_set_value(self):
-        self.assertEqual(len(self.controller._curves), 1)
-        set_proxy_value(self.index, 'index', 1)
-        set_proxy_value(self.value, 'value', 42)
-        # The x-proxy does not have a curve
-        empty = self.controller._curves.get(self.index)
-        self.assertIsNone(empty)
-        curve = self.controller._curves.get(self.value)
-        self.assertIsNotNone(curve)
-        self.assertEqual(list(curve.xData), [1.0])
-        self.assertEqual(list(curve.yData), [42.0])
-        set_proxy_value(self.index, 'index', 2)
-        set_proxy_value(self.value, 'value', 37)
-        self.assertEqual(list(curve.xData), [1.0, 2.0])
-        self.assertEqual(list(curve.yData), [42.0, 37.0])
 
-        # Reset the curve
-        set_proxy_value(self.reset, 'reset', True)
-        curve = self.controller._curves.get(self.value)
-        self.assertIsNotNone(curve)
+def test_set_value(multicurvegraph_setup):
+    controller, reset, index, value = multicurvegraph_setup
+    assert len(controller._curves) == 1
+    set_proxy_value(index, "index", 1)
+    set_proxy_value(value, "value", 42)
+    empty = controller._curves.get(index)
+    assert empty is None
+    curve = controller._curves.get(value)
+    assert curve is not None
+    assert list(curve.xData) == [1.0]
+    assert list(curve.yData) == [42.0]
+    set_proxy_value(index, "index", 2)
+    set_proxy_value(value, "value", 37)
+    assert list(curve.xData) == [1.0, 2.0]
+    assert list(curve.yData) == [42.0, 37.0]
 
-        # None curve in PyQtGraph >= 0.11.1
-        empty_x = curve.xData is None or list(curve.xData) == []
-        empty_y = curve.yData is None or list(curve.yData) == []
-        self.assertTrue(empty_x)
-        self.assertTrue(empty_y)
+    set_proxy_value(reset, "reset", True)
+    curve = controller._curves.get(value)
+    assert curve is not None
 
-        # Slightly refill the curve
-        set_proxy_value(self.value, 'value', 42)
-        curve = self.controller._curves.get(self.value)
+    empty_x = curve.xData is None or list(curve.xData) == []
+    empty_y = curve.yData is None or list(curve.yData) == []
+    assert empty_x
+    assert empty_y
 
-        empty = curve.yData is None or list(curve.yData) == []
-        self.assertTrue(empty)
-        # No data, we have to list the synchronizer first
-        set_proxy_value(self.index, 'index', 1)
-        self.assertEqual(list(curve.yData), [42.0])
+    set_proxy_value(value, "value", 42)
+    curve = controller._curves.get(value)
 
-    def test_visualize_additional_nobinding(self):
-        proxy = get_property_proxy(None, 'value', 'TestDevice2')
-        assert self.controller.visualize_additional_property(proxy)
-        self.assertEqual(len(self.controller._curves), 1)
-        build_binding(Object.getClassSchema(),
-                      existing=proxy.root_proxy.binding)
-        self.assertEqual(len(self.controller._curves), 2)
+    empty = curve.yData is None or list(curve.yData) == []
+    assert empty
+    set_proxy_value(index, "index", 1)
+    assert list(curve.yData) == [42.0]
 
-    def test_configuration(self):
-        """
-        The controller should have the default and non-empty configuration .
-        """
-        default_config = build_model_config(self.controller.model)
-        configuration = self.controller.widget.configuration
-        assert configuration
-        assert configuration == default_config
 
-    def test_remove_proxy(self):
-        controller = self.controller
-        # Remove reset proxy
-        assert controller.remove_additional_property(self.reset)
-        assert controller._reset_proxy is None
+def test_visualize_additional_nobinding(multicurvegraph_setup):
+    controller, _, _, value = multicurvegraph_setup
+    proxy = get_property_proxy(None, "value", "TestDevice2")
+    assert controller.visualize_additional_property(proxy)
+    assert len(controller._curves) == 1
+    build_binding(Object.getClassSchema(),
+                  existing=proxy.root_proxy.binding)
+    assert len(controller._curves) == 2
 
-        legend = controller.widget._legend
-        assert legend.isVisible()
 
-        # Remove the last additional proxy
-        assert controller._curves.get(self.value)
-        assert controller.remove_additional_property(self.value)
-        # Check if the curve is removed
-        assert controller._curves.get(self.value) is None
-        assert not legend.isVisible()
+def test_configuration(multicurvegraph_setup):
+    controller, _, _, _ = multicurvegraph_setup
+    default_config = build_model_config(controller.model)
+    configuration = controller.widget.configuration
+    assert configuration
+    assert configuration == default_config
+
+
+def test_remove_proxy(multicurvegraph_setup):
+    controller, reset, _, value = multicurvegraph_setup
+    assert controller.remove_additional_property(reset)
+    assert controller._reset_proxy is None
+
+    legend = controller.widget._legend
+    assert legend.isVisible()
+
+    assert controller._curves.get(value)
+    assert controller.remove_additional_property(value)
+    assert controller._curves.get(value) is None
+    assert not legend.isVisible()
