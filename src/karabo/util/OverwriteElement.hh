@@ -7,7 +7,7 @@
  *
  * Major re-design on February 1, 2013, 1:00 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_OVERWRITEELEMENT_HH

@@ -3,7 +3,7 @@
  *
  * Created on November 14, 2019, 9:57 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_NET_INFLUXDBCLIENT_HH

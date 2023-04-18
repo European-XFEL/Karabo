@@ -5,7 +5,7 @@
  *
  * Created on December 21, 2011, 10:37 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_CORE_CORE_HH
