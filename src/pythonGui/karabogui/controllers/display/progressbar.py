@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <alessandro.silenzi@xfel.eu>
 # Created on October 26, 2017
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QAction, QProgressBar

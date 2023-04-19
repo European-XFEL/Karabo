@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <dennis.goeries@xfel.eu>
 # Created on November 8, 2021
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 
 from enum import IntEnum

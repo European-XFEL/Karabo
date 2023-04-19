@@ -3,7 +3,7 @@
  *
  * Author: <burkhard.heisen@xfel.eu>
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "DataLogger.hh"

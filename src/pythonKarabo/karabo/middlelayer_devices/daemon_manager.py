@@ -1,7 +1,7 @@
 #############################################################################
 # Author: degon
 # Created on November, 2019, 01:06 PM
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import json
 from asyncio import CancelledError

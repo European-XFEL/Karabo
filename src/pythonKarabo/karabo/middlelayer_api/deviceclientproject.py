@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on September 9, 2014
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 
 """ This module contains a class which represents the project related

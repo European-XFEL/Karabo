@@ -4,7 +4,7 @@
  *
  * Created on February 11, 2016, 10:30 AM
  *
- *  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ *  * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_NET_UTILS_HH

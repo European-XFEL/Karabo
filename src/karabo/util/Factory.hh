@@ -4,7 +4,7 @@
  *
  * Created on August 26, 2012, 6:22 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef FOOCONBAR_FACTORY_H

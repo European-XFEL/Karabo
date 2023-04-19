@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on July 11, 2016
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from abc import abstractmethod
 from functools import partial

@@ -3,7 +3,7 @@
  *
  * Created on November 4, 2019, 9:09 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 

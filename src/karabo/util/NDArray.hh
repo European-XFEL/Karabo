@@ -2,6 +2,9 @@
  * Author: <burkhard.heisen@xfel.eu>
  *
  * Created on March 23, 2015, 10:17 AM
+ *
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ *
  */
 
 #ifndef KARABO_UTIL_NDARRAY_HH

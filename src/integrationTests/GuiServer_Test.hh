@@ -1,7 +1,9 @@
 /*
  * File:   GuiServer_Test.hh
  * Author: alessandro.silenzi@xfel.eu
-
+ *
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ *
  */
 
 #ifndef GUISERVER_TEST_HH

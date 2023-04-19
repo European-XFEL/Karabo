@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on May 12, 2017
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from traits.api import Dict, HasStrictTraits, Property, String
 

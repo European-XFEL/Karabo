@@ -6,7 +6,7 @@
  *
  * Created on August 19, 2010, 8:14 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "StringTools.hh"

@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <john.wiggins@xfel.eu>
 # Created on August 8, 2017
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from enum import Enum
 

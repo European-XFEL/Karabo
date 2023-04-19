@@ -1,7 +1,7 @@
 /**
  * Author: steffen.hauf@xfel.eu
  *
- * Copyright (c) 2010-2019 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
  *
  */
 

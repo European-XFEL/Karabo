@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <dennis.goeries@xfel.eu>
 # Created on October 27, 2012
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from datetime import datetime
 
