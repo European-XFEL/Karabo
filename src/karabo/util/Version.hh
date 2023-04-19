@@ -3,7 +3,7 @@
  *
  * Created on February 10, 2014, 3:58 PM
  *
- * Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_VERSION_HH

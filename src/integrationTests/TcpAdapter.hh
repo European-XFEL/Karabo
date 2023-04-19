@@ -5,7 +5,7 @@
  *
  * Created on June, 2016, 03:03 PM
  *
- * Copyright (c) 2010-2013 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_TCPADAPTERDEVICE_HH

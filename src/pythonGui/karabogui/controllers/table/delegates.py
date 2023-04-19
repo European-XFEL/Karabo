@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <dennis.goeries@xfel.eu>
 # Created on March 6, 2021
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import webbrowser
 

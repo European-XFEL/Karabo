@@ -107,7 +107,7 @@ class Runner(object):
         print(" #                   Karabo Device Server")
         print(" #")
         print(
-            " # Copyright (C) European XFEL GmbH Hamburg. "
+            " # Copyright (C) European XFEL GmbH Schenefeld. "
             "All rights reserved.")
         print(" ############################################################"
               "####\n")

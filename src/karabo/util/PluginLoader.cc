@@ -6,7 +6,7 @@
  *
  * Created on October 4, 2010, 6:16 PM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef _WIN32

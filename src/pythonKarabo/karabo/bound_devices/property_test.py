@@ -2,7 +2,7 @@
 
 __author__ = "gero.flucke@xfel.eu"
 __date__ = "September, 2017, 13:45 PM"
-__copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
+__copyright__ = """Copyright (c) European XFEL GmbH Schenefeld.
 All rights reserved."""
 
 import threading

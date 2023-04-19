@@ -9,7 +9,7 @@
  * Major update on January 17, 2013 9:00 AM
  * Contributions by: <djelloul.boukhelef@xfel.eu>
  *
- * Copyright (C) 2010 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) 2010 European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_TYPES_HH

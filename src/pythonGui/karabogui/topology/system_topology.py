@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <john.wiggins@xfel.eu>
 # Created on January 10, 2017
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from traits.api import (
     Bool, Dict, HasStrictTraits, Instance, Property, on_trait_change)

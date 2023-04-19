@@ -3,7 +3,7 @@
  *
  * Author: <andrea.parenti@xfel.eu>
  *
- * Copyright (c) 2010-2013 European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "ByteSwap.hh"

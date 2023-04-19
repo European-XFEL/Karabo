@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <martin.teichmann@xfel.eu>
 # Created in June 2014
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor

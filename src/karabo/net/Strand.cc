@@ -5,7 +5,7 @@
  *
  * Created on November 10, 2017, 9:24 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  *
  */
 

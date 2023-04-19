@@ -1,6 +1,6 @@
 /*
  * File:   Broker.hh
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  * Created on May 4, 2020, 8:27 AM
  */
 
