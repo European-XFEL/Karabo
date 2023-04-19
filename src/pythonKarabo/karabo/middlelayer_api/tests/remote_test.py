@@ -18,8 +18,7 @@ from karabo.middlelayer import (
     getInstanceInfo, getSchema, getTimeInfo, isAlive, isSet, lock, setNoWait,
     setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
 from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, event_loop, run_test)
-from karabo.middlelayer_api.broker import mqtt
+    AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
 from karabo.middlelayer_api.logger import CacheLog
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -540,10 +539,8 @@ async def test_setnowait(deviceTest):
     setNoWait(d, value=200, counter=300 * unit.mm)
     assert remote.value == 0
     assert remote.counter == 0
-    if mqtt:
-        await sleep(0.2)
-    else:
-        await sleep(0.1)
+    await sleepUntil(lambda: d.value == 200)
+    await sleepUntil(lambda: d.counter == 300)
     assert remote.value == 200
     assert remote.counter == 300
 
@@ -641,8 +638,7 @@ async def test_waituntilnew(deviceTest):
         # had been a bug before
         assert d.counter == None # noqa
         assert d.nested.val == None # noqa
-        if not mqtt:
-            await waitUntilNew(d.value, d.counter, d.nested.val)
+        await waitUntilNew(d.value, d.counter, d.nested.val)
         task = ensure_future(d.count())
         try:
             i = 0
@@ -664,8 +660,6 @@ async def test_waituntildevice(deviceTest):
     remote.counter = -1
     await sleep(2)
     with (await getDevice("remote")) as d:
-        if mqtt:
-            await updateDevice(d)
         d.counter = 0
         await sleep(0.1)
         task = ensure_future(d.count())
@@ -686,8 +680,6 @@ async def test_collect(deviceTest):
     """test that multiple settings are gathered into one"""
     remote = deviceTest["remote"]
     with (await getDevice("remote")) as d:
-        if mqtt:
-            await updateDevice(d)
         d.once = 3
         d.once = 7
         d.once = 10
