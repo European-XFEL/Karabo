@@ -1,0 +1,15 @@
+#!/bin/bash
+echo "Looking for Karabp RabbitMQ docker container"
+
+CONTAINER=karabo_rabbitmq
+
+docker ps --filter name=$CONTAINER | grep $CONTAINER > /dev/null
+if [[ $? -eq 0 ]]; then
+    echo "Found existing container, stopping ..."
+    docker container kill $CONTAINER > /dev/null
+else
+    echo "No Karabo RabbitMQ docker container instance found ..."
+fi
+
+# Force a clean returncode
+exit 0
