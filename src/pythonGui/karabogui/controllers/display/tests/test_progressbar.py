@@ -1,10 +1,9 @@
+import pytest
 from qtpy.QtCore import Qt
 
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabo.native import Configurable, Float, Int8
-from karabogui.binding.api import build_binding
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..progressbar import NULL_RANGE, PROGRESS_MAX, DisplayProgressBar
 
@@ -17,47 +16,56 @@ class ObjectWithoutLimits(Configurable):
     prop = Int8()
 
 
-class TestDisplayProgressBar(GuiTestCase):
-    def setUp(self):
-        super(TestDisplayProgressBar, self).setUp()
+@pytest.fixture
+def progressbar_setup(gui_app):
+    schema = Object.getClassSchema()
+    model = DisplayProgressBarModel(is_vertical=True)
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = DisplayProgressBar(proxy=proxy, model=model)
+    controller.create(None)
+    yield controller, proxy, model
 
-        schema = Object.getClassSchema()
-        self.model = DisplayProgressBarModel(is_vertical=True)
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = DisplayProgressBar(proxy=self.proxy,
-                                             model=self.model)
-        self.controller.create(None)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
 
-    def tearDown(self):
-        super(TestDisplayProgressBar, self).tearDown()
-        self.controller.destroy()
-        assert self.controller.widget is None
 
-    def test_widget(self):
-        controller = DisplayProgressBar(proxy=self.proxy, model=self.model)
-        controller.create(None)
-        assert controller.widget.minimum() == 0
-        assert controller.widget.maximum() == PROGRESS_MAX
+def test_widget(progressbar_setup):
+    controller, _, _ = progressbar_setup
+    assert controller.widget.minimum() == 0
+    assert controller.widget.maximum() == PROGRESS_MAX
 
-    def test_orientation(self):
-        assert self.controller.widget.orientation() == Qt.Vertical
 
-        # Trigger the orientation changing action
-        action = self.controller.widget.actions()[0]
-        assert action.text() == 'Change Orientation'
+def test_orientation(progressbar_setup):
+    controller, _, _ = progressbar_setup
+    assert controller.widget.orientation() == Qt.Vertical
 
-        action.trigger()
-        assert self.controller.widget.orientation() == Qt.Horizontal
+    # Trigger the orientation changing action
+    action = controller.widget.actions()[0]
+    assert action.text() == "Change Orientation"
 
-    def test_set_value(self):
-        # value range is [-2, 4]; 1.0 is the middle
-        set_proxy_value(self.proxy, 'prop', 1.0)
-        assert self.controller.widget.value() == PROGRESS_MAX * 0.5
+    action.trigger()
+    assert controller.widget.orientation() == Qt.Horizontal
 
-    def test_no_limits_messagebox(self):
-        schema = ObjectWithoutLimits.getClassSchema()
-        build_binding(schema, existing=self.proxy.root_proxy.binding)
 
-        assert self.controller.widget.minimum() == 0
-        assert self.controller.widget.maximum() == 0
-        assert self.controller._value_factors == NULL_RANGE
+def test_set_value(progressbar_setup):
+    controller, proxy, _ = progressbar_setup
+    # value range is [-2, 4]; 1.0 is the middle
+    set_proxy_value(proxy, "prop", 1.0)
+    assert controller.widget.value() == PROGRESS_MAX * 0.5
+
+
+def test_no_limits_messagebox(gui_app):
+    schema = ObjectWithoutLimits.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    model = DisplayProgressBarModel(is_vertical=True)
+    controller = DisplayProgressBar(proxy=proxy, model=model)
+    controller.create(None)
+
+    assert controller.widget.minimum() == 0
+    assert controller.widget.maximum() == 0
+    assert controller._value_factors == NULL_RANGE
+
+    # tear down
+    controller.destroy()
+    assert controller.widget is None
