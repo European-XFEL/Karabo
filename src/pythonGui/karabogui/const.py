@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on November 7, 2011
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import socket
 from os import environ, getpid, path

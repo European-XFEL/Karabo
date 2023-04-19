@@ -1,7 +1,7 @@
 #############################################################################
 # Author: <john.wiggins@xfel.eu>
 # Created on October 21, 2016
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #############################################################################
 import os
 import os.path as op
