@@ -1,6 +1,6 @@
 /*
  * File:   MqttBroker.hh
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  * Created on June 27, 2020, 9:23 PM
  */
 
