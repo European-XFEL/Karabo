@@ -6,7 +6,7 @@
  *
  * Created on November 2, 2010, 9:47 AM
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "Connection.hh"

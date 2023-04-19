@@ -7,7 +7,7 @@
  *
  * Created on August, 11, 2022.
  *
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_NET_USERAUTHCLIENT_HH

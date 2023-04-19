@@ -1,5 +1,5 @@
 /**
- * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  *
  * The main logic of the managing of the data loggers and of the devices that they should log is as follows:
  * * Register handlers for new and gone instances before topology gathering starts.
