@@ -29,7 +29,8 @@ from karabo.middlelayer_api.device_client import (
     listConfigurationFromName, listDevicesWithConfiguration, lock,
     saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
-from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
+from karabo.middlelayer_api.device_server import (
+    DeviceServerBase, MiddleLayerDeviceServer)
 from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.eventloop import (
     EventLoop, KaraboFuture, NoEventLoop, global_sync, synchronize,
