@@ -1,18 +1,16 @@
 import operator
-from unittest import mock
 
 from qtpy.QtGui import QPixmap
 
 from karabo.common.scenemodel.api import (
     DigitIconsModel, IconData, SelectionIconsModel, TextIconsModel)
 from karabo.native import Configurable, Int32, String
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..icons import DigitIcons, SelectionIcons, TextIcons
 
 NUM_OPTIONS = [1, 2, 3, 4]
-TEXT_OPTIONS = ['foo', 'bar', 'baz', 'qux']
+TEXT_OPTIONS = ["foo", "bar", "baz", "qux"]
 
 ICON_ITEM_PATH = "karabogui.controllers.icons_dialogs.IconItem"
 
@@ -40,128 +38,97 @@ def _text_model():
     return TextIconsModel(values=values)
 
 
-class TestDigitIcons(GuiTestCase):
-    def setUp(self):
-        super(TestDigitIcons, self).setUp()
+def _assert_current_item(controller, proxy, mocker, value,
+                         valid=True, changed=True, digit_icon=False):
+    # Save a reference on the previous item
+    current_item = controller.current_item
 
-        schema = NumberObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = DigitIcons(proxy=self.proxy, model=_digits_model())
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
-        self.assertIsNone(self.controller.current_item)
+    # Set the proxy with mocked icon item to avoid pixmap problems
+    method_path = ICON_ITEM_PATH + "._load_pixmap"
+    mocker.patch(method_path, return_value=QPixmap())
+    set_proxy_value(proxy, "prop", value)
 
-    def tearDown(self):
-        super(TestDigitIcons, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+    if not valid:
+        assert controller.current_item is None
+        return
 
-    def test_set_value(self):
-        self._assert_current_item(2, changed=True)
-        self._assert_current_item(1, changed=False)
-        self._assert_current_item(3, changed=True)
-        self._assert_current_item(4, valid=False)
+    if changed:
+        assert current_item is not controller.current_item
+    else:
+        assert current_item is controller.current_item
 
-    def _assert_current_item(self, value, valid=True, changed=True):
-        # Save a reference on the previous item
-        current_item = self.controller.current_item
+    current_item = controller.current_item
+    assert current_item is not None
 
-        # Set the proxy with mocked icon item to avoid pixmap problems
-        method_path = ICON_ITEM_PATH + "._load_pixmap"
-        with mock.patch(method_path, return_value=QPixmap()):
-            set_proxy_value(self.proxy, 'prop', value)
-
-        if not valid:
-            self.assertIsNone(self.controller.current_item)
-            return
-
-        assert_same = self.assertIsNot if changed else self.assertIs
-        assert_same(current_item, self.controller.current_item)
-        current_item = self.controller.current_item
-        self.assertIsNotNone(current_item)
+    if digit_icon:
         compare = operator.le if current_item.equal else operator.lt
-        self.assertTrue(compare(value, float(current_item.value)))
+        assert compare(value, float(current_item.value))
+    else:
+        assert value == current_item.value
 
 
-class TestSelectionIcons(GuiTestCase):
-    def setUp(self):
-        super(TestSelectionIcons, self).setUp()
+def test_digit_icons(gui_app, mocker):
+    # set up
+    schema = NumberObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = DigitIcons(proxy=proxy, model=_digits_model())
+    controller.create(None)
+    assert controller.widget is not None
+    assert controller.current_item is None
 
-        schema = StringObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = SelectionIcons(proxy=self.proxy,
-                                         model=_selection_model())
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
-        self.assertIsNone(self.controller.current_item)
+    # set values
+    _assert_current_item(controller, proxy, mocker, 2, changed=True,
+                         digit_icon=True)
+    _assert_current_item(controller, proxy, mocker, 1, changed=False,
+                         digit_icon=True)
+    _assert_current_item(controller, proxy, mocker, 3, changed=True,
+                         digit_icon=True)
+    _assert_current_item(controller, proxy, mocker, 4, valid=False,
+                         digit_icon=True)
 
-    def tearDown(self):
-        super(TestSelectionIcons, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
-
-    def test_set_value(self):
-        self._assert_current_item('foo', changed=True)
-        self._assert_current_item('foo', changed=False)
-        self._assert_current_item('bar', changed=True)
-
-        # widget will automatically create the items for each option
-        self._assert_current_item('qux', changed=True)
-
-    def _assert_current_item(self, value, changed=True):
-        # Save a reference on the previous item
-        current_item = self.controller.current_item
-
-        # Set the proxy with mocked icon item to avoid pixmap problems
-        method_path = ICON_ITEM_PATH + "._load_pixmap"
-        with mock.patch(method_path, return_value=QPixmap()):
-            set_proxy_value(self.proxy, 'prop', value)
-
-        assert_same = self.assertIsNot if changed else self.assertIs
-        assert_same(current_item, self.controller.current_item)
-        current_item = self.controller.current_item
-        self.assertIsNotNone(current_item)
-        self.assertEqual(value, current_item.value)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
 
 
-class TestTextIcons(GuiTestCase):
-    def setUp(self):
-        super(TestTextIcons, self).setUp()
+def test_selection_icons(gui_app, mocker):
+    # setup
+    schema = StringObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = SelectionIcons(proxy=proxy, model=_selection_model())
+    controller.create(None)
+    assert controller.widget is not None
+    assert controller.current_item is None
 
-        schema = StringObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = TextIcons(proxy=self.proxy, model=_text_model())
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
+    # set values
+    _assert_current_item(controller, proxy, mocker, "foo", changed=True)
+    _assert_current_item(controller, proxy, mocker, "foo", changed=False)
+    _assert_current_item(controller, proxy, mocker, "bar", changed=True)
 
-    def tearDown(self):
-        super(TestTextIcons, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+    # widget will automatically create the items for each option
+    _assert_current_item(controller, proxy, mocker, "qux", changed=True)
 
-    def test_set_value(self):
-        self._assert_current_item('foo', changed=True)
-        self._assert_current_item('foo', changed=False)
-        self._assert_current_item('bar', changed=True)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
 
-        # widget will NOT automatically create the items for each option
-        self._assert_current_item('qux', valid=False)
 
-    def _assert_current_item(self, value, valid=True, changed=True):
-        # Save a reference on the previous item
-        current_item = self.controller.current_item
+def test_text_icons(gui_app, mocker):
+    # setup
+    schema = StringObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = TextIcons(proxy=proxy, model=_text_model())
+    controller.create(None)
+    assert controller.widget is not None
 
-        # Set the proxy with mocked icon item to avoid pixmap problems
-        method_path = ICON_ITEM_PATH + "._load_pixmap"
-        with mock.patch(method_path, return_value=QPixmap()):
-            set_proxy_value(self.proxy, 'prop', value)
+    # set value
+    _assert_current_item(controller, proxy, mocker, "foo", changed=True)
+    _assert_current_item(controller, proxy, mocker, "foo", changed=False)
+    _assert_current_item(controller, proxy, mocker, "bar", changed=True)
 
-        if not valid:
-            self.assertIsNone(self.controller.current_item)
-            return
+    # widget will NOT automatically create the items for each option
+    _assert_current_item(controller, proxy, mocker, "qux", valid=False)
 
-        assert_same = self.assertIsNot if changed else self.assertIs
-        assert_same(current_item, self.controller.current_item)
-        current_item = self.controller.current_item
-        self.assertIsNotNone(current_item)
-        self.assertEqual(value, current_item.value)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
