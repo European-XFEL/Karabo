@@ -10,7 +10,7 @@ function startRabbitMQ() {
   docker images $IMAGE --format "{{.Repository}}:{{.Tag}}" | grep $IMAGE > /dev/null
   if [[ $? -ne 0 ]]; then
     # pull in case we miss this image
-    docker pull $IMAGE 
+    docker pull $IMAGE
     if [[ $? -ne 0 ]]; then
       echo "ERROR: is docker installed?"
       exit 1
@@ -35,8 +35,16 @@ function startRabbitMQ() {
     echo "---------------------------------------------------------------"
     echo "RabbitMQ broker was started in a container."
     echo ""
-    echo "You can access its web admin at: \"http://localhost:15672\""
+    echo "You can access its administration interface at: \"http://localhost:15672\""
     echo "The user and the password for the web admin are both \"karabo\""
+    echo ""
+    echo "For your Karabo installation to use the broker, please set the KARABO_BROKER"
+    echo "environment variable to \"amqp://karabo:karabo@localhost:5672\"."
+    echo ""
+    echo "The KARABO_BROKER environment variable can be set in a permanent way by"
+    echo "editing the file \"\$KARABO/var/environment/KARABO_BROKER\"."
+    echo ""
+
     exit 0
   else
     echo "----------------------------------------------"
