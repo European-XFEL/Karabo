@@ -13,12 +13,13 @@ from asyncio import (
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
-from karabo.middlelayer_api.broker import Broker
+from karabo.middlelayer_api.broker import Broker, check_broker_scheme
 from karabo.native import KaraboValue, unit_registry as unit
 
 # Number of threads that can be scheduled in the thread pool executor.
 _NUM_THREADS = 200
 _SYNC_LOOP = False
+_DEFAULT_HOSTS = "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777"
 
 
 def set_global_sync():
@@ -258,6 +259,9 @@ class EventLoop(SelectorEventLoop):
         self.set_default_executor(self._default_executor)
         self.set_exception_handler(EventLoop.exceptionHandler)
 
+        self.hosts = os.environ.get("KARABO_BROKER", _DEFAULT_HOSTS).split(',')
+        check_broker_scheme(self.hosts)
+
     def exceptionHandler(self, context):
         try:
             instance = context["future"].instance()
@@ -270,10 +274,8 @@ class EventLoop(SelectorEventLoop):
             self.default_exception_handler(context)
 
     def getBroker(self, deviceId, classId, broadcast):
-        hosts = os.environ.get("KARABO_BROKER",
-                               "tcp://exfl-broker.desy.de:7777,"
-                               "tcp://localhost:7777").split(',')
-        self.connection, Cls = Broker.create_connection(hosts, self.connection)
+        self.connection, Cls = Broker.create_connection(
+            self.hosts, self.connection)
         return Cls(self, deviceId, classId, broadcast)
 
     def create_task(self, coro, instance=None, name=None):
