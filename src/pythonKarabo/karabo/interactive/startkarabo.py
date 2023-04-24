@@ -345,13 +345,23 @@ def gnometermlog():
         print("'gnome-terminal' cannot be found - abort!")
         print("Try to use 'karabo-xterm' instead.")
         return 1
+    use_lnav = False
+    if shutil.which("lnav") is not None:
+        use_lnav = True
     servers = [fn for fn in defaultall()
                if isexecutable(osp.join(fn, "log", "run"))]
-    cmd = sum((["--tab", "-e",
-                r'bash -c "echo -en \\\e]0\;{0}\\\a;'  # set tab title
-                'tail -n 100 -F $KARABO/var/log/{0}/current"'
-                .format(s)]
-               for s in servers), ["gnome-terminal"])
+    if use_lnav:
+        cmd = sum((["--tab", "-e",
+                    r'bash -c "echo -en \\\e]0\;{0}\\\a;'  # set tab title
+                    'lnav $KARABO/var/log/{0}/current"'
+                    .format(s)]
+                   for s in servers), ["gnome-terminal"])
+    else:
+        cmd = sum((["--tab", "-e",
+                    r'bash -c "echo -en \\\e]0\;{0}\\\a;'  # set tab title
+                    'tail -n 100 -F $KARABO/var/log/{0}/current"'
+                    .format(s)]
+                   for s in servers), ["gnome-terminal"])
     os.execvp("gnome-terminal", cmd)
 
 
@@ -369,12 +379,19 @@ def xtermlog():
     if shutil.which("xterm") is None:
         print("'xterm' cannot be found - abort!")
         return 1
+    use_lnav = False
+    if shutil.which("lnav") is not None:
+        use_lnav = True
     servers = [fn for fn in defaultall()
                if isexecutable(osp.join(fn, "log", "run"))]
     for server in servers:
-        # Capital '-F' to follow renaming - 'current' is a rolling  log file
-        subprocess.Popen(["xterm", "-T", server, "-e", "tail", "-n", "100",
-                          "-F", absolute("var", "log", server, "current")])
+        if use_lnav:
+            subprocess.Popen(["xterm", "-T", server, "-e", "lnav",
+                              absolute("var", "log", server, "current")])
+        else:
+            # Capital '-F' to follow renaming - 'current' is a rolling log file
+            subprocess.Popen(["xterm", "-T", server, "-e", "tail", "-n", "100",
+                              "-F", absolute("var", "log", server, "current")])
 
 
 server_template = """#!/bin/bash
