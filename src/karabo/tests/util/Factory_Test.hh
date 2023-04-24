@@ -4,7 +4,7 @@
  *
  * Created on August 26, 2012, 7:20 PM
  *
- * © Copyright 2012 Burkhard C. Heisen
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_FACTORY_TEST_HH

@@ -3,7 +3,7 @@
  *
  * Created on March 23, 2015, 10:17 AM
  *
- * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  *
  */
 

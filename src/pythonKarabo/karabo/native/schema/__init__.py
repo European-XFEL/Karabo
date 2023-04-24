@@ -1,6 +1,6 @@
 """The karabo schema package.
-Copyright (c) European X-Ray Free-Electron Laser Facility GmbH Schenefeld.
-All rights reserved.
+
+Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """
 # flake8: noqa
 __version__ = "0.1.0"
