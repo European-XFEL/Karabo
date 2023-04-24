@@ -1,8 +1,8 @@
 import numpy as np
+import pytest
 
 from karabo.native import Configurable, Double, Hash, NDArray, VectorFloat
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..vector_hist_graph import VectorHistogramGraph
 
@@ -18,68 +18,67 @@ class NDArrayObject(Configurable):
         dtype=Double)
 
 
-class TestVectorHistGraph(GuiTestCase):
-    def setUp(self):
-        super(TestVectorHistGraph, self).setUp()
-        schema = VectorObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = VectorHistogramGraph(proxy=self.proxy)
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
-
-    def tearDown(self):
-        super(TestVectorHistGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
-
-    def test_hist_basics(self):
-        self.controller.model.auto = False
-        self.controller.model.start = 0
-        self.controller.model.stop = 10
-        set_proxy_value(self.proxy, 'prop', [1, 2, 2, 3, 3, 3, 3, 8])
-        curve = self.controller._plot
-        x, y = curve.getData()
-        np.testing.assert_array_almost_equal(
-            x, [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
-        np.testing.assert_array_almost_equal(y, [0, 1, 2, 4, 0, 0, 0, 0, 1, 0])
-
-    def test_hist_empty(self):
-        self.controller.model.auto = False
-        self.controller.model.start = 0
-        self.controller.model.stop = 10
-        set_proxy_value(self.proxy, 'prop', [])
-        curve = self.controller._plot
-        x, y = curve.getData()
-        self.assertIsNone(x)
-        self.assertIsNone(y)
+@pytest.fixture
+def vector_hist_setup(gui_app):
+    schema = VectorObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = VectorHistogramGraph(proxy=proxy)
+    controller.create(None)
+    assert controller.widget is not None
+    yield controller, proxy
+    controller.destroy()
+    assert controller.widget is None
 
 
-class TestsNDArrayHistGraph(GuiTestCase):
-    def setUp(self):
-        super(TestsNDArrayHistGraph, self).setUp()
-        schema = NDArrayObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = VectorHistogramGraph(proxy=self.proxy)
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
+def test_vector_hist_basics(vector_hist_setup):
+    controller, proxy = vector_hist_setup
+    controller.model.auto = False
+    controller.model.start = 0
+    controller.model.stop = 10
+    set_proxy_value(proxy, "prop", [1, 2, 2, 3, 3, 3, 3, 8])
+    curve = controller._plot
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(
+        x, [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
+    np.testing.assert_array_almost_equal(y, [0, 1, 2, 4, 0, 0, 0, 0, 1, 0])
 
-    def tearDown(self):
-        super(TestsNDArrayHistGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
 
-    def test_hist_basics(self):
-        self.controller.model.auto = False
-        self.controller.model.start = 0
-        self.controller.model.stop = 10
-        value = np.array([1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 8.1, 9.2, 10.1],
-                         dtype=np.float64)
-        array_hash = Hash('type', 20,
-                          'data', value.tobytes())
-        set_proxy_value(self.proxy, 'prop', array_hash)
+def test_vector_hist_empty(vector_hist_setup):
+    controller, proxy = vector_hist_setup
+    controller.model.auto = False
+    controller.model.start = 0
+    controller.model.stop = 10
+    set_proxy_value(proxy, "prop", [])
+    curve = controller._plot
+    x, y = curve.getData()
+    assert x is None
+    assert y is None
 
-        curve = self.controller._plot
-        x, y = curve.getData()
-        np.testing.assert_array_almost_equal(
-            x, [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
-        np.testing.assert_array_almost_equal(y, [9, 1, 9, 0, 0, 0, 0, 0, 0, 0])
+
+def test_array_hist_basics(gui_app):
+    # setup
+    schema = NDArrayObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = VectorHistogramGraph(proxy=proxy)
+    controller.create(None)
+    assert controller.widget is not None
+
+    # test body
+    controller.model.auto = False
+    controller.model.start = 0
+    controller.model.stop = 10
+    value = np.array([1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 8.1, 9.2, 10.1],
+                     dtype=np.float64)
+    array_hash = Hash("type", 20,
+                      "data", value.tobytes())
+    set_proxy_value(proxy, "prop", array_hash)
+
+    curve = controller._plot
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(
+        x, [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
+    np.testing.assert_array_almost_equal(y, [9, 1, 9, 0, 0, 0, 0, 0, 0, 0])
+
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
