@@ -1,8 +1,7 @@
 import numpy as np
 
 from karabo.native import Configurable, VectorInt32
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..vector_fill_graph import DisplayVectorFillGraph
 
@@ -11,24 +10,21 @@ class Object(Configurable):
     value = VectorInt32()
 
 
-class TestDisplayVectorFill(GuiTestCase):
-    def setUp(self):
-        super().setUp()
+def test_vector_fill_basics(gui_app):
+    # setup
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "value")
+    controller = DisplayVectorFillGraph(proxy=proxy)
+    controller.create(None)
+    assert controller.widget is not None
 
-        schema = Object.getClassSchema()
-        self.value = get_class_property_proxy(schema, 'value')
-        self.controller = DisplayVectorFillGraph(proxy=self.value)
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
+    # test body
+    value = [2, 4, 6]
+    set_proxy_value(proxy, "value", value)
+    curve = controller._plot
+    assert curve is not None
+    np.testing.assert_array_equal(curve.yData, value)
 
-    def tearDown(self):
-        super().tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
-
-    def test_vector_fill_basics(self):
-        value = [2, 4, 6]
-        set_proxy_value(self.value, 'value', value)
-        curve = self.controller._plot
-        self.assertIsNotNone(curve)
-        np.testing.assert_array_equal(curve.yData, value)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
