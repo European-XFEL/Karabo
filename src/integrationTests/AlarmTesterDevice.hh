@@ -5,7 +5,7 @@
  *
  * Created on June, 2016, 03:03 PM
  *
- * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_ALARMSYSTEM_HH
