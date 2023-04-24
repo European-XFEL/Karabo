@@ -395,6 +395,7 @@ void Validator_Test::testAlarms() {
     validated.clear();
 }
 
+
 void Validator_Test::testSlots() {
     util::Schema s;
     SLOT_ELEMENT(s).key("slot").commit();
@@ -424,4 +425,32 @@ void Validator_Test::testSlots() {
     res = val.validate(s, in, out);
     CPPUNIT_ASSERT(!res.first);
     CPPUNIT_ASSERT_EQUAL(std::string("There is configuration provided for Slot 'slot'"), res.second);
+}
+
+
+void Validator_Test::testLeafAssignmentInternal() {
+    util::Schema schema;
+    util::BOOL_ELEMENT(schema)
+          .key("boolProperty")
+          .displayedName("Bool property")
+          .description("A bool property")
+          .init()
+          .assignmentInternal()
+          .defaultValue(false)
+          .commit();
+
+    util::Validator validator;
+    util::Hash validated;
+    // Test default without setting
+    std::pair<bool, std::string> res;
+    res = validator.validate(schema, util::Hash(), validated);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT(validated.has("boolProperty"));
+    CPPUNIT_ASSERT(!validated.get<bool>("boolProperty"));
+    // Test to set a parameter with assignment internal
+    validated.clear();
+    res = validator.validate(schema, util::Hash("boolProperty", true), validated);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT(validated.has("boolProperty"));
+    CPPUNIT_ASSERT(validated.get<bool>("boolProperty"));
 }
