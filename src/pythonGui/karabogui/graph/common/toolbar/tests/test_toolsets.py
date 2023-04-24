@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabogui.graph.common.enums import MouseTool, ROITool
 from karabogui.testing import GuiTestCase
 

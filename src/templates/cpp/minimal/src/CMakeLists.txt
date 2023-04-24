@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 add_library (
     ${CMAKE_PROJECT_NAME} SHARED
 )

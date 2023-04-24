@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 .test_build_template: &test_build
   script:
     - source ./set_os_info.sh

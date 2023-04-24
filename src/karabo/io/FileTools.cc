@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "FileTools.hh"
 
 template void karabo::io::loadFromFile<karabo::util::Hash>(karabo::util::Hash& object, const std::string& filename,

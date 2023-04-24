@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Copied from karabo/util/Schema.hh!
 KARABO_SCHEMA_NODE_TYPE = "nodeType"
 KARABO_SCHEMA_LEAF_TYPE = "leafType"

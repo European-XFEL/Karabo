@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
 from qtpy.QtCore import Qt

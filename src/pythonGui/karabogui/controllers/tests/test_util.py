@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Configurable, Int32, MetricPrefix, Unit
 from karabogui.testing import get_class_property_proxy
 

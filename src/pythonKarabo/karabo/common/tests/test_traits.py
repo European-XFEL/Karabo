@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import HasStrictTraits, Instance, Int, List
 
 from karabo.common.api import walk_traits_object

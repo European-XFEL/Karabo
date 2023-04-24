@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer_api.device_client import getTopology
 

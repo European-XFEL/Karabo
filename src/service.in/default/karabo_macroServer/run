@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
 exec envdir $KARABO/var/environment karabo-macroserver serverId=karabo/macroServer 2>&1

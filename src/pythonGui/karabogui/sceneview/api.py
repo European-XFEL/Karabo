@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .selection_model import SceneSelectionModel
 from .shapes import LineShape, RectangleShape

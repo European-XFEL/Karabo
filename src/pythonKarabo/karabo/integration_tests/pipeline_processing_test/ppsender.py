@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from datetime import datetime
 from threading import Thread
 from time import sleep

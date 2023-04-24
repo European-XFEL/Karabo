@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   ToType.hpp
  * Author: <burkhard.heisen@xsmail.com>

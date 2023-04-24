@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import GraphicsLayoutWidget, LabelItem
 from traits.api import Dict, Enum, HasStrictTraits, Instance
 

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import sys
 
 from karabo.middlelayer import AccessLevel, Overwrite

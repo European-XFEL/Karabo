@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import AxisItem as PgAxisItem, DateAxisItem
 from qtpy.QtCore import Qt, Signal
 

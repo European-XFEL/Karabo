@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import unittest
 from warnings import catch_warnings, simplefilter
 
