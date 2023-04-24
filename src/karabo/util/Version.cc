@@ -3,7 +3,7 @@
  *
  * Created on February 10, 2014, 3:58 PM
  *
- * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "Version.hh"
