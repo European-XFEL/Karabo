@@ -889,6 +889,25 @@ namespace karabo {
                   .readOnly()
                   .initialValue(0u)
                   .commit();
+
+            // Internal assignment
+            STRING_ELEMENT(expected)
+                  .key("stringInternal")
+                  .displayedName("Internal String")
+                  .description("A string property with assignment internal")
+                  .reconfigurable()
+                  .assignmentInternal()
+                  .defaultValue("Internal Only")
+                  .commit();
+
+            STRING_ELEMENT(expected)
+                  .key("stringInitInternal")
+                  .displayedName("Internal Init String")
+                  .description("A string property with assignment internal and init only")
+                  .init()
+                  .assignmentInternal()
+                  .defaultValue("Init Internal Only")
+                  .commit();
         }
 
 
