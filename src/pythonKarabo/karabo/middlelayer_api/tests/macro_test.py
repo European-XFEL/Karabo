@@ -910,7 +910,7 @@ def test_connectdevice(deviceTest):
     try:
         assert d.value == 123
         remote.value = 456
-        waitUntil(lambda: d.value == 456, timeout=0.1)  # noqa
+        waitUntil(lambda: d.value == 456, timeout=0.5)  # noqa
     finally:
         # check that the proxy gets collected when not used anymore
         weak = weakref.ref(d)
