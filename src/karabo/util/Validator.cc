@@ -160,7 +160,8 @@ namespace karabo {
                                 report << "Missing mandatory parameter: \"" << currentScope << "\"" << endl;
                                 return;
                             }
-                        } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
+                        } else if ((assignment == Schema::OPTIONAL_PARAM || assignment == Schema::INTERNAL_PARAM) &&
+                                   (hasDefault && m_injectDefaults)) {
                             Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             if (hasRowSchema)
                                 node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA,

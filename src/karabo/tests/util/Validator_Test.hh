@@ -12,6 +12,7 @@
 
 class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Validator_Test);
+    CPPUNIT_TEST(testLeafAssignmentInternal);
     CPPUNIT_TEST(testTableOptionalColumn);
     CPPUNIT_TEST(testTableMandatoryColumn);
     CPPUNIT_TEST(testTableMinMaxRows);
@@ -92,6 +93,11 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
      * @brief Checks that the Validator::validate does not create nodes for slots
      */
     void testSlots();
+
+    /**
+     * @brief Checks that the Validator::validate can verify for assignment internal leaf elements
+     */
+    void testLeafAssignmentInternal();
 };
 
 #endif /* VALIDATOR_TEST_HH */
