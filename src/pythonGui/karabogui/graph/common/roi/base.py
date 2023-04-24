@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numpy as np
 from pyqtgraph import ROI, Point, TextItem, functions as fn
 from qtpy.QtCore import QPoint, Qt, Slot

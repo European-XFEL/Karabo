@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Project that builds the Karabo C++ Device Server.
 #
 # Variables that influence the configuration behavior and that should be

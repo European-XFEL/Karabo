@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from enum import Enum
 
 from qtpy.QtCore import QEvent

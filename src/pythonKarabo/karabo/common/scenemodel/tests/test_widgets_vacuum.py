@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from ..api import VacuumWidgetModel
 from ..widgets.vacuum import VACUUM_WIDGETS
 from .utils import (

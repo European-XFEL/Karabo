@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from .model import SceneModel
 from .shapes import LineModel
 from .widgets.graph_image import WebCamGraphModel

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_pipeline_schema,

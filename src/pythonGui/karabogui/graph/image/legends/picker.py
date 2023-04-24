@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import LabelItem
 from pyqtgraph.graphicsItems.LegendItem import ItemSample
 from qtpy.QtCore import Qt

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from abc import abstractmethod
 
 from qtpy.QtGui import QIcon, QKeySequence

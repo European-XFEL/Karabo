@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from numpy import log10
 from qtpy.QtWidgets import QAction, QDialog, QInputDialog
 from traits.api import Instance, String, on_trait_change

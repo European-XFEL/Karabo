@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .axis_item import (
     AlarmAxisItem, AuxPlotAxisItem, AxisItem, StateAxisItem, TimeAxisItem,

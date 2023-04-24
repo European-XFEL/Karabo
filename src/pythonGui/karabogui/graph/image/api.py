@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .aux_plots.base.plot import SHOWN_AXES, AuxPlotItem
 from .aux_plots.controller import AuxPlotsController

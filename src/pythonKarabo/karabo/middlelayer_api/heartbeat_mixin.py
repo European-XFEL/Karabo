@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import ensure_future, gather, sleep
 
 from karabo.native import (

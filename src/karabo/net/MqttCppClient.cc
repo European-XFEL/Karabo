@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "MqttCppClient.hh"
 
 #include "karabo/log/Logger.hh"

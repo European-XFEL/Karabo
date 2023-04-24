@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from time import sleep
 
 from karabo.bound import KARABO_CLASSINFO, PythonDevice

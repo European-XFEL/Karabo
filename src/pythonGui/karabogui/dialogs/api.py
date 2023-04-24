@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .about import AboutDialog
 from .alarm_dialog import AlarmDialog

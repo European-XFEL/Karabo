@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import enum
 from xml.etree.ElementTree import register_namespace
 

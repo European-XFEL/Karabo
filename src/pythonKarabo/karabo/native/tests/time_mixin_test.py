@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from platform import system
 from time import sleep
 from unittest import TestCase, main, skipIf

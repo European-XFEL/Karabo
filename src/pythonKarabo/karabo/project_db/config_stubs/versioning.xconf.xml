@@ -1,3 +1,4 @@
+<!-- Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. -->
 <collection xmlns="http://exist-db.org/collection-config/1.0">
     <index>
         <fulltext default="none" attributes="no">

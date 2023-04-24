@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import (
     Bool, ByteArray, Configurable, EncodingType, Hash, Int8, Node, VectorInt8,
     VectorInt16)

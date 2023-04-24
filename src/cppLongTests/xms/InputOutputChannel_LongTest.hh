@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   InputOutputChannel_LongTest.hh
  * Author: gero.flucke@xfel.eu

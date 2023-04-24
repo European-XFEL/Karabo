@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .binding_types import (
     BaseBinding, BindingNamespace, BindingRoot, BoolBinding, ByteArrayBinding,

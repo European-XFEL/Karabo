@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QToolBar
 from traits.api import Dict, HasStrictTraits, Instance
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 # check the InfluxDb docker image
 IMAGE=influxdb:1.7.8

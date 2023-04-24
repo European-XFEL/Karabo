@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """ This module contains a little helper class which allows
 to register subclasses of one class """
 

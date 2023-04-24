@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .codeeditor import CodeBook, CodeEditor
 from .hints import (

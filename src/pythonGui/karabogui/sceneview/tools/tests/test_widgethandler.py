@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import pytest
 from qtpy.QtCore import QEvent, QPoint, Qt
 from qtpy.QtGui import QMouseEvent

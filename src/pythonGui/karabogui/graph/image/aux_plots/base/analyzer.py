@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from abc import abstractmethod
 
 from traits.api import ABCHasStrictTraits, Dict, Property

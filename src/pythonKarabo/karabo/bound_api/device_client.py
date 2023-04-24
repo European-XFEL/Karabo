@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State

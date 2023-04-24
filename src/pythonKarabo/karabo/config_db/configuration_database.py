@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import hashlib
 import os
 from contextlib import ContextDecorator

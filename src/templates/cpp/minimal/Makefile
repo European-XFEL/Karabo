@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Makefile to fool "karabo install" into building and installing the device
 # using CMake.
 

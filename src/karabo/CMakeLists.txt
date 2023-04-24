@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # The project that builds the Karabo Framework Library (libkarabo.so)
 #
 # Variables that influence the configuration/generation behavior of this project:

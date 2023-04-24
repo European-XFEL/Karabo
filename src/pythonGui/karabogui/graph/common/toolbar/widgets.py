@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QSize, Qt, Signal, Slot
 from qtpy.QtWidgets import QAction, QMenu, QToolBar, QToolButton, QWidgetAction
 

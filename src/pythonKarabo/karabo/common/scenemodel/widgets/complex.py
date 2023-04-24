@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Enum, Float, Int, String

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import uuid
 from asyncio import get_event_loop, set_event_loop
 from contextlib import ExitStack, contextmanager

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabogui.testing import GuiTestCase
 from karabogui.widgets.popup import PopupWidget
 

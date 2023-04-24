@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.bound import (
     KARABO_CLASSINFO, VECTOR_STRING_ELEMENT, PythonDevice, launchPythonDevice)
 from karabo.common.states import State

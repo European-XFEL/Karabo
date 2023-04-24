@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from random import randint
 
 from traits.api import CInt, Enum, Float, Instance, Int, List, Range, String

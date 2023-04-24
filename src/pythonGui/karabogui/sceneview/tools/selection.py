@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QPoint, QRect, Qt
 from qtpy.QtGui import QColor, QPen
 from traits.api import Any, Enum, HasStrictTraits, Instance, String

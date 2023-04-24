@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy import uic
 from qtpy.QtWidgets import QDialog
 from traits.api import TraitError, Undefined
