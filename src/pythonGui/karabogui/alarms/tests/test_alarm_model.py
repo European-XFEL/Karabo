@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QModelIndex, Qt
 
 from karabogui.alarms.alarm_model import AlarmModel

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest import main
 from unittest.mock import patch
 from uuid import uuid4

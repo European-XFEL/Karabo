@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.states import State
 from karabogui.graph.common.const import ALL_STATES
 

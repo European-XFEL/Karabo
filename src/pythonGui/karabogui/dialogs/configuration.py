@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy import uic
 from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Slot
 from qtpy.QtGui import QColor

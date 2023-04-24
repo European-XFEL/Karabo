@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import LabelItem
 
 from karabogui.graph.common.api import KaraboLegend, float_to_string

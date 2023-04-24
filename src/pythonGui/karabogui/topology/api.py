@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .project_device import ProjectDeviceInstance
 from .system_topology import SystemTopology

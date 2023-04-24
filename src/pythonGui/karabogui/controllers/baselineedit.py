@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QLineEdit

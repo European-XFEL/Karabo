@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import TimeoutError, get_event_loop, sleep
 
 import numpy as np

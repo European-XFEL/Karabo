@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .client import InfluxDbClient, Results, get_line_fromdicts, lines_fromhash
 from .dlraw2influx import PROCESSED_RAWS_FILE_NAME, DlRaw2Influx

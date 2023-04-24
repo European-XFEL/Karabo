@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest import mock
 
 from karabogui.alarms.api import INIT_UPDATE_TYPE, AlarmModel

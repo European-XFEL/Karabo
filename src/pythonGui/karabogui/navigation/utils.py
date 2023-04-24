@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import karabogui.icons as icons
 from karabo.common.api import ServerFlags
 

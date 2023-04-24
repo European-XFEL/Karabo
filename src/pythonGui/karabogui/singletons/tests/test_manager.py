@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from inspect import signature
 from unittest.mock import ANY, Mock, call, patch
 

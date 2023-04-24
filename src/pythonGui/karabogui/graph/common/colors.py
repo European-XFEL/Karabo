@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from itertools import cycle
 
 from pyqtgraph import mkBrush, mkPen

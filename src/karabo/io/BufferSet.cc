@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "BufferSet.hh"
 
 #include <karabo/util/StringTools.hh>

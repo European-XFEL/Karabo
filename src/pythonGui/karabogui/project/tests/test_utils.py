@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.project.api import MacroModel
 from karabogui.project.utils import run_macro
 

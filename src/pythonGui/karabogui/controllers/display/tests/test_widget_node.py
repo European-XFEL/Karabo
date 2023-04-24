@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Configurable, Int32, Node
 from karabogui.binding.api import PropertyProxy
 from karabogui.testing import GuiTestCase, get_class_property_proxy

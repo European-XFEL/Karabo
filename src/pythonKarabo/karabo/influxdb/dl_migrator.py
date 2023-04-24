@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 import argparse
 import datetime

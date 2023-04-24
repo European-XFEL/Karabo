@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # The code was borrowed from 'asyncio_mqtt' package and
 # 'loop_asyncio.py' example (paho.mqtt.python) and adapted
 # due to middlelayer EventLoop requirements.
