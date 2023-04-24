@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import Future, TimeoutError, sleep, wait_for
 
 import pytest

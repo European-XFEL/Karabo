@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import uuid
 from asyncio import ensure_future, get_event_loop, sleep
 

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Project that builds the C++ Karabo Framework Integration Tests.
 #
 # Variables that influence the configuration behavior and that should be

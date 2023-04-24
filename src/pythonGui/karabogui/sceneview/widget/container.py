@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QRect, QSize, Qt
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 

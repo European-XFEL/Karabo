@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy import uic
 from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtWidgets import QDialog

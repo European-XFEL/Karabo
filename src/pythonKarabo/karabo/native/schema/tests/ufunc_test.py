@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from platform import system
 from unittest import TestCase, main, skip
 

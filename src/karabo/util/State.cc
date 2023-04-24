@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "State.hh"
 
 #include <boost/smart_ptr/make_shared.hpp>

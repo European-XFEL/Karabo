@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from functools import partial
 
 import karabo.bound_api as bound_pkg

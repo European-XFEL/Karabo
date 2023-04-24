@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from time import gmtime, strftime, strptime, time
 
 from lxml import etree

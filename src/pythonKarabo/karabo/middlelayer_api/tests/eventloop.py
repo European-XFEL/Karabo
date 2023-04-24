@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import uuid
 import weakref
 from asyncio import gather, get_event_loop, set_event_loop, sleep, wait_for

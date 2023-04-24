@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "SignalSlotableWrap.hh"
 
 #include <karabo/util/Exception.hh>

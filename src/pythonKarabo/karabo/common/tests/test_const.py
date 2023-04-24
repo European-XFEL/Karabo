@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from inspect import isfunction
 
 from karabo.common import const as constmod

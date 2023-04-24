@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   SceneProvider_Test.cc
  * Author: steffen.hauf@xfel.eu

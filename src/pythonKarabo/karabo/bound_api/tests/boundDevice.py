@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """ This is a test device, written in the bound API, for the
 API cross test
 """

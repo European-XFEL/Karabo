@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "karabo/net/JmsBroker.hh"
 
 #include <karabo/log/Logger.hh>

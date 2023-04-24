@@ -1,2 +1,3 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 exec svscan $KARABO/var/service 2>&1

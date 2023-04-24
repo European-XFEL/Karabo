@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest.mock import patch
 
 from karabogui.testing import GuiTestCase

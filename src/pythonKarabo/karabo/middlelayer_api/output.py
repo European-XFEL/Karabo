@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """ This module redirects output """
 
 from asyncio import get_event_loop

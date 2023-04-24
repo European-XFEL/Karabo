@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from ..const import (
     ROOT_COLLECTION, ROOT_COLLECTION_BACKUP, ROOT_COLLECTION_TEST)
 

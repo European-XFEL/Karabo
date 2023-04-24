@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #ifndef KARABO_IO_H5_TABLE_HH
 #define KARABO_IO_H5_TABLE_HH
 

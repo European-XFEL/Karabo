@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QEvent, QPoint, Qt, Slot
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QStyle

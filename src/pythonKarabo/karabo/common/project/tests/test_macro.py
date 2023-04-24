@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import uuid
 
 from karabo.common.project.api import MacroModel

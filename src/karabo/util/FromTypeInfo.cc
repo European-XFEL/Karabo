@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   FromType.hh
  * Author: <burkhard.heisen@xsmail.com>

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import contextlib
 
 from qtpy.QtCore import QAbstractItemModel, QModelIndex

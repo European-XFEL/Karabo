@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   main.cc
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>

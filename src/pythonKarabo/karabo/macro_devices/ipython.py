@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import pickle
 from asyncio import TimeoutError, ensure_future, get_event_loop, wait_for
 from queue import Empty

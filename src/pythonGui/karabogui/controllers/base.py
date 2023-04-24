@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QWidget
 from traits.api import (
     Bool, HasStrictTraits, Instance, List, Property, on_trait_change)

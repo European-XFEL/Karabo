@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Any, ArrayOrNone, Enum, HasStrictTraits, Int
 
 from karabo.native import EncodingType

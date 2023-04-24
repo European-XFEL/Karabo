@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QPointF, QRectF, QSizeF, Qt, Signal
 from qtpy.QtGui import QColor, QPen
 from qtpy.QtWidgets import QGraphicsObject

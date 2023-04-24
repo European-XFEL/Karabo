@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from datetime import datetime
 from sys import getsizeof
 from time import sleep

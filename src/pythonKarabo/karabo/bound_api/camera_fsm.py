@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 __author__ = "andrea.parenti@xfel.eu"
 __date__ = "August  7, 2013"
 
