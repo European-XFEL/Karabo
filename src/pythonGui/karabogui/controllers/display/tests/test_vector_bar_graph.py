@@ -1,11 +1,9 @@
-from unittest.mock import patch
-
 import numpy as np
+import pytest
 
 from karabo.common.scenemodel.api import VectorBarGraphModel
 from karabo.native import Configurable, Hash, Int32, NDArray, VectorInt32
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..vector_bar_graph import DisplayVectorBarGraph
 
@@ -22,69 +20,64 @@ class NDArrayObject(Configurable):
     )
 
 
-class TestDisplayVectorBar(GuiTestCase):
-    def setUp(self):
-        super(TestDisplayVectorBar, self).setUp()
-
-        schema = Object.getClassSchema()
-        self.value = get_class_property_proxy(schema, 'value')
-        self.controller = DisplayVectorBarGraph(proxy=self.value)
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
-
-    def tearDown(self):
-        super(TestDisplayVectorBar, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
-
-    def test_bar_graph_basics(self):
-        value = [2, 4, 6]
-        set_proxy_value(self.value, 'value', value)
-        curve = self.controller._plot
-        self.assertEqual(list(curve.opts.get('x')), [0, 1, 2])
-        self.assertEqual(list(curve.opts.get('height')), value)
-
-    def test_bar_width(self):
-        controller = DisplayVectorBarGraph(proxy=self.value,
-                                           model=VectorBarGraphModel())
-        controller.create(None)
-        action = controller.widget.actions()[10]
-        self.assertEqual(action.text(), 'Bar Width')
-
-        dsym = 'karabogui.controllers.display.vector_bar_graph.QInputDialog'
-        with patch(dsym) as QInputDialog:
-            QInputDialog.getDouble.return_value = 2.7, True
-            action.trigger()
-            self.assertEqual(controller.model.bar_width, 2.7)
-            self.assertEqual(controller._plot.opts['width'], 2.7)
-
-        controller.destroy()
+@pytest.fixture
+def vector_bar_graph_setup(gui_app):
+    # setup
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "value")
+    controller = DisplayVectorBarGraph(proxy=proxy,
+                                       model=VectorBarGraphModel())
+    controller.create(None)
+    assert controller.widget is not None
+    yield controller, proxy
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
 
 
-class TestArrayBar(GuiTestCase):
-    def setUp(self):
-        super(TestArrayBar, self).setUp()
+def test_bar_graph_basics(vector_bar_graph_setup):
+    controller, proxy = vector_bar_graph_setup
+    value = [2, 4, 6]
+    set_proxy_value(proxy, "value", value)
+    curve = controller._plot
+    assert list(curve.opts.get("x")) == [0, 1, 2]
+    assert list(curve.opts.get("height")) == value
 
-        schema = NDArrayObject.getClassSchema()
-        self.value = get_class_property_proxy(schema, 'value')
-        self.controller = DisplayVectorBarGraph(proxy=self.value)
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
 
-    def tearDown(self):
-        super(TestArrayBar, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+def test_bar_graph_width(vector_bar_graph_setup, mocker):
+    controller, proxy = vector_bar_graph_setup
+    action = controller.widget.actions()[10]
+    assert action.text() == "Bar Width"
 
-    def test_bar_graph_basics(self):
-        value = np.array(
-            [2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
-            dtype=np.int32)
-        array_hash = Hash('type', 12,
-                          'data', value.tobytes())
-        set_proxy_value(self.value, 'value', array_hash)
-        curve = self.controller._plot
-        np.testing.assert_array_equal(
-            list(curve.opts.get('x')), np.arange(10))
-        np.testing.assert_array_equal(
-            list(curve.opts.get('height')), value)
+    dsym = "karabogui.controllers.display.vector_bar_graph.QInputDialog"
+    QInputDialog = mocker.patch(dsym)
+    QInputDialog.getDouble.return_value = 2.7, True
+    action.trigger()
+    assert controller.model.bar_width == 2.7
+    assert controller._plot.opts["width"] == 2.7
+
+
+def test_array_bar_graph_basics(gui_app):
+    # setup
+    schema = NDArrayObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "value")
+    controller = DisplayVectorBarGraph(proxy=proxy)
+    controller.create(None)
+    assert controller.widget is not None
+
+    # test body
+    value = np.array(
+        [2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
+        dtype=np.int32)
+    array_hash = Hash("type", 12,
+                      "data", value.tobytes())
+    set_proxy_value(proxy, "value", array_hash)
+    curve = controller._plot
+    np.testing.assert_array_equal(
+        list(curve.opts.get("x")), np.arange(10))
+    np.testing.assert_array_equal(
+        list(curve.opts.get("height")), value)
+
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
