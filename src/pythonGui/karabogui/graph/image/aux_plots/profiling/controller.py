@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QAction, QMenu
 from traits.api import (
     ArrayOrNone, Bool, Dict, Instance, Property, Type, on_trait_change)

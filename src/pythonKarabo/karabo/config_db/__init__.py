@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .configuration_database import ConfigurationDatabase, DbHandle
 from .utils import (

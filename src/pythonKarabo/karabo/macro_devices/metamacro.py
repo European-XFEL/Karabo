@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.sanity_check import validate_macro
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Device, Macro, Overwrite, String, isSet)

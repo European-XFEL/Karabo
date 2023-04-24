@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import logging
 import numbers
 from collections.abc import MutableMapping

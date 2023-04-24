@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 107000
 #include "BeastClientBase_1_81.hh"

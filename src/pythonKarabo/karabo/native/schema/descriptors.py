@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """ This module contains the type hierarchy implied by the Karabo hash.
 """
 import logging

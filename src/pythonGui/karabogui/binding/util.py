@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from urllib.parse import parse_qs
 
 import numpy as np

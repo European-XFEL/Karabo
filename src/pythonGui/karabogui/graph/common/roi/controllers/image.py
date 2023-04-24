@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import Slot
 
 from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION

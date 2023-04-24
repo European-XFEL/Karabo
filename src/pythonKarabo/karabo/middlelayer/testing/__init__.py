@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa: F401
 
 from karabo.middlelayer_api.tests.eventloop import (

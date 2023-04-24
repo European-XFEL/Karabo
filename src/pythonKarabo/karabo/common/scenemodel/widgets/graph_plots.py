@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import warnings
 from xml.etree.ElementTree import SubElement
 

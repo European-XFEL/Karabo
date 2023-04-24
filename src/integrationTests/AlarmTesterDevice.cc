@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * $Id: AlarmTester.cc 7755 2016-06-24 14:10:56Z haufs $
  *

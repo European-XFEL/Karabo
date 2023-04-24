@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 echo "Looking for Karabp RabbitMQ docker container"
 
 CONTAINER=karabo_rabbitmq

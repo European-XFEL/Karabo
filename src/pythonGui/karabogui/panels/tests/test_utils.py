@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabogui.testing import system_hash
 from karabogui.topology.api import SystemTopology
 

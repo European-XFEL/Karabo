@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .controller.device import DeviceInstanceController
 from .controller.device_config import DeviceConfigurationController
