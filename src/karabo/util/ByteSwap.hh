@@ -3,7 +3,7 @@
  *
  * Author: <andrea.parenti@xfel.eu>
  *
- * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_BYTESWAP_HH
