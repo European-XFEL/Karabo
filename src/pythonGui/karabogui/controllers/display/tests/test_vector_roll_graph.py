@@ -1,7 +1,7 @@
 from platform import system
-from unittest import mock, skipIf
 
 import numpy as np
+import pytest
 from qtpy.QtWidgets import QGraphicsTextItem
 
 from karabo.common.scenemodel.api import VectorRollGraphModel
@@ -9,7 +9,7 @@ from karabo.native import (
     Configurable, Hash, Int32, NDArray, Timestamp, VectorInt32)
 from karabogui.graph.common.api import AuxPlots
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
+    get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
 from ..vector_roll_graph import ArrayRollGraph
 
@@ -25,102 +25,104 @@ class NDArrayObject(Configurable):
         dtype=Int32)
 
 
-class TestVectorRollGraph(GuiTestCase):
+@pytest.fixture
+def vector_roll_graph_setup(gui_app, mocker):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = ArrayRollGraph(proxy=proxy, model=VectorRollGraphModel())
 
-    def setUp(self):
-        super(TestVectorRollGraph, self).setUp()
+    mocker.patch.object(QGraphicsTextItem, "setHtml")
+    controller.create(None)
+    assert controller.widget is not None
 
-        schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = ArrayRollGraph(proxy=self.proxy,
-                                         model=VectorRollGraphModel())
+    yield controller, proxy
 
-        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
-            self.controller.create(None)
-            self.assertIsNotNone(self.controller.widget)
-
-    def tearDown(self):
-        super(TestVectorRollGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
-
-    def test_configuration(self):
-        """Assert that the vector roll auxiliar plots do not smooth the
-        images"""
-        aux_plots = self.controller.widget._aux_plots
-        controller = aux_plots._aggregators[AuxPlots.ProfilePlot]
-        self.assertFalse(controller.smooth)
-
-    @skipIf(system() == "Windows",
-            reason="image.data is None in Windows tests")
-    def test_set_value(self):
-        """Test the value setting in VectorRollGraph"""
-        plot = self.controller._plot
-        self.assertIsNotNone(plot)
-        value = [2, 4, 6]
-        set_proxy_value(self.proxy, 'prop', value)
-        image = self.controller._image
-        np.testing.assert_almost_equal(image.data[0], value)
-
-    @skipIf(system() == "Windows",
-            reason="image.data is None in Windows tests")
-    def test_set_value_timestamp(self):
-        """Test the value setting with same timestamp in VectorRollGraph"""
-        plot = self.controller._plot
-        self.assertIsNotNone(plot)
-        timestamp = Timestamp()
-        h = Hash('prop', [2, 4, 6])
-        set_proxy_hash(self.proxy, h, timestamp)
-        image = self.controller._image
-        np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
-        h = Hash('prop', [22, 34, 16])
-        set_proxy_hash(self.proxy, h, timestamp)
-        image = self.controller._image
-        np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
-
-    def test_image_stack_configuration(self):
-        controller = ArrayRollGraph(proxy=self.proxy,
-                                    model=VectorRollGraphModel())
-        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
-            controller.create(None)
-
-        action = controller.widget.actions()[3]
-        self.assertEqual(action.text(), 'Image Size')
-
-        dsym = 'karabogui.controllers.display.vector_roll_graph.QInputDialog'
-        with mock.patch(dsym) as QInputDialog:
-            QInputDialog.getInt.return_value = 20, True
-            action.trigger()
-            self.assertEqual(controller.model.maxlen, 20)
-            self.assertEqual(controller._image.stack, 20)
-            self.assertIsNone(controller._image.data)
-
-        controller.destroy()
+    controller.destroy()
+    assert controller.widget is None
 
 
-class TestArrayRollGraph(GuiTestCase):
-    def setUp(self):
-        super(TestArrayRollGraph, self).setUp()
-        schema = NDArrayObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = ArrayRollGraph(proxy=self.proxy)
-        self.controller.create(None)
-        self.assertIsNotNone(self.controller.widget)
+def test_vector_roll_graph_configuration(vector_roll_graph_setup):
+    """Assert that the vector roll auxiliar plots do not smooth the
+    images"""
+    controller, _ = vector_roll_graph_setup
+    aux_plots = controller.widget._aux_plots
+    controller = aux_plots._aggregators[AuxPlots.ProfilePlot]
+    assert not controller.smooth
 
-    def tearDown(self):
-        super(TestArrayRollGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
 
-    @skipIf(system() == "Windows",
-            reason="image.data is None in Windows tests")
-    def test_set_value(self):
-        value = np.array(
-            [2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
-            dtype=np.int32)
-        array_hash = Hash('type', 12,
-                          'data', value.tobytes())
-        set_proxy_value(self.proxy, 'prop', array_hash)
+@pytest.mark.skipif(system() == "Windows",
+                    reason="image.data is None in Windows tests")
+def test_vector_roll_graph_set_value(vector_roll_graph_setup):
+    """Test the value setting in VectorRollGraph"""
+    controller, proxy = vector_roll_graph_setup
+    plot = controller._plot
+    assert plot is not None
+    value = [2, 4, 6]
+    set_proxy_value(proxy, "prop", value)
+    image = controller._image
+    np.testing.assert_almost_equal(image.data[0], value)
 
-        image = self.controller._image
-        np.testing.assert_almost_equal(image.data[0], value)
+
+@pytest.mark.skipif(system() == "Windows",
+                    reason="image.data is None in Windows tests")
+def test_vector_roll_graph_set_value_timestamp(vector_roll_graph_setup):
+    """Test the value setting with same timestamp in VectorRollGraph"""
+    controller, proxy = vector_roll_graph_setup
+    plot = controller._plot
+    assert plot is not None
+    timestamp = Timestamp()
+    h = Hash("prop", [2, 4, 6])
+    set_proxy_hash(proxy, h, timestamp)
+    image = controller._image
+    np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
+    h = Hash("prop", [22, 34, 16])
+    set_proxy_hash(proxy, h, timestamp)
+    image = controller._image
+    np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
+
+
+def test_vector_roll_graph_image_stack_configuration(vector_roll_graph_setup,
+                                                     mocker):
+    _, proxy = vector_roll_graph_setup
+    controller = ArrayRollGraph(proxy=proxy, model=VectorRollGraphModel())
+    mocker.patch.object(QGraphicsTextItem, "setHtml")
+    controller.create(None)
+
+    action = controller.widget.actions()[3]
+    assert action.text() == "Image Size"
+
+    dsym = "karabogui.controllers.display.vector_roll_graph.QInputDialog"
+    QInputDialog = mocker.patch(dsym)
+    QInputDialog.getInt.return_value = 20, True
+    action.trigger()
+    assert controller.model.maxlen == 20
+    assert controller._image.stack == 20
+    assert controller._image.data is None
+
+    controller.destroy()
+
+
+@pytest.mark.skipif(system() == "Windows",
+                    reason="image.data is None in Windows tests")
+def test_set_value(gui_app):
+    # setup
+    schema = NDArrayObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    controller = ArrayRollGraph(proxy=proxy)
+    controller.create(None)
+    assert controller.widget is not None
+
+    # test body
+    value = np.array(
+        [2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
+        dtype=np.int32)
+    array_hash = Hash("type", 12,
+                      "data", value.tobytes())
+    set_proxy_value(proxy, "prop", array_hash)
+
+    image = controller._image
+    np.testing.assert_almost_equal(image.data[0], value)
+
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
