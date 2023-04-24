@@ -1250,14 +1250,22 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
     auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
-    // Give demo some time to auto-connect now that demo2 is there:
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    int count = 0;
+    do {
+        if (count == 0) { // Locally, one 10 ms sleep seems enough, but CI failed once with 100 ms.
+            // Give demo some time to auto-connect now that demo2 is there:
+            boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+        } else {
+            // Probably above time was not enough
+            std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
+        }
+        demo2->emit("signalA", "Hello World 2!");
 
-    demo2->emit("signalA", "Hello World 2!");
+        // Time for all signaling (although it is all short-cutting the broker):
+        // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
+        waitDemoOk(demo, 2, 8); // 8: about 500 ms max waiting
+    } while (!demo->wasOk(2) && ++count < 10);
 
-    // Time for all signaling (although it is all short-cutting the broker):
-    // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
-    waitDemoOk(demo, 2);
     CPPUNIT_ASSERT(demo->wasOk(2));
 }
 
