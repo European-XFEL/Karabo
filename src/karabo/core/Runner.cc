@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+ */
+
 #include "Runner.hh"
 
 #include <krb_log4cpp/Category.hh>

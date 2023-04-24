@@ -1,3 +1,5 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$May 24, 2013 11:36:55 AM$"
 
@@ -7,6 +9,8 @@ import re
 from karathon import Hash, loadFromFile
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+
+cr_cmt = " # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved."
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -106,9 +110,7 @@ class Runner(object):
               "####")
         print(" #                   Karabo Device Server")
         print(" #")
-        print(
-            " # Copyright (C) European XFEL GmbH Schenefeld. "
-            "All rights reserved.")
+        print(cr_cmt)
         print(" ############################################################"
               "####\n")
         if not what:

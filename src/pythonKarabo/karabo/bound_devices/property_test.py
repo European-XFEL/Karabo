@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 __author__ = "gero.flucke@xfel.eu"
 __date__ = "September, 2017, 13:45 PM"
-__copyright__ = """Copyright (c) European XFEL GmbH Schenefeld.
-All rights reserved."""
 
 import threading
 import time

@@ -2,7 +2,7 @@
  *
  * Created on August 22, 2016, 17:17 PM
  *
- * Copyright (c) 2016-2018 European XFEL GmbH Schenefeld. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #include "NDArray.hh"
