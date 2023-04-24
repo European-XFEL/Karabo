@@ -3,7 +3,7 @@
  *
  * Author: <burkhard.heisen@xfel.eu>
  *
- * Copyright (c) European XFEL GmbH Schenefeld. All rights reserved.
+ * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
