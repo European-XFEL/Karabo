@@ -137,9 +137,10 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
 
     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
     input->setInstanceId("inputChannel");
-    unsigned int calls = 0;
-    input->registerDataHandler([&calls, processTime](const Hash& data, const InputChannel::MetaData& meta) {
-        ++calls;
+    auto calls = std::make_shared<int>(
+          0); // shared_ptr to capture by value in lambda avoids trouble if handler called after test done
+    input->registerDataHandler([calls, processTime](const Hash& data, const InputChannel::MetaData& meta) {
+        ++(*calls);
         boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
     });
 
@@ -253,7 +254,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
 
 
     const unsigned int totalSent = numSentFuture.get();
-    std::clog << "DONE: output sent " << totalSent << " data items out of which only " << calls << " reached input "
+    std::clog << "DONE: output sent " << totalSent << " data items out of which only " << *calls << " reached input "
               << "since input disconnected " << disconCounter << " times" << std::endl;
     // Finally do all the necessary asserts:
     CPPUNIT_ASSERT_MESSAGE(exceptionText, exceptionText.empty());
@@ -261,5 +262,5 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
 
     CPPUNIT_ASSERT_MESSAGE(disreconnectFailure, disreconnectFailure.empty());
 
-    CPPUNIT_ASSERT(calls > 0);
+    CPPUNIT_ASSERT(*calls > 0);
 }
