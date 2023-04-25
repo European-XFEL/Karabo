@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import sys
 from os import path as op
 from unittest import mock, skip

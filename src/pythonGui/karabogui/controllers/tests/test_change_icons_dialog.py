@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.api import KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_INC
 from karabogui import messagebox
 from karabogui.binding.api import FloatBinding, StringBinding, Uint64Binding

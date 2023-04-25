@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel, ProjectModel
 

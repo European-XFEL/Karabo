@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # The project that builds the various C++ components of the Karabo Framework:
 # libkarabo, libkarathon, C++ device server, unit tests, integration tests,
 # and karabo C++ utilities like BrokerMessageLogs, BrokerMessageRates, ...

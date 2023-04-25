@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtCore import QItemSelectionModel
 
 from karabogui.testing import click_button, singletons, system_hash

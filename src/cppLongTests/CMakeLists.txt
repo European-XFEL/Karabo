@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Project that builds the C++ Karabo Framework Long Running Tests.
 #
 # Variables that influence the configuration behavior and that should be

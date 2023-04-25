@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #
 # lints all modified C++ source files with clang-format and modified Python
 # files with flake8 and isort.

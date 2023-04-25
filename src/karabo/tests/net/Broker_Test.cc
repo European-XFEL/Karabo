@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   Broker_Test.cc
  * Author: Sergey Esenov serguei.essenov@xfel.eu

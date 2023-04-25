@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import pytest
 
 from karabo.common.scenemodel.api import EvaluatorModel

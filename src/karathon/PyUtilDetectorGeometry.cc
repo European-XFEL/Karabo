@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include <boost/python.hpp>
 #include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/Hash.hh>

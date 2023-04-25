@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   SchemaBinarySerializer.hh
  * Author: <djelloul.boukhelef@xfel.eu>

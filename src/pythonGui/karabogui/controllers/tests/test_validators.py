@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtGui import QValidator
 
 from karabo.common.const import KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_INC

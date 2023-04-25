@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import os
 from abc import abstractmethod
 from asyncio import sleep, wait_for

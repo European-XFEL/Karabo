@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QAction, QDialog
 from traits.api import Instance, Type, on_trait_change
 

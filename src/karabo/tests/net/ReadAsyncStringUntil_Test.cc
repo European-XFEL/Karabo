@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   ReadAsyncStringUntil_Test.cc
  * Author: giovanet
