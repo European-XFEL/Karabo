@@ -6,8 +6,9 @@ from qtpy.QtWidgets import QDialog, QWidget
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, LabelModel, SceneLinkModel, SceneTargetWindow,
     WebLinkModel)
+from karabo.native import Hash
 from karabogui.events import KaraboEvent
-from karabogui.testing import GuiTestCase
+from karabogui.testing import GuiTestCase, click_button, singletons
 
 from ..link import (
     DeviceSceneLinkWidget, SceneLinkWidget, WebDialog, WebLinkWidget)
@@ -216,6 +217,45 @@ def test_device_scene_link_widget(gui_app, mocker):
     widget.decline_changes()
     widget.set_visible(True)
     widget.update_global_access_level(None)
+    widget.destroy()
+
+
+def test_device_scene_link_sending(gui_app, mocker):
+    # Send a scene target
+    model = DeviceSceneLinkModel(
+        text="DeviceSceneLink Text", foreground="black",
+        x=0, y=0, width=100, height=100,
+        target="scene", keys=["XHQ_EH_DG/SCENE/LINK"])
+
+    main_widget = QWidget()
+    widget = DeviceSceneLinkWidget(model=model,
+                                   parent=main_widget)
+    main_widget.show()
+    manager = mocker.Mock()
+    path = "karabogui.sceneview.widget.link.is_device_online"
+    question = mocker.patch(path)
+    question.return_value = True
+    with singletons(manager=manager):
+        click_button(widget)
+        args = manager.callDeviceSlot.call_args
+        assert len(args) == 2
+        assert args[0][1] == "XHQ_EH_DG/SCENE/LINK"
+        assert args[0][2] == "requestScene"
+        # of args the last argument is the parameter hash
+        h = args[0][-1]
+        assert isinstance(h, Hash)
+        assert "name" in h
+        assert h["name"] == "scene"
+
+        # Erase target and click again, empty string is send
+        model.target = ""
+        click_button(widget)
+        args = manager.callDeviceSlot.call_args
+        h = args[0][-1]
+        assert isinstance(h, Hash)
+        assert "name" in h
+        assert h["name"] == ""
+
     widget.destroy()
 
 
