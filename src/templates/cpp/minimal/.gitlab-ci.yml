@@ -22,13 +22,13 @@
 
 ##### Test build #####
 test:almalinux9:
-  image: europeanxfel/karabo-ci:almalinux-9-002
+  image: europeanxfel/karabo-ci:almalinux-9-003
   before_script:
     - export KARABO_TAG="latest_build"
   <<: *test_build
 
 test:almalinux9latest:
-  image: europeanxfel/karabo-ci:almalinux-9-002
+  image: europeanxfel/karabo-ci:almalinux-9-003
   before_script:
     - export KARABO_TAG="latest_prerelease_build"
   <<: *test_build

@@ -2,6 +2,7 @@ stages:
   - lint
   - build
   - test
+  - mirror
 
 .build_template: &build
   stage: build
@@ -47,47 +48,39 @@ stages:
   <<: *artifacts-spec
 
 .image_almalinux8_: &image_almalinux8
-  image: europeanxfel/karabo-ci:almalinux-8-002
+  image: europeanxfel/karabo-ci:almalinux-8-003
   tags:
     - KaraboFramework
 
 .image_almalinux9_: &image_almalinux9
-  image: europeanxfel/karabo-ci:almalinux-9-001
+  image: europeanxfel/karabo-ci:almalinux-9-003
   tags:
     - KaraboFramework
 
 .image_centos7_: &image_centos7
-  image: europeanxfel/karabo-ci:centos-7-002
+  image: europeanxfel/karabo-ci:centos-7-003
   tags:
     - KaraboFramework
 
 .image_ubuntu20_: &image_ubuntu20
-  image: europeanxfel/karabo-ci:ubuntu-20-002
+  image: europeanxfel/karabo-ci:ubuntu-20-003
   tags:
     - KaraboFramework
 
 .image_ubuntu22_: &image_ubuntu22
-  image: europeanxfel/karabo-ci:ubuntu-22-001
+  image: europeanxfel/karabo-ci:ubuntu-22-002
   tags:
     - KaraboFramework
 
 .image_debian10_: &image_debian10
-  image: europeanxfel/karabo-ci:debian-10-002
+  image: europeanxfel/karabo-ci:debian-10-003
   tags:
     - KaraboFramework
 
 .image_miniconda_: &image_miniconda
-  image: europeanxfel/karabo-ci:miniconda-3-005
+  image: europeanxfel/karabo-ci:miniconda-3-006
   tags:
     - KaraboFramework
-
-# # TODO: remove this after reporting support for ctest is working
-# .test_template_miniconda_cmake: &test-miniconda-cmake
-#   stage: test
-#   <<: *services_template
-#   script:
-#     - source ci/prepare "$CI_BUILD_NAME"
-#     - source ci/test "$CI_BUILD_NAME"
 
 .release_build: &release-build
   <<: *build
@@ -682,3 +675,57 @@ long tests ubuntu20:
 long tests ubuntu22:
   <<: *image_ubuntu22
   <<: *long-tests
+
+# Publish to the GitHub mirror - 1st. of 2 steps
+#
+# 1st. step is triggered by release tags automatically and publishes the 
+# master branch and the tags of the Framework to an internal mirror. As part 
+# of this step, the git commit history is edited using git-filter-repo to 
+# remove personal data from contributors who do not want their personal data
+# exposed in the public GitHub mirror.
+#
+# The 2nd. step will be manual, triggered from the internal mirror on demand
+# and will be responsible for updating the public GitHub mirror with the 
+# contents of the internal mirror.
+internal_mirror_publish:
+  stage: mirror
+  image: europeanxfel/karabo-ci:almalinux-9-003
+
+  only:
+    - /^(\d+\.)(\d+\.)(\d+)$/
+
+  except:
+    - branches
+    - schedules
+  script:
+
+    # Retrieves the mail and name mappings for authors that have chosen to keep
+    # their data hidden in the commit history of the public repository.
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/contriboptouts.git
+    # Retrieves the master branch and the tags of the Karabo Framework repository.
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch master --single-branch FrameworkMaster
+    - cd FrameworkMaster
+    - git fetch --tags
+    # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
+    - git remote rm origin
+    # Pushes the master branch and the tags to the internal mirror.
+    # The KARABO_FRAMEWORK_MIRROR_TOKEN must be an environment variable defined in the Framework Gitlab project whose
+    # value is a project access token generated for the FrameworkMirror Gitlab project.
+    - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+    - git push --mirror internal_mirror
+    # Removes the local copy of the Karabo Framework repository - all the opts out obfuscation will be performed on
+    # the internal mirror.
+    - cd ..
+    - rm -rf FrameworkMaster
+    # The opt out obfuscation must be performed over the just updated internal mirror to avoid any conflicts
+    # during the push.
+    - git clone https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+    - cd FrameworkMirror
+    - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
+    # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
+    # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
+    # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
+    # found at https://htmlpreview.github.io/?https://github.com/newren/git-filter-repo/blob/docs/html/git-filter-repo.html#INTERNALS.
+    - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+    # Note: the push below requires the FrameworkMirror repository to be set to allow force push to its master branch (by default not allowed)
+    - git push -u internal_mirror master --force --prune
