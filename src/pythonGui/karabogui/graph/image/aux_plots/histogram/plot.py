@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import PlotDataItem
 from qtpy.QtCore import QPointF, Qt
 from qtpy.QtGui import QBrush, QColor, QLinearGradient, QPen

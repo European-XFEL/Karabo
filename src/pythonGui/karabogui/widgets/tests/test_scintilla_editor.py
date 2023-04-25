@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabogui.widgets.scintilla_api import create_symbols
 from karabogui.widgets.scintilla_editor import (
     ERROR_INDICATOR, HIGHLIGHT_INDICATOR, STYLE_ISSUE_INDICATOR, CodeBook,

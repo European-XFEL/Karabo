@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   HashFilter_Test.cc
  * Author: <krzysztof.wrona@xfel.eu>

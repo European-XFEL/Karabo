@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.scenemodel.api import TableElementModel
 from karabo.native import Bool, Configurable, Hash, Int32, String, VectorHash
 from karabogui.binding.config import apply_configuration

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.scenemodel.api import HistoricTextModel
 from karabo.native import Configurable, Hash, String, Timestamp, VectorString
 from karabogui.const import IS_WINDOWS_SYSTEM

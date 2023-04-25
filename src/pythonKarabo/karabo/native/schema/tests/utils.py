@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import AccessMode, Configurable, Int32, String, VectorHash
 
 

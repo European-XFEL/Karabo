@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, DaqPolicy, EnumValue, Hash, String,

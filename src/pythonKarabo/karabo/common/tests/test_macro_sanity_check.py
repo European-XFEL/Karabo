@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest import TestCase
 
 from karabo.common.sanity_check import validate_macro

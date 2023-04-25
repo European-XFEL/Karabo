@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Configurable, Hash, String, VectorHash
 from karabogui.configurator.api import TableDialog
 from karabogui.testing import (

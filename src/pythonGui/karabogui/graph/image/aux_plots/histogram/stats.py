@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Constant
 
 from karabogui.graph.common.formatting import table_body, table_row

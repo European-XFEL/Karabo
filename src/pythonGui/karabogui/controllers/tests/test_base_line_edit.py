@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData

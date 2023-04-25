@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Configurable, String
 from karabogui.testing import get_class_property_proxy, set_proxy_value
 

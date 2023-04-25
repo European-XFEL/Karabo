@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from collections import defaultdict
 from collections.abc import Iterable
 from itertools import chain

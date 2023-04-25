@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from os.path import dirname, join, realpath
 
 from setuptools import find_packages, setup

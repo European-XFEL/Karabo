@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtGui import QFont, QFontDatabase
 
 from karabogui.fonts import FONT_FILENAMES, get_alias_from_font

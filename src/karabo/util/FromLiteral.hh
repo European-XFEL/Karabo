@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   FromLiteral
  * Author: <burkhard.heisen@xsmail.com>

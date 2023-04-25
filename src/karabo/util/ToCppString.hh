@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   ToCppString.hh
  * Author: <burkhard.heisen@xsmail.com>

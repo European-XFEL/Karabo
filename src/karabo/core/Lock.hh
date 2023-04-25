@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 
 /*
 >>>>>>> d89f1262a64624058e79a31967c3cdde4e8c1f00

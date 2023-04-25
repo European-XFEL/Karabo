@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .dialog.table_view import TableDialog
 from .filter_model import ConfiguratorFilterModel

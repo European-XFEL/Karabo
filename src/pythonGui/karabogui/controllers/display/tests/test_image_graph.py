@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import pytest
 from numpy.testing import assert_array_equal
 from pyqtgraph import ColorMap

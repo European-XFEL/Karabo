@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Project that builds the Karabo Idx Utilities for file based data logging.
 #
 # Variables that influence the configuration behavior and that should be

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Jul 26, 2012 16:17:33 PM$"
 

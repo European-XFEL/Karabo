@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """This tests the communication between bound API and middlelayer API"""
 
 import os
