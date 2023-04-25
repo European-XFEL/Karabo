@@ -34,14 +34,14 @@
     expire_in: 8 weeks
 
 test:almalinux9:release:
-  image: europeanxfel/karabo-ci:almalinux-9-002
+  image: europeanxfel/karabo-ci:almalinux-9-003
   before_script:
     - export KARABO_TAG="latest_build"
   <<: *test_build
   <<: *test_report
 
 test:almalinux9:prerelease:
-  image: europeanxfel/karabo-ci:almalinux-9-002
+  image: europeanxfel/karabo-ci:almalinux-9-003
   before_script:
     - export KARABO_TAG="latest_prerelease_build"
   <<: *test_build
