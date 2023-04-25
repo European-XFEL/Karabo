@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QDialog
 
 from karabogui.graph.common.api import AxesLabelsDialog

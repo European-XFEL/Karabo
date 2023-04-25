@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numpy as np
 from pyqtgraph import Point
 from qtpy.QtCore import QRectF, QSizeF

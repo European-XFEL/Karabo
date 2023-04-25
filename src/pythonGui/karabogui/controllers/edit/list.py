@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from ast import literal_eval
 
 from qtpy.QtCore import Qt

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import unittest
 
 from karabogui.graph.plots.utils import _get_sample_threshold

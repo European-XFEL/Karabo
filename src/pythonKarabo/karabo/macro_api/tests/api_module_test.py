@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import os.path as op
 
 from karabo.testing.import_checker import check_for_star_imports

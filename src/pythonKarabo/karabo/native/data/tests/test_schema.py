@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from copy import deepcopy
 from unittest import TestCase, main
 

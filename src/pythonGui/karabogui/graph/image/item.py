@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numpy as np
 from pyqtgraph import GraphicsObject, Point, functions as fn, getConfigOption
 from qtpy.QtCore import QPointF, QRectF, Qt, Signal, Slot

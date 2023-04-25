@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   Timing_Test.hh
  * Author: steffen.hauf@xfel.eu

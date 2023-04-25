@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.testing.utils import temp_xml_file
 
 from ..model import UnknownXMLDataModel

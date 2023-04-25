@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .bases import BaseProjectObjectModel
 from .cache import MemCacheWrapper, ProjectDBCache, get_user_cache

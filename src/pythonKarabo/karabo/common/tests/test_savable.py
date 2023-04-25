@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Dict, HasStrictTraits, HasTraits, Instance, List
 
 from karabo.common.api import BaseSavableModel, set_modified_flag

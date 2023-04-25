@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #
 # Author: <burkhard.heisen@xfel.eu>
 #

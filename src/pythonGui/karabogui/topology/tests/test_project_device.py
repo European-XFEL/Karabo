@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest.mock import Mock
 
 from karabo.common.api import KARABO_WARN_HIGH, InstanceStatus

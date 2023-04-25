@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import copy
 
 from karabo.bound import Hash, SignalSlotable

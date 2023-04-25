@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karathon import INIT, READ, WRITE, AccessType, AssemblyRules
 
 from .configurator import Configurator

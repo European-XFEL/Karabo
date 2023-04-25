@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtGui import QValidator
 
 from karabogui.testing import GuiTestCase

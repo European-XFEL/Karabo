@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 from .button_delegate import TableButtonDelegate
 from .controller import BaseFilterTableController, BaseTableController
