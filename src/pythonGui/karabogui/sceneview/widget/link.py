@@ -252,11 +252,11 @@ class DeviceSceneLinkWidget(BaseLinkWidget):
                 f"Device <b>{device_id}</b> is not online!",
                 "Warning", parent=self)
             return
-        if len(self.model.target):
-            scene_name = self.model.target
-            target_window = self.model.target_window
-            get_scene_from_server(device_id, scene_name=scene_name,
-                                  target_window=target_window)
+
+        scene_name = self.model.target
+        target_window = self.model.target_window
+        get_scene_from_server(device_id, scene_name=scene_name,
+                              target_window=target_window)
 
     def on_edit(self):
         """Reimplemented function of `BaseLinkWidget"""
