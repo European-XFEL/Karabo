@@ -215,9 +215,15 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t
     // Asynchronous replies do not have that key, so we use instead:
     // "slotInstanceIds": |DataLogger-Cam7_Proc||Karabo_GuiServer_0|
     boost::optional<util::Hash::Node&> funcNode = header->find("slotFunctions");
-    const std::string& slots =
-          (funcNode ? funcNode->getValue<std::string>() : header->get<std::string>("slotInstanceIds"));
-
+    std::string slots;
+    if (funcNode) {
+        slots = funcNode->getValue<std::string>();
+    } else if (header->has("slotInstanceIds")) {
+        slots = header->get<std::string>("slotInstanceIds");
+    } else {
+        // For example heartbeats in AMQP case don't provide receiver information
+        slots = "__none__";
+    }
     std::vector<std::string> slotsVec;
     // token_compress_on: treat "||" as "|"
     boost::split(slotsVec, slots, boost::is_any_of("|"), boost::token_compress_on);
