@@ -3,6 +3,8 @@ stages:
   - build
   - test
   - mirror
+  - systemtest
+
 
 .build_template: &build
   stage: build
@@ -301,6 +303,15 @@ test_docs:
     changes:
       - "src/**/*"
       - "doc/**/*"
+
+systemtest:
+  stage: systemtest
+  image: europeanxfel/karabo-ci:miniconda-3
+  allow_failure: true
+  only:
+    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
+  script:
+    - python ci/portal/portal_start
 
 # release build
 
@@ -678,14 +689,14 @@ long tests ubuntu22:
 
 # Publish to the GitHub mirror - 1st. of 2 steps
 #
-# 1st. step is triggered by release tags automatically and publishes the 
-# master branch and the tags of the Framework to an internal mirror. As part 
-# of this step, the git commit history is edited using git-filter-repo to 
+# 1st. step is triggered by release tags automatically and publishes the
+# master branch and the tags of the Framework to an internal mirror. As part
+# of this step, the git commit history is edited using git-filter-repo to
 # remove personal data from contributors who do not want their personal data
 # exposed in the public GitHub mirror.
 #
 # The 2nd. step will be manual, triggered from the internal mirror on demand
-# and will be responsible for updating the public GitHub mirror with the 
+# and will be responsible for updating the public GitHub mirror with the
 # contents of the internal mirror.
 internal_mirror_publish:
   stage: mirror
