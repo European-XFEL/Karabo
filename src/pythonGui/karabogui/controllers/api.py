@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 # NOTE: None of the controller classes are here. They should be acquired from
 # the registry, not directly (tests excluded, of course)

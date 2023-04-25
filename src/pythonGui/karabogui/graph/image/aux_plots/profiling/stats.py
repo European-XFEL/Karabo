@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Constant, Dict
 
 from karabogui.graph.common.formatting import (

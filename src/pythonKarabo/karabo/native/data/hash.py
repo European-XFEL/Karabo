@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numbers
 from collections import OrderedDict
 from collections.abc import Iterable

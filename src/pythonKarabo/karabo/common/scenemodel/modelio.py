@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from xml.etree.ElementTree import Element, parse, tostring
 
 from .const import NS_KARABO, NS_SVG, SCENE_FILE_VERSION

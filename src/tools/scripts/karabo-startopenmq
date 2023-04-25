@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 cd $(dirname $0)
 if [ -z $KARABO ]; then

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Configurable, Float, Int32
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, ProxyStatus, build_binding)

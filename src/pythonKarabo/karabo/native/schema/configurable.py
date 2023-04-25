@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import gather
 from collections import OrderedDict
 from functools import partial

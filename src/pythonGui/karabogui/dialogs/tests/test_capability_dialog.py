@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest import main, mock
 
 from karabogui.binding.api import apply_default_configuration, build_binding

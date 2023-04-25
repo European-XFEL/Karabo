@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa: F401
 """This is the complete public API for middle layer devices. You are
 free to use everything defined here, try to avoid doing deep imports

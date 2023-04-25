@@ -1,4 +1,5 @@
 #! /bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 if [ $# -lt 1 ] || [ $1 = "-h" ] || [ $1 = "--help" ]; then
     echo

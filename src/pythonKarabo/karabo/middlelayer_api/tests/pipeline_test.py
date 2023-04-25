@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import socket
 from asyncio import (
     Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,

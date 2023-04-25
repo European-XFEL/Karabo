@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """This module contains the base classes for Karabo schema types
 
 Karabo keeps some metadata with its values. This module contains the

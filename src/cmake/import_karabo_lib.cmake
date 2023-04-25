@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Creates an IMPORTED target for the Karabo Framework Library by obtaining
 # link libraries dependencies from a "karaboDependencies.pc" file expected
 # at $KARABO/lib/karaboDependencies.pc.

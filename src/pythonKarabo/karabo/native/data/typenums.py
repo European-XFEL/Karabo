@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from enum import Enum
 
 __all__ = ['HashType', 'HASH_TYPE_TO_XML_TYPE', 'XML_TYPE_TO_HASH_TYPE']

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.common.project.device import DeviceInstanceModel
 from karabo.common.project.device_config import DeviceConfigurationModel
 from karabo.common.project.server import DeviceServerModel

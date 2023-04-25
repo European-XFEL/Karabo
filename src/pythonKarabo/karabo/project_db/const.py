@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 LIST_DOMAINS_QUERY = """
     xquery version "3.0";
     <collections>{{

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Undefined
 
 from karabogui.binding.api import FloatBinding

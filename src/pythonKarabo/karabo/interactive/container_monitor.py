@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import signal
 import subprocess
 from argparse import ArgumentParser

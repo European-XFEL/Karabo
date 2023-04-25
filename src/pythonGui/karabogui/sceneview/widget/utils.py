@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabogui.binding.api import PropertyProxy
 from karabogui.singletons.api import get_topology
 

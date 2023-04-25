@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Dict, Instance, List, Property, Trait, TraitHandler
 
 from karabo.native import Hash

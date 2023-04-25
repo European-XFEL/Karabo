@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
     INPUT_CHANNEL, INT32_ELEMENT, KARABO_CLASSINFO, NODE_ELEMENT,

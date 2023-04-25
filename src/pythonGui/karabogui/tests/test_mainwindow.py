@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QFrame
 
 from karabogui.testing import singletons
