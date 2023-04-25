@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.Qsci import QsciLexerPython
 from qtpy.QtGui import QColor, QFont
 

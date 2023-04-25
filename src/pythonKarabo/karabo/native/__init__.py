@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # flake8: noqa
 # Import project namespace
 from .data import *

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import random
 from platform import system
 from unittest import mock, skipIf

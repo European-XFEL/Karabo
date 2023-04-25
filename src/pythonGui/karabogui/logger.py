@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import logging
 
 from qtpy.QtCore import QObject, QPoint, Qt, Signal, Slot

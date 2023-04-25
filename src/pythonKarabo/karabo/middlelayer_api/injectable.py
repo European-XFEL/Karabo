@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import gather, get_event_loop
 from itertools import chain
 

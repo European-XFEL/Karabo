@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import time
 from asyncio import gather, get_event_loop, sleep
 from contextlib import contextmanager

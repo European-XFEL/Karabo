@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtGui import QFont
 
 from ..fonts import FONT_STYLE_HINTS, get_qfont

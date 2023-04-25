@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 KARABO_SCHEMA_DISPLAY_TYPE_BIN = "bin"
 KARABO_SCHEMA_DISPLAY_TYPE_OCT = "oct"
 KARABO_SCHEMA_DISPLAY_TYPE_HEX = "hex"

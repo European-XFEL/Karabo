@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # To disable building of tests, please set the cache variable BUILD_TESTS to
 # 0 from the cmake configuration command-line. The default is to BUILD_TESTS.
 

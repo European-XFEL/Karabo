@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 safeRunCommand() {
     typeset cmnd="$*"

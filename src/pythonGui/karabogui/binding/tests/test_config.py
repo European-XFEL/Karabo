@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import os.path as op
 from contextlib import contextmanager
 from glob import glob

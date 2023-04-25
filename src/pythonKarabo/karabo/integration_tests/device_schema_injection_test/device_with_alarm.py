@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.bound import (
     DOUBLE_ELEMENT, INT32_ELEMENT, KARABO_CLASSINFO, NODE_ELEMENT,
     TABLE_ELEMENT, VECTOR_INT32_ELEMENT, Hash, PythonDevice, Schema)

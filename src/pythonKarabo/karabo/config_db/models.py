@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #
 # Model classes generated from the existing Sqlite database by pwiz,
 # a model generator script bundled with peewee. The command to generate

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numpy as np
 from numpy.testing import assert_array_equal
 

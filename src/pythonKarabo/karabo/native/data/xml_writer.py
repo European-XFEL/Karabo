@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import base64
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import get_event_loop
 
 import pkg_resources

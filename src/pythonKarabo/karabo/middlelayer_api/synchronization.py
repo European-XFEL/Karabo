@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """This module contains some synchronization routines for users"""
 
 import asyncio

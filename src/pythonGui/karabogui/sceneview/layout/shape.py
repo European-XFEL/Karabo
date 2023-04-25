@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QLayout, QLayoutItem
 
 from karabogui.sceneview.utils import save_painter_state

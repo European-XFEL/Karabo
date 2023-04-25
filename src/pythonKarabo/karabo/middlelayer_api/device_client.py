@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """This is the machinery to communicate with remote devices.
 
 Usually, one communicated with a remote device by creating a device

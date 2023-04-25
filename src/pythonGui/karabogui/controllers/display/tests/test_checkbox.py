@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Bool, Configurable
 from karabogui.testing import (
     check_renderer_against_svg, get_class_property_proxy, set_proxy_value)

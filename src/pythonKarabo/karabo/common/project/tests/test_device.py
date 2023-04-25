@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from uuid import uuid4
 
 from traits.api import pop_exception_handler, push_exception_handler

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import time
 from asyncio import Future, ensure_future, sleep
 

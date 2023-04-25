@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from asyncio import wait_for
 
 from karabo.middlelayer import (

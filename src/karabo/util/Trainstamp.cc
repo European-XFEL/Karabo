@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   TrainStamp.cc
  * Author: WP76

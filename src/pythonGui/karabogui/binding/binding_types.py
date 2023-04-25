@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numpy as np
 from traits.api import (
     Array, CArray, Complex, Dict, Either, Enum, Event, HasStrictTraits,

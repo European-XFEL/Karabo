@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 KARABO_ALARM_SERVICE = "Karabo_AlarmService"
 KARABO_CONFIG_MANAGER = "KaraboConfigurationManager"
 KARABO_DAEMON_MANAGER = "KaraboDaemonManager"

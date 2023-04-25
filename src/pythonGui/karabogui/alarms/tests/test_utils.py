@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabogui.testing import alarm_data
 
 from .. import utils

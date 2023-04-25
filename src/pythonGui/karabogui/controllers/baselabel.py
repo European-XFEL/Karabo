@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
 from traits.api import Instance, String, Tuple, Undefined
 

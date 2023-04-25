@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import logging
 import time
 from asyncio import CancelledError, Future, TimeoutError, ensure_future

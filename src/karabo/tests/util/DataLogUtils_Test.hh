@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   DataLogUtils_Test.hh
  * Author: costar

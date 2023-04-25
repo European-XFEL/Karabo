@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import operator
 
 from qtpy.QtGui import QPixmap

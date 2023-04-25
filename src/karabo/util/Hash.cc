@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 /*
  * File:   Hash.cc
  * Author: <burkhard.heisen@xfel.eu>

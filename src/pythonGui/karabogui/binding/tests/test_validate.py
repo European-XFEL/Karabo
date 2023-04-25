@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import numpy as np
 
 import karabogui.binding.binding_types as types

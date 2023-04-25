@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """Custom API definition for Qsci autocompletion"""
 
 global _KARABO_NAMESPACE

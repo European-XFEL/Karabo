@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from .macro_api.alarms import showAlarms, showInterlocks
 from .macro_api.device_interface import (
     listCameras, listDeviceInstantiators, listMotors, listMultiAxisMotors,

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from traits.api import Callable, List
 
 from karabogui import icons

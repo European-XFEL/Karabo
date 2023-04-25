@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from unittest import main, mock
 
 from karabo.common.project.api import MacroModel, ProjectModel, write_macro

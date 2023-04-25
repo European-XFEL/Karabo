@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #ifndef KARABO_UTIL_PACKPARAMETERS
 #define KARABO_UTIL_PACKPARAMETERS
 

@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 """This tests the long pipeline tests in the middlelayer API"""
 
 from random import randint

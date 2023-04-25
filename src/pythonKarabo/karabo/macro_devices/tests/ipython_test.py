@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import pickle
 from asyncio import Future, TimeoutError, wait_for
 from datetime import datetime, timezone

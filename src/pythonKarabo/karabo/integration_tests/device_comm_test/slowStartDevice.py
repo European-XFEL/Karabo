@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import time
 
 from karabo.bound import INT32_ELEMENT, KARABO_CLASSINFO, PythonDevice

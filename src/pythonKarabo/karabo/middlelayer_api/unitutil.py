@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 import copy
 from asyncio import iscoroutinefunction
 from collections.abc import Iterable

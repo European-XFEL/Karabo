@@ -1,3 +1,4 @@
+/* Copyright (C) European XFEL GmbH Schenefeld. All rights reserved. */
 #include "AlarmConditions.hh"
 
 #include "Exception.hh"

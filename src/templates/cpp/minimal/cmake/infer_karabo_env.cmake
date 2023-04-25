@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #
 # Tries  to infer the directory of a Karabo installation based on the
 # behavior of "karabo new" and "karabo install" commands, which place the

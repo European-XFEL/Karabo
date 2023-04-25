@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from .. import api
 from .utils import (
     assert_base_traits, base_widget_traits, single_model_round_trip)

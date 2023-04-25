@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from pyqtgraph import PlotItem
 from qtpy.QtWidgets import QMenu
 from traits.api import (
