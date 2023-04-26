@@ -98,10 +98,11 @@ def test_delete():
         r = weakref.ref(remote)
         Remote.destructed = False
         del remote
-        sleepSync(lambda: Remote.destructed)
+        time.sleep(0.05)
         gc.collect()
         time.sleep(0.05)
         assert r() is None
+        sleepSync(lambda: Remote.destructed)
         assert Remote.destructed
     finally:
         thread.stop()
