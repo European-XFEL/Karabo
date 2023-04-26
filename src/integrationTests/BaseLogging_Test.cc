@@ -1237,7 +1237,7 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     string configTimepoint;
 
     int nTries = NUM_RETRY;
-    while (conf.empty() && nTries > 0) {
+    while (!conf.has(noDefaultProp) && nTries > 0) {
         try {
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterPropSet)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
