@@ -497,13 +497,15 @@ def test_disconnect(deviceTest):
     d = getDevice("remote")    # proxy is not connected after 5 seconds
     sleep(5)
     executeNoWait(d, "count")
+    # Total count is 30 times for 0.05 seconds each -> 1.5 seconds
     time.sleep(0.1)
     assert d.counter == -1
     with updateDevice(d):
         assert d.counter != -1
         time.sleep(0.1)
         assert d.counter != 29
-    time.sleep(0.1)
+    # Sleep after exit to let signals propagate the disconnect
+    time.sleep(0.2)
     last = d.counter
     time.sleep(0.1)
     assert last == d.counter
