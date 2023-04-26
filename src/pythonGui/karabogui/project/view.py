@@ -23,7 +23,7 @@ from karabogui.util import is_database_processing, move_to_cursor
 
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
-from .controller.macro import get_project_macros
+from .controller.macro import MacroController, get_project_macros
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
 from .controller.server import DeviceServerController, get_project_servers
@@ -111,7 +111,8 @@ class ProjectView(QTreeView):
             project_controller = self._project_controller(selected_controller)
             selected_controller.double_click(project_controller, parent=self)
 
-            ignored = (DeviceInstanceController, DeviceServerController)
+            ignored = (DeviceInstanceController, DeviceServerController,
+                       MacroController)
             if isinstance(selected_controller, ignored):
                 # Don't expand or fold servers and devices!
                 event.ignore()
