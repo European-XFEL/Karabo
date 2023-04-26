@@ -1789,7 +1789,7 @@ namespace karabo {
                 instanceInfo.set("status", status);
 
                 // the capabilities field specifies the optional capabilities a device provides.
-                int capabilities = 0;
+                unsigned int capabilities = 0;
 
                 if (hasAvailableScenes) capabilities |= Capabilities::PROVIDES_SCENES;
                 if (hasAvailableMacros) capabilities |= Capabilities::PROVIDES_MACROS;
@@ -1798,7 +1798,7 @@ namespace karabo {
                 instanceInfo.set("capabilities", capabilities);
 
                 if (hasAvailableInterfaces) {
-                    int interfaces = 0;
+                    unsigned int interfaces = 0;
                     const std::vector<std::string>& availableInterfaces = get<std::vector<std::string>>("interfaces");
                     for (const std::string& desc : availableInterfaces)
                         if (desc == "Motor") interfaces |= Interfaces::Motor;
