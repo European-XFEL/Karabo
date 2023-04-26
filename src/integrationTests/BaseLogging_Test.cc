@@ -928,7 +928,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
     std::vector<std::string> confKeys;
     conf.getKeys(confKeys);
     Epochstamp latestTimestamp(0, 0);
-    for (const auto path : confKeys) {
+    for (const std::string& path : confKeys) {
         const Hash::Node& propNode = conf.getNode(path);
         if (propNode.hasAttribute("sec") && propNode.hasAttribute("frac")) {
             auto propSec = propNode.getAttribute<unsigned long long>("sec");
@@ -965,28 +965,42 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
     }
     CPPUNIT_ASSERT_EQUAL(false, deviceIdFound);
 
-    // Waits a while before retrieving the configuration for a timepoint where the device is guaranteed to be offline.
-    // There is an interval between the device being killed and the event that it is gone reaching the logger - the
-    // delay decreases the chances of the timepoint used in the request for configuration from past to precede the
+    // There is an interval between the device being killed and the event that it is gone reaching the logger.
+    // But we need to be sure that the timepoint used in the request for configuration from past is affter the
     // timestamp associated to the device shutdown event.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(15250));
+    // In rare CI cases this sleep seems not to be enough, therefore the loop below that even postpones the requested
+    // timepoint.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 
     Epochstamp afterDeviceGone;
     std::clog << "... after device being logged is gone (requested config at " << afterDeviceGone.toIso8601()
-              << ") ...";
-    // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set in the
-    // previous test cases for the 'int32Property' - even after the device being logged is gone.
-    CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, afterDeviceGone.toIso8601())
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                .receive(conf, schema, configAtTimepoint, configTimepoint));
+              << " or later) ...";
+    int nTries = NUM_RETRY;
+    unsigned int numChecks = 0;
+    conf.clear();
+    configAtTimepoint = true;
+    while ((!conf.has("int32Property") || kLastValueSet != conf.get<int>("int32Property") || configAtTimepoint) &&
+           nTries-- > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+        afterDeviceGone.now();
 
-    CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
-    CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+        // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set in
+        // the previous test cases for the 'int32Property' - even after the device being logged is gone.
+        CPPUNIT_ASSERT_NO_THROW(
+              m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, afterDeviceGone.toIso8601())
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                    .receive(conf, schema, configAtTimepoint, configTimepoint));
+        ++numChecks;
+    }
+    const std::string msg("Failed after " + toString(numChecks) + " attempts\nconf: " + toString(conf) +=
+                          "\nconfigAtTimePoint: " + toString(configAtTimepoint) +=
+                          "\nconfigTimepoint: " + configTimepoint);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, kLastValueSet, conf.get<int>("int32Property"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, false, configAtTimepoint);
     karabo::util::Epochstamp configStamp(configTimepoint);
     // if data migration happened the data is younger than the file based logging data
-    CPPUNIT_ASSERT(configStamp > (dataWasMigrated ? fileMigratedDataEndsBefore : beforeAnything));
-    CPPUNIT_ASSERT(configStamp < afterDeviceGone);
+    CPPUNIT_ASSERT_MESSAGE(msg, configStamp > (dataWasMigrated ? fileMigratedDataEndsBefore : beforeAnything));
+    CPPUNIT_ASSERT_MESSAGE(msg, configStamp < afterDeviceGone);
     std::clog << "\n... "
               << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
               << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being "
@@ -1052,6 +1066,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Increase "variable" value and store after increasing it
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1)); // ensure timestamp is after setting
         stampsAfter.push_back(Epochstamp());
 
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
@@ -1140,7 +1155,8 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                 // for these expected exceptions (and go on with next try), but bail out for any other remote exception.
                 const std::string fileLoggerMsg(
                       "Requested time point for device configuration is earlier than anything logged");
-                const std::string influxLoggerMsg("Failed to query schema digest");
+                const std::string influxLoggerMsg( // see InfluxLogReader::onLastSchemaDigestBeforeTime
+                      "No active schema could be found for device at (or before) time point.");
                 CPPUNIT_ASSERT_MESSAGE("Unexpected RemoteException received: " + std::string(re.what()),
                                        (re.detailedMsg().find(fileLoggerMsg) != std::string::npos ||
                                         re.detailedMsg().find(influxLoggerMsg) != std::string::npos));
@@ -1151,12 +1167,13 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
             nTries--;
         }
-        CPPUNIT_ASSERT_MESSAGE("Failed to retrieve a non-empty configuration for device '" + m_deviceId + "' after " +
-                                     toString(nChecks) + " attempts - " + toString(nRemoteExceptions) +
-                                     " remote exceptions among them - conf: " + toString(conf),
-                               conf.size() > 0);
+        const std::string msg("Failed to retrieve expected configuration for device '" + m_deviceId + "' after " +
+                              toString(nChecks) + " attempts - " + toString(nRemoteExceptions) +
+                              " remote exceptions among them - conf: " + toString(conf));
+        CPPUNIT_ASSERT_MESSAGE(msg, conf.size() > 0);
         CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
-        CPPUNIT_ASSERT_EQUAL(static_cast<int>(i + 1), conf.get<int>("value")); // +1: stamp is after update
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, static_cast<int>(i + 1), // +1: stamp is after update
+                                     conf.get<int>("value"));
 
         // Check received stamps: For "value" be aware that we store with
         // microsec precision only: we might be 1 off since we cut off digits instead of rounding
