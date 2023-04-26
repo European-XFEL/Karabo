@@ -295,7 +295,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
                 ->request(dlreader0, "slotGetBadData", beforeFirstBurst.toIso8601Ext(), afterFirstBurst.toIso8601Ext())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(badDataAllDevices));
-    CPPUNIT_ASSERT_EQUAL(0ul, badDataAllDevices.size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(badDataAllDevices), 0ul, badDataAllDevices.size());
 
     // Wait some time to isolate the schema update bursts.
     boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
