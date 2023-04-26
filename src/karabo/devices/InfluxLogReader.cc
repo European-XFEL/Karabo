@@ -666,6 +666,7 @@ namespace karabo {
                 auto value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (value.is_null()) {
                     // No digest has been found - it's not possible to go ahead.
+                    // Note that following text is expected in BaseLogging_Test::testCfgFromPastRestart
                     std::ostringstream oss;
                     oss << "No active schema could be found for device at (or before) time point.";
                     Epochstamp currTime;
