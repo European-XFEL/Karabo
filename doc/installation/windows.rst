@@ -1,3 +1,6 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 *************************************
 Connecting with Karabo GUI on Windows
 *************************************
