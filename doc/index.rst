@@ -1,3 +1,6 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 Welcome to Karabo's documentation!
 ==================================
 
