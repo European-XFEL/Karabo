@@ -1,7 +1,6 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 from karabo.native import Configurable, Int32, Node
-from karabogui.binding.api import PropertyProxy
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import get_class_property_proxy
 
 from ..widgetnode import DisplayWidgetNode
 
@@ -15,23 +14,16 @@ class Object(Configurable):
     node = Node(DataNode)
 
 
-class TestWidgetNode(GuiTestCase):
-    def setUp(self):
-        super(TestWidgetNode, self).setUp()
+def test_widgetnode_version(gui_app):
+    # setup
+    schema = Object.getClassSchema()
+    widget_node = get_class_property_proxy(schema, 'node')
+    controller = DisplayWidgetNode(proxy=widget_node)
+    controller.create(None)
 
-        schema = Object.getClassSchema()
-        self.widget_node = get_class_property_proxy(schema, 'node')
-        device = self.widget_node.root_proxy
-        self.value = PropertyProxy(root_proxy=device, path='value')
+    # test body
+    assert controller.widget.text() == "WidgetNode\nNodeType: DataNode"
 
-        self.controller = DisplayWidgetNode(proxy=self.widget_node)
-        self.controller.create(None)
-
-    def tearDown(self):
-        super(TestWidgetNode, self).tearDown()
-        self.controller.destroy()
-        assert self.controller.widget is None
-
-    def test_widget_version(self):
-        self.assertEqual(self.controller.widget.text(),
-                         "WidgetNode\nNodeType: DataNode")
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
