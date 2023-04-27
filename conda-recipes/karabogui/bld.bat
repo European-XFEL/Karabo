@@ -1,3 +1,4 @@
+:: Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 set BUILD_KARABO_SUBMODULE=NATIVE
 cd ./src/pythonKarabo
 python setup.py install

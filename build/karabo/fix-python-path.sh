@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 # Script for fixing up the python path on several python packages
 #

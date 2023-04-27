@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 # WARNING: This script needs to be run in a proper environment.
 # The karabo activate file needs to be sourced and a broker needs to be
 # started.
