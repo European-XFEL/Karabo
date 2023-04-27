@@ -1,3 +1,4 @@
+:: Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 @REM Store existing OMP_NUM_THREADS
 
 @if defined OMP_NUM_THREADS (
