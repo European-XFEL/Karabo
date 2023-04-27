@@ -86,7 +86,7 @@ mkdir -p $PACKAGEDIR/var/data
 # karabo external dependencies
 cp -rf $EXTERN_DEPS_DIR $PACKAGEDIR/extern
 
-# karathon
+# karathon and karabind
 # Use karabo embedded python interpreter
 PATH=$PACKAGEDIR/extern/bin:$PATH
 SITE_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
