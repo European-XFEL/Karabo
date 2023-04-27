@@ -53,7 +53,7 @@ __lint_clang_format() {
     SCAN_DIRS="$CI_PROJECT_DIR/src/karabo $CI_PROJECT_DIR/src/brokerMessageLogger \
     $CI_PROJECT_DIR/src/cppLongTests $CI_PROJECT_DIR/src/deviceServer \
     $CI_PROJECT_DIR/src/integrationTests $CI_PROJECT_DIR/src/karathon \
-    $CI_PROJECT_DIR/src/tools"
+    $CI_PROJECT_DIR/src/karabind $CI_PROJECT_DIR/src/tools"
 
     echo "Linting format with `clang-format --version` ..."
 
