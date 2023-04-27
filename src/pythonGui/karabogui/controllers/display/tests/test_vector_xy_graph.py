@@ -3,8 +3,7 @@ import numpy as np
 
 from karabo.native import Configurable, VectorInt32
 from karabogui.binding.api import PropertyProxy
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..vector_xy_graph import DisplayVectorXYGraph
 
@@ -14,31 +13,29 @@ class Object(Configurable):
     value = VectorInt32()
 
 
-class TestXYVectorGraph(GuiTestCase):
-    def setUp(self):
-        super(TestXYVectorGraph, self).setUp()
+def test_vector_xy_graph(gui_app):
+    """Test the setting of both x and y values in the vector xy graph"""
+    # setup
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "index")
+    device = proxy.root_proxy
+    value_proxy = PropertyProxy(root_proxy=device, path="value")
 
-        schema = Object.getClassSchema()
-        self.index = get_class_property_proxy(schema, 'index')
-        device = self.index.root_proxy
-        self.value = PropertyProxy(root_proxy=device, path='value')
+    controller = DisplayVectorXYGraph(proxy=proxy)
+    controller.create(None)
+    assert controller.widget is not None
+    controller.visualize_additional_property(value_proxy)
 
-        self.controller = DisplayVectorXYGraph(proxy=self.index)
-        self.controller.create(None)
-        self.controller.visualize_additional_property(self.value)
+    # set values
+    index = [1, 2, 3, 4, 5]
+    value = [42] * 5
+    set_proxy_value(proxy, "index", index)
+    set_proxy_value(value_proxy, "value", value)
 
-    def tearDown(self):
-        super(TestXYVectorGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+    curve = controller._curves[value_proxy]
+    np.testing.assert_almost_equal(list(curve.xData), index)
+    np.testing.assert_almost_equal(list(curve.yData), value)
 
-    def test_set_value(self):
-        """Test the setting of both x and y values in the vector xy graph"""
-        index = [1, 2, 3, 4, 5]
-        value = [42] * 5
-        set_proxy_value(self.index, 'index', index)
-        set_proxy_value(self.value, 'value', value)
-
-        curve = self.controller._curves[self.value]
-        np.testing.assert_almost_equal(list(curve.xData), index)
-        np.testing.assert_almost_equal(list(curve.yData), value)
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
