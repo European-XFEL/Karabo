@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 # Install karaboCommon
 export BUILD_KARABO_SUBMODULE=NATIVE

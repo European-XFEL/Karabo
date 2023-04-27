@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 get_abs_path() {
     local PARENT_DIR=$(dirname "$1")
     local BASENAME=$(basename "$1")

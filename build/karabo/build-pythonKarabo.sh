@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 BUILD_OPTION=$2
 OS=$(uname -s)
