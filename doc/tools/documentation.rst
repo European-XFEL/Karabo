@@ -1,3 +1,6 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 .. _projects/howto_document:
 
 **************************************

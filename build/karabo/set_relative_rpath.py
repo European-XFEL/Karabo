@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # -*- coding: iso-8859-1 -*-
 
 #
