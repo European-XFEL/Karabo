@@ -443,8 +443,8 @@ if [ -d $FRAMEWORK_INSTALL_DIR ]; then
     done
 fi
 
-# Builds libkarabo, libkarathon, karabo-* utilities and install them
-# in FRAMEWORK_INSTALL_DIR.
+# Builds libkarabo, libkarathon, libkarabind, karabo-* utilities
+# and installs them in FRAMEWORK_INSTALL_DIR.
 safeRunCommand $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target install
 if [ $? -ne 0 ]; then
     echo
