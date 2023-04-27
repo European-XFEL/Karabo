@@ -1,3 +1,4 @@
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # Restore previous value of OMP_NUM_THREADS if any
 
 unset OMP_NUM_THREADS

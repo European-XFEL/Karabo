@@ -1,3 +1,6 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 .. _installation/dependency_management:
 
 External Dependency Management in Karabo
