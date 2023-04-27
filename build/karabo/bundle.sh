@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 # Script for creating a full Karabo software bundle with the C++ portions
 # of the Framework built with CMake.
