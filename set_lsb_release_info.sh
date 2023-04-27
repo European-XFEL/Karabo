@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 # Sets the environment variables LSB_RELEASE_DIST and
 # LSB_RELEASE_VERSION with the system distribution and
 # version information, respectively.

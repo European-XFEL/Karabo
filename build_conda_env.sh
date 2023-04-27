@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 # Script for activating the KaraboGUI conda environment, also offers some
 # auxiliary functionality like building the conda package or cleaning the
 # environment.
