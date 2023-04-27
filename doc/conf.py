@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # -*- coding: utf-8 -*-
 #
 # Karabo documentation build configuration file, created by

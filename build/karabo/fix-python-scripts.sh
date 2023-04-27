@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 # Script for fixing up the shebang lines of Python entry-point scripts of
 # Karabo entry points.

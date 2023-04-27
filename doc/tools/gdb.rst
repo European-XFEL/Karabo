@@ -1,3 +1,6 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
 UPDATE: As of 2022, use of Netbeans for doing C++ development both for the
 Karabo Framework and for Karabo Devices is being phased out. The primarily
 supported C++ IDE is Visual Studio Code. Visual Studio Code offers excelent
