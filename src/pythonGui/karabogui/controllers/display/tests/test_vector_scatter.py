@@ -1,13 +1,11 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-from unittest.mock import patch
-
 import numpy as np
+import pytest
 
 from karabo.common.scenemodel.api import VectorScatterGraphModel
 from karabo.native import Configurable, VectorFloat, VectorInt32
 from karabogui.binding.proxy import PropertyProxy
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..vector_scatter_graph import DisplayVectorScatterGraph
 
@@ -17,63 +15,67 @@ class Object(Configurable):
     y = VectorInt32(defaultValue=[1, 2, 3])
 
 
-class TestVectorScatterGraph(GuiTestCase):
-    def setUp(self):
-        super(TestVectorScatterGraph, self).setUp()
+@pytest.fixture
+def vector_scatter_setup(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "x")
+    device = proxy.root_proxy
+    prop_proxy = PropertyProxy(root_proxy=device, path="y")
+    controller = DisplayVectorScatterGraph(proxy=proxy)
+    controller.create(None)
+    controller.visualize_additional_property(prop_proxy)
+    assert controller.widget is not None
 
-        schema = Object.getClassSchema()
-        self.x = get_class_property_proxy(schema, 'x')
-        device = self.x.root_proxy
-        self.y = PropertyProxy(root_proxy=device, path='y')
-        self.controller = DisplayVectorScatterGraph(proxy=self.x)
-        self.controller.create(None)
-        self.controller.visualize_additional_property(self.y)
-        self.assertIsNotNone(self.controller.widget)
+    yield controller, proxy, prop_proxy
 
-    def tearDown(self):
-        super(TestVectorScatterGraph, self).tearDown()
-        self.controller.destroy()
-        self.assertIsNone(self.controller.widget)
+    controller.destroy()
+    assert controller.widget is None
 
-    def test_scatter_graph_basics(self):
-        set_proxy_value(self.x, 'x', [2.3, 4.5, 7.9])
-        set_proxy_value(self.y, 'y', [1, 2, 3])
-        curve = self.controller._plot
-        x, y = curve.getData()
-        np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
-        np.testing.assert_array_almost_equal(y, [1, 2, 3])
 
-    def test_pointsize(self):
-        controller = DisplayVectorScatterGraph(proxy=self.x,
-                                               model=VectorScatterGraphModel())
-        controller.create(None)
-        action = controller.widget.actions()[10]
-        self.assertEqual(action.text(), 'Point Size')
+def test_vector_scatter_graph_basics(vector_scatter_setup):
+    controller, proxy, prop_proxy = vector_scatter_setup
+    set_proxy_value(proxy, "x", [2.3, 4.5, 7.9])
+    set_proxy_value(prop_proxy, "y", [1, 2, 3])
+    curve = controller._plot
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
+    np.testing.assert_array_almost_equal(y, [1, 2, 3])
 
-        dsym = ('karabogui.controllers.display.'
-                'vector_scatter_graph.QInputDialog')
-        with patch(dsym) as QInputDialog:
-            QInputDialog.getDouble.return_value = 2.7, True
-            action.trigger()
-            self.assertEqual(controller.model.psize, 2.7)
-            self.assertEqual(controller._plot.opts['size'], 2.7)
 
-        controller.destroy()
+def test_vector_scatter_graph_pointsize(vector_scatter_setup, mocker):
+    _, proxy, prop_proxy = vector_scatter_setup
+    controller = DisplayVectorScatterGraph(proxy=proxy,
+                                           model=VectorScatterGraphModel())
+    controller.create(None)
+    action = controller.widget.actions()[10]
+    assert action.text() == "Point Size"
 
-    def test_removal_property(self):
-        controller = DisplayVectorScatterGraph(proxy=self.x,
-                                               model=VectorScatterGraphModel())
-        controller.create(None)
-        controller.visualize_additional_property(self.y)
-        set_proxy_value(self.x, 'x', [2.3, 4.5, 7.9])
-        set_proxy_value(self.y, 'y', [1, 2, 3])
+    dsym = ("karabogui.controllers.display."
+            "vector_scatter_graph.QInputDialog")
+    QInputDialog = mocker.patch(dsym)
+    QInputDialog.getDouble.return_value = 2.7, True
+    action.trigger()
+    assert controller.model.psize == 2.7
+    assert controller._plot.opts["size"] == 2.7
 
-        curve = self.controller._plot
-        x, y = curve.getData()
-        np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
-        np.testing.assert_array_almost_equal(y, [1, 2, 3])
+    controller.destroy()
 
-        self.assertTrue(controller.remove_additional_property(self.y))
-        self.assertIsNone(controller._y_proxy)
-        # Removing more does not hurt
-        self.assertFalse(controller.remove_additional_property(self.y))
+
+def test_removal_property(vector_scatter_setup):
+    _, proxy, prop_proxy = vector_scatter_setup
+    controller = DisplayVectorScatterGraph(proxy=proxy,
+                                           model=VectorScatterGraphModel())
+    controller.create(None)
+    controller.visualize_additional_property(prop_proxy)
+    set_proxy_value(proxy, "x", [2.3, 4.5, 7.9])
+    set_proxy_value(prop_proxy, "y", [1, 2, 3])
+
+    curve = controller._plot
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
+    np.testing.assert_array_almost_equal(y, [1, 2, 3])
+
+    assert controller.remove_additional_property(prop_proxy)
+    assert controller._y_proxy is None
+    # Removing more does not hurt
+    assert not controller.remove_additional_property(prop_proxy)
