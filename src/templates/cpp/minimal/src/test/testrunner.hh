@@ -29,7 +29,7 @@
 /**
  * @brief Test fixture for setup/teardown of karabo event loop,
  *        device server, and device client.
- * 
+ *
  *        This class is generic and does not need to be modified
  *        to support different device classes.
  */

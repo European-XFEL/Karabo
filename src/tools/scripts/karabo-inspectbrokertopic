@@ -17,7 +17,7 @@ if [ ${#@} -le 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
     # print help message if first argument asks for help
     echo
     echo "$SCRIPT - Look into messages stuck on broker:"
-    echo 
+    echo
     echo "  $SCRIPT [-h|--help] topic [broker:port [numMessages [firstMessageIdx]]]"
     echo
     echo "Default broker:port is taken as first item in \$KARABO_BROKER if that is"
