@@ -401,4 +401,3 @@ Some text that requires a footnote [#f1]_ .
     .. rubric:: Footnotes
 
     .. [#f1] Text of the first footnote.
-

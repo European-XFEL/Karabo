@@ -44,5 +44,3 @@ like to share with a selected group of people you work together with and get
 their opinion. You should explicitly let the people know that they should
 collaborate with you on the WIP MR. Everyone else can ignore WIP MRs,
 if they have not been explicitly asked for review.
-
-

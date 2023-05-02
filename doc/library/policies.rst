@@ -86,13 +86,3 @@ with getDevice("SomeDevice") as dev:
    dev.move() # Move to the target
 
    waitUntil(lambda: dev.state == "Stopped") # Wait until target reached
-
-
-
-
-
-
-
-
-
-

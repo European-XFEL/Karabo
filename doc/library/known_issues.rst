@@ -91,4 +91,3 @@ Karabo GUI
 - It can happen that devices crash and do not send their ``instanceGone`` signal
   to the gui servers. Hence, in rare situations, devices are visible in the
   GUI client although they are not online.
-
