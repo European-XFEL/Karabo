@@ -10,4 +10,3 @@ rm -f $FILE_BASE
 $LCOV_BASE/lcov --capture --initial --no-external --directory $UT_BASE --output-file $FILE_BASE_UT
 $LCOV_BASE/lcov --capture --initial --no-external --directory $IT_BASE --output-file $FILE_BASE_IT
 $LCOV_BASE/lcov -a $FILE_BASE_UT -a $FILE_BASE_IT -o $FILE_BASE
-
