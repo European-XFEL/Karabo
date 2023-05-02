@@ -35,4 +35,3 @@ else
     # Then strip off the leading 'tcp://' to have e.g. exflbkr02n0.desy.de:7777
     $KARABO/extern/bin/imqcmd -b ${FIRST_BROKER#tcp://} $@
 fi
-

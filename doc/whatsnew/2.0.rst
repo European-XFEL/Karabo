@@ -547,4 +547,3 @@ Python Middlelayer - Specific
 - Make yourself familiar with the new unified sync/async interface
 - Update to `DeviceNodes` whenever you have explicitly used `connectDevice`
   to mirror properties of a remote device in your expected parameters.
-
