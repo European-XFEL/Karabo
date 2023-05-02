@@ -57,6 +57,3 @@ taken:
   *Apply*.
 
 - Finally, save your icon as a plain SVG file.
-
-
-

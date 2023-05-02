@@ -751,4 +751,3 @@ automatically map to these calls
 
     While internally states are serialized as strings, states can only be
     updated by assigning a state enumerator object.
-

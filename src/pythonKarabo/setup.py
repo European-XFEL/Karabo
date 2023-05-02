@@ -1,4 +1,5 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+# flake8: noqa
 import os
 import os.path as op
 import sys

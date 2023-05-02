@@ -70,6 +70,3 @@ by ``GuiServer::slotAlarmSignalsUpdate``.
 
     Further information about the Alarm Service can be found at **Karabo** > **Outdated Concepts** > **Alarm System**.
     The pieces of information in that page that are not outdated will be merged soon into this page.
-
-
-
