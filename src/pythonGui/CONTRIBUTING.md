@@ -37,9 +37,9 @@ This will solve your environment dependencies and create an environment
 called ``karabogui``. Call ``conda activate karabogui`` to activate it. Still,
 the Karabo code has to be installed::
 
-    cd src/pythonKarabo 
-    pip install -e . --no-deps 
-    cd ../../ 
+    cd src/pythonKarabo
+    pip install -e . --no-deps
+    cd ../../
     cd src/pythonGui pip
     install -e . --no-deps
 
@@ -125,7 +125,7 @@ independent testing and event signals.
 - Dependencies:
 
   The Qt version of the `Karabo GUI` is provided by the community, e.g. we use
-  packages like *qtpy* and the conda qt-feedstock to run. However, only the 
+  packages like *qtpy* and the conda qt-feedstock to run. However, only the
   *PyQt* package is tested and supported. *PySide* is best-effort. For plotting
   features, the library *PyQtGraph* should be used. The `Karabo GUI` must run
   on different OS: MacOS, Windows and Linux. Hence, the *pathlib* module
