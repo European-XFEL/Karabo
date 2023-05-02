@@ -37,6 +37,3 @@ the way it is implemented (namely through using the C++ code under the hood).
    This API is not officially supported anymore, and only maintained for 
    development and debugging purposes. You should never use it for scripting of 
    devices in a production environment!
-
-
-

@@ -24,7 +24,7 @@ setup(name='__CLASS_NAME__',
       packages=find_packages('src'),
       entry_points={
           'karabo.bound_device': [
-              '__CLASS_NAME__ = __PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__',
+              '__CLASS_NAME__ = __PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__'
           ],
       },
       package_data={},

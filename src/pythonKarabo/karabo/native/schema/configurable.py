@@ -221,7 +221,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         await gather(*[s for s in setters if s is not None])
 
     async def set_setter(self, config, only_changes=False):
-        """Internal handler to set a Hash on the Configurable via the setter functions
+        """Internal handler to set a Hash on the Configurable via the setter
+        functions
 
         :param only_changes: Boolean to check if only changed values should
                              be set, the default is `False`.

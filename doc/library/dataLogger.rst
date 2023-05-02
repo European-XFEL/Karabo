@@ -170,5 +170,3 @@ values in requested time range.
 
 
  
-
-
