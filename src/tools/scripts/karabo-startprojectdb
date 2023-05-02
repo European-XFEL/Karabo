@@ -9,7 +9,7 @@ CONTAINER=karabo_existdb
 docker images $IMAGE --format "{{.Repository}}:{{.Tag}}" | grep $IMAGE > /dev/null
 if [[ $? -ne 0 ]]; then
     # pull in case we miss this image
-    docker pull $IMAGE 
+    docker pull $IMAGE
     if [[ $? -ne 0 ]]; then
         echo "ERROR: is docker installed?"
         exit 1

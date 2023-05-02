@@ -3,7 +3,7 @@ General
 =======
 
 - Lets try to provide better folder structure (Karabind should not be flat?)
-  * Elements in their own file together with MACRO? 
+  * Elements in their own file together with MACRO?
 - Every subitem is (ideally) a single merge request
   * Hash and Schema are very large
 
@@ -19,7 +19,7 @@ General
     * Try to split this into 2-4 MR's
 
   * [ ] ValidatorWrapper
-    
+
   * [ ] Elements
     * [ ] NodeElementWrapper
     * [ ] ChoiceElementWrapper
@@ -42,7 +42,7 @@ General
 - [ ] exportPyUtilTimeDuration()
 - [ ] exportPyUtilDims()
 - [ ] exportPyUtilNDArray()
-- [?] exportPyUtilDetectorGeometry() 
+- [?] exportPyUtilDetectorGeometry()
   * Don't transport initially
 - [X] exportPyUtilRollingWindowStatistics()
   * Don't transport to karabind
