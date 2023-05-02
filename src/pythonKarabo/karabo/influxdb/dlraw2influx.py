@@ -191,7 +191,8 @@ class DlRaw2Influx():
             self.data = []
             r = await self.db_client.write_with_retry(line_data)
             if r['code'] != 204:
-                msg = f"""Error writing line protocol: {r['code']} - {r['reason']}
+                rs = r['reason']
+                msg = f"""Error writing line protocol: {r['code']} - {rs}
                     Write retries: {r['retried']}
                     Content:
                     {line_data} ...

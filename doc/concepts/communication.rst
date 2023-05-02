@@ -127,4 +127,3 @@ visualised in the Karabo GUI.
 
 In C++ and bound Python, the data schema can be specified when the channels are
 defined in the *expectedParameters* function of the device.
-

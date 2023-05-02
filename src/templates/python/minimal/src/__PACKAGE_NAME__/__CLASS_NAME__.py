@@ -53,4 +53,3 @@ class __CLASS_NAME__(PythonDevice):
         # Here 'def onData(self, data, meta)' is registered
         # for InputChannel "input" as defined in expectedParameters.
         # self.KARABO_ON_DATA("input", self.onData)
-
