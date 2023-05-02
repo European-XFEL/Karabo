@@ -47,4 +47,3 @@ It is possible to link issues based on various relations. Current relations are:
 * copied from - Links issues to identify whether it was copied, and from which issue it was copied from.
 
 * copied to - Reciprocal of copied from.
-

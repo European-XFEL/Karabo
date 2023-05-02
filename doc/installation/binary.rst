@@ -57,5 +57,3 @@ able to e.g. run::
    Shell aliases and paths may conflict with the environment ``activate`` sets up. If ``which python`` 
    does not point to the Karabo-provided executable after sourcing activate, check your shell configuration
    e.g. `.bash_rc` if any aliases or python paths are set therein and comment the respective lines.
-
-
