@@ -1,6 +1,5 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-from unittest import mock, skipIf
-
+import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog
 
@@ -8,8 +7,7 @@ from karabo.common.scenemodel.api import EditableSpinBoxModel
 from karabo.native import Configurable, Int32, UInt8, Unit
 from karabogui.binding.api import build_binding
 from karabogui.const import IS_MAC_SYSTEM
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..intspinbox import EditableSpinBox
 
@@ -22,57 +20,63 @@ class Other(Configurable):
     prop = UInt8()
 
 
-class TestEditableSpinBox(GuiTestCase):
-    def setUp(self):
-        super(TestEditableSpinBox, self).setUp()
-        self.proxy = get_class_property_proxy(Object.getClassSchema(), 'prop')
-        self.controller = EditableSpinBox(proxy=self.proxy,
-                                          model=EditableSpinBoxModel())
-        self.controller.create(None)
-        self.controller.set_read_only(False)
+@pytest.fixture
+def intspinbox_setup(gui_app):
+    # teardown
+    proxy = get_class_property_proxy(Object.getClassSchema(), "prop")
+    controller = EditableSpinBox(proxy=proxy, model=EditableSpinBoxModel())
+    controller.create(None)
+    assert controller.widget is not None
+    controller.set_read_only(False)
+    yield controller, proxy
+    # teardown
+    controller.destroy()
+    assert controller.widget is None
 
-    def tearDown(self):
-        self.controller.destroy()
-        assert self.controller.widget is None
 
-    def test_set_value(self):
-        set_proxy_value(self.proxy, 'prop', 5)
-        assert self.controller.widget.value() == 5
+def test_intspinbox_basics(intspinbox_setup):
+    controller, proxy = intspinbox_setup
+    # set value
+    set_proxy_value(proxy, "prop", 5)
+    assert controller.widget.value() == 5
 
-    def test_edit_value(self):
-        self.controller.widget.setValue(3)
-        assert self.proxy.edit_value == 3
+    # edit value
+    controller.widget.setValue(3)
+    assert proxy.edit_value == 3
 
-    def test_focus_policy(self):
-        assert self.controller.widget.focusPolicy() == Qt.StrongFocus
+    # focus policy
+    assert controller.widget.focusPolicy() == Qt.StrongFocus
 
-    def test_schema_update(self):
-        proxy = get_class_property_proxy(Other.getClassSchema(), 'prop')
-        controller = EditableSpinBox(proxy=proxy)
-        controller.create(None)
 
-        assert controller.widget.minimum() == 0
-        assert controller.widget.maximum() == 255
-        assert controller.widget.suffix() == ""
+def test_intspinbox_schema_update(gui_app):
+    proxy = get_class_property_proxy(Other.getClassSchema(), "prop")
+    controller = EditableSpinBox(proxy=proxy)
+    controller.create(None)
 
-        build_binding(Object.getClassSchema(),
-                      existing=proxy.root_proxy.binding)
+    assert controller.widget.minimum() == 0
+    assert controller.widget.maximum() == 255
+    assert controller.widget.suffix() == ""
 
-        assert controller.widget.minimum() == -10
-        assert controller.widget.maximum() == 10
-        assert controller.widget.suffix() == " s"
+    build_binding(Object.getClassSchema(),
+                  existing=proxy.root_proxy.binding)
 
-    @skipIf(IS_MAC_SYSTEM, "Fonts are different on MacOS")
-    def test_font_setting(self):
-        settings = "{ font: normal; font-size: 10pt; }"
-        assert settings in self.controller.widget.styleSheet()
+    assert controller.widget.minimum() == -10
+    assert controller.widget.maximum() == 10
+    assert controller.widget.suffix() == " s"
 
-        path = "karabogui.controllers.edit.intspinbox.FormatLabelDialog"
-        with mock.patch(path) as dialog:
-            dialog().exec.return_value = QDialog.Accepted
-            dialog().font_size = 11
-            dialog().font_weight = "bold"
-            self.controller._format_field()
 
-            settings = "{ font: bold; font-size: 11pt; }"
-            assert settings in self.controller.widget.styleSheet()
+@pytest.mark.skipif(IS_MAC_SYSTEM, reason="Fonts are different on MacOS")
+def test_intspinbox_font_setting(intspinbox_setup, mocker):
+    controller, _ = intspinbox_setup
+    settings = "{ font: normal; font-size: 10pt; }"
+    assert settings in controller.widget.styleSheet()
+
+    path = "karabogui.controllers.edit.intspinbox.FormatLabelDialog"
+    dialog = mocker.patch(path)
+    dialog().exec.return_value = QDialog.Accepted
+    dialog().font_size = 11
+    dialog().font_weight = "bold"
+    controller._format_field()
+
+    settings = "{ font: bold; font-size: 11pt; }"
+    assert settings in controller.widget.styleSheet()
