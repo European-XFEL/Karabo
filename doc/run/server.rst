@@ -174,9 +174,3 @@ Processes vs. threads
 
 The C++ and Middlelayer servers run devices as threads/coroutines, whereas 
 the (bound) Python server starts each device in an own process.
-
-
-
-
-
-

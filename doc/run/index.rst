@@ -23,4 +23,3 @@ the installation as described for
 and
 :ref:`installation from source <installation/sources>`,
 respectively.
-

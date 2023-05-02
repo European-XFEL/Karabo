@@ -221,6 +221,3 @@ again and select View Domain Admin Console, select from Menu on the
 left server (Admin server), then Properties tab in the main
 window. Override current value of JMS_PROVIDER_PORT to 7777 and
 save. Afterwards restart the server.
-
-
-

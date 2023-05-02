@@ -94,4 +94,3 @@ do
     echo
     counter+=1
 done
-

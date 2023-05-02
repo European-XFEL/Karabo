@@ -41,9 +41,3 @@ As an exception to the rule, this patch level increase comes with an additionall
 
 * Karabo now has a TABLE_ELEMENT that allows devices to posses a table-like property. Variable number of fields with different field types can be used. 
   Internally the table is represented as an array of Hashes, with each Hash representing an individual row.
-
-
-
-
-
-
