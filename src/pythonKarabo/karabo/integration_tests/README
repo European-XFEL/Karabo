@@ -1,3 +1,3 @@
 Whenever adding a new test that needs its own devices, do not forget
-- to add an __init__.py file 
+- to add an __init__.py file
 - to add their egg-files (if any) to setup.py
