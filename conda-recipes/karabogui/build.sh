@@ -10,7 +10,7 @@ unset BUILD_KARABO_SUBMODULE
 cd ../pythonGui
 python setup.py install
 
-# from 
+# from
 # https://docs.conda.io/projects/conda-build/en/latest/resources/activate-scripts.html
 # Copy the [de]activate scripts to $PREFIX/etc/conda/[de]activate.d.
 # This will allow them to be run on environment activation.
