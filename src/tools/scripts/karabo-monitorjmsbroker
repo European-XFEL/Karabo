@@ -6,7 +6,7 @@ if [ -z $KARABO ]; then
   exit 1
 fi
 
-_term() { 
+_term() {
     $KARABO/extern/bin/imq stop
 }
 # Stop Broker on sigterm
