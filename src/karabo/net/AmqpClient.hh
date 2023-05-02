@@ -1142,7 +1142,7 @@ namespace karabo {
 
         /**
          * @brief Class that expose usual client API
-         * 
+         *
          */
         class AmqpClient : public boost::enable_shared_from_this<AmqpClient> {
            public:
