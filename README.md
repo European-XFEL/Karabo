@@ -8,9 +8,9 @@ see our [contributing guidelines](CONTRIBUTING.md) before reporting an issue.
 
 This work is multi-licensed under Mozilla Public License 2.0 (Core) and GPL
 3.0 (pythonGui).
-The applicable license depends on the location of a file in the repository tree. 
-The MPL2.0 license applies for all files except those located in src/pythonGui 
-and subtrees therein. Accordingly, the GPLv3.0 license applies to any files 
+The applicable license depends on the location of a file in the repository tree.
+The MPL2.0 license applies for all files except those located in src/pythonGui
+and subtrees therein. Accordingly, the GPLv3.0 license applies to any files
 location in src/pythonGui and its subtrees.
 
 # Copyright notice:

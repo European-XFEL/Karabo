@@ -714,7 +714,7 @@ void exportPyUtilHash(py::module_& m) {
                 tree = Hash()
                 flat.unflatten(tree)
                 result = similar(h, tree)
-    
+
                 ... result will be 'True'
           )pbdoc");
 
