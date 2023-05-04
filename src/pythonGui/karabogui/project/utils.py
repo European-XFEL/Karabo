@@ -416,6 +416,26 @@ def show_modified_project_message(project, parent=None):
     return True
 
 
+def show_reload_scene_project_message(data, parent=None):
+    """Check whether the given ``project`` has opened scenes
+
+    :return Whether the user wants to restore scenes
+    """
+    if not data:
+        return False
+
+    ask = (f'The project currently has <b>{len(data)}</b> active scene(s). '
+           'Do you want to open the scenes after project has been reloaded?')
+    options = (QMessageBox.Yes | QMessageBox.No)
+    reply = QMessageBox.question(parent, 'Scenes reload', ask,
+                                 options, QMessageBox.No)
+    if reply == QMessageBox.No:
+        return False
+
+    if reply == QMessageBox.Yes:
+        return True
+
+
 def show_trash_project_message(is_trashed, simple_name='', parent=None):
     """Check whether the given ``is_trashed`` should be toggled and show a
     messagebox to allow the user to confirm moving to trash or restoring from
