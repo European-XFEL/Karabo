@@ -53,6 +53,7 @@ class PanelWrangler(QObject):
         # not necessary due to the fact that the singleton mediator object and
         # `self` are being destroyed when the GUI exists
         event_map = {
+            KaraboEvent.RestoreSceneView: self._event_restore_scene,
             KaraboEvent.ShowSceneView: self._event_attached_scene,
             KaraboEvent.ShowUnattachedSceneView: self._event_unattached_scene,
             KaraboEvent.ShowUnattachedController: self._event_controller_panel,
@@ -83,6 +84,12 @@ class PanelWrangler(QObject):
         """
         return model in self._project_item_panels
 
+    def scene_panel_data(self):
+        """Return the dictionary of opened project scene panels"""
+        panel_data = self._project_item_panels
+        return {model: panel for model, panel in panel_data.items()
+                if isinstance(model, SceneModel)}
+
     def use_splash_screen(self, splash):
         """Attach a QSplashScreen instance which will be closed when the first
         window appears.
@@ -94,6 +101,14 @@ class PanelWrangler(QObject):
 
     # --------------------  -----------------------------------------------
     # Qt callbacks
+
+    def _event_restore_scene(self, data):
+        target_window = data.get("target_window",
+                                 SceneTargetWindow.MainWindow)
+        model = data["model"]
+        panel = self._open_scene(model, target_window, attached=True)
+        if panel is not None and not panel.is_docked:
+            panel.move(data["x"], data["y"])
 
     def _event_attached_scene(self, data):
         target_window = data.get('target_window',
@@ -344,6 +359,7 @@ class PanelWrangler(QObject):
             panel.onDock()
         elif target_window is SceneTargetWindow.Dialog:
             panel.onUndock()
+        return panel
 
     def _show_project_item_panel(self, model, panel, attached=True):
         has_panel = model in self._project_item_panels
