@@ -116,6 +116,7 @@ else:
             'karabo-check=karabo.interactive.startkarabo:checkkarabo',
             'karabo-gterm=karabo.interactive.startkarabo:gnometermlog',
             'karabo-xterm=karabo.interactive.startkarabo:xtermlog',
+            'karabo-less=karabo.interactive.startkarabo:less',
             'karabo-add-deviceserver=karabo.interactive.startkarabo:adddeviceserver',
             'karabo-remove-deviceserver=karabo.interactive.startkarabo:removedeviceserver',
             'karabo-create-services=karabo.interactive.startkarabo:make_service_dir',
