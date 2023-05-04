@@ -705,20 +705,25 @@ internal_mirror_publish:
   image: europeanxfel/karabo-ci:almalinux-9-003
 
   only:
-    - /^(\d+\.)(\d+\.)(\d+)$/
+  # TODO: remove the temporary trigger on .gitlab-ci.yml changes below.
+    changes:
+      - ".gitlab-ci.yml"
+
+  #TODO: Uncomment the trigger on release tags below - this is what will be used.
+  #   - /^(\d+\.)(\d+\.)(\d+)$/
 
   except:
-    - branches
+    # TODO: uncomment the exception on branches below - for the temporary testing tigger that is wanted.
+    # - branches
     - schedules
   script:
 
-    # Retrieves the mail and name mappings for authors that have chosen to keep
-    # their data hidden in the commit history of the public repository.
+    # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden
+    # in the commit history of the public repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/contriboptouts.git
     # Retrieves the master branch and the tags of the Karabo Framework repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch master --single-branch FrameworkMaster
     - cd FrameworkMaster
-    - git fetch --tags
     # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
     - git remote rm origin
     # Pushes the master branch and the tags to the internal mirror.
@@ -726,15 +731,16 @@ internal_mirror_publish:
     # value is a project access token generated for the FrameworkMirror Gitlab project.
     - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
     - git push --mirror internal_mirror
-    # Removes the local copy of the Karabo Framework repository - all the opts out obfuscation will be performed on
-    # the internal mirror.
+    # Removes the local copy of the Karabo Framework repository - all the filtering will happen on the internal mirror.
     - cd ..
     - rm -rf FrameworkMaster
-    # The opt out obfuscation must be performed over the just updated internal mirror to avoid any conflicts
-    # during the push.
+    # The removal of files above 100 Mb (GitHub imposed limit) and the obfuscation of opts out must be performed over the just
+    # updated internal mirror to avoid any conflicts during the push.
     - git clone https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
     - cd FrameworkMirror
+    - git-filter-repo --strip-blobs-bigger-than 100M
     - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
+
     # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
     # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
     # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
@@ -742,3 +748,7 @@ internal_mirror_publish:
     - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
     # Note: the push below requires the FrameworkMirror repository to be set to allow force push to its master branch (by default not allowed)
     - git push -u internal_mirror master --force --prune
+    # Note: the forced push of the tags below is needed because 'git-filter-repo' changes the commits SHAs of the repo
+    # and updates the tags to refer to the new commit identifiers. If the tags are not pushed they will still refer
+    # to the old commit idenfitifiers in the mirror.
+    - git push internal_mirror --tags --force
