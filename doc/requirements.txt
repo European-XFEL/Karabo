@@ -1,5 +1,5 @@
 sphinx==1.8.5
-pint
+pint==0.17
 git+https://git.xfel.eu/xfel-rtd/rtd-conf.git
 slumber
 breathe==4.7.3
