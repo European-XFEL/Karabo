@@ -313,7 +313,8 @@ systemtest:
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
   script:
-    - python ci/portal/portal_start
+    - python ci/portal/portal_start.py
+
 
 # release build
 
