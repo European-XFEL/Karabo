@@ -17,9 +17,11 @@ from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.logger import get_logger
 from karabogui.project.dialog.project_handle import NewProjectDialog
+from karabogui.project.restore import add_restore, get_restore_data
 from karabogui.project.utils import (
     load_project, load_project_with_device, maybe_save_modified_project,
-    reload_project, save_object, show_modified_project_message)
+    reload_project, save_object, show_modified_project_message,
+    show_reload_scene_project_message)
 from karabogui.project.view import ProjectView
 from karabogui.singletons.api import get_db_conn, get_topology
 from karabogui.util import get_spin_widget, version_compatible
@@ -266,6 +268,8 @@ def _project_reload_handler(project_view):
     if not show_modified_project_message(root_model, parent=project_view):
         return
 
+    data = get_restore_data()
+    restore = show_reload_scene_project_message(data)
     project = reload_project(root_model)
     # We created a new project object!
     if project is not None:
@@ -273,6 +277,8 @@ def _project_reload_handler(project_view):
         text = (f"Reloading project <b>{root_model.simple_name}</b> from "
                 "project database")
         get_logger().info(text)
+        if restore:
+            add_restore(project=project, scene_data=data)
 
 
 def _project_new_handler(project_view):
