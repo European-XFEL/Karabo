@@ -54,6 +54,14 @@ namespace karabo {
             static void removeThread(const int nThreads = 1);
 
             /**
+             * Post a task on the underlying io event loop for later execution
+             * @param func a functor not taking any argument, but with any return type
+             * @param delayMs execution will be delayed by given time (in milliseconds)
+             */
+            template <class Function>
+            static void post(Function&& func, unsigned int delayMs = 0);
+
+            /**
              * Return the Eventloop's underlying boost::asio::io_service
              * @return
              */
@@ -152,6 +160,29 @@ namespace karabo {
             boost::mutex m_signalHandlerMutex;
             SignalHandler m_signalHandler;
         };
+
+        // Implementation of templated functions
+        template <class Function>
+        void EventLoop::post(Function&& func, unsigned int delayMs) {
+            boost::asio::io_service& service = getIOService();
+            if (0 == delayMs) {
+                service.post(std::forward<Function>(func));
+            } else {
+                auto timer = std::make_shared<boost::asio::deadline_timer>(service);
+                timer->expires_from_now(boost::posix_time::milliseconds(delayMs));
+                // Bind timer shared_ptr to lambda to keep it alive as long as needed
+#if __cplusplus < 201402L
+                // Pre-C++14 does not support generalized lambda capture
+                timer->async_wait([func, timer]
+#else
+                timer->async_wait([func = std::forward<Function>(func), timer]
+#endif
+                                  (const boost::system::error_code& e) {
+                                      if (e) return;
+                                      func();
+                                  });
+            }
+        }
     } // namespace net
 } // namespace karabo
 
