@@ -16,7 +16,5 @@
 #include "io/Output.hh"
 #include "io/OutputElement.hh"
 #include "io/TextSerializer.hh"
-#include "io/h5/File.hh"
-#include "io/h5/Table.hh"
 
 #endif
