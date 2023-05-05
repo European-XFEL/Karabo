@@ -599,10 +599,7 @@ namespace karabo {
             safeClientWrite(weakChannel, h);
             KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << userId << "' using GUI client version "
                                       << cliVersion << " (from " << getChannelAddress(channel) << "): " + errorMsg;
-            auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
-            timer->expires_from_now(boost::posix_time::milliseconds(500));
-            timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this, boost::asio::placeholders::error,
-                                        weakChannel, timer));
+            karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, weakChannel), 500);
         }
 
         void GuiServerDevice::onTokenAuthorizeResult(const WeakChannelPointer& weakChannel, const std::string& clientId,
@@ -862,8 +859,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
-                                                 boost::shared_ptr<boost::asio::deadline_timer> timer) {
+        void GuiServerDevice::deferredDisconnect(WeakChannelPointer channel) {
             KARABO_LOG_FRAMEWORK_DEBUG << "deferredDisconnect";
 
             auto chan = channel.lock();
@@ -2227,10 +2223,7 @@ namespace karabo {
                 safeClientWrite(channel, Hash("type", "notification", "message", ostr.str()));
 
                 // Give client a bit of time to receive the message...
-                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
-                timer->expires_from_now(boost::posix_time::milliseconds(1000));
-                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
-                                            boost::asio::placeholders::error, channel, timer));
+                karabo::net::EventLoop::post(bind_weak(&GuiServerDevice::deferredDisconnect, this, channel), 1000);
             }
 
             reply(found);
