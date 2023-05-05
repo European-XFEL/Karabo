@@ -19,6 +19,7 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testMethod2);
     CPPUNIT_TEST(testSignalCapture);
+    CPPUNIT_TEST(testPost);
     CPPUNIT_TEST(testAddThreadDirectly);
     CPPUNIT_TEST(testExceptionTrace);
     CPPUNIT_TEST_SUITE_END();
@@ -34,6 +35,7 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     void testMethod();
     void testMethod2();
     void testSignalCapture();
+    void testPost();
     void testAddThreadDirectly();
     void testExceptionTrace();
 };
