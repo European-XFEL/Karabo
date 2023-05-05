@@ -1804,7 +1804,7 @@ namespace karabo {
             if (allSucceeded) {
                 // Better post the success handler to release lock...
                 const auto& successHandler = std::get<1>(info);
-                if (successHandler) EventLoop::getIOService().post(successHandler);
+                if (successHandler) EventLoop::post(successHandler);
                 m_currentMultiAsyncConnects.erase(infoIter);
             }
         }
@@ -2607,7 +2607,7 @@ namespace karabo {
             // Nothing to do except informing that this 'nothing' succeeded ;-)
             if (outputChannels.empty()) {
                 // To avoid surprises with mutex locks, do not call directly, but leave context by posting to event loop
-                if (handler) EventLoop::getIOService().post(boost::bind(handler, true));
+                if (handler) EventLoop::post(boost::bind(handler, true));
                 return;
             }
 

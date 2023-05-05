@@ -236,7 +236,7 @@ namespace karabo {
                 // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
                 // And in this way we ensure that onTcpConnect is properly bound with bind_weak.
                 // But see the HACK in initializeServerConnection if even that is called too early.
-                karabo::net::EventLoop::getIOService().post(
+                karabo::net::EventLoop::post(
                       boost::bind(&OutputChannel::initializeServerConnection, this, kMaxServerInitializationAttempts));
             }
         }
@@ -269,7 +269,7 @@ namespace karabo {
                     }
                     boost::this_thread::yield();
                     // Bare boost::bind with this as in constructor.
-                    karabo::net::EventLoop::getIOService().post(
+                    karabo::net::EventLoop::post(
                           boost::bind(&OutputChannel::initializeServerConnection, this, --countdown));
                     return;
                 } else {
