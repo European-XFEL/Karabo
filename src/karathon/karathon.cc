@@ -47,7 +47,6 @@ template <class T>
 void exportPyIoTextSerializer();
 template <class T>
 void exportPyIoBinarySerializer();
-void exportPyIoH5File();
 
 // xms
 void exportPyXmsInputOutputChannel();
@@ -132,7 +131,6 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyIoBinarySerializer<karabo::util::Hash>();
     exportPyIoBinarySerializer<karabo::util::Schema>();
 
-    exportPyIoH5File();
 
     // xms
     exportPyXmsInputOutputChannel();

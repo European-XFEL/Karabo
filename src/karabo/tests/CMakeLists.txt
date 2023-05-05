@@ -81,11 +81,8 @@ set(coreTestRunner_FILES
 set(ioTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/io/BufferSet_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/io/FileInputOutput_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/H5File_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/H5Format_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/io/HashBinarySerializer_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/io/HashXmlSerializer_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/io/Hdf5_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/io/SchemaSerializer_Test.cc
     $<TARGET_OBJECTS:TEST_RUNNER_NOLOOP>
 )
@@ -173,5 +170,5 @@ add_custom_command(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/io/resources"
-        "${CMAKE_CURRENT_BINARY_DIR}/io/resources"
+       "${CMAKE_CURRENT_BINARY_DIR}/io/resources"
 )
