@@ -13,7 +13,9 @@
 
 #include "EventLoop_Test.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Exception.hh"
+#include "karabo/util/TimeDuration.hh"
 
 
 using namespace karabo::util;
@@ -109,6 +111,37 @@ void EventLoop_Test::testSignalCapture() {
     t.join();
 
     CPPUNIT_ASSERT(terminateCaught);
+}
+
+void EventLoop_Test::testPost() {
+    // Post a method and verify it is executed
+    {
+        auto promise = std::make_shared<std::promise<bool>>();
+        auto future = promise->get_future();
+        auto func = [promise]() { promise->set_value(true); };
+        EventLoop::post(func);
+        EventLoop::run();
+
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT(future.get());
+    }
+
+    // Post method with a delay and verify delay
+    {
+        auto promise = std::make_shared<std::promise<bool>>();
+        auto future = promise->get_future();
+        auto func = [promise]() { promise->set_value(true); };
+
+        const Epochstamp before;
+        EventLoop::post(std::move(func), 100); // 100 ms delay, move semantics function
+        EventLoop::run();
+
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, future.wait_for(std::chrono::milliseconds(2000)));
+        const TimeDuration period = before.elapsed();
+        CPPUNIT_ASSERT(future.get());
+        CPPUNIT_ASSERT_EQUAL(0ull, period.getTotalSeconds());               // less than a full second
+        CPPUNIT_ASSERT_GREATEREQUAL(100ull, period.getFractions(MILLISEC)); // at least 100 milliseconds
+    }
 }
 
 void EventLoop_Test::testAddThreadDirectly() {
