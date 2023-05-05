@@ -25,6 +25,7 @@ class FaultyDevice(Device):
         raise RuntimeError("Not allowed to start")
 
 
+@pytest.mark.skipif(not amqp, reason="Only works reliable on amqp")
 @pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
