@@ -705,21 +705,14 @@ internal_mirror_publish:
   image: europeanxfel/karabo-ci:almalinux-9-003
 
   only:
-  # TODO: remove the temporary trigger on .gitlab-ci.yml changes below.
-    changes:
-      - ".gitlab-ci.yml"
-
-  #TODO: Uncomment the trigger on release tags below - this is what will be used.
-  #   - /^(\d+\.)(\d+\.)(\d+)$/
-
+    - /^(\d+\.)(\d+\.)(\d+)$/
   except:
-    # TODO: uncomment the exception on branches below - for the temporary testing tigger that is wanted.
-    # - branches
+    - branches
     - schedules
   script:
 
-    # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden
-    # in the commit history of the public repository.
+    # Retrieves the mail and name mappings for authors that have chosen to keep their data hidden in the
+    # commit history of the public repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/contriboptouts.git
     # Retrieves the master branch and the tags of the Karabo Framework repository.
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu/Karabo/Framework.git --branch master --single-branch FrameworkMaster
