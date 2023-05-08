@@ -577,13 +577,15 @@ namespace karabo {
 
         template <>
         std::string HashBinarySerializer::readSingleValue(std::istream& is) const {
-            unsigned size = readSize(is);
+            const unsigned int size = readSize(is);
             std::string result;
-            result.resize(size); // unfortunately, all characters are initialised with null although not needed
-            // Further optimisation:
-            // With access to raw character pointers inside 'is', one could directly create the string with
-            // an interator range and get rid of the null initialisation overhead: return string(rawPtr, rawPtr + size);
-            is.read(&(result[0]), size);
+            if (size) {
+                result.resize(size); // unfortunately, all characters are initialised with null although not needed
+                // Further optimisation:
+                // With access to raw character pointers inside 'is', one could directly create the string with an
+                // interator range and get rid of the null initialisation overhead: return string(rawPtr, rawPtr + size)
+                is.read(&(result[0]), size);
+            }
             return result;
         }
 
@@ -591,13 +593,15 @@ namespace karabo {
         template <>
         Schema HashBinarySerializer::readSingleValue(std::istream& is) const {
             Hash hash;
-            SchemaBinarySerializer serializer /*= SchemaBinarySerializer*/ (hash);
+            SchemaBinarySerializer serializer(hash);
             // TODO Optimize this by reading directly from istream
-            unsigned size = readSize(is);
+            const unsigned int size = readSize(is);
             Schema schema;
-            boost::shared_array<char> buffer(new char[size]);
-            is.read(buffer.get(), size);
-            serializer.load(schema, buffer.get(), size);
+            if (size) {
+                boost::scoped_array<char> buffer(new char[size]);
+                is.read(buffer.get(), size);
+                serializer.load(schema, buffer.get(), size);
+            }
             return schema;
         }
 
