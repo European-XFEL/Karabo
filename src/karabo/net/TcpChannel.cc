@@ -169,16 +169,16 @@ namespace karabo {
 
 
         void TcpChannel::read(std::vector<char>& data) {
-            size_t nBytes = this->readSizeInBytes();
+            const size_t nBytes = this->readSizeInBytes();
             data.resize(nBytes);
-            this->read(&data[0], nBytes);
+            if (!data.empty()) this->read(&data[0], nBytes);
         }
 
 
         void TcpChannel::read(boost::shared_ptr<std::vector<char>>& data) {
-            size_t nBytes = this->readSizeInBytes();
+            const size_t nBytes = this->readSizeInBytes();
             data->resize(nBytes);
-            this->read(&(*data)[0], nBytes);
+            if (!data->empty()) this->read(&(*data)[0], nBytes);
         }
 
 
@@ -1097,7 +1097,9 @@ namespace karabo {
 
         void TcpChannel::prepareHashFromHeader(karabo::util::Hash& hash) const {
             if (m_textSerializer) {
-                m_textSerializer->load(hash, &(*m_inboundHeader)[0], m_inboundHeader->size());
+                if (!m_inboundHeader->empty()) {
+                    m_textSerializer->load(hash, &(*m_inboundHeader)[0], m_inboundHeader->size());
+                }
             } else {
                 m_binarySerializer->load(hash, *m_inboundHeader);
             }
@@ -1129,7 +1131,9 @@ namespace karabo {
 
         void TcpChannel::prepareHashFromData(karabo::util::Hash& hash) const {
             if (m_textSerializer) {
-                m_textSerializer->load(hash, &(*m_inboundData)[0], m_inboundData->size());
+                if (!m_inboundData->empty()) {
+                    m_textSerializer->load(hash, &(*m_inboundData)[0], m_inboundData->size());
+                }
             } else {
                 m_binarySerializer->load(hash, *m_inboundData);
             }
@@ -1535,7 +1539,11 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const vector<char>& data, int prio) {
-            writeAsync(&(data[0]), data.size(), prio);
+            if (data.empty()) {
+                KARABO_LOG_FRAMEWORK_INFO << "Skip writeAsync of empty data.";
+            } else {
+                writeAsync(&(data[0]), data.size(), prio);
+            }
         }
 
 
