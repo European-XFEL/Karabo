@@ -1,13 +1,12 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-from unittest import main
-
+import pytest
 from qtpy.QtCore import QPoint
 
 from karabo.common.scenemodel.api import TableElementModel
 from karabo.native import Bool, Configurable, Hash, String, VectorHash
 from karabogui.binding.config import apply_configuration
 from karabogui.controllers.table.api import BaseTableController, TableModel
-from karabogui.testing import GuiTestCase, get_property_proxy
+from karabogui.testing import get_property_proxy
 
 
 class TableSchema(Configurable):
@@ -55,82 +54,84 @@ class LegacyTableController(BaseTableController):
         return item_model
 
 
-class TestCustomBaseController(GuiTestCase):
-    def setUp(self):
-        super().setUp()
-        self.proxy = get_property_proxy(Object.getClassSchema(), "prop")
-        self.model = TableElementModel()
-        self.controller = MyTableController(proxy=self.proxy,
-                                            model=self.model)
-        self.controller.create(None)
-        self.assertTrue(self.controller.isReadOnly())
-        self.controller.set_read_only(False)
-        self.table_hash = Hash(
-            "prop",
-            [Hash("arch", "a", "foo", True),
-             Hash("arch", "b", "foo", False)])
-        apply_configuration(self.table_hash, self.proxy.root_proxy.binding)
+@pytest.fixture
+def custom_table_controller_setup(gui_app):
+    proxy = get_property_proxy(Object.getClassSchema(), "prop")
+    model = TableElementModel()
+    controller = MyTableController(proxy=proxy, model=model)
+    controller.create(None)
+    assert controller.isReadOnly()
+    controller.set_read_only(False)
+    table_hash = Hash(
+        "prop",
+        [Hash("arch", "a", "foo", True),
+         Hash("arch", "b", "foo", False)])
+    apply_configuration(table_hash, proxy.root_proxy.binding)
 
-    def tearDown(self):
-        super().tearDown()
-        self.controller.destroy()
+    yield controller
 
-    def test_subclassing_model(self):
-        """Test that one can specify the table model"""
-        model = self.controller.sourceModel()
-        self.assertTrue(model.state_less)
-        self.assertIsInstance(model, MyTableModel)
-        self.assertEqual(filter_model, True)
-
-    def test_custom_context(self):
-        """Test that one can use a custom context menu"""
-        controller = self.controller
-        # Note: Try QTest on later versions with rightclick, not working in
-        # Qt 5.9
-        self.assertEqual(count, 0)
-        controller._custom_menu(QPoint(0, 0))
-        # Calls custom_menu
-        self.assertEqual(count, 1)
-
-    def test_column_index_key(self):
-        index = self.controller.columnIndex("foo")
-        self.assertEqual(index, 1)
-        index = self.controller.columnIndex("arch")
-        self.assertEqual(index, 0)
-        # Schema evolution! Return `None` index
-        index = self.controller.columnIndex("nothere")
-        self.assertIsNone(index)
-
-        key = self.controller.columnKey(0)
-        self.assertEqual(key, "arch")
-        key = self.controller.columnKey(1)
-        self.assertEqual(key, "foo")
-        key = self.controller.columnKey(2)
-        self.assertIsNone(key)
-
-    def test_stretch_last_section(self):
-        table_widget = self.controller.tableWidget()
-        self.assertTrue(table_widget.horizontalHeader().stretchLastSection())
-
-    def test_legacy_controller(self):
-        proxy = get_property_proxy(Object.getClassSchema(), "prop")
-        model = TableElementModel()
-        controller = LegacyTableController(proxy=proxy,
-                                           model=model)
-        controller.create(None)
-        self.assertTrue(controller.isReadOnly())
-        self.assertTrue(legacy_model)
-
-        # Check the menu
-        menu = controller.get_basic_menu()
-        self.assertIsNotNone(menu)
-        # Readonly does not have an action
-        self.assertEqual(len(menu.actions()), 0)
-        controller.set_read_only(False)
-        menu = controller.get_basic_menu()
-        self.assertIsNotNone(menu)
-        self.assertEqual(len(menu.actions()), 1)
+    controller.destroy()
+    assert controller.widget is None
 
 
-if __name__ == "__main__":
-    main()
+def test_subclassing_model(custom_table_controller_setup):
+    """Test that one can specify the table model"""
+    controller = custom_table_controller_setup
+    model = controller.sourceModel()
+    assert model.state_less
+    assert isinstance(model, MyTableModel)
+    assert filter_model is True
+
+
+def test_custom_context(custom_table_controller_setup):
+    """Test that one can use a custom context menu"""
+    controller = custom_table_controller_setup
+    # Note: Try QTest on later versions with rightclick, not working in
+    # Qt 5.9
+    assert count == 0
+    controller._custom_menu(QPoint(0, 0))
+    # Calls custom_menu
+    assert count == 1
+
+
+def test_column_index_key(custom_table_controller_setup):
+    controller = custom_table_controller_setup
+    index = controller.columnIndex("foo")
+    assert index == 1
+    index = controller.columnIndex("arch")
+    assert index == 0
+    # Schema evolution! Return `None` index
+    index = controller.columnIndex("nothere")
+    assert index is None
+
+    key = controller.columnKey(0)
+    assert key == "arch"
+    key = controller.columnKey(1)
+    assert key == "foo"
+    key = controller.columnKey(2)
+    assert key is None
+
+
+def test_stretch_last_section(custom_table_controller_setup):
+    controller = custom_table_controller_setup
+    table_widget = controller.tableWidget()
+    assert table_widget.horizontalHeader().stretchLastSection()
+
+
+def test_legacy_controller(gui_app):
+    proxy = get_property_proxy(Object.getClassSchema(), "prop")
+    model = TableElementModel()
+    controller = LegacyTableController(proxy=proxy, model=model)
+    controller.create(None)
+    assert controller.isReadOnly()
+    assert legacy_model
+
+    # Check the menu
+    menu = controller.get_basic_menu()
+    assert menu is not None
+    # Readonly does not have an action
+    assert len(menu.actions()) == 0
+    controller.set_read_only(False)
+    menu = controller.get_basic_menu()
+    assert menu is not None
+    assert len(menu.actions()) == 1
