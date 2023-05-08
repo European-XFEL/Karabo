@@ -23,18 +23,12 @@ To install VSCode, please follow the instructions at https://code.visualstudio.c
 
 For Ubuntu, both the `snap` and the `apt` based installation methods work.
 
-1.2. Install VSCode Extensions
-------------------------------
+1.2. Install VSCode C/C++ Extensions
+------------------------------------
 
-Open VSCode, and install the following extensions:
+Open VSCode, and install the following extension pack:
 
-* C/C++ from Microsoft - https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools.
-* CMake Tools from Microsoft - https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools.
-
-The following additional extensions are not required, just recommended:
-
-* CMake from twxs - https://marketplace.visualstudio.com/items?itemName=twxs.cmake.
-* Git Lens - https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens.
+* C/C++ Extension Pack - https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack
 
 1.3. Configure GDB Pretty printing
 ----------------------------------
