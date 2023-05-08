@@ -671,13 +671,19 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_sender, "currentDataId", nData - 1u, true,
                                                     m_maxTestTimeOut * 4)); // Longer time out due to many data items
 
-    const unsigned int receivedWhenWriteDone = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-    const unsigned int missing = nDataExpected - receivedWhenWriteDone;
+    unsigned int receivedWhenWriteDone = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
     if (slowReceiver) {
-        // Not everything is missing, i.e. data has been processed
-        CPPUNIT_ASSERT_LESS(nDataExpected, missing);
+        // At least some data has already been processed
+        // Though there is no guarantee - seen a CI with none of 1100 received, so wait a bit if needed
+        int nTries = 100;
+        while (0 == receivedWhenWriteDone && --nTries >= 0) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+            receivedWhenWriteDone = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+        }
+        CPPUNIT_ASSERT(receivedWhenWriteDone > 0);
     } else {
         // No bottleneck on the receiver, i.e. all is received, except what maybe sits in the pots of the buffer
+        const unsigned int missing = nDataExpected - receivedWhenWriteDone;
         CPPUNIT_ASSERT_LESSEQUAL(m_nPots, missing);
     }
     // When EOS have arrived (and thus all data), "nTotalDataOnEos" is set to a new value.
