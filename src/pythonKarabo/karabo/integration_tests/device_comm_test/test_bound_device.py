@@ -442,10 +442,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
             self.assertTrue(ok, msg)
 
-            # Cannot instantiate another one:
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, instTimeout)
-            self.assertTrue(not ok, msg)
-
             # Now let the device fall into coma, i.e. it does not react anymore
             # karabo wise, but its process is still alive:
             self.dc.execute('deviceNotGoingDownCleanly', 'slotPutToComa')

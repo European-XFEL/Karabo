@@ -244,7 +244,8 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
     def _test_change_output_schema(self, dev_id, updateSlot):
         # test that touching the output channel schema forces the channel to
         # be recreated, i.e. reconnect
-        receiver_id = "receiver"
+        # Use unique id in case other case fails and thus does not kill device:
+        receiver_id = "receiver_" + updateSlot
         cfg = Hash("deviceId", receiver_id,
                    "input.connectedOutputChannels", dev_id + ":output")
         ok, msg = self.dc.instantiate(self.server_id, self.devClass, cfg,
@@ -297,13 +298,13 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         ele.assignmentOptional().defaultValue(1).reconfigurable().commit()
         schemasToInject.append((schema3, False))
 
-        for schema, triggerReconnect in schemasToInject:
+        for i, (schema, triggerReconnect) in enumerate(schemasToInject):
 
             req = self.sigSlot.request(dev_id, updateSlot, schema)
             req.waitForReply(max_timeout_ms)
 
             # If output channel schema changed, we expect that the channel was
-            # recreated and and thus the InputChannel of the receiver was
+            # recreated and thus the InputChannel of the receiver was
             # disconnected and reconnected. Both should trigger a change of the
             # input channel's missingConnections property which should trigger
             # a call to our "injected" slot that is connected to
@@ -316,14 +317,15 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
             res = self.waitUntilTrue(condition, max_timeout, 100)
             with connectionChangesLock:
-                self.assertEqual(res, triggerReconnect, str(connectionChanges))
+                debugMsg = f"Scenario {i}: {str(connectionChanges)}"
+                self.assertEqual(res, triggerReconnect, debugMsg)
 
                 if triggerReconnect:
-                    self.assertEqual(2, len(connectionChanges),
-                                     str(connectionChanges))
+                    self.assertEqual(2, len(connectionChanges), debugMsg)
+                    # failes in https://git.xfel.eu/Karabo/Framework/-/jobs/401852
                     self.assertEqual(connectionChanges[0],
-                                     [dev_id + ":output"])
-                    self.assertEqual(connectionChanges[1], [])
+                                     [dev_id + ":output"], debugMsg)
+                    self.assertEqual(connectionChanges[1], [], debugMsg)
 
             req = self.sigSlot.request(dev_id, "slotUpdateSchema", Schema())
             req.waitForReply(max_timeout_ms)
@@ -337,12 +339,12 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
                 res = self.waitUntilTrue(condition2, max_timeout, 100)
                 with connectionChangesLock:
-                    self.assertTrue(res, str(connectionChanges))
-                    self.assertEqual(len(connectionChanges), 4,
-                                     str(connectionChanges))
+                    debugMsg = f"Scenario {i}: {str(connectionChanges)}"
+                    self.assertTrue(res, debugMsg)
+                    self.assertEqual(len(connectionChanges), 4, debugMsg)
                     self.assertEqual(connectionChanges[2],
-                                     [dev_id + ":output"])
-                    self.assertEqual(connectionChanges[3], [])
+                                     [dev_id + ":output"], debugMsg)
+                    self.assertEqual(connectionChanges[3], [], debugMsg)
 
             with connectionChangesLock:
                 connectionChanges.clear()
