@@ -1605,6 +1605,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
     // And poll for the correct answer
+    // Failed https://git.xfel.eu/Karabo/Framework/-/jobs/402381 - no clue why and how!
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataPerRun));
 
     pollDeviceProperty<float>(m_receiver, "averageTransferTime", 0.f, false); // until not zero anymore!
