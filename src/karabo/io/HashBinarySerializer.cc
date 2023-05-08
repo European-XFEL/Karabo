@@ -462,8 +462,9 @@ namespace karabo {
                 const size_t size = readSize(is);
                 node.setValue(std::vector<Hash::Pointer>());
                 std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer>>();
-                result.resize(size, Hash::Pointer(new Hash()));
+                result.resize(size);
                 for (size_t i = 0; i < size; ++i) {
+                    result[i].reset(new Hash());
                     readHash(*(result[i]), is);
                 }
             } else {
@@ -495,8 +496,9 @@ namespace karabo {
                 const size_t size = readSize(is);
                 node.setValue(std::vector<Hash::Pointer>());
                 std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer>>();
-                result.resize(size, Hash::Pointer(new Hash()));
+                result.resize(size);
                 for (size_t i = 0; i < size; ++i) {
+                    result[i].reset(new Hash());
                     readHash(*(result[i]), is, buffers);
                 }
             } else {
