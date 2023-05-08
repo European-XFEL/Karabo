@@ -1296,8 +1296,8 @@ void SignalSlotable_Test::_testAutoConnectSlot() {
     auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
-    // Give demo some time to auto-connect now that demo2 is there:
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    // Give demo some time to auto-connect now that demo2 is there (failed with 100 in a CI at least once):
+    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
     demo->emit("signalA", "Hello World 2!");
     // Time for all signaling (although it is all short-cutting the broker):
