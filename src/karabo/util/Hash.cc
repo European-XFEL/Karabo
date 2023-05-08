@@ -772,6 +772,9 @@ namespace karabo {
                             otherAttrNodePtr->getValue<std::vector<std::string>>()) {
                             return false;
                         }
+                    } else if (lAttrIt->getType() == Types::VECTOR_HASH_POINTER) {
+                        throw KARABO_NOT_IMPLEMENTED_EXCEPTION(
+                              "Hash::fullyEquals does not support VECTOR_HASH_POINTER");
                     } else if (lAttrIt->getValueAs<std::string>() != otherAttrNodePtr->getValueAs<std::string>()) {
                         return false;
                     }
@@ -787,6 +790,8 @@ namespace karabo {
                                             (*otherNodePtr).getValue<std::vector<Hash>>(), orderMatters)) {
                         return false;
                     }
+                } else if ((*itl).getType() == Types::VECTOR_HASH_POINTER) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Hash::fullyEquals does not support VECTOR_HASH_POINTER");
                 } else if ((*itl).getType() == Types::VECTOR_STRING) {
                     // For now treat VECTOR_STRING separately:
                     // The generic getValueAs<std::string>() below has trouble with commas in an element.
