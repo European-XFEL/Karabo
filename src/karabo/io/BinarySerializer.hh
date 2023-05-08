@@ -71,7 +71,8 @@ namespace karabo {
              * @return number of processed bytes in archive
              */
             size_t load(T& object, const std::vector<char>& archive) {
-                return load(object, &archive[0], archive.size());
+                if (archive.empty()) return 0;
+                else return load(object, &archive[0], archive.size());
             }
 
             /**
@@ -125,7 +126,8 @@ namespace karabo {
              * @return number of processed bytes in archive
              */
             size_t load(const boost::shared_ptr<T>& object, const std::vector<char>& archive) {
-                return load(*object, &archive[0], archive.size());
+                if (archive.empty()) return 0;
+                else return load(*object, &archive[0], archive.size());
             }
 
             /**
@@ -190,7 +192,8 @@ namespace karabo {
              * @param archive binary archive containing the data
              */
             size_t load(std::vector<T>& objects, const std::vector<char>& archive) {
-                return load(objects, &archive[0], archive.size());
+                if (archive.empty()) return 0;
+                else return load(objects, &archive[0], archive.size());
             }
         };
     } // namespace io
