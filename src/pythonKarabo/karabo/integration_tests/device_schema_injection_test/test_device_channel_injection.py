@@ -322,7 +322,6 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
                 if triggerReconnect:
                     self.assertEqual(2, len(connectionChanges), debugMsg)
-                    # failes in https://git.xfel.eu/Karabo/Framework/-/jobs/401852
                     self.assertEqual(connectionChanges[0],
                                      [dev_id + ":output"], debugMsg)
                     self.assertEqual(connectionChanges[1], [], debugMsg)
