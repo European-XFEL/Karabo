@@ -284,7 +284,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrA).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
     Epochstamp afterFirstBurst;
 
@@ -308,7 +308,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrC).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
     Epochstamp afterSecondBurst;
 
@@ -337,7 +337,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrD).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     // Makes sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
     Epochstamp afterThirdBurst;
     // Checks that the schema update succeeded.
@@ -524,7 +524,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     // previous loop plus a safety margin.
     Epochstamp after32KbWrite(before32KbWrite + TimeDuration(0, 5 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
 
     // Checks that the 32Kb strings have not been flagged as bad data.
@@ -570,7 +570,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     }
     Epochstamp after64KbWrite(before64KbWrite + TimeDuration(0, 9 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
 
     // Checks that the half of the stringProperty updates has exceeded the max log rate and has been rated as bad data.
@@ -631,7 +631,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
                                   .receive());
     Epochstamp afterSingle32KbWrite(beforeSingle32KbWrite + TimeDuration(0, 8 * millisecInAtto));
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
 
     // Checks that the 32 Kb string has been successfully set as property values.
@@ -759,7 +759,7 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
     Epochstamp afterPropWrites;
 
     // Make sure that data has been written to Influx.
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", SLOT_REQUEST_TIMEOUT_MILLIS / 1000));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
 
     // Checks that slotGetPropertyHistory gets the averages consistently - the same number of data points and the same
