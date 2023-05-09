@@ -687,7 +687,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                           testFlags, std::future_status::ready,
                           ptrFuture.wait_for(std::chrono::milliseconds(
-                                9 * nData * 20))); // * 20 as robustness margin - failed with 10 in one CI
+                                9 * nData * 50))); // * 50 as robustness margin - failed with 20 in one CI
                     ptrFuture.get();
 
                     for (size_t i = 0; i < nData; ++i) {
