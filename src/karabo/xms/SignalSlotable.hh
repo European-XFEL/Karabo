@@ -1206,9 +1206,8 @@ namespace karabo {
                     header->get("signalInstanceId", result);
                 }
             };
-            karabo::util::Hash::Pointer header;
+            karabo::util::Hash::Pointer header, body;
             try {
-                karabo::util::Hash::Pointer body;
                 receiveResponse(header, body); // sends request and blocks until reply arrives or times out
                 const boost::optional<karabo::util::Hash::Node&> errorNode = header->find("error");
                 if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
@@ -1223,7 +1222,7 @@ namespace karabo {
                                                     : std::string());
                     throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
                 }
-                karabo::util::unpack(*body, args...);
+                karabo::util::unpack(*body, args...); // ParameterException if args is too long
 
                 if (sizeof...(Args) != body->size()) {
                     const int nArgs = body->size() - sizeof...(Args);
@@ -1248,7 +1247,8 @@ namespace karabo {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);
                 const std::string msg("Error while '" + m_signalSlotable->getInstanceId() +
-                                      "' received message from '" + signalInstanceId + "'");
+                                      "' received following reply from '" + signalInstanceId +
+                                      "': " + (body ? toString(*body) : std::string()));
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION(msg));
             }
         }
