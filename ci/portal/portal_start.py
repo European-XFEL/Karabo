@@ -22,8 +22,11 @@ def main():
          "test_variables": {"karabo_version": tag},
          "project": project}
 
+    print("--- Start Portal Request ---")
+    print(d)
+    print("--- End Portal Request ---")
     request = requests.post(destination, json=d, headers=headers, verify=False)
-    print("Portal Request", request)
+    print("Portal Request Answer:", request)
 
 
 if __name__ == "__main__":
