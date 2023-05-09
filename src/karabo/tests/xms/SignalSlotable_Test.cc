@@ -535,9 +535,18 @@ void SignalSlotable_Test::_testReceiveExceptions() {
     karabo::util::Exception::clearTrace();
     // Trying to receive more items than come gives karabo::util::SignalSlotException:
     std::string answer;
-    CPPUNIT_ASSERT_THROW(
-          greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer, resultInt),
-          karabo::util::SignalSlotException);
+    try {
+        greeter->request("responder", "slotAnswer", "Hello").timeout(slotCallTimeout).receive(answer, resultInt);
+        throw KARABO_LOGIC_EXCEPTION("Incompatible request did not throw");
+    } catch (const karabo::util::SignalSlotException& e) {
+        const std::string msg(e.detailedMsg());
+        CPPUNIT_ASSERT_MESSAGE("Message: " + msg, msg.find("Key 'a2' does not exist") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE("Message: " + msg,
+                               msg.find("Error while 'greeter' received following reply from 'responder': "
+                                        "'a1' => Hello, world! STRING") != std::string::npos);
+    } catch (const std::exception& e) {
+        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") + e.what(), false);
+    }
     karabo::util::Exception::clearTrace();
     // Too short timeout gives TimeoutException:
     CPPUNIT_ASSERT_THROW(greeter->request("responder", "slotAnswer", "Hello").timeout(1).receive(answer),
