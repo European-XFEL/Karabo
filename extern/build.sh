@@ -3,23 +3,11 @@
 ##############################################################################
 # Packages that we know how to build
 
-DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack cmake boost hdf5
-log4cpp cppunit openmq nss openmqc patchelf googletest libxml2 libxslt
-daemontools libzmq nlohmann_json pugixml mqtt redisclient amqp libev belle-Cpp14)
+# note that patchelf will actually build for CentOs7 only, for all others
+# we will use the conan version.
+DEPENDENCIES_BASE=( belle-Cpp14 daemontools lapack log4cpp openmq openmqc mqtt redisclient patchelf )
 
-DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
-six nose py pyparsing packaging toml more-itertools zipp importlib-metadata pluggy
-attrs colorama iniconfig atomicwrites pytest pytest_runner pytest_cov pytest_mock
-pytest_asyncio pytest_subtests pytest_timeout pytest_rerunfailures pillow sip backports
-backports_abc tornado dateutil ptyprocess pytz pexpect pyzmq markupsafe jinja2 pygments
-decorator traitlets parso ipython_genutils jedi pickleshare wcwidth backcall
-prompt_toolkit ipython tabulate jupyter_core jupyter_client ipykernel simplegeneric
-dill pkgconfig h5py pyusb parse jsonschema ecdsa tzlocal httplib2 traits pint nbformat isort
-notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
-chardet idna urllib3 requests ply psutil pycodestyle pyflakes flake8
-msgpack msgpack-numpy pyyaml coverage matplotlib eulxml eulexist
-mqtt_python peewee async-timeout hiredis aioredis multidict yarl pamqp aiormq aio-pika
-pg8000 conan)
+DEPENDENCIES_PYTHON=( eulexist hdf5 )
 
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
@@ -29,6 +17,7 @@ source "$scriptDir/../set_lsb_release_info.sh"
 # Important constants
 
 BUILD_MARKER_NAME=".marker.txt"
+DEPS_MANAGER_MARKER_NAME=".conan.pip.marker.txt"
 DEPS_MARKER_NAME=".deps_tag.txt"
 if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
     KARABO_UPLOAD_CURL_PREFIX=http://exflctrl01.desy.de/karabo
@@ -46,6 +35,12 @@ DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
 DEPS_BASE_NAME_MAP['AlmaLinux8']='AlmaLinux-8'
 DEPS_BASE_NAME_MAP['AlmaLinux9']='AlmaLinux-9'
 DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
+
+SQLITE_VERSION=3.38.5
+PYTHON_VERSION=3.8.16
+PYTHON_PATH_VERSION=3.8
+CPP_STD_LIB_VERSION=c++11
+CPP_STD=14
 
 ##############################################################################
 # Define a bunch of functions to be called later
@@ -286,17 +281,47 @@ package_deps_directory() {
     popd
 }
 
+checkReturnCode() {
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        if [ -n "$1" ]; then
+            # if the output is present, print it in case of error
+            cat $1>&1
+            # remove the temporary file before exiting
+            rm -f $1
+            # redirect the filedescriptor 3 to stdout as is tradition
+            exec 3>&1
+        fi
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        exit $ret_code
+    fi
+}
+
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
 
     echo cmnd=$cmnd
     eval $cmnd
-    ret_code=$?
-    if [ $ret_code != 0 ]; then
-        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
-        exit $ret_code
-    fi
+    checkReturnCode ""
+}
+
+safeRunCommandQuiet() {
+    local cmnd="$*"
+    local ret_code
+
+    tmp_output=$(mktemp)
+    echo cmnd=$cmnd
+    # redirect the stream with file descriptor 3 to the temporary file
+    exec 3>"$tmp_output"
+    # execute the command redirecting the output to 3
+    eval $cmnd>&3 2>&3
+    # `checkReturnCode` will print the output even in quiet mode.
+    checkReturnCode $tmp_output
+    # remove the temporary file to clean up
+    rm -f $tmp_output
+    # redirect the filedescriptor 3 to stdout as is tradition
+    exec 3>&1
 }
 
 try_dependency_download() {
@@ -317,6 +342,222 @@ try_dependency_download() {
         echo "### All external dependencies already installed from download. ###"
         exit 0
     fi
+}
+
+download_python() {
+    local package_status=$(get_package_manager_status)
+    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
+    element_in "python-download" "${package_status[@]}"
+    local vin=$?
+    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
+        pushd $scriptDir/resources/sqlite
+        mkdir -p sqlite
+        safeRunCommand "curl https://github.com/sqlite/sqlite/archive/refs/tags/version-$SQLITE_VERSION.zip -L -o sqlite.zip"
+        safeRunCommand "unzip -qq sqlite.zip -d tmp"
+        safeRunCommand "rm sqlite.zip"
+        safeRunCommand "mv tmp/* sqlite-$SQLITE_VERSION"
+        safeRunCommand "rm -rf tmp"
+        safeRunCommand "tar -cf sqlite-$SQLITE_VERSION.tar ./"
+        popd
+        echo "sqlite-download" >> $marker_path
+        pushd $scriptDir/resources/python
+        mkdir -p python
+        safeRunCommand "curl https://github.com/python/cpython/archive/refs/tags/v$PYTHON_VERSION.zip -L -o python.zip"
+        safeRunCommand "unzip -qq python.zip -d tmp"
+        safeRunCommand "rm python.zip"
+        safeRunCommand "mv tmp/* Python-$PYTHON_VERSION"
+        safeRunCommand "rm -rf tmp"
+        safeRunCommand "tar -cf Python-$PYTHON_VERSION.tar ./"
+        popd
+        echo "python-download" >> $marker_path
+    fi
+}
+
+install_python() {
+    DEPENDENCIES=( sqlite python )
+    build_dependencies
+}
+
+install_cmake_boost_nss() {
+    DEPENDENCIES=( cmake boost nss )
+    build_dependencies
+}
+
+download_sources() {
+    local package_status=$(get_package_manager_status)
+    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
+    # check for the final step in the package manager based installation
+    # if that succeeded we are also done here.
+    element_in "pip-requirements" "${package_status[@]}"
+    local vin=$?
+    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
+        pushd $scriptDir
+        safeRunCommand "$INSTALL_PREFIX/bin/python3 -m pip install pyyaml"
+        safeRunCommand "$INSTALL_PREFIX/bin/python3 download_helper.py downloads.yml"
+        popd
+    fi
+}
+
+get_package_manager_status() {
+    mkdir -p $INSTALL_PREFIX
+    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
+
+    # Check if $marker_path exists or not => if it does then read contents.
+    # Otherwise create the file and input names of packages one by one as they are installed.
+    if [ ! -f $marker_path ]; then
+        touch $marker_path
+    fi
+
+    # Read the marker file into a variable as a list
+    local built_deps=""
+    IFS=$'\r\n' built_deps=$(cat $marker_path)
+    unset IFS
+
+    echo $built_deps
+}
+
+install_from_deps() {
+    pushd $scriptDir
+    # we use markers to not repeat steps in the build stage.
+    # TODO: could create hash digests of the main requirement files
+    # and force a rebuild if they changed.
+    local package_status=$(get_package_manager_status)
+    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
+    
+    # make sure we have paths set to where conan will place artifacts
+    OLD_PATH=$PATH
+    OLD_PYTHONPATH=$PYTHONPATH
+    OLD_CPATH=$CPATH
+    OLD_LD_RUN_PATH=$LD_RUN_PATH
+    export PATH=$INSTALL_PREFIX/bin:$PATH
+    export PYTHONPATH=$INSTALL_PREFIX/lib/python$PYTHON_PATH_VERSION
+    if [ -n "$CPATH" ] ; then
+        export CPATH=$INSTALL_PREFIX/include:$INSTALL_PREFIX/include/hdf5
+    else
+        export CPATH=$INSTALL_PREFIX/include:$INSTALL_PREFIX/include/hdf5:$CPATH
+    fi
+    export LD_RUN_PATH=$INSTALL_PREFIX/lib
+
+    # for the lib paths we need to give the version explicitely
+    local python_version=python$PYTHON_PATH_VERSION
+
+    # global pip config
+    # we will run pip as a module throughout to avoid errors where a pip import
+    # is not found when using the pip3 command directtly. 
+    # These sometimes occur if pip does large changes, as part of dependency
+    # chains affecting its own requirements.
+    local pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
+    local pip_target="--target $INSTALL_PREFIX/lib/$python_version"
+    
+    # force a reinstall of pip first, such that it works properly
+    element_in "pip-upgrade" "${package_status[@]}"
+    local vin=$?
+    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
+        safeRunCommand "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py"
+        safeRunCommand "$INSTALL_PREFIX/bin/python get-pip.py --force-reinstall"
+        safeRunCommand "rm get-pip.py"
+        echo "pip-upgrade" >> $marker_path
+    fi
+     
+    # install requirements that should be installed before conan, 
+    # and before we go through most other python packages
+    # since this includes conan, we need to force a reinstall, otherwise
+    # only the stdlib version of conan will be available, no commands can
+    # be issued directly from the CLI.
+    element_in "pip-pre-requirements" "${package_status[@]}"
+    local vin=$?
+    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
+        # make sure numpy prefers blas over openblas
+        safeRunCommandQuiet "$pip_install_cmd --force-reinstall -r requirements-pre.txt"
+        echo "pip-pre-requirements" >> $marker_path
+    fi
+    
+    # next is conan
+    element_in "conan" "${package_status[@]}"
+    local vin=$?
+    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
+        # create a profile
+
+        # make sure we use the c++11 ABI everywhere
+        local cxx_lib=libstd$CPP_STD_LIB_VERSION
+
+        safeRunCommand "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
+        safeRunCommand "$INSTALL_PREFIX/bin/conan profile update settings.compiler.libcxx=$cxx_lib default"
+
+        # configure prefix paths
+        local folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
+        
+        # when should conan build from sources? missing means if no pre-compiled binary package exists
+        local build_opts="--build=missing"
+
+        # define the C++ standard to use - this needs to be compatible with the Framework itself
+        local cxx_std=$CPP_STD
+        
+        local compiler_opts="-s compiler.cppstd=$cxx_std -s compiler.libcxx=$cxx_lib"
+
+        local cmake_opt="-c general.conan_cmake_program=$INSTALL_PREFIX/bin/cmake"
+        
+        # how to handle any system requirements that might be defined by a package.
+        # check means to verify presence and complain. Since we don't want to require
+        # sudo rights on installation of Karabo, this is all we can do here.
+        local sys_req_opts="-c tools.system.package_manager:mode=check"
+
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $compiler_opts $sys_req_opts $cmake_opts"
+        echo "conan" >> $marker_path
+    fi
+    
+    # with conan installed, now build shipped dependencies
+    # this way python can already pick them up.
+    # What have we been asked to build? - this builds the rest
+    determine_build_packages
+
+    # Build the dependencies
+    build_dependencies
+
+    # install python requirements 
+    # we do this in multiple stages, as pip has issues resolving a 
+    # too complex dependency chain with many pinned versions.
+    # In the best case it will need forever to resolve it, attempting
+    # any version starting with the lates one. In the worst case,
+    # it just fails. Since we know that we need to e.g. compile
+    # something as central as numpy from sources, we simplify
+    # the dependency chain by staging multiple requirement.txt docs.
+    element_in "pip-requirements" "${package_status[@]}"
+    local vin=$?
+    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
+        export NPY_BLAS_ORDER="BLAS,OPENBLAS"
+        export NPY_LAPACK_ORDER="LAPACK,OPENBLAS"
+        safeRunCommandQuiet "$pip_install_cmd -r requirements-0.txt"
+        safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
+        safeRunCommandQuiet "$pip_install_cmd -r requirements-2.txt"
+        echo "pip-requirements" >> $marker_path
+    fi
+    
+    popd
+
+    # reset the environment
+    if [ -n "$OLD_PATH" ] ; then
+        export PATH=$OLD_PATH
+    fi
+
+    if [ -n "$OLD_PYTHONPATH" ] ; then
+        export PYTHONPATH=$OLD_PYTHONPATH
+    else
+        unset PYTHON_PATH
+    fi
+
+    if [ -n "$OLD_CPATH" ] ; then
+        export CPATH=$OLD_CPATH
+    else
+        unset CPATH
+    fi
+
+    if [ -n "$OLD_LD_RUN_PATH" ] ; then
+        export LD_RUN_PATH=$OLD_LD_RUN_PATH
+    else
+        unset LD_RUN_PATH
+    fi
+
 }
 
 usage() {
@@ -370,13 +611,20 @@ if [ "$WHAT" = "ALL" ]; then
     try_dependency_download
 fi
 
-# We only continue if nothing was downloaded
+# python download is specialy to allow full boostrap
+download_python
 
-# What have we been asked to build?
-determine_build_packages
+# install python
+install_python
 
-# Build the dependencies
-build_dependencies
+# download any sources we build ourselfs
+download_sources
+
+# now install cmake, conan will use it
+install_cmake_boost_nss
+
+# install via conan and pip next
+install_from_deps
 
 # Package everything up, if requested
 if [ "$BUILD_PACKAGE" = "y" ]; then

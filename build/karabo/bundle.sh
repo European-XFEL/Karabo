@@ -68,7 +68,6 @@ fi
 BASEDIR=$(get_abs_path $scriptDir/../../)
 EXTRACT_SCRIPT=$scriptDir/extract.sh
 PYTHON_FIXER_SCRIPT=$scriptDir/fix-python-scripts.sh
-PYTHONPATH_FIXER_SCRIPT=$scriptDir/fix-python-path.sh
 PACKAGEDIR=$BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
@@ -110,9 +109,6 @@ cd -
 safeRunCommand "$PYTHON_FIXER_SCRIPT" $PACKAGEDIR
 export PATH=$PACKAGEDIR/extern/bin:$PATH
 
-# Correct Python path in the python config files
-safeRunCommand "$PYTHONPATH_FIXER_SCRIPT" $PACKAGEDIR
-
 # pythonKarabo
 safeRunCommand "$scriptDir/build-pythonKarabo.sh" $PACKAGEDIR $PYOPT
 
@@ -138,11 +134,9 @@ cp extract-pythonplugin.sh $PACKAGEDIR/bin/.extract-pythonplugin.sh
 cp extract-dependency.sh $PACKAGEDIR/bin/.extract-dependency.sh
 cp extract-pythondependency.sh $PACKAGEDIR/bin/.extract-pythondependency.sh
 cp fix-python-scripts.sh $PACKAGEDIR/bin/.fix-python-scripts.sh
-cp fix-python-path.sh $PACKAGEDIR/bin/.fix-python-path.sh
 cp set_relative_rpath.py $PACKAGEDIR/bin/.set_relative_rpath.py
 
 safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
-safeRunCommand "$PACKAGEDIR/bin/.fix-python-path.sh $PACKAGEDIR"
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     # ZIP it - but exclude developer's stuff from var, devices, etc.
