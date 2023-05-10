@@ -248,6 +248,8 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
     testMaxNumDataRange();
     testMaxNumDataHistory();
 
+    // Following tests use device m_deviceId, so ensure it is logged
+    waitUntilLogged(m_deviceId, "influxAllTestRunnerWithDataMigration");
     testInt(true);
     testUInt64(false);
     testFloat(false);
