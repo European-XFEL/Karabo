@@ -146,9 +146,6 @@ mkdir -p $HOME/.karabo
 # fix the shebang line of Python entry-points
 safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 
-# set the Python path in the config
-safeRunCommand "$KARABO/bin/.fix-python-path.sh" $KARABO
-
 # Create some directories
 # 1. var/log (for supervisor)
 mkdir -p $KARABO/var/log
