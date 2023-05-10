@@ -99,6 +99,16 @@ def test_get_image_data():
     np.testing.assert_array_equal(
         image, np.array([[2, 4, 6], [6, 8, 10]], np.int64))
 
+    h = Hash()
+    h['schema.image.pixels'] = Hash()
+    h['schema.image.pixels.data'] = np.array([[2, 4, 6], [6, 8, 10]], np.int64)
+    h['schema.image.pixels.type'] = 16
+    h['schema.image.pixels.shape'] = np.array([2, 3], np.uint64)
+    h['schema.image.pixels.isBigEndian'] = False
+    image = get_image_data(h, path='schema.image')
+    np.testing.assert_array_equal(
+        image, np.array([[2, 4, 6], [6, 8, 10]], np.int64))
+
 
 def test_get_array_data():
     h = Hash()
@@ -125,12 +135,12 @@ def test_get_array_data():
     assert array.shape == (3,)
 
     # Squeeze deactivated
-    h['data'] = Hash()
-    h['data.data'] = np.array([2, 4, 6], np.int64)
-    h['data.type'] = 16
-    h['data.shape'] = np.array([3, 1], np.uint64)
-    h['data.isBigEndian'] = False
-    array = get_array_data(h, 'data', squeeze=False)
+    h['round'] = Hash()
+    h['round.data'] = np.array([2, 4, 6], np.int64)
+    h['round.type'] = 16
+    h['round.shape'] = np.array([3, 1], np.uint64)
+    h['round.isBigEndian'] = False
+    array = get_array_data(h, 'round', squeeze=False)
     np.testing.assert_array_equal(
         array, np.array([[2], [4], [6]], dtype=np.int64))
     assert array.shape == (3, 1)
