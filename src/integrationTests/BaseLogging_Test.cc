@@ -318,6 +318,30 @@ bool BaseLogging_Test::waitForCondition(boost::function<bool()> checker, unsigne
     return (numOfWaits < maxNumOfWaits);
 }
 
+
+void BaseLogging_Test::waitUntilLogged(const std::string& deviceId, const std::string& textForFailure) {
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const bool isLogged = waitForCondition(
+          [this, &loggerId, &deviceId]() {
+              auto toLogIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
+              if (std::find(toLogIds.begin(), toLogIds.end(), deviceId) == toLogIds.end()) {
+                  // Logger manager did not (yet?) tell the logger to log the device
+                  return false;
+              }
+              auto notLoggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesNotLogged");
+              const bool inNotLogged =
+                    (std::find(notLoggedIds.begin(), notLoggedIds.end(), deviceId) != notLoggedIds.end());
+
+              return !inNotLogged;
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
+
+    CPPUNIT_ASSERT_MESSAGE(
+          textForFailure + ": '" + deviceId + "' not logged, loggerCfg: " + toString(m_deviceClient->get(loggerId)),
+          isLogged);
+}
+
+
 void BaseLogging_Test::setPropertyTestSchema() {
     std::vector<Hash> updates;
     updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value",
@@ -415,6 +439,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
     std::clog << "Check if InfluxLogReader is validating range for 'maxNumData' for slot 'getPropertyHistory' ... ";
 
     const std::string dlReader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    waitUntilLogged(dlReader0, "testMaxNumDataRange");
     const std::string outOfRangeErrMsg("'maxNumData' parameter is intentionally limited to a maximum of");
 
     const int readerMaxHistSize = m_deviceClient->get<int>(dlReader0, "maxHistorySize");
@@ -434,10 +459,12 @@ void BaseLogging_Test::testMaxNumDataRange() {
         m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(replyDevice, replyProperty, history);
-
+        throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
     } catch (karabo::util::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
         CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
+    } catch (const std::exception& e) {
+        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") += e.what(), false);
     }
 
     // Negative values must be rejected.
@@ -446,10 +473,12 @@ void BaseLogging_Test::testMaxNumDataRange() {
         m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(replyDevice, replyProperty, history);
-
+        throw KARABO_LOGIC_EXCEPTION("Wrong arguments to slotGetPropertyHistory did not let it throw");
     } catch (karabo::util::RemoteException& e) {
         const std::string& errMsg = e.userFriendlyMsg(true);
         CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
+    } catch (const std::exception& e) {
+        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected exception: ") += e.what(), false);
     }
 
     // 0 must be accepted - it as if InfluxLogReader::maxHistorySize has been used.
@@ -480,15 +509,7 @@ void BaseLogging_Test::testMaxNumDataHistory() {
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE("Failed to instantiate testing device '" + deviceId + "':" + res.second, res.first);
 
-    // Checks that the testing device is being logged.
-    bool isLogged = waitForCondition(
-          [this, &loggerId, &deviceId]() {
-              auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
-              return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
-          },
-          KRB_TEST_MAX_TIMEOUT * 1000);
-
-    CPPUNIT_ASSERT_MESSAGE("Failed to start logging of testing device '" + deviceId + ".", isLogged);
+    waitUntilLogged(deviceId, "testMaxNumDataHistory");
 
     // Writing sequence - write a sequence of increasing values.
     Epochstamp beforeWrites;
@@ -600,15 +621,8 @@ void BaseLogging_Test::testDropBadData() {
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    CPPUNIT_ASSERT_MESSAGE(
-          "Test device missing from 'devicesToBeLogged' :" +
-                toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
-          waitForCondition(
-                [this, &loggerId, &deviceId]() {
-                    auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
-                    return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
-                },
-                KRB_TEST_MAX_TIMEOUT * 1000));
+
+    waitUntilLogged(deviceId, "testDropBadData");
 
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     unsigned int numCycles = 5;
@@ -1047,15 +1061,8 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    CPPUNIT_ASSERT_MESSAGE(
-          "Test device missing from 'devicesToBeLogged' :" +
-                toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
-          waitForCondition(
-                [this, &loggerId, &deviceId]() {
-                    auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
-                    return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
-                },
-                KRB_TEST_MAX_TIMEOUT * 1000));
+
+    waitUntilLogged(deviceId, "testCfgFromPastRestart");
 
     // few cycles: increase value, stop and restart logging
     const unsigned int numCycles = 5;
@@ -1221,15 +1228,8 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    waitForCondition(
-          [this, &logId, &deviceId]() {
-              auto ids = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
-              return (find(ids.begin(), ids.end(), deviceId) != ids.end());
-          },
-          KRB_TEST_MAX_TIMEOUT * 1000);
-    auto ids = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
-    CPPUNIT_ASSERT_MESSAGE(deviceId + " not among devicesToBeLogged: " + toString(ids),
-                           find(ids.begin(), ids.end(), deviceId) != ids.end());
+
+    waitUntilLogged(deviceId, "testUnchangedNoDefaultProperties");
 
     // Set the value of the test device's property with no default value.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, noDefaultProp, 12));
@@ -1284,15 +1284,8 @@ void BaseLogging_Test::testUnchangedNoDefaultProperties() {
     success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    waitForCondition(
-          [this, &logId, &deviceId]() {
-              auto logIds = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
-              return (find(logIds.begin(), logIds.end(), deviceId) != logIds.end());
-          },
-          KRB_TEST_MAX_TIMEOUT * 1000);
-    ids = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
-    CPPUNIT_ASSERT_MESSAGE(deviceId + " not among devicesToBeLogged: " + toString(ids),
-                           find(ids.begin(), ids.end(), deviceId) != ids.end());
+
+    waitUntilLogged(deviceId, "testUnchangedNoDefaultProperties_2");
 
     // Flush the data logger to make sure there's no logging pendency
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
@@ -1804,6 +1797,8 @@ void BaseLogging_Test::testNans() {
           m_deviceClient->instantiate(m_server, "NanTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
+    waitUntilLogged(deviceId, "testNans");
+
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     const size_t max_set = 100ul;
     const size_t full_return_size = max_set + 1ul;
@@ -2008,21 +2003,11 @@ void BaseLogging_Test::testSchemaEvolution() {
     // Instantiates a DataLogTestDevice to use for the schema evolution test.
     // "m_deviceIdPrefix" allows concurrent Influx tests on the different platform CI runners.
     const std::string deviceId(getDeviceIdPrefix() + "SchemaEvolutionDevice");
-    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     auto success =
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Checks that the instantiated device is being logged.
-    CPPUNIT_ASSERT_MESSAGE(
-          "Test device missing from 'devicesToBeLogged' :" +
-                toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
-          waitForCondition(
-                [this, &loggerId, &deviceId]() {
-                    auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
-                    return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
-                },
-                KRB_TEST_MAX_TIMEOUT * 1000));
+    waitUntilLogged(deviceId, "testSchemaEvolution");
 
     // Captures the timepoint before any property modification.
     Epochstamp fromTimePoint;
