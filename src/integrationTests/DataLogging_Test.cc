@@ -34,6 +34,8 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    waitUntilLogged(m_deviceId, "fileAllTestRunner");
+
     testInt();
     testUInt64();
     testFloat();
@@ -186,6 +188,9 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 
     testMaxNumDataHistory();
     testDropBadData();
+
+    // Following tests use device m_deviceId, so ensure it is logged
+    waitUntilLogged(m_deviceId, "influxAllTestRunnerWithDataMigration");
     testInt(true);
     testUInt64(false);
     testFloat(false);
@@ -275,6 +280,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    waitUntilLogged(deviceId, "testInfluxMaxSchemaLogRate");
 
     // Wait some time to isolate the schema update bursts.
     boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
@@ -397,6 +403,7 @@ void DataLogging_Test::testInfluxMaxStringLength() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    waitUntilLogged(propTestDevice, "testInfluxMaxStringLength");
 
     ///////  Checks that a string below the length limit is accepted
     Epochstamp beforeBelowLimit;
@@ -508,6 +515,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    waitUntilLogged(m_deviceId, "testInfluxMaxPerDevicePropLogRate");
 
     // Checks that writing 32Kb of data is within the log rate tolerance.
     Epochstamp before32KbWrite;
@@ -744,6 +752,7 @@ void DataLogging_Test::testInfluxPropHistoryAveraging() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    waitUntilLogged(m_deviceId, "testInfluxPropHistoryAveraging");
 
     Epochstamp beforePropWrites;
     for (size_t i = 0; i < numWrites; i++) {
