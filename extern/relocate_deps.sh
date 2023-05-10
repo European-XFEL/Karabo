@@ -16,11 +16,7 @@ get_abs_path() {
 }
 
 relocate_python() {
-    # Includes are in a symlinked directory which has a bad link
-    pushd $INSTALL_PREFIX/include
-    rm python3.8 && ln -s python3.8m python3.8
-    popd
-
+    
     # Makefile has a 'prefix' which needs to be fixed
     local sed_program='s%^prefix=.*$%prefix='${INSTALL_PREFIX}'%'
     sed -i $sed_program $($INSTALL_PREFIX/bin/python -c "import sysconfig; print(sysconfig.get_makefile_filename())")
@@ -94,7 +90,13 @@ rewrite_rpaths() {
     done
 
     # Relocate the executables
-    run_rpath_fixer "-f -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
+    export ORIGIN=$INSTALL_PREFIX/bin
+    # can't fix python if python is running the fixer script
+    run_rpath_fixer "-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
+    # now fix python
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --set-rpath $INSTALL_PREFIX/lib $INSTALL_PREFIX/bin/python"
+    # run a second time forcing to RUNPATH as well: https://stackoverflow.com/questions/43616505/setting-rpath-for-python-not-working
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath $INSTALL_PREFIX/lib $INSTALL_PREFIX/bin/python"
 }
 
 run_rpath_fixer() {
