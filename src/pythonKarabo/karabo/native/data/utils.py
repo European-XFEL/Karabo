@@ -107,22 +107,25 @@ def _build_ndarray(data, path=None, squeeze=False):
     return array
 
 
-def get_image_data(data):
+def get_image_data(data, path=None):
     """Method to extract an ``image`` from a Hash into a numpy array
 
     This is a common use case when processing pipeline data (receiving from an
     output channel)
 
     :param data: A hash containing the image data hash
+    :param path: optional path of the image data. If no path is provided,
+                 the default checks if the data hash contains paths with
+                 `data.image` or `image` and get the image data.
 
     :returns: A numpy array containing the extracted pixel data
     """
     text = "Expected a Hash, but got type %s instead!" % type(data)
     assert isinstance(data, Hash), text
-
-    if "data.image" in data:
+    if path is not None:
+        return _build_ndarray(data[path], path="pixels")
+    elif "data.image" in data:
         return _build_ndarray(data["data.image"], path="pixels")
-
     elif "image" in data:
         return _build_ndarray(data["image"], path="pixels")
 
