@@ -1,0 +1,6 @@
+# requirements here are needed to get conan running, and ensure that
+# pip has necessary packages. Don't put anything in here that
+# requires libraries to be installed by conan first.
+wheel
+conan==1.59.0
+pip==22.0.4  # newer versions do not have --install-option. We can upgrade here once numpy runs on openblas
