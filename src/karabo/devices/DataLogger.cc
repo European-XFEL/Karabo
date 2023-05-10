@@ -403,12 +403,15 @@ namespace karabo {
             // Initiate logging for all of them
             for (const std::string& deviceId : deviceIds) {
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-                if (!appendTo(deviceId, "devicesToBeLogged")) {
+                // (Try to) put first into "devicesNotLogged" so that outside can check whether device is logged by the
+                // following procedure:
+                // - first check that it is in "devicesToBeLogged" (if not, slotAddDevicesToBeLogged was not yet called)
+                // - then check that it is NOT in devicesNotLogged" anymore
+                if (!appendTo(deviceId, "devicesNotLogged")) {
                     badIds.push_back(deviceId);
                     continue;
                 }
-                // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
-                appendTo(deviceId, "devicesNotLogged");
+                appendTo(deviceId, "devicesToBeLogged");
 
                 // Create data structure ... depending on implementation
                 DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId));
