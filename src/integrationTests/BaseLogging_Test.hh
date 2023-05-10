@@ -124,6 +124,15 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
 
     bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis);
 
+    /**
+     * Waits until logger has started to log device, assert otherwise.
+     * Timeout is BaseLogging_Test::KRB_TEST_MAX_TIMEOUT)
+     *
+     * @param deviceId device that should be logged
+     * @param textForFailure string prepended to assertion failure message if not logged
+     */
+    void waitUntilLogged(const std::string& deviceId, const std::string& textForFailure);
+
     const std::string m_server;
     const std::string m_deviceId;
 
