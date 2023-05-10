@@ -305,6 +305,8 @@ def substitute_pattern(path, regex, replace_with):
         return
 
     rewritten_text = [regex.sub(replace_with, line) for line in text]
+    if rewritten_text != text:
+        print(f"Rewritten parts of {path}")
     try:
         with open(path, mode='w', encoding=encoding) as fout:
             fout.writelines(rewritten_text)
