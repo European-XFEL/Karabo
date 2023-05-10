@@ -403,7 +403,7 @@ def install(args):
                     src = os.path.join('dist', args.config, '*', '*.so')
                     run_cmd('cp -f {} {}'.format(src, tgt))
         elif os.path.exists('setup.py'):
-            run_cmd('pip install --no-deps --upgrade .')
+            run_cmd('pip install --upgrade .')
         else:
             print('package {} has no clear'
                   ' installation path'.format(args.device))
@@ -623,7 +623,7 @@ def develop(args):
             lib = os.path.join('..', path, 'dist', args.config, '*', '*.so')
             run_cmd('ln -sf {}'.format(lib))
         elif os.path.exists('setup.py'):
-            run_cmd('pip install --no-deps -e .')
+            run_cmd('pip install -e .')
         else:
             print('package {} has no clear'
                   ' installation path'.format(args.device))
