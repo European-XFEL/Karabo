@@ -114,6 +114,8 @@ namespace karabo {
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                            const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
                                            const std::string& topic, bool forceViaBroker) const {
+            // Timestamp added to be able to measure latencies even if broker is by-passed (or non-JMS broker)
+            header->set("MQTimestamp", getEpochMillis());
             if (!forceViaBroker) {
                 if (tryToCallDirectly(instanceId, header, body)) return;
             }
@@ -139,8 +141,6 @@ namespace karabo {
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_username);
-            // Timestamp added to be able to measure latencies even if broker is by-passed
-            header->set("MQTimestamp", getEpochMillis());
             return header;
         }
 
@@ -168,8 +168,6 @@ namespace karabo {
             header->set("slotFunctions", "|" + slotInstanceId + ":" + slotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
-            // Timestamp added to be able to measure latencies even if broker is by-passed
-            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
@@ -187,8 +185,6 @@ namespace karabo {
             header->set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
-            // Timestamp added to be able to measure latencies even if broker is by-passed
-            header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
 
@@ -893,6 +889,7 @@ namespace karabo {
                 replyHeader->set("signalInstanceId", m_instanceId);
                 replyHeader->set("signalFunction", "__reply__");
                 replyHeader->set("slotInstanceIds", "|" + targetInstanceId + "|");
+
                 Hash::Pointer replyBody = boost::make_shared<Hash>("a1", message, "a2", details);
                 doSendMessage(targetInstanceId, replyHeader, replyBody, KARABO_SYS_PRIO, KARABO_SYS_TTL);
             }
@@ -962,15 +959,14 @@ namespace karabo {
             Hash::Pointer replyHeader = boost::make_shared<Hash>();
 
             std::string targetInstanceId;
+            replyHeader->set("signalInstanceId", m_instanceId);
             if (caseRequest) {
                 targetInstanceId = header.get<string>("signalInstanceId");
                 replyHeader->set("replyFrom", header.get<std::string>("replyTo"));
-                replyHeader->set("signalInstanceId", m_instanceId);
                 replyHeader->set("signalFunction", "__reply__");
                 replyHeader->set("slotInstanceIds", "|" + targetInstanceId + "|");
             } else { // i.e. caseRequestNoWait with a reply properly placed
                 targetInstanceId = header.get<string>("replyInstanceIds");
-                replyHeader->set("signalInstanceId", m_instanceId);
                 replyHeader->set("signalFunction", "__replyNoWait__");
                 replyHeader->set("slotInstanceIds", header.get<string>("replyInstanceIds"));
                 replyHeader->set("slotFunctions", header.get<string>("replyFunctions"));
