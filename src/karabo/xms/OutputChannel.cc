@@ -90,6 +90,7 @@ namespace karabo {
                   .expertAccess()
                   .assignmentOptional()
                   .defaultValue(0)
+                  .maxInc(65535) // ports are 16-bit
                   .init()
                   .commit();
 
