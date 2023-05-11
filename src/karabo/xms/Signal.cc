@@ -148,7 +148,8 @@ namespace karabo {
             setSlotStrings(slots, *header);
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
-            // Timestamp added to be able to measure latencies even if broker is by-passed
+            // Timestamp added to be able to measure latencies even if broker is by-passed (or non-JMS)
+            // Needed here since Signal is by-passing m_signalSlotable->doSendMessage(..).
             header->set("MQTimestamp", m_signalSlotable->getEpochMillis());
             return header;
         }
