@@ -57,6 +57,7 @@ namespace karabo {
                   .description("Hostport of a peer for type 'client' and local port for type 'server'")
                   .assignmentOptional()
                   .defaultValue(0)
+                  .maxInc(65535) // ports are 16-bit
                   .commit();
 
             STRING_ELEMENT(expected)
