@@ -260,9 +260,12 @@ void BaseLogging_Test::setUp() {
     Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
+
     // Create client
     m_deviceClient = boost::make_shared<DeviceClient>(std::string(), false);
     m_deviceClient->initialize();
+    m_deviceClient->setInternalTimeout(SLOT_REQUEST_TIMEOUT_MILLIS);
+
     m_sigSlot = boost::make_shared<SignalSlotable>("sigSlot");
     m_sigSlot->start();
 
