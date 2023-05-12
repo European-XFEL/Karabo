@@ -634,16 +634,11 @@ namespace karabo {
             stayConnected(instanceId); // connect synchronously (if not yet connected...)
             // Request schema
             Schema schema;
-            try {
-                std::string dummy;
-                p->request(instanceId, "slotGetSchema", false) // Retrieves full schema
-                      .timeout(m_internalTimeout)
-                      .receive(schema, dummy); // 2nd "return value" is deviceId
-            } catch (const TimeoutException&) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
-                Exception::clearTrace();
-                return Schema();
-            }
+            std::string dummy;
+            p->request(instanceId, "slotGetSchema", false) // Retrieves full schema
+                  .timeout(m_internalTimeout)
+                  .receive(schema, dummy); // 2nd "return value" is deviceId
+
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
         }
@@ -732,17 +727,12 @@ namespace karabo {
             // Not found, request and cache it
             // Request schema
             Schema schema;
-            try {
-                std::string dummy;
-                m_signalSlotable.lock()
-                      ->request(instanceId, "slotGetSchema", true) // Retrieves active schema
-                      .timeout(m_internalTimeout)
-                      .receive(schema, dummy); // 2nd "return value" is deviceId
-            } catch (const TimeoutException&) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
-                Exception::clearTrace();
-                return Schema();
-            }
+            std::string dummy;
+            m_signalSlotable.lock()
+                  ->request(instanceId, "slotGetSchema", true) // Retrieves active schema
+                  .timeout(m_internalTimeout)
+                  .receive(schema, dummy); // 2nd "return value" is deviceId
+
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
         }
@@ -765,16 +755,10 @@ namespace karabo {
             // Not found, request and cache it
             // Request schema
             Schema schema;
-            try {
-                m_signalSlotable.lock()
-                      ->request(serverId, "slotGetClassSchema", classId)
-                      .timeout(m_internalTimeout)
-                      .receive(schema); // Retrieves full schema
-            } catch (const TimeoutException&) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Schema request for server \"" << serverId << "\" timed out";
-                Exception::clearTrace();
-                return Schema();
-            }
+            m_signalSlotable.lock()
+                  ->request(serverId, "slotGetClassSchema", classId)
+                  .timeout(m_internalTimeout)
+                  .receive(schema); // Retrieves full schema
 
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
@@ -1213,17 +1197,10 @@ namespace karabo {
             std::string dummy1, dummy2; // deviceId and property (as our input - relevant for receiveAsync)
             const Hash args("from", from, "to", to, "maxNumData", maxNumData);
 
-            try {
-                // Increasing timeout since getting history may take a while...
-                p->request(dataLogReader, "slotGetPropertyHistory", deviceId, property, args)
-                      .timeout(10 * m_internalTimeout)
-                      .receive(dummy1, dummy2, result);
-            } catch (const TimeoutException&) {
-                Exception::clearTrace();
-                KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
-                                           << "' timed out for device.property '" << deviceId << "." << property
-                                           << "'.";
-            }
+            // Increasing timeout since getting history may take a while...
+            p->request(dataLogReader, "slotGetPropertyHistory", deviceId, property, args)
+                  .timeout(10 * m_internalTimeout)
+                  .receive(dummy1, dummy2, result);
             return result;
         }
 
@@ -1285,15 +1262,9 @@ namespace karabo {
             Schema schema;
             bool configAtTimepoint;
             std::string configTimepoint; // Timepoint for configuration as a string in ISO8601 format.
-            try {
-                p->request(dataLogReader, "slotGetConfigurationFromPast", deviceId, timepoint)
-                      .timeout(10 * m_internalTimeout)
-                      .receive(hash, schema, configAtTimepoint, configTimepoint);
-            } catch (const TimeoutException&) {
-                Exception::clearTrace();
-                KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
-                                           << "' timed out for configuration at '" << timepoint << "'.";
-            }
+            p->request(dataLogReader, "slotGetConfigurationFromPast", deviceId, timepoint)
+                  .timeout(10 * m_internalTimeout)
+                  .receive(hash, schema, configAtTimepoint, configTimepoint);
 
             return make_pair(hash, schema);
         }
@@ -2240,15 +2211,10 @@ namespace karabo {
 
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
 
-            try {
-                p->request(deviceId, "slotGetOutputChannelNames")
-                      .timeout(m_internalTimeout)
-                      .receive(names); // Retrieves vector of names
-            } catch (const TimeoutException&) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Output channel names request for instance \"" << deviceId
-                                           << "\" timed out";
-                Exception::clearTrace();
-            }
+            p->request(deviceId, "slotGetOutputChannelNames")
+                  .timeout(m_internalTimeout)
+                  .receive(names); // Retrieves vector of names
+
             return names;
         }
 
