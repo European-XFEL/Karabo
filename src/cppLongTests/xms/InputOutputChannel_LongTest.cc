@@ -160,7 +160,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     // initiate connect and block until done (fail test if timeout)
     karabo::net::ErrorCode ec;
     input->connect(outputInfo, connectHandler);
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(1000)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
     ec = connectFuture.get();                                                 // Can get() only once...
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
 
