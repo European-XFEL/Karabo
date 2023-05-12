@@ -60,6 +60,9 @@ namespace karabo {
                   .description("Local port for this server")
                   .assignmentOptional()
                   .defaultValue(44444)
+                  .minInc(1024)  // Below 1024: normal users are not allowed to run servers on them
+                                 // (https://www.w3.org/Daemon/User/Installation/PrivilegedPorts.html)
+                  .maxInc(65535) // TCP port numbers are 16 bits
                   .commit();
 
             STRING_ELEMENT(expected)
