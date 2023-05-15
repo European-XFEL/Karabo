@@ -205,6 +205,9 @@ source "$scriptDir/set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=$LSB_RELEASE_DIST
     DISTRO_RELEASE=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
+else
+    echo "Karabo Framework is currently supported only on Linux"
+    exit 1
 fi
 
 # External dependencies have to be outside the source tree. This is
@@ -319,6 +322,12 @@ while [ -n "$1" ]; do
     esac
     shift
 done
+
+echo $BASH_VERSINFO
+if [[ $BASH_VERSINFO -lt 4 ]]; then
+    echo "Bash version 4 or higher required"
+    exit 1
+fi
 
 if [ "$NUM_JOBS" = "0" ]; then
     # numJobs not specified in command-line; use the number of active cores.
