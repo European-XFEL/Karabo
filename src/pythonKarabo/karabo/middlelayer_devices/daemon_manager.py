@@ -15,8 +15,8 @@ from karabo.common.scenemodel.api import (
     write_scene)
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy, Device,
-    Double, Hash, Overwrite, State, String, UInt32, Unit, VectorHash,
-    VectorString, background, has_changes, sleep, slot)
+    Double, Hash, KaraboError, Overwrite, State, String, UInt32, Unit,
+    VectorHash, VectorString, background, has_changes, sleep, slot)
 
 STATUS_PAGE = "{}/status.json"
 
@@ -282,6 +282,13 @@ class DaemonManager(Device):
                    if _row["karabo_name"] == server_id][0]
         header = data["header"]
         command = COMMAND_MAP[header]
+        # We are still performing an action on device
+        if self.post_action_tasks.get(
+                (server_id, host_id)):
+            raise KaraboError(
+                "KaraboDaemonManager is still waiting for an action on "
+                f"{server_id} on {host_id}. Please try again later.")
+
         success, text = await self._action_service(
             server_id, host_id, command, post_action=header)
         # The first entry is the found row, must be there
@@ -301,8 +308,9 @@ class DaemonManager(Device):
     async def _action_service(self, service_name, host, command,
                               post_action=None):
         self.logger.info(
-            f"Action executed by daemon device: Action: {service_name}, "
-            f"service_name: {host}, host: {command}")
+            f"Action executed by daemon device: Action: {command}, "
+            f"service_name: {service_name}, host: {host}, "
+            f"post_action: {post_action}")
 
         try:
             info = self.services_info[f"{host}.{service_name}"]
@@ -336,12 +344,9 @@ class DaemonManager(Device):
         """A post action for a service related to service request"""
         if self.state != State.CHANGING:
             self.state = State.CHANGING
-        task = self.post_action_tasks.get((service_name, host))
-        if task is not None:
-            return
-
         if request == "start":
-            pass  # nothing to follow up on start
+            self.post_action_tasks[(service_name, host)] = background(
+                self._ensure_service_up(service_name, host))
         elif request == "stop":
             self.post_action_tasks[(service_name, host)] = background(
                 self._ensure_service_down(service_name, host))
@@ -371,6 +376,8 @@ class DaemonManager(Device):
         """Ensure a service can restart after being stopped"""
         try:
             if not await self.wait_status(service_name, STATUS_DOWN):
+                self.logger.info(
+                    "Server didn't go down as expected, now trying to kill.")
                 await self._action_service(service_name, host, "kill")
             # Wait until the kill resolves
             if not await self.wait_status(service_name, STATUS_DOWN, num=15):
@@ -384,6 +391,19 @@ class DaemonManager(Device):
         """Ensure a service is down by killing a service"""
         try:
             if not await self.wait_status(service_name, STATUS_DOWN):
+                self.logger.info(
+                    "Server didn't go down as expected, now trying to kill.")
+                await self._action_service(service_name, host, "kill")
+        finally:
+            self.post_action_tasks.pop((service_name, host))
+
+    async def _ensure_service_up(self, service_name, host):
+        """If a service does not come online after a period, the process
+        gets killed once to try again later"""
+        try:
+            if not await self.wait_status(service_name, STATUS_UP):
+                self.logger.info(
+                    "Server didn't come up as expected, now trying to kill.")
                 await self._action_service(service_name, host, "kill")
         finally:
             self.post_action_tasks.pop((service_name, host))
