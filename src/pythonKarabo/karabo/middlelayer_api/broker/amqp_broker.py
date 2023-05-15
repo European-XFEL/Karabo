@@ -17,7 +17,7 @@ from aiormq.base import TaskWrapper
 from karabo.native import (
     Hash, KaraboError, decodeBinary, decodeBinaryPos, encodeBinary)
 
-from ..eventloop import EventLoop, global_sync
+from ..eventloop import EventLoop
 from ..utils import suppress
 from .base import Broker
 
@@ -403,9 +403,10 @@ class AmqpBroker(Broker):
         """Reimplemented method of `Broker`"""
         await self._on_stop_tasks()
         me = asyncio.current_task(loop=None)
-        # Close the channel depending if the eventloop runs in
-        # the main thread
-        if not global_sync():
+        # Services that are listening to broadcasts don't need their
+        # channel closed, e.g. clients or servers. This will happen
+        # on connection closure
+        if not self.broadcast:
             me.add_done_callback(self.close_channel)
 
         tasks = [t for t in self.tasks if t is not me
