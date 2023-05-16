@@ -81,6 +81,21 @@ __release_build() {
             __check_existence $KARABO_UPLOAD_CURL_PREFIX/$FRAMEWORK_DEST_DIR/$REL_ARTIFACT_NAME
             bash ./auto_build_all.sh Release --numJobs $NUM_COMPILE_JOBS --bundle --quiet
             mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
+            # test that python is linked correctly in the archive
+            # first relocate the extern dir to assure it is not picked up if we build in the same
+            # job
+            echo "Installing binary to perform final tests..."
+            mv extern extern_will_not_link
+            bash $REL_ARTIFACT_NAME --prefix=/tmp/
+            source /tmp/karabo/activate
+            # if any linker paths are off, the following commands will fail
+            echo "Testing Python linking works by outputting version..."
+            echo "python ..."
+            python --version
+            echo "python3 ..."
+            python3 --version
+            echo "python3.8 ..."
+            python3.8 --version
             sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $KARABO_UPLOAD_HOST "mkdir -p $KARABO_UPLOAD_DIR/$FRAMEWORK_DEST_DIR"
             sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
             ;;
