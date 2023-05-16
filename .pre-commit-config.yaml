@@ -1,0 +1,31 @@
+exclude: |
+  (?x)(
+      ^build/|
+      ^extern/|
+      ^doc/|
+      ^src/service.in/|
+      ^src/environment.in/|
+      ^ci/
+  )
+
+repos:
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: check-json
+      - id: destroyed-symlinks
+      - id: check-symlinks
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        exclude: |
+          (?x)(
+              ^conda-recipes/|
+              ^src/pythonKarabo/karabo/integration_tests/|
+              ^src/pythonKarabo/karabo/bound_api/tests/
+          )
