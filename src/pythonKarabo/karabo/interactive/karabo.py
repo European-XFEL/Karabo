@@ -107,8 +107,9 @@ def parse_commandline():
 
     parser_chk.add_argument('-b', '--branch',
                             type=str,
-                            default='master',
-                            help='The branch/tag of the device package')
+                            default='',
+                            help='The branch/tag of the device package. '
+                                 'If empty, use HEAD of the remote repo.')
 
     parser_ins = sps.add_parser('install',
                                 help='Installs an existing device')
@@ -174,8 +175,9 @@ def parse_commandline():
 
     parser_dev.add_argument('-b', '--branch',
                             type=str,
-                            default='master',
-                            help='The branch/tag of the device package')
+                            default='',
+                            help='The branch/tag of the device package. '
+                                 'If empty, use HEAD of the remote repo.')
 
     parser_dev.add_argument('-f', '--force',
                             action='store_true',
@@ -270,14 +272,17 @@ def new(args):
         configure_template(path, args.device, class_name, email,
                            " ".join([args.template, args.api]))
         os.chdir(path)
+        # From git version 2.28 onwards we could use
+        # 'git init --initial-branch=main' and skip the 'checkout -b' step
         run_cmd('git init')
+        run_cmd('git checkout -b main')
         run_cmd('git remote add origin {}/karaboDevices/{}.git'
                 .format(args.git, args.device))
         run_cmd('git add .')
         run_cmd('git commit -m "Initial commit"')
         print('New device package was added to: {}'
               .format(os.getcwd()))
-        print('Use: "git push -u origin master" if you want start versioning '
+        print('Use: "git push -u origin main" if you want start versioning '
               'remotely')
 
 
@@ -288,9 +293,9 @@ def checkout(args):
             print('INFO The device package already exists, skipped checkout')
         else:
             print('Downloading {}... '.format(args.device), end='', flush=True)
-            git_opt = "-b {}".format(args.branch)
+            git_opt = f"-b {args.branch} " if args.branch else ''
             run_cmd(f"git clone {args.git}{resolve_project(args.device)}.git"
-                    f" {git_opt} {path}")
+                    f" {git_opt}{path}")
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
