@@ -27,8 +27,8 @@ To install a local service suite including a JMS broker, simply type::
 Step 2: Edit the environment files
 ==================================
 
-In the karabo folder navigate to ``var/environment`` and set the content file
-named ``KARABO_BROKER`` to ``tcp://localhost:7777``
+In the karabo folder navigate to ``var/environment``. If the file named ``KARABO_BROKER`` does not exist, create the file and change its content to ``tcp://localhost:7777``.
+
 
 Step 3: Start the karabo backbone
 =================================
