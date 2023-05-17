@@ -120,46 +120,43 @@ Additionally, the following guidelines are suggested:
 Python
 ======
 
-General - Tools
----------------
+Coding Style
+-------------
 
-- First and foremost, programming should be done *PEP8* conform.
-  Additionally, if there is no *PEP8* definition and for further examples, the
-  `google style guide <https://google.github.io/styleguide/pyguide.html>`_
-  can be looked up.
-- Per convention, `strings` should be created with `"`.
-- Per convention, `lists` and `dicts` should should be created with [], {}, respectively.
-  Tools like *flake8* can help in writing clean code.
-- Import ordering is done using *isort -m4*. A corresponding *isort* configuration file
-  is provided in `src/pythonKarabo` and `src/pythonGui`
-- Every new feature must be supplied with a unit-test and if necessary, with an integration
-  test.
+- Code should be *isorted* and style-checked using *flake8*. An isort configuration file
+  is provided in `src/pythonKarabo`.
+- Double quotes ("") should be used around strings instead of single quotes('') and triple-double
+  quotes (""") should be used instead of triple-single quotes (''').
+- We prefer hanging indentation.
+- `super()` should always be called without explicitly passing the class object.
+  For example, call ```super().foo(1, 2)``` instead of ```super(Foo, self).foo(1, 2)```
+
+
+Naming conventions:
+
+- Classes should be named in PascalCase and methods and instance variables
+  should be in snake_case, except when overriding a third-party
+  method/variable.
+- Always spell out the variable without truncating, e.g. `server` instead of `srv`.
+- Do not use names of builtins for variables (e.g. `object` and`list`)
+
 
 Documentation
 -------------
-
+- Always try to add a docstring for new code, including tests, unless the name
+  of the class/method/function is self-explanatory. Overridden methods should
+  have a docstring to mention how they behave differently from the parent
+  method.
 - Use double backticks (\`\`name\`\`) to document variables inside a method
 
 
-Python Classes
---------------
-
-- Per convention, deriving from a super class and call methods should be done
-  like this (>= Python 3.6):
-
-       `super()`
-
-- Do not use names of builtins for variables (e.g. `object`)
+Testing
+-------
+- Every new feature must be supplied with a unit-test and also with an integration
+  test, if necessary.
 
 
 Karabo GUI
 ==========
 
-- By design, we sort out functionality to controllers based on *traits* package for type checking,
-  user interface library independent testing and event signals.
-- New style features of Qt > 5.9 should not be used until further notice.
-- The `Karabo GUI` must run on different OS: MacOS, Windows and Unix system.
-  Hence, the library *pathlib* should be used whenever os path functionality has to be used.
-- The Qt version of the `Karabo GUI` is provided by the community, e.g. we use packages like *qtpy* and the conda qt-feedstock
-  to run. However, only the *PyQt* package is tested and supported. *PySide* is best-effort.
-- Plot features should be implemented using *PyQtGraph*.
+See the contribution guidelines to Karabo GUI [here](src/pythonGui/CONTRIBUTING.md)
