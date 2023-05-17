@@ -731,9 +731,9 @@ internal_mirror_publish:
     # updated internal mirror to avoid any conflicts during the push.
     - git clone https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
     - cd FrameworkMirror
+    - git-filter-repo --invert-paths --path src/environment.in/KARABO_BROKER
     - git-filter-repo --strip-blobs-bigger-than 100M
     - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
-
     # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
     # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
     # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
