@@ -210,7 +210,7 @@ class DeviceClassProxy(BaseDeviceProxy):
 
     def _status_default(self):
         topology = get_topology()
-        server_key = 'server.{}'.format(self.server_id)
+        server_key = f'server.{self.server_id}'
         attributes = topology.get_attributes(server_key)
         if attributes is None:
             return ProxyStatus.NOSERVER

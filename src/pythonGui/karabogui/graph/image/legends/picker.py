@@ -10,7 +10,7 @@ from karabogui.graph.common.api import KaraboLegend, float_to_string
 class PickerLegend(KaraboLegend):
 
     def __init__(self):
-        super(PickerLegend, self).__init__()
+        super().__init__()
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setHorizontalSpacing(15)
 
@@ -31,7 +31,7 @@ class PickerLegend(KaraboLegend):
         x = float_to_string(x)
         y = float_to_string(y)
         value = float_to_string(value) if type(value) is float else str(value)
-        self._label.setText("x: {}<br>y: {}<br>value: {}".format(x, y, value))
+        self._label.setText(f"x: {x}<br>y: {y}<br>value: {value}")
         self._color_box.setBrush(QBrush(color))
         self.updateSize()
 
@@ -48,7 +48,7 @@ class ColorSample(ItemSample):
     """The color item in the legend that shows the selected pixel color"""
 
     def __init__(self, item):
-        super(ColorSample, self).__init__(item)
+        super().__init__(item)
 
         self._brush = Qt.NoBrush
         self._pen = QPen(QColor(196, 197, 193, 200), 1)

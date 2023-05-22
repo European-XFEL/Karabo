@@ -45,7 +45,7 @@ class KaraboPlotView(QWidget):
     stateChanged = Signal(object)
 
     def __init__(self, axis=AxisType.Classic, actions=None, parent=None):
-        super(KaraboPlotView, self).__init__(parent)
+        super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(WIDGET_MIN_WIDTH, WIDGET_MIN_HEIGHT)
 

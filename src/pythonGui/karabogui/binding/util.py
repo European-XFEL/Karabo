@@ -275,7 +275,7 @@ def get_dtype_format(binding):
         if abs_err is not None:
             # Yes, abs error below 0 can happen
             if 0 < abs_err < 1:
-                fmt = "{{:.{}f}}".format(-int(log10(abs_err)))
+                fmt = f"{{:.{-int(log10(abs_err))}f}}"
             else:
                 fmt = "{:.1f}"
 

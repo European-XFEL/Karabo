@@ -20,7 +20,7 @@ class KaraboMessageBox(QDialog):
     existing = set()
 
     def __init__(self, parent=None):
-        super(KaraboMessageBox, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui("messagebox.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -56,7 +56,7 @@ class KaraboMessageBox(QDialog):
             self._ticker.stop()
         # Graceful unregister with discard!
         self.existing.discard(self)
-        super(KaraboMessageBox, self).closeEvent(event)
+        super().closeEvent(event)
 
     def sizeHint(self):
         return self._size_hint

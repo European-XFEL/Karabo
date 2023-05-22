@@ -36,8 +36,8 @@ def format_vector_hash_details(binding, value):
             detail = format_property_details(row_binding, row_name, row_value)
             row_details.append(detail)
         # Do some formatting, a la yaml.
-        tabbed_details = ["    {}".format(detail) for detail in row_details]
-        tabbed_row = ["    {}".format(deets)
+        tabbed_details = [f"    {detail}" for detail in row_details]
+        tabbed_row = [f"    {deets}"
                       for deets in [f"row {index}:"] + tabbed_details]
         details.append("\n".join(tabbed_row))
     return "\n" + "\n".join(details)

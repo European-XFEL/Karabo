@@ -10,7 +10,7 @@ class UnitLabelWrapper(QFrame):
     """
 
     def __init__(self, widget, parent=None):
-        super(UnitLabelWrapper, self).__init__(parent)
+        super().__init__(parent)
 
         # Store internal widget reference
         self._internal_widget = widget
@@ -46,7 +46,7 @@ class UnitLabelWrapper(QFrame):
             self.label.setText(unit_label)
 
     def setFont(self, font):
-        super(UnitLabelWrapper, self).setFont(font)
+        super().setFont(font)
         self._internal_widget.setFont(font)
         self.label.setFont(font)
 

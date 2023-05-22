@@ -9,7 +9,7 @@ from qtpy.QtWidgets import QSizePolicy, QToolBar, QWidget
 
 class ToolBar(QToolBar):
     def __init__(self, title="", parent=None):
-        super(ToolBar, self).__init__(title, parent=parent)
+        super().__init__(title, parent=parent)
 
         iconSize = QSize(32, 32)
         iconSize *= 0.6

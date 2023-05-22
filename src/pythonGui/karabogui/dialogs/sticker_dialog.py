@@ -21,7 +21,7 @@ BUTTON_FONT_SIZE = 10
 class StickerDialog(QDialog):
 
     def __init__(self, model=None, parent=None):
-        super(StickerDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('stickerdialog.ui'), self)
 
         self.model = model.clone_traits()
@@ -47,9 +47,9 @@ class StickerDialog(QDialog):
         self.leText.setPlainText(model.text)
         sheet = []
         font_string = get_qfont(model.font, adjust_size=True).toString()
-        sheet.append('qproperty-font: "{}";'.format(font_string))
-        sheet.append('color: "{}";'.format(model.foreground))
-        sheet.append('background-color: "{}";'.format(model.background))
+        sheet.append(f'qproperty-font: "{font_string}";')
+        sheet.append(f'color: "{model.foreground}";')
+        sheet.append(f'background-color: "{model.background}";')
 
         # Add borders
         bg = model.background
@@ -58,7 +58,7 @@ class StickerDialog(QDialog):
         color = QColor(bg).darker(120).name()
         sheet.append('border: 1px solid;')
         sheet.append('border-top: 5px solid;')
-        sheet.append('border-color: {};'.format(color))
+        sheet.append(f'border-color: {color};')
 
         self.leText.setStyleSheet("QPlainTextEdit {{ {} }}".format("".join(
             sheet)))

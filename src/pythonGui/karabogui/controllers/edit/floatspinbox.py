@@ -34,7 +34,7 @@ class FloatSpinBox(BaseBindingController):
         objectName = generateObjectName(self)
         widget.setObjectName(objectName)
 
-        self._style_sheet = ("QDoubleSpinBox#{}".format(objectName) +
+        self._style_sheet = (f"QDoubleSpinBox#{objectName}" +
                              " {{ font: {}; font-size: {}pt; }}")
         # add actions
         step_action = QAction("Change Step...", widget)

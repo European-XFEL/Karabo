@@ -34,7 +34,7 @@ class SaveConfigurationDialog(QDialog):
     """Save dialog for configuration details"""
 
     def __init__(self, parent=None):
-        super(SaveConfigurationDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui("config_save.ui"), self)
         self.ui_priority.currentIndexChanged.connect(self._change_text)
         index = self.ui_priority.currentIndex()
@@ -75,7 +75,7 @@ class SaveConfigurationDialog(QDialog):
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
-        super(SaveConfigurationDialog, self).done(result)
+        super().done(result)
 
     @property
     def description(self):
@@ -95,7 +95,7 @@ class ConfigurationFromNameDialog(QDialog):
     """
 
     def __init__(self, instance_id, parent=None):
-        super(ConfigurationFromNameDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui("config_handle.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
@@ -164,7 +164,7 @@ class ConfigurationFromNameDialog(QDialog):
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
-        super(ConfigurationFromNameDialog, self).done(result)
+        super().done(result)
 
     def _check_existing(self):
         if self.ui_table_widget.selectionModel().hasSelection():
@@ -205,7 +205,7 @@ class ConfigurationFromNameDialog(QDialog):
     def accept(self):
         """The dialog was accepted and we can request a configuration"""
         self._request_configuration()
-        super(ConfigurationFromNameDialog, self).accept()
+        super().accept()
 
     @Slot()
     def _request_configuration(self):
@@ -257,7 +257,7 @@ class TableModel(QAbstractTableModel):
                CONFIG_DATA[CONFIG_DB_PRIORITY]]
 
     def __init__(self, instance_id="", parent=None):
-        super(TableModel, self).__init__(parent)
+        super().__init__(parent)
         self.instance_id = instance_id
         self.data = []
 

@@ -286,7 +286,7 @@ def extract_edits(schema, binding):
             if isinstance(subnode, ChoiceOfNodesBinding):
                 chosen = subnode.choice
                 yield from _iter_binding(getattr(subnode.value, chosen),
-                                         '{}.{}'.format(subname, chosen))
+                                         f'{subname}.{chosen}')
             elif isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
             elif not isinstance(subnode, SlotBinding):

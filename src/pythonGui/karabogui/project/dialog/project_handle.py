@@ -50,7 +50,7 @@ def get_column_index(project_data_key):
 
 class LoadProjectDialog(QDialog):
     def __init__(self, is_subproject=False, parent=None):
-        super(LoadProjectDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('project_handle.ui'), self)
         # set proper window flags
         self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
@@ -156,7 +156,7 @@ class LoadProjectDialog(QDialog):
         Stop listening for broadcast events
         """
         unregister_from_broadcasts(self.event_map)
-        super(LoadProjectDialog, self).done(result)
+        super().done(result)
 
     def _domains_updated(self, domains):
         # Domain combobox
@@ -293,7 +293,7 @@ class LoadProjectDialog(QDialog):
 class NewProjectDialog(QDialog):
     def __init__(self, model=None, is_rename=False, default=False,
                  parent=None):
-        super(NewProjectDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('project_new.ui'), self)
         self.setModal(False)
 
@@ -326,7 +326,7 @@ class NewProjectDialog(QDialog):
                 self.adjustSize()
             else:
                 title = 'Create a copy of this project...'
-                text = '{}_copy'.format(model.simple_name)
+                text = f'{model.simple_name}_copy'
             self.leTitle.setText(text)
         self.setWindowTitle(title)
         self.leTitle.setFocus()
@@ -362,7 +362,7 @@ class NewProjectDialog(QDialog):
         Stop listening for broadcast events
         """
         unregister_from_broadcasts(self.event_map)
-        super(NewProjectDialog, self).done(result)
+        super().done(result)
 
     @property
     def simple_name(self):
@@ -387,7 +387,7 @@ class TableModel(QAbstractTableModel):
     headers = HEADER
 
     def __init__(self, show_trashed=False, parent=None):
-        super(TableModel, self).__init__(parent)
+        super().__init__(parent)
         self.entries = []
         self.db_conn = get_db_conn()
         self.show_trashed = show_trashed
@@ -484,4 +484,4 @@ class TableModel(QAbstractTableModel):
         self.entries.sort(key=attrgetter(ProjectEntry._fields[column]),
                           reverse=bool(order))
         self.layoutChanged.emit()
-        super(TableModel, self).sort(column, order)
+        super().sort(column, order)

@@ -55,7 +55,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     signalHasModifications = Signal(bool)
 
     def __init__(self, parent=None):
-        super(ConfigurationTreeModel, self).__init__(parent)
+        super().__init__(parent)
         self._root_proxy = None
         self._property_proxies = {}
         self._model_index_refs = WeakValueDictionary()
