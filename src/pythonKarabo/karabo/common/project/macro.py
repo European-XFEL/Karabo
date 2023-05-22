@@ -22,7 +22,7 @@ class MacroModel(BaseProjectObjectModel):
 
     @cached_property
     def _get_instance_id(self):
-        return "Macro-{}-{}".format(self.simple_name, self.uuid)
+        return f"Macro-{self.simple_name}-{self.uuid}"
 
 
 def read_macro(filename_or_fileobj):
@@ -35,7 +35,7 @@ def read_macro(filename_or_fileobj):
         return MacroModel()
 
     if not hasattr(filename_or_fileobj, "read"):
-        with open(filename_or_fileobj, "r") as input:
+        with open(filename_or_fileobj) as input:
             macro_code = input.read()
     else:
         macro_code = filename_or_fileobj.read()
