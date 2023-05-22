@@ -93,7 +93,7 @@ class Hash(OrderedDict):
         return OrderedDict.__getitem__(*self._path(path, auto))
 
     def __str__(self):
-        r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
+        r = ', '.join(f'{k}{self[k, ...]!r}: {self[k]!r}'
                       for k in self)
         return '<' + r + '>'
 
@@ -503,7 +503,7 @@ class HashList(list):
             return tabulate.tabulate(self, headers="keys", tablefmt="grid")
         else:
             # XXX: More support for other HashLists
-            return "<HashList(" + super(HashList, self).__repr__() + ")>"
+            return "<HashList(" + super().__repr__() + ")>"
 
 
 class HashByte(str):
@@ -512,7 +512,7 @@ class HashByte(str):
     _hashType = HashType.Char
 
     def __repr__(self):
-        return "${:x}".format(ord(self))
+        return f"${ord(self):x}"
 
 
 class Schema:
@@ -557,7 +557,7 @@ class Schema:
         return h
 
     def __repr__(self):
-        return "Schema('{}', {})".format(self.name, self.hash)
+        return f"Schema('{self.name}', {self.hash})"
 
 
 NUMPY_TO_HASH_TYPE_VECTOR = {
@@ -631,7 +631,7 @@ def get_hash_type_from_data(data):
             memoryview(data)
             return HashType.ByteArray
         except TypeError:
-            raise TypeError('unknown datatype {}'.format(data.__class__))
+            raise TypeError(f'unknown datatype {data.__class__}')
 
 
 def is_equal(a, b):
