@@ -69,7 +69,7 @@ class DatabaseBase(ContextDecorator):
 
     def path(self, domain, uuid):
         # XXX: Add a '_0' suffix to keep old code from wetting its pants
-        return "{}/{}/{}_0".format(self.root, domain, uuid)
+        return f"{self.root}/{domain}/{uuid}_0"
 
     def __enter__(self):
         """Obtain a database handle.
@@ -95,7 +95,7 @@ class DatabaseBase(ContextDecorator):
         :param domain: the domain to check
         :return: True if it exists, false otherwise
         """
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         return self.dbhandle.hasCollection(path)
 
     def add_domain(self, domain):
@@ -110,11 +110,11 @@ class DatabaseBase(ContextDecorator):
         :raises: ProjectDBError on Handle failure,
                  or RuntimeError if domain creation failed otherwise
         """
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         success = self.dbhandle.createCollection(path)
 
         if not success:
-            raise RuntimeError("Failed to create domain at {}".format(path))
+            raise RuntimeError(f"Failed to create domain at {path}")
 
     @staticmethod
     def _make_xml_if_needed(xml_rep):
@@ -154,7 +154,7 @@ class DatabaseBase(ContextDecorator):
         if isinstance(xml_rep, etree._Element):
             return to_string(xml_rep)
 
-        raise ValueError("Cannot handle type {}".format(type(xml_rep)))
+        raise ValueError(f"Cannot handle type {type(xml_rep)}")
 
     def sanitize_database(self, domain):
         """Optional Method
@@ -307,7 +307,7 @@ class DatabaseBase(ContextDecorator):
             # NOTE: The client might send us garbage
             item_tree = self._make_xml_if_needed(item_xml)
         except ValueError:
-            msg = 'XML parse error for item "{}"'.format(uuid)
+            msg = f'XML parse error for item "{uuid}"'
             raise ProjectDBError(msg)
 
         if 'user' not in item_tree.attrib:

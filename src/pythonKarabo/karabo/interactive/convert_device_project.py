@@ -93,7 +93,7 @@ def create_package_directory(package_name, directory, common_prefix,
     print('Creating package directory:',
           strip_common_prefix(package_dir, common_prefix))
     os.makedirs(package_dir)
-    with open(op.join(package_dir, '__init__.py'), 'wt'):
+    with open(op.join(package_dir, '__init__.py'), 'w'):
         pass
 
     if use_svn:
@@ -125,13 +125,13 @@ def execfile(path, mod_dict):
     implementation which gets the job done.
     """
     error = None
-    with open(path, 'r') as fp:
+    with open(path) as fp:
         try:
             code = compile(fp.read(), op.basename(path), 'exec')
             exec(code, mod_dict)
         except (ImportError, SyntaxError) as ex:
             mod_dict.clear()
-            error = '{}: {}'.format(type(ex).__name__, str(ex))
+            error = f'{type(ex).__name__}: {str(ex)}'
 
     return error
 
@@ -175,7 +175,7 @@ def show_device_errors(errors):
     if errors:
         print('The following errors were encountered:')
         for fn, error in errors.items():
-            print('  In "{}" =>'.format(fn), error)
+            print(f'  In "{fn}" =>', error)
     print('Exiting.')
 
 

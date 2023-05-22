@@ -149,7 +149,7 @@ class VerificationProjectManager():
             self.assertTrue(ret)
             proxy = await connectDevice("consumeTest")
             uuid = str(uuid4())
-            xml = '<test uuid="{0}">foobar</test>'.format(uuid)
+            xml = f'<test uuid="{uuid}">foobar</test>'
             item = Hash()
             item["xml"] = xml
             item["uuid"] = uuid
