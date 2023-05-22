@@ -11,7 +11,7 @@ class TestObjectDuplicateDialog(GuiTestCase):
     TEXT = 'You are about to create <b>{}</b> duplicate(s)'
 
     def setUp(self):
-        super(TestObjectDuplicateDialog, self).setUp()
+        super().setUp()
         simple_name = "foo"
         self.dialog = ObjectDuplicateDialog(simple_name)
 

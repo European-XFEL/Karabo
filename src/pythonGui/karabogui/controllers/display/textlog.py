@@ -83,7 +83,7 @@ class DisplayTextLog(BaseBindingController):
     def _write_log(self, text, timestamp):
         dt = datetime.fromtimestamp(timestamp.toTimestamp())
         stamp = dt.strftime('[%H:%M:%S]')
-        item = '{}: {}'.format(stamp, text)
+        item = f'{stamp}: {text}'
         self.log_widget.append(item)
 
         # update our scroll bar

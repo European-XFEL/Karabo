@@ -366,7 +366,7 @@ class KaraboImageItem(GraphicsObject):
 
         # 0. Slice image with existing geometry
         if self._slice_rect is not None:
-            x1, y1, x2, y2 = [int(c) for c in self._slice_rect.getCoords()]
+            x1, y1, x2, y2 = (int(c) for c in self._slice_rect.getCoords())
             return image[y1:y2, x1:x2]
 
         # Start calculating the view geometry

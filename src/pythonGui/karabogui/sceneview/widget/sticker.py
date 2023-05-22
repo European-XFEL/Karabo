@@ -16,7 +16,7 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
     """A `StickerWidget` for creating editable text widgets on the `scene`"""
 
     def __init__(self, model, parent=None):
-        super(StickerWidget, self).__init__(model=model, parent=parent)
+        super().__init__(model=model, parent=parent)
         self.set_widget_properties(model)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setReadOnly(True)
@@ -39,7 +39,7 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
 
     def destroy(self):
         """Satisfy the informal widget interface."""
-        super(StickerWidget, self).destroy()
+        super().destroy()
 
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
@@ -81,9 +81,9 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
         font_string = get_qfont(model.font).toString()
 
         sheet = []
-        sheet.append('qproperty-font: "{}";'.format(font_string))
-        sheet.append('color: "{}";'.format(model.foreground))
-        sheet.append('background-color: "{}";'.format(model.background))
+        sheet.append(f'qproperty-font: "{font_string}";')
+        sheet.append(f'color: "{model.foreground}";')
+        sheet.append(f'background-color: "{model.background}";')
 
         # Add borders
         bg = model.background
@@ -92,7 +92,7 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
         color = QColor(bg).darker(120).name()
         sheet.append('border: 1px solid;')
         sheet.append('border-top: 5px solid;')
-        sheet.append('border-color: {};'.format(color))
+        sheet.append(f'border-color: {color};')
 
         self.setStyleSheet("QPlainTextEdit {{ {} }}".format("".join(
             sheet)))

@@ -72,7 +72,7 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
             messagebox.show_error(
                 "No Macro server found in system topology. "
                 "Console cannot be started.")
-            raise IOError
+            raise OSError
 
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()

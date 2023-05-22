@@ -43,7 +43,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
     """A QStyledItemDelegate for slot buttons
     """
     def __init__(self, parent=None):
-        super(SlotButtonDelegate, self).__init__(parent)
+        super().__init__(parent)
         self._button_states = {}
 
     def paint(self, painter, option, index):
@@ -51,7 +51,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
         model = index.model()
         proxy = model.index_ref(index)
         if not isinstance(getattr(proxy, 'binding', None), SlotBinding):
-            super(SlotButtonDelegate, self).paint(painter, option, index)
+            super().paint(painter, option, index)
             return
 
         set_fill_rect(painter, option, index)
@@ -68,7 +68,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
                 self._handle_event_state(proxy, event, option)
                 return True
 
-        return super(SlotButtonDelegate, self).editorEvent(
+        return super().editorEvent(
             event, model, option, index)
 
     def _draw_button(self, painter, option, index, proxy):

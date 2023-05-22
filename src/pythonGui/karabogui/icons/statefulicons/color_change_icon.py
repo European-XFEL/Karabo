@@ -11,7 +11,7 @@ from xml.etree.ElementTree import Element, parse, tostring
 from karabo.common.scenemodel.const import NS_SVG
 
 
-class ColorChangeIcon(object):
+class ColorChangeIcon:
     """An SVG group element which can have fill colors changed in one or more
     subelements.
     """
@@ -61,8 +61,7 @@ def get_color_change_icon(path):
     def _iter_groups_r(element):
         for group in element.findall(NS_SVG + 'g'):
             yield group
-            for subgroup in _iter_groups_r(group):
-                yield subgroup
+            yield from _iter_groups_r(group)
 
     tree = parse(path)
 
@@ -96,7 +95,7 @@ def get_color_change_icons(path):
 
 
 def _join_style_attr(style):
-    return ';'.join(['{}:{}'.format(k, v) for k, v in style.items()])
+    return ';'.join([f'{k}:{v}' for k, v in style.items()])
 
 
 def _split_style_attr(style):

@@ -100,7 +100,7 @@ class ArrowSceneTool(LineSceneTool):
     marker_path = Instance(QPainterPath)
 
     def draw(self, scene_view, painter):
-        super(ArrowSceneTool, self).draw(scene_view, painter)
+        super().draw(scene_view, painter)
         if self.line is not None:
             line = QLineF(self.line)
             if line.length():

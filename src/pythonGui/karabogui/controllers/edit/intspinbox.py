@@ -40,7 +40,7 @@ class EditableSpinBox(BaseBindingController):
         objectName = generateObjectName(self)
         widget.setObjectName(objectName)
 
-        self._style_sheet = ("SpinBox#{}".format(objectName) +
+        self._style_sheet = (f"SpinBox#{objectName}" +
                              " {{ font: {}; font-size: {}pt; }}")
 
         # Formats

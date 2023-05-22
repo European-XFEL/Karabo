@@ -11,7 +11,7 @@ from .utils import get_dialog_ui
 class FormatLabelDialog(QDialog):
 
     def __init__(self, font_size=10, font_weight="normal", parent=None):
-        super(FormatLabelDialog, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         uic.loadUi(get_dialog_ui("format_label.ui"), self)
 
         # Populate font size combobox and set current index

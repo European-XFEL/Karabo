@@ -33,7 +33,7 @@ class BaseLabelController(BaseBindingController):
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
 
         objectName = generateObjectName(self)
-        self.style_sheet = ("QWidget#{}".format(objectName) +
+        self.style_sheet = (f"QWidget#{objectName}" +
                             " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
         sheet = self.style_sheet.format(ALL_OK_COLOR)
@@ -150,7 +150,7 @@ class FormatMixin:
 
     def _create_fmt(self):
         """Generate the string formatting according to the model settings"""
-        self.fmt = "{{:.{}{}}}".format(self.model.decimals, self.model.fmt)
+        self.fmt = f"{{:.{self.model.decimals}{self.model.fmt}}}"
 
 
 class AlarmMixin:

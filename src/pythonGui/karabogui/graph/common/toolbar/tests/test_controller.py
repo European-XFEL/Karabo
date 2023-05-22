@@ -9,7 +9,7 @@ from ..toolsets import MouseModeToolset
 class TestToolbarController(GuiTestCase):
 
     def setUp(self):
-        super(TestToolbarController, self).setUp()
+        super().setUp()
         self.toolbar = ToolbarController()
 
     def test_basics(self):

@@ -12,7 +12,7 @@ from .utils import get_dialog_ui
 
 class SceneLinkDialog(QDialog):
     def __init__(self, model, parent=None):
-        super(SceneLinkDialog, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         uic.loadUi(get_dialog_ui('scenelink.ui'), self)
 
         self._selectedScene = 0
@@ -42,7 +42,7 @@ class SceneLinkDialog(QDialog):
         def visitor(obj):
             nonlocal collected
             if isinstance(obj, SceneModel):
-                target = "{}:{}".format(obj.simple_name, obj.uuid)
+                target = f"{obj.simple_name}:{obj.uuid}"
                 collected.add(target)
 
         walk_traits_object(project, visitor)
