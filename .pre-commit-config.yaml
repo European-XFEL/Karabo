@@ -46,3 +46,9 @@ repos:
               ^src/pythonKarabo/karabo/integration_tests/|
               ^src/pythonKarabo/karabo/bound_api/tests/
           )
+
+  -   repo: https://github.com/asottile/pyupgrade
+      rev: v3.4.0
+      hooks:
+      -   id: pyupgrade
+          args: [--py37-plus]
