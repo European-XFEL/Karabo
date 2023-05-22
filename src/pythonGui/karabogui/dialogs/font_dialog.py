@@ -18,7 +18,7 @@ DEFAULT_STYLE = "Regular"
 class FontDialog(QDialog):
 
     def __init__(self, qfont, parent=None):
-        super(FontDialog, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         uic.loadUi(get_dialog_ui("font_dialog.ui"), self)
 
         # Instantiate variables

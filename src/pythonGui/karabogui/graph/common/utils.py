@@ -6,7 +6,7 @@ MAX_PRECISION = -24
 
 def float_to_string(f, precision=2):
     """Create pretty floats for legend items"""
-    fmt = "{{:.{}f}}".format(precision)
+    fmt = f"{{:.{precision}f}}"
     return fmt.format(f).rstrip("0").rstrip(".")
 
 

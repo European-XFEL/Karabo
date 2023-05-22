@@ -10,7 +10,7 @@ from ..controller import AGGREGATOR_MAP, AuxPlotsController
 class TestAuxPlots(GuiTestCase):
 
     def setUp(self):
-        super(TestAuxPlots, self).setUp()
+        super().setUp()
         self._image_layout = GraphicsLayoutWidget()
         self._controller = AuxPlotsController(image_layout=self._image_layout)
 

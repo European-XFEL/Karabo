@@ -10,7 +10,7 @@ from .base import BasePanelWidget
 
 class PlaceholderPanel(BasePanelWidget):
     def __init__(self):
-        super(PlaceholderPanel, self).__init__("Start Page")
+        super().__init__("Start Page")
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -21,5 +21,5 @@ class PlaceholderPanel(BasePanelWidget):
         """We override this method to make sure the standard toolbar stays
         hidden for this panel.
         """
-        super(PlaceholderPanel, self).attach_to_container(container)
+        super().attach_to_container(container)
         self.standard_toolbar.setVisible(False)

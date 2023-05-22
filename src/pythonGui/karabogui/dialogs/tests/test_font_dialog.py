@@ -10,7 +10,7 @@ from ..font_dialog import FontDialog
 class TestFontDialog(GuiTestCase):
 
     def setUp(self):
-        super(TestFontDialog, self).setUp()
+        super().setUp()
         # Add fonts
         for font_file in FONT_FILENAMES:
             QFontDatabase.addApplicationFont(font_file)

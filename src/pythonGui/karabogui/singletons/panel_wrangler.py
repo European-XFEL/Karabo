@@ -31,7 +31,7 @@ class PanelWrangler(QObject):
     """
 
     def __init__(self, parent=None):
-        super(PanelWrangler, self).__init__(parent=parent)
+        super().__init__(parent=parent)
 
         self.main_window = None
         self.splash = None
@@ -397,7 +397,7 @@ def _find_scene_model(name, uuid):
     """Find a SceneModel which is already open in the project.
     """
 
-    class _Visitor(object):
+    class _Visitor:
         found = None
 
         def __call__(self, obj):

@@ -29,7 +29,7 @@ from .tools import DeviceSceneHandler
 
 class DeviceTreeView(QTreeView):
     def __init__(self, parent=None):
-        super(DeviceTreeView, self).__init__(parent)
+        super().__init__(parent)
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = DeviceTreeModel(parent=self)
@@ -129,7 +129,7 @@ class DeviceTreeView(QTreeView):
         """Reimplementation of the Qt function
         """
         # XXX: We used to expand the index here!
-        super(DeviceTreeView, self).scrollTo(index, hint)
+        super().scrollTo(index, hint)
 
     # ----------------------------
     # Events
@@ -147,7 +147,7 @@ class DeviceTreeView(QTreeView):
                 event.accept()
                 return
 
-        super(DeviceTreeView, self).mouseDoubleClickEvent(event)
+        super().mouseDoubleClickEvent(event)
 
     # ----------------------------
     # Slots
@@ -265,8 +265,8 @@ class DeviceTreeView(QTreeView):
 
     def collapseAll(self):
         self.expanded = False
-        super(DeviceTreeView, self).collapseAll()
+        super().collapseAll()
 
     def expandAll(self):
         self.expanded = True
-        super(DeviceTreeView, self).expandAll()
+        super().expandAll()

@@ -43,7 +43,7 @@ class Network(QObject):
     signalNetworkPerformance = Signal(float, bool)
 
     def __init__(self, parent=None):
-        super(Network, self).__init__(parent=parent)
+        super().__init__(parent=parent)
 
         self._tcp_socket = None
         self._data_reader = None
@@ -332,7 +332,7 @@ class Network(QObject):
             return sequence if len(sequence) <= maxsize else sequence[:maxsize]
 
         # cache the server address
-        server = '{}:{}'.format(self.hostname, self.port)
+        server = f'{self.hostname}:{self.port}'
 
         self.gui_servers = _least_recently_used(server, self.gui_servers,
                                                 int(MAX_GUI_SERVER_HISTORY))

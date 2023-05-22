@@ -15,7 +15,7 @@ class GridView(QWidget):
     """
 
     def __init__(self, parent=None):
-        super(GridView, self).__init__(parent)
+        super().__init__(parent)
         self._pen = QPen()
         self._pen.setWidth(PEN_SIZE)
         self._pen.setColor(QColor(*GRID_COLOR))
@@ -55,7 +55,7 @@ class GridView(QWidget):
     def resizeEvent(self, event):
         """Throttle the generation of the grid on resize events!"""
         self._update_timer.start()
-        super(GridView, self).resizeEvent(event)
+        super().resizeEvent(event)
 
     @Slot()
     def _needs_update(self):

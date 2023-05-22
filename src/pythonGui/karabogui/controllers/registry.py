@@ -74,7 +74,7 @@ def get_scene_model_class(klass):
     return instance_trait.klass
 
 
-class register_binding_controller(object):
+class register_binding_controller:
     """A class decorator for `BaseBindingController` subclasses which registers
     the widget for the various UI builders and adds some useful metadata.
 

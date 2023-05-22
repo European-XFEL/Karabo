@@ -37,7 +37,7 @@ class KaraboImageView(QWidget):
         Acts as a container of the graphics layout, the image plotitem,
         the toolbar and other tooling features.
         """
-        super(KaraboImageView, self).__init__(parent)
+        super().__init__(parent)
 
         # Main layout to organize
         layout = QGridLayout(self)
@@ -624,8 +624,8 @@ class KaraboImageView(QWidget):
     def _update_scale_legend(self):
         if self._scale_legend is not None:
             x_scale, y_scale = self.plotItem.axes_transform[TF_SCALING]
-            x_units, y_units = [labels["units"] for labels in
-                                self.plotItem.axes_labels]
+            x_units, y_units = (labels["units"] for labels in
+                                self.plotItem.axes_labels)
             self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
 
     # -----------------------------------------------------------------------
@@ -633,7 +633,7 @@ class KaraboImageView(QWidget):
     def event(self, event):
         if event.type() == QEvent.ToolTip:
             self.toolTipChanged.emit()
-        return super(KaraboImageView, self).event(event)
+        return super().event(event)
 
     def sizeHint(self):
         """ The optimal size when all aux plots and labels are activated."""

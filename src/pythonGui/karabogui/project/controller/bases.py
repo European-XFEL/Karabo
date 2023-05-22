@@ -107,7 +107,7 @@ class BaseProjectController(ABCHasStrictTraits):
         """The name for this controller's item in the GUI view
         """
         if self.model.modified:
-            return '*{}'.format(self.display_name)
+            return f'*{self.display_name}'
         else:
             return self.display_name
 

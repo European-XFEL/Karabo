@@ -10,7 +10,7 @@ from ..actions import BoxHSceneAction, BoxVSceneAction
 
 class TestLayoutActions(GuiTestCase):
     def setUp(self):
-        super(TestLayoutActions, self).setUp()
+        super().setUp()
         self._foo_label = LabelModel(x=20, y=20, text="foo")
         self._bar_label = LabelModel(x=10, y=10, text="bar")
         self._baz_label = LabelModel(x=10, y=20, text="baz")
@@ -19,7 +19,7 @@ class TestLayoutActions(GuiTestCase):
         self._scene_view = SceneView(model=self._scene_model)
 
     def tearDown(self):
-        super(TestLayoutActions, self).tearDown()
+        super().tearDown()
         self._scene_view.destroy()
 
     def test_basics(self):

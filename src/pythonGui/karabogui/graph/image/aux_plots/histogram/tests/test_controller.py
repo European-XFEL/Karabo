@@ -11,12 +11,12 @@ from ..controller import (
 class TestHistogramAggregator(GuiTestCase):
 
     def setUp(self):
-        super(TestHistogramAggregator, self).setUp()
+        super().setUp()
         self._aggregator = HistogramAggregator()
         self._aggregator.on_trait_change(self._mock_slot, "stats")
 
     def tearDown(self):
-        super(TestHistogramAggregator, self).tearDown()
+        super().tearDown()
         self._aggregator.on_trait_change(self._mock_slot, "stats", remove=True)
         self._emitted_value = None
 

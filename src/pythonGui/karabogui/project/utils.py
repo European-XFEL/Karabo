@@ -318,9 +318,9 @@ def save_as_object(obj):
             old_uuid = parts[1]
             if old_uuid in scene_uuids:
                 new_uuid = scene_uuids[old_uuid]
-                target = "{}:{}".format(simple_name, new_uuid)
+                target = f"{simple_name}:{new_uuid}"
             else:
-                target = "{}:{}".format(simple_name, old_uuid)
+                target = f"{simple_name}:{old_uuid}"
             link.target = target
 
     def _replace_macro_uuids():

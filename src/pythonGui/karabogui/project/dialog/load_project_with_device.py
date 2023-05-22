@@ -64,7 +64,7 @@ class LoadProjectWithDeviceDialog(QDialog):
         Unsubscribes from broadcast events.
         """
         unregister_from_broadcasts(self.event_map)
-        super(LoadProjectWithDeviceDialog, self).done(result)
+        super().done(result)
 
     # -----------------------------------------------------------------------
     # Dialog values accessors

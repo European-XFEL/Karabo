@@ -57,7 +57,7 @@ class KaraboImageNode(HasStrictTraits):
         if axis == Axes.Z:
             return self.dim_z
         else:
-            raise ValueError('Invalid axis value: {}'.format(axis))
+            raise ValueError(f'Invalid axis value: {axis}')
 
     def get_slice(self, axis, cell):
         """Returns the cell slice from the given axis"""

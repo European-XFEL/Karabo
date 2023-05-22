@@ -13,7 +13,7 @@ class SystemTopologyListener(QObject):
     system topology and passes them along via a callback method.
     """
     def __init__(self, notification_cb, parent=None):
-        super(SystemTopologyListener, self).__init__(parent)
+        super().__init__(parent)
         # Hold a weak reference to a callback bound method
         self.callback = WeakMethodRef(notification_cb, num_args=2)
 

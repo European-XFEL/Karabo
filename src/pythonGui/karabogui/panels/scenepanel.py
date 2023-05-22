@@ -40,7 +40,7 @@ class ScenePanel(BasePanelWidget):
         # cache a reference to the scene model
         self.model = model
         self.connected_to_server_at_init = connected_to_server
-        super(ScenePanel, self).__init__(model.simple_name, allow_closing=True)
+        super().__init__(model.simple_name, allow_closing=True)
 
         # Add a handler for the window title. Don't forget to remove it later!
         self.model.on_trait_change(self.set_title, 'simple_name')
@@ -114,7 +114,7 @@ class ScenePanel(BasePanelWidget):
     # Qt Methods
 
     def closeEvent(self, event):
-        super(ScenePanel, self).closeEvent(event)
+        super().closeEvent(event)
         if event.isAccepted():
             # Tell the scene view and scroll widget to destruct
             if self.scene_view is not None:
@@ -151,7 +151,7 @@ class ScenePanel(BasePanelWidget):
         color = get_topic_color(karabo_topic)
         if color is not None:
             self.toolbar.setStyleSheet(
-                """QToolBar {{ background-color: rgba{} }};""".format(color))
+                f"""QToolBar {{ background-color: rgba{color} }};""")
 
     # ----------------------------
     # Qt slots
@@ -524,7 +524,7 @@ class ResizableScrollArea(QScrollArea):
     """
 
     def __init__(self, child_widget, parent=None):
-        super(ResizableScrollArea, self).__init__(parent=parent)
+        super().__init__(parent=parent)
 
         self._resizing = False
         self._resize_type = ''
@@ -539,7 +539,7 @@ class ResizableScrollArea(QScrollArea):
             self.unsetCursor()
         elif event_type == QEvent.Leave:
             self._child_widget.mouse_left()
-        return super(ResizableScrollArea, self).eventFilter(obj, event)
+        return super().eventFilter(obj, event)
 
     def mouseMoveEvent(self, event):
         if not event.buttons():

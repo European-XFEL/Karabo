@@ -11,7 +11,7 @@ from ..base import KaraboImageView
 class TestKaraboImageView(GuiTestCase):
 
     def setUp(self):
-        super(TestKaraboImageView, self).setUp()
+        super().setUp()
         self.widget = KaraboImageView()
         self.roi = self.widget.add_roi()
         self.aux_plots = self.widget.add_aux(AuxPlots.ProfilePlot)

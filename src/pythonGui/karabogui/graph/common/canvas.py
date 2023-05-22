@@ -22,7 +22,7 @@ class BaseCanvas(QGraphicsObject):
     editingFinished = Signal(object)
 
     def __init__(self, rect):
-        super(BaseCanvas, self).__init__()
+        super().__init__()
         self._drawn_geometry = None
         self._default_geometry = QPointF()
         self._bounding_rect = rect
@@ -66,7 +66,7 @@ class RectCanvas(BaseCanvas):
     """Canvas for drawing rectangles."""
 
     def __init__(self, rect):
-        super(RectCanvas, self).__init__(rect)
+        super().__init__(rect)
         self._drawn_geometry = QRectF(0, 0, 0, 0)
         self._default_geometry = QRectF()
         self._start_pos = None
@@ -82,7 +82,7 @@ class RectCanvas(BaseCanvas):
             self._start_pos = event.pos()
             rect = QRectF(self._start_pos, self._start_pos).normalized()
             self._drawn_geometry = rect
-        super(RectCanvas, self).mousePressEvent(event)
+        super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         """Reimplemented because we want to record geometry and draw
@@ -99,7 +99,7 @@ class RectCanvas(BaseCanvas):
 class PointCanvas(BaseCanvas):
 
     def __init__(self, rect):
-        super(PointCanvas, self).__init__(rect)
+        super().__init__(rect)
         self._drawn_geometry = QRectF(0, 0, 0, 0)
         self._default_geometry = QRectF()
 
@@ -108,10 +108,10 @@ class PointCanvas(BaseCanvas):
         if event.button() == Qt.LeftButton:
             event.accept()
             return
-        super(PointCanvas, self).mousePressEvent(event)
+        super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
         """Reimplemented because we want to record the self._drawn_geometry
            first before emitting it in base class."""
         self._drawn_geometry = QRectF(event.pos(), QSizeF(1, 1))
-        super(PointCanvas, self).mouseReleaseEvent(event)
+        super().mouseReleaseEvent(event)

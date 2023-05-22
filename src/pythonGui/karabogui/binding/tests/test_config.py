@@ -146,7 +146,7 @@ def test_default_values():
     config = extract_configuration(binding)
     default_props = ('a', 'b', 'h1', 'i1', 'j1')
     for prop in default_props:
-        assert prop in config, '{!r} missing from config'.format(prop)
+        assert prop in config, f'{prop!r} missing from config'
     assert "k1" not in config
     assert 'm' not in config
     # Since no user edits, an empty Hash should have been extracted

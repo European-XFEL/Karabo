@@ -29,7 +29,7 @@ class MacroPanel(BasePanelWidget):
 
     def __init__(self, model):
         self.model = model
-        super(MacroPanel, self).__init__(model.simple_name, allow_closing=True)
+        super().__init__(model.simple_name, allow_closing=True)
 
         self.already_connected = {}
 
@@ -137,7 +137,7 @@ class MacroPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
 
     def closeEvent(self, event):
-        super(MacroPanel, self).closeEvent(event)
+        super().closeEvent(event)
         if event.isAccepted():
             # Unregister to KaraboBroadcastEvent
             unregister_from_broadcasts(self.event_map)

@@ -61,7 +61,7 @@ class ArrayExporter:
         self._data = data
 
     def export(self):
-        name = "{}_data.npy".format(Timestamp().toLocal())
+        name = f"{Timestamp().toLocal()}_data.npy"
         filename = util.getSaveFileName(caption="Export Data",
                                         filter="Numpy File (*.npy)",
                                         suffix="npy",
@@ -72,7 +72,7 @@ class ArrayExporter:
             return
 
         if not filename.endswith(".npy"):
-            filename = "{}.npy".format(filename)
+            filename = f"{filename}.npy"
 
         np.save(filename, self._data)
 
@@ -109,7 +109,7 @@ class MultiArrayExporter:
         self._zipped = zipped
 
     def export(self):
-        name = "{}_data.npz".format(Timestamp().toLocal())
+        name = f"{Timestamp().toLocal()}_data.npz"
         filename = util.getSaveFileName(caption="Export Data",
                                         filter="Numpy Zipped File (*.npz)",
                                         suffix="npz",
@@ -120,7 +120,7 @@ class MultiArrayExporter:
             return
 
         if not filename.endswith(".npz"):
-            filename = "{}.npz".format(filename)
+            filename = f"{filename}.npz"
 
         np.savez(filename, **self._zipped)
 
@@ -136,7 +136,7 @@ class ImageExporter:
         """Exports the plot to an image"""
         # First we export the contents to a QImage
         qimage = self._exporter.export(toBytes=True)
-        name = "{}_image.png".format(Timestamp().toLocal())
+        name = f"{Timestamp().toLocal()}_image.png"
         filename = util.getSaveFileName(caption="Save Snapshot",
                                         filter="PNG (*.png)",
                                         suffix="png",
@@ -147,6 +147,6 @@ class ImageExporter:
             return
 
         if not filename.endswith(".png"):
-            filename = "{}.png".format(filename)
+            filename = f"{filename}.png"
 
         qimage.save(filename)

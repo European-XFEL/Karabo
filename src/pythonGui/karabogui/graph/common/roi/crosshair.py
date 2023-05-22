@@ -32,7 +32,7 @@ class CrosshairROI(KaraboROI):
 
         center = self.center
         self.textItem.setPos(center)
-        x, y = [float_to_string(coord) for coord in center]
+        x, y = (float_to_string(coord) for coord in center)
         self.textItem.setHtml(set_roi_html(name=self.name, center=(x, y)))
 
     def invalidate(self):

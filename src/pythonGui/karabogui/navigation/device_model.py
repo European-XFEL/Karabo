@@ -19,7 +19,7 @@ from .context import _UpdateContext
 class DeviceTreeModel(QAbstractItemModel):
 
     def __init__(self, parent=None):
-        super(DeviceTreeModel, self).__init__(parent)
+        super().__init__(parent)
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)

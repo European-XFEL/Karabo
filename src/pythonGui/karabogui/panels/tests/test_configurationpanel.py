@@ -94,7 +94,7 @@ class Object(Configurable):
 class TestSetProxyConfiguration(GuiTestCase):
 
     def setUp(self):
-        super(TestSetProxyConfiguration, self).setUp()
+        super().setUp()
         # Setup online device proxy
         online_binding = build_binding(Object().getDeviceSchema())
         apply_configuration(Hash(DEFAULT_VALUES), online_binding)
@@ -111,7 +111,7 @@ class TestSetProxyConfiguration(GuiTestCase):
         self.config_panel = ConfigurationPanel()
 
     def tearDown(self):
-        super(TestSetProxyConfiguration, self).tearDown()
+        super().tearDown()
         self.config_panel._reset_panel()
         self.config_panel.destroy()
         self.config_panel = None

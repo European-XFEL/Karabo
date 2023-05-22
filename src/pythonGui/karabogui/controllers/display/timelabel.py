@@ -44,11 +44,10 @@ class DisplayTimeLabel(BaseBindingController):
         widget.setWordWrap(True)
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
         objectName = generateObjectName(self)
-        style_sheet = ("QWidget#{}".format(objectName) +
-                       " {{ background-color : rgba{}; }}")
-        sheet = style_sheet.format(ALL_OK_COLOR)
         widget.setObjectName(objectName)
-        widget.setStyleSheet(sheet)
+        style_sheet = (f"QWidget#{objectName}" +
+                       f" {{ background-color : rgba{ALL_OK_COLOR}; }}")
+        widget.setStyleSheet(style_sheet)
 
         action = QAction('Change datetime format...', widget)
         widget.addAction(action)

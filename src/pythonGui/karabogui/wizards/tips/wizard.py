@@ -43,7 +43,7 @@ LOGO_WIDTH = 100
 class TipsTricksWizard(QWizard):
 
     def __init__(self, parent=None):
-        super(TipsTricksWizard, self).__init__(parent)
+        super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Karabo Tips & Tricks")
 

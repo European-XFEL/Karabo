@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
         """Show the big data latency including value set in the gui"""
         name = data['name']
         proc = data['proc']
-        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
+        self.ui_big_data.setText(f"{name} - {proc:.3f} s")
 
     def _event_db_processing(self, data):
         """This method gets called whenever the database is switching its
@@ -460,14 +460,14 @@ class MainWindow(QMainWindow):
         self.panelActions = {}
 
         text = "Connect to server"
-        self.acServerConnect = QAction(icons.remote, "&{}".format(text), self)
+        self.acServerConnect = QAction(icons.remote, f"&{text}", self)
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
         self.acServerConnect.triggered.connect(self.onConnectionButtonPress)
 
         text = "Exit"
-        self.acExit = QAction(icons.exit, "&{}".format(text), self)
+        self.acExit = QAction(icons.exit, f"&{text}", self)
         self.acExit.setStatusTip(text)
         self.acExit.setToolTip(text)
         self.acExit.setShortcut('Ctrl+Q')
@@ -880,11 +880,11 @@ class MainWindow(QMainWindow):
         """Color our network lamp with respect to the processing delay
         """
         color = get_processing_color(proc_delay=proc_delay)
-        self.ui_lamp.setStyleSheet("background-color: rgba{}".format(color))
+        self.ui_lamp.setStyleSheet(f"background-color: rgba{color}")
 
         # The CHOOCH from the QDialog will still set the diff!
         if active:
-            self.ui_lamp.setText('{:.3f}'.format(proc_delay))
+            self.ui_lamp.setText(f'{proc_delay:.3f}')
 
     @Slot(bool)
     def onServerConnectionChanged(self, isConnected):

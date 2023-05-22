@@ -32,4 +32,4 @@ class BaseStats(HasStrictTraits):
         """Converts the numerical value into an readable number"""
         if value is None:
             return "-"
-        return "{:.2f}".format(value).rstrip('0').rstrip('.')
+        return f"{value:.2f}".rstrip('0').rstrip('.')

@@ -10,7 +10,7 @@ from qtpy.QtWidgets import QColorDialog, QDialog
 class GraphViewDialog(QDialog):
 
     def __init__(self, config={}, parent=None):
-        super(GraphViewDialog, self).__init__(parent)
+        super().__init__(parent)
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                "view.ui")
         uic.loadUi(ui_path, self)

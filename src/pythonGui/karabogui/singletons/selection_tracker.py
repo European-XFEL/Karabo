@@ -11,7 +11,7 @@ class SelectionTracker(QObject):
     """
 
     def __init__(self, parent=None):
-        super(SelectionTracker, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         self._model = None
 
     def grab_selection(self, selection_model):

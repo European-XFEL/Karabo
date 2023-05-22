@@ -17,7 +17,7 @@ BUTTON_SIZE = 10
 class TextDialog(QDialog):
 
     def __init__(self, label_model=None, alignment=False, parent=None):
-        super(TextDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('textdialog.ui'), self)
         self.has_alignment = alignment
         if label_model is None:
