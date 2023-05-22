@@ -105,6 +105,8 @@ namespace karabo {
               .commit();
 
         BOOL_ELEMENT(expected).key("copyAllData").assignmentOptional().defaultValue(true).reconfigurable().commit();
+
+        BOOL_ELEMENT(expected).key("safeNDArray").assignmentOptional().defaultValue(true).reconfigurable().commit();
     }
 
 
@@ -224,6 +226,7 @@ namespace karabo {
             Hash data3;
             Hash data4;
             bool copyAllData = get<bool>("copyAllData");
+            bool safeNDArray = get<bool>("safeNDArray");
             auto channel = this->getOutputChannel("output2");
 
             // Loop all the data to be send
@@ -251,14 +254,21 @@ namespace karabo {
                 data4.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
                                           .time_of_day()
                                           .total_microseconds());
-                OutputChannel::MetaData meta4("source2", Timestamp());
+                OutputChannel::MetaData meta4("source4", Timestamp());
 
-                // Write
+                // Write four items from different sources
                 channel->write(data1, meta1, copyAllData);
                 channel->write(data2, meta2, copyAllData);
                 channel->write(data3, meta3, copyAllData);
                 channel->write(data4, meta4, copyAllData);
-                channel->update();
+                // In our scenario, safeNDArray==true is a bit fake if copyAllData==false:
+                // The data sent survives the update and is re-used (i.e. sent again).
+                // If the array data inside the loop would be changed that would lead to data curruption.
+                // But we do not do that and are anyway only interested in data throughput.
+                // To cure that completely, the NDArray would have to be created (and thus its underlying data
+                // allocated) inside the loop.
+                // Send all four items in one go
+                channel->update(safeNDArray);
 
                 KARABO_LOG_INFO << "Written data # " << iData;
                 set("currentDataId", iData);
