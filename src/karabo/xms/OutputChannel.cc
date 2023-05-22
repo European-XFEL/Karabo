@@ -1617,12 +1617,12 @@ namespace karabo {
 
 
         void OutputChannel::write(const karabo::util::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
-            write(*data, metaData, true);
+            write(*data, metaData, false);
         }
 
 
         void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
-            write(*data, true);
+            write(*data, false);
         }
 
 
