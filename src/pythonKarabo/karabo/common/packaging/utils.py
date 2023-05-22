@@ -5,9 +5,9 @@ _BASE = r"\d+\.\d+\.\d+"
 _RELEASE = r"(a|b|rc)\d+"
 _DEV = r"\.dev\d+"
 
-_BASE_VERSION_REGEX = re.compile("^({})({})?".format(_BASE, _RELEASE))
+_BASE_VERSION_REGEX = re.compile(f"^({_BASE})({_RELEASE})?")
 _FULL_VERSION_REGEX = re.compile(
-    "^({})({}({})?)?".format(_BASE, _RELEASE, _DEV)
+    f"^({_BASE})({_RELEASE}({_DEV})?)?"
 )
 
 
