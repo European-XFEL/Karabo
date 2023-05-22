@@ -10,7 +10,7 @@ from .utils import single_model_round_trip
 def _assert_base_traits(model):
     traits = _base_shape_traits()
     for name, value in traits.items():
-        msg = "{} has the wrong value!".format(name)
+        msg = f"{name} has the wrong value!"
         assert getattr(model, name) == value, msg
 
 
