@@ -30,14 +30,14 @@ def make_substitutions(path, substitutions):
         with open(path, mode='rb') as fp:
             encoding = tokenize.detect_encoding(fp.readline)[0]
     except SyntaxError:
-        print('Unreadable file "{}" ignored'.format(path))
+        print(f'Unreadable file "{path}" ignored')
         return
 
     try:
-        with open(path, mode='r', encoding=encoding) as fin:
+        with open(path, encoding=encoding) as fin:
             text = fin.readlines()
     except UnicodeDecodeError:
-        print('Failed to read file "{}"'.format(path))
+        print(f'Failed to read file "{path}"')
         return
 
     rewritten_text = []

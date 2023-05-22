@@ -264,7 +264,7 @@ class ConfigurationManager(DeviceClientBase):
         return super().slotInstanceGone(instanceId, info)
 
     def __init__(self, configuration):
-        super(ConfigurationManager, self).__init__(configuration)
+        super().__init__(configuration)
         self.db = None
         regex = self.configurationName.descriptor.regex
         self.name_pattern = re.compile(regex)
@@ -601,18 +601,18 @@ class ConfigurationManager(DeviceClientBase):
 
 def get_scene(deviceId):
     scene0 = TableElementModel(
-        height=431.0, keys=['{}.view'.format(deviceId)],
+        height=431.0, keys=[f'{deviceId}.view'],
         parent_component='DisplayComponent',
         width=601.0, x=340.0, y=230.0)
     scene1 = DisplayTextLogModel(
-        height=199.0, keys=['{}.status'.format(deviceId)],
+        height=199.0, keys=[f'{deviceId}.status'],
         parent_component='DisplayComponent',
         width=531.0, x=410.0, y=10.0)
     scene20 = DisplayCommandModel(
-        height=35.0, keys=['{}.listConfigurations'.format(deviceId)],
+        height=35.0, keys=[f'{deviceId}.listConfigurations'],
         parent_component='DisplayComponent', width=321.0, x=80.0, y=311.0)
     scene21 = DisplayCommandModel(
-        height=35.0, keys=['{}.saveConfigurations'.format(deviceId)],
+        height=35.0, keys=[f'{deviceId}.saveConfigurations'],
         parent_component='DisplayComponent', width=321.0, x=80.0, y=346.0)
     scene2 = BoxLayoutModel(
         direction=2, height=80.0, width=321.0, x=10.0, y=320.0,
@@ -622,10 +622,10 @@ def get_scene(deviceId):
         parent_component='DisplayComponent', text='Configuration Manager',
         width=391.0, x=20.0, y=10.0)
     scene40 = DisplayLabelModel(
-        font_size=10, height=31.0, keys=['{}.deviceId'.format(deviceId)],
+        font_size=10, height=31.0, keys=[f'{deviceId}.deviceId'],
         parent_component='DisplayComponent', width=311.0, x=70.0, y=50.0)
     scene41 = DisplayStateColorModel(
-        height=31.0, keys=['{}.state'.format(deviceId)],
+        height=31.0, keys=[f'{deviceId}.state'],
         parent_component='DisplayComponent',
         show_string=True, width=311.0, x=70.0, y=90.0)
     scene420 = LabelModel(
@@ -633,7 +633,7 @@ def get_scene(deviceId):
         height=31.0, parent_component='DisplayComponent', text='Last Success',
         width=73.0, x=70.0, y=130.0)
     scene421 = ErrorBoolModel(
-        height=31.0, keys=['{}.lastSuccess'.format(deviceId)],
+        height=31.0, keys=[f'{deviceId}.lastSuccess'],
         parent_component='DisplayComponent', width=68.0, x=143.0, y=130.0)
     scene42 = BoxLayoutModel(
         height=37.0, width=391.0, x=10.0, y=114.0,
@@ -655,10 +655,10 @@ def get_scene(deviceId):
         text='configurationName', width=321.0, x=10.0, y=470.0)
     scene8010 = DisplayLabelModel(
         font_size=10, height=27.0,
-        keys=['{}.configurationName'.format(deviceId)],
+        keys=[f'{deviceId}.configurationName'],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=490.0)
     scene8011 = EditableRegexModel(
-        height=27.0, keys=['{}.configurationName'.format(deviceId)],
+        height=27.0, keys=[f'{deviceId}.configurationName'],
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=490.0)
     scene801 = BoxLayoutModel(
@@ -672,10 +672,10 @@ def get_scene(deviceId):
         height=20.0, parent_component='DisplayComponent', text='priority',
         width=321.0, x=10.0, y=530.0)
     scene8110 = DisplayLabelModel(
-        font_size=10, height=34.0, keys=['{}.priority'.format(deviceId)],
+        font_size=10, height=34.0, keys=[f'{deviceId}.priority'],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=550.0)
     scene8111 = IntLineEditModel(
-        height=34.0, keys=['{}.priority'.format(deviceId)],
+        height=34.0, keys=[f'{deviceId}.priority'],
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=550.0)
     scene811 = BoxLayoutModel(
@@ -689,10 +689,10 @@ def get_scene(deviceId):
         height=20.0, parent_component='DisplayComponent', text='description',
         width=321.0, x=10.0, y=584.0)
     scene8210 = DisplayLabelModel(
-        font_size=10, height=34.0, keys=['{}.description'.format(deviceId)],
+        font_size=10, height=34.0, keys=[f'{deviceId}.description'],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=604.0)
     scene8211 = LineEditModel(
-        height=34.0, keys=['{}.description'.format(deviceId)],
+        height=34.0, keys=[f'{deviceId}.description'],
         klass='EditableLineEdit',
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=604.0)
@@ -710,10 +710,10 @@ def get_scene(deviceId):
         height=20.0, parent_component='DisplayComponent', text='Device',
         width=311.0, x=10.0, y=220.0)
     scene91 = DisplayLabelModel(
-        font_size=10, height=27.0, keys=['{}.deviceName'.format(deviceId)],
+        font_size=10, height=27.0, keys=[f'{deviceId}.deviceName'],
         parent_component='DisplayComponent', width=311.0, x=10.0, y=240.0)
     scene92 = LineEditModel(
-        height=27.0, keys=['{}.deviceName'.format(deviceId)],
+        height=27.0, keys=[f'{deviceId}.deviceName'],
         klass='EditableLineEdit',
         parent_component='EditableApplyLaterComponent', width=311.0, x=10.0,
         y=270.0)
