@@ -29,7 +29,7 @@ def karabo_deprecated(func):
     @wraps(func)
     def new_func(*args, **kwargs):
         warnings.warn_explicit(
-            "Call to deprecated function {}.".format(func.__name__),
+            f"Call to deprecated function {func.__name__}.",
             category=DeprecationWarning,
             filename=func.__code__.co_filename,
             lineno=func.__code__.co_firstlineno + 1,
@@ -47,7 +47,7 @@ def timeit(func):
         t_start = perf_counter()
         ret = func(*args, **kwargs)
         elapsed = perf_counter() - t_start
-        print("{} took {}".format(func.__name__, elapsed))
+        print(f"{func.__name__} took {elapsed}")
         return ret
 
     return wrapper
