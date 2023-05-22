@@ -476,7 +476,7 @@ def adddeviceserver():
     abs_target = absolute("var", "service", target_dir)
 
     if osp.exists(abs_target):
-        print("ERROR service/{} already exists".format(target_dir))
+        print(f"ERROR service/{target_dir} already exists")
         return 3
     # hide the new dir from svscan by prefixing with a . until we are done
     tmpdir = mkdtemp(dir=absolute("var", "service"), prefix=".tmp-")
@@ -518,7 +518,7 @@ def removedeviceserver():
 
     name = sys.argv[1].replace("/", "_")
     # hide the service from svscan by prefixing with a . so it doesn't restart
-    tmppath = absolute("var", "service", ".{}".format(name))
+    tmppath = absolute("var", "service", f".{name}")
     if osp.exists(absolute("var", "service", name)):
         os.rename(absolute("var", "service", name), tmppath)
     else:

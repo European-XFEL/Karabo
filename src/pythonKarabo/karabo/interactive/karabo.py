@@ -246,7 +246,7 @@ def new(args):
         class_name = args.device[0].capitalize() + args.device[1:]
         if os.path.isdir(path):
             if args.force:
-                run_cmd('rm -rf {}'.format(path))
+                run_cmd(f'rm -rf {path}')
             else:
                 print('Device {} already exists.'
                       .format(args.device))
@@ -262,7 +262,7 @@ def new(args):
                 if os.path.isdir(os.path.join(troot, d))]
             print(f'    - available set(s): {", ".join(avail_sets)}.')
             return
-        run_cmd('mkdir -p {}'.format(path))
+        run_cmd(f'mkdir -p {path}')
         run_cmd('cp -rf {} {}'.format(os.path.join(tpath, '*'), path))
         # '.[gi]*' matches '.gitignore', '.install.sh' and '.gitlab-ci.yml',
         # but neither '.' nor '..', which would generate an error on the cp
@@ -292,7 +292,7 @@ def checkout(args):
         if os.path.isdir(path):
             print('INFO The device package already exists, skipped checkout')
         else:
-            print('Downloading {}... '.format(args.device), end='', flush=True)
+            print(f'Downloading {args.device}... ', end='', flush=True)
             git_opt = f"-b {args.branch} " if args.branch else ''
             run_cmd(f"git clone {args.git}{resolve_project(args.device)}.git"
                     f" {git_opt}{path}")
@@ -366,7 +366,7 @@ def install(args):
         if not clean_dir(path, args):
             return
         os.makedirs(path, exist_ok=True)
-        print('Downloading source for {}... '.format(args.device),
+        print(f'Downloading source for {args.device}... ',
               end='', flush=True)
         run_cmd(f"git clone {args.git}{resolve_project(args.device)}.git"
                 f" --depth 1 -b {args.tag} --single-branch {path}")
@@ -393,20 +393,20 @@ def install(args):
                 print('Installing {} binaries, please wait...'
                       ''.format(args.device), end='', flush=True)
                 cmd = os.path.join(os.environ['KARABO'], package)
-                run_cmd('bash {} --prefix={} '.format(cmd, tgt))
+                run_cmd(f'bash {cmd} --prefix={tgt} ')
                 print('done.')
             else:
                 # some dependencies might still use this env. var.
                 # to download a binary if the naming scheme
                 # is different than the one expected by the `download` function
                 os.environ['KARABO_BINARY_REPOSITORY'] = args.repo
-                print('Compiling {}, please wait... '.format(args.device),
+                print(f'Compiling {args.device}, please wait... ',
                       end='', flush=True)
-                run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
+                run_cmd(f'make CONF={args.config} -j{args.jobs}')
                 print('done.')
                 if os.path.isdir('dist') and str2bool(copyFlag):
                     src = os.path.join('dist', args.config, '*', '*.so')
-                    run_cmd('cp -f {} {}'.format(src, tgt))
+                    run_cmd(f'cp -f {src} {tgt}')
         elif os.path.exists('setup.py'):
             run_cmd('pip install --upgrade .')
         else:
@@ -426,7 +426,7 @@ def clean_dir(path, args):
     :return: True if path has been removed, False otherwise
     """
     if os.path.isdir(path):
-        tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").rstrip()
+        tag = run_cmd(f'cd {path}; git tag').decode("utf-8").rstrip()
         if not hasattr(args, 'tag'):
             # we are called by develop, the depth is more than 1
             tag = run_cmd('cd {}; git rev-parse --abbrev-ref HEAD'
@@ -434,7 +434,7 @@ def clean_dir(path, args):
             new_tag = args.branch
         else:
             new_tag = args.tag
-        sha1 = run_cmd('cd {}; git show -s --format=%H'.format(path)).\
+        sha1 = run_cmd(f'cd {path}; git show -s --format=%H').\
             decode("utf-8").rstrip()
 
         def check_tag():
@@ -484,7 +484,7 @@ def clean_dir(path, args):
                       ''.format(args.device, tag))
                 return False
         elif args.force:  # always overwrite
-            run_cmd('rm -rf {}'.format(path))
+            run_cmd(f'rm -rf {path}')
         elif sha1 == check_tag():  # tag already installed
             # TODO: add integrity check (git status should be ok)
             print('{}-{} already installed: skipping'
@@ -502,16 +502,16 @@ def clean_dir(path, args):
                     args.device, ver, args.device, new_tag))
 
             if overwrite.lower() != "y":
-                print('Abort {} installation'.format(args.device))
+                print(f'Abort {args.device} installation')
                 sys.exit(1)
-            run_cmd('rm -rf {}'.format(path))
+            run_cmd(f'rm -rf {path}')
 
     return True
 
 
 def parse_configuration_file(filename):
     devices = []
-    with open(filename, 'r') as csvfile:
+    with open(filename) as csvfile:
         rows = csv.reader(csvfile, delimiter=',')
         for row in rows:
             if len(row) < 2 or len(row) > 3 or '#' in row[0]:
@@ -549,7 +549,7 @@ def list_devices(args):
     def _show_py_devices(name, entries):
         # Three columns with left, center, and right alignment
         TEMPLATE = '{:<26}{:^26}{:>26}'
-        print('{}:'.format(name))
+        print(f'{name}:')
         print(TEMPLATE.format('Class', 'Package', 'Version'))
         print('=' * 79)
         for ep in entries:
@@ -588,22 +588,22 @@ def list_devices(args):
 def uninstall(args):
     path = os.path.join('installed', args.device)
     if os.path.isdir(path):
-        run_cmd('rm -rf {}'.format(path))
-    so_path = 'plugins/lib{}.so'.format(args.device)
+        run_cmd(f'rm -rf {path}')
+    so_path = f'plugins/lib{args.device}.so'
     if os.path.isfile(so_path):
         if not os.path.islink(so_path):
-            ret = run_cmd('rm {}'.format(so_path))
+            ret = run_cmd(f'rm {so_path}')
         else:
             print('Failed to uninstall {}. {} is not a regular file.'.
                   format(args.device, so_path))
             sys.exit(1)
     else:
         # -q (quiet) to suppress sucess output - that is returned by run_cmd
-        ret = run_cmd('pip uninstall -q -y {}'.format(args.device))
+        ret = run_cmd(f'pip uninstall -q -y {args.device}')
 
     # run_cmd returns output - empty output means success for 'rm' and 'pip'
     if not ret:
-        print('{} was successfully uninstalled'.format(args.device))
+        print(f'{args.device} was successfully uninstalled')
     else:
         print('Problems uninstalling {}, see "karabo -h" for potential '
               'reasons.'.format(args.device))
@@ -620,13 +620,13 @@ def develop(args):
         if os.path.exists('DEPENDS'):
             install_dependencies(args, True)
         if os.path.exists('Makefile'):
-            print('Compiling {}, please wait... '.format(args.device),
+            print(f'Compiling {args.device}, please wait... ',
                   end='', flush=True)
-            run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
+            run_cmd(f'make CONF={args.config} -j{args.jobs}')
             print('done.')
             os.chdir(os.path.join('..', '..', 'plugins'))
             lib = os.path.join('..', path, 'dist', args.config, '*', '*.so')
-            run_cmd('ln -sf {}'.format(lib))
+            run_cmd(f'ln -sf {lib}')
         elif os.path.exists('setup.py'):
             run_cmd('pip install -e .')
         else:
@@ -640,7 +640,7 @@ def install_dependencies(args, is_develop=False):
     NOTE: This function must be run in the directory of the DEPENDS file!
     """
     devices = parse_configuration_file('DEPENDS')
-    dep_names = ', '.join('{} ({})'.format(e[0], e[1]) for e in devices)
+    dep_names = ', '.join(f'{e[0]} ({e[1]})' for e in devices)
     print('Found dependencies:', dep_names)
     if args.config == 'Simulation':
         print('Skipped automatic installation as building in Simulation '
@@ -660,16 +660,16 @@ def install_dependencies(args, is_develop=False):
 
 
 def undevelop(args):
-    so_path = 'plugins/lib{}.so'.format(args.device)
+    so_path = f'plugins/lib{args.device}.so'
     if os.path.islink(so_path):
-        run_cmd('rm -f {}'.format(so_path))
+        run_cmd(f'rm -f {so_path}')
     elif os.path.exists(so_path):
         print('Failed to undo development mode installation for {}. {} is '
               'not a link.'.format(args.device, so_path))
         sys.exit(1)
     else:
-        run_cmd('pip uninstall -y {}'.format(args.device))
-    print('Development mode installation for {} undone'.format(args.device))
+        run_cmd(f'pip uninstall -y {args.device}')
+    print(f'Development mode installation for {args.device} undone')
 
 
 def main():
