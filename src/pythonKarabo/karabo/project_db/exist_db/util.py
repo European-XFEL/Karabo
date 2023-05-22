@@ -105,7 +105,7 @@ def init_db(db_settings, dbhandle):
         assert len(r.results[0]) != 0
     except (ExistDBException, AssertionError):
         # LOCAL domain
-        init_collection("{}/LOCAL".format(db_settings.root_collection))
+        init_collection(f"{db_settings.root_collection}/LOCAL")
 
 
 def verify_db(db_settings):

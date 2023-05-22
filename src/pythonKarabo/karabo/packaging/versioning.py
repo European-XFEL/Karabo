@@ -53,7 +53,7 @@ def _parse_svn_part(info_str, part_name):
     match = re.search(svn_parts[part_name], info_str)
     if match is not None:
         return match.groups()[0]
-    raise SvnParseError('SVN {} not found!'.format(part_name))
+    raise SvnParseError(f'SVN {part_name} not found!')
 
 
 def get_karabo_framework_version():
@@ -62,7 +62,7 @@ def get_karabo_framework_version():
     karabo_path = _get_karabo_framework_path()
     version_path = op.join(karabo_path, 'VERSION')
 
-    with open(version_path, 'rt') as fp:
+    with open(version_path) as fp:
         return fp.read().strip()
 
 
@@ -87,7 +87,7 @@ def get_package_version(path):
     path = op.normpath(path)
     karabo_version = get_karabo_version()
     dev_version = _get_development_version(path)
-    extra = '.dev{}'.format(dev_version) if dev_version != '0' else ''
+    extra = f'.dev{dev_version}' if dev_version != '0' else ''
 
     return karabo_version + extra
 
@@ -141,7 +141,7 @@ def svn_version(path, svn_cmd='svn'):
                 'version': '0.0.0', 'released': False}
 
     return {
-        'vcs_revision': '{}@r{}'.format(svn_branch, svn_count),
+        'vcs_revision': f'{svn_branch}@r{svn_count}',
         'revision_count': svn_count,
         'version': svn_branch,
         'released': svn_count == '0',
