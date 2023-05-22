@@ -57,7 +57,7 @@ class ReaderRegistry(HasStrictTraits):
     def read(self, element):
         klass = self._fetch_klass(element)
         reader = self._fetch_reader(name=klass, version=self.version)
-        assert reader is not None, "Reader not found for {}!".format(element)
+        assert reader is not None, f"Reader not found for {element}!"
 
         sig = signature(reader)
         # XXX: Backward compatibility with GUI extensions. Old readers have
@@ -112,7 +112,7 @@ class WriterRegistry(HasStrictTraits):
     def write(self, model, parent):
         klass = model.__class__
         writer = self.entries.get(klass)
-        assert writer is not None, "Writer not found for {}!".format(klass)
+        assert writer is not None, f"Writer not found for {klass}!"
 
         sig = signature(writer)
         # XXX: Backward compatibility with GUI extensions. Old writers have
@@ -166,7 +166,7 @@ def find_def(id_):
     return _reader_registry.find(id_)
 
 
-class register_scene_reader(object):
+class register_scene_reader:
     """Decorator for reader functions."""
 
     def __init__(self, objname, xmltag="", version=SCENE_FILE_VERSION):
@@ -187,7 +187,7 @@ class register_scene_reader(object):
         return func
 
 
-class register_scene_writer(object):
+class register_scene_writer:
     """Decorator for writer functions"""
 
     def __init__(self, objclass):

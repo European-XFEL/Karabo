@@ -12,7 +12,7 @@ UBUNTU_FONT_SPEC = "Ubuntu,48,-1,5,63,0,0,0,0,0"
 def _assert_geometry_traits(model):
     traits = _geometry_traits()
     for name, value in traits.items():
-        msg = "{} has the wrong value!".format(name)
+        msg = f"{name} has the wrong value!"
         assert getattr(model, name) == value, msg
 
 

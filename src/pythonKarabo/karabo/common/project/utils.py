@@ -23,7 +23,7 @@ def find_parent_object(model, ancestor_model, search_klass):
     :return: A parent project object model or None
     """
 
-    class _Visitor(object):
+    class _Visitor:
         found_parent = None
         parent_candidate = None
 
@@ -118,7 +118,7 @@ def device_config_exists(project, instance_id, config_names):
                 isinstance(obj, DeviceInstanceModel)
                 and obj.instance_id == instance_id
         ):
-            existing = set(conf.simple_name for conf in obj.configs)
+            existing = {conf.simple_name for conf in obj.configs}
             if not existing.isdisjoint(config_names):
                 found = True
 
@@ -157,8 +157,7 @@ def recursive_save_object(root, storage, domain):
         for name in iterables:
             children = getattr(obj, name)
             for child in children:
-                for subchild in _tree_iter(child):
-                    yield subchild
+                yield from _tree_iter(child)
         # Yield the root last
         yield obj
 

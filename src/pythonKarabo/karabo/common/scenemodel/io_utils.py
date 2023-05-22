@@ -82,7 +82,7 @@ def read_font_format_data(element):
 def write_base_widget_data(model, element, widget_class_name):
     """Write out the attributes common to all "widget" elements"""
     if len(model.parent_component) == 0:
-        msg = "Widget {} has no parent component!".format(widget_class_name)
+        msg = f"Widget {widget_class_name} has no parent component!"
         raise SceneWriterException(msg)
     element.set(NS_KARABO + "class", model.parent_component)
     element.set(NS_KARABO + "widget", widget_class_name)
