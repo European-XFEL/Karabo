@@ -9,7 +9,7 @@ from sys import platform
 from xml.etree.ElementTree import fromstring
 
 
-class MemCacheWrapper(object):
+class MemCacheWrapper:
     """In-memory storage for project objects which forwards to another object
     on cache misses.
     """
@@ -39,7 +39,7 @@ class MemCacheWrapper(object):
         return data
 
 
-class ProjectDBCache(object):
+class ProjectDBCache:
     """Local storage for objects retrieved from the project database"""
 
     def __init__(self, dirpath):
