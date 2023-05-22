@@ -6,7 +6,7 @@ from asyncio import gather, sleep, wait
 import pytest
 
 from karabo.middlelayer.testing import (
-    create_device_server, create_instanceId, event_loop)
+    create_device_server, create_instanceId, event_loop, sleepUntil)
 from karabo.middlelayer_api.broker.compat import amqp
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
@@ -212,8 +212,9 @@ async def test_device_server_concurrence(event_loop: event_loop):
         assert len(server.deviceInstanceMap) == 0
         for _ in range(2):
             instantiateNoWait(serverId, "PropertyTestMDL", deviceId)
-        await sleep(2)
         # Only a single device made it
+        await sleepUntil(lambda: len(server.deviceInstanceMap) > 0,
+                         timeout=5)
         assert len(server.deviceInstanceMap) == 1
     finally:
         await finalize_server(server)
