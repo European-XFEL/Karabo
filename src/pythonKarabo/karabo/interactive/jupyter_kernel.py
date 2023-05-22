@@ -74,10 +74,10 @@ class KaraboKernel(IPythonKernel):
 
 class JupyterDevice(DeviceClientBase, Device):
     def __init__(self, configuration):
-        super(JupyterDevice, self).__init__(configuration)
+        super().__init__(configuration)
 
     def _initInfo(self):
-        info = super(JupyterDevice, self)._initInfo()
+        info = super()._initInfo()
         info["lang"] = "python"
         info["type"] = "client"
         return info
@@ -95,7 +95,7 @@ class KaraboKernelApp(IPKernelApp):
         pid = os.getpid()
         loop = get_event_loop()
         self.kernel.device = JupyterDevice(
-            {"_deviceId_": "jupyter-{}-{}".format(hostname, pid)})
+            {"_deviceId_": f"jupyter-{hostname}-{pid}"})
         loop.run_until_complete(
             self.kernel.device.startInstance())
         self.kernel.start()
