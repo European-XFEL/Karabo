@@ -14,7 +14,7 @@ from .utils import get_dialog_ui
 class LoginDialog(QDialog):
     def __init__(self, username="", password="", hostname="", port="",
                  gui_servers=[], parent=None):
-        super(LoginDialog, self).__init__(parent)
+        super().__init__(parent)
         filepath = get_dialog_ui("logindialog.ui")
         uic.loadUi(filepath, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)

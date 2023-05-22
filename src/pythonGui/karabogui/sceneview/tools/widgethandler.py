@@ -158,7 +158,7 @@ class SceneControllerHandler(SceneWidgetHandler):
         if qwidget.actions():
             name = get_class_const_trait(controller, '_ui_name')
             property_menu = menu.addMenu(icons.undefinedAttribute,
-                                         '{}: Properties'.format(name))
+                                         f'{name}: Properties')
             property_menu.addActions(qwidget.actions())
             property_menu.addSeparator()
 

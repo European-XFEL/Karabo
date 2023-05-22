@@ -22,7 +22,7 @@ from .utils import get_language_icon
 class SystemTreeModel(QAbstractItemModel):
 
     def __init__(self, parent=None):
-        super(SystemTreeModel, self).__init__(parent)
+        super().__init__(parent)
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)

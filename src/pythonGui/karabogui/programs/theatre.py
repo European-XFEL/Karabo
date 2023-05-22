@@ -82,7 +82,7 @@ class DeviceWaiter(QObject):
         if self.device_scenes:
             pending_scenes = []
             for device_id, scene_names in self.device_scenes.items():
-                pending_scenes.extend(['{}|{}'.format(device_id, scene)
+                pending_scenes.extend([f'{device_id}|{scene}'
                                        for scene in scene_names])
             msg += "Could not open the following scenes: {}. \n".format(
                 ',\n'.join(pending_scenes))

@@ -35,7 +35,7 @@ from .tools import DeviceSceneHandler, ServerLogHandler
 
 class SystemTreeView(QTreeView):
     def __init__(self, parent=None):
-        super(SystemTreeView, self).__init__(parent)
+        super().__init__(parent)
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = SystemTreeModel(parent=self)
@@ -190,7 +190,7 @@ class SystemTreeView(QTreeView):
         """Reimplementation of the Qt function
         """
         # XXX: We used to expand the index here!
-        super(SystemTreeView, self).scrollTo(index, hint)
+        super().scrollTo(index, hint)
 
     # ----------------------------
     # Events
@@ -208,7 +208,7 @@ class SystemTreeView(QTreeView):
                 event.accept()
                 return
 
-        super(SystemTreeView, self).mouseDoubleClickEvent(event)
+        super().mouseDoubleClickEvent(event)
 
     # ----------------------------
     # Slots
@@ -407,8 +407,8 @@ class SystemTreeView(QTreeView):
 
     def collapseAll(self):
         self.expanded = False
-        super(SystemTreeView, self).collapseAll()
+        super().collapseAll()
 
     def expandAll(self):
         self.expanded = True
-        super(SystemTreeView, self).expandAll()
+        super().expandAll()

@@ -14,7 +14,7 @@ from karabogui.testing import GuiTestCase
 class TestProjectGroupController(GuiTestCase):
 
     def setUp(self):
-        super(TestProjectGroupController, self).setUp()
+        super().setUp()
         push_exception_handler(lambda *args: None, reraise_exceptions=True)
         self.qt_model = ProjectViewItemModel(parent=None)
 
@@ -24,7 +24,7 @@ class TestProjectGroupController(GuiTestCase):
         self.proj_controller = self.qt_model.root_controller
 
     def tearDown(self):
-        super(TestProjectGroupController, self).tearDown()
+        super().tearDown()
         pop_exception_handler()
         self.qt_model = None
 

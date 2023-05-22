@@ -43,11 +43,11 @@ class AuxPlotsToolset(BaseToolsetController):
         elif tool == AuxPlots.Histogram and hist_button.isChecked():
             prof_button.setChecked(False)
 
-        super(AuxPlotsToolset, self).select(tool)
+        super().select(tool)
 
     def check(self, tool):
         if tool == AuxPlots.NoPlot:
             self.uncheck_all()
             return
 
-        super(AuxPlotsToolset, self).check(tool)
+        super().check(tool)

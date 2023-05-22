@@ -36,7 +36,7 @@ def write_protocol_handler(src, dest):
         # Copy the contents of the file while prepending the shebang
         with open(dest, 'w') as dest_file:
             dest_file.write(PYTHON_SHEBANG + "\n")
-            with open(src, 'r') as src_file:
+            with open(src) as src_file:
                 dest_file.writelines(src_file.readlines())
         # Make the file executable
         stat = os.stat(dest)

@@ -13,14 +13,14 @@ X_LENGTH, Y_LENGTH = (5, 4)
 class TestProfileAuxPlot(GuiTestCase):
 
     def setUp(self):
-        super(TestProfileAuxPlot, self).setUp()
+        super().setUp()
         self._controller = ProfileAggregator()
         self._controller.set_axes(x_data=np.arange(X_LENGTH),
                                   y_data=np.arange(Y_LENGTH))
         self._controller.on_trait_change(self._mock_slot, "stats")
 
     def tearDown(self):
-        super(TestProfileAuxPlot, self).tearDown()
+        super().tearDown()
         self._controller.on_trait_change(self._mock_slot, "stats", remove=True)
         self._emitted_value = None
 

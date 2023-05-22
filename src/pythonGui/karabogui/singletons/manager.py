@@ -59,7 +59,7 @@ def getLevelName(level):
 
 class Manager(QObject):
     def __init__(self, parent=None):
-        super(Manager, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         # this dictionary maps the deviceIds to a weak reference of the
         # DeviceProxy instances waiting for a reply from the server
         self._waiting_devices = WeakValueDictionary()
@@ -222,13 +222,12 @@ class Manager(QObject):
         move_to_cursor(msg_box)
         if msg_box.exec() == QMessageBox.No:
             return
-
         # Note: We shutdown a server although we want to instantiate devices
         # from there.
         if self._awaiting_instantiations:
-            deviceIds = set(deviceId for deviceId, project_device
-                            in self._topology._project_devices.items()
-                            if project_device.server_id == serverId)
+            deviceIds = {deviceId for deviceId, project_device
+                         in self._topology._project_devices.items()
+                         if project_device.server_id == serverId}
             discard = deviceIds.intersection(self._awaiting_instantiations)
             for deviceId in discard:
                 self._awaiting_instantiations.discard(deviceId)

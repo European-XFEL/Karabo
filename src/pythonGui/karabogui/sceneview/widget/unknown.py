@@ -17,7 +17,7 @@ class UnknownSvgWidget(QWidget):
     """
 
     def __init__(self, renderer, parent=None):
-        super(UnknownSvgWidget, self).__init__(parent)
+        super().__init__(parent)
         self.renderer = renderer
         self.setGeometry(renderer.viewBox())
         self.setToolTip("External SVG Element")

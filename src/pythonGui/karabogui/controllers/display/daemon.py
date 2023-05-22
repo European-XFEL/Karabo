@@ -147,7 +147,7 @@ class DaemonTableModel(QAbstractTableModel):
     """
 
     def __init__(self, parent=None):
-        super(DaemonTableModel, self).__init__(parent)
+        super().__init__(parent)
         self._table_data = []
 
     def initialize(self, value):

@@ -10,7 +10,7 @@ from karabogui.testing import GuiTestCase
 
 class TestCase(GuiTestCase):
     def setUp(self):
-        super(TestCase, self).setUp()
+        super().setUp()
         self.toolbar = ToolbarController()
 
     def test_add_aux_plots_toolset(self):
@@ -40,7 +40,7 @@ class TestCase(GuiTestCase):
 
 class TestAuxPlotsToolset(GuiTestCase):
     def setUp(self):
-        super(TestAuxPlotsToolset, self).setUp()
+        super().setUp()
         self.toolset = AuxPlotsToolset()
 
     def test_button_click(self):
@@ -93,7 +93,7 @@ class TestAuxPlotsToolset(GuiTestCase):
 
 class TestROIToolset(GuiTestCase):
     def setUp(self):
-        super(TestROIToolset, self).setUp()
+        super().setUp()
         self.toolset = ROIToolset()
 
     def test_button_click(self):

@@ -30,7 +30,7 @@ class AuxPlotViewBox(ViewBox):
     from destroying the plot range."""
 
     def __init__(self, parent=None):
-        super(AuxPlotViewBox, self).__init__(parent=parent, enableMenu=False)
+        super().__init__(parent=parent, enableMenu=False)
         self.setMouseEnabled(x=False, y=False)
         self.menu = None
 
@@ -51,7 +51,7 @@ class AuxPlotViewBox(ViewBox):
 class AuxPlotItem(PlotItem):
 
     def __init__(self, orientation="top", axisItems=None, parent=None):
-        super(AuxPlotItem, self).__init__(
+        super().__init__(
             parent=parent, axisItems=axisItems, enableMenu=False,
             viewBox=AuxPlotViewBox(parent=None))
 
@@ -81,7 +81,7 @@ class AuxPlotItem(PlotItem):
     # Reimplemented `PyQtGraph` methods
 
     def setLabel(self, axis, text=None, **kwargs):
-        super(AuxPlotItem, self).setLabel(axis, text=text, **LABEL_STYLE)
+        super().setLabel(axis, text=text, **LABEL_STYLE)
 
     def setMenuEnabled(self, enableMenu=True, enableViewBoxMenu=False):
         """Reimplemented function to circumvent behavior of pyqtgraph"""
@@ -98,7 +98,7 @@ class BasePlot(ABCHasStrictTraits):
     menu = Property(Instance(QMenu))
 
     def __init__(self, **traits):
-        super(BasePlot, self).__init__(**traits)
+        super().__init__(**traits)
 
         # Create axis items for different plot orientations
         shown_axes = SHOWN_AXES[self.orientation]

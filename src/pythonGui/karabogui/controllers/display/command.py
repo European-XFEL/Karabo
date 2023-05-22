@@ -99,7 +99,7 @@ class DisplayCommand(BaseBindingController):
         """
         font_size = get_font_size_from_dpi(self.model.font_size)
         if self.model.requires_confirmation:
-            color = ("rgb({0}, {1}, {2})").format(*LOCKED_COLOR)
+            color = ("rgb({}, {}, {})").format(*LOCKED_COLOR)
             widget.setStyleSheet(CONFIRM_STYLE.format(font_size, color))
         else:
             fw = self.model.font_weight

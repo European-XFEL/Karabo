@@ -34,7 +34,7 @@ QPADDING = 2
 class DynamicToolButton(QToolButton):
 
     def __init__(self, parent=None):
-        super(DynamicToolButton, self).__init__(parent)
+        super().__init__(parent)
         self.setAutoRaise(True)
         self.setMinimumSize(20, 20)
         self.setEnabled(False)
@@ -42,13 +42,13 @@ class DynamicToolButton(QToolButton):
     def resizeEvent(self, event):
         width, height = self.width(), self.height()
         self.setIconSize(QSize(width - QPADDING, height - QPADDING))
-        super(DynamicToolButton, self).resizeEvent(event)
+        super().resizeEvent(event)
 
 
 class IconSelectionDialog(QDialog):
 
     def __init__(self, parent=None):
-        super(IconSelectionDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(False)
         self.setWindowTitle("Select icon")
         self.setWindowFlags(Qt.Window |

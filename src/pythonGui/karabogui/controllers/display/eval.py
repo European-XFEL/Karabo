@@ -46,7 +46,7 @@ class Evaluator(BaseBindingController):
         return ns
 
     def _function_default(self):
-        return eval('lambda x: {}'.format(self.model.expression),
+        return eval(f'lambda x: {self.model.expression}',
                     self.globals_ns)
 
     def create_widget(self, parent):
@@ -63,7 +63,7 @@ class Evaluator(BaseBindingController):
         action.triggered.connect(self._change_expression)
 
         objectName = generateObjectName(self)
-        self._style_sheet = ("QWidget#{}".format(objectName) +
+        self._style_sheet = (f"QWidget#{objectName}" +
                              " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
         sheet = self._style_sheet.format(ALL_OK_COLOR)
@@ -93,7 +93,7 @@ class Evaluator(BaseBindingController):
         self._check_alarms(binding, value)
 
         try:
-            disp_value = "{}".format(self.function(value))
+            disp_value = f"{self.function(value)}"
         except Exception as e:
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
@@ -105,9 +105,9 @@ class Evaluator(BaseBindingController):
             return
 
         try:
-            self.function = eval('lambda x: {}'.format(text), self.globals_ns)
+            self.function = eval(f'lambda x: {text}', self.globals_ns)
         except Exception:
-            msg = 'Error in expression: {}'.format(traceback.format_exc())
+            msg = f'Error in expression: {traceback.format_exc()}'
             messagebox.show_warning(msg, title='Error in expression',
                                     parent=self.widget)
             return

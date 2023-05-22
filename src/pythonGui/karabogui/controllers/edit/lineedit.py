@@ -48,7 +48,7 @@ class DoubleLineEdit(BaseLineEditController):
     def toString(self, value):
         """Reimplemented method of `BaseLineEditController`"""
         format_str = ("{}" if self.model.decimals == -1
-                      else "{{:.{}f}}".format(self.model.decimals))
+                      else f"{{:.{self.model.decimals}f}}")
         return format_str.format(float(str(value)))
 
     def fromString(self, value):
@@ -114,7 +114,7 @@ class Hexadecimal(BaseLineEditController):
 
     def toString(self, value):
         """Reimplemented method of `BaseLineEditController`"""
-        return "{:x}".format(value)
+        return f"{value:x}"
 
     def fromString(self, value):
         """Reimplemented method of `BaseLineEditController`"""

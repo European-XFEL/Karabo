@@ -34,7 +34,7 @@ class BasePanelWidget(QFrame):
     signalPanelClosed = Signal(str)
 
     def __init__(self, title, allow_closing=False):
-        super(BasePanelWidget, self).__init__(parent=None)
+        super().__init__(parent=None)
         self.setWindowTitle(title)
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
         self.setLineWidth(1)

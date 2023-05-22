@@ -30,12 +30,10 @@ class DisplayList(BaseBindingController):
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
         widget.setFocusPolicy(Qt.NoFocus)
         objectName = generateObjectName(self)
-        style_sheet = ("QWidget#{}".format(objectName) +
-                       " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
-        sheet = style_sheet.format(ALL_OK_COLOR)
-        widget.setStyleSheet(sheet)
-
+        style_sheet = (f"QWidget#{objectName}" +
+                       f" {{ background-color : rgba{ALL_OK_COLOR}; }}")
+        widget.setStyleSheet(style_sheet)
         action = QAction("Format field...", widget)
         action.triggered.connect(self._format_field)
         widget.addAction(action)

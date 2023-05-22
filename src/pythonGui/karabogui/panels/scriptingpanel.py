@@ -25,7 +25,7 @@ STATUS_TIP = {
 
 class ScriptingPanel(BasePanelWidget):
     def __init__(self):
-        super(ScriptingPanel, self).__init__("Console", allow_closing=True)
+        super().__init__("Console", allow_closing=True)
 
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
@@ -37,7 +37,7 @@ class ScriptingPanel(BasePanelWidget):
         self._access_console()
 
     def closeEvent(self, event):
-        super(ScriptingPanel, self).closeEvent(event)
+        super().closeEvent(event)
         if event.isAccepted():
             unregister_from_broadcasts(self.event_map)
             self._stop_ipython()
@@ -99,7 +99,7 @@ class ScriptingPanel(BasePanelWidget):
                 self.console.exit_requested.connect(self._stop_ipython)
                 self.mainLayout.addWidget(self.console)
                 self._set_button_state(True)
-            except IOError:
+            except OSError:
                 self._set_button_state(False)
         else:
             self._stop_ipython()

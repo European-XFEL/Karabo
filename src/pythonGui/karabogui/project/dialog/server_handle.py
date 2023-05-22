@@ -17,7 +17,7 @@ from .utils import get_dialog_ui
 
 class ServerHandleDialog(QDialog):
     def __init__(self, model=None, parent=None):
-        super(ServerHandleDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('server_handle.ui'), self)
 
         avail_servers = self.get_available_servers()

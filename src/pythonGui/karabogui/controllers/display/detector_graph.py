@@ -23,7 +23,7 @@ class FrameSlider(QWidget):
     cellChanged = Signal(int)
 
     def __init__(self, parent=None):
-        super(FrameSlider, self).__init__(parent)
+        super().__init__(parent)
         ui_file = get_ui_file("frame_slider.ui")
         uic.loadUi(ui_file, self)
 

@@ -13,7 +13,7 @@ from .tool_widget import InterfaceBar
 
 class DevicePanel(BasePanelWidget):
     def __init__(self):
-        super(DevicePanel, self).__init__("Device Topology")
+        super().__init__("Device Topology")
         # We need broadcasts!
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level,

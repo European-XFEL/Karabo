@@ -29,7 +29,7 @@ class MouseWheelEventBlocker(QObject):
     """
 
     def __init__(self, widget):
-        super(MouseWheelEventBlocker, self).__init__()
+        super().__init__()
         self.widget = widget
 
     def eventFilter(self, obj, event):
@@ -52,7 +52,7 @@ class SignalBlocker:
 
 
 def generateObjectName(widget):
-    return "{0}_{1}".format(widget.__class__.__name__, uuid4().hex)
+    return f"{widget.__class__.__name__}_{uuid4().hex}"
 
 
 def getOpenFileName(parent=None, caption="", filter="", directory=""):

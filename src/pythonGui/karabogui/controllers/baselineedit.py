@@ -36,7 +36,7 @@ class BaseLineEditController(BaseBindingController):
         self.validator = self.create_validator()
         self.internal_widget.setValidator(self.validator)
         objectName = generateObjectName(self)
-        self._style_sheet = ("QWidget#{}".format(objectName) +
+        self._style_sheet = (f"QWidget#{objectName}" +
                              " {{ color: {}; }}")
         self.internal_widget.setObjectName(objectName)
         sheet = self._style_sheet.format(FINE_COLOR)

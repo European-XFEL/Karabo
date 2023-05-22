@@ -5,12 +5,12 @@ from qtpy.QtWidgets import QWidgetItem
 from .shape import ShapeLayoutItem
 
 
-class BaseLayout(object):
+class BaseLayout:
     """ This is a mix-in class intended to be inherited by all SceneView
     layouts. It implements generic parts of the QLayout virtual interface.
     """
     def __init__(self, model, *args):
-        super(BaseLayout, self).__init__(*args)
+        super().__init__(*args)
         self.model = model
         self._drawable_items = []
 
@@ -90,7 +90,7 @@ class BaseLayout(object):
         self.model.trait_set(x=rect.x(), y=rect.y(),
                              width=rect.width(), height=rect.height())
         self.invalidate()  # Important! Force a full layout recalculation
-        super(BaseLayout, self).setGeometry(rect)
+        super().setGeometry(rect)
 
     def sizeHint(self):
         return self.geometry().size()

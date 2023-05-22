@@ -232,7 +232,7 @@ class SceneController(BaseProjectController):
         config['data_dir'] = op.dirname(fn)
 
         if not fn.endswith('.svg'):
-            fn = '{}.svg'.format(fn)
+            fn = f'{fn}.svg'
 
         with open(fn, 'w') as fout:
             fout.write(write_scene(scene))

@@ -16,7 +16,7 @@ from .base import BasePanelWidget
 
 class LoggingPanel(BasePanelWidget):
     def __init__(self):
-        super(LoggingPanel, self).__init__("Log", allow_closing=True)
+        super().__init__("Log", allow_closing=True)
         # Register for broadcast events.
         self.event_map = {
             KaraboEvent.LogMessages: self._event_log_messages,
@@ -61,7 +61,7 @@ class LoggingPanel(BasePanelWidget):
         """Unregister from broadcast events, tell main window to enable
         the button to add me back.
         """
-        super(LoggingPanel, self).closeEvent(event)
+        super().closeEvent(event)
         if event.isAccepted():
             unregister_from_broadcasts(self.event_map)
             self.signalPanelClosed.emit(self.windowTitle())

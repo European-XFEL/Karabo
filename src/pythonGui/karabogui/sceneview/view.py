@@ -62,7 +62,7 @@ class SceneView(QWidget):
     resetToSelectionTool = Signal()
 
     def __init__(self, model=None, parent=None):
-        super(SceneView, self).__init__(parent)
+        super().__init__(parent)
 
         layout_model = FixedLayoutModel(x=0, y=0, width=SCENE_MIN_WIDTH,
                                         height=SCENE_MIN_HEIGHT)
@@ -179,7 +179,7 @@ class SceneView(QWidget):
             if event.isAccepted():
                 self.update()
             else:
-                super(SceneView, self).mouseMoveEvent(event)
+                super().mouseMoveEvent(event)
 
     def mousePressEvent(self, event):
         proxy_selecting = isinstance(self.current_tool, ProxySelectionTool)
@@ -188,7 +188,7 @@ class SceneView(QWidget):
             if event.isAccepted():
                 self.update()
             else:
-                super(SceneView, self).mousePressEvent(event)
+                super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
         if self.design_mode:
@@ -196,7 +196,7 @@ class SceneView(QWidget):
             if event.isAccepted():
                 self.update()
             else:
-                super(SceneView, self).mouseReleaseEvent(event)
+                super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         if self.design_mode:
@@ -308,7 +308,7 @@ class SceneView(QWidget):
             widget = self.widget_at_position(event.pos())
             if widget is not None:
                 return widget.event(event)
-        return super(SceneView, self).event(event)
+        return super().event(event)
 
     def _event_access_level(self, data):
         self._update_widget_states()
@@ -362,7 +362,7 @@ class SceneView(QWidget):
         self._set_scene_model(None)
         self._scene_obj_cache.clear()
         self._widget_removal_queue.clear()
-        super(SceneView, self).destroy()
+        super().destroy()
 
     def set_tab_visible(self, visible):
         """Sets whether this scene is visible.

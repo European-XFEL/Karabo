@@ -15,14 +15,14 @@ MIN_DOWNSAMPLING = [1, 1.5, 2]
 
 class _BaseImageItemTest(GuiTestCase):
     def setUp(self):
-        super(_BaseImageItemTest, self).setUp()
+        super().setUp()
         # Instantiate imageItem from KaraboImageView
         self.imageView = KaraboImageView()
         self.imageItem = self.imageView.plot().imageItem
         self.imageView.setFixedSize(300, 300)
 
     def tearDown(self):
-        super(_BaseImageItemTest, self).tearDown()
+        super().tearDown()
         self.imageView.destroy()
         self.imageView = None
 

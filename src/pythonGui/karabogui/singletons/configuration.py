@@ -41,7 +41,7 @@ class Item:
 
     def __set_name__(self, owner, name):
         self.name = name
-        self.path = "{group}/{name}".format(group=self.group, name=self.name)
+        self.path = f"{self.group}/{self.name}"
         if self.q_set:
             self.default = self.initialize_value()
 
@@ -161,7 +161,7 @@ class Configuration(QObject):
     macro_development = Item(q_set=True, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
-        instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
+        instance = super().__new__(cls, *args, **kwargs)
         # Memory filling avoiding __setattr__!
         memory = [getattr(cls, attr).name for attr in dir(cls)
                   if isinstance(getattr(cls, attr), Item)]
@@ -173,12 +173,12 @@ class Configuration(QObject):
 
     def __setitem__(self, key, value):
         if key not in self._memory:
-            raise KeyError("Configuration key is not valid: {}".format(key))
+            raise KeyError(f"Configuration key is not valid: {key}")
         super().__setattr__(key, value)
 
     def __getitem__(self, item):
         if item not in self._memory:
-            raise KeyError("Configuration key is not valid: {}".format(item))
+            raise KeyError(f"Configuration key is not valid: {item}")
         return super().__getattribute__(item)
 
     def __contains__(self, key):
@@ -197,8 +197,7 @@ class Configuration(QObject):
             yield super().__getattribute__(key)
 
     def keys(self):
-        for key in self._memory:
-            yield key
+        yield from self._memory
 
     def groups(self):
         """Return a dictionary with groups as keys and config keys as values
@@ -234,10 +233,10 @@ class Configuration(QObject):
 
     def __setattr__(self, key, value):
         if key not in self._memory:
-            raise KeyError("Configuration key is not valid: {}".format(key))
+            raise KeyError(f"Configuration key is not valid: {key}")
         super().__setattr__(key, value)
 
     def __repr__(self):
         names = "\n".join("\t" + attr + ": " + repr(getattr(self, attr))
                           for attr in self._memory)
-        return "{{\n{}\n}}".format(names)
+        return f"{{\n{names}\n}}"

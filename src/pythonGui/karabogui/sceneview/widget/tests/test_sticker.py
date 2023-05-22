@@ -24,7 +24,7 @@ class TestStickerWidget(GuiTestCase):
     # Test setup
 
     def setUp(self):
-        super(TestStickerWidget, self).setUp()
+        super().setUp()
         self.model = model = StickerModel(text=TEXT, foreground='black',
                                           x=0, y=0, width=100, height=100)
 
@@ -35,7 +35,7 @@ class TestStickerWidget(GuiTestCase):
         self.parent.show()
 
     def tearDown(self):
-        super(TestStickerWidget, self).tearDown()
+        super().tearDown()
         self.parent = None
         self.widget = None
 
