@@ -49,8 +49,7 @@ def walk_traits_object(
         for name in iterables:
             children = getattr(obj, name)
             for child in children:
-                for subchild, subparent in _tree_iter(child, parent=obj):
-                    yield subchild, subparent
+                yield from _tree_iter(child, parent=obj)
 
     for leaf, parent in _tree_iter(traits_obj):
         if pass_parent:

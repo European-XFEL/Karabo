@@ -96,7 +96,7 @@ UNKNOWN_WIDGET_TOOL = """
 
 
 def _get_file_data(filename):
-    with open(filename, "r") as fp:
+    with open(filename) as fp:
         return fp.read()
 
 
@@ -262,7 +262,7 @@ def test_real_data_round_trip():
         new_xml = api.write_scene(scene)
         orig_xml = _get_file_data(fn)
 
-        failmsg = "Scene {} didn't round trip!".format(op.basename(fn))
+        failmsg = f"Scene {op.basename(fn)} didn't round trip!"
         assert xml_is_equal(orig_xml, new_xml), failmsg
 
 
@@ -352,5 +352,5 @@ def _get_xml_element_from_model(model):
     # corresponding to the Karabo name
     tree = fromstring(xml)
     return tree.find(
-        "*[@{ns}widget='{name}']".format(ns=api.NS_KARABO, name=name)
+        f"*[@{api.NS_KARABO}widget='{name}']"
     )
