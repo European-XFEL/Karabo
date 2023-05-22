@@ -229,7 +229,7 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     std::clog << "Testing enforcing of max schema logging rate limit for Influx ..." << std::endl;
 
-    const unsigned int rateWinSecs = 2u;
+    const unsigned int rateWinSecs = 1u;
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
@@ -273,17 +273,17 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Starts the logger and readers with a lower max schema rate threshold - 11 kb/s - over a rateWinSecs seconds
-    // rating window. The 11 kb/s comes from the verified size of the different device schemas used in the
-    // test - 6.258 bytes.
-    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 11, rateWinSecs);
+    // Starts the logger and readers with a lower max schema rate threshold - 20 kb/s - over a rateWinSecs seconds
+    // rating window. The base64 encoded schema of the DataLogTestDevice is 12,516 bytes (before schema update),
+    // so with rateWinSecs == 1, a single schema can be logged in that period, but two cannot.
+    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 20, rateWinSecs);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
     waitUntilLogged(deviceId, "testInfluxMaxSchemaLogRate");
 
     // Wait some time to isolate the schema update bursts.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 + 1));
 
     ///////  Checks that a schema update within the rating limit is accepted.
     Epochstamp beforeFirstBurst;
@@ -304,7 +304,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(badDataAllDevices), 0ul, badDataAllDevices.size());
 
     // Wait some time to isolate the schema update bursts.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 + 1));
 
     ////////  Checks that two schema updates in a fast succession would go above the
     ////////  threshold and one of the updates (the second) would be rejected.
@@ -335,7 +335,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           badDataInfo.find(deviceId + "::schema") != std::string::npos);
 
     // Wait some time to isolate the schema update bursts.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 - 500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(rateWinSecs * 1000 + 1));
 
     //////  Checks that after the updates have settled down for a while, schemas
     //////  can be logged again.
