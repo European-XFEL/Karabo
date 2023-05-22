@@ -16,7 +16,7 @@ __all__ = ['Timestamp', 'minutesAgo', 'daysAgo', 'hoursAgo']
 
 
 @total_ordering
-class Timestamp(object):
+class Timestamp:
     """This is a time stamp
 
     :param date: is either another timestamp (then we copy), None

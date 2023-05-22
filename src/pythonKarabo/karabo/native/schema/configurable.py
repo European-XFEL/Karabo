@@ -109,7 +109,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
     @classmethod
     def register(cls, name, dict):
-        super(Configurable, cls).register(name, dict)
+        super().register(name, dict)
         for k, v in dict.items():
             if isinstance(v, Descriptor):
                 # in python 3.6 replaced with __set_name__
@@ -205,7 +205,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def setChildValue(self, key, value, desc):
         """Set all values in Nodes"""
         for parent, parentkey in self._parents.items():
-            parent.setChildValue("{}.{}".format(parentkey, key), value, desc)
+            parent.setChildValue(f"{parentkey}.{key}", value, desc)
 
     def _getValue(self, key):
         ret = self.__dict__.get(key)
@@ -296,7 +296,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         is read"""
 
 
-class Overwrite(object):
+class Overwrite:
     """Overwrite the attributes of an inherited property
 
     This looks like a normal property definition, just that it takes the
@@ -357,7 +357,7 @@ class Node(Descriptor):
                             **kwargs)
 
     def toSchemaAndAttrs(self, device, state):
-        _, attrs = super(Node, self).toSchemaAndAttrs(device, state)
+        _, attrs = super().toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
         if self.cls.daqDataType is not None:
             attrs["daqDataType"] = self.cls.daqDataType.value
@@ -407,7 +407,7 @@ class Node(Descriptor):
         yield from super().allDescriptors(prefix)
         for key in self.cls._allattrs:
             yield from getattr(self.cls, key).allDescriptors(
-                "{}{}.".format(prefix, self.key))
+                f"{prefix}{self.key}.")
 
 
 class ChoiceOfNodes(Node):
@@ -451,7 +451,7 @@ class ListOfNodes(Node):
             h[k] = v.getClassSchema(device, state).hash
             h[k, "nodeType"] = NodeType.Node
 
-        _, attrs = super(ListOfNodes, self).toSchemaAndAttrs(device, state)
+        _, attrs = super().toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.ListOfNodes
         return h, attrs
 

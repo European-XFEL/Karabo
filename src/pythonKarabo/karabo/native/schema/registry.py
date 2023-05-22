@@ -5,7 +5,7 @@ to register subclasses of one class """
 __all__ = ['MetaRegistry', 'Registry']
 
 
-class Registry(object):
+class Registry:
     @classmethod
     def register(cls, name, dict):
         """ This method is called for each subclass that is defined
@@ -17,7 +17,7 @@ class Registry(object):
 
 class MetaRegistry(type):
     def __init__(self, name, bases, dict):
-        super(MetaRegistry, self).__init__(name, bases, dict)
+        super().__init__(name, bases, dict)
         dict.pop("__classcell__", None)
         super(self, self).register(name, dict)
 
