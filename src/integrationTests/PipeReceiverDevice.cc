@@ -171,7 +171,7 @@ namespace karabo {
                   data.get<unsigned long long>("inTime");
             m_transferTimes.push_back(transferTime);
             set("nTotalData", get<unsigned int>("nTotalData") + 1);
-            karabo::util::NDArray arr = data.get<karabo::util::NDArray>("array");
+            const karabo::util::NDArray& arr = data.get<karabo::util::NDArray>("array");
             KARABO_LOG_INFO << arr.byteSize();
         }
     }
