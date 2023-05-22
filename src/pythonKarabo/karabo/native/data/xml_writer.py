@@ -46,7 +46,7 @@ def yield_xml_hash(data):
         yield ">"
 
         yield from value_writer(value)
-        yield "</{}>".format(key)
+        yield f"</{key}>"
 
 
 def yield_xml_simple(data):
@@ -91,7 +91,7 @@ def yield_xml_bool(data):
 
 
 def yield_xml_complex(data):
-    yield escape("({},{})".format(data.real, data.imag))
+    yield escape(f"({data.real},{data.imag})")
 
 
 __WRITER_MAP = {
@@ -141,7 +141,7 @@ def saveToFile(hash_, filename):
     Note: If the file already exists, it gets overwritten!
     """
 
-    assert isinstance(hash_, Hash), "Expected Hash, not {}".format(type(hash_))
+    assert isinstance(hash_, Hash), f"Expected Hash, not {type(hash_)}"
     filename = Path(filename)
     directory = filename.parent.absolute()
     directory.mkdir(parents=True, exist_ok=True)

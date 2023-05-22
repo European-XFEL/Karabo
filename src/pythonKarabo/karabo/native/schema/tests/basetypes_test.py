@@ -87,7 +87,7 @@ class Tests(TestCase):
         self.assertEqual(head.timestamp, self.t1)
         self.assertEqual(sep.timestamp, self.t1)
         self.assertEqual(tail.timestamp, self.t1)
-        self.assertEqual("{:5}".format(s), "a,b  ")
+        self.assertEqual(f"{s:5}", "a,b  ")
 
         ll = s.split(sep)
         self.assertEqual(ll.timestamp, self.t1)
