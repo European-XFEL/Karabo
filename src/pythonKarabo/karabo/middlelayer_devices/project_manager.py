@@ -38,7 +38,7 @@ class ProjectManager(Device):
     signalProjectUpdate = Signal(TypeHash(), String())
 
     def __init__(self, configuration):
-        super(ProjectManager, self).__init__(configuration)
+        super().__init__(configuration)
         self.user_db_sessions = {}
 
     async def onInitialization(self):
@@ -53,7 +53,7 @@ class ProjectManager(Device):
             with get_project(self.projectDB, init_db=True):
                 self.state = State.ON
         except ProjectDBError as e:
-            self.logger.error("ProjectDBError : {}".format(str(e)))
+            self.logger.error(f"ProjectDBError : {str(e)}")
             self.state = State.ERROR
 
     @Slot(displayedName="Reset", allowedStates=[State.ERROR],
@@ -298,7 +298,7 @@ class ProjectManager(Device):
                 # Any keys left were not in the database
                 if len(keys) > 0:
                     success = False
-                    exceptionReason = 'Items "{}" not found!'.format(keys)
+                    exceptionReason = f'Items "{keys}" not found!'
             except ProjectDBError as e:
                 exceptionReason = str(e)
                 success = False
