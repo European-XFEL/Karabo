@@ -15,13 +15,7 @@ get_abs_path() {
     echo "$abs_path"
 }
 
-relocate_python() {
-    # `python` should be a soft link to `python3` which has fixed linker paths
-    pushd $INSTALL_PREFIX/bin
-    rm -f python
-    ln -sf python3 python
-    popd
-    
+relocate_python() {    
     # Makefile has a 'prefix' which needs to be fixed
     local sed_program='s%^prefix=.*$%prefix='${INSTALL_PREFIX}'%'
     sed -i $sed_program $($INSTALL_PREFIX/bin/python -c "import sysconfig; print(sysconfig.get_makefile_filename())")
