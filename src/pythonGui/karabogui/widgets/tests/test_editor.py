@@ -48,11 +48,11 @@ class TestConst(GuiTestCase):
         widget.appendPlainText("Karabo")
         self.assertGreaterEqual(widget.numberWidgetArea(), 9)
         for text in range(10):
-            widget.appendPlainText("{}".format(text))
+            widget.appendPlainText(f"{text}")
         # We have double digits now
         self.assertGreaterEqual(widget.numberWidgetArea(), 15)
         for text in range(90):
-            widget.appendPlainText("{}".format(text))
+            widget.appendPlainText(f"{text}")
         # We have three digits now
         self.assertGreaterEqual(widget.numberWidgetArea(), 21)
         self.assertEqual(widget.textCursor().block().lineCount(), 1)

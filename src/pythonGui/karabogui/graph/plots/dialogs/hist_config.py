@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QDialog
 
 class HistogramDialog(QDialog):
     def __init__(self, config, parent=None):
-        super(HistogramDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(False)
         # load ui file
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),

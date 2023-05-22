@@ -65,7 +65,7 @@ def is_valid_url(url):
 
 class WebValidator(QValidator):
     def __init__(self, parent=None):
-        super(WebValidator, self).__init__(parent)
+        super().__init__(parent)
 
     def validate(self, input, pos):
         if not is_valid_url(input):
@@ -78,7 +78,7 @@ class WebDialog(QDialog):
     """
 
     def __init__(self, target='http://', title='Weblink', parent=None):
-        super(WebDialog, self).__init__(parent)
+        super().__init__(parent)
         filepath = get_dialog_ui('webdialog.ui')
         uic.loadUi(filepath, self)
         self.setModal(False)

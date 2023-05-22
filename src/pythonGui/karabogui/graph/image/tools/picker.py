@@ -12,7 +12,7 @@ from karabogui.graph.image.legends.picker import PickerLegend
 class PickerController(QObject):
 
     def __init__(self, plotItem, parent=None):
-        super(PickerController, self).__init__(parent=parent)
+        super().__init__(parent=parent)
 
         self.plotItem = plotItem
         self._selected_pixel = None
@@ -162,19 +162,19 @@ class IndicatorRectangle(QGraphicsRectItem):
     def hoverEnterEvent(self, event):
         self.savedPen = self.pen()
         self.setPen(QPen(QColor(0, 0, 0)))
-        super(IndicatorRectangle, self).hoverEnterEvent(event)
+        super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event):
         self.setPen(self.savedPen)
         event.ignore()
-        super(IndicatorRectangle, self).hoverLeaveEvent(event)
+        super().hoverLeaveEvent(event)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             event.accept()
         else:
             event.ignore()
-        super(IndicatorRectangle, self).mousePressEvent(event)
+        super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         pass

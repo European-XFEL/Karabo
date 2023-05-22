@@ -12,7 +12,7 @@ from karabogui.singletons.api import get_manager, get_network
 from .utils import get_dialog_ui
 
 
-class _PatternMatcher(object):
+class _PatternMatcher:
     """A tiny state machine which watches for a single pattern.
 
     Useful for watching for specific key sequences...
@@ -42,7 +42,7 @@ class AboutDialog(QDialog):
     """
 
     def __init__(self, parent=None):
-        super(AboutDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('about.ui'), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
@@ -67,4 +67,4 @@ class AboutDialog(QDialog):
         for matcher, trigger in self._cheat_codes.items():
             if matcher.check(text):
                 trigger()
-        return super(AboutDialog, self).keyPressEvent(event)
+        return super().keyPressEvent(event)

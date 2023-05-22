@@ -185,7 +185,7 @@ class CodeBook(QWidget):
 
 class LineNumberWidget(QWidget):
     def __init__(self, parent):
-        super(LineNumberWidget, self).__init__(parent)
+        super().__init__(parent)
         self.editor = parent
 
     def sizeHint(self):
@@ -205,7 +205,7 @@ class CodeEditor(QPlainTextEdit):
     resultFound = Signal(int)
 
     def __init__(self, parent=None):
-        super(CodeEditor, self).__init__(parent)
+        super().__init__(parent)
         self.number_widget = LineNumberWidget(parent=self)
         self.cache_blocks = -1
         self.cache_lines = -1
@@ -471,7 +471,7 @@ class CodeEditor(QPlainTextEdit):
     # Events
 
     def resizeEvent(self, event):
-        super(CodeEditor, self).resizeEvent(event)
+        super().resizeEvent(event)
         cr = self.contentsRect()
         # resize the block number area
         self.number_widget.setGeometry(
@@ -494,7 +494,7 @@ class CodeEditor(QPlainTextEdit):
         height = QFontMetrics(self.font()).height()
         while block.isValid() and (top <= event.rect().bottom()):
             if block.isVisible() and (bottom >= event.rect().top()):
-                number = '{}'.format(block_number + 1)
+                number = f'{block_number + 1}'
                 painter.setPen(LINE_WIDGET_COLOR)
                 painter.drawText(0, top, self.numberWidgetArea(),
                                  height, Qt.AlignRight, number)

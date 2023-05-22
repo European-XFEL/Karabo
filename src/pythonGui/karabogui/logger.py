@@ -23,7 +23,7 @@ class LogMediator(QObject):
 
 class QtHandler(logging.Handler):
     def __init__(self, slotfunc, *args, **kwargs):
-        super(QtHandler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.signaller = LogMediator()
         self.signaller.signal.connect(slotfunc)
         formatter = logging.Formatter(
@@ -86,7 +86,7 @@ class StatusLogWidget(QFrame):
     @Slot(str, logging.LogRecord)
     def update_status(self, status, record):
         color = self.COLORS.get(record.levelno, 'black')
-        s = '<font color="%s">%s</font>' % (color, status)
+        s = f'<font color="{color}">{status}</font>'
         self.log_widget.append(s)
         bar = self.log_widget.verticalScrollBar()
         bar.setValue(bar.maximum())

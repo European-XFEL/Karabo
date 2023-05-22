@@ -15,7 +15,7 @@ LEVELS = (0, 255)
 class TestHistogramPlot(GuiTestCase):
 
     def setUp(self):
-        super(TestHistogramPlot, self).setUp()
+        super().setUp()
         self._plot_item = HistogramPlot(orientation="top")
         self._colormap = COLORMAPS[self._plot_item.colormap]
 

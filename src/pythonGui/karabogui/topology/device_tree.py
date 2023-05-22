@@ -162,7 +162,7 @@ class DeviceSystemTree(HasStrictTraits):
         """Traits default initializer for the `update_context` trait.
         """
 
-        class Dummy(object):
+        class Dummy:
             @contextmanager
             def reset_context(self):
                 yield
@@ -292,7 +292,7 @@ class DeviceSystemTree(HasStrictTraits):
             else access_level)
 
         found_nodes = []
-        pattern = node_id if use_reg_ex else ".*{}".format(re.escape(node_id))
+        pattern = node_id if use_reg_ex else f".*{re.escape(node_id)}"
         flags = 0 if case_sensitive else re.IGNORECASE
         regex = re.compile(pattern, flags=flags)
 

@@ -21,8 +21,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
     """
 
     def __init__(self, model, parent=None):
-        super(LabelWidget, self).__init__(model.text,
-                                          model=model, parent=parent)
+        super().__init__(model.text, model=model, parent=parent)
         self.setSizePolicy(QSizePolicy.MinimumExpanding,
                            QSizePolicy.Minimum)
         self.setFrameShape(QFrame.Box)
@@ -50,11 +49,10 @@ class LabelWidget(KaraboSceneWidget, QLabel):
 
         # Set the stylesheet for background and foreground color
         sheet = []
-        sheet.append('color: "{}";'.format(model.foreground))
+        sheet.append(f"color: {model.foreground};")
         if model.background:
-            sheet.append('background-color: "{}";'.format(
-                model.background))
-        self.setStyleSheet("QLabel {{ {} }}".format("".join(sheet)))
+            sheet.append(f"background-color: {model.background};")
+        self.setStyleSheet(f"QLabel {{ {''.join(sheet)} }}")
         self.setGeometry(model.x, model.y, model.width, model.height)
         self.create_display_text()
 
@@ -86,7 +84,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
 
     def resizeEvent(self, event):
         """Reimplemented function of PyQt for adjust the display text"""
-        super(LabelWidget, self).resizeEvent(event)
+        super().resizeEvent(event)
         self.create_display_text()
 
     @property

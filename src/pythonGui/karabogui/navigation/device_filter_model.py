@@ -90,7 +90,7 @@ class DeviceFilterModel(QSortFilterProxyModel):
         self.selectionModel.setCurrentIndex(index,
                                             QItemSelectionModel.ClearAndSelect)
 
-        treeview = super(DeviceFilterModel, self).parent()
+        treeview = super().parent()
         treeview.scrollTo(index)
 
     @Slot(QItemSelection, QItemSelection)
