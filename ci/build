@@ -79,7 +79,7 @@ __release_build() {
             export REL_ARTIFACT_DEST_PATH=$FRAMEWORK_DEST_DIR/$REL_ARTIFACT_NAME
             export REL_ARTIFACT_LATEST_PATH=$FRAMEWORK_LATEST_DIR/$REL_LATEST_NAME
             __check_existence $KARABO_UPLOAD_CURL_PREFIX/$FRAMEWORK_DEST_DIR/$REL_ARTIFACT_NAME
-            bash ./auto_build_all.sh Release --numJobs $NUM_COMPILE_JOBS --bundle --quiet
+            bash ./auto_build_all.sh Release --numJobs $NUM_COMPILE_JOBS --bundle
             mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
             sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $KARABO_UPLOAD_HOST "mkdir -p $KARABO_UPLOAD_DIR/$FRAMEWORK_DEST_DIR"
             sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
