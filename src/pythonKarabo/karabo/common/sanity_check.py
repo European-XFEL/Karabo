@@ -98,7 +98,7 @@ def has_imports(tree, module, func):
                         )
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name == "{}.{}".format(module, func):
+                if alias.name == f"{module}.{func}":
                     return "Found {}.{} in line {}".format(
                         module, func, node.lineno
                     )

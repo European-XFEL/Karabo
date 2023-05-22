@@ -240,7 +240,7 @@ def __arrow_writer(model, parent):
     set_numbers(("x1", "y1", "x2", "y2"), model, element)
 
     # Write marker-end attribute
-    element.set("marker-end", "url(#{})".format(model.marker.id))
+    element.set("marker-end", f"url(#{model.marker.id})")
 
     return element
 
