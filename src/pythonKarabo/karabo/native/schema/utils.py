@@ -136,7 +136,7 @@ def _get_value_type_default(vtype: str, attributes={}):
     elif is_bytearray_type(vtype):
         return bytearray([])
     elif is_vector_char_type(vtype):
-        return bytes()
+        return b''
 
     text = f"The value type {vtype} is not supported for a default value"
     raise NotImplementedError(text)

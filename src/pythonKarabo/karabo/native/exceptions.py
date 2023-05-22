@@ -9,5 +9,5 @@ class KaraboError(Exception):
     """
 
     def __init__(self, *args, loglevel=logging.ERROR, **kwargs):
-        super(KaraboError, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.loglevel = loglevel

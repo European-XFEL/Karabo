@@ -140,7 +140,7 @@ class Image(Type):
 
         self.__dict__.update(data.toDict())
         self.daqDataType = daqDataType
-        super(Image, self).__init__(accessMode=AccessMode.READONLY, **kwargs)
+        super().__init__(accessMode=AccessMode.READONLY, **kwargs)
 
     def toSchemaAndAttrs(self, device, state):
         _, attrs = super().toSchemaAndAttrs(device, state)

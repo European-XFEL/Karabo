@@ -1,4 +1,3 @@
-# coding: utf-8
 """The karabo_hash package.
 
 Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
