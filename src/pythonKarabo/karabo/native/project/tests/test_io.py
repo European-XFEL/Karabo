@@ -23,7 +23,7 @@ from ..api import (
 TEST_DOMAIN = 'TESTES'
 
 
-class _StorageWrapper(object):
+class _StorageWrapper:
     """A thin wrapper around storage objects which handles serialization of
     project objects.
     """
@@ -39,7 +39,7 @@ class _StorageWrapper(object):
 def _compare_projects(proj0, proj1):
     COMPARABLE_TRAIT_TYPES = (Bool, Enum, Float, Int, Range, String)
 
-    class _ObjectFlattener(object):
+    class _ObjectFlattener:
         def __init__(self):
             self.instances = []
 
@@ -231,7 +231,7 @@ class ProjectTest(TestCase):
             # the same object must be returned to the caller
             existing = klass(uuid=model.uuid)
             read_model = read_project_model(StringIO(xml), existing=existing)
-            msg = '{} reader is broken!'.format(klass.__name__)
+            msg = f'{klass.__name__} reader is broken!'
             assert read_model is existing, msg
 
     def test_modified_after_read(self):
