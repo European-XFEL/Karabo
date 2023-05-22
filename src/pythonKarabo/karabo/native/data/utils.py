@@ -139,7 +139,7 @@ def create_html_hash(hsh, include_attributes=True):
             yield ('<tr><td style="padding-left:{}em">'
                    '<font size="1" color="red">'
                    '{}</td><td>'.format(nest + 1, key))
-            yield '<font size="1" color="red">{}'.format(escape(str(value)))
+            yield f'<font size="1" color="red">{escape(str(value))}'
 
     def _html_hash_generator(hsh, nest=0):
         if nest == 0:

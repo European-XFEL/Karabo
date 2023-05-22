@@ -81,7 +81,7 @@ class NDArray(Type):
             dtype = dtype.numpy
         self.dtype = numpy.dtype(dtype)
         self.shape = shape
-        super(NDArray, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def toSchemaAndAttrs(self, device, state):
         _, attrs = super().toSchemaAndAttrs(device, state)
