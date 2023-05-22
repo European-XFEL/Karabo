@@ -46,7 +46,7 @@ def check_for_disallowed_module_imports(forbidden_module, path):
             module = node.module
             if node.level > 0:
                 base = _get_name_from_level(node.level)
-                module = '{}.{}'.format(base, module)
+                module = f'{base}.{module}'
             assert forbidden_module not in module, warning_msg
 
 

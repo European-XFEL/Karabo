@@ -23,7 +23,7 @@ def code_for(model, key, children=None):
         if value == trait_default:
             continue
 
-        traits.append('{}={}'.format(name, repr(value)))
+        traits.append(f'{name}={repr(value)}')
 
     if children:
         traits.append('{}=[{}]'.format(key, ', '.join(children)))
@@ -73,7 +73,7 @@ def convert_scene_model_to_code(model, name='scene'):
         classes.update(child_cls)
 
     klass_name, stmt = code_for(model, key, children=child_names)
-    code.append('{} = {}'.format(name, stmt))
+    code.append(f'{name} = {stmt}')
     classes.add(klass_name)
 
     return classes, code
