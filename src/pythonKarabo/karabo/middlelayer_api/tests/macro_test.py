@@ -501,6 +501,8 @@ def test_disconnect(deviceTest):
     time.sleep(0.1)
     assert d.counter == -1
     with updateDevice(d):
+        # We are connected now and should receive updates
+        waitUntil(lambda: d.counter != -1)
         assert d.counter != -1
         time.sleep(0.1)
         assert d.counter != 29
