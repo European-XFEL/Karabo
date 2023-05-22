@@ -34,11 +34,11 @@ GET_NETWORK_PATH = "karabogui.wizards.cinema.wizard.get_network"
 class BaseCinemaInstallerTest(GuiTestCase):
 
     def setUp(self):
-        super(BaseCinemaInstallerTest, self).setUp()
+        super().setUp()
         self.installer = CinemaWizardController()
 
     def tearDown(self):
-        super(BaseCinemaInstallerTest, self).tearDown()
+        super().tearDown()
         self.installer = None
 
     def assert_select_scenes_page(self, available, selected):

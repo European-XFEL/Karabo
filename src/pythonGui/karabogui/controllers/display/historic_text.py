@@ -225,4 +225,4 @@ class DisplayHistoricText(BaseBindingController):
         """Write a status on the label with the time point"""
         dt = datetime.fromtimestamp(Timestamp().toTimestamp())
         stamp = dt.strftime("[%H:%M:%S]")
-        self.status_widget.setText("{}: {}".format(stamp, text))
+        self.status_widget.setText(f"{stamp}: {text}")

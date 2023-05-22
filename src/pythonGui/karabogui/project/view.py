@@ -263,11 +263,11 @@ class ProjectView(QTreeView):
         for server in online:
             server.instantiate_devices()
 
-        # Nofify that we have seen offline servers!
+        # Notify that we have seen offline servers!
         if offline:
             offline_ids = ', '.join(
-                sorted(set([server.model.server_id
-                            for server in offline])))
+                sorted({server.model.server_id
+                        for server in offline}))
             msg = ('Servers are not online for device instantiation: '
                    '{}!'.format(offline_ids))
             messagebox.show_warning(msg, title='Servers offline',

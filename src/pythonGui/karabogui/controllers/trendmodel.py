@@ -43,7 +43,7 @@ def get_start_end_date_time(selected_time_span):
     return start_date_time, current_date_time
 
 
-class _Generation(object):
+class _Generation:
     """ This holds a single generation of a Curve's data.
     """
     size = 200

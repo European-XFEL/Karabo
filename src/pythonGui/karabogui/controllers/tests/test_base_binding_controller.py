@@ -175,7 +175,7 @@ def _define_binding_classes():
 
 class TestBaseBindingController(GuiTestCase):
     def setUp(self):
-        super(TestBaseBindingController, self).setUp()
+        super().setUp()
 
         # Avoid polluting the controller registry!
         with flushed_registry():

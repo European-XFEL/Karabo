@@ -15,7 +15,7 @@ class PanelContainer(QTabWidget):
     """A container for ``BasePanelWidget`` instances
     """
     def __init__(self, title, parent, handle_empty=False):
-        super(PanelContainer, self).__init__(parent)
+        super().__init__(parent)
         self.setWindowTitle(title)
         self.panel_set = set()
         self.handle_empty = handle_empty
@@ -170,13 +170,13 @@ class PanelContainer(QTabWidget):
     # Qt Overrides
 
     def addTab(self, widget, label):
-        index = super(PanelContainer, self).addTab(widget, label)
+        index = super().addTab(widget, label)
         self._set_tab_text_color(index, widget, widget.tab_text_color)
         self._set_tab_icon(index, widget)
         return index
 
     def insertTab(self, index, widget, label):
-        index = super(PanelContainer, self).insertTab(index, widget, label)
+        index = super().insertTab(index, widget, label)
         self._set_tab_text_color(index, widget, widget.tab_text_color)
         self._set_tab_icon(index, widget)
         return index

@@ -278,7 +278,7 @@ class LogWidget(QWidget):
 
         with open(filename, "w") as out:
             for log in self.table_model.getData():
-                out.write("{0} | {1} | {2} | {3} | {4} #\n".format(*log))
+                out.write("{} | {} | {} | {} | {} #\n".format(*log))
 
 
 class LogFilterModel(QSortFilterProxyModel):

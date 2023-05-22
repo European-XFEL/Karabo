@@ -9,10 +9,10 @@ TYPICAL = 20000
 class TestPlotUtils(unittest.TestCase):
 
     def setUp(self):
-        super(TestPlotUtils, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(TestPlotUtils, self).tearDown()
+        super().tearDown()
 
     def test_sample_threshold(self):
         """Test the sample threshold finding"""

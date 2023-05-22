@@ -15,7 +15,7 @@ LABEL_COLOR = QColor(0, 0, 0, 200)
 
 class KaraboLegend(LegendItem):
     def __init__(self, size=None, offset=None, **kwargs):
-        super(KaraboLegend, self).__init__(
+        super().__init__(
             size, offset, pen=LEGEND_PEN, brush=LEGEND_BRUSH,
             labelTextColor=LABEL_COLOR)
 
@@ -40,21 +40,21 @@ class KaraboLegend(LegendItem):
 
 class CoordsLegend(KaraboLegend):
     def __init__(self, color='w'):
-        super(CoordsLegend, self).__init__()
+        super().__init__()
         self._label = LabelItem(color=color, size="8pt")
         self.layout.addItem(self._label, 0, 0)
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.hide()
 
     def set_value(self, x, y):
-        self._label.setText("x: {}<br>y: {}".format(x, y))
+        self._label.setText(f"x: {x}<br>y: {y}")
 
 
 class ColorBox(ItemSample):
     """The color box in the legend that shows the curve pen color"""
 
     def __init__(self, item):
-        super(ColorBox, self).__init__(item)
+        super().__init__(item)
         self._pen = mkPen(item.opts.get('pen', None))
         self._brush = mkBrush(self._pen.color())
 

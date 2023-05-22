@@ -331,7 +331,7 @@ class DeviceServerController(BaseProjectGroupController):
 
 def _get_server_status(server_id):
     topology = get_topology()
-    attributes = topology.get_attributes('server.{}'.format(server_id))
+    attributes = topology.get_attributes(f'server.{server_id}')
     if attributes is not None:
         return ProxyStatus.ONLINE
     return ProxyStatus.OFFLINE

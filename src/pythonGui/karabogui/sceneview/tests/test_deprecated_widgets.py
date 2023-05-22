@@ -63,7 +63,7 @@ class TestDeprecatedWidgets(GuiTestCase):
     # Test setup
 
     def setUp(self):
-        super(TestDeprecatedWidgets, self).setUp()
+        super().setUp()
 
         # Initialize device proxies
         schema = Object.getClassSchema()
@@ -82,7 +82,7 @@ class TestDeprecatedWidgets(GuiTestCase):
         self.view = SceneView()
 
     def tearDown(self):
-        super(TestDeprecatedWidgets, self).tearDown()
+        super().tearDown()
         self.view.destroy()
         self.view = None
 

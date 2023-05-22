@@ -32,7 +32,7 @@ class ProfilePlot(BasePlot):
     _fit_pen = Instance(QPen, factory=make_pen(_fit_color))
 
     def __init__(self, **traits):
-        super(ProfilePlot, self).__init__(**traits)
+        super().__init__(**traits)
         self._data_item = self._add_plot_item()
         self._fit_item = self._add_plot_item()
 

@@ -22,11 +22,11 @@ NAMES = ["curve_1", "curve_2"]
 class TestPlotViewExport(GuiTestCase):
 
     def setUp(self):
-        super(TestPlotViewExport, self).setUp()
+        super().setUp()
         self.widget = KaraboPlotView()
 
     def tearDown(self):
-        super(TestPlotViewExport, self).tearDown()
+        super().tearDown()
         self.widget.destroy()
         self.widget = None
         for ext in [NPY, NPZ]:
@@ -124,7 +124,7 @@ RANGE_TOLERANCE = 0.12  # or 12% percent
 class _BasePlotTest(GuiTestCase):
 
     def setUp(self):
-        super(_BasePlotTest, self).setUp()
+        super().setUp()
         self.widget = KaraboPlotView()
         self.widget.configuration.update(DEFAULT_CONFIG)
         self.widget.show()
@@ -132,7 +132,7 @@ class _BasePlotTest(GuiTestCase):
         self._plot = None
 
     def tearDown(self):
-        super(_BasePlotTest, self).tearDown()
+        super().tearDown()
         self.widget.close()
         self.widget.destroy()
         self.widget = None
@@ -218,7 +218,7 @@ class _BasePlotTest(GuiTestCase):
 class TestCurveItem(_BasePlotTest):
 
     def setUp(self):
-        super(TestCurveItem, self).setUp()
+        super().setUp()
         self._plot = self.widget.add_curve_item()
 
     def test_basics(self):
@@ -253,7 +253,7 @@ class TestCurveItem(_BasePlotTest):
 class TestBarItem(_BasePlotTest):
 
     def setUp(self):
-        super(TestBarItem, self).setUp()
+        super().setUp()
         self._plot = self.widget.add_bar_item()
         self._plot.set_width(0.1)
 

@@ -8,7 +8,7 @@ class _ShapeLayoutItemChild(QLayoutItem):
     """ A private QLayoutItem for the ShapeLayoutItem
     """
     def __init__(self, shape):
-        super(_ShapeLayoutItemChild, self).__init__()
+        super().__init__()
         self.shape = shape
 
     def isEmpty(self):
@@ -26,7 +26,7 @@ class ShapeLayoutItem(QLayout):
     a layout or a widget (or a spacer). So here we are.
     """
     def __init__(self, shape):
-        super(ShapeLayoutItem, self).__init__()
+        super().__init__()
         self._item = None
         self.addItem(_ShapeLayoutItemChild(shape))
 

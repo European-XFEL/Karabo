@@ -7,7 +7,7 @@ from ..configuration import (
     BACKBONE, DIRECTORIES, NETWORK, PANEL, PROJECT, USER, Configuration)
 
 
-class MockSettings(object):
+class MockSettings:
 
     def __init__(self):
         self.last_path = None

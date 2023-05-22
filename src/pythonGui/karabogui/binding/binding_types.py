@@ -159,7 +159,7 @@ class BaseBinding(HasStrictTraits):
         return self.validate_trait("value", value)
 
 
-class BindingNamespace(object):
+class BindingNamespace:
     """A namespace which is iterable and remembers the order in which values
     were added. Additionally, the type of the values in the namespace can be
     restricted with an `item_type` which is a type or tuple of types.
@@ -184,7 +184,7 @@ class BindingNamespace(object):
 
     def __delattr__(self, key):
         if not key.startswith(self.__priv_prefix):
-            super(BindingNamespace, self).__delattr__(key)
+            super().__delattr__(key)
             self.__names.remove(key)
 
     def __setattr__(self, key, value):
@@ -192,7 +192,7 @@ class BindingNamespace(object):
             msg = 'Attributes of type {} are expected, but type {} was passed'
             raise ValueError(msg.format(self.__type, type(value)))
 
-        super(BindingNamespace, self).__setattr__(key, value)
+        super().__setattr__(key, value)
         if key not in self.__names and not key.startswith(self.__priv_prefix):
             self.__names.append(key)
 
@@ -205,7 +205,7 @@ class BindingNamespace(object):
     def __repr__(self):
         names = '\n'.join('\t' + n + ': ' + repr(getattr(self, n))
                           for n in self)
-        return '{{\n{}\n}}'.format(names)
+        return f'{{\n{names}\n}}'
 
 
 class BindingRoot(BaseBinding):

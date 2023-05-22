@@ -40,7 +40,7 @@ class EditDelegate(QStyledItemDelegate):
     """A QStyledItemDelegate for configurator values
     """
     def __init__(self, parent=None):
-        super(EditDelegate, self).__init__(parent)
+        super().__init__(parent)
         self._button_states = {}
         self._selection_changed = False
 
@@ -139,7 +139,7 @@ class EditDelegate(QStyledItemDelegate):
         model = index.model()
         obj = model.index_ref(index)
         if not isinstance(getattr(obj, 'binding', None), VectorHashBinding):
-            super(EditDelegate, self).paint(painter, option, index)
+            super().paint(painter, option, index)
             return
 
         set_fill_rect(painter, option, index)
@@ -155,7 +155,7 @@ class EditDelegate(QStyledItemDelegate):
             if isinstance(getattr(proxy, 'binding', None), VectorHashBinding):
                 self._handle_event_state(proxy, event, model, option, index)
 
-        return super(EditDelegate, self).editorEvent(
+        return super().editorEvent(
             event, model, option, index)
 
     # ----------------------------------------------------------------------
@@ -214,7 +214,7 @@ class EditDelegate(QStyledItemDelegate):
 class EditWidgetWrapper(QWidget):
     """A QWidget container which can be returned as an item's editor."""
     def __init__(self, obj, index, parent=None):
-        super(EditWidgetWrapper, self).__init__(parent)
+        super().__init__(parent)
         self.setAutoFillBackground(True)
 
         if isinstance(obj, PropertyProxy):
@@ -247,7 +247,7 @@ class EditWidgetWrapper(QWidget):
 # -----------------------------------------------------------------------------
 # Attribute editors aren't typical BaseBindingControllers
 
-class EnumAttributeEditor(object):
+class EnumAttributeEditor:
     """An editor for attribute values defined by an Enum class."""
     # Subclasses should define this
     enum_klass = Enum
@@ -278,7 +278,7 @@ class EnumAttributeEditor(object):
         def _get_item_text(enum_val):
             # Normalize the ENUM_VALUE_NAME -> Enum value name
             name = enum_val.name.replace('_', ' ').lower().capitalize()
-            return "{} ({})".format(enum_val.value, name)
+            return f"{enum_val.value} ({name})"
 
         for e in self.enum_klass:
             text = _get_item_text(e)
@@ -311,7 +311,7 @@ class IntValidator(QValidator):
         return self.Acceptable, input, pos
 
 
-class NumberAttributeEditor(object):
+class NumberAttributeEditor:
     """An editor for numerical attribute values
     """
     def __init__(self, binding, parent=None):
@@ -338,7 +338,7 @@ class NumberAttributeEditor(object):
     def value(self, value):
         if value is None:
             value = 0
-        self.widget.setText("{}".format(value))
+        self.widget.setText(f"{value}")
 
     def _on_text_changed(self, text):
         self.widget.setPalette(self._normal_palette
