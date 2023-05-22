@@ -45,6 +45,12 @@ Breaking Changes
 ++++++++++++++++
 
 - Drop Ubuntu18 support from CI
+- C++/bound: If an NDArray inside a Hash that is sent via an output channel
+  contains data that is touched after Device.writeChannel (or
+  OutputChannel.update), the safeNDArray flag of these methods now explicitly
+  must be set to false to guarantee data integrity. Changed for performance
+  reasons since production systems do not use such NDArray.
+  Similarly the copyAllData flag of OutputChannel.write has changed to false.
 
 Change of behaviour
 +++++++++++++++++++

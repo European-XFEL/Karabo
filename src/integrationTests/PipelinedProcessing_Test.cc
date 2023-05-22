@@ -1567,12 +1567,16 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
     std::clog << "---\ntestProfileTransferTimes\n";
 
     const auto testStartTime = chrono::high_resolution_clock::now();
+    // flags mean:      noShortCut, copy, safeNDArray
+    testProfileTransferTimes(false, true, false);
+    testProfileTransferTimes(false, false, false);
+    testProfileTransferTimes(true, true, false);
+    testProfileTransferTimes(true, false, false);
 
-    testProfileTransferTimes(false, true);
-    testProfileTransferTimes(false, false);
-    testProfileTransferTimes(true, true);
-    testProfileTransferTimes(true, false);
-
+    testProfileTransferTimes(false, true, true);
+    testProfileTransferTimes(false, false, true);
+    testProfileTransferTimes(true, true, true);
+    testProfileTransferTimes(true, false, true);
     std::clog
           << "Test duration (ms): "
           << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
@@ -1582,7 +1586,9 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
 }
 
 
-void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy) {
+void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy, bool safeNDArray) {
+    std::clog << "- (" << (copy ? "   copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "   short cut")
+              << ", " << (safeNDArray ? "    safe ndarray" : "not safe ndarray") << "): " << std::flush;
     if (noShortCut) {
         setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
     }
@@ -1597,6 +1603,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     // set the scenario
     m_deviceClient->set(m_sender, "scenario", "profile");
     m_deviceClient->set(m_sender, "copyAllData", copy);
+    m_deviceClient->set(m_sender, "safeNDArray", safeNDArray);
     // make sure the sender has stopped sending data
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
     // Assure that receiver is connected.
@@ -1605,14 +1612,14 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
     // And poll for the correct answer
-    // Failed https://git.xfel.eu/Karabo/Framework/-/jobs/402381 - no clue why and how!
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataPerRun));
+    const unsigned int expectedDataItems = nDataPerRun * 4; // sender sends 4 items per iteration
+    pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", expectedDataItems);
+    CPPUNIT_ASSERT_EQUAL(expectedDataItems, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
     pollDeviceProperty<float>(m_receiver, "averageTransferTime", 0.f, false); // until not zero anymore!
     float transferTime = m_deviceClient->get<float>(m_receiver, "averageTransferTime") / 1000;
 
-    std::clog << "- (" << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
-              << "): " << transferTime << " milliseconds average transfer time" << std::endl;
+    std::clog << transferTime << " milliseconds average transfer time" << std::endl;
 
     if (noShortCut) {
         unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
