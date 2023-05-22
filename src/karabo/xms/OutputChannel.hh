@@ -258,13 +258,13 @@ namespace karabo {
              * @param metaData a MetaData object containing meta data for this data token.
              * @param copyAllData If false, serialization is optimized to avoid copies for big (i.e. NDArray) data.
              *
-             * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
-             * called for the channel.
+             * Note: When using copyAllData==false (default!), any NDArray/ImageData inside data must stay untouched
+             *       at least until update() has been called for the channel.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData = true);
+            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData = false);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
@@ -273,18 +273,21 @@ namespace karabo {
              * @param data input Hash object
              * @param copyAllData If false, serialization is optimized to avoid copies for big (i.e. NDArray) data.
              *
-             * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
-             * called for the channel.
+             * Note: When using copyAllData==false (default!), any NDArray/ImageData inside data must stay untouched
+             *       at least until update() has been called for the channel.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void write(const karabo::util::Hash& data, bool copyAllData = true);
+            void write(const karabo::util::Hash& data, bool copyAllData = false);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data shared pointer to input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
+             *
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called for
+             *       the channel.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
@@ -297,6 +300,9 @@ namespace karabo {
              * name are used as data source.
              * @param data shared pointer to input Hash object
              *
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called for
+             *       the channel.
+             *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
@@ -308,13 +314,13 @@ namespace karabo {
              *
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
              *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
-             *                    finished. If false, safety copies are done when needed, i.e. when data is queued or
-             *                    sent locally.
+             *                    finished. Default is 'true'. If false, safety copies are done when needed, i.e. when
+             *                    data is queued or sent locally.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void update(bool safeNDArray = false); // false: backward compatible - but change before releasing
+            void update(bool safeNDArray = true);
 
             /**
              * Send end-of-stream (EOS) notification to all connected input channels to indicate a logical break

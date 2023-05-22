@@ -564,22 +564,22 @@ void exportPyXmsInputOutputChannel() {
               .def("getInformation", &karabo::xms::OutputChannel::getInformation)
 
               .def("write", &karathon::OutputChannelWrap().writePy,
-                   (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData") = true),
+                   (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData") = false),
                    "data - a Hash with the data to write\n"
                    "meta - ChannelMetaData\n"
-                   "copyAllData - can (for performance reasons should) be set to False if all\n"
-                   "              ndarray inside 'data' are NOT changed until update() is called\n"
+                   "copyAllData - if true, ndarray data inside 'data' is copied and thus safe to\n"
+                   "              be re-used immediately. Default is 'false' for performance.\n"
                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
                    "      be called concurrently")
 
-              .def("update", &karathon::OutputChannelWrap().updatePy, (bp::arg("safeNDArray") = false),
+              .def("update", &karathon::OutputChannelWrap().updatePy, (bp::arg("safeNDArray") = true),
                    "Update the output channel, i.e. send all data over the wire that was\n"
                    "previously written by calling write(..).\n"
                    "safeNdarray - boolean to indicate whether all ndarrays inside the Hash\n"
                    "              passed to write(..) before are 'safe', i.e. their memory\n"
                    "              will not be referred to elsewhere after update is finished.\n"
-                   "              If false, safety copies are done when needed, i.e. when\n"
-                   "              data is queued.\n"
+                   "              If 'false', safety copies are done when needed, i.e. when\n"
+                   "              data is queued. Default is 'true' for performance.\n"
                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
                    "      be called concurrently")
 
