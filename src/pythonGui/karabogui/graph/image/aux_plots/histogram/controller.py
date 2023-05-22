@@ -32,7 +32,7 @@ class HistogramAggregator(ControllerAggregator):
     levels = Property
 
     def __init__(self, **traits):
-        super(HistogramAggregator, self).__init__(**traits)
+        super().__init__(**traits)
 
         # Create menu
         menu = QMenu()
@@ -63,7 +63,7 @@ class HistogramAggregator(ControllerAggregator):
         self.stats = stats
 
     def destroy(self):
-        super(HistogramAggregator, self).destroy()
+        super().destroy()
         self.on_trait_change(self._show_stats, "show_stats", remove=True)
 
     # -----------------------------------------------------------------------

@@ -10,7 +10,7 @@ from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION
 class ImageTransformsDialog(QDialog):
 
     def __init__(self, transforms, aspect_ratio, show_legend, parent=None):
-        super(ImageTransformsDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(False)
         # load ui file
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),

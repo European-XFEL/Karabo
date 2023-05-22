@@ -44,7 +44,7 @@ class SparkRenderer(QWidget):
     _indicator_window_size = 5
 
     def __init__(self, parent):
-        super(SparkRenderer, self).__init__(parent)
+        super().__init__(parent)
 
         self.pen = QPen(Qt.black, 2, Qt.SolidLine)
         self.no_pen = QPen(Qt.blue, 1, Qt.SolidLine)
@@ -194,11 +194,11 @@ class SparkRenderer(QWidget):
             # add timebase info
             tb = self.time_base
             if tb >= 3600:
-                tb = "{:d}h".format(tb // 3600)
+                tb = f"{tb // 3600:d}h"
             elif tb >= 600:
-                tb = "{:d}m".format(tb // 60)
+                tb = f"{tb // 60:d}m"
             else:
-                tb = "{:d}s".format(tb)
+                tb = f"{tb:d}s"
 
             dy = self.height() - 13
             path = self._createPainterPath(np.array([3., 28., 28., 3., 3.]),
@@ -210,13 +210,13 @@ class SparkRenderer(QWidget):
 
     def _returnFormatted(self, v):
         if v == 0:
-            return "{:+0.2f}".format(v)
+            return f"{v:+0.2f}"
 
         exp = np.log10(abs(v))
         if abs(exp) <= 2:
-            return "{:+0.2f}".format(v)
+            return f"{v:+0.2f}"
         else:
-            return "{:+0.1e}".format(v)
+            return f"{v:+0.1e}"
 
     def _createPainterPath(self, x, y):
         path = QPainterPath()
@@ -394,7 +394,7 @@ class DisplaySparkline(BaseBindingController):
         widget.addAction(time_base_separator)
         time_base_group = QActionGroup(widget)
         for label, base in TIMEBASES:
-            tbAction = QAction("{} time base".format(label),
+            tbAction = QAction(f"{label} time base",
                                time_base_group, checkable=True)
             tbAction.toggled.connect(partial(change_time_base, base))
 

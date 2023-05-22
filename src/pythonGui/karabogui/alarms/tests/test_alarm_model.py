@@ -17,7 +17,7 @@ def create_alarm_data(update_type=INIT_UPDATE_TYPE):
             id=i,
             timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
             timeOfOccurrence='2017-04-20T09:32:22 UTC',
-            deviceId='dev{}'.format(i),
+            deviceId=f'dev{i}',
             property='rent',
             type=ALARM_HIGH,
             description='rent is too damn high',
@@ -29,7 +29,7 @@ def create_alarm_data(update_type=INIT_UPDATE_TYPE):
         id=200,
         timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
         timeOfOccurrence='2017-04-20T09:32:22 UTC',
-        deviceId='devGauge{}'.format(i),
+        deviceId=f'devGauge{i}',
         property='rent',
         type=INTERLOCK,
         description='rent is too damn high',
@@ -41,7 +41,7 @@ def create_alarm_data(update_type=INIT_UPDATE_TYPE):
         id=400,
         timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
         timeOfOccurrence='2017-04-20T09:32:22 UTC',
-        deviceId='devValve{}'.format(i),
+        deviceId=f'devValve{i}',
         property='water',
         type=INTERLOCK,
         description='water leak detected',
@@ -53,7 +53,7 @@ def create_alarm_data(update_type=INIT_UPDATE_TYPE):
         id=300,
         timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
         timeOfOccurrence='2017-04-20T09:35:22 UTC',
-        deviceId='dev{}'.format(i),
+        deviceId=f'dev{i}',
         property='rent',
         type=INTERLOCK,
         description='rent is too damn high',
@@ -75,7 +75,7 @@ def _type(typ):
 
 class TestModel(GuiTestCase):
     def setUp(self):
-        super(TestModel, self).setUp()
+        super().setUp()
         self.alarm_model = AlarmModel()
         data = create_alarm_data(INIT_UPDATE_TYPE)
         self.alarm_model.init_alarms_info(data)

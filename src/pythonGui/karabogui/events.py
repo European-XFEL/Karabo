@@ -69,7 +69,7 @@ class KaraboBroadcastEvent(QEvent):
     Type = QEvent.Type(QEvent.registerEventType())
 
     def __init__(self, sender="", data=None):
-        super(KaraboBroadcastEvent, self).__init__(self.Type)
+        super().__init__(self.Type)
         self.sender = sender  # Names the sender
         self.data = data or {}  # Includes the data which is sent
 

@@ -6,7 +6,7 @@ from pyqtgraph import mkBrush, mkPen
 from karabogui.graph.common.const import DEFAULT_PEN_WIDTH
 
 
-class Colors(object):
+class Colors:
     def __init__(self, alpha):
         self.a = (255, 191, 0, alpha)  # dark gold
         self.b = (51, 153, 255, alpha)  # fancy blue

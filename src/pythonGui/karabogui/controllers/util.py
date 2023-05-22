@@ -18,7 +18,7 @@ def axis_label(proxy):
 
     unit = binding.unit_label
     name = binding.displayed_name
-    return "{} [{}]".format(name, unit) if unit else name
+    return f"{name} [{unit}]" if unit else name
 
 
 def get_class_const_trait(klass, name):
@@ -63,7 +63,7 @@ def populate_controller_registry():
                      if fn.endswith('.py')]
         for mod_fname in mod_files:
             submodule = os.path.splitext(mod_fname)[0]
-            importlib.import_module('{}.{}'.format(pkg, submodule))
+            importlib.import_module(f'{pkg}.{submodule}')
 
     load_extensions()
 
@@ -77,7 +77,7 @@ def load_extensions():
         try:
             entry.load()
         except Exception as e:
-            print('Cannot load plugin {}: {}'.format(entry.name, e))
+            print(f'Cannot load plugin {entry.name}: {e}')
 
 
 def with_display_type(display_type):

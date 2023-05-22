@@ -36,7 +36,7 @@ class SingleBit(BaseBindingController):
 
         objectName = generateObjectName(self)
         self._internal_widget.setObjectName(objectName)
-        self._style_sheet = ("QLabel#{}".format(objectName) +
+        self._style_sheet = (f"QLabel#{objectName}" +
                              " {{ background-color: rgb{}; "
                              "border: 2px solid black;"
                              "border-radius: 6px;}}")

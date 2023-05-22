@@ -17,7 +17,7 @@ class Mediator(QObject):
     """
 
     def __init__(self, parent=None):
-        super(Mediator, self).__init__(parent)
+        super().__init__(parent)
 
         self._listeners = defaultdict(set)
 
@@ -25,7 +25,7 @@ class Mediator(QObject):
         """Dispatch KaraboBroadcastEvents to all interested listeners.
         """
         if not isinstance(event, KaraboBroadcastEvent):
-            return super(Mediator, self).event(event)
+            return super().event(event)
 
         sender = event.sender
         data = event.data

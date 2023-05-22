@@ -14,7 +14,7 @@ class VectorBarGraphPlot(BarGraphItem):
 
     def __init__(self, width, brush):
         X_DEFAULT, Y_DEFAULT = [], []
-        super(VectorBarGraphPlot, self).__init__(
+        super().__init__(
             x=X_DEFAULT, width=width, height=Y_DEFAULT, y0=0, brush=brush)
 
         # Add the logMode in the options
@@ -163,7 +163,7 @@ class ScatterGraphPlot(ScatterPlotItem):
     def __init__(self, pen, cycle, **kwargs):
         self._cycle = cycle
         default_x, default_y = [], []
-        super(ScatterGraphPlot, self).__init__(
+        super().__init__(
             x=default_x, y=default_y, pxMode=True, pen=pen, **kwargs)
 
     def setData(self, x, y, *args, **kwargs):
@@ -174,7 +174,7 @@ class ScatterGraphPlot(ScatterPlotItem):
         if self._cycle:
             size = len(x)
             if not size:
-                super(ScatterGraphPlot, self).setData(
+                super().setData(
                     x, y, brush=self.points_brush, **kwargs)
                 return
 
@@ -185,4 +185,4 @@ class ScatterGraphPlot(ScatterPlotItem):
         else:
             brush = self.points_brush
 
-        super(ScatterGraphPlot, self).setData(x, y, brush=brush, **kwargs)
+        super().setData(x, y, brush=brush, **kwargs)

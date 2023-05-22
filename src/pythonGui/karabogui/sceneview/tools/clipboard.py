@@ -161,7 +161,7 @@ class ScenePasteReplaceAction(BaseScenePasteAction):
                 if new_device_id is None:
                     new_key = key
                 else:
-                    new_key = "{}.{}".format(new_device_id, property_key)
+                    new_key = f"{new_device_id}.{property_key}"
                 new_key_list.append(new_key)
             # Overwrite key list with new keys
             model.keys = new_key_list
@@ -177,7 +177,7 @@ class ScenePasteReplaceAction(BaseScenePasteAction):
         for m in models:
             self._get_widget_model_keys(m, keys)
 
-        device_ids = sorted(set(k.split('.', 1)[0] for k in keys))
+        device_ids = sorted({k.split('.', 1)[0] for k in keys})
         dialog = ReplaceDialog(device_ids, parent=scene_view)
         if dialog.exec() != QDialog.Accepted:
             return

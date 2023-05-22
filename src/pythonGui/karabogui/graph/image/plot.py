@@ -35,7 +35,7 @@ class KaraboImagePlot(PlotItem):
     imageAxesChanged = Signal()
 
     def __init__(self, parent=None):
-        super(KaraboImagePlot, self).__init__(
+        super().__init__(
             viewBox=KaraboImageViewBox(parent=None),
             axisItems=create_axis_items(axes_with_ticks=TICK_AXIS),
             enableMenu=False,
@@ -235,7 +235,7 @@ class KaraboImagePlot(PlotItem):
         self.vb.setYRange(*y_range, padding=padding)
 
     def set_label(self, axis=0, text='', units=''):
-        formatted_units = " ({})".format(units) if units else units
+        formatted_units = f" ({units})" if units else units
 
         show = True if (text != "" or units != "") else False
 
@@ -259,7 +259,7 @@ class KaraboImagePlot(PlotItem):
         elif export_type == ExportTool.Data:
             exporter = ArrayExporter(self.imageItem.image)
         else:
-            raise LookupError("No exporter found for {}".format(export_type))
+            raise LookupError(f"No exporter found for {export_type}")
 
         exporter.export()
 

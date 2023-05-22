@@ -579,7 +579,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             project = project_controller.model
             project_macros = {s.simple_name for s in project.macros}
 
-            if '{}-{}'.format(device_id, macro_name) in project_macros:
+            if f'{device_id}-{macro_name}' in project_macros:
                 msg = ('A macro with that name already exists in the selected '
                        'project.')
                 messagebox.show_warning(msg, title='Cannot Load Macro')
@@ -599,7 +599,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             project = project_controller.model
             project_scenes = {s.simple_name for s in project.scenes}
 
-            if '{}|{}'.format(device_id, scene_name) in project_scenes:
+            if f'{device_id}|{scene_name}' in project_scenes:
                 msg = ('A scene with that name already exists in the selected '
                        'project.')
                 messagebox.show_warning(msg, title='Cannot Load Scene')
