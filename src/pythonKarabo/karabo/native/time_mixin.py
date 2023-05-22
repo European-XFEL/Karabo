@@ -4,7 +4,7 @@ import numpy as np
 from .data import Timestamp
 
 
-class TimeMixin(object):
+class TimeMixin:
     """Mediator class for TrainId calculation used for KaraboValues
 
     This class is updated via the slotTimeTick in any middlelayer device

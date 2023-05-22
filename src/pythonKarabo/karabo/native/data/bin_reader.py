@@ -10,7 +10,7 @@ from .typenums import HashType
 __all__ = ['decodeBinary', 'decodeBinaryPos']
 
 
-class BinaryParser(object):
+class BinaryParser:
     def __init__(self):
         self.pos = 0
         self.data = None
@@ -85,7 +85,7 @@ def read_binary_schema(file):
     name = str(file.data[file.pos:file.pos + size], "utf8")
     file.pos += size
     ret = read_binary_hash(file)
-    assert file.pos - op == l, 'failed: {} {} {}'.format(file.pos, op, l)
+    assert file.pos - op == l, f'failed: {file.pos} {op} {l}'
     return Schema(name, hash=ret)
 
 

@@ -67,7 +67,7 @@ def string_from_bool(data):
 
 
 def string_from_complex(data):
-    return "({},{})".format(data.real, data.imag)
+    return f"({data.real},{data.imag})"
 
 
 _STRING_CONVERTER = {

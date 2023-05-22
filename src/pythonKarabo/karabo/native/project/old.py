@@ -16,9 +16,9 @@ from karabo.common.scenemodel.api import read_scene
 from karabo.native.data import decodeXML, encodeXML
 
 
-class Project(object):
+class Project:
     def __init__(self, filename):
-        super(Project, self).__init__()
+        super().__init__()
 
         self.version = 1
         self.filename = filename
@@ -85,12 +85,12 @@ class Project(object):
 
         with ZipFile(self.filename, mode="a", compression=ZIP_DEFLATED) as zf:
             digest = hashlib.sha1(data).hexdigest()
-            respath = "resources/{}/{}".format(category, digest)
+            respath = f"resources/{category}/{digest}"
             # Duplicate items compute the same hash. Don't write them twice.
             if not _hasPath(zf, respath):
                 zf.writestr(respath, data)
         self.resources.setdefault(category, set()).add(digest)
-        return "project:{}".format(respath)
+        return f"project:{respath}"
 
     def addScene(self, scene):
         self.scenes.append(scene)
@@ -106,7 +106,7 @@ class Project(object):
             with ZipFile(self.filename, mode="r") as zf:
                 return zf.read(u.path)
         elif u.scheme == "":  # for old projects, delete later
-            with open(url, mode="r") as fin:
+            with open(url) as fin:
                 return fin.read()
         else:
             return urllib.request.urlopen(url).read()
@@ -117,14 +117,14 @@ class Project(object):
         read_project(self.filename, instance=self)
 
 
-class ProjectConfiguration(object):
+class ProjectConfiguration:
     def __init__(self, project, name, hash=None):
-        super(ProjectConfiguration, self).__init__()
+        super().__init__()
 
         if name.endswith(".xml"):
             self.filename = name
         else:
-            self.filename = "{}.xml".format(name)
+            self.filename = f"{name}.xml"
 
         self.hash = hash
 
@@ -135,14 +135,14 @@ class ProjectConfiguration(object):
         return encodeXML(self.hash)
 
 
-class BaseDevice(object):
+class BaseDevice:
     def __init__(self, serverId, classId, deviceId, ifexists):
         assert ifexists in ("ignore", "restart")
 
         self.serverId = serverId
         self.classId = classId
 
-        self.filename = "{}.xml".format(deviceId)
+        self.filename = f"{deviceId}.xml"
         self.ifexists = ifexists
 
 
@@ -156,9 +156,9 @@ class BaseDeviceGroup(BaseDevice):
         self.devices.append(device)
 
 
-class Monitor(object):
+class Monitor:
     def __init__(self, name, config=None):
-        super(Monitor, self).__init__()
+        super().__init__()
 
         self.name = name
         self.config = config
@@ -173,7 +173,7 @@ class Monitor(object):
 
     @name.setter
     def name(self, name):
-        self.filename = "{}.xml".format(name)
+        self.filename = f"{name}.xml"
 
     def fromXml(self, xmlString):
         self.config = decodeXML(xmlString)
@@ -202,7 +202,7 @@ def read_project(path, instance=None):
         proj = Project(path)
 
     with ZipFile(path, "r") as zf:
-        projectHash = _read_xml_hash(zf, "{}.xml".format(PROJECT_KEY))
+        projectHash = _read_xml_hash(zf, f"{PROJECT_KEY}.xml")
 
         proj.version = projectHash[PROJECT_KEY, "version"]
         proj.uuid = projectHash[PROJECT_KEY, ...].get("uuid", proj.uuid)
@@ -240,7 +240,7 @@ def _read_configurations(zf, projectConfig, projInstance):
         for c in configList:
             filename = c.get("filename")
             configuration = ProjectConfiguration(projInstance, filename)
-            data = zf.read("{}/{}".format(CONFIGURATIONS_KEY, filename))
+            data = zf.read(f"{CONFIGURATIONS_KEY}/{filename}")
             configuration.fromXml(data)
             projInstance.addConfiguration(devId, configuration)
 
@@ -257,7 +257,7 @@ def _read_devices(zf, projectConfig):
             assert filename.endswith(".xml")
             filename = filename[:-4]
 
-            configPath = "{}/{}.xml".format(DEVICES_KEY, filename)
+            configPath = f"{DEVICES_KEY}/{filename}.xml"
             grpConfig = _read_xml_hash(zf, configPath)
             for _, config in grpConfig.items():
                 serverId = dev.getAttribute("group", "serverId")
@@ -279,7 +279,7 @@ def _read_devices(zf, projectConfig):
                 assert filename.endswith(".xml")
                 filename = filename[:-4]
 
-                configPath = "{}/{}.xml".format(DEVICES_KEY, filename)
+                configPath = f"{DEVICES_KEY}/{filename}.xml"
                 devConfig = _read_xml_hash(zf, configPath)
                 for classId, config in devConfig.items():
                     device = BaseDevice(serverId, classId, filename,
@@ -295,7 +295,7 @@ def _read_devices(zf, projectConfig):
             assert filename.endswith(".xml")
             filename = filename[:-4]
 
-            configPath = "{}/{}.xml".format(DEVICES_KEY, filename)
+            configPath = f"{DEVICES_KEY}/{filename}.xml"
             devConfig = _read_xml_hash(zf, configPath)
             for classId, config in devConfig.items():
                 device = BaseDevice(serverId, classId, filename,
@@ -313,7 +313,7 @@ def _read_macros(zf, projectConfig):
     macros = []
 
     for name in projectConfig[MACROS_KEY]:
-        data = zf.read("{}/{}".format(MACROS_KEY, "{}.py".format(name)))
+        data = zf.read("{}/{}".format(MACROS_KEY, f"{name}.py"))
         macro_model = read_macro(StringIO(data.decode()))
         macro_model.simple_name = name
         macros.append(macro_model)
@@ -331,7 +331,7 @@ def _read_monitors(zf, projectConfig):
         for m in monitorHash:
             filename = m.get("filename")
             assert filename.endswith(".xml")
-            data = zf.read("{}/{}".format(MONITORS_KEY, filename))
+            data = zf.read(f"{MONITORS_KEY}/{filename}")
             filename = filename[:-4]
             monitor = Monitor(filename)
             monitor.fromXml(data)
@@ -347,7 +347,7 @@ def _read_scenes(zf, projectConfig):
 
     for s in projectConfig[SCENES_KEY]:
         title = s["filename"]
-        data = zf.read("{}/{}".format(SCENES_KEY, title))
+        data = zf.read(f"{SCENES_KEY}/{title}")
         scene_model = read_scene(BytesIO(data))
         scene_model.simple_name = title
         scenes.append(scene_model)

@@ -44,7 +44,7 @@ def wrap(data):
     elif isinstance(data, (numbers.Number, numpy.ndarray)):
         return QuantityValue(data)
     else:
-        raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
+        raise TypeError(f'cannot wrap "{type(data)}" into Karabo type')
 
 
 def newest_timestamp(objs, newest=None):
@@ -105,7 +105,7 @@ def wrap_methods(cls):
     return cls
 
 
-class KaraboValue(object):
+class KaraboValue:
     """This is the base class for all Karabo values.
 
     All attributes of a Karabo device contain objects of these types, as they
@@ -238,7 +238,7 @@ class NoneValue(_Singleton):
 
     def __init__(self, value=None, **kwargs):
         assert value is None or isinstance(value, NoneValue)
-        super(NoneValue, self).__init__(value, **kwargs)
+        super().__init__(value, **kwargs)
 
     def __eq__(self, other):
         return other is None or isinstance(other, NoneValue)
@@ -272,7 +272,7 @@ class EnumValue(KaraboValue):
             raise TypeError('value "{}" is not element of enum "{}"'.
                             format(value, descriptor.enum))
         if not isinstance(value, Enum):
-            raise TypeError('value "{}" must be an Enum'.format(value))
+            raise TypeError(f'value "{value}" must be an Enum')
         self.enum = value
 
     def __eq__(self, other):
@@ -288,10 +288,10 @@ class EnumValue(KaraboValue):
         return repr(self.enum)
 
     def _repr_pretty_(self, p, cycle):
-        p.text("<{}>".format(self))
+        p.text(f"<{self}>")
 
     def _repr_html_generator_(self):
-        yield "<i>{}</i>".format(self)
+        yield f"<i>{self}</i>"
 
     def __hash__(self):
         return hash(self.enum)
@@ -484,7 +484,7 @@ class TableValue(KaraboValue):
     """This wraps numpy structured arrays. Pint cannot deal with them."""
 
     def __init__(self, value, units, **kwargs):
-        super(TableValue, self).__init__(value, **kwargs)
+        super().__init__(value, **kwargs)
         self.value = value
         self.units = units
 
@@ -635,7 +635,7 @@ class TableValue(KaraboValue):
     def _repr_html_generator_(self):
         yield "<table><tr>"
         for name in self.value.dtype.names:
-            yield "<th>{}</th>".format(name)
+            yield f"<th>{name}</th>"
         for row in self.value:
             yield "</tr><tr>"
             for col in row:
@@ -792,7 +792,7 @@ class QuantityValue(KaraboValue, Quantity):
         elif relative is not None:
             err = relative
         else:
-            return "{{:~{}}}".format(fmt).format(value)
+            return f"{{:~{fmt}}}".format(value)
 
         err = 1 - int(numpy.log10(err))
         if err > 0:
@@ -802,15 +802,15 @@ class QuantityValue(KaraboValue, Quantity):
                     err, fmt).format}
                 formatted_value = numpy.array2string(value.value,
                                                      formatter=_formatter)
-                ret = "{} {:~}".format(formatted_value, value.units)
+                ret = f"{formatted_value} {value.units:~}"
             else:
                 # old behaviour for floats
-                ret = "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
+                ret = f"{{:.{err}~{fmt}}}".format(1.0 * value)
         else:
             # XXX: the following string always return [0], regardless of the
             #  size of the initial array
             # TODO: this branch is not covered by tests
-            ret = "{{:~{}}}".format(fmt).format(0 * value)
+            ret = f"{{:~{fmt}}}".format(0 * value)
         return ret
 
     def _repr_pretty_(self, p, cycle):
@@ -869,7 +869,7 @@ class QuantityValue(KaraboValue, Quantity):
                 fields = ((int(bit), name) for bit, name in fields)
                 res = "|".join(name for bit, name in fields
                                if self.value & (1 << bit))
-                return "{{{}}}".format(res)
+                return f"{{{res}}}"
             formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
             return formats[self.descriptor.displayType].format(self.value)
         except (AttributeError, KeyError):
