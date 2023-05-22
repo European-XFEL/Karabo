@@ -99,7 +99,7 @@ def __scene_reader(element):
 
     # We get the first level defs first
     defs = []
-    for d in element.findall("./{}defs".format(NS_SVG)):
+    for d in element.findall(f"./{NS_SVG}defs"):
         defs.append(read_element(d))
         element.remove(d)
     # Record the defs on the reader registry
