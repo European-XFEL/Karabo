@@ -57,7 +57,7 @@ class SystemTopology(HasStrictTraits):
 
     # Required by the singleton system (see ``karabogui.singleton.api``)
     def __init__(self, parent=None):
-        super(SystemTopology, self).__init__()
+        super().__init__()
 
     def clear(self):
         """Clear all saved devices and classes"""

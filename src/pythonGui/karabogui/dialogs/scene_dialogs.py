@@ -8,7 +8,7 @@ from .utils import get_dialog_ui
 
 class ReplaceDialog(QDialog):
     def __init__(self, devices, parent=None):
-        super(ReplaceDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('replacedialog.ui'), self)
 
         self.twTable.setRowCount(len(devices))
@@ -47,7 +47,7 @@ class SceneItemDialog(QDialog):
 
     def __init__(self, x=0, y=0, title='SceneItem', max_x=1024, max_y=768,
                  parent=None):
-        super(SceneItemDialog, self).__init__(parent)
+        super().__init__(parent)
         filepath = get_dialog_ui('sceneitem_dialog.ui')
         uic.loadUi(filepath, self)
         self.setModal(False)
@@ -74,7 +74,7 @@ class SceneItemDialog(QDialog):
 
 class ResizeSceneDialog(QDialog):
     def __init__(self, size=QSize(), parent=None):
-        super(ResizeSceneDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(False)
         ui_path = get_dialog_ui('resizedialog.ui')
         uic.loadUi(ui_path, self)

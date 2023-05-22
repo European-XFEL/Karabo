@@ -4,7 +4,7 @@ import os.path as op
 from qtpy.QtGui import QIcon
 
 
-class Icon(object):
+class Icon:
     """A lazy-loading class for QIcons
 
     QIcons can only be read once a QApplication is created. This

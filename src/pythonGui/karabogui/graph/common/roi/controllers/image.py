@@ -11,7 +11,7 @@ from .base import BaseROIController
 class ImageROIController(BaseROIController):
 
     def __init__(self, plotItem):
-        super(ImageROIController, self).__init__(plotItem)
+        super().__init__(plotItem)
         plotItem.imageTransformed.connect(self._update_transform)
 
         # Enable movement wrt image pixels
@@ -19,18 +19,18 @@ class ImageROIController(BaseROIController):
         self.translateSnap = True
 
     def show(self, roi):
-        super(ImageROIController, self).show(roi)
+        super().show(roi)
         if self.plotItem.image_set:
             # Create a first ROI read
             self.update()
 
     def _show_roi_item(self, roi_item):
-        super(ImageROIController, self)._show_roi_item(roi_item)
+        super()._show_roi_item(roi_item)
         self._update_geometry(roi_item)
 
     def destroy(self):
         self.plotItem.imageTransformed.disconnect(self._update_transform)
-        super(ImageROIController, self).destroy()
+        super().destroy()
 
     @Slot()
     def update(self):
@@ -76,7 +76,7 @@ class ImageROIController(BaseROIController):
 
     @Slot(object)
     def _set_current_item(self, roi_item, update=True):
-        super(ImageROIController, self)._set_current_item(roi_item, update)
+        super()._set_current_item(roi_item, update)
         if update and self.plotItem.image_set:
             self.update()
 

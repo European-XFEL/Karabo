@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QDialog
 
 class TransformDialog(QDialog):
     def __init__(self, config, parent=None):
-        super(TransformDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setModal(False)
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'transform_config.ui')

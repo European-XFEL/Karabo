@@ -52,7 +52,7 @@ class ProjectDatabaseConnection(QObject):
     """
 
     def __init__(self, parent=None):
-        super(ProjectDatabaseConnection, self).__init__(parent)
+        super().__init__(parent)
         self.cache = get_user_cache()
         self.network = get_network()
 

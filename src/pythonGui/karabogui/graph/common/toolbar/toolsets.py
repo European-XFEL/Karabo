@@ -81,7 +81,7 @@ class MouseModeToolset(BaseToolsetController):
             tool = self.default_tool
             self.buttons[tool].setChecked(True)
 
-        super(MouseModeToolset, self).select(tool)
+        super().select(tool)
 
 
 class ROIToolset(BaseToolsetController):
@@ -113,7 +113,7 @@ class ROIToolset(BaseToolsetController):
         # Get the proper tool from the actions
         if tool in self.buttons:
             tool = self.buttons[tool].defaultAction().data()
-        super(ROIToolset, self).select(tool)
+        super().select(tool)
 
     def check(self, tool):
         """Checking the tool only changes the check state of the button.

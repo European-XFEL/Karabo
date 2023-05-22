@@ -28,7 +28,7 @@ class BaseROIController(QObject):
     }
 
     def __init__(self, plotItem):
-        super(BaseROIController, self).__init__()
+        super().__init__()
         self._rois = defaultdict(list)
 
         self.plotItem = plotItem

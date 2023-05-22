@@ -131,7 +131,7 @@ def beam_profile_table_html(x_stats, y_stats):
         return ''
 
     def _to_string(value):
-        return "{:.3g}".format(value) if value is not None else "-"
+        return f"{value:.3g}" if value is not None else "-"
 
     return PROFILE_STATS_HTML.format(
         x_ampl=_to_string(x_stats.get("amplitude")),

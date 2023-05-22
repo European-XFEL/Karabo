@@ -42,7 +42,7 @@ UNKNOWN_XML_MODEL = sm.UnknownXMLDataModel(
 
 class TestLoadSVG(GuiTestCase):
     def setUp(self):
-        super(TestLoadSVG, self).setUp()
+        super().setUp()
         self.view = SceneView()
 
     def _load_file(self, dir, file_name):

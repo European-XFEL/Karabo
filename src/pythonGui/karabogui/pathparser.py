@@ -6,7 +6,7 @@ from qtpy.QtCore import QPointF
 from qtpy.QtGui import QPainterPath
 
 
-class Parser(object):
+class Parser:
     re = re.compile("([MmZzLlHhVvCcSsQqTtAa])|"
                     "(-?(([0-9]*[.][0-9]*)|[0-9]+)([eE][+-]?[0-9]*)?)")
 

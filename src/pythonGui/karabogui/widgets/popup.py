@@ -91,12 +91,12 @@ class PopupWidget(QWidget):
         """
         if self.can_freeze:
             self.reset()
-        super(PopupWidget, self).closeEvent(event)
+        super().closeEvent(event)
 
 
 class TextEdit(QTextEdit):
     def __init__(self, parent=None):
-        super(TextEdit, self).__init__(parent)
+        super().__init__(parent)
         self._fittedWidth = 310
         self._fittedHeight = 0
 

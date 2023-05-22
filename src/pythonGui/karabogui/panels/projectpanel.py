@@ -36,7 +36,7 @@ class ProjectPanel(BasePanelWidget):
     """
 
     def __init__(self):
-        super(ProjectPanel, self).__init__("Projects")
+        super().__init__("Projects")
         # Bool to set if the project manager version is okay for the
         # load with device action.
         self._manager_version = False
