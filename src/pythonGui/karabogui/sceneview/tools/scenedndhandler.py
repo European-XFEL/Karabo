@@ -149,7 +149,7 @@ class ProjectDropHandler(SceneDnDHandler):
         if item.get('type') == ProjectItemTypes.SCENE:
             uuid = item.get('uuid')
             simple_name = item.get('simple_name')
-            target = '{}:{}'.format(simple_name, uuid)
+            target = f'{simple_name}:{uuid}'
             position = event.pos()
 
             fm = get_font_metrics()

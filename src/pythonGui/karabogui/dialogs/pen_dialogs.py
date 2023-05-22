@@ -20,7 +20,7 @@ class PenDialog(QDialog):
                   Qt.DashDotDotLine]
 
     def __init__(self, pen, brush=None, parent=None):
-        super(PenDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('pendialog.ui'), self)
         self.pen = pen
         self.brush = brush
@@ -149,7 +149,7 @@ class PenStyleComboBox(QComboBox):
               (Qt.DashDotDotLine, "Dash dot dot line")]
 
     def __init__(self, parent=None):
-        super(PenStyleComboBox, self).__init__(parent)
+        super().__init__(parent)
 
         self.setIconSize(QSize(32, 12))
         for s in self.styles:

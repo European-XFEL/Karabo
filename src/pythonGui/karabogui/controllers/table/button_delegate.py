@@ -24,7 +24,7 @@ class TableButtonDelegate(QStyledItemDelegate):
     """
 
     def __init__(self, parent=None):
-        super(TableButtonDelegate, self).__init__(parent)
+        super().__init__(parent)
         self._enabled = True
         self._button_states = {}
 
@@ -39,7 +39,7 @@ class TableButtonDelegate(QStyledItemDelegate):
         if event.type() in handled_types:
             self._handle_event_state(event, option, index)
             return True
-        return super(TableButtonDelegate, self).editorEvent(
+        return super().editorEvent(
             event, model, option, index)
 
     def _draw_button(self, painter, option, index):

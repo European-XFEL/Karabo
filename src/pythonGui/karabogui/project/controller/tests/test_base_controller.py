@@ -27,7 +27,7 @@ def assert_no_notification_handlers(proj_model):
 
         if not acceptable:
             names = "\n\t".join([repr(n.handler) for n in notifiers])
-            msg = "Trait {} still has notifiers!\n\t{}".format(name, names)
+            msg = f"Trait {name} still has notifiers!\n\t{names}"
             raise AssertionError(msg)
 
     # Recurse!

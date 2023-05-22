@@ -18,7 +18,7 @@ INKSCAPE_DIR = op.join(DATA_DIR, 'inkscape')
 
 class TestShapes(GuiTestCase):
     def setUp(self):
-        super(TestShapes, self).setUp()
+        super().setUp()
         self.view = SceneView()
         self.view._set_scene_model(SceneModel())
 

@@ -34,7 +34,7 @@ class FormatFmtDialog(QDialog):
         combo_fmt = self.combo_fmt.currentText()
         combo_decimals = self.combo_decimals.currentText()
 
-        preview = "{{:.{}{}}}".format(combo_decimals, combo_fmt)
+        preview = f"{{:.{combo_decimals}{combo_fmt}}}"
         if self.value is not None:
             try:
                 preview = preview.format(self.value)

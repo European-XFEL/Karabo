@@ -120,7 +120,7 @@ class ElidingLabel(QLabel):
 
 class LineEdit(QLineEdit):
     def __init__(self, parent=None):
-        super(LineEdit, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumWidth(WIDGET_MIN_WIDTH)
         self.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
@@ -164,7 +164,7 @@ class DoubleSpinBox(QDoubleSpinBox):
 
 class SvgWidget(QSvgWidget):
     def __init__(self, parent=None):
-        super(SvgWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setMaximumSize(SVG_MAX_SIZE, SVG_MAX_SIZE)
 
     def sizeHint(self):
@@ -173,7 +173,7 @@ class SvgWidget(QSvgWidget):
 
 class FrameWidget(QLabel):
     def __init__(self, parent=None):
-        super(FrameWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setAutoFillBackground(True)
         self.setAlignment(Qt.AlignCenter)
         self.setMinimumWidth(STATE_MIN_SIZE)

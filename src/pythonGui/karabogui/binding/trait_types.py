@@ -9,7 +9,7 @@ class NumpyRange(BaseRange):
 
     def __init__(self, dtype=None, **kwargs):
         self._dtype = dtype
-        super(NumpyRange, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def validate(self, object, name, value):
         """ Validate that the value is in the specified range.

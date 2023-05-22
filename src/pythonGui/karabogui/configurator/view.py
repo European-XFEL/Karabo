@@ -45,7 +45,7 @@ class ConfigurationTreeView(QTreeView):
     itemSelectionChanged = Signal()
 
     def __init__(self, parent=None):
-        super(ConfigurationTreeView, self).__init__(parent)
+        super().__init__(parent)
         self.setDragEnabled(True)
         self.setTabKeyNavigation(True)
         self.header().setSectionsMovable(False)

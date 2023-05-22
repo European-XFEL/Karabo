@@ -33,7 +33,7 @@ class ControllerAggregator(HasStrictTraits):
     menu = Property(Instance(QMenu))
 
     def __init__(self, config=None, **traits):
-        super(ControllerAggregator, self).__init__(**traits)
+        super().__init__(**traits)
 
         for orientation, plot_klass in self.contents.items():
             if config is None:
@@ -92,7 +92,7 @@ class BaseController(HasStrictTraits):
     orientation = String
 
     def __init__(self, **traits):
-        super(BaseController, self).__init__(**traits)
+        super().__init__(**traits)
         self.plot = self.plot_klass(orientation=self.orientation)
 
     # -----------------------------------------------------------------------

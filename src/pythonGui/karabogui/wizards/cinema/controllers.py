@@ -23,7 +23,7 @@ class BasePageController(HasStrictTraits):
     project_model = DelegatesTo("wizard_controller")
 
     def __init__(self, **traits):
-        super(BasePageController, self).__init__(**traits)
+        super().__init__(**traits)
         page = self.page
         page.set_complete(not self.needs_completion)
         page.setCommitPage(self.commit_page)

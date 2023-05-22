@@ -33,11 +33,10 @@ class DisplayWidgetNode(BaseBindingController):
         widget.setAlignment(Qt.AlignCenter)
 
         objectName = generateObjectName(self)
-        style = ("QWidget#{}".format(objectName) +
-                 " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
-        sheet = style.format(ALL_OK_COLOR)
-        widget.setStyleSheet(sheet)
+        style_sheet = (f"QWidget#{objectName}" +
+                       f" {{ background-color : rgba{ALL_OK_COLOR}; }}")
+        widget.setStyleSheet(style_sheet)
         widget.setFrameStyle(QFrame.Box)
         widget.setFont(QFont("Times", 8, QFont.Cursive))
 
@@ -47,5 +46,5 @@ class DisplayWidgetNode(BaseBindingController):
         info = proxy.binding.display_type.split('|')
         # The real node type is mangled in the display_type
         node_type = info[1] if len(info) > 1 else "NaN"
-        template = "WidgetNode\nNodeType: {}".format(node_type)
+        template = f"WidgetNode\nNodeType: {node_type}"
         self.widget.setText(template)

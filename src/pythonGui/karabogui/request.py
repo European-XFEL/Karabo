@@ -179,7 +179,7 @@ def get_scene_from_server(device_id, scene_name, project=None,
         with StringIO(data) as fp:
             scene = read_scene(fp)
             scene.modified = True
-            scene.simple_name = '{}|{}'.format(dev_id, name)
+            scene.simple_name = f'{dev_id}|{name}'
             scene.reset_uuid()
 
         # Add to the project AND open it
@@ -229,7 +229,7 @@ def get_macro_from_server(device_id, macro_name, project):
         with StringIO(data) as fp:
             macro = read_macro(fp)
             macro.initialized = macro.modified = True
-            macro.simple_name = '{}-{}'.format(dev_id, name)
+            macro.simple_name = f'{dev_id}-{name}'
             macro.reset_uuid()
 
         # Macro's can only be added to project. Hence, add first to the project

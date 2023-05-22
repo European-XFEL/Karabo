@@ -49,7 +49,7 @@ def run_scene_file(filename):
 
 def run_scene_link(ns):
     device_id, scene_name = ns.dev_scene_link.split('|')
-    keys = ["{}.availableScenes".format(device_id)]
+    keys = [f"{device_id}.availableScenes"]
     link = DeviceSceneLinkModel(
         keys=keys, target=scene_name, text=ns.dev_scene_link, width=200)
     model = SceneModel(children=[link])

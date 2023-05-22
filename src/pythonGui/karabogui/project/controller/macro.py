@@ -267,7 +267,7 @@ class MacroController(BaseProjectGroupController):
         config['data_dir'] = op.dirname(fn)
 
         if not fn.endswith('.py'):
-            fn = '{}.py'.format(fn)
+            fn = f'{fn}.py'
 
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
