@@ -71,7 +71,7 @@ def _trait_sig(trait):
             sig += trait_type.klass
     elif isinstance(trait_type, Enum):
         values = ",".join([str(v) for v in trait_type.values])
-        sig += "({})".format(values)
+        sig += f"({values})"
     sig += "".join([_trait_sig(sub) for sub in trait_type.inner_traits()])
     return sig
 
