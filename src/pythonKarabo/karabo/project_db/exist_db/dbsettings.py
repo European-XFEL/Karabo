@@ -20,8 +20,8 @@ class DbSettings:
 
 
 def make_server_uri(server, port):
-    return "{}:{}/exist/xmlrpc".format(server, port)
+    return f"{server}:{port}/exist/xmlrpc"
 
 
 def make_server_url(user, password, server_uri):
-    return "http://{}:{}@{}".format(user, password, server_uri)
+    return f"http://{user}:{password}@{server_uri}"
