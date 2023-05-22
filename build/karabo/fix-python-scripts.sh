@@ -22,9 +22,3 @@ do
     sed -i "$SED_PROGRAM" $script_name
   fi
 done
-
-# make sure python is a link to python3
-pushd $PACKAGEDIR/extern/bin
-rm -f python
-ln -sf python3 python
-popd
