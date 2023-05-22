@@ -52,10 +52,10 @@ def yield_binary_schema(data):
     for p in data.hash.paths(intermediate=True):
         nodeType = NodeType(data.hash[p, "nodeType"])
         if nodeType is NodeType.Leaf:
-            assert not data.hash[p], "no proper leaf: {}".format(p)
+            assert not data.hash[p], f"no proper leaf: {p}"
         else:
             assert isinstance(data.hash[p], Hash), \
-                "no proper node: {}".format(p)
+                f"no proper node: {p}"
     binary = b''.join(yield_binary_hash(data.hash))
     s = data.name.encode('utf8')
     yield pack('IB', len(binary) + len(s) + 1, len(s))

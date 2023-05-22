@@ -156,7 +156,7 @@ class TestSerializers(TestCase):
         try:
             saveToFile(HASH, FILENAME)
         except Exception as e:
-            self.fail("Failed as file already exists: {}".format(e))
+            self.fail(f"Failed as file already exists: {e}")
 
         # Test with non-Hash value
         with self.assertRaises(Exception):
@@ -301,7 +301,7 @@ class TestSerializers(TestCase):
             with open(FILENAME, 'w') as fp:
                 writeXML(h, fp)
 
-            with open(FILENAME, 'r') as fp:
+            with open(FILENAME) as fp:
                 decoded = decodeXML(fp.read())
                 assert decoded.fullyEqual(h)
 

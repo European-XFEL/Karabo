@@ -136,7 +136,7 @@ class Enumable:
         if isinstance(other, self.enum):
             return other
         else:
-            raise TypeError("{} required here".format(self.enum))
+            raise TypeError(f"{self.enum} required here")
 
     def toDataAndAttrs(self, data):
         h, attrs = super().toDataAndAttrs(data)
@@ -146,7 +146,7 @@ class Enumable:
             return h, attrs
 
     def toSchemaAndAttrs(self, device, state):
-        schema, attrs = super(Enumable, self).toSchemaAndAttrs(device, state)
+        schema, attrs = super().toSchemaAndAttrs(device, state)
         if self.enum is not None:
             attrs["classId"] = self.enum.__name__
             if self.enum is State:
@@ -303,7 +303,7 @@ class Integer(Simple, Enumable):
 
         info = np.iinfo(self.numpy)
         if value < info.min or value > info.max:
-            raise ValueError("value {} not in range of datatype".format(value))
+            raise ValueError(f"value {value} not in range of datatype")
 
     def getMinMax(self):
         info = np.iinfo(self.numpy)
@@ -364,7 +364,7 @@ class Number(Simple):
         return min, max
 
 
-class Descriptor(object):
+class Descriptor:
     """This is the base class for all descriptors in Karabo
 
     Descriptors describe the content of a device property. The description
@@ -428,14 +428,14 @@ class Descriptor(object):
         if allowedStates is not None:
             if strict:
                 self.allowedStates = set(allowedStates)
-                if not all((isinstance(s, State) for s in self.allowedStates)):
+                if not all(isinstance(s, State) for s in self.allowedStates):
                     raise TypeError('allowedStates must contain States, '
                                     'not "{}"'.format(allowedStates))
             else:
-                self.allowedStates = set((State(s) for s in allowedStates))
+                self.allowedStates = {State(s) for s in allowedStates}
         if tags is not None:
             self.tags = set(tags)
-            if not all((isinstance(s, str) for s in self.tags)):
+            if not all(isinstance(s, str) for s in self.tags):
                 raise TypeError('tags must contain strings, not "{}"'.
                                 format(tags))
         if classId is not None:
@@ -558,7 +558,7 @@ class Descriptor(object):
         value.
         """
         if self.accessMode is not AccessMode.RECONFIGURABLE:
-            msg = 'property "{}" is not reconfigurable'.format(self.key)
+            msg = f'property "{self.key}" is not reconfigurable'
             raise KaraboError(msg)
         elif self.allowedStates is not None:
             parent = instance.get_root()
@@ -580,7 +580,7 @@ class Descriptor(object):
         if value is None or self.accessMode is AccessMode.READONLY:
             if self.assignment is Assignment.MANDATORY:
                 raise KaraboError(
-                    'assignment is mandatory for "{}"'.format(self.key))
+                    f'assignment is mandatory for "{self.key}"')
             return self._initialize(instance, self.defaultValue)
         return self._initialize(instance, value)
 
@@ -613,7 +613,7 @@ class Slot(Descriptor):
     requiredAccessLevel = Attribute(AccessLevel.USER, dtype=AccessLevel)
 
     def toSchemaAndAttrs(self, device, state):
-        h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
+        h, attrs = super().toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
         # Explicitly calling super's schema sets Descriptor's displayType and
         # classId attributes, not Slot's
@@ -757,7 +757,7 @@ class Type(Descriptor, Registry):
 
     @classmethod
     def register(cls, name, dict):
-        super(Type, cls).register(name, dict)
+        super().register(name, dict)
 
         if "number" in dict:
             cls.types[cls.number] = cls
@@ -806,7 +806,7 @@ class Vector(Type):
 
     @classmethod
     def register(cls, name, dict):
-        super(Vector, cls).register(name, dict)
+        super().register(name, dict)
         if "basetype" in dict:
             cls.basetype.vectortype = cls
 
@@ -830,7 +830,7 @@ class NumpyVector(Vector):
 
     @classmethod
     def register(cls, name, dict):
-        super(NumpyVector, cls).register(name, dict)
+        super().register(name, dict)
         cls.vstrs[cls.basetype.numpy().dtype.str] = cls
 
     def cast(self, other):
@@ -875,7 +875,7 @@ class VectorBool(NumpyVector):
     def cast(self, other):
         if isinstance(other, list) and other and isinstance(other[0], str):
             other = [o in ('true', 'True', '1') for o in other]
-        return super(VectorBool, self).cast(other)
+        return super().cast(other)
 
 
 class Char(Simple, Type):
@@ -1179,7 +1179,7 @@ class TypeNone(Type):
 
     def cast(self, other):
         if other is not None:
-            raise TypeError('cannot cast to None (was {})'.format(other))
+            raise TypeError(f'cannot cast to None (was {other})')
 
 
 class TypeHash(Type):
@@ -1239,7 +1239,7 @@ class VectorHash(Vector):
     rowSchema = Attribute()
 
     def __init__(self, rows=None, strict=True, **kwargs):
-        super(VectorHash, self).__init__(strict=strict, **kwargs)
+        super().__init__(strict=strict, **kwargs)
         if rows is not None:
             self.rowSchema = rows.getClassSchema()
 
@@ -1364,4 +1364,4 @@ def get_descriptor_from_data(data):
             memoryview(data)
             return ByteArray
         except TypeError:
-            raise TypeError('unknown datatype {}'.format(data.__class__))
+            raise TypeError(f'unknown datatype {data.__class__}')
