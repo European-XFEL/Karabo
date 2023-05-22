@@ -58,7 +58,7 @@ def getdata(name, allowed_services):
     try:
         path = absolute("var", "service", name, "name")
         try:
-            with open(path, "r") as fin:
+            with open(path) as fin:
                 # Remove possible trailing characters
                 karabo_name = fin.read().strip()
         except FileNotFoundError:

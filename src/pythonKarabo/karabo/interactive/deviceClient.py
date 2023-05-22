@@ -246,7 +246,7 @@ if ip is not None:
                 re_key='.*set')
 
 
-class DeviceClient(object):
+class DeviceClient:
     """DeviceClient to remotely control Karabo
 
     The DeviceClient allows to remotely control a Karabo installation.
@@ -290,7 +290,7 @@ class DeviceClient(object):
         if passwordFile is None:
             password = getpass.getpass()
         else:
-            with open('passwordFile', 'r') as file:
+            with open('passwordFile') as file:
                 password = file.readline()
         return self.__client.login(username, password, provider)
 

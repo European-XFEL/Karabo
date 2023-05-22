@@ -49,7 +49,7 @@ class ProjectDatabase(DatabaseBase):
             server = os.getenv('KARABO_PROJECT_DB', None)
 
         if server is None:
-            raise EnvironmentError("No environment variable KARABO_PROJECT_DB"
+            raise OSError("No environment variable KARABO_PROJECT_DB"
                                    " found, nor was a server to connect to"
                                    " given!")
         if port is None:
@@ -74,7 +74,7 @@ class ProjectDatabase(DatabaseBase):
                 string describing the reason
         """
         # Check whether the object got modified inbetween
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = """
             xquery version "3.0";
             let $path := "{path}"
@@ -112,7 +112,7 @@ class ProjectDatabase(DatabaseBase):
         :return:
         """
         # path to where the possible entries are located
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
 
         assert isinstance(items, (list, tuple))
 
@@ -139,7 +139,7 @@ class ProjectDatabase(DatabaseBase):
                 return $doc
             return $sorted-docs[last()]
 
-            """.format(uuids='("{}")'.format(uuids), path=path)
+            """.format(uuids=f'("{uuids}")', path=path)
 
             try:
                 res = self.dbhandle.query(query, how_many=req_cnk_size)
@@ -161,7 +161,7 @@ class ProjectDatabase(DatabaseBase):
                  and simple_name
         """
         # path to where the possible entries are located
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = """
         xquery version "3.0";
         declare namespace functx = "http://www.functx.com";
@@ -224,7 +224,7 @@ class ProjectDatabase(DatabaseBase):
                  and simple_name
         """
         # path to where the possible entries are located
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = """
         xquery version "3.0";
         declare namespace functx = "http://www.functx.com";
@@ -302,8 +302,8 @@ class ProjectDatabase(DatabaseBase):
         base = '{}{}/'.format('/'.join(domain.split('/')[:-2]),
                               self.settings.root_collection_backup)
         source = domain.split('/')[-1]
-        bck = "{}_{}_backup".format(source, tstamp)
-        tmp = "tmp_{}".format(tstamp)
+        bck = f"{source}_{tstamp}_backup"
+        tmp = f"tmp_{tstamp}"
 
         query = """
             xquery version "3.0";
@@ -324,11 +324,11 @@ class ProjectDatabase(DatabaseBase):
         """.format(origin_base=origin_base, base=base, source=source, tmp=tmp,
                    dest=bck)
 
-        print("Creating backup of domain {} at {}{}".format(domain, base, bck))
+        print(f"Creating backup of domain {domain} at {base}{bck}")
         try:
             res = self.dbhandle.query(query)
         except ExistDBException as e:
-            raise ProjectDBError("Failed creating backup: {}".format(e))
+            raise ProjectDBError(f"Failed creating backup: {e}")
 
         print("Sucessfully created backup, now proceeding with sanitizing")
 
@@ -380,7 +380,7 @@ class ProjectDatabase(DatabaseBase):
         try:
             res = self.dbhandle.query(query).results[0]
         except ExistDBException as e:
-            raise ProjectDBError("Failed sanitizing: {}".format(e))
+            raise ProjectDBError(f"Failed sanitizing: {e}")
 
         msg = dedent("""
             Sanitized database:
@@ -447,7 +447,7 @@ class ProjectDatabase(DatabaseBase):
                                   'attr_name': root.attrib['attr_name'],
                                   'attr_value': root.attrib['attr_value']})
             except ExistDBException as e:
-                raise ProjectDBError("Failed updating attribute: {}".format(e))
+                raise ProjectDBError(f"Failed updating attribute: {e}")
         return res_items
 
     def get_configurations_from_device_name(self, domain, instance_id):
@@ -473,7 +473,7 @@ class ProjectDatabase(DatabaseBase):
         return <item configid="{{$configid}}" instanceid="{{$instanceid}}"/>
         }}</items>
         """
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = query.format(path=path, instance_id=instance_id)
 
         res = self.dbhandle.query(query)
@@ -511,7 +511,7 @@ class ProjectDatabase(DatabaseBase):
                 device_id="{{$device_id}}"/>
         }}</items>
         """
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = query.format(path=path, instance_id=device_id_part)
 
         res = self.dbhandle.query(query)
@@ -540,7 +540,7 @@ class ProjectDatabase(DatabaseBase):
         }}</items>
         """
 
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = query.format(path=path, uuid=uuid)
         res = self.dbhandle.query(query)
 
@@ -561,8 +561,8 @@ class ProjectDatabase(DatabaseBase):
         for server in servers:
             queryf = query.format(path=path, instance=server["serverid"])
             res = self.dbhandle.query(queryf)
-            projects |= set([r.attrib["projectname"] for r in
-                             res.results[0].getchildren()])
+            projects |= {r.attrib["projectname"] for r in
+                             res.results[0].getchildren()}
         return projects
 
     def get_projects_data_from_device(self, domain, uuid):
@@ -585,7 +585,7 @@ class ProjectDatabase(DatabaseBase):
         }}</items>
         """
 
-        path = "{}/{}".format(self.root, domain)
+        path = f"{self.root}/{domain}"
         query = query.format(path=path, uuid=uuid)
         res = self.dbhandle.query(query)
 

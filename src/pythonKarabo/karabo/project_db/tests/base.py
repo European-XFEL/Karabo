@@ -93,7 +93,7 @@ class ProjectDatabaseVerification():
 
                 meta = db.save_item('LOCAL', testproject2, xml_rep)
 
-                path = "{}/LOCAL/{}_0".format(db.root, testproject2)
+                path = f"{db.root}/LOCAL/{testproject2}_0"
                 self.assertTrue(db.dbhandle.hasDocument(path))
                 decoded = db.dbhandle.getDoc(path).decode('utf-8')
                 doctree = etree.fromstring(decoded)

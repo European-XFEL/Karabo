@@ -168,7 +168,7 @@ class DaemonManager(Device):
         defaultValue=["scene"])
 
     def __init__(self, configuration):
-        super(DaemonManager, self).__init__(configuration)
+        super().__init__(configuration)
         self.client = None
         self.post_action_tasks = {}
         self.aggregator_uri = ""
