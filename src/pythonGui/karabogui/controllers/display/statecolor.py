@@ -28,7 +28,7 @@ class DisplayStateColor(BaseBindingController):
     def create_widget(self, parent):
         widget = FrameWidget(parent)
         objectName = generateObjectName(self)
-        self._style_sheet = ("QLabel#{}".format(objectName) +
+        self._style_sheet = (f"QLabel#{objectName}" +
                              " {{ background-color : rgb{}; }}")
         widget.setObjectName(objectName)
 

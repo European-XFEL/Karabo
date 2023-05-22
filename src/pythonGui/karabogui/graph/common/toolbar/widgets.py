@@ -8,7 +8,7 @@ from ..const import BUTTON_SIZE, ICON_SIZE
 class ToolBar(QToolBar):
 
     def __init__(self, orientation=Qt.Vertical, parent=None):
-        super(ToolBar, self).__init__(parent)
+        super().__init__(parent)
         # Setup toolbar settings
         self.setOrientation(orientation)
         self.setStyleSheet("QToolBar { border: 0px }")
@@ -29,7 +29,7 @@ class ToolBar(QToolBar):
 
 class WidgetAction(QWidgetAction):
     def __init__(self, button, parent=None):
-        super(WidgetAction, self).__init__(parent)
+        super().__init__(parent)
         button.setParent(parent)
         self._toolbar_button = button
         self._menu_button = None
@@ -106,7 +106,7 @@ class WidgetAction(QWidgetAction):
             self._actions.clear()
 
         self._menu_button = None
-        super(WidgetAction, self).deleteWidget(widget)
+        super().deleteWidget(widget)
 
     @Slot()
     def _on_menu_button_clicked(self):
@@ -128,7 +128,7 @@ class DropDownMenu(QMenu):
     triggered = Signal(QAction)
 
     def mouseReleaseEvent(self, event):
-        super(DropDownMenu, self).mouseReleaseEvent(event)
+        super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             action = self.actionAt(event.pos())
             if action:
@@ -141,7 +141,7 @@ class DropDownButton(QToolButton):
     triggered = Signal(object)
 
     def __init__(self, parent=None):
-        super(DropDownButton, self).__init__(parent=parent)
+        super().__init__(parent=parent)
 
         # Setup custom dropdown menu
         menu = DropDownMenu()
@@ -171,7 +171,7 @@ class DropDownButton(QToolButton):
         self.setChecked(False)
 
     def setCheckable(self, checkable):
-        super(DropDownButton, self).setCheckable(checkable)
+        super().setCheckable(checkable)
         if checkable:
             self.toggled.connect(self._check_action)
 

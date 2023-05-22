@@ -21,9 +21,9 @@ class ObjectDuplicateDialog(QDialog):
                             duplicate simple Name
         :param parent: A parent object
         """
-        super(ObjectDuplicateDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('object_duplicate.ui'), self)
-        self.setWindowTitle('Duplicate object {}'.format(simple_name))
+        self.setWindowTitle(f'Duplicate object {simple_name}')
 
         # Add spinboxes with validator
         self.sbStart = UIntSpinbox(self)
@@ -48,7 +48,7 @@ class ObjectDuplicateDialog(QDialog):
         else:
             nb_dupe = 1
 
-        text = 'You are about to create <b>{}</b> duplicate(s)'.format(nb_dupe)
+        text = f'You are about to create <b>{nb_dupe}</b> duplicate(s)'
         self.laText.setText(text)
 
     @Slot(int)
@@ -80,7 +80,7 @@ class ObjectDuplicateDialog(QDialog):
             start_index = self.sbStart.value()
             end_index = self.sbEnd.value()
             for index in range(start_index, end_index + 1):
-                dupe_name = '{}{}'.format(self.leTitle.text(), index)
+                dupe_name = f'{self.leTitle.text()}{index}'
                 simple_names.append(dupe_name)
         else:
             simple_names.append(self.leTitle.text())
@@ -91,7 +91,7 @@ class ObjectDuplicateDialog(QDialog):
 class UIntSpinbox(QSpinBox):
 
     def __init__(self, parent):
-        super(UIntSpinbox, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimum(0)
         self.setMaximum(1000)
 
@@ -99,18 +99,18 @@ class UIntSpinbox(QSpinBox):
         if not value.isdigit() and value != '':
             return QValidator.Invalid, value, pos
 
-        return super(UIntSpinbox, self).validate(value, pos)
+        return super().validate(value, pos)
 
 
 class ObjectEditDialog(QDialog):
     def __init__(self, object_type='object', model=None, parent=None):
-        super(ObjectEditDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('object_edit.ui'), self)
 
         if model is None:
-            title = 'Add {}'.format(object_type)
+            title = f'Add {object_type}'
         else:
-            title = 'Edit {}'.format(object_type)
+            title = f'Edit {object_type}'
             self.leTitle.setText(model.simple_name)
 
         validator = InputValidator()

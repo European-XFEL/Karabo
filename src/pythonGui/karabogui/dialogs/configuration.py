@@ -52,7 +52,7 @@ class ConfigNode(HasStrictTraits):
 
 class ConfigurationModel(QAbstractItemModel):
     def __init__(self, parent=None):
-        super(ConfigurationModel, self).__init__(parent)
+        super().__init__(parent)
         self.root = ConfigNode()
         self._get_model_data()
 
@@ -195,7 +195,7 @@ class ConfigurationDialog(QDialog):
     """
 
     def __init__(self, parent=None):
-        super(ConfigurationDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         # Don't block the event loop!
         self.setModal(False)

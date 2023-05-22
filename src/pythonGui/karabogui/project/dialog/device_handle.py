@@ -31,7 +31,7 @@ class DeviceHandleDialog(QDialog):
                          must be used by the device.
         :param parent: The parent of the dialog
         """
-        super(DeviceHandleDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('device_handle.ui'), self)
         validator = InputValidator()
         self.leTitle.setValidator(validator)

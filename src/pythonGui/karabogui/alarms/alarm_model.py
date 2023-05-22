@@ -22,7 +22,7 @@ class AlarmModel(QAbstractTableModel):
     headers = list(ALARM_DATA.values())
 
     def __init__(self, parent=None):
-        super(AlarmModel, self).__init__(parent)
+        super().__init__(parent)
         self.instanceId = KARABO_ALARM_SERVICE
         self.all_entries = []  # All alarm entries
 

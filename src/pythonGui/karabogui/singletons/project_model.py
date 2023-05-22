@@ -40,7 +40,7 @@ class ProjectViewItemModel(QAbstractItemModel):
     """
 
     def __init__(self, parent=None):
-        super(ProjectViewItemModel, self).__init__(parent)
+        super().__init__(parent)
         self.q_selection_model = QItemSelectionModel(self, self)
 
         self._traits_model = None
@@ -159,7 +159,7 @@ class ProjectViewItemModel(QAbstractItemModel):
 
         controllers = []
 
-        pattern = text if use_reg_ex else ".*{}".format(re.escape(text))
+        pattern = text if use_reg_ex else f".*{re.escape(text)}"
         flags = 0 if case_sensitive else re.IGNORECASE
         regex = re.compile(pattern, flags=flags)
 
@@ -197,7 +197,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         self.q_selection_model.setCurrentIndex(
             index, QItemSelectionModel.ClearAndSelect)
 
-        treeview = super(ProjectViewItemModel, self).parent()
+        treeview = super().parent()
         treeview.scrollTo(index)
 
     def selectNode(self, controller):

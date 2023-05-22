@@ -81,7 +81,7 @@ class ProfileAggregator(ControllerAggregator):
     smooth = Property
 
     def __init__(self, **traits):
-        super(ProfileAggregator, self).__init__(**traits)
+        super().__init__(**traits)
 
         # Create shared menu
         menu = QMenu()
@@ -115,7 +115,7 @@ class ProfileAggregator(ControllerAggregator):
         self.y_plot.axis = y_data
 
     def destroy(self):
-        super(ProfileAggregator, self).destroy()
+        super().destroy()
         self.on_trait_change(self._show_stats, "show_stats", remove=True)
 
     # -----------------------------------------------------------------------

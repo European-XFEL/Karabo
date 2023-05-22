@@ -227,7 +227,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         layout_widget.setLayout(layout)
         objectName = generateObjectName(self)
         layout_widget.setObjectName(objectName)
-        self._style_sheet = ("QWidget#{}".format(objectName) +
+        self._style_sheet = (f"QWidget#{objectName}" +
                              " {{ background-color : rgba{}; }}")
 
         if self.model.parent_component == "EditableApplyLaterComponent":
@@ -284,7 +284,7 @@ class ControllerLayout(QHBoxLayout):
        the minimum size depending on the content margins (for the borders)."""
 
     def minimumSize(self):
-        size = super(ControllerLayout, self).minimumSize()
+        size = super().minimumSize()
         if not size.isEmpty():
             left, top, right, bottom = self.getContentsMargins()
             size = QSize(size.width() - (left + right),

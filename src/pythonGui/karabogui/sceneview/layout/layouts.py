@@ -13,13 +13,13 @@ from .base import BaseLayout
 
 class GroupLayout(BaseLayout, QLayout):
     def __init__(self, model, parent=None):
-        super(GroupLayout, self).__init__(model, parent)
+        super().__init__(model, parent)
         self._children = []
         self._child_bounds = None
 
     def _add_layout(self, layout):
         self.addItem(layout)
-        super(GroupLayout, self)._add_layout(layout)
+        super()._add_layout(layout)
 
     def _add_widget(self, widget):
         self.addWidget(widget)
@@ -34,7 +34,7 @@ class GroupLayout(BaseLayout, QLayout):
     def removeItem(self, item):
         self._children.remove(item)
         self._child_bounds = None
-        super(GroupLayout, self).removeItem(item)
+        super().removeItem(item)
 
     def itemAt(self, index):
         try:
@@ -95,7 +95,7 @@ class GroupLayout(BaseLayout, QLayout):
         # Invalidate the cached bounds!
         self._child_bounds = None
 
-        super(GroupLayout, self).setGeometry(rect)
+        super().setGeometry(rect)
 
     def _child_bounding_rect(self):
         """Cache the result of calc_bounding_rect to avoid expensive
@@ -111,12 +111,12 @@ VERTICAL_LAYOUTS = (QBoxLayout.TopToBottom, QBoxLayout.BottomToTop)
 
 class BoxLayout(BaseLayout, QBoxLayout):
     def __init__(self, model, direction, parent=None):
-        super(BoxLayout, self).__init__(model, direction, parent)
+        super().__init__(model, direction, parent)
         self.setContentsMargins(0, 0, 0, 0)
 
     def _add_layout(self, layout):
         self.addItem(layout)
-        super(BoxLayout, self)._add_layout(layout)
+        super()._add_layout(layout)
 
     def _add_widget(self, widget):
         self.addWidget(widget)
@@ -144,10 +144,10 @@ class BoxLayout(BaseLayout, QBoxLayout):
 
             return QSize(get_width(widths), get_height(heights))
 
-        return super(BoxLayout, self).sizeHint()
+        return super().sizeHint()
 
     def setGeometry(self, rect):
-        super(BoxLayout, self).setGeometry(rect)
+        super().setGeometry(rect)
 
         # Update the geometry of the widget in their model
         for i in range(self.count()):
@@ -170,12 +170,12 @@ class BoxLayout(BaseLayout, QBoxLayout):
 
 class GridLayout(BaseLayout, QGridLayout):
     def __init__(self, model, parent=None):
-        super(GridLayout, self).__init__(model, parent)
+        super().__init__(model, parent)
 
     def _add_layout(self, layout):
         ld = layout.model.layout_data
         self.addLayout(layout, ld.row, ld.col, ld.rowspan, ld.colspan)
-        super(GridLayout, self)._add_layout(layout)
+        super()._add_layout(layout)
 
     def _add_widget(self, widget):
         ld = widget.model.layout_data

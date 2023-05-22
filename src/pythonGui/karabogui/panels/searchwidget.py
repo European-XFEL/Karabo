@@ -18,7 +18,7 @@ from .utils import get_panel_ui
 
 class SearchBar(QWidget):
     def __init__(self, parent=None):
-        super(SearchBar, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_panel_ui("project_filter.ui"), self)
 
         self.label_filter.textChanged.connect(self._filter_changed)
@@ -102,7 +102,7 @@ class SearchBar(QWidget):
         n_found = len(self.found)
         self.index_array = deque(range(n_found))
         if self.index_array:
-            result = "{} Results".format(n_found)
+            result = f"{n_found} Results"
             self._select_node()
         else:
             result = "No results"

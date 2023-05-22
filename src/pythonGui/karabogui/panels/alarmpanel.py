@@ -25,7 +25,7 @@ ACKNOWLEDGE_COLUMN = 6
 
 class AlarmPanel(BasePanelWidget):
     def __init__(self):
-        super(AlarmPanel, self).__init__("Alarms", allow_closing=True)
+        super().__init__("Alarms", allow_closing=True)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -105,7 +105,7 @@ class AlarmPanel(BasePanelWidget):
 
     def closeEvent(self, event):
         """Tell main window to enable the button to add me back."""
-        super(AlarmPanel, self).closeEvent(event)
+        super().closeEvent(event)
         if event.isAccepted():
             self.signalPanelClosed.emit(self.windowTitle())
 

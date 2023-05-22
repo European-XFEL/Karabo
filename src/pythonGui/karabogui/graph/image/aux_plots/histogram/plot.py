@@ -36,7 +36,7 @@ class HistogramPlot(BasePlot):
     gradient = Property(Instance(QLinearGradient), depends_on='colormap')
 
     def __init__(self, **traits):
-        super(HistogramPlot, self).__init__(**traits)
+        super().__init__(**traits)
         self._data_item = self._add_plot_item()
 
     # -----------------------------------------------------------------------
@@ -51,7 +51,7 @@ class HistogramPlot(BasePlot):
                                 pen=self._pen, brush=brush, fillLevel=0)
 
     def destroy(self):
-        super(HistogramPlot, self).destroy()
+        super().destroy()
         self.on_trait_change(self._set_brush, "levels", remove=True)
 
     # -----------------------------------------------------------------------

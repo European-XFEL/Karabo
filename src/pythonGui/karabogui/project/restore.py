@@ -15,7 +15,7 @@ _reload_sessions = set()
 def add_restore(project, scene_data):
     """Add a session for bookkeeping"""
     global _reload_sessions
-    _reload_sessions = set(s for s in _reload_sessions if not s.finished)
+    _reload_sessions = {s for s in _reload_sessions if not s.finished}
     active = ProjectRestoreSession(project=project, scene_data=scene_data)
     _reload_sessions.add(active)
 

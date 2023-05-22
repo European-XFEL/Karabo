@@ -18,7 +18,7 @@ LABEL_HEIGHT = 20
 
 class PageContainer(QWizard):
     def __init__(self, parent=None):
-        super(PageContainer, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         pixmap = QPixmap(LOGO_PATH)
         pixmap = pixmap.scaledToWidth(LOGO_WIDTH)
@@ -27,7 +27,7 @@ class PageContainer(QWizard):
 
     def setPage(self, index, page):
         page.container = self
-        super(PageContainer, self).setPage(index, page)
+        super().setPage(index, page)
 
     @Slot(int)
     def fitContents(self, index):
@@ -41,7 +41,7 @@ class Page(QWizardPage):
     ui_file = None
 
     def __init__(self, parent=None):
-        super(Page, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         if self.ui_file is not None:
             ui_path = Path(__file__).parent / self.ui_file
             uic.loadUi(str(ui_path), self)
@@ -79,8 +79,8 @@ class Page(QWizardPage):
         """Reimplement to populate the page with the desired contents"""
 
 
-LEFT_ARROW = u"\u2190"
-RIGHT_ARROW = u"\u2192"
+LEFT_ARROW = "\u2190"
+RIGHT_ARROW = "\u2192"
 
 
 class SelectScenesPage(Page):

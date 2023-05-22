@@ -317,13 +317,13 @@ class ArrowShape(LineShape):
 
     def draw(self, painter):
         """Draw the line and the marker shapes"""
-        super(ArrowShape, self).draw(painter)  # line
+        super().draw(painter)  # line
         self.marker.draw(painter)  # marker
 
     def geometry(self):
         """The geometry of the arrow shape depends on the union of the line
            shape and marker shape geometries."""
-        line_geom = super(ArrowShape, self).geometry()
+        line_geom = super().geometry()
         return line_geom.united(self.marker.geometry())
 
     def set_geometry(self, rect):
@@ -333,8 +333,8 @@ class ArrowShape(LineShape):
                      zip(rect.getCoords(), self.geometry().getCoords()))
 
         # Adjust line rect.
-        line_rect = super(ArrowShape, self).geometry()
-        super(ArrowShape, self).set_geometry(line_rect.adjusted(*diff))
+        line_rect = super().geometry()
+        super().set_geometry(line_rect.adjusted(*diff))
 
     @on_trait_change("line")
     def _transform_marker(self):
@@ -350,7 +350,7 @@ class ArrowShape(LineShape):
     def minimumSize(self):
         """We use the line and the marker sizes for the effective
            minimum size."""
-        line_size = super(ArrowShape, self).minimumSize()
+        line_size = super().minimumSize()
         marker_size = self.marker.geometry().size()
         return QSize(max(line_size.width(), marker_size.width()),
                      max(line_size.height(), marker_size.height()))

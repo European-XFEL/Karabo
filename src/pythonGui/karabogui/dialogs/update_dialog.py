@@ -76,12 +76,12 @@ def _download_file_for_tag(tag, remote_server):
 
     The file is removed on context exit."""
     wheel_file = _WHEEL_TEMPLATE.format(tag)
-    wheel_path = '{}{}/{}'.format(remote_server, tag, wheel_file)
+    wheel_path = f'{remote_server}{tag}/{wheel_file}'
 
     try:
         wheel_request = requests.get(wheel_path, stream=True, timeout=_TIMEOUT)
     except requests.Timeout:
-        return None, 'Timeout when updating version {}'.format(tag)
+        return None, f'Timeout when updating version {tag}'
 
     if not wheel_request.status_code == requests.codes.ok:
         return None, 'Error {} downloading version {}'.format(
@@ -123,7 +123,7 @@ def install_package(wheel_file):
         load_extensions()
         return output.decode()
     except CalledProcessError as e:
-        return 'Error installing {} package: {}'.format(_PKG_NAME, str(e))
+        return f'Error installing {_PKG_NAME} package: {str(e)}'
 
 
 def update_package(tag, remote_server):
@@ -151,7 +151,7 @@ class UpdateDialog(QDialog):
     """
 
     def __init__(self, parent=None):
-        super(UpdateDialog, self).__init__(parent)
+        super().__init__(parent)
         uic.loadUi(get_dialog_ui('update_dialog.ui'), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
@@ -229,12 +229,12 @@ class UpdateDialog(QDialog):
             self.ed_log.append(err)
             return None
 
-        cmd = 'pip install --upgrade {}'.format(self._wheel_file)
+        cmd = f'pip install --upgrade {self._wheel_file}'
         self._start_process(cmd)
 
     def _start_uninstall_process(self):
         """Uninstalls the current GUIExtensions package"""
-        cmd = 'pip uninstall --yes {}'.format(_PKG_NAME)
+        cmd = f'pip uninstall --yes {_PKG_NAME}'
         self._start_process(cmd)
 
     def _update_log(self, text):
@@ -343,23 +343,23 @@ def main():
         if version == UNDEFINED_VERSION:
             print('{} package not installed')
         else:
-            print('{}: version {} installed'.format(_PKG_NAME, version))
+            print(f'{_PKG_NAME}: version {version} installed')
 
     elif args.uninstall:
-        print('Uninstalling {} package'.format(_PKG_NAME))
+        print(f'Uninstalling {_PKG_NAME} package')
         output = uninstall_package()
         print(output)
 
     elif args.tag:
         tag = args.tag[0]
 
-        print('Installing {} version {}\n'.format(_PKG_NAME, tag))
+        print(f'Installing {_PKG_NAME} version {tag}\n')
         output = update_package(tag, remote_server)
         print(output)
 
     elif args.latest:
         tag = get_latest_version(remote_server)
-        print('Installing {} version {}\n'.format(_PKG_NAME, tag))
+        print(f'Installing {_PKG_NAME} version {tag}\n')
         output = update_package(tag, remote_server)
         print(output)
 

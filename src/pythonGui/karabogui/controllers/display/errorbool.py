@@ -53,7 +53,7 @@ class DisplayErrorBool(BaseBindingController):
             svg_file = OK_BOOL if value else ERROR_BOOL
         else:
             svg_file = ERROR_BOOL if value else OK_BOOL
-        self.widget.setToolTip("{}".format(value))
+        self.widget.setToolTip(f"{value}")
         self.widget.load(svg_file)
 
     def value_update(self, proxy):
