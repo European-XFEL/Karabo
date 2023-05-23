@@ -905,7 +905,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
     } catch (const RemoteException& re) {
         const std::string fileLoggerMsg(
               "Requested time point for device configuration is earlier than anything logged");
-        const std::string influxLoggerMsg("No active schema could be found for device at (or before) time point.");
+        const std::string influxLoggerMsg("No active schema could be found for device");
         CPPUNIT_ASSERT_MESSAGE("Exception message: " + re.detailedMsg(),
                                (re.detailedMsg().find(fileLoggerMsg) != string::npos ||
                                 re.detailedMsg().find(influxLoggerMsg) != string::npos));
@@ -1166,7 +1166,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                 const std::string fileLoggerMsg(
                       "Requested time point for device configuration is earlier than anything logged");
                 const std::string influxLoggerMsg( // see InfluxLogReader::onLastSchemaDigestBeforeTime
-                      "No active schema could be found for device at (or before) time point.");
+                      "No active schema could be found for device");
                 CPPUNIT_ASSERT_MESSAGE("Unexpected RemoteException received: " + std::string(re.what()),
                                        (re.detailedMsg().find(fileLoggerMsg) != std::string::npos ||
                                         re.detailedMsg().find(influxLoggerMsg) != std::string::npos));
