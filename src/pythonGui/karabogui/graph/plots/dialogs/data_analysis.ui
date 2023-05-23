@@ -15,54 +15,80 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,8,0">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout0">
-       <item>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="1">
-          <widget class="QPushButton" name="fit_button">
-           <property name="toolTip">
-            <string/>
-           </property>
+      <layout class="QVBoxLayout" name="verticalLayout0"/>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Fit</string>
+            <string>Fitting options :</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Fitting options :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="fit_options_combobox"/>
-           </item>
-          </layout>
+         <item>
+          <widget class="QComboBox" name="fit_options_combobox"/>
          </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="update_data_button">
-           <property name="toolTip">
-            <string>Refersh data from parent plot</string>
+        </layout>
+       </item>
+       <item row="0" column="2">
+        <widget class="QPushButton" name="fit_button">
+         <property name="toolTip">
+          <string/>
+         </property>
+         <property name="text">
+          <string>Fit</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QPushButton" name="update_data_button">
+         <property name="toolTip">
+          <string>Refersh data from parent plot</string>
+         </property>
+         <property name="text">
+          <string>Update Data</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="auto_update_checkbox">
+         <property name="text">
+          <string>Fit on update</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="3">
+        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,5">
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="property_label">
            <property name="text">
-            <string>Update Data</string>
+            <string>Property:</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="0" alignment="Qt::AlignLeft">
-          <widget class="QCheckBox" name="auto_update_checkbox">
-           <property name="text">
-            <string>Fit on update</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
+         <item>
+          <widget class="QComboBox" name="property_comboBox"/>
          </item>
         </layout>
        </item>
