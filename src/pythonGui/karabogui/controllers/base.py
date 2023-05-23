@@ -210,7 +210,7 @@ class BaseBindingController(HasStrictTraits):
             return False
 
     def remove_additional_property(self, proxy):
-        """Remove an additional property proxy from the controller"""
+        """Remove an additional property proxy"""
         if proxy not in self.proxies:
             return False  # Not there
 
