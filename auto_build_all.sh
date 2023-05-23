@@ -323,7 +323,6 @@ while [ -n "$1" ]; do
     shift
 done
 
-echo $BASH_VERSINFO
 if [[ $BASH_VERSINFO -lt 4 ]]; then
     echo "Bash version 4 or higher required"
     exit 1
