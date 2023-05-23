@@ -16,6 +16,7 @@ config = {'half_samples': 6000, 'roi_items': [], 'roi_tool': 0, 'offset': 0.0,
 
 class Object(Configurable):
     prop = VectorFloat(defaultValue=[1.1, 2.0, 3.2, 4.5])
+    prop2 = VectorFloat()
 
 
 def test_fetch_data(gui_app):
@@ -25,7 +26,7 @@ def test_fetch_data(gui_app):
     proxy.value = value
 
     dialog = DataAnalysisDialog(
-        proxy=proxy, config=config, parent=None)
+        proxies=[proxy], config=config, parent=None)
 
     # Initial values
     combo = dialog.fit_options_combobox
@@ -43,3 +44,31 @@ def test_fetch_data(gui_app):
     dialog.update_data()
     x, y = dialog.data_curve.getData()
     assert all(y == np.array(value))
+
+
+def test_multiple_proxies(gui_app, mocker):
+    """
+    Test dialog when the plot has multiple proxies.
+    """
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    value = [1.0, 2.0, 3.0, 4.0]
+    proxy.value = value
+
+    additional_proxy = get_class_property_proxy(schema, "prop2")
+    additional_proxy.value = [0.1, 0.2, 0.3, 0.4]
+
+    dialog = DataAnalysisDialog(
+        proxies=[proxy, additional_proxy], config=config, parent=None)
+    combo_box = dialog.property_comboBox
+    assert combo_box.currentText() == proxy.key
+    assert combo_box.itemText(0) == proxy.key
+    assert combo_box.itemText(1) == additional_proxy.key
+
+    # When combobox item is changed, the plot should get updated.
+    method = mocker.patch.object(dialog, "update_data")
+    assert method.call_count == 0
+    combo_box.setCurrentIndex(1)
+    assert dialog.proxy == combo_box.currentData()
+    assert dialog.proxy == additional_proxy
+    assert method.call_count == 1
