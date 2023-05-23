@@ -551,6 +551,9 @@ namespace karabo {
             for (size_t i = 0; i < DIGEST_LENGTH; ++i) dss << std::hex << int(obuf[i]);
             std::string schDigest(dss.str());
 
+            KARABO_LOG_FRAMEWORK_DEBUG << "Digest for schema of device '" << m_deviceToBeLogged << "': '" << schDigest
+                                       << "'";
+
             std::ostringstream oss;
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << schDigest
                 << "\"'";
@@ -574,6 +577,9 @@ namespace karabo {
                         // at least one schema with the digest has been found.
                         // When the digest isn't found, the response json is '{"results":[{"statement_id":0}]}'.
                         schemaInDb = true;
+
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Schema with digest '" << schDigest << "' for device '"
+                                                   << m_deviceToBeLogged << "' already exists in Influx.";
                     }
                 } catch (const nl::json::exception& je) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Error checking if schema with digest '" << schDigest
@@ -640,6 +646,11 @@ namespace karabo {
                 // Flush what was accumulated before ...
                 m_dbClientWrite->flushBatch();
                 m_dbClientWrite->enqueueQuery(ss.str());
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Schema with digest '" << schemaDigest << "' for device '"
+                                           << m_deviceToBeLogged << "' submitted to Influx. The schema has "
+                                           << toString(schemaSize) << " bytes and has been saved in "
+                                           << toString(nFullChunks + (lastChunkSize > 0 ? 1 : 0)) << " chunk(s).";
 
                 return true;
             } else {
