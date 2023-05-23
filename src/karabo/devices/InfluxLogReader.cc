@@ -668,7 +668,8 @@ namespace karabo {
                     // No digest has been found - it's not possible to go ahead.
                     // Note that following text is expected in BaseLogging_Test::testCfgFromPastRestart
                     std::ostringstream oss;
-                    oss << "No active schema could be found for device at (or before) time point.";
+                    oss << "No active schema could be found for device at (or before) '" << ctxt->atTime.toIso8601Ext()
+                        << "'.";
                     Epochstamp currTime;
                     TimeDuration elapsed = currTime - ctxt->atTime;
                     const TimeValue atTimeSecsAgo = elapsed.getTotalSeconds();
@@ -676,10 +677,10 @@ namespace karabo {
                         // The requested timepoint is not "old" enough - there's a chance that the schema will be
                         // available soon in the InfluxDB.
                         oss << " As the requested time point is " << atTimeSecsAgo
-                            << " secs. ago, the schema may soon be available.";
+                            << " secs. ago, the schema for device may soon be available.";
                     }
                     const std::string errMsg = oss.str();
-                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    KARABO_LOG_FRAMEWORK_ERROR << "For device '" << ctxt->deviceId << "': " << errMsg;
                     ctxt->aReply.error(errMsg);
                     return;
                 } else {
