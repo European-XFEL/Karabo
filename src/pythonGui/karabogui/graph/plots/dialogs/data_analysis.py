@@ -7,6 +7,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog
 from scipy.optimize import curve_fit
 
+from karabogui.binding.api import get_binding_value
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.common.fitting import (
     gaussian_fit, linear_function_fit, normal_cdf)
@@ -39,12 +40,10 @@ class DataAnalysisDialog(QDialog):
         - Linear function.
     """
 
-    def __init__(self, proxy=None, config=None, parent=None):
+    def __init__(self, proxies, config=None, parent=None):
         super().__init__(parent)
         ui_path = Path(__file__).parent / "data_analysis.ui"
         uic.loadUi(ui_path, self)
-        self.setWindowTitle(f"Data Analysis Dialog|{proxy.key}")
-        self.proxy = proxy
         self.config = config
         self.x_values = self.y_values = []
 
@@ -67,11 +66,49 @@ class DataAnalysisDialog(QDialog):
         self.fit_button.clicked.connect(self.fit)
         self.update_data_button.clicked.connect(self.update_data)
 
+        self.set_up_property_combobox(proxies)
+        self.proxy = proxies[0]
+        self.setWindowTitle(f"Data Analysis Dialog|{self.proxy.key}")
         self.update_data()
+
+    def set_up_property_combobox(self, proxies: list):
+        """
+        Add all the available proxies to the combobox as internal
+        data and its key as visible text. Also select the item
+        corresponding to the proxy which is plotted.
+
+        :param proxies: All available proxies.
+        """
+        visible = len(proxies) > 1
+        self.property_comboBox.setVisible(visible)
+        self.property_label.setVisible(visible)
+
+        if not visible:
+            return
+
+        for index, proxy in enumerate(proxies):
+            self.property_comboBox.addItem(proxy.key)
+            self.property_comboBox.setItemData(index, proxy)
+        self.property_comboBox.currentIndexChanged.connect(
+            self._on_property_changed)
+
+    @Slot(int)
+    def _on_property_changed(self):
+        """
+        Update the plot and dialog's window title with respect to the selected
+        proxy.
+        """
+        proxy = self.property_comboBox.currentData()
+        self.proxy = proxy
+        self.update_data()
+        self.setWindowTitle(f"Data Analysis Dialog|{proxy.key}")
 
     def update_data(self):
         """Fetch the latest data points from the parent plot"""
-        self.y_values = self.proxy.value
+        value = get_binding_value(self.proxy)
+        if value is None:
+            return
+        self.y_values = value
         offset = self.config.get("offset", 0.0)
         step = self.config.get("step", 1.0)
         self.x_values = generate_baseline(self.y_values, offset=offset,
@@ -79,6 +116,8 @@ class DataAnalysisDialog(QDialog):
         self.data_curve.setData(self.x_values, self.y_values)
         if self.auto_update_checkbox.isChecked():
             self.fit()
+        else:
+            self.fit_curve.setVisible(False)
 
     @Slot()
     def fit(self):
@@ -100,6 +139,7 @@ class DataAnalysisDialog(QDialog):
         self.fit_curve.setData(xfit, yfit, width=10)
 
         self._update_fit_result(heading=fit_option, values=params, perr=perr)
+        self.fit_curve.setVisible(True)
 
     def _update_fit_result(self, heading, values, perr):
         """
