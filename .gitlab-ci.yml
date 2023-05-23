@@ -52,32 +52,32 @@ stages:
   <<: *artifacts-spec
 
 .image_almalinux8_: &image_almalinux8
-  image: europeanxfel/karabo-ci:almalinux-8-003
+  image: europeanxfel/karabo-ci:almalinux-8-001
   tags:
     - KaraboFramework
 
 .image_almalinux9_: &image_almalinux9
-  image: europeanxfel/karabo-ci:almalinux-9-003
+  image: europeanxfel/karabo-ci:almalinux-9-001
   tags:
     - KaraboFramework
 
 .image_centos7_: &image_centos7
-  image: europeanxfel/karabo-ci:centos-7-003
+  image: europeanxfel/karabo-ci:centos-7-001
   tags:
     - KaraboFramework
 
 .image_ubuntu20_: &image_ubuntu20
-  image: europeanxfel/karabo-ci:ubuntu-20-003
+  image: europeanxfel/karabo-ci:ubuntu-20-001
   tags:
     - KaraboFramework
 
 .image_ubuntu22_: &image_ubuntu22
-  image: europeanxfel/karabo-ci:ubuntu-22-002
+  image: europeanxfel/karabo-ci:ubuntu-22
   tags:
     - KaraboFramework
 
 .image_debian10_: &image_debian10
-  image: europeanxfel/karabo-ci:debian-10-003
+  image: europeanxfel/karabo-ci:debian-10-001
   tags:
     - KaraboFramework
 
@@ -703,7 +703,7 @@ long tests ubuntu22:
 # contents of the internal mirror.
 internal_mirror_publish:
   stage: mirror
-  image: europeanxfel/karabo-ci:almalinux-9-003
+  image: europeanxfel/karabo-ci:miniconda-3-006
 
   only:
     - /^(\d+\.)(\d+\.)(\d+)$/
