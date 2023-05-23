@@ -57,7 +57,7 @@ class BaseArrayGraph(BaseBindingController):
     def show_data_analysis_dialog(self):
         config = build_graph_config(self.model)
         data_analysis_dialog = DataAnalysisDialog(
-            proxy=self.proxy, config=config, parent=self.widget)
+            proxies=self.proxies, config=config, parent=self.widget)
         data_analysis_dialog.show()
 
     def __pens_default(self):
