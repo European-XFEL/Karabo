@@ -51,6 +51,7 @@ if (karabo_FOUND)
         INTERFACE_COMPILE_DEFINITIONS "__SO__"
         INTERFACE_COMPILE_OPTIONS "-Wfatal-errors;-Wno-unused-local-typedefs;-Wno-deprecated-declarations;-Wall"
         INTERFACE_INCLUDE_DIRECTORIES "$ENV{KARABO}/include;$ENV{KARABO}/extern/include"
+        INTERFACE_LINK_DIRECTORIES "$ENV{KARABO}/lib;$ENV{KARABO}/extern/lib"
     )
 else()
      # If using pkg-config fails,
