@@ -1,50 +1,9 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-.test_build_template: &test_build
-  script:
-    - source ./set_os_info.sh
-    - export REL_OS_NAME=$OS_DIST
-    - export REL_OS_VERS_LONG=$OS_MAJOR_VERSION
-    - export REL_PROJECT_NAME=$CI_PROJECT_NAME
-    - export REL_TAG=$CI_BUILD_REF_NAME
-    - export BUILD_TYPE=Debug
-    - export NUM_JOBS=$(grep "processor" /proc/cpuinfo | wc -l)
-    - export REL_BUILD_DIR=$CI_PROJECT_DIR/dist/$BUILD_TYPE/GNU-Linux-x86/
-    - curl http://exflctrl01.desy.de/karabo/karaboFramework/tags/$KARABO_TAG/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
-    - bash karabo.sh --prefix=/root
-    - source /root/karabo/activate
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
-    - karabo -g https://gitlab-ci-token:$CI_JOB_TOKEN@git.xfel.eu install $REL_PROJECT_NAME $REL_TAG
-    - pushd $CI_PROJECT_DIR
-    - pip install pytest-cov
-    - pip install -e .
-    - python -m isort --check .
-    - pytest . --junitxml=junit.py.xml --cov=$CI_PROJECT_NAME --cov-report term
 
-# to have gitlab extract code coverage for your project
-#   1) goto Settings->CI/CD->General piplines->Test coverage parsing
-#   2) copy/paste this regex and save:  ^TOTAL.+?([\d\.]+\%)$
+variables:
+  USE_ISORT: "true"
 
-.test_report_template: &test_report
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - junit.*.xml
-    paths:
-      - junit.*.xml
-    expire_in: 8 weeks
-
-test:almalinux9:release:
-  image: europeanxfel/karabo-ci:almalinux-9-003
-  before_script:
-    - export KARABO_TAG="latest_build"
-  <<: *test_build
-  <<: *test_report
-
-test:almalinux9:prerelease:
-  image: europeanxfel/karabo-ci:almalinux-9-003
-  before_script:
-    - export KARABO_TAG="latest_prerelease_build"
-  <<: *test_build
-
-# add more operating systems if necessary
+include:
+  - project: karabo/gitlabci
+    file: .python-ci.yml
+    ref: main
