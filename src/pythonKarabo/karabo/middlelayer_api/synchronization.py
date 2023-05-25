@@ -219,7 +219,7 @@ def synchronous(func):
     return wrapper
 
 
-class FutureDict(object):
+class FutureDict:
     """A dict for values which are only available in the future
 
     If you want to wait for something that only becomes available in the
