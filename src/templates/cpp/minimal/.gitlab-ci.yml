@@ -1,37 +1,6 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-.test_build_template: &test_build
-  script:
-    - source ./set_os_info.sh
-    - export REL_OS_NAME=$OS_DIST
-    - export REL_OS_VERS_LONG=$OS_MAJOR_VERSION
-    - export BUILD_TYPE=Debug
-    - export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
-    - curl http://exflctrl01.desy.de/karabo/karaboFramework/tags/$KARABO_TAG/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
-    - bash karabo.sh --prefix=/root
-    - source /root/karabo/activate
-    - pushd $CI_PROJECT_DIR
-    - export GTEST_OUTPUT=xml:$CI_PROJECT_DIR/report.xml
-    - make test
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - report.xml
-    paths:
-      - report.xml
-    expire_in: 1 week
 
-##### Test build #####
-test:almalinux9:
-  image: europeanxfel/karabo-ci:almalinux-9-003
-  before_script:
-    - export KARABO_TAG="latest_build"
-  <<: *test_build
-
-test:almalinux9latest:
-  image: europeanxfel/karabo-ci:almalinux-9-003
-  before_script:
-    - export KARABO_TAG="latest_prerelease_build"
-  <<: *test_build
-
-# add more operating systems if necessary
+include:
+  - project: karabo/gitlabci
+    file: .cpp-ci.yml
+    ref: main
