@@ -1,5 +1,4 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-from __future__ import absolute_import, unicode_literals
 
 import asyncio
 import getpass
@@ -89,7 +88,7 @@ def synchronize_notimeout(coro):
     return wrapper
 
 
-class KaraboFuture(object):
+class KaraboFuture:
     """A handle for a result that will be available in the future
 
     This will be returned by many Karabo methods, if a callback has been

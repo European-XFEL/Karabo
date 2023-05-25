@@ -50,7 +50,7 @@ class DeviceClientProject(Project):
     DeviceGroup = ProjectDeviceGroup
 
     def __init__(self, filename, deviceClient):
-        super(DeviceClientProject, self).__init__(filename)
+        super().__init__(filename)
 
         self.deviceClient = deviceClient
 
@@ -132,7 +132,7 @@ class DeviceClientProject(Project):
         self.isMonitoring = True
 
         if not filename.endswith(".csv"):
-            filename = "{}.csv".format(filename)
+            filename = f"{filename}.csv"
 
         self.monitorFile = open(filename, "a")
         self.monitorWriter = csv.writer(self.monitorFile)
@@ -190,7 +190,7 @@ class DeviceClientProject(Project):
         self.monitorWriter.writerow(row)
 
 
-class MonitorTimer(object):
+class MonitorTimer:
     """ This class represents a time which can call a \function in a given
     interval.
 

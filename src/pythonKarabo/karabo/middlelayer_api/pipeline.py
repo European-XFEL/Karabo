@@ -96,7 +96,7 @@ class PipelineMetaData(ProxyBase):
     timestamp = Bool(key="timestamp")
 
 
-class Channel(object):
+class Channel:
     """This class is responsible for reading and writing Hashes to TCP
 
     It is the low-level implementation of the pipeline protocol."""
@@ -244,7 +244,7 @@ class NetworkInput(Configurable):
         defaultValue=[])
     async def connectedOutputChannels(self, value):
         # Basic name protection is implemented here, as it can cause hickups!
-        outputs = set(output.strip() for output in value)
+        outputs = {output.strip() for output in value}
         if not outputs:
             self.connectedOutputChannels = []
             return
@@ -308,15 +308,15 @@ class NetworkInput(Configurable):
 
     async def connect_handler(self, output):
         # XXX: Please keep this for the time being.
-        print("NetworkInput connect handler called by {}!".format(output))
+        print(f"NetworkInput connect handler called by {output}!")
 
     async def close_handler(self, output):
         # XXX: Please keep this for the time being.
-        print("NetworkInput close handler called by {}!".format(output))
+        print(f"NetworkInput close handler called by {output}!")
 
     async def end_of_stream_handler(self, cls):
         # XXX: Please keep this for the time being.
-        print("EndOfStream handler called by {}!".format(cls))
+        print(f"EndOfStream handler called by {cls}!")
 
     async def call_handler(self, func, *args):
         """Call a network input handler under mutex and error protection"""
@@ -380,7 +380,7 @@ class NetworkInput(Configurable):
                 # Tell the world we are connected before we start
                 # requesting data
                 await shield(self.call_handler(self.connect_handler, output))
-                instance_id = "{}:{}".format(root.deviceId, self._name)
+                instance_id = f"{root.deviceId}:{self._name}"
                 cmd = Hash("reason", "hello",
                            "instanceId", instance_id,
                            "memoryLocation", "remote",
@@ -648,7 +648,7 @@ class InputChannel(Node):
     end_of_stream_handler = None
 
     def __init__(self, raw=False, **kwargs):
-        super(InputChannel, self).__init__(NetworkInput, **kwargs)
+        super().__init__(NetworkInput, **kwargs)
         self.raw = raw
 
     def _initialize(self, instance, value):
@@ -658,7 +658,7 @@ class InputChannel(Node):
 
         The `value` still is the bare Hash value, as it came from the network!
         """
-        ret = super(InputChannel, self)._initialize(instance, value)
+        ret = super()._initialize(instance, value)
         channel = instance.__dict__[self.key]
         channel.raw = self.raw
         channel.handler = self.handler.__get__(instance, type(instance))
@@ -698,7 +698,7 @@ class OutputProxyNode(ProxyNodeBase):
     """Descriptor representing a Proxy for an output channel"""
 
     def __init__(self, key, node, prefix, **kwargs):
-        self.longkey = "{}{}.".format(prefix, key)
+        self.longkey = f"{prefix}{key}."
         sub = ProxyFactory.createNamespace(node, self.longkey)
         cls = type(key, (OutputProxy,), sub)
         super().__init__(key=key, cls=cls, **kwargs)
@@ -1188,4 +1188,4 @@ class OutputChannel(Node):
             class Output(NetworkOutput):
                 schema = SchemaNode(cls)
 
-        super(OutputChannel, self).__init__(Output, **kwargs)
+        super().__init__(Output, **kwargs)
