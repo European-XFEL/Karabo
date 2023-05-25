@@ -5,7 +5,7 @@
 What's New in Karabo 2.17.0
 ***************************
 
-Release scheduled for the **26.05.2023**. Merge-log until 2.17.0rc6.
+Release scheduled for the **02.06.2023**. Merge-log until 2.17.0rc15.
 This release candidate is public and for testing.
 
 
@@ -26,6 +26,7 @@ Summary – Release highlights
 - GUI: Data Analysis dialog option provided for VectorGraph widgets
 - GUI: The mainwindow title bar reflects now the loaded project
 - Ubuntu 22 Support: Backported to 2.16.4
+- TOOLS: karabo scripts autocompletes services, e.g. `karabo-kill`, `karabo-stop`, ...
 
 Features
 ++++++++
@@ -80,10 +81,44 @@ Change of behaviour
 Detailed Merge-Log
 ++++++++++++++++++
 
-
 Graphical User Interface
 ========================
 
+- GUI: Also send empty names for device scene links !7434
+- GUI: Controller documentation for 2.17.X !7586
+- GUI: Don't expand macro controller on double click !7483
+- GUI: Enable to restore scenes in project reload (Backport 2.17.X) !7516
+- GUI: Provide scope for gui app fixture !7436
+- GUI: Start own contributing for the GUI !7439
+- GUI: Test controls display image graph is updated for pyTest !7446
+- GUI: Transport alarm graph test to pytest !7407
+- GUI: Transport controllers/display/tests/test_label.py to pytest !7418
+- GUI: Transport colorbool test to pytest !7410
+- GUI: Transport controllers/display/tests/test_lamp.py to pytest !7419
+- GUI: Transport controllers/display/tests/test_lineedit.py to pytest !7420
+- GUI: Transport controllers/display/tests/test_multicurvegraph.py to pytest !7421
+- GUI: Transport controllers/display/tests/test_scatter.py to pytest !7423
+- GUI: Transport controllers/display/tests/test_singlebit to pytest !7424
+- GUI: Transport daemon test to pytest !7411
+- GUI: Transport errorbool test to pytest !7413
+- GUI: Transport eval controller test to pytest !7438
+- GUI: Transport icon command controller test to pytest !7440
+- GUI: Transport icons controller test to pytest !7442
+- GUI: Transport sparkline controller test to pytest !7444
+- GUI: Transport state graph controller test to pytest !7445
+- GUI: Transport statecolor controller test to pytest !7454
+- GUI: Transport statefulicon controller test to pytest !7455
+- GUI: Transport textlog controller test to pytest !7464
+- GUI: Transport time label controller test to pytest !7465
+- GUI: Transport vector bar graph controller test to pytest !7466
+- GUI: Transport vector fill test to pytest !7468
+- GUI: Transport vector graph controller test to pytest !7469
+- GUI: Transport vector hist graph controller test to pytest !7471
+- GUI: Transport vector roll graph controller test to pytest !7472
+- GUI: Transport vector scatter controller test to pytest !7473
+- GUI: Transport vector xy graph controller test to pytest !7490
+- GUI: Transport webcam controller test to pytest !7492
+- GUI: Transport widget node controller test to pytest !7493
 - GUI: Resolve "Macro Editor: Adjust font size"Closes #204 !7291
 - GUI: Protect reactive login dialog from not set port number !7288
 - GUI: Provide server development flag visibility on server icons !7286
@@ -208,6 +243,19 @@ MDL/Native core
 - Native: Allow None as default for VectorRegexString !7007
 - Native: Allow RegexString to have None as default Closes #18 !7008
 - Native: Protect hash repr from unknown hash types !7012
+- MDL Test: Add missing timeout protections in output injection test !7458
+- MDL: Add DeviceServerBase to namespace !7456
+- MDL: Align delete client test !7485
+- MDL: Align disconnect test of macrosCloses #322 !7482
+- MDL: Cleanup remote test and make setNoWait test sleep independent !7453
+- MDL: Create a topology macro and add to namespace !7416
+- MDL: Cross test refactor for pytest !7448
+- MDL: Don't close channels automatically for services with broadcasts, as they... (2.17.X Port) !7576
+- MDL: Gracefully shutdown ikarabo, avoid closing channel directly !7429
+- MDL: Increase timeout in connectDevice test !7467
+- MDL: Protect DaemonManager against quick down/up call from an operator (Port 2.17) !7557
+- MDL: Provide broker scheme validationCloses #256 and #257 !7457
+- MDL: Provide get_image_data helper with path declaration (Port to 2.17.X) !7540
 - MDL: Protect NoEventLoop from launching tasks when going down !6938
 - MDL: Don't start the AsyncTimer again when the loop is closed, provide success feedback and is_running method !6946
 - MDL: Add create_instanceId to testing namespace and enhance !6941
@@ -351,7 +399,18 @@ MDL/Native core
 Bound/cpp core
 ==============
 
-
+- C++ tests: More robust pipeline test !7435
+- C++ tests: Robust waiting for signal slot connection !7461
+- C++ tests: Fix sporadic test failures or crashes !7476
+- C++ tests: Fixes and more robustness !7479
+- C++ tests: Give more info in case of failure of data logging test !7489
+- C++ tests: More robust test gui server notification test !7432
+- C++ tests: Trigger file logger indexing from the beginning in Nan test !7433
+- C++: Direct EventLoop::post with potential delay (backport to 2.17.X) !7519
+- C++: Fix broker message logger for AMQP !7428
+- C++: Restrict configured ports to valid TCP range (BACKPORT to 2.17.X) !7548
+- C++: Split device schemas in chunks of "maxStringValueLength" bytes while saving in Influx. !7409
+- C++/Bound: Fix assignmentInternal having a defaultValueCloses #144 !7459
 - C++: Improvements and updates to the template files for new C++ devices. !7284
 - C++: Establish limits on the AMQP queues !7285
 - C++: support long inheritance chain in configurator !7263
@@ -390,6 +449,8 @@ Bound/cpp core
 - C++/Bound: Remove sending logs to broker !7022
 - C++/Bound: Improve device templates !7177
 - Bound: Add order test !7164
+- Bound: Longer sleep time and cautious threading locks !7441
+- Bound: Scene Provider Test: change capability to integer !7426
 - Bound: Add slotGetConfigurationSlice !7039
 - Bound: Track senderId in lastCommand !7042
 - Bound: fix slotLoggerContent if server has no devices !7046
@@ -456,6 +517,7 @@ Core Devices
 - Python influx: Remove a few deprecation warnings and code quality !7159
 - All API: Clients use only first data log readers per logger server !7266
 - GUI Server: Send a success subscribe log reply !7308
+- Influx: Text to Influx migrator updated to chunk schemas like the InfluxDataLogger. !7417
 
 
 Dependencies, Documentation and Tools
@@ -497,13 +559,34 @@ Dependencies, Documentation and Tools
 - DOC: Document until alpha 8 !7287
 - DOC: Document more the 2.16.X releasesCloses #229 !7338
 - DOC: Document until rc5 !7360
+- DOC: Doc new release candidate 2.17.0rc6 !7412
+- DOC: fix documentation for synchronized coroutines !7414
 - CI: Add build and test jobs for Ubuntu22. !6924
 - CI: Fix the gitlab CI setup in the templates for new devices on AlmaLinux9. !7328
 - CI: Framework - use CI_JOB_TOKEN instead of requiring XFEL_TOKEN to be defined in every project !7345
 - CI: Fix for "set_lsb_release_info.sh" not found from ".bundle*" scripts in "$KARABO/bin". !7333
+- CI: Lint karabind !7488
+- CI: Provide System test !7408
+- CI: Trigger integration tests when some change happens in src/karabo/core. !7425
+- CI: Add system test fix to hot fix branch !7520
+- CI: Downgrade docker images (2.17.X) !7587
+- CI: Replace exflserv05 with exflctrl01 !7427
 - TOOLS: remove tags on karabo install !7018
 - TOOLS: Fix typo in karabo-kill help message. !7000
 - TOOLS: Add Python and IDE related entries to MDL/Bound Python .gitignore templates. !7276
+- TOOLS: Provide karabo-stoprabbitmq command !7449
+- TOOLS: RabbitMQ: More helpful output from "karabo-startrabbitmq" command. !7450
+- TOOLS: protect auto_build_all.sh from being called from other OSes (Port to 2.17.X) !7554
+- TOOLS: Use lnav if available !7462
+- TOOLS: Add karabo-less helper (Port to 2.17.X) !7505
+- TOOLS: Adjust brokerrates script for non existent slotInstanceIds on heartbeats !7463
 - DEPS: Test before uploading dependencies !7036
 - DEPS:: Remove RedisClients and their implementations !7364
 - DEPS: Update async timeout, jinja2 and add pytest rerunfailuresCloses #121, #120, and #112 !7404- C++: Belle dependency isolated in HTTP server implementation class. !7363
+- FOSS: Add copyright to files in src that lack it !7474
+- FOSS: Add copyright to non-src filesCloses #282 !7487
+- FOSS: Add licensing to the framework !7431
+- FOSS: CI job to publish to the internal mirror on pushes of release tags. !7447
+- FOSS: Copyright from Hamburg to Schenefeld !7443
+- FOSS: Harmonize copyright !7460
+- FOSS: Add CLA and update contribution guidelines accordingly !7352
