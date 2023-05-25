@@ -26,7 +26,7 @@ class Injectable(Configurable):
     """
 
     def __init__(self, configuration={}):
-        super(Injectable, self).__init__(configuration)
+        super().__init__(configuration)
         import warnings
         warnings.warn(
             "'Injectable' is not required anymore for Schema injection "
