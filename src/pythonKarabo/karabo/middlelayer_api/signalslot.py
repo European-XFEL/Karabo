@@ -1,5 +1,4 @@
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
-from __future__ import unicode_literals
 
 import inspect
 import logging
@@ -22,7 +21,7 @@ from .synchronization import FutureDict, firstCompleted
 from .utils import get_karabo_version, get_property
 
 
-class Signal(object):
+class Signal:
     def __init__(self, *args):
         self.args = args
 
@@ -71,7 +70,7 @@ def slot(f, passMessage=False):
 coslot = slot
 
 
-class BoundSignal(object):
+class BoundSignal:
     def __init__(self, device, name, signal):
         self.device = device
         self.name = name
@@ -361,7 +360,7 @@ class SignalSlotable(Configurable):
             ensure_future(self._ss.main(self))
             await self._assert_name_unique()
             await self._ss.notify_network(self._initInfo())
-            await super(SignalSlotable, self)._run(**kwargs)
+            await super()._run(**kwargs)
             await wait_for(get_event_loop().run_coroutine_or_thread(
                 self.preInitialization), timeout=5)
         except CancelledError:

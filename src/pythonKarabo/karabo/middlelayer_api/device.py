@@ -169,7 +169,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
 
     def __init__(self, configuration):
         self.__timeServerId = configuration.pop("__timeServerId", "None")
-        super(Device, self).__init__(configuration)
+        super().__init__(configuration)
         if not isSet(self.serverId):
             self.serverId = self._serverId_
         if not isSet(self.hostName):
@@ -194,7 +194,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         return status
 
     def _initInfo(self):
-        info = super(Device, self)._initInfo()
+        info = super()._initInfo()
         info["type"] = "device"
         info["classId"] = self.classId.value
         info["serverId"] = self.serverId.value
@@ -229,7 +229,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
 
     async def _run(self, **kwargs):
         self._ss.enter_context(self.log.setBroker(self._ss))
-        await super(Device, self)._run(**kwargs)
+        await super()._run(**kwargs)
 
     @slot
     def slotGetConfiguration(self):
@@ -273,7 +273,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         if (self.lockedBy and self.lockedBy !=
                 self._ss.get_property(message, "signalInstanceId") and
                 not lock_clear):
-            return 'Device locked by "{}"'.format(self.lockedBy)
+            return f'Device locked by "{self.lockedBy}"'
         return None
 
     async def slotReconfigure(self, reconfiguration, message):
@@ -281,7 +281,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         msg = self._checkLocked(message)
         if msg is not None:
             raise KaraboError(msg)
-        await super(Device, self).slotReconfigure(reconfiguration)
+        await super().slotReconfigure(reconfiguration)
         self.update()
 
     slotReconfigure = slot(slotReconfigure, passMessage=True)
@@ -293,7 +293,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         if statusInfo != self._statusInfo:
             self.updateInstanceInfo(Hash("status", statusInfo))
             self._statusInfo = statusInfo
-        super(Device, self).update()
+        super().update()
 
     async def setOutputSchema(self, *args):
         """This is a wrapper function to change the schema of existing output
