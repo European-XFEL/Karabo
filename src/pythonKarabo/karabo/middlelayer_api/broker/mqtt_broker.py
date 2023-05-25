@@ -22,7 +22,7 @@ from .pahomqtt import AsyncioMqttHelper, MqttError
 
 class MqttBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(MqttBroker, self).__init__(True)
+        super().__init__(True)
         self.domain = loop.topic
         self.loop = loop
         self.clientId = str(uuid.uuid4())
@@ -81,7 +81,7 @@ class MqttBroker(Broker):
             return
         body = Hash()
         for i, a in enumerate(args):
-            body['a{}'.format(i + 1)] = a
+            body[f'a{i + 1}'] = a
         header['signalInstanceId'] = self.deviceId
         header['producerTimestamp'] = self.timestamp
         self.incrementOrderNumbers(topic, header, qos)
@@ -494,7 +494,7 @@ class MqttBroker(Broker):
         params = []
         for i in count(1):
             try:
-                params.append(body['a{}'.format(i)])
+                params.append(body[f'a{i}'])
             except KeyError:
                 break
         replyFrom = header.get('replyFrom')
