@@ -10,9 +10,9 @@ from karabo.native import (
 # Broken path accumulated in the history of karabo ...
 # Choice of Nodes connection and Beckhoff properties that will throw!
 
-BROKEN_PATHS = set([
+BROKEN_PATHS = {
     "_connection_",
-])
+}
 
 
 def sanitize_init_configuration(schema, config):

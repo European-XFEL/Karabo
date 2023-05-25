@@ -25,7 +25,7 @@ def get_karabo_version():
         print("ERROR: $KARABO is not defined. Make sure you have sourced "
               "the 'activate' script.")
         return ''
-    with open(path, 'r') as fp:
+    with open(path) as fp:
         version = fp.read()
     return version
 

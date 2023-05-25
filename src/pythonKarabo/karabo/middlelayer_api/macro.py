@@ -388,7 +388,7 @@ class Macro(Device):
             if cls.__doc__ is not None:
                 print(cls.__doc__)
                 return
-            print("usage: {} slot [property=value] ...\n".format(argv[0]))
+            print(f"usage: {argv[0]} slot [property=value] ...\n")
             print("this calls a slot in macro {} with the given properties\n".
                   format(cls.__name__))
             print("available properties and slots:")
@@ -398,7 +398,7 @@ class Macro(Device):
                 if isinstance(v, Descriptor):
                     dn = v.displayedName if v.displayedName is not None else ""
                     t = type(v).__name__
-                    print("{:10}{:10}{}".format(k, t, dn))
+                    print(f"{k:10}{t:10}{dn}")
             return
         args = {k: getattr(cls, k).fromstring(v)
                 for k, v in (a.split("=", 1) for a in argv[2:])}

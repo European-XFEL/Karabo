@@ -131,7 +131,7 @@ class DeviceServerBase(SignalSlotable):
         self.seqnum = 0
 
     def _initInfo(self):
-        info = super(DeviceServerBase, self)._initInfo()
+        info = super()._initInfo()
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
@@ -157,7 +157,7 @@ class DeviceServerBase(SignalSlotable):
         # before coming online.
         await self.pluginLoader.update()
         await self.scanPluginsOnce()
-        await super(DeviceServerBase, self)._run(**kwargs)
+        await super()._run(**kwargs)
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
         self.logger.info(
@@ -275,7 +275,7 @@ class DeviceServerBase(SignalSlotable):
         should return the schema for `classId`, or call super(). This fail
         back implementation just raises an error.
         """
-        raise RuntimeError('Unknown class "{}"'.format(classId))
+        raise RuntimeError(f'Unknown class "{classId}"')
 
     def _generateDefaultDeviceId(self, devClassId):
         self.instanceCount += 1
@@ -426,10 +426,10 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         accessMode=AccessMode.INITONLY)
 
     def __init__(self, configuration):
-        super(MiddleLayerDeviceServer, self).__init__(configuration)
+        super().__init__(configuration)
 
     async def _run(self, **kwargs):
-        await super(MiddleLayerDeviceServer, self)._run(**kwargs)
+        await super()._run(**kwargs)
         if isSet(self.timeServerId):
             await self._ss.async_connect(self.timeServerId, "signalTimeTick",
                                          self.slotTimeTick)
@@ -486,8 +486,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
             Hash("log", level))
 
     async def scanPluginsOnce(self):
-        changes = await super(
-            MiddleLayerDeviceServer, self).scanPluginsOnce()
+        changes = await super().scanPluginsOnce()
         if not self.pluginNamespace:
             return changes
         classes = set(self.deviceClasses)
@@ -505,7 +504,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         return changes
 
     def getVisibilities(self):
-        visibilities = super(MiddleLayerDeviceServer, self).getVisibilities()
+        visibilities = super().getVisibilities()
         visibilities.update((k, v.visibility.defaultValue.value)
                             for k, v in self.plugins.items())
         return visibilities
@@ -515,13 +514,12 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         cls = self.plugins.get(classId)
         if cls is not None:
             return cls.getClassSchema(), classId, self.serverId
-        return super(MiddleLayerDeviceServer, self).slotGetClassSchema(classId)
+        return super().slotGetClassSchema(classId)
 
     async def startDevice(self, classId, deviceId, config):
         cls = self.plugins.get(classId)
         if cls is None:
-            return (await super(MiddleLayerDeviceServer, self)
-                    .startDevice(classId, deviceId, config))
+            return (await super().startDevice(classId, deviceId, config))
         # Server validates the configuration of the device
         invalid = validate_init_configuration(
             cls.getClassSchema(), config)
@@ -562,7 +560,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
                     f"were shutdown: {devices} --- {errors.values()}")
 
         # then kill the server
-        await super(MiddleLayerDeviceServer, self).slotKillServer(message)
+        await super().slotKillServer(message)
 
         return self.serverId
 
@@ -576,8 +574,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
     @slot
     async def slotInstanceNew(self, instanceId, info):
-        await super(MiddleLayerDeviceServer, self).slotInstanceNew(
-            instanceId, info)
+        await super().slotInstanceNew(instanceId, info)
         if (info.get("classId") == "TimeServer" and
                 instanceId == self.timeServerId):
             await self._ss.async_connect(self.timeServerId, "signalTimeTick",
@@ -588,16 +585,14 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
     @slot
     def slotInstanceGone(self, instanceId, info):
-        super(MiddleLayerDeviceServer, self).slotInstanceGone(instanceId,
-                                                              info)
+        super().slotInstanceGone(instanceId, info)
         # Forward the broadcast to the device instances!
         for device in self.deviceInstanceMap.values():
             device.slotInstanceGone(instanceId, info)
 
     @slot
     def slotInstanceUpdated(self, instanceId, info):
-        super(MiddleLayerDeviceServer, self).slotInstanceUpdated(
-            instanceId, info)
+        super().slotInstanceUpdated(instanceId, info)
         # Forward the broadcast to the device instances!
         for device in self.deviceInstanceMap.values():
             device.slotInstanceUpdated(instanceId, info)
@@ -622,7 +617,7 @@ class BoundDeviceServer(DeviceServerBase):
         self._process_futures = FutureDict()
 
     async def scanPluginsOnce(self):
-        changes = await super(BoundDeviceServer, self).scanPluginsOnce()
+        changes = await super().scanPluginsOnce()
         if not self.boundNamespace:
             return changes
         classes = set(self.deviceClasses)
@@ -659,7 +654,7 @@ class BoundDeviceServer(DeviceServerBase):
         return changes
 
     def getVisibilities(self):
-        visibilities = super(BoundDeviceServer, self).getVisibilities()
+        visibilities = super().getVisibilities()
         visibilities.update((k, v.hash["visibility", "defaultValue"])
                             for k, v in self.bounds.items())
         return visibilities
@@ -669,7 +664,7 @@ class BoundDeviceServer(DeviceServerBase):
         schema = self.bounds.get(classId)
         if schema is not None:
             return schema, classId, self.serverId
-        return super(BoundDeviceServer, self).slotGetClassSchema(classId)
+        return super().slotGetClassSchema(classId)
 
     @slot
     def slotDeviceGone(self, instanceId):
@@ -718,8 +713,7 @@ class BoundDeviceServer(DeviceServerBase):
 
     async def startDevice(self, classId, deviceId, config):
         if classId not in self.bounds:
-            return (await super(BoundDeviceServer, self)
-                    .startDevice(classId, deviceId, config))
+            return (await super().startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
         # Logger settings for the three appenders (ostream, file, cache)
@@ -772,7 +766,7 @@ class BoundDeviceServer(DeviceServerBase):
             for p in self.processes.values():
                 p.kill()
         self.processes.clear()
-        await super(BoundDeviceServer, self).slotKillServer(message)
+        await super().slotKillServer(message)
 
         return self.serverId
 
