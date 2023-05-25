@@ -294,7 +294,7 @@ async def _getLogReaderId(deviceId):
     # GuiServerDevice::onGetPropertyHistory. One day we should
     # de-hard-code both.
     instance = get_instance()
-    did = "DataLogger-{}".format(deviceId)
+    did = f"DataLogger-{deviceId}"
     if did not in instance.loggerMap:
         instance.loggerMap = await instance.call(
             "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
@@ -409,7 +409,7 @@ async def printHistory(prop, begin, end=None, maxNumData=100):
             sep = "\n" if "\n" in item else " "
             yield f"{stamp} {trainId}:{sep}{item}"
 
-    print("\n".join((line for line in create_lines())))
+    print("\n".join(line for line in create_lines()))
 
 
 @synchronize
@@ -611,7 +611,7 @@ async def saveConfigurationFromName(devices, name, description='', priority=1,
     await instance.call(KARABO_CONFIG_MANAGER, slot, h)
 
 
-class Queue(object):
+class Queue:
     """A queue of property changes
 
     This allows you to track all the changes of a property on a remote device.
