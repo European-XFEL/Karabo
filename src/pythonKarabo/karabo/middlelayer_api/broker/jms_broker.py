@@ -22,7 +22,7 @@ _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
 
 class JmsBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(JmsBroker, self).__init__(False)
+        super().__init__(False)
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
@@ -40,7 +40,7 @@ class JmsBroker(Broker):
     def send(self, p, args):
         hash = Hash()
         for i, a in enumerate(args):
-            hash['a{}'.format(i + 1)] = a
+            hash[f'a{i + 1}'] = a
         m = openmq.BytesMessage()
         m.data = encodeBinary(hash)
         p['signalInstanceId'] = self.deviceId
@@ -161,7 +161,7 @@ class JmsBroker(Broker):
 
         broadcast_mq = ("slotInstanceIds LIKE '%|{0.deviceId}|%' "
                         "OR slotInstanceIds LIKE '%|*|%'".format(self))
-        device_mq = "slotInstanceIds LIKE '%|{0.deviceId}|%'".format(self)
+        device_mq = f"slotInstanceIds LIKE '%|{self.deviceId}|%'"
 
         def receiver():
             m_mq = broadcast_mq if self.broadcast else device_mq
@@ -317,7 +317,7 @@ class JmsBroker(Broker):
         params = []
         for i in count(1):
             try:
-                params.append(hash['a{}'.format(i)])
+                params.append(hash[f'a{i}'])
             except KeyError:
                 break
         replyFrom = message.properties.get('replyFrom')

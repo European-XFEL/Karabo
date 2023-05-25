@@ -50,7 +50,7 @@ class Error(Exception):
         s = wrapped_dll.dll.MQGetStatusString(status)
         self.status = status
         try:
-            super(Error, self).__init__(s.value.decode("utf8"))
+            super().__init__(s.value.decode("utf8"))
         finally:
             wrapped_dll.MQFreeString(s)
 
@@ -63,7 +63,7 @@ class String(c_char_p):
     pass
 
 
-class Wrapper(object):
+class Wrapper:
     def __init__(self, dll):
         self.dll = dll
         dll.MQGetStatusString.restype = String
@@ -93,7 +93,7 @@ class Properties(MutableMapping):
         if handle is None:
             handle = c_int()
             dll.MQCreateProperties(byref(handle))
-        self = super(Properties, cls).__new__(cls)
+        self = super().__new__(cls)
         self.dll = dll
         self.handle = handle
         return self
@@ -111,7 +111,7 @@ class Properties(MutableMapping):
         if not self.valid():
             return "MQProperty{INVALID}"
         else:
-            props = ("{}:{!r}".format(k, v) for k, v in self.items())
+            props = (f"{k}:{v!r}" for k, v in self.items())
             return "MQProperty{" + ", ".join(props) + "}"
 
     def __del__(self):
@@ -135,7 +135,7 @@ class Properties(MutableMapping):
                 raise KeyError(key)
             raise
         ret = TYPES[type.value]()
-        getattr(self.dll, "MQGet{}Property".format(TYPENAMES[type.value]))(
+        getattr(self.dll, f"MQGet{TYPENAMES[type.value]}Property")(
             self.handle, key, byref(ret))
         return ret.value
 
@@ -171,7 +171,7 @@ class Properties(MutableMapping):
         raise NotImplementedError
 
 
-class Connection(object):
+class Connection:
     def __init__(self, properties, username, password, clientID=None):
         self.dll = _get_openmqc()
         self.handle = c_int()
@@ -203,7 +203,7 @@ class Connection(object):
         self.dll.MQCloseConnection(self.handle)
 
 
-class Session(object):
+class Session:
     def __init__(self, connection, isTransacted, acknowledgeMode, receiveMode):
         self.dll = _get_openmqc()
         self.handle = c_int()
@@ -232,9 +232,9 @@ class Session(object):
         self.dll.MQAcknowledgeMessage(self.handle, message.handle)
 
 
-class _Destination(object):
+class _Destination:
     def __new__(cls, handle):
-        self = super(_Destination, cls).__new__(cls)
+        self = super().__new__(cls)
         self.dll = _get_openmqc()
         self.handle = handle
         return self
@@ -263,10 +263,10 @@ class Destination(_Destination):
         handle = c_int()
         dll.MQCreateDestination(session.handle, c_char_p(name.encode("utf8")),
                                 c_char_p(type), byref(handle))
-        return super(Destination, cls).__new__(cls, handle)
+        return super().__new__(cls, handle)
 
 
-class Producer(object):
+class Producer:
     def __init__(self, session, destination=None):
         self.dll = _get_openmqc()
         self.handle = c_int()
@@ -285,7 +285,7 @@ class Producer(object):
                                   c_byte(priority), c_longlong(timeToLive))
 
 
-class _Consumer(object):
+class _Consumer:
     def __init__(self):
         self.handle = c_int()
         self.dll = _get_openmqc()
@@ -296,7 +296,7 @@ class _Consumer(object):
 
 class Consumer(_Consumer):
     def __init__(self, session, destination, selector, noLocal):
-        super(Consumer, self).__init__()
+        super().__init__()
         self.dll.MQCreateMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
@@ -320,14 +320,14 @@ class Consumer(_Consumer):
         return Message._create(ret)
 
 
-class Message(object):
+class Message:
     def __new__(cls, handle=None, dll=None):
         if dll is None:
             dll = _get_openmqc()
         if handle is None:
             handle = c_int()
             dll.MQCreateMessage(byref(handle))
-        self = super(Message, cls).__new__(cls)
+        self = super().__new__(cls)
         self.dll = dll
         self.handle = handle
         return self
@@ -390,7 +390,7 @@ class TextMessage(Message):
         if handle is None:
             handle = c_int()
             dll.MQCreateTextMessage(byref(handle))
-        return super(TextMessage, cls).__new__(cls, handle, dll=dll)
+        return super().__new__(cls, handle, dll=dll)
 
     @property
     def data(self):
@@ -410,7 +410,7 @@ class BytesMessage(Message):
         if handle is None:
             handle = c_int()
             dll.MQCreateBytesMessage(byref(handle))
-        return super(BytesMessage, cls).__new__(cls, handle, dll=dll)
+        return super().__new__(cls, handle, dll=dll)
 
     @property
     def data(self):

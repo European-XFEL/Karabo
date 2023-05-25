@@ -15,7 +15,7 @@ from karabo.native import (
 UNSUBSCRIBE_TIMEOUT = 5
 
 
-class _ProxyBase(object):
+class _ProxyBase:
     _parent = Weak()
 
     @classmethod
@@ -23,11 +23,11 @@ class _ProxyBase(object):
         return cls._allattrs
 
     def __repr__(self):
-        subs = ", ".join("{}={!r}".format(k, getattr(self, k))
+        subs = ", ".join(f"{k}={getattr(self, k)!r}"
                          for k, v in self.__class__.__dict__.items()
                          if isinstance(v, Descriptor) and
                          not isinstance(v, Slot) and hasattr(self, k))
-        return self.__class__.__name__ + "[{}]".format(subs)
+        return f"{self.__class__.__name__}[{subs}]"
 
     def _repr_html_generator_(self, nest=0):
         if nest == 0:
@@ -57,7 +57,7 @@ class _ProxyBase(object):
                 val = getattr(self, attr, None)
                 if isinstance(val, (_ProxyBase, KaraboValue)):
                     p.break_()
-                    with p.group(4, "{}:".format(attr)):
+                    with p.group(4, f"{attr}:"):
                         p.breakable()
                         p.pretty(val)
 
@@ -208,7 +208,7 @@ class SubProxyBase(_ProxyBase):
         return self._parent.setValue(desc, value)
 
 
-class ProxyFactory(object):
+class ProxyFactory:
     """Create a proxy for Karabo devices
 
     This is an customizable factory class to create proxies for Karabo
@@ -241,7 +241,7 @@ class ProxyFactory(object):
 
     @classmethod
     def createNode(cls, key, node, prefix, **kwargs):
-        sub = cls.createNamespace(node, "{}{}.".format(prefix, key))
+        sub = cls.createNamespace(node, f"{prefix}{key}.")
         Cls = type(key, (cls.SubProxy,), sub)
         return cls.ProxyNode(key=key, cls=Cls, **kwargs)
 
@@ -481,7 +481,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             """
             if not self._alive:
                 raise KaraboError(
-                    'device "{}" died'.format(self._deviceId))
+                    f'device "{self._deviceId}" died')
             coro = func(*args)
             task = asyncio.ensure_future(coro)
             self._running_tasks.add(task)
@@ -494,7 +494,7 @@ class DeviceClientProxyFactory(ProxyFactory):
                     raise
                 else:
                     raise KaraboError(
-                        'device "{}" died'.format(self._deviceId))
+                        f'device "{self._deviceId}" died')
 
         async def initialize_proxy(self):
             """Initialize the proxy by subscribing to updates

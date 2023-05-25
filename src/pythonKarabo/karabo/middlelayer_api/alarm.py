@@ -48,7 +48,7 @@ class AlarmMixin(Configurable):
         self._changed_alarms = set()
         self._old_alarms = {}
         self.accumulatedGlobalAlarms = dict()
-        super(AlarmMixin, self).__init__(configuration)
+        super().__init__(configuration)
 
     def setChildValue(self, key, value, desc):
 
@@ -82,13 +82,13 @@ class AlarmMixin(Configurable):
                 self.accumulatedGlobalAlarms[new_alarm.value] = value.timestamp
 
         # Outside, of course use unmangled key
-        super(AlarmMixin, self).setChildValue(key, value, desc)
+        super().setChildValue(key, value, desc)
 
     def update(self):
         changes = self.__gather_alarms()
         if changes is not None:
             self.signalAlarmUpdate(self.deviceId, changes)
-        super(AlarmMixin, self).update()
+        super().update()
 
     def __gather_alarms(self):
         toAdd = Hash()
@@ -105,9 +105,9 @@ class AlarmMixin(Configurable):
                 toAdd[prop] = Hash(cond.value, Hash(
                     "type", cond.value,
                     "description",
-                    getattr(desc, "alarmInfo_{}".format(cond.value), ""),
+                    getattr(desc, f"alarmInfo_{cond.value}", ""),
                     "needsAcknowledging",
-                    bool(getattr(desc, "alarmNeedsAck_{}".format(cond.value),
+                    bool(getattr(desc, f"alarmNeedsAck_{cond.value}",
                                  True))))
                 toAdd[prop][cond.value, ...] = timestamp.toDict()
 

@@ -87,7 +87,7 @@ async def test_device_server_instantiate_plugins(event_loop: event_loop):
 
         assert len(server.deviceInstanceMap.keys()) == 0
         # Test instantiate a device
-        deviceId = "test-mdlfake-{}".format(uuid.uuid4())
+        deviceId = f"test-mdlfake-{uuid.uuid4()}"
         await server.startDevice("PropertyTestMDL", deviceId,
                                  Hash())
         assert len(server.deviceInstanceMap.keys()) == 1
@@ -134,8 +134,8 @@ async def test_device_server_instantiate_plugins(event_loop: event_loop):
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_device_server_autostart(event_loop: event_loop):
-    deviceId_1 = "test-prop-{}".format(uuid.uuid4())
-    deviceId_2 = "test-prop-{}".format(uuid.uuid4())
+    deviceId_1 = f"test-prop-{uuid.uuid4()}"
+    deviceId_2 = f"test-prop-{uuid.uuid4()}"
     serverId = f"testMDLServer-{uuid.uuid4()}"
 
     init = {deviceId_1: {"classId": "PropertyTestMDL"},
