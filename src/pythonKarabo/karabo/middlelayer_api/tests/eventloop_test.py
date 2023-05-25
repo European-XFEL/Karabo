@@ -8,7 +8,7 @@ from karabo.middlelayer_api.synchronization import sleep
 from .eventloop import DeviceTest, sync_tst
 
 
-class Barrier(object):
+class Barrier:
     def __init__(self):
         self.lock = Lock()
         self.state = "init"

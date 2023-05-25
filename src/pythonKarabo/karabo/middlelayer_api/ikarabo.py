@@ -36,7 +36,7 @@ class DeviceClient(TopologyMacro):
             if name in self.systemTopology["device"]:
                 return getDevice(name)
             else:
-                raise AttributeError('Unknown device "{}"'.format(name))
+                raise AttributeError(f'Unknown device "{name}"')
 
     # We don't allow logs coming from command line
     log = Node(
@@ -44,7 +44,7 @@ class DeviceClient(TopologyMacro):
         displayedName="No Logger")
 
     def _initInfo(self):
-        info = super(DeviceClient, self)._initInfo()
+        info = super()._initInfo()
         info["lang"] = "python"
         info["type"] = "client"
         return info

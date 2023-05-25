@@ -19,7 +19,7 @@ from karabo.native import (
 @pytest.fixture(scope="module")
 def utilsTest(event_loop: event_loop):
 
-    class Stamp(object):
+    class Stamp:
         pass
 
     obj = Stamp()
