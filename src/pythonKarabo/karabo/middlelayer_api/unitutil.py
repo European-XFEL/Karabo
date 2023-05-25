@@ -91,7 +91,7 @@ class StateSignifier(SignifierBase):
     """
 
     def returnMostSignificant(self, iterable):
-        ret = super(StateSignifier, self).returnMostSignificant(iterable)
+        ret = super().returnMostSignificant(iterable)
         ret = wrap(copy.copy(ret))
         ret.timestamp = newest_timestamp(iterable)
 
