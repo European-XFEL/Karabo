@@ -587,9 +587,9 @@ class Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING),
                              "5.5")
         except Exception as e:
-            self.fail((
+            self.fail(
                 "test_getWarnAlarmLowHighAs exception in "
-                "getWarnHighAs: " + str(e)))
+                "getWarnHighAs: " + str(e))
 
         try:
             self.assertEqual(schema.getAlarmLowAs("exampleKey5", Types.STRING),
@@ -598,8 +598,8 @@ class Schema_TestCase(unittest.TestCase):
                              "-22.1")
         except Exception as e:
             self.fail(
-                ("test_getWarnAlarmLowHighAs exception in "
-                 "getAlarmLowAs: " + str(e)))
+                "test_getWarnAlarmLowHighAs exception in "
+                f"getAlarmLowAs: {str(e)}")
 
         try:
             self.assertEqual(
@@ -608,8 +608,8 @@ class Schema_TestCase(unittest.TestCase):
                 schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777")
         except Exception as e:
             self.fail(
-                ("test_getWarnAlarmLowHighAs exception in "
-                 "getAlarmHighAs: " + str(e)))
+                "test_getWarnAlarmLowHighAs exception in "
+                f"getAlarmHighAs: {str(e)}")
 
     def test_hasWarnAlarm(self):
         try:

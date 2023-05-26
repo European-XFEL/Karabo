@@ -28,7 +28,7 @@ class OkErrorFsm(base.BaseFsm):
         e.commit()
 
     def __init__(self, configuration):
-        super(OkErrorFsm, self).__init__(configuration)
+        super().__init__(configuration)
 
         # **************************************************************
         # *                        Events                              *

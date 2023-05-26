@@ -9,7 +9,7 @@ import unittest
 from karabo.bound import Connection, EventLoop, Hash
 
 
-class Server(object):
+class Server:
     def __init__(self):
         # create connection object
         try:
@@ -18,7 +18,7 @@ class Server(object):
             # register connect handler for incoming connections
             self.port = self.connection.startAsync(self.onConnect)
 
-            print("\nServer listening port : {}".format(self.port))
+            print(f"\nServer listening port : {self.port}")
         except BaseException:
             print("*** Server __init__() unexpected error: "
                   "{}".format(sys.exc_info()[0]))
@@ -114,8 +114,8 @@ class P2p_asyncTestCase(unittest.TestCase):
     def test_p2p_async(self):
 
         def onError(error_code, channel):
-            print("Error #%r => %r" % (error_code.value(),
-                                       error_code.message()))
+            print(f"Error #{error_code.value()!r}"
+                  f" => {error_code.message()!r}")
             channel.close()
             EventLoop.stop()
 
