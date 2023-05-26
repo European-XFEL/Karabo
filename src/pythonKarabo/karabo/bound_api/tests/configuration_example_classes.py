@@ -17,7 +17,7 @@ from karabo.common.states import State
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Shape", "1.0")
-class Shape(object):
+class Shape:
     def __init__(self, configuration):
         self.configuration = configuration
 
@@ -42,7 +42,7 @@ class Shape(object):
 @KARABO_CLASSINFO("Circle", "1.0")
 class Circle(Shape):
     def __init__(self, configuration):
-        super(Circle, self).__init__(configuration)
+        super().__init__(configuration)
 
     @staticmethod
     def expectedParameters(expected):
@@ -96,7 +96,7 @@ Editable Circle
 @KARABO_CLASSINFO("EditableCircle", "1.0")
 class EditableCircle(Circle):
     def __init__(self, configuration):
-        super(EditableCircle, self).__init__(configuration)
+        super().__init__(configuration)
 
     @staticmethod
     def expectedParameters(expected):
@@ -131,7 +131,7 @@ Rectangle
 @KARABO_CLASSINFO("Rectangle", "1.0")
 class Rectangle(Shape):
     def __init__(self, configuration):
-        super(Rectangle, self).__init__(configuration)
+        super().__init__(configuration)
         # print "Rectangle.__init__"
 
     @staticmethod
@@ -165,7 +165,7 @@ class Rectangle(Shape):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("GraphicsRenderer", "1.0")
-class GraphicsRenderer(object):
+class GraphicsRenderer:
     def __init__(self, input):
         shape = Shape.createChoice("shapes", input)
         if "shapes.Circle" in input:
@@ -210,7 +210,7 @@ class GraphicsRenderer(object):
 
 
 @KARABO_CLASSINFO("GraphicsRenderer1", "1.0")
-class GraphicsRenderer1(object):
+class GraphicsRenderer1:
     @staticmethod
     def expectedParameters(expected):
         (
@@ -281,7 +281,7 @@ class GraphicsRenderer1(object):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("TestStruct1", "1.0")
-class TestStruct1(object):
+class TestStruct1:
     @staticmethod
     def expectedParameters(expected):
         (
@@ -525,9 +525,9 @@ class TestStruct1(object):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("SomeClassId", "1.0")
-class SomeClass(object):
+class SomeClass:
     def __init__(self, configuration):
-        super(SomeClass, self).__init__()
+        super().__init__()
 
     @staticmethod
     def expectedParameters(expected):
@@ -580,15 +580,15 @@ class SomeClass(object):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Base", "1.0")
-class Base(object):
+class Base:
     def __init__(self, configuration):
-        super(Base, self).__init__()
+        super().__init__()
 
 
 @KARABO_CLASSINFO("P1", "1.0")
 class P1(Base):
     def __init__(self, configuration):
-        super(P1, self).__init__(configuration)
+        super().__init__(configuration)
 
     @staticmethod
     def expectedParameters(expected):
@@ -650,7 +650,7 @@ class P1(Base):
 @KARABO_CLASSINFO("P2", "1.0")
 class P2(Base):
     def __init__(self, configuration):
-        super(P2, self).__init__(configuration)
+        super().__init__(configuration)
 
     @staticmethod
     def expectedParameters(expected):
@@ -686,7 +686,7 @@ class P2(Base):
 @KARABO_CLASSINFO("P3", "1.0")
 class P3(Base):
     def __init__(self, configuration):
-        super(P3, self).__init__(configuration)
+        super().__init__(configuration)
 
     @staticmethod
     def expectedParameters(expected):
@@ -721,7 +721,7 @@ class P3(Base):
 @KARABO_CLASSINFO("ArrayContainer", "1.0")
 class ArrayContainer(Base):
     def __init__(self, configuration):
-        super(ArrayContainer, self).__init__(configuration)
+        super().__init__(configuration)
 
     @staticmethod
     def expectedParameters(expected):
@@ -750,9 +750,9 @@ class ArrayContainer(Base):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("GraphicsRenderer2", "1.0")
-class GraphicsRenderer2(object):
+class GraphicsRenderer2:
     def __init__(self, configuration):
-        super(GraphicsRenderer2, self).__init__()
+        super().__init__()
 
     @staticmethod
     def expectedParameters(expected):

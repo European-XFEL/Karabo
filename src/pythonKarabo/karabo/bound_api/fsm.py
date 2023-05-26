@@ -21,7 +21,7 @@ def GNOOP():
     return True
 
 
-class Event(object):
+class Event:
     def __init__(self, a):
         self.x = a
 
@@ -211,7 +211,7 @@ class _State(dict):
     interrupt = None
 
     def __init__(self, fsm, base, on_entry=NOOP, on_exit=NOOP, in_state=''):
-        super(_State, self).__init__()
+        super().__init__()
         self.fsm = fsm
         self.base = base
         self.on_entry = on_entry
@@ -318,8 +318,8 @@ class StateMachine(_State):
 
     def __init__(self, fsm, stt, initial, on_entry=NOOP, on_exit=NOOP,
                  in_state=''):
-        super(StateMachine, self).__init__(fsm, None, on_entry=on_entry,
-                                           on_exit=on_exit, in_state=in_state)
+        super().__init__(fsm, None, on_entry=on_entry, on_exit=on_exit,
+                         in_state=in_state)
         self.currentStateObject = None
         self.stt = dict()
         self.initial_state = list()
