@@ -254,8 +254,8 @@ class TestDevice(PythonDevice):
         schema = Schema()
 
         (
-            STRING_ELEMENT(schema).key("word{}".format(self.word_no))
-            .displayedName("Word #{}".format(self.word_no))
+            STRING_ELEMENT(schema).key(f"word{self.word_no}")
+            .displayedName(f"Word #{self.word_no}")
             .description("The word")
             .assignmentOptional().defaultValue("Hello")
             .reconfigurable()
@@ -265,13 +265,13 @@ class TestDevice(PythonDevice):
             .commit(),
 
             DOUBLE_ELEMENT(schema)
-            .key("injectedNode.number{}".format(self.word_no))
+            .key(f"injectedNode.number{self.word_no}")
             .assignmentOptional()
             .noDefaultValue()
             .commit()
         )
         self.updateSchema(schema)
-        self.set("injectedNode.number{}".format(self.word_no), self.word_no)
+        self.set(f"injectedNode.number{self.word_no}", self.word_no)
         self.word_no += 1
 
     def send(self):

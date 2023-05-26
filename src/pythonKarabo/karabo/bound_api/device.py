@@ -294,7 +294,7 @@ class PythonDevice(NoFsm):
         """
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
-        super(PythonDevice, self).__init__(configuration)
+        super().__init__(configuration)
 
         self._parameters = configuration
         if "_serverId_" in self._parameters:
@@ -919,7 +919,7 @@ class PythonDevice(NoFsm):
         """
 
         channel = self._ss.getOutputChannel(channelName)
-        sourceName = "{}:{}".format(self.getInstanceId(), channelName)
+        sourceName = f"{self.getInstanceId()}:{channelName}"
         if not timestamp:
             timestamp = self.getActualTimestamp()
         meta = ChannelMetaData(sourceName, timestamp)
@@ -970,7 +970,7 @@ class PythonDevice(NoFsm):
             except RuntimeError as e:
                 print(e)
                 raise AttributeError(
-                    "Error while retrieving '{}' from device".format(key))
+                    f"Error while retrieving '{key}' from device")
 
     def __getitem__(self, key):
         """Alternative for `value = self.get(key)`: `value = self[key]`"""
@@ -1343,7 +1343,7 @@ class PythonDevice(NoFsm):
         """
         assert isinstance(currentState, State)
         stateName = currentState.name
-        self.log.DEBUG("updateState: {}".format(stateName))
+        self.log.DEBUG(f"updateState: {stateName}")
         if self["state"] != currentState:
             self.set("state", currentState)
             if currentState is State.ERROR:
@@ -1810,7 +1810,7 @@ class PythonDevice(NoFsm):
         self.set("Logger.priority", newprio)
         Logger.setPriority(newprio)
         self.log.INFO(
-            "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
+            f"Logger Priority changed : {oldprio} ==> {newprio}")
 
     def getActualTimestamp(self):
         """Returns the actual timestamp.
@@ -1882,7 +1882,7 @@ class PythonDevice(NoFsm):
             self.set(Hash("performanceStatistics", performanceMeasures))
 
     def onBrokerError(self, message):
-        self.log.ERROR("Broker consumption problem: {}".format(message))
+        self.log.ERROR(f"Broker consumption problem: {message}")
         # Trigger alarm, but not always a new one (system is busy anyway).
         # By setting messagingProblems up to every second, we can investigate
         # roughly the time of problems via the data logger.

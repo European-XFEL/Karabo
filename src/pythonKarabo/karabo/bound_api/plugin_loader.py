@@ -12,7 +12,7 @@ DEFAULT_NAMESPACE = "karabo.bound_device"
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonPluginLoader", "1.0")
-class PluginLoader(object):
+class PluginLoader:
 
     @staticmethod
     def expectedParameters(expected):
@@ -36,7 +36,7 @@ class PluginLoader(object):
             if ep.name == name:
                 return ep
         else:
-            raise RuntimeError("Plugin {} not found!".format(name))
+            raise RuntimeError(f"Plugin {name} not found!")
 
     def update(self):
         ws = WorkingSet()
