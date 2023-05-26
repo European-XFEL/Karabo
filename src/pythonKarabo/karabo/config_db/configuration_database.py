@@ -49,7 +49,7 @@ class DbHandle(ContextDecorator):
         return True
 
 
-class ConfigurationDatabase(object):
+class ConfigurationDatabase:
 
     def __init__(self, db):
         self.dbHandle = db

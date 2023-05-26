@@ -94,7 +94,7 @@ class DlSchema2Influx():
         schema_update_epoch = op.getmtime(self.schema_path)
         karathon_text_ser = TextSerializerSchema.create("Xml")
         karathon_bin_ser = BinarySerializerSchema.create("Bin")
-        with open(self.schema_path, 'r') as fp:
+        with open(self.schema_path) as fp:
 
             for i, l in enumerate(fp):
                 try:
@@ -218,7 +218,7 @@ class DlSchema2Influx():
                         if not op.exists(op.dirname(self.part_proc_out_path)):
                             os.makedirs(op.dirname(self.part_proc_out_path))
                         with open(self.part_proc_out_path, 'a') as err:
-                            err.write("Error at line {}: {}\n".format(i, exc))
+                            err.write(f"Error at line {i}: {exc}\n")
                     elif not self.part_proc_out_path:
                         raise
 
@@ -258,7 +258,7 @@ class DlSchema2Influx():
             schema = tokens[3].strip()
         except IndexError:
             raise Exception(
-                "Unable to parse line: '{}'".format(line.strip()))
+                f"Unable to parse line: '{line.strip()}'")
 
         try:
             timestamp_ns = int(float(secs)*1E9 + float(frac_secs)/1E9)
