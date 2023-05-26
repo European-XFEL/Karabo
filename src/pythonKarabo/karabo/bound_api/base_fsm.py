@@ -40,7 +40,7 @@ class BaseFsm(NoFsm):
 
         :param configuration:
         """
-        super(BaseFsm, self).__init__(configuration)
+        super().__init__(configuration)
         self.fsm = None
         self.processEventLock = threading.RLock()
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
@@ -58,7 +58,7 @@ class BaseFsm(NoFsm):
             try:
                 fsm.start()
             except Exception as e:
-                raise RuntimeError("startFsm -- Exception: {0}".format(str(e)))
+                raise RuntimeError(f"startFsm -- Exception: {str(e)}")
 
             state = fsm.get_state()
             self.updateState(state)
@@ -72,9 +72,9 @@ class BaseFsm(NoFsm):
                 try:
                     fsm.process_event(event)
                 except Exception as e:
+                    name = event.__class__.__name__
                     self.exceptionFound(
-                        "Exception while processing event = '{0}'"
-                        .format(event.__class__.__name__), str(e))
+                       f"Exception while processing event '{name}': {e}")
                 finally:
                     state = fsm.get_state()
                     self.updateState(state)

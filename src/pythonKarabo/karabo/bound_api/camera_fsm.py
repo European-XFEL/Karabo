@@ -69,7 +69,7 @@ class CameraFsm(base.BaseFsm):
         )
 
     def __init__(self, configuration):
-        super(CameraFsm, self).__init__(configuration)
+        super().__init__(configuration)
 
         # **************************************************************
         # *                        Events                              *

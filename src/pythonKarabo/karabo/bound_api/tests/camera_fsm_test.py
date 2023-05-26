@@ -14,7 +14,7 @@ class CameraUser(CameraFsm):
     log = Logger.getCategory()
 
     def __init__(self, configuration):
-        super(CameraUser, self).__init__(configuration)
+        super().__init__(configuration)
 
     # The following 2 methods should be always defined
     def noStateTransition(self):
