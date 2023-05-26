@@ -14,7 +14,7 @@ class StartStopUser(StartStopFsm):
     log = Logger.getCategory()
 
     def __init__(self, configuration):
-        super(StartStopUser, self).__init__(configuration)
+        super().__init__(configuration)
 
     # The following 2 methods should be always defined
     def noStateTransition(self):
@@ -22,7 +22,7 @@ class StartStopUser(StartStopFsm):
 
     def updateState(self, currentState):
         self.log.DEBUG(
-            "-- StartStopUser.updateState to '{}'".format(currentState))
+            f"-- StartStopUser.updateState to '{currentState}'")
 
     def errorStateOnEntry(self):
         self.log.DEBUG("-- StartStopUser.errorStateOnEntry")

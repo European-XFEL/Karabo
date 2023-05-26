@@ -14,7 +14,7 @@ class OkErrorUser(OkErrorFsm):
     log = Logger.getCategory()
 
     def __init__(self, configuration):
-        super(OkErrorUser, self).__init__(configuration)
+        super().__init__(configuration)
 
     # The following 2 methods should be always defined
     def noStateTransition(self):
@@ -22,7 +22,7 @@ class OkErrorUser(OkErrorFsm):
 
     def updateState(self, currentState):
         self.log.DEBUG(
-            "-- OkErrorUser.updateState to '{}'".format(currentState))
+            f"-- OkErrorUser.updateState to '{currentState}'")
 
     def errorStateOnEntry(self):
         self.log.DEBUG("-- OkErrorUser.errorStateOnEntry")

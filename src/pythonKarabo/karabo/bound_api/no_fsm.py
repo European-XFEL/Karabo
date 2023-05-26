@@ -11,14 +11,14 @@ from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("NoFsm", "1.3")
-class NoFsm(object):
+class NoFsm:
 
     @staticmethod
     def expectedParameters(expected):
         pass
 
     def __init__(self, configuration):
-        super(NoFsm, self).__init__()
+        super().__init__()
         self.func = []
 
     def startFsm(self):
@@ -34,7 +34,7 @@ class NoFsm(object):
     def stopFsm(self): pass
 
     def errorFound(self, userFriendly, detail):
-        print("*** ERROR *** : {} -- {}".format(userFriendly, detail))
+        print(f"*** ERROR *** : {userFriendly} -- {detail}")
 
     def exceptionFound(self, userFriendlyMessage, detailedMessage):
         pass
