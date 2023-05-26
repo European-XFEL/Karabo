@@ -40,7 +40,7 @@ class StartStopFsm(base.BaseFsm):
         e.commit()
 
     def __init__(self, configuration):
-        super(StartStopFsm, self).__init__(configuration)
+        super().__init__(configuration)
 
         # **************************************************************
         # *                        Events                              *
