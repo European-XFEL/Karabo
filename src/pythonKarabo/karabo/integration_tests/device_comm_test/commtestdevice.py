@@ -37,7 +37,7 @@ class CommTestDevice(PythonDevice):
         )
 
     def __init__(self, config):
-        super(CommTestDevice, self).__init__(config)
+        super().__init__(config)
         self.KARABO_SLOT(self.slotRequestArgs)
         self.KARABO_SLOT(self.slotRequestArgsAsync)
         self.KARABO_SLOT(self.slotRequestStateUpdate)

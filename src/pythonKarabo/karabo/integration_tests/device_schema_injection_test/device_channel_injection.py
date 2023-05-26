@@ -30,7 +30,7 @@ class DeviceChannelInjection(PythonDevice):
         )
 
     def __init__(self, config):
-        super(DeviceChannelInjection, self).__init__(config)
+        super().__init__(config)
         # Define the slots
         self.KARABO_SLOT(self.slotAppendSchema)
         self.KARABO_SLOT(self.slotUpdateSchema)

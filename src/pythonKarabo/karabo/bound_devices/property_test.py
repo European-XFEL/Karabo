@@ -30,7 +30,7 @@ class PropertyTest(PythonDevice):
 
     def __init__(self, configuration):
         # always call PythonDevice constructor first!
-        super(PropertyTest, self).__init__(configuration)
+        super().__init__(configuration)
 
         # Define the slots
         self.KARABO_SLOT(self.setAlarm)

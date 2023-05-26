@@ -13,7 +13,7 @@ class TestPipelineProcessing(BoundDeviceTestCase):
     KRB_TEST_MAX_TIMEOUT = 20  # seconds
 
     def setUp(self):
-        super(TestPipelineProcessing, self).setUp()
+        super().setUp()
         class_ids = ['PPSenderDevice', 'PPReceiverDevice']
         self.start_server("bound", SERVER_ID, class_ids,
                           namespace="karabo.bound_device_test")
@@ -152,7 +152,7 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         dataItemSize = self.dc.get("pipeTestReceiver", "dataItemSize")
         duration = (datetime.now() - startTimePoint).seconds
         mbps = dataItemSize // 1e6 * nTotalOnEos / duration
-        msg = "Pipeline Processing Test: Megabytes/s: {}".format(mbps)
+        msg = f"Pipeline Processing Test: Megabytes/s: {mbps}"
         print(msg)
         self.assertEqual(120, nTotalOnEos)
 
