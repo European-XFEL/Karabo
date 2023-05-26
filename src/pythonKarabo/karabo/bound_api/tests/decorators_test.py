@@ -12,7 +12,7 @@ from karabo.common.states import State
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("ExampleBase", "1.0")
-class ExampleBaseClass(object):
+class ExampleBaseClass:
     def __init__(self, configuration):
         self.configuration = configuration
 
@@ -46,7 +46,7 @@ class ExampleBaseClass(object):
 @KARABO_CLASSINFO("ExampleDerived", "1.0")
 class ExampleDerivedClass(ExampleBaseClass):
     def __init__(self, configuration):
-        super(ExampleDerivedClass, self).__init__(configuration)
+        super().__init__(configuration)
         self.configuration = configuration
 
     @staticmethod
@@ -66,7 +66,7 @@ class ExampleDerivedClass(ExampleBaseClass):
 @KARABO_CLASSINFO("Example", "1.0")
 class ExampleClass(ExampleBaseClass):
     def __init__(self, configuration):
-        super(ExampleClass, self).__init__(configuration)
+        super().__init__(configuration)
         self.configuration = configuration
 
     @staticmethod
@@ -85,9 +85,9 @@ class ExampleClass(ExampleBaseClass):
 # ------------------------------------------------
 # Inherit from a class without Karabo
 
-class NoKaraboClass(object):
+class NoKaraboClass:
     def __init__(self, configuration):
-        super(NoKaraboClass, self).__init__(configuration)
+        super().__init__(configuration)
 
     def getKaraboVersion(self):
         return 2
@@ -96,7 +96,7 @@ class NoKaraboClass(object):
 @KARABO_CLASSINFO("ExampleNoKarabo", "1.0")
 class ExampleNoKarabo(NoKaraboClass, ExampleDerivedClass):
     def __init__(self, configuration):
-        super(ExampleNoKarabo, self).__init__(configuration)
+        super().__init__(configuration)
         self.configuration = configuration
 
     @staticmethod

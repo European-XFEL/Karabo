@@ -407,7 +407,7 @@ class Hash_TestCase(unittest.TestCase):
         with self.assertRaises(OverflowError):
             h = Hash("vb", [2 ** 64])
         for value, type_ in values_and_types.items():
-            msg = "Failed to unbox {0}".format(value)
+            msg = f"Failed to unbox {value}"
             try:
                 h = Hash("a", value)
                 self.assertEqual(h.getType("a"), type_[0], msg=msg)
@@ -416,7 +416,7 @@ class Hash_TestCase(unittest.TestCase):
                 self.fail(msg)
             # Now for vectors:
             # first most broad int type first
-            msg = "Failed to unbox {0} in list".format(value)
+            msg = f"Failed to unbox {value} in list"
             try:
                 h = Hash("a", [value, 0])
                 self.assertEqual(h.getType("a"), type_[1], msg=msg)
