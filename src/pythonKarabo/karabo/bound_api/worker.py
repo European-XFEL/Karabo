@@ -122,7 +122,7 @@ class Worker(threading.Thread):
     def start(self):
         if not self.running:
             self.suspended = False
-            super(Worker, self).start()
+            super().start()
         if self.suspended:
             with self.cv:
                 self.suspended = False
@@ -159,7 +159,7 @@ class Worker(threading.Thread):
 class QueueWorker(Worker):
 
     def __init__(self, callback):
-        super(QueueWorker, self).__init__(self.onWork)
+        super().__init__(self.onWork)
         self.handler = callback
         self.msg = None
 

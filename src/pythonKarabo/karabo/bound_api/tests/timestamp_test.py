@@ -62,8 +62,8 @@ class Timestamp_TestCase(unittest.TestCase):
             es01 = Epochstamp(1356441936, 789333123456789123)  # (pTimeStr01)
         except Exception as e:
             self.fail(
-                (functionName + " creating Epochstamp01 using the String "
-                                "constructor: " + str(e)))
+                f"{functionName} creating Epochstamp01 using the String"
+                f" constructor: {str(e)}")
 
         try:
             ts01 = Timestamp(es01, Trainstamp())

@@ -173,7 +173,7 @@ class Tests(unittest.TestCase):
             n1.setType("COMPLEX_FLOAT")
             self.assertEqual(n1.getType(), Types.COMPLEX_FLOAT)
             self.assertEqual(n1.getValue(), (10+0j))
-            n1.setValue((12+9.9j))
+            n1.setValue(12+9.9j)
             self.assertEqual(n1.getValue(), (12+9.9j))
 
             # 'setType' & 'setValue' for COMPLEX_DOUBLE
@@ -183,7 +183,7 @@ class Tests(unittest.TestCase):
             n1.setType("COMPLEX_DOUBLE")
             self.assertEqual(n1.getType(), Types.COMPLEX_DOUBLE)
             self.assertEqual(n1.getValue(), (10+0j))
-            n1.setValue((2.222222222-33.3333333333j))
+            n1.setValue(2.222222222-33.3333333333j)
             self.assertEqual(n1.getValue(), (2.222222222-33.3333333333j))
 
             attrs = h.getAttributes("a.b.c")
