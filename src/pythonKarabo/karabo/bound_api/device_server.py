@@ -36,7 +36,7 @@ from .runner import Runner
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("DeviceServer", "1.0")
-class DeviceServer(object):
+class DeviceServer:
     """Device server serves as a launcher of python devices.
 
     It scans 'plugins' directory for new plugins (python scripts) available and
@@ -201,7 +201,7 @@ class DeviceServer(object):
         if config is None:
             raise ValueError(
                 "Input configuration for constructor should be Hash, not None")
-        super(DeviceServer, self).__init__()
+        super().__init__()
         # describe FSM
         self.processEventLock = threading.RLock()
         self.fsm = self.setupFsm()
@@ -411,7 +411,7 @@ class DeviceServer(object):
         EventLoop.stop()
 
     def errorFoundAction(self, m1, m2):
-        self.log.ERROR("{} -- {}".format(m1, m2))
+        self.log.ERROR(f"{m1} -- {m2}")
 
     def slotStartDevice(self, configuration):
         self.instantiateDevice(configuration)
@@ -436,7 +436,7 @@ class DeviceServer(object):
         self.log.INFO("Trying to start a '{}' with device id '{}'"
                       "...".format(classid, config['_deviceId_']))
         self.log.DEBUG(
-            "with the following configuration:\n{}".format(input_config))
+            f"with the following configuration:\n{input_config}")
 
         # Inject HostName
         config['hostName'] = self.hostname
@@ -635,7 +635,7 @@ class DeviceServer(object):
             schema = Configurator(PythonDevice).getSchema(classid)
             self.ss.reply(schema, classid, self.serverid)
         except AttributeError as e:
-            self.log.WARN("Replied empty schema due to : {}".format(str(e)))
+            self.log.WARN(f"Replied empty schema due to : {str(e)}")
             self.ss.reply(Schema(), classid, self.serverid)
 
     def slotLoggerPriority(self, newprio):
@@ -647,7 +647,7 @@ class DeviceServer(object):
         oldprio = Logger.getPriority()
         Logger.setPriority(newprio)
         self.log.INFO(
-            "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
+            f"Logger Priority changed : {oldprio} ==> {newprio}")
         # Also devices started in future get the new priority by default:
         self.loggerParameters["priority"] = newprio
         # Merge the new log priority into the instanceInfo
@@ -744,7 +744,7 @@ class DeviceServer(object):
             return _id
 
 
-class Launcher(object):
+class Launcher:
     """ Launches a PythonDevice in its own interpreter."""
 
     def __init__(self, params):

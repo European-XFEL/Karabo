@@ -15,7 +15,7 @@ cr_cmt = " # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved."
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Runner", "1.0")
-class Runner(object):
+class Runner:
 
     def __init__(self, deviceServer):
         self.deviceServer = deviceServer
@@ -131,7 +131,7 @@ class Runner(object):
             return
         if token[0] == '{':
             raise SyntaxError(
-                "Key cannot start with opening brace ==> '{}'".format(token))
+                f"Key cannot start with opening brace ==> '{token}'")
         pos = token.find("={")
         if pos > 0:
             key = prefix + token[:pos] + '.'
