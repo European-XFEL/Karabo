@@ -114,7 +114,7 @@ class PPReceiverDevice(PythonDevice):
         )
 
     def __init__(self, config):
-        super(PPReceiverDevice, self).__init__(config)
+        super().__init__(config)
         self.KARABO_SLOT(self.reset)
         self.registerInitialFunction(self.initialize)
         self.transferTimes = []
@@ -163,7 +163,7 @@ class PPReceiverDevice(PythonDevice):
             self.transferTimes.append(transferTime)
             self.set("nTotalData", self.get("nTotalData") + 1)
             arr = data.get("array")
-            self.log.DEBUG("Array size: {}".format(arr.size)*getsizeof(arr[0]))
+            self.log.DEBUG(f"Array size: {arr.size}"*getsizeof(arr[0]))
 
     def onEndOfStreamProfile(self, channel):
         self.set("averageTransferTime", np.mean(self.transferTimes))
