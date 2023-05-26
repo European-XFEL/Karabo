@@ -14,10 +14,10 @@ instTimeoutMs = instTimeout * 1000
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
-        super(TestDeviceDeviceComm, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(TestDeviceDeviceComm, self).tearDown()
+        super().tearDown()
 
     def test_properties(self):
 
@@ -65,7 +65,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         with self.subTest(msg="Test lastCommand"):
             lastCommand = self.dc.get(deviceId, "lastCommand")
-            self.assertEqual(lastCommand, str())
+            self.assertEqual(lastCommand, '')
 
             self.dc.execute(deviceId, "slotClearLock")
             lastCommand = self.dc.get(deviceId, "lastCommand")

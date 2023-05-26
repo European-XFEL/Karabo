@@ -7,7 +7,7 @@ from karabo.common.states import State
 class NonSceneProvidingDevice(PythonDevice):
 
     def __init__(self, config):
-        super(NonSceneProvidingDevice, self).__init__(config)
+        super().__init__(config)
         self.registerInitialFunction(self.initialize)
 
     def initialize(self):

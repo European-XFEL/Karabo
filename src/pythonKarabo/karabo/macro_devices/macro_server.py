@@ -17,7 +17,7 @@ class MacroServer(MiddleLayerDeviceServer):
         defaultValue=AccessLevel.ADMIN)
 
     def _initInfo(self):
-        info = super(MacroServer, self)._initInfo()
+        info = super()._initInfo()
         info["lang"] = "macro"
         return info
 

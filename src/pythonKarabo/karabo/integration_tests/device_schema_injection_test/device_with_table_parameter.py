@@ -35,4 +35,4 @@ class DeviceWithTableElementParam(PythonDevice):
         )
 
     def __init__(self, config):
-        super(DeviceWithTableElementParam, self).__init__(config)
+        super().__init__(config)

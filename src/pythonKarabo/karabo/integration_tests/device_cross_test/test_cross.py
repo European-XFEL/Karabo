@@ -545,7 +545,7 @@ async def test_history(deviceTest):
         # Wait until logger is ready for logging our middlelayer device,
         # i.e. published non-empty timestamp of any logged parameter
         with (await getDevice(
-                "DataLogger-{}".format(server))) as logger:
+                f"DataLogger-{server}")) as logger:
             await updateDevice(logger)
             while True:
                 found = False
