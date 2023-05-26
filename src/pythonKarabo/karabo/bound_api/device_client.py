@@ -11,7 +11,7 @@ class DeviceClient(BoundDeviceClient):
     """
     def get(self, instanceId, *args, **kw):
         """ Handle conversion of returned State and AlarmCondition objects."""
-        value = super(DeviceClient, self).get(instanceId, *args, **kw)
+        value = super().get(instanceId, *args, **kw)
 
         if not isinstance(value, Hash):
             schema = self.getDeviceSchema(instanceId)

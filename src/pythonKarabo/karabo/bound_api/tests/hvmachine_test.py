@@ -12,7 +12,7 @@ from karabo.bound import (
     KARABO_FSM_STATE_MACHINE_EE, State)
 
 
-class HvMachine(object):
+class HvMachine:
     '''
     State machine used in HV Mpod projects
     '''

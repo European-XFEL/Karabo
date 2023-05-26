@@ -9,7 +9,7 @@ from karathon import (
     INIT, READ, WRITE, AccessType, AssemblyRules, Hash, Schema, Validator)
 
 
-class Configurator(object):
+class Configurator:
     """Provides factorized configuration
 
     Configurator is the singleton class that keeps methods for registration and
@@ -54,7 +54,7 @@ class Configurator(object):
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(Configurator, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def registerClass(self, derived):
@@ -181,7 +181,7 @@ class Configurator(object):
         validator = Validator()
         result, error, validated = validator.validate(schema, configuration)
         if not result:
-            raise RuntimeError("Validation Exception: {}".format(error))
+            raise RuntimeError(f"Validation Exception: {error}")
         return Derived(validated)
 
     def createNode(self, nodename, classid, configuration, validation=True):
