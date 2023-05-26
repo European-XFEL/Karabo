@@ -55,7 +55,7 @@ class Tests(TestCase):
 
         loop = cls.loop
         sigslot = SignalSlotable(
-            {"_deviceId_": "test-mdlserver-{}".format(uuid.uuid4())})
+            {"_deviceId_": f"test-mdlserver-{uuid.uuid4()}"})
         sigslot.startInstance(loop=loop)
         cls.lead = sigslot
 
