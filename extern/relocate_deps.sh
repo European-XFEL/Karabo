@@ -92,6 +92,8 @@ rewrite_rpaths() {
     # can't fix python if python is running the fixer script
     run_rpath_fixer "-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
     # now fix python forcing to RPATH: https://stackoverflow.com/questions/43616505/setting-rpath-for-python-not-working
+    # "RPATH affects the binary and all shared libraries, but RUNPATH affects only the binary, and does not recursively 
+    # apply to shared libraries that this binary loads.". We theed the first behaviour."
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python"
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3"
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.8" 
