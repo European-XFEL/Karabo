@@ -8,7 +8,6 @@ What's New in Karabo 2.17.0
 Release scheduled for the **02.06.2023**. Merge-log until 2.17.0rc15.
 This release candidate is public and for testing.
 
-
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
