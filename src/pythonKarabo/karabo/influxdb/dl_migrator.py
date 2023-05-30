@@ -47,7 +47,7 @@ class DlMigrator():
         """Retrieves the number of the previous run."""
         prev_run_num = 0
         if os.path.exists(self.prev_run_file):
-            with open(self.prev_run_file, 'r') as pr_file:
+            with open(self.prev_run_file) as pr_file:
                 prev_run_num = int(pr_file.read())  # Invalid file should throw
         return prev_run_num
 
@@ -102,7 +102,7 @@ class DlMigrator():
         proc_raws_path = os.path.join(self.output_dir,
                                       PROCESSED_RAWS_FILE_NAME)
         if os.path.exists(proc_raws_path):
-            with open(proc_raws_path, 'r') as proc_raws_file:
+            with open(proc_raws_path) as proc_raws_file:
                 for _, file_record in enumerate(proc_raws_file):
                     fields = file_record.split('|')
                     last_update = float(fields[0])
@@ -112,7 +112,7 @@ class DlMigrator():
         proc_schemas_path = os.path.join(self.output_dir,
                                          PROCESSED_SCHEMAS_FILE_NAME)
         if os.path.exists(proc_schemas_path):
-            with open(proc_schemas_path, 'r') as proc_schemas_file:
+            with open(proc_schemas_path) as proc_schemas_file:
                 for _, file_record in enumerate(proc_schemas_file):
                     fields = file_record.split('|')
                     last_update = float(fields[0])
@@ -150,12 +150,12 @@ class DlMigrator():
                 last_update = os.path.getmtime(file_path)
                 if (self.processed_schemas.get(file_path) == last_update or
                         self.processed_raws.get(file_path) == last_update):
-                    print("'{}' already migrated: skip.".format(file_path))
+                    print(f"'{file_path}' already migrated: skip.")
                     self.n_skipped += 1
                     continue
                 if ((self.start_date and last_update < self.start_date) or
                         (self.end_date and last_update > self.end_date)):
-                    print("'{}' outside date range.".format(file_path))
+                    print(f"'{file_path}' outside date range.")
                     self.n_skipped += 1
                     continue
 
@@ -169,7 +169,7 @@ class DlMigrator():
         for i in range(0, len(full_workload)):
             workloads[i % self.concurrent_tasks].append(full_workload[i])
 
-        print('... workload of {} files splitted.'.format(len(full_workload)))
+        print(f'... workload of {len(full_workload)} files splitted.')
 
         return workloads
 
@@ -250,9 +250,9 @@ class DlMigrator():
         self._save_run_info(start_time, workloads_info, end_time)
 
         print("Migration job finished:")
-        print("Files skipped: {}".format(self.n_skipped))
-        print("Files processed successfully: {}".format(self.n_processed))
-        print("Files with migration errors:  {}".format(self.n_part_processed))
+        print(f"Files skipped: {self.n_skipped}")
+        print(f"Files processed successfully: {self.n_processed}")
+        print(f"Files with migration errors:  {self.n_part_processed}")
 
     async def insert_archive(self, path, output_dir, device_id, workload_id):
         try:
