@@ -144,7 +144,7 @@ class PPSenderDevice(PythonDevice):
         )
 
     def __init__(self, config):
-        super(PPSenderDevice,self).__init__(config)
+        super().__init__(config)
         self.KARABO_SLOT(self.write)
         self.writingWorker = None
         self.registerInitialFunction(self.initialize)
@@ -183,14 +183,14 @@ class PPSenderDevice(PythonDevice):
                 data.set("data", vec)
                 self.writeChannel("output1", data)
 
-                msg = "Written data # {}".format(iData)
+                msg = f"Written data # {iData}"
                 self.set("currentDataId", iData)
                 self.log.DEBUG(msg)
                 if delayInMs > 0:
                     sleep(delayInMs/1000)
 
         except Exception as e:
-            self.log.ERROR("Stop writing because: {}".format(e))
+            self.log.ERROR(f"Stop writing because: {e}")
 
         self.signalEndOfStream("output1")
         self.updateState(State.NORMAL)
@@ -213,13 +213,13 @@ class PPSenderDevice(PythonDevice):
                 channel.update()
                 self.set("currentDataId", iData)
 
-                msg = "Written data # {}".format(iData)
+                msg = f"Written data # {iData}"
                 self.log.DEBUG(msg)
                 if delayInMs > 0:
                     sleep(delayInMs/1000)
 
         except Exception as e:
-            self.log.ERROR("Stop writing because: {}".format(e))
+            self.log.ERROR(f"Stop writing because: {e}")
 
         self.signalEndOfStream("output2")
         self.updateState(State.NORMAL)
@@ -249,7 +249,7 @@ class PPSenderDevice(PythonDevice):
 
 
         except Exception as e:
-            self.log.ERROR("Stop writing because: {}".format(e))
+            self.log.ERROR(f"Stop writing because: {e}")
 
         self.signalEndOfStream("node.output3")
         self.updateState(State.NORMAL)

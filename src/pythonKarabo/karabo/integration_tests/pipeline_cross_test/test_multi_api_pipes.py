@@ -169,7 +169,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # Waits for all devices in the chain to show up in the topology.
         num_of_waits = max_waits
         devices_present = set()
-        devices_not_present = set([st_inf[0] for st_inf in start_info])
+        devices_not_present = {st_inf[0] for st_inf in start_info}
         while num_of_waits > 0 and len(devices_present) < len(start_info):
             devices = self.dc.getDevices()
             for devid in devices_not_present:
@@ -211,7 +211,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # data through the pipe.
         num_of_waits = max_waits
         outputs_connected = set()
-        outputs_not_connected = set([st_inf[0] for st_inf in start_info])
+        outputs_not_connected = {st_inf[0] for st_inf in start_info}
         # no connection to check for 'receiver:output'.
         outputs_not_connected.discard('receiver')
         while num_of_waits > 0 and len(outputs_not_connected) > 0:
@@ -219,7 +219,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                 try:
                     conns = self.dc.get(devid, 'output.connections')
                 except RuntimeError as re:
-                    print("Problem retrieving 'output.connections' from '{}': {}".format(devid, re))
+                    print(f"Problem retrieving 'output.connections' from '{devid}': {re}")
                 if len(conns) > 0:
                     outputs_connected.add(devid)
             outputs_not_connected = outputs_not_connected - outputs_connected
@@ -398,10 +398,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                 sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
-        self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
+        self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
 
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
-        self.assertTrue(ok, "Problem killing receiver device: '{}'.".format(msg))
+        self.assertTrue(ok, f"Problem killing receiver device: '{msg}'.")
 
     def _test_1to1_queue(self, queueOpt, sender_api, sender_freq,
                          receiver_api, processing_time):
@@ -464,10 +464,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                 sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
-        self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
+        self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
 
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
-        self.assertTrue(ok, "Problem killing receiver device: '{}'.".format(msg))
+        self.assertTrue(ok, f"Problem killing receiver device: '{msg}'.")
 
     def _test_1to1_drop(self, sender_api, sender_freq,
                         receiver_api, processing_time):
@@ -544,10 +544,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
             self.assertGreater(inputCounter, 0, "At least one data item should have been received.")
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
-        self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
+        self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
 
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
-        self.assertTrue(ok, "Problem killing receiver device: '{}'.".format(msg))
+        self.assertTrue(ok, f"Problem killing receiver device: '{msg}'.")
 
     def start_server_num(self, api, server_num, **kwargs):
         """Start server of given api and number"""
@@ -587,7 +587,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
     def serverId(self, api, num):
         """Server id of server with given api and number"""
-        return "{}Server/{}".format(api, num)
+        return f"{api}Server/{num}"
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, timeout):
         """
@@ -601,7 +601,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
             try:
                 res = self.dc.get(devId, propertyName)
             except RuntimeError as re:
-                print("Problem retrieving property value: {}".format(re))
+                print(f"Problem retrieving property value: {re}")
             if res == whatItShouldBe:
                 return True
             else:
@@ -642,7 +642,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                 res = self.dc.get(devId, propertyName)
                 res2 = self.dc.get(devId2, propertyName2)
             except RuntimeError as re:
-                print("Problem retrieving property value: {}".format(re))
+                print(f"Problem retrieving property value: {re}")
             if res == res2:
                 return True
             else:

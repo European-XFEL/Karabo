@@ -33,7 +33,7 @@ class UnstoppedThreadDevice(PythonDevice):
         )
 
     def __init__(self, configuration):
-        super(UnstoppedThreadDevice,self).__init__(configuration)
+        super().__init__(configuration)
         self.running = False
         self.pollingThread = None
         self.KARABO_SLOT(self.slotPutToComa)

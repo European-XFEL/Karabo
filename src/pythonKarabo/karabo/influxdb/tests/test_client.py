@@ -198,8 +198,8 @@ class Influx_TestCase(DeviceTest):
                 # second half has f"{_fake_key}-DOUBLE"
                 self.assertIsNone(vals[2])
         # because of the silly quotes, `time` is last
-        expected_keys = set(
-            ('time', f'{_fake_key}-FLOAT', f'{_fake_key}-DOUBLE'))
+        expected_keys = {
+            'time', f'{_fake_key}-FLOAT', f'{_fake_key}-DOUBLE'}
 
         self.assertEqual(set(cols), expected_keys)
         r = await self.client.get_field_count(
