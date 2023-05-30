@@ -63,13 +63,11 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
     template <class T>
     void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
-    std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType, bool useInvalidInfluxUrl = false,
-                                                        bool useInvalidDbName = false,
-                                                        unsigned int maxPerDevicePropLogRate = 5 * 1024,
-                                                        unsigned int propLogRatePeriod = 5,
-                                                        unsigned int maxSchemaLogRate = 15 * 1024,
-                                                        unsigned int schemaLogRatePeriod = 5,
-                                                        unsigned int maxStringLength = 1024 * 1024);
+    std::pair<bool, std::string> startDataLoggerManager(
+          const std::string& loggerType, bool useInvalidInfluxUrl = false, bool useInvalidDbName = false,
+          unsigned int maxPerDevicePropLogRate = 5 * 1024, unsigned int propLogRatePeriod = 5,
+          unsigned int maxSchemaLogRate = 15 * 1024, unsigned int schemaLogRatePeriod = 5,
+          unsigned int maxStringLength = karabo::util::MAX_INFLUX_VALUE_LENGTH);
 
     /**
      * Checks that slotGetPropertyHistory logging works when a
