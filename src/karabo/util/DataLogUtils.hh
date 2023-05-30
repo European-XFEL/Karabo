@@ -69,9 +69,11 @@ namespace karabo {
         char const* const DATALOG_NEWLINE_MANGLE = ".KRB_NEWLINE.";
 
 
-        // Must be the same value configured for maximum allowed field size in the Influx
-        // instances for input via the line protocol.
-        const unsigned int MAX_INFLUX_VALUE_LENGTH = 1048576u;
+        // Since Telegraf states a limit of 1 Mb as the maximum length acceptable for a string
+        // metric, a value known to be below that limit is used for saving string metrics.
+        // Schemas whose sizes are above the value of MAX_INFLUX_VALUE_LENGTH bytes are split
+        // into chunks of MAX_INFLUX_VALUE_LENGTH bytes.
+        const unsigned int MAX_INFLUX_VALUE_LENGTH = 921600u; // 900 *1024 bytes
 
         /**
          * A structure defining meta data as used by the data loggers
