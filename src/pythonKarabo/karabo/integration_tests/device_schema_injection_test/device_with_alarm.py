@@ -45,4 +45,4 @@ class DeviceWithAlarm(PythonDevice):
         )
 
     def __init__(self, config):
-        super(DeviceWithAlarm, self).__init__(config)
+        super().__init__(config)

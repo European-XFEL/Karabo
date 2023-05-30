@@ -114,7 +114,7 @@ class DlRaw2Influx():
             'lines_processed': 0,
             'write_retries': [],
         }
-        with open(self.raw_path, 'r') as fp:
+        with open(self.raw_path) as fp:
             for i, l in enumerate(fp):
                 try:
                     self._process_line(l)
@@ -301,7 +301,7 @@ class DlRaw2Influx():
             # the type adding an `_INF`
             if value in ("nan", "-inf", "inf", "-nan"):
                 ktype = f"{ktype}_INF"
-                value = '"{}"'.format(value)
+                value = f'"{value}"'
         elif ktype in ("INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
                        "INT64"):
             value = str(value) + "i"
@@ -332,13 +332,13 @@ class DlRaw2Influx():
             # here we put it into quotes to tell influx to treat it as a
             # string and change the ktype to VECTOR_STRING
             ktype = "VECTOR_STRING"
-            value = '"{}"'.format(value)
+            value = f'"{value}"'
         elif ktype == "VECTOR_UINT8":
             binary = base64.b64decode(value)
             vec = [str(v) for v in struct.unpack('B'*len(binary), binary)]
             value = '"{}"'.format(",".join(vec))
         elif ktype == "BYTE_ARRAY" or ktype.startswith("VECTOR_"):
-            value = '"{}"'.format(value)
+            value = f'"{value}"'
         elif ktype == "CHAR":
             size = len(value)
             if size > 1:
@@ -350,7 +350,7 @@ class DlRaw2Influx():
                 binary = base64.b64encode(value[0].encode('utf-8'))
             value = f'"{binary.decode("utf-8")}"'
         if len(ktype) > 0:
-            name = "{}-{}".format(name, ktype)
+            name = f"{name}-{ktype}"
 
         if user_name == "":
             user_name = "."
