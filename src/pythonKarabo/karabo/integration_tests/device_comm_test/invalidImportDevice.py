@@ -18,7 +18,7 @@ class InvalidImportDevice(PythonDevice):
         )
 
     def __init__(self, config):
-        super(InvalidImportDevice, self).__init__(config)
+        super().__init__(config)
         self.registerInitialFunction(self.initialize)
 
     def initialize(self):

@@ -24,7 +24,7 @@ def call_counter(func):
 
 class TestDeviceClientComm(BoundDeviceTestCase):
     def setUp(self):
-        super(TestDeviceClientComm, self).setUp()
+        super().setUp()
 
         self.data_server = 'BoundDeviceServer0'
         self.data_device = 'propTestDevice0'
@@ -32,7 +32,7 @@ class TestDeviceClientComm(BoundDeviceTestCase):
         self.instantiate_device(self.data_server, deviceId=self.data_device)
 
     def tearDown(self):
-        super(TestDeviceClientComm, self).tearDown()
+        super().tearDown()
 
     def instantiate_device(self, serverId, classId='PropertyTest',
                            deviceId='propTestDevice', configuration=None,

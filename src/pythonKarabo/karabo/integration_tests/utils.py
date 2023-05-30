@@ -95,11 +95,11 @@ class BoundDeviceTestCase(TestCase):
         if api == "bound":
             if namespace is not None:
                 server_args = [f"pluginNamespace={namespace}"] + server_args
-            server_args.append('Logger.priority={}'.format(logLevel))
+            server_args.append(f'Logger.priority={logLevel}')
             serverProcess = start_bound_server(server_id, server_args,
                                                plugin_dir=plugin_dir)
         elif api == "cpp":
-            server_args.append('Logger.priority={}'.format(logLevel))
+            server_args.append(f'Logger.priority={logLevel}')
             serverProcess = start_cpp_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         elif api == "mdl":
@@ -109,7 +109,7 @@ class BoundDeviceTestCase(TestCase):
             serverProcess = start_mdl_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         else:
-            raise RuntimeError("Unknown server api: {}".format(api))
+            raise RuntimeError(f"Unknown server api: {api}")
 
         # wait for classes to appear
         if not skip_plugins_check:

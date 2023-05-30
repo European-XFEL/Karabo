@@ -25,22 +25,22 @@ def get_key_value(key, value):
     """
     if isinstance(value, str):
         return b''.join(
-            [f'{key}=\"'.encode('utf-8'),
+            [f'{key}=\"'.encode(),
              escape_tag_field_key(value).encode('utf-8'),
              b'\"'])
     elif isinstance(value, bool):
         if value:
-            return f'{key}=t'.encode('utf-8')
+            return f'{key}=t'.encode()
         else:
-            return f'{key}=f'.encode('utf-8')
+            return f'{key}=f'.encode()
     elif isinstance(value, numbers.Integral):
-        return f'{key}={value}i'.encode('utf-8')
+        return f'{key}={value}i'.encode()
     elif isinstance(value, numbers.Real):
-        return f'{key}={repr(value)}'.encode('utf-8')
+        return f'{key}={repr(value)}'.encode()
     else:
         data = string_from_hashtype(value)
         return b''.join(
-            [f'{key}=\"'.encode('utf-8'),
+            [f'{key}=\"'.encode(),
                 escape_tag_field_key(data).encode('utf-8'),
                 b'\"'])
 
@@ -64,7 +64,7 @@ def get_line_fromdicts(measurement, field_dict, tag_dict=None, timestamp=None):
 
     # timestamp precision is set in `write` is us
     timestamp = timestamp or int(1e6*time.time())
-    timestamp = f' {timestamp}'.encode('utf-8')
+    timestamp = f' {timestamp}'.encode()
     return b''.join(
         (measurement.encode('utf-8'), tags, b' ', fields, timestamp))
 
@@ -100,9 +100,9 @@ def lines_fromhash(device_id, hash_, tags=""):
             else:
                 yield from _serialize(v, f"{prefix}{k}.")
     yield from _serialize(hash_, "")
-    yield f'_tid={tid}i'.encode('utf-8')
+    yield f'_tid={tid}i'.encode()
     if timestamp > 0:
-        yield f' {timestamp}'.encode('utf-8')
+        yield f' {timestamp}'.encode()
 
 
 def get_keys_from_result(result, measurement, query):
@@ -128,8 +128,7 @@ class Results():
 
     def get_series(self):
         for d in self.data:
-            for serie in d.get('series', []):
-                yield serie
+            yield from d.get('series', [])
 
     def _get_series_key(self, serie):
         return (serie.get('measurement',
@@ -147,8 +146,7 @@ class Results():
     def __getitem__(self, key):
         for serie in self.get_series():
             if key == self._get_series_key(serie):
-                for value in serie.get('values', []):
-                    yield value  # this is a list
+                yield from serie.get('values', [])
 
     def get_columns(self, key):
         for serie in self.get_series():
@@ -206,7 +204,7 @@ class InfluxDbClient():
     def _get_basic_auth_header(self):
         auth_header = None
         if self.user and self.password:
-            cred = f'{self.user}:{self.password}'.encode('utf-8')
+            cred = f'{self.user}:{self.password}'.encode()
             b64_cred = base64.b64encode(cred).decode('utf-8')
             auth_header = {'Authorization': f'Basic {b64_cred}'}
         return auth_header
