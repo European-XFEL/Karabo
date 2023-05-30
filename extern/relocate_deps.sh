@@ -15,7 +15,7 @@ get_abs_path() {
     echo "$abs_path"
 }
 
-relocate_python() {    
+relocate_python() {
     # Makefile has a 'prefix' which needs to be fixed
     local sed_program='s%^prefix=.*$%prefix='${INSTALL_PREFIX}'%'
     sed -i $sed_program $($INSTALL_PREFIX/bin/python -c "import sysconfig; print(sysconfig.get_makefile_filename())")
@@ -89,13 +89,12 @@ rewrite_rpaths() {
     done
 
     # Relocate the executables
-    export ORIGIN=$INSTALL_PREFIX/bin
     # can't fix python if python is running the fixer script
     run_rpath_fixer "-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
-    # now fix python
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --set-rpath $INSTALL_PREFIX/lib $INSTALL_PREFIX/bin/python"
-    # run a second time forcing to RUNPATH as well: https://stackoverflow.com/questions/43616505/setting-rpath-for-python-not-working
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath $INSTALL_PREFIX/lib $INSTALL_PREFIX/bin/python"
+    # now fix python forcing to RPATH: https://stackoverflow.com/questions/43616505/setting-rpath-for-python-not-working
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python"
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3"
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.8" 
 }
 
 run_rpath_fixer() {
