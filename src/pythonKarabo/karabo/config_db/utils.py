@@ -84,7 +84,7 @@ def create_config_set_id(deviceIds):
     :return: a sha1 hash that is unique for a given set of devices.
     """
     assert type(deviceIds) is list
-    uniques = sorted(set([devId.upper() for devId in deviceIds]))
+    uniques = sorted({devId.upper() for devId in deviceIds})
     ids_str = '::'.join(uniques)
     return hashlib.sha1(ids_str.encode('utf-8')).hexdigest()
 

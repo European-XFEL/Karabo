@@ -120,7 +120,7 @@ class IPythonKernel(Device):
         self.state = State.STARTED
 
     def _initInfo(self):
-        info = super(IPythonKernel, self)._initInfo()
+        info = super()._initInfo()
         info["lang"] = "python"
         # XXX: The GUI cannot handle this device as client for the time being
         #      treat it as a macro so it will not be archived.

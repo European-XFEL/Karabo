@@ -86,7 +86,7 @@ def _get_service_information(interlock_only=False):
                 ack = info_hsh.get(ACKNOWLEDGEABLE)
                 acknowledge = needs_ack and ack
                 # Create namedtuple
-                entry = AlarmEntry(acknowledge="{}".format(acknowledge),
+                entry = AlarmEntry(acknowledge=f"{acknowledge}",
                                    **params)
                 entries.append(entry)
 

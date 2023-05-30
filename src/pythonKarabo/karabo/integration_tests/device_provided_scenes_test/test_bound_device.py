@@ -10,7 +10,7 @@ SERVER_ID = "testServerSceneProviders"
 
 class TestDeviceProvidedScenes(BoundDeviceTestCase):
     def setUp(self):
-        super(TestDeviceProvidedScenes, self).setUp()
+        super().setUp()
         class_ids = ['SceneProvidingDevice', 'NonSceneProvidingDevice']
         self.start_server("bound", SERVER_ID, class_ids,
                           namespace="karabo.bound_device_test")
