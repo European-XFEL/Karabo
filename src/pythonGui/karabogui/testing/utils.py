@@ -29,8 +29,7 @@ from karabogui.util import process_qt_events
 
 
 class GuiTestCase(unittest.TestCase):
-    """ A convenient base class for gui test cases
-    """
+    """ A convenient base class for gui test cases"""
 
     def setUp(self):
         os.environ["KARABO_TEST_GUI"] = "1"
