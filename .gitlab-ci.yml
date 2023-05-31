@@ -705,7 +705,7 @@ internal_mirror_publish:
   image: europeanxfel/karabo-ci:miniconda-3-006
 
   only:
-    - /^(\d+\.)(\d+\.)(\d+)$/
+    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc)(\d+))?$/
   except:
     - branches
     - schedules
