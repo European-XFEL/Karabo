@@ -14,20 +14,16 @@
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
-
-#include "version.hh"  // provides __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION
+#include "version.hh" // provides __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION
 
 
 namespace karabo {
 
-    class __CLASS_NAME__ final: public karabo::core::Device<> {
-
-    public:
-
+    class __CLASS_NAME__ final : public karabo::core::Device<> {
+       public:
         // Add reflection information and Karabo framework compatibility to
         // this class.
-        KARABO_CLASSINFO(__CLASS_NAME__, "__CLASS_NAME__",
-                         __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION)
+        KARABO_CLASSINFO(__CLASS_NAME__, "__CLASS_NAME__", __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION)
 
         /**
          * @brief Necessary method as part of the factory/configuration system
@@ -69,8 +65,7 @@ namespace karabo {
          *           will automatically be applied to the current state.
          *
          */
-        virtual void preReconfigure(
-            karabo::util::Hash& incomingReconfiguration) override;
+        virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
 
         /**
          * @brief Acts as a hook and is called after an reconfiguration request
@@ -86,9 +81,8 @@ namespace karabo {
          */
         virtual void postReconfigure() override;
 
-    private:
-
-         void initialize();
+       private:
+        void initialize();
 
     }; // class __CLASS_NAME__
 
