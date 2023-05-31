@@ -6,7 +6,7 @@
  * Created on July 9, 2013, 8:59 AM
  */
 #include <karabo/util/Configurator.hh>
-//#include "HashBinarySerializer.hh"
+// #include "HashBinarySerializer.hh"
 #include "SchemaBinarySerializer.hh"
 
 using namespace std;

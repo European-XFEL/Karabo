@@ -5,7 +5,7 @@
 #include <karathon/Wrapper.hh>
 
 
-//#include <karabo/util/ArrayTools.hh>
+// #include <karabo/util/ArrayTools.hh>
 
 
 // using namespace std;
