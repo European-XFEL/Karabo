@@ -113,14 +113,14 @@ runPythonLongTests() {
     echo
 
     if [ $CODECOVERAGE = "y" ]; then
-       safeRunCommand $scriptDir/run_python_tests.sh \
-           --runLongTests \
-           --collectCoverage \
-           --rootDir $scriptDir
+        safeRunCommand $scriptDir/run_python_tests.sh \
+            --runLongTests \
+            --collectCoverage \
+            --rootDir $scriptDir
     else
-       safeRunCommand $scriptDir/run_python_tests.sh \
-           --runLongTests \
-           --rootDir $scriptDir
+        safeRunCommand $scriptDir/run_python_tests.sh \
+            --runLongTests \
+            --rootDir $scriptDir
     fi
     deactivate
 }
@@ -421,13 +421,13 @@ pushd $FRAMEWORK_BUILD_DIR
 # of Karabo as it is used to compile some other dependencies, like the
 # MQTT client lib.
 safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
-      -DBUILD_UNIT_TESTING=$BUILD_UNIT_TESTING \
-      -DBUILD_INTEGRATION_TESTING=$BUILD_INTEGRATION_TESTING \
-      -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
-      -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
-      -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
-      -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
-      $scriptDir/src/.
+    -DBUILD_UNIT_TESTING=$BUILD_UNIT_TESTING \
+    -DBUILD_INTEGRATION_TESTING=$BUILD_INTEGRATION_TESTING \
+    -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
+    -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
+    -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
+    -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
+    $scriptDir/src/.
 
 if [ $? -ne 0 ]; then
     echo
@@ -440,102 +440,102 @@ fi
 if [ -d $FRAMEWORK_INSTALL_DIR ]; then
     for dir in $FRAMEWORK_INSTALL_DIR/*
     do
-       if [[  "$dir" = "$FRAMEWORK_INSTALL_DIR/devices" ||
+        if [[  "$dir" = "$FRAMEWORK_INSTALL_DIR/devices" ||
               "$dir" = "$FRAMEWORK_INSTALL_DIR/installed" ||
               "$dir" = "$FRAMEWORK_INSTALL_DIR/plugins" ||
               "$dir" = "$FRAMEWORK_INSTALL_DIR/var" ]]; then
-           : # Skip removal of directory
-       else
-           rm -rf $dir
-       fi
-    done
-fi
-
-# Builds libkarabo, libkarathon, libkarabind, karabo-* utilities
-# and installs them in FRAMEWORK_INSTALL_DIR.
-safeRunCommand $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target install
-if [ $? -ne 0 ]; then
-    echo
-    echo "#### Error on cmake project building phase. Exiting. ####"
-    exit 1
-fi
-
-# Installs the components of the Karabo Framework that are not built
-# with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be
-# run from the activated Karabo environment hosted in the install
-# tree.
-BUNDLE_ACTION="install"
-if [ "$BUNDLE" = "y" ]; then
-    BUNDLE_ACTION="package"
-fi
-safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
-
-# enable prints from now on.
-if [ ! -z "$KARABO_CI_QUIET" ]; then
-    unset KARABO_CI_QUIET
-fi
-
-echo "### Successfully finished building of karaboFramework ###"
-
-if [ "$GEN_CODE_COVERAGE" = "1" ]; then
-    echo
-    echo Running Karabo C++ tests and generating coverage report ...
-    echo
-    # Activate the karabo environment to allow tests to be run from the
-    # build tree.
-    source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
-    # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
-    # a 'test_coverage_report' target, than when built runs the tests and
-    # generates the coverage report.
-    $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target test_coverage_report
-    deactivateKarabo
-    # Generate the coverage report for the Python tests - all of them.
-    producePythonCodeCoverageReport
-    exit 0
-fi
-
-if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS" = "y" ];}; then
-    echo
-    echo Running Karabo C++ tests ...
-    echo
-    # Activate the karabo environment to allow tests to be run from the
-    # build tree.
-    typeset tests_ret_code
-    source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
-    # clear previous tests
-    for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
-        rm -f ${name}
-    done
-    # NOTE: the tests are not executed inside a `safeRunCommand` function.
-    #       this is to give us the chance to process the result files.
-    ctest -VV
-    tests_ret_code=$?
-    # deactivate the environment where C++ tests are run
-    deactivateKarabo
-    # Parse the XML test outputs
-    checkCppUnitTestResults
-    if [ $tests_ret_code != 0 ]; then
-        echo "Test execution FAILED"
-        echo "Report files processing did not find errors..."
-        echo "A test file is likely missing due to a segmentation fault in tests."
-        exit $tests_ret_code
+                : # Skip removal of directory
+            else
+                rm -rf $dir
+            fi
+        done
     fi
-fi
 
-popd
+    # Builds libkarabo, libkarathon, libkarabind, karabo-* utilities
+    # and installs them in FRAMEWORK_INSTALL_DIR.
+    safeRunCommand $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target install
+    if [ $? -ne 0 ]; then
+        echo
+        echo "#### Error on cmake project building phase. Exiting. ####"
+        exit 1
+    fi
 
-if [ "$RUNTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ] ; then
-    runPythonUnitTests
-fi
+    # Installs the components of the Karabo Framework that are not built
+    # with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be
+    # run from the activated Karabo environment hosted in the install
+    # tree.
+    BUNDLE_ACTION="install"
+    if [ "$BUNDLE" = "y" ]; then
+        BUNDLE_ACTION="package"
+    fi
+    safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
 
-if [ "$RUNINTEGRATIONTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
-    runPythonIntegrationTests
-fi
+    # enable prints from now on.
+    if [ ! -z "$KARABO_CI_QUIET" ]; then
+        unset KARABO_CI_QUIET
+    fi
 
-if [ "$RUNLONGTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
-    runPythonLongTests
-fi
+    echo "### Successfully finished building of karaboFramework ###"
 
-echo "### Successfully finished building and packaging of karaboFramework ###"
-echo
-exit 0
+    if [ "$GEN_CODE_COVERAGE" = "1" ]; then
+        echo
+        echo Running Karabo C++ tests and generating coverage report ...
+        echo
+        # Activate the karabo environment to allow tests to be run from the
+        # build tree.
+        source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+        # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
+        # a 'test_coverage_report' target, than when built runs the tests and
+        # generates the coverage report.
+        $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target test_coverage_report
+        deactivateKarabo
+        # Generate the coverage report for the Python tests - all of them.
+        producePythonCodeCoverageReport
+        exit 0
+    fi
+
+    if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS" = "y" ];}; then
+        echo
+        echo Running Karabo C++ tests ...
+        echo
+        # Activate the karabo environment to allow tests to be run from the
+        # build tree.
+        typeset tests_ret_code
+        source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+        # clear previous tests
+        for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
+            rm -f ${name}
+        done
+        # NOTE: the tests are not executed inside a `safeRunCommand` function.
+        #       this is to give us the chance to process the result files.
+        ctest -VV
+        tests_ret_code=$?
+        # deactivate the environment where C++ tests are run
+        deactivateKarabo
+        # Parse the XML test outputs
+        checkCppUnitTestResults
+        if [ $tests_ret_code != 0 ]; then
+            echo "Test execution FAILED"
+            echo "Report files processing did not find errors..."
+            echo "A test file is likely missing due to a segmentation fault in tests."
+            exit $tests_ret_code
+        fi
+    fi
+
+    popd
+
+    if [ "$RUNTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ] ; then
+        runPythonUnitTests
+    fi
+
+    if [ "$RUNINTEGRATIONTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
+        runPythonIntegrationTests
+    fi
+
+    if [ "$RUNLONGTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
+        runPythonLongTests
+    fi
+
+    echo "### Successfully finished building and packaging of karaboFramework ###"
+    echo
+    exit 0
