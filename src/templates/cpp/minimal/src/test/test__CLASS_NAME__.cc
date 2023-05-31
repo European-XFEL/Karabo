@@ -7,18 +7,17 @@
  * Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
  */
 
-#include "__CLASS_NAME__.hh"
-
-#include <thread>
-#include <utility>
-#include <boost/shared_ptr.hpp>
 #include <gtest/gtest.h>
 
-#include "karabo/util/Hash.hh"
+#include <boost/shared_ptr.hpp>
+#include <thread>
+#include <utility>
 
+#include "__CLASS_NAME__.hh"
+#include "karabo/util/Hash.hh"
 #include "testrunner.hh"
 
-#define TEST_DEVICE_ID   "test__CLASS_NAME__"
+#define TEST_DEVICE_ID "test__CLASS_NAME__"
 
 using namespace ::testing;
 
@@ -29,19 +28,17 @@ using namespace ::testing;
  *        from this default one to create fixtures with different
  *        instantiation configurations or different mocking behaviour.
  */
-class __CLASS_NAME__DefaultCfg: public KaraboDeviceFixture {
-protected:
+class __CLASS_NAME__DefaultCfg : public KaraboDeviceFixture {
+   protected:
+    __CLASS_NAME__DefaultCfg() : KaraboDeviceFixture() {}
 
-    __CLASS_NAME__DefaultCfg(): KaraboDeviceFixture() {}
-
-    void SetUp( ) override {
+    void SetUp() override {
         /**
          * Add configuration for this 'DefaultCfg' test fixture
          * to the devCfg hash here
          */
 
-        karabo::util::Hash devCfg("deviceId", TEST_DEVICE_ID,
-                                  "_deviceId_", TEST_DEVICE_ID);
+        karabo::util::Hash devCfg("deviceId", TEST_DEVICE_ID, "_deviceId_", TEST_DEVICE_ID);
 
         /**
          * Instantiate device without device server so the device pointer
@@ -58,10 +55,10 @@ protected:
          *   - onTimeUpdate will never get called
          */
         // instantiate the device to be tested
-        //karabo::core::BaseDevice::Pointer baseDevice;
-        //baseDevice = instantiateAndGetPointer("__CLASS_NAME__", TEST_DEVICE_ID, devCfg);
+        // karabo::core::BaseDevice::Pointer baseDevice;
+        // baseDevice = instantiateAndGetPointer("__CLASS_NAME__", TEST_DEVICE_ID, devCfg);
         // cast the BaseDevice::Pointer to the derived class Pointer
-        //deviceUnderTest = boost::dynamic_pointer_cast<karabo::__CLASS_NAME__>(baseDevice);
+        // deviceUnderTest = boost::dynamic_pointer_cast<karabo::__CLASS_NAME__>(baseDevice);
 
         /**
          * Instantiate device inside a device server
@@ -74,10 +71,9 @@ protected:
         /**
          * Add default expectations for this test fixture here
          */
-
     }
 
-    void TearDown( ) override {
+    void TearDown() override {
         /**
          * Shutdown the device
          */
@@ -93,7 +89,6 @@ protected:
 
 // test only that device instantiates
 TEST_F(__CLASS_NAME__DefaultCfg, testDeviceInstantiation) {
-
     karabo::util::Hash result = m_deviceCli->get(TEST_DEVICE_ID);
     std::string cls = result.get<std::string>("classId");
     std::string clsVer = result.get<std::string>("classVersion");
