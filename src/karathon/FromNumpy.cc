@@ -17,7 +17,7 @@ namespace karathon {
 
 
     FromNumpy::FromNumpy() {
-        //#define _KARABO_HELPER_MACRO(fromType, refType) (fromType, karabo::util::Types::refType)
+        // #define _KARABO_HELPER_MACRO(fromType, refType) (fromType, karabo::util::Types::refType)
 #define _KARABO_HELPER_MACRO(fromType, refType) \
     { fromType, karabo::util::Types::refType }
 
