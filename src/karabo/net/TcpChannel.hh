@@ -9,7 +9,7 @@
 #ifndef KARABO_NET_TCPCHANNEL_HH
 #define KARABO_NET_TCPCHANNEL_HH
 
-//#include <boost/enable_shared_from_this.hpp>
+// #include <boost/enable_shared_from_this.hpp>
 
 #include <atomic>
 #include <karabo/io/BinarySerializer.hh>
