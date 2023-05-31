@@ -11,7 +11,6 @@
 
 
 KaraboDeviceFixture::KaraboDeviceFixture() {
-
     m_eventLoopThread = std::thread(&karabo::net::EventLoop::work);
 
     // Instantiate C++ Device Client
@@ -19,38 +18,28 @@ KaraboDeviceFixture::KaraboDeviceFixture() {
     m_deviceCli->initialize();
 }
 
-void KaraboDeviceFixture::instantiateWithDeviceServer(
-        const std::string& classId,
-        const std::string& instanceId,
-        const karabo::util::Hash& devCfg) {
-
+void KaraboDeviceFixture::instantiateWithDeviceServer(const std::string& classId, const std::string& instanceId,
+                                                      const karabo::util::Hash& devCfg) {
     // Instantiate C++ device server
     const karabo::util::Hash& pluginConfig = karabo::util::Hash("pluginDirectory", ".");
     karabo::util::PluginLoader::create("PluginLoader", pluginConfig)->update();
 
     // scanPlugins is set to true to scan $KARABO/plugins directory
     // can be set to false if other libraries are not needed for testing
-    karabo::util::Hash config("serverId", DEVICE_SERVER_ID,
-                              "scanPlugins", true,
-                              "Logger.priority", LOG_PRIORITY);
+    karabo::util::Hash config("serverId", DEVICE_SERVER_ID, "scanPlugins", true, "Logger.priority", LOG_PRIORITY);
     m_deviceSrv = karabo::core::DeviceServer::create("DeviceServer", config);
     m_deviceSrv->finalizeInternalInitialization();
 
     // instantiate the device under test
     std::pair<bool, std::string> success =
-    m_deviceCli->instantiate(DEVICE_SERVER_ID, classId,
-                             devCfg, DEV_CLI_TIMEOUT_SEC);
+          m_deviceCli->instantiate(DEVICE_SERVER_ID, classId, devCfg, DEV_CLI_TIMEOUT_SEC);
 
-    ASSERT_TRUE(success.first)
-        << "Failure instantiating '" << instanceId << "':\n"
-        << success.second;
+    ASSERT_TRUE(success.first) << "Failure instantiating '" << instanceId << "':\n" << success.second;
 }
 
-karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(
-        const std::string& classId,
-        const std::string& instanceId,
-        const karabo::util::Hash& devCfg) {
-
+karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(const std::string& classId,
+                                                                                const std::string& instanceId,
+                                                                                const karabo::util::Hash& devCfg) {
     std::string errorMsg;
     karabo::core::BaseDevice::Pointer devPtr;
 
@@ -65,22 +54,21 @@ karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(
         // connect the device under test to the broker
         Broker::Pointer connection = Broker::createChoice(brokerType, valBrokerCfg);
         devPtr->finalizeInternalInitialization(
-            connection,
-            true, // no server feeds the device with broadcasts, so it has to listen itself
-            "");  // timeserver id (only needed by slotGetTime) does not matter
+              connection,
+              true, // no server feeds the device with broadcasts, so it has to listen itself
+              "");  // timeserver id (only needed by slotGetTime) does not matter
     } catch (const std::exception& e) {
         errorMsg = e.what();
         if (errorMsg.empty()) errorMsg = "Unexpected instantiation exception";
     }
 
-    EXPECT_TRUE(errorMsg.empty())
-        << "Failure instantiating '" << instanceId << "':" << std::endl
-        << errorMsg << std::endl;
+    EXPECT_TRUE(errorMsg.empty()) << "Failure instantiating '" << instanceId << "':" << std::endl
+                                  << errorMsg << std::endl;
 
     return devPtr;
 }
 
-KaraboDeviceFixture::~KaraboDeviceFixture( ) {
+KaraboDeviceFixture::~KaraboDeviceFixture() {
     m_deviceCli.reset();
     m_deviceSrv.reset();
     karabo::net::EventLoop::stop();
@@ -91,7 +79,7 @@ KaraboDeviceFixture::~KaraboDeviceFixture( ) {
 /*
  * @brief GoogleTest entry point
  */
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
