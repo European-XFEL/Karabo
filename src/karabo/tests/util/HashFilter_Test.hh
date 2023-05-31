@@ -13,7 +13,7 @@
 #include <karabo/log/Logger.hh>
 #include <karabo/util/Configurator.hh>
 
-//#define HASHFILTER_HDF5TEST
+// #define HASHFILTER_HDF5TEST
 
 class HashFilter_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(HashFilter_Test);
