@@ -1,12 +1,7 @@
-# installing these first will speed up a lot of other things
-# on the main requirements. This is basically because pip seems
-# to have a hard time sorting out a dependency chain that requires
-# numpy, and scipy in a lot of places. Hence we install
-# them here first.
-numpy==1.21.4 --install-option="--no-binary numpy"  # if we don't have openblas available, we need to build from sources, so BLAS is used
-scipy==1.6.3 --install-option="--no-binary scipy"
+# requirements in this file might be forced to compile from sources by specifying the --no-binary :all:.
+# for many packages this will not be required, nor preferable. Such packages should hence not be 
+# added to this file.
 
-# since pip seems to consider building from source preferable to wheels
-# for any entry in a requirement file, in which a single entry specifies
-# such an option, we also add all other packages which require this here.
-pyzmq==22.3.0 --install-option="--no-binary pyzmq"
+numpy==1.21.4
+scipy==1.6.3
+pyzmq==22.3.0
