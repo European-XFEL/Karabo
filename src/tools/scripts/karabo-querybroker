@@ -22,8 +22,8 @@ if [ $1 == "-h" ] || [ $1 == "--help" ]; then
 fi
 
 if [ -z $KARABO ]; then
-  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
-  exit 1
+    echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
+    exit 1
 fi
 
 if [ -z $KARABO_BROKER ]; then

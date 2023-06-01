@@ -18,12 +18,12 @@ if [ -f "/etc/os-release" ]; then
     OS_MAJOR_VERSION=$(cat "/etc/os-release" | awk -F= '{if($1 == "VERSION_ID") print $2}' | tr -d \" |  sed -r "s/^([0-9]+).*/\1/")
     export OS_MAJOR_VERSION
 else
-  eval which lsb_release &> /dev/null
-  if [ $? = 0 ]; then
-    # lsb_release is available; use it to set the variables
-    OS_DIST=$(lsb_release -is)
-    export OS_DIST
-    OS_MAJOR_VERSION=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-    export OS_MAJOR_VERSION
-  fi
+    eval which lsb_release &> /dev/null
+    if [ $? = 0 ]; then
+        # lsb_release is available; use it to set the variables
+        OS_DIST=$(lsb_release -is)
+        export OS_DIST
+        OS_MAJOR_VERSION=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+        export OS_MAJOR_VERSION
+    fi
 fi
