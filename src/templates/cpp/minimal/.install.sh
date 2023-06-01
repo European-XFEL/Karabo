@@ -15,8 +15,8 @@ safeRunCommand() {
 }
 
 if [ -z $KARABO ]; then
-  echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework you would like to use."
-  exit 1
+    echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework you would like to use."
+    exit 1
 fi
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # "karabo install" expects the installation directory here
@@ -30,12 +30,12 @@ BUILD_OPT="--build ."
 unset MAKEFLAGS
 # handle the make -j option from the caller.
 if [[ "${2}" != "" ]]; then
-  BUILD_OPT="--build . -j ${2}"
-# or use all but 4 procs on system
-# (minimum nproc is always 1)
+    BUILD_OPT="--build . -j ${2}"
+    # or use all but 4 procs on system
+    # (minimum nproc is always 1)
 elif command -v nproc &> /dev/null; then
-  NPROC=$(nproc --all --ignore=4)
-  BUILD_OPT="--build . -j${NPROC}"
+    NPROC=$(nproc --all --ignore=4)
+    BUILD_OPT="--build . -j${NPROC}"
 fi
 
 

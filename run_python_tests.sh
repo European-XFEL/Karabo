@@ -79,7 +79,7 @@ the code coverage data in several places and needs to be a bit more dynamic.
 
 The order in which you call the flags is not important. If a flag is repeated,
 the script behaves as it would if the flag was only called once.
-"
+    "
 }
 
 # Help function for checking successful execution of commands
