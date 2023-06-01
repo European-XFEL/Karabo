@@ -20,12 +20,12 @@ if [ -f "/etc/os-release" ]; then
     LSB_RELEASE_VERSION=$(cat "/etc/os-release" | awk -F= '{if($1 == "VERSION_ID") print $2}' | tr -d \")
     export LSB_RELEASE_VERSION
 else
-  eval which lsb_release &> /dev/null
-  if [ $? = 0 ]; then
-    # lsb_release is available; use it to set the variables
-    LSB_RELEASE_DIST=$(lsb_release -is)
-    export LSB_RELEASE_DIST
-    LSB_RELEASE_VERSION=$(lsb_release -rs)
-    export LSB_RELEASE_VERSION
-  fi
+    eval which lsb_release &> /dev/null
+    if [ $? = 0 ]; then
+        # lsb_release is available; use it to set the variables
+        LSB_RELEASE_DIST=$(lsb_release -is)
+        export LSB_RELEASE_DIST
+        LSB_RELEASE_VERSION=$(lsb_release -rs)
+        export LSB_RELEASE_VERSION
+    fi
 fi
