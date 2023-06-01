@@ -443,7 +443,7 @@ install_from_deps() {
 
     # global pip config
     # we will run pip as a module throughout to avoid errors where a pip import
-    # is not found when using the pip3 command directtly. 
+    # is not found when using the pip3 command directly.
     # These sometimes occur if pip does large changes, as part of dependency
     # chains affecting its own requirements.
     local pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
@@ -459,15 +459,14 @@ install_from_deps() {
         echo "pip-upgrade" >> $marker_path
     fi
      
-    # install requirements that should be installed before conan, 
-    # and before we go through most other python packages
+    # install requirements that should be installed before everything else,
+    # such as pip, conan, and other tools to build/install packages
     # since this includes conan, we need to force a reinstall, otherwise
     # only the stdlib version of conan will be available, no commands can
     # be issued directly from the CLI.
     element_in "pip-pre-requirements" "${package_status[@]}"
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-        # make sure numpy prefers blas over openblas
         safeRunCommandQuiet "$pip_install_cmd --force-reinstall -r requirements-pre.txt"
         echo "pip-pre-requirements" >> $marker_path
     fi
@@ -527,12 +526,44 @@ install_from_deps() {
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         export NPY_BLAS_ORDER="BLAS,OPENBLAS"
         export NPY_LAPACK_ORDER="LAPACK,OPENBLAS"
-        safeRunCommandQuiet "$pip_install_cmd -r requirements-0.txt"
+        local install_from_source=""
+        local install_from_cache=""
+
+        # if any package in requirements-0.txt is not in cache, install
+        # requirements-0.txt all from source
+        while read -r line
+        do
+          if [[ $line = \#* || -z $line ]]; then
+            continue
+          fi
+          local in_reqs=`echo $line | sed 's/==/-/g'`
+          local in_cache=`$INSTALL_PREFIX/bin/pip cache list $in_reqs --format=abspath`
+          if [[ -z "$in_cache" ]]; then
+            # compile from source if any package from requirements-0 is missing in cache
+            safeRunCommand "$pip_install_cmd -r requirements-0.txt --no-binary :all:"
+            install_from_source=":all:"
+            break
+          else
+            # append to list of wheels to install from cache
+            install_from_cache="$install_from_cache $in_cache"
+          fi
+        done < requirements-0.txt
+
+        # if all packages in requirements-0.txt are in cache, install from cache
+        if [[ -z $install_from_source ]]; then
+          safeRunCommand "$pip_install_cmd $install_from_cache"
+        fi
+
+        # install everything else, these will also use cache if possible
+        # (automatically determined by pip)
         safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
         safeRunCommandQuiet "$pip_install_cmd -r requirements-2.txt"
         echo "pip-requirements" >> $marker_path
     fi
-    
+
+    # check numpy capabilities
+    $INSTALL_PREFIX/bin/python -c "import numpy; print(numpy.show_config())"
+
     popd
 
     # reset the environment
