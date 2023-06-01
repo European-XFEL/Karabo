@@ -19,12 +19,15 @@ repos:
       - id: check-json
       - id: destroyed-symlinks
       - id: check-symlinks
+      - id: check-xml
+      - id: pretty-format-json
+        args: [ --autofix ]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v13.0.0
     hooks:
       - id: clang-format
-        args: ["-style=file"]
+        args: [ "-style=file" ]
         files: |
           (?x)(
               ^src/karabo/|
@@ -39,15 +42,15 @@ repos:
   - repo: https://github.com/pycqa/isort
     rev: 5.11.5
     hooks:
-      -  id: isort
-         name: isort pythonKarabo
-         files: |
+      - id: isort
+        name: isort pythonKarabo
+        files: |
           (?x)(
               ^src/pythonKarabo/
           )
-      -  id: isort
-         name: isort pythonGui
-         files: |
+      - id: isort
+        name: isort pythonGui
+        files: |
           (?x)(
               ^src/pythonGui/
           )
@@ -63,8 +66,8 @@ repos:
               ^src/pythonKarabo/karabo/bound_api/tests/
           )
 
-  -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.4.0
-      hooks:
-      -   id: pyupgrade
-          args: [--py37-plus]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.4.0
+    hooks:
+      - id: pyupgrade
+        args: [ --py37-plus ]
