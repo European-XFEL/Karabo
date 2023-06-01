@@ -151,11 +151,11 @@ karaboCondaInstallCPPEnvironment() {
     if [[ "${SETUP_FLAG}" == develop ]]; then
         # using the conda info instead of CONDA_PREFIX to fit older conda versions
         RECIPE_DIR=${_RECIPE_DIR} \
-        SRC_DIR=${SCRIPT_PATH} \
-        PKG_NAME=${KARABO_ENV} \
-        PREFIX=`conda info --json | grep active_prefix | awk -F ": " '{printf $2;}' | sed  's|[,"]||g'` \
-        CPU_COUNT=`python -c "import multiprocessing as mp; print(mp.cpu_count())"` \
-        bash ${_RECIPE_DIR}/build.sh || return 1
+            SRC_DIR=${SCRIPT_PATH} \
+            PKG_NAME=${KARABO_ENV} \
+            PREFIX=`conda info --json | grep active_prefix | awk -F ": " '{printf $2;}' | sed  's|[,"]||g'` \
+            CPU_COUNT=`python -c "import multiprocessing as mp; print(mp.cpu_count())"` \
+            bash ${_RECIPE_DIR}/build.sh || return 1
     elif [[ "${SETUP_FLAG}" == install ]]; then
         python -m cogapp -o ${_RECIPE_DIR}/meta.yaml ${_RECIPE_DIR}/meta_base.yaml || return 1
         echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: will conda build with recipe dir ${_RECIPE_DIR}."
@@ -210,7 +210,7 @@ Note: The environment variable XFEL_CONDA_CHANNEL can optionally be used to poin
       If one follows the instructions in doc/installation/gui.rst, this script
       should be called as:
 
-      XFEL_CONDA_CHANNEL=localhost:8081 source build_conda_env.sh clean develop"
+    XFEL_CONDA_CHANNEL=localhost:8081 source build_conda_env.sh clean develop"
 }
 
 SETUP_FLAG=false
