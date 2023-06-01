@@ -10,10 +10,22 @@ stages:
 
 .build_template: &build
   stage: build
+  variables:
+    CONAN_USER_HOME: $CI_PROJECT_DIR/.cache/conan
+    PIP_CACHE_DIR:   $CI_PROJECT_DIR/.cache/pip
+  cache:
+    key: $CI_JOB_NAME
+    paths:
+      - .cache/conan/
+      - .cache/pip/
+    policy: pull-push
   script:
     - source set_lsb_release_info.sh
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
+  after_script:
+    # clean up build directories from conan cache
+    - conan remove "*" -b -f
 
 .artifact_template: &artifacts-spec
   artifacts:
