@@ -151,6 +151,22 @@ class ProjectViewItemModel(QAbstractItemModel):
                                                 encoding='UTF-8'))
         return mimeData
 
+    def selectModel(self, model):
+        """Find and select a controller from the project `model`"""
+        controller = None
+
+        def _visitor(obj):
+            """Find all items matching"""
+            if obj.model is model:
+                nonlocal controller
+                controller = obj
+                return True
+
+        self.visit(_visitor)
+        if controller is not None:
+            self.selectNode(controller)
+        return controller is not None
+
     def findNodes(self, text, case_sensitive=True,
                   use_reg_ex=True, full_match=False):
         """ Find in the ``self._traits_model`` all objects maching criteria"""
