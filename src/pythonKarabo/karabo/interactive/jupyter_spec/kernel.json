@@ -1,6 +1,12 @@
 {
-    "argv": ["{prefix}/bin/python", "-m", "karabo.interactive.jupyter_kernel", "-f", "{connection_file}"],
-    "display_name": "Karabo",
-    "language": "python",
-    "name": "Karabo"
+  "argv": [
+    "{prefix}/bin/python",
+    "-m",
+    "karabo.interactive.jupyter_kernel",
+    "-f",
+    "{connection_file}"
+  ],
+  "display_name": "Karabo",
+  "language": "python",
+  "name": "Karabo"
 }
