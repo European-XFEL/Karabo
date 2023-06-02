@@ -237,6 +237,8 @@ class MacroController(BaseProjectGroupController):
             project.macros.remove(macro)
             project.macros.insert(new_index, macro)
 
+        broadcast_event(KaraboEvent.ShowProjectModel, {"model": self.model})
+
     def _move_up(self, project_controller):
         self._move_macro(project_controller, "up")
 
