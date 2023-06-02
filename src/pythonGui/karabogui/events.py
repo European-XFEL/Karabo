@@ -51,6 +51,7 @@ class KaraboEvent(Enum):
     ShowConfigurationFromPast = "Show Configuration From Past"
     ShowDevice = "Show device"
     ShowProjectDevice = "Show project device"
+    ShowProjectModel = "Show project model"
     ShowMacroView = "Show macro"
     ShowSceneView = "Show scene"
     ShowUnattachedController = "Show unattached controller"
