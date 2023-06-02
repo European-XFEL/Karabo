@@ -17,7 +17,7 @@ def main():
         print("No test portal destination provided, aborting ...")
         return
 
-    d = {"tests": ["Distributed/200/01", "*/01/01", "Laptop/100/01"],
+    d = {"tests": ["CI_Distributed/200/01", "*/01/01", "Laptop/100/01"],
          "user": email,
          "test_variables": {"karabo_version": tag},
          "project": project}
