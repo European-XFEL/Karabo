@@ -51,6 +51,7 @@ class ProjectPanel(BasePanelWidget):
             KaraboEvent.LoginUserChanged: self._event_access_level,
             KaraboEvent.SystemTopologyUpdate: self._event_system_topology,
             KaraboEvent.ShowProjectDevice: self._event_show_project_device,
+            KaraboEvent.ShowProjectModel: self._event_select_project_model,
         }
         register_for_broadcasts(event_map)
 
@@ -193,6 +194,11 @@ class ProjectPanel(BasePanelWidget):
         if nodes:
             # Select first entry
             model.selectNode(nodes[0])
+
+    def _event_select_project_model(self, data):
+        """Event to show a project device """
+        model = self.tree_view.model()
+        model.selectModel(data.get("model"))
 
     # -----------------------------------------------------------------------
 
