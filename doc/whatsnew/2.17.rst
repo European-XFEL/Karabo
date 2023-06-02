@@ -5,8 +5,7 @@
 What's New in Karabo 2.17.0
 ***************************
 
-Release scheduled for the **02.06.2023**. Merge-log until 2.17.0rc15.
-This release candidate is public and for testing.
+Release scheduled for the **02.06.2023**.
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
@@ -26,6 +25,7 @@ Summary – Release highlights
 - GUI: The mainwindow title bar reflects now the loaded project
 - Ubuntu 22 Support: Backported to 2.16.4
 - TOOLS: karabo scripts autocompletes services, e.g. `karabo-kill`, `karabo-stop`, ...
+- DataLoggers: Provide schema chunking for very large schemas
 
 Features
 ++++++++
@@ -45,12 +45,6 @@ Breaking Changes
 ++++++++++++++++
 
 - Drop Ubuntu18 support from CI
-- C++/bound: If an NDArray inside a Hash that is sent via an output channel
-  contains data that is touched after Device.writeChannel (or
-  OutputChannel.update), the safeNDArray flag of these methods now explicitly
-  must be set to false to guarantee data integrity. Changed for performance
-  reasons since production systems do not use such NDArray.
-  Similarly the copyAllData flag of OutputChannel.write has changed to false.
 
 Change of behaviour
 +++++++++++++++++++
