@@ -7,7 +7,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog
 from scipy.optimize import curve_fit
 
-from karabogui.binding.api import get_binding_value
+from karabogui.api import get_array_data
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.common.fitting import (
     gaussian_fit, linear_function_fit, normal_cdf)
@@ -105,7 +105,7 @@ class DataAnalysisDialog(QDialog):
 
     def update_data(self):
         """Fetch the latest data points from the parent plot"""
-        value = get_binding_value(self.proxy)
+        value, _ = get_array_data(self.proxy)
         if value is None:
             return
         self.y_values = value
