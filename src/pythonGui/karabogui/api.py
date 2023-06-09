@@ -21,7 +21,7 @@ from karabogui.binding.api import (
     is_unsigned_vector_integer, is_vector_integer)
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.api import (
-    DIMENSIONS, BaseBindingController, BaseLineEditController,
+    DIMENSIONS, BaseArrayGraph, BaseBindingController, BaseLineEditController,
     BindingValidator, ListValidator, SimpleValidator, add_unit_label,
     axis_label, get_array_data, get_dimensions_and_encoding, get_image_data,
     has_options, is_proxy_allowed, register_binding_controller,
