@@ -17,12 +17,13 @@ from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.itemtypes import ProjectItemTypes
+from karabogui.project.dialog.move_handle import MoveHandleDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
     check_device_server_exists, check_macro_exists)
 from karabogui.request import get_macro_from_server, get_scene_from_server
-from karabogui.singletons.api import get_config
+from karabogui.singletons.api import get_config, get_panel_wrangler
 from karabogui.util import (
     VALID_PROJECT_OBJECT_NAME, getOpenFileName, move_to_cursor,
     show_filename_error)
@@ -104,9 +105,15 @@ def _fill_macros_menu(menu, project_controller):
                                                parent=menu.parent()))
     load_from_device.setEnabled(project_allowed)
 
+    move_action = QAction(icons.move, 'Arrange Macros', menu)
+    move_action.triggered.connect(partial(_move_project_macros,
+                                          project_controller,
+                                          parent=menu.parent()))
+
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
+    menu.addAction(move_action)
 
 
 def _fill_scenes_menu(menu, project_controller):
@@ -134,6 +141,11 @@ def _fill_scenes_menu(menu, project_controller):
                                             project_model=project_model,
                                             parent=menu.parent()))
 
+    move_action = QAction(icons.move, 'Arrange Scenes', menu)
+    move_action.triggered.connect(partial(_move_project_scenes,
+                                          project_controller,
+                                          parent=menu.parent()))
+
     about_action = QAction(icons.about, 'About', menu)
     about_action.triggered.connect(partial(_about_scene,
                                            project_controller,
@@ -143,6 +155,8 @@ def _fill_scenes_menu(menu, project_controller):
     menu.addAction(load_from_device)
     menu.addSeparator()
     menu.addAction(cinema_action)
+    menu.addSeparator()
+    menu.addAction(move_action)
     menu.addSeparator()
     menu.addAction(about_action)
 
@@ -243,6 +257,24 @@ def _load_macro_from_device(project_controller, parent=None):
                               project=project)
 
 
+def _move_project_macros(project_controller, parent=None):
+    wrangler = get_panel_wrangler()
+    project = project_controller.model
+    showing = [wrangler.is_showing_project_item(model)
+               for model in project.macros]
+    if any(showing):
+        messagebox.show_error(
+            "Please close all macros in the group element first before "
+            "reordering.", parent=parent)
+        return
+
+    macros = list(project.macros)
+    dialog = MoveHandleDialog(macros, parent=parent)
+    if dialog.exec() == QDialog.Accepted:
+        del project.macros[:]
+        project.macros.extend(dialog.items)
+
+
 def _add_scene(project_controller, parent=None):
     """ Add a scene to the associated project
     """
@@ -250,7 +282,6 @@ def _add_scene(project_controller, parent=None):
     dialog = ObjectEditDialog(object_type='scene', parent=parent)
     move_to_cursor(dialog)
     if dialog.exec() == QDialog.Accepted:
-        # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name)
         # Set initialized and modified last
         scene.initialized = scene.modified = True
@@ -316,6 +347,23 @@ def _load_scene_from_device(project_controller, parent=None):
 
         get_scene_from_server(device_id, scene_name=scene_name,
                               project=project)
+
+
+def _move_project_scenes(project_controller, parent=None):
+    wrangler = get_panel_wrangler()
+    project = project_controller.model
+    showing = [wrangler.is_showing_project_item(model)
+               for model in project.scenes]
+    if any(showing):
+        messagebox.show_error(
+            "Please close all scenes in the group element first before "
+            "reordering.", parent=parent)
+        return
+    scenes = list(project.scenes)
+    dialog = MoveHandleDialog(scenes, parent=parent)
+    if dialog.exec() == QDialog.Accepted:
+        del project.scenes[:]
+        project.scenes.extend(dialog.items)
 
 
 def _create_cinema_link(project_model=None, parent=None):
