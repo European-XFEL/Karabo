@@ -5,6 +5,7 @@
 from .arrays import (
     DIMENSIONS, get_array_data, get_dimensions_and_encoding, get_image_data)
 from .base import BaseBindingController
+from .basearray import BaseArrayGraph
 from .baselabel import AlarmMixin, BaseLabelController, FormatMixin
 from .baselineedit import BaseLineEditController
 from .registry import (

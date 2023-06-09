@@ -7,7 +7,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog
 from scipy.optimize import curve_fit
 
-from karabogui.api import get_array_data
+from karabogui.controllers.api import get_array_data
 from karabogui.graph.common.api import make_pen
 from karabogui.graph.common.fitting import (
     gaussian_fit, linear_function_fit, normal_cdf)
