@@ -177,15 +177,15 @@ class BaseProjectGroupController(BaseProjectController):
         """ Handles assignment to a list trait and passes the notification
         along to ``item_handler``
         """
-        self.item_handler(0, new, old)
+        self.item_handler(new, old)
 
     def items_mutated(self, event):
         """ Handles mutation(insertion/removal) of a list trait and passes the
         notification along to ``item_handler``
         """
-        self.item_handler(event.index, event.added, event.removed)
+        self.item_handler(event.added, event.removed)
 
-    def item_handler(self, index, added, removed):
+    def item_handler(self, added, removed):
         """ Called for List-trait events on ``model``
         """
         for model in removed:
@@ -198,7 +198,7 @@ class BaseProjectGroupController(BaseProjectController):
         additions = [self.child_create(model=model, parent=self,
                                        _qt_model=self._qt_model)
                      for model in added]
-        self._update_ui_children(index, additions)
+        self._update_ui_children(additions)
 
     def _children_items_changed(self, event):
         """ Maintain ``_child_map`` by watching item events on ``children``
@@ -212,15 +212,15 @@ class BaseProjectGroupController(BaseProjectController):
         for controller in event.added:
             self._child_map[controller.model] = controller
 
-    def _update_ui_children(self, index, additions):
+    def _update_ui_children(self, additions):
         """ Propagate changes from the Traits model to the Qt item model.
         """
         if not additions:
             return
 
         # First and last indices, INCLUSIVE (thus the '- 1')
-        first = index
+        first = len(self.children)
         last = first + len(additions) - 1
         # NOTE: Always use a context manager when modifying self.children!
         with self._qt_model.insertion_context(self, first, last):
-            self.children[index:index] = additions
+            self.children.extend(additions)
