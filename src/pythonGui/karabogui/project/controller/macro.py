@@ -97,16 +97,6 @@ class MacroController(BaseProjectGroupController):
                                               parent=parent))
         dupe_action.setEnabled(project_allowed)
 
-        up_action = QAction(icons.arrowFancyUp, 'Move Up', menu)
-        up_action.triggered.connect(partial(self._move_up,
-                                            project_controller))
-        up_action.setEnabled(project_allowed)
-
-        down_action = QAction(icons.arrowFancyDown, 'Move Down', menu)
-        down_action.triggered.connect(partial(self._move_down,
-                                              project_controller))
-        down_action.setEnabled(project_allowed)
-
         delete_action = QAction(icons.kill, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 project_controller,
@@ -122,8 +112,6 @@ class MacroController(BaseProjectGroupController):
 
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
-        menu.addAction(up_action)
-        menu.addAction(down_action)
         menu.addAction(delete_action)
         menu.addSeparator()
         menu.addAction(save_as_action)
@@ -143,7 +131,7 @@ class MacroController(BaseProjectGroupController):
         broadcast_event(KaraboEvent.ShowMacroView,
                         {'model': self.model})
 
-    def item_handler(self, index, added, removed):
+    def item_handler(self, added, removed):
         """ Called when instances are added/removed
         """
         for inst_id in removed:
@@ -158,7 +146,7 @@ class MacroController(BaseProjectGroupController):
                                        instance_id=inst_id)
                      for inst_id in added]
         # Synchronize the GUI with the Traits model
-        self._update_ui_children(index, additions)
+        self._update_ui_children(additions)
 
     def system_topology_callback(self, devices, servers):
         """ This callback is called by the ``SystemTopologyListener`` object
@@ -217,33 +205,6 @@ class MacroController(BaseProjectGroupController):
 
     # ----------------------------------------------------------------------
     # action handlers
-
-    def _move_macro(self, project_controller, mode):
-        """Move a macro either `up` or `down` in the project controller"""
-        assert mode in ("up", "down")
-
-        macro = self.model
-        project = project_controller.model
-        if macro in project.macros:
-            index = project.macros.index(macro)
-            if mode == "up":
-                new_index = index - 1
-                if new_index < 0:
-                    return
-            elif mode == "down":
-                new_index = index + 1
-                if new_index > len(project.macros):
-                    return
-            project.macros.remove(macro)
-            project.macros.insert(new_index, macro)
-
-        broadcast_event(KaraboEvent.ShowProjectModel, {"model": self.model})
-
-    def _move_up(self, project_controller):
-        self._move_macro(project_controller, "up")
-
-    def _move_down(self, project_controller):
-        self._move_macro(project_controller, "down")
 
     def _delete_macro(self, project_controller, parent=None):
         """ Remove the macro associated with this item from its project
