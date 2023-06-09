@@ -822,8 +822,8 @@ async def test_injected_output_channel_connection(event_loop):
             assert receiver.received > 0
             await sleepUntil(lambda: received is True, timeout=5)
             assert received
-            await waitUntil(lambda: input_proxy.received > 0,
-                            timeout=5)
+            await wait_for(waitUntil(lambda: input_proxy.received > 0),
+                           timeout=5)
             assert input_proxy.received > 0
 
             # Kill the device and bring up again
@@ -845,7 +845,8 @@ async def test_injected_output_channel_connection(event_loop):
             await receiver.resetCounter()
             await sender_proxy.sendData()
             await sleepUntil(lambda: received is True, timeout=5)
-            await waitUntil(lambda: input_proxy.received > 0)
             await sleepUntil(lambda: receiver.received > 0,
                              timeout=5)
+            await wait_for(waitUntil(lambda: input_proxy.received > 0),
+                           timeout=5)
             assert receiver.received > 0
