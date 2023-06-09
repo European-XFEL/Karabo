@@ -23,7 +23,7 @@ from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.background import background
 from karabogui.dialogs.api import (
     AboutDialog, ClientTopologyDialog, ConfigurationDialog, DataViewDialog,
-    UpdateDialog)
+    DevelopmentTopologyDialog, UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -479,6 +479,10 @@ class MainWindow(QMainWindow):
         self.acClientTopology = QAction("Client Topology", self)
         self.acClientTopology.triggered.connect(self.onClientTopology)
 
+        self.acDevelopmentOverview = QAction("Development Servers", self)
+        self.acDevelopmentOverview.triggered.connect(
+            self.onDevelopmentOverview)
+
         self.acConfig = QAction("Application Configuration", self)
         self.acConfig.triggered.connect(self.onConfiguration)
 
@@ -568,6 +572,7 @@ class MainWindow(QMainWindow):
         mViewMenu = menuBar.addMenu("&View")
         mViewMenu.addAction(self.acConfig)
         mViewMenu.addAction(self.acClientTopology)
+        mViewMenu.addAction(self.acDevelopmentOverview)
 
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
@@ -790,6 +795,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def onClientTopology(self):
         ClientTopologyDialog(parent=self).open()
+
+    @Slot()
+    def onDevelopmentOverview(self):
+        DevelopmentTopologyDialog(parent=self).open()
 
     @Slot()
     def onHelpAbout(self):
