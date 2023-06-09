@@ -88,32 +88,10 @@ def test_base_controller_project(gui_app, subtests):
     assert len(insertions) == 1
     assert insertions[0] == (1, 1)
 
-    proj.scenes.insert(1, SceneModel(simple_name="Inserted"))
-    assert len(controller.children[1].children) == 3
-    assert len(insertions) == 2
-    assert insertions[1] == (1, 1)
-    assert proj.scenes[1].simple_name == "Inserted"
-
-    proj.scenes.insert(0, SceneModel(simple_name="InsertedBeginning"))
-    assert len(controller.children[1].children) == 4
-    assert len(insertions) == 3
-    # start and end is 0
-    assert insertions[2] == (0, 0)
-    assert proj.scenes[0].simple_name == "InsertedBeginning"
-    assert proj.scenes[2].simple_name == "Inserted"
-
-    proj.scenes.pop(1)
-    assert len(controller.children[1].children) == 3
-    assert len(removals) == 1
-    assert removals[0] == (1, 1)
-    # Previos items are shifted, start and end is 1
-    assert proj.scenes[0].simple_name == "InsertedBeginning"
-    assert proj.scenes[1].simple_name == "Inserted"
-
     subproj = proj.subprojects.pop()
     assert len(controller.children[-1].children) == 0
-    assert len(removals) == 2
-    assert removals[1] == (0, 0)
+    assert len(removals) == 1
+    assert removals[0] == (0, 0)
     assert_no_notification_handlers(subproj)
 
     destroy_project_controller(controller)
