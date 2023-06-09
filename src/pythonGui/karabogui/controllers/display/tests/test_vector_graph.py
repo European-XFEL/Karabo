@@ -200,8 +200,7 @@ def test_xtransform(vector_graph_setup, mocker):
     offset = 20
     step = 10
     # Trigger the transformation configuration
-    dialog = ("karabogui.controllers.display.vector_graph."
-              "TransformDialog.get")
+    dialog = "karabogui.controllers.basearray.TransformDialog.get"
     content = {"offset": offset, "step": step}
     mocker.patch(dialog, return_value=(content, True))
     action.trigger()
@@ -219,8 +218,7 @@ def test_view_settings(vector_graph_setup, mocker):
     assert action is not None
 
     # Trigger the transformation configuration
-    dialog = ("karabogui.graph.plots.dialogs.view."
-              "GraphViewDialog.get")
+    dialog = "karabogui.graph.plots.dialogs.view.GraphViewDialog.get"
     content = {"title": "TestTitle", "background": "white"}
     mocker.patch(dialog, return_value=(content, True))
     action.trigger()
