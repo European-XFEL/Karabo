@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 
+# This file is part of Karabo.
+#
+# http://www.karabo.eu
+#
 # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+#
+# Karabo is free software: you can redistribute it and/or modify it under
+# the terms of the MPL-2 Mozilla Public License.
+#
+# You should have received a copy of the MPL-2 Public License along with
+# Karabo. If not, see <https://www.mozilla.org/en-US/MPL/2.0/>.
+#
+# Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.
 
 # Script for activating the KaraboGUI conda environment, also offers some
 # auxiliary functionality like building the conda package or cleaning the
@@ -117,55 +131,6 @@ karaboCondaInstallGUIEnvironment() {
     popd
 }
 
-karaboCondaInstallMDLEnvironment() {
-    KARABO_ENV=karabo-mdl
-    # Clean environment if needed
-    karaboCondaCleanEnvironment ${KARABO_ENV} || return 1
-    if [ "$SETUP_FLAG" == false ]; then
-        # NOP
-        return 0
-    fi
-
-    _RECIPE_DIR=${SCRIPT_PATH}/conda-recipes/${KARABO_ENV}
-    safeRunCondaCommand conda activate ${KARABO_ENV} || return 1
-    if [[ "${SETUP_FLAG}" == develop ]]; then
-        pushd ${SCRIPT_PATH}/src/pythonKarabo
-        export BUILD_KARABO_SUBMODULE=MDL
-        safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
-        unset BUILD_KARABO_SUBMODULE
-        popd
-    elif [[ "${SETUP_FLAG}" == install ]]; then
-        python -m cogapp -o ${_RECIPE_DIR}/meta.yaml ${_RECIPE_DIR}/meta_base.yaml || return 1
-        safeRunCondaCommand conda build ${_RECIPE_DIR} || return 1
-        safeRunCondaCommand conda install -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
-    fi
-}
-
-karaboCondaInstallCPPEnvironment() {
-    echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: Running karaboCondaInstallCPPEnvironment"
-    KARABO_ENV=karabo-cpp
-    # Clean environment if asked
-    karaboCondaCleanEnvironment ${KARABO_ENV} || return 1
-    safeRunCondaCommand conda activate ${KARABO_ENV} || safeRunCondaCommand source activate ${KARABO_ENV} || return 1
-    _RECIPE_DIR=${SCRIPT_PATH}/conda-recipes/${KARABO_ENV}
-    if [[ "${SETUP_FLAG}" == develop ]]; then
-        # using the conda info instead of CONDA_PREFIX to fit older conda versions
-        RECIPE_DIR=${_RECIPE_DIR} \
-            SRC_DIR=${SCRIPT_PATH} \
-            PKG_NAME=${KARABO_ENV} \
-            PREFIX=`conda info --json | grep active_prefix | awk -F ": " '{printf $2;}' | sed  's|[,"]||g'` \
-            CPU_COUNT=`python -c "import multiprocessing as mp; print(mp.cpu_count())"` \
-            bash ${_RECIPE_DIR}/build.sh || return 1
-    elif [[ "${SETUP_FLAG}" == install ]]; then
-        python -m cogapp -o ${_RECIPE_DIR}/meta.yaml ${_RECIPE_DIR}/meta_base.yaml || return 1
-        echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: will conda build with recipe dir ${_RECIPE_DIR}."
-        safeRunCondaCommand conda build ${_RECIPE_DIR} || return 1
-        echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: will conda install in channel ${CONDA_LOCAL_CHANNEL} in env ${KARABO_ENV}."
-        safeRunCondaCommand conda install -y -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
-    fi
-    unset _RECIPE_DIR
-}
-
 displayHelp() {
     echo "
 Usage: build_conda_env.sh install|develop|clean [envs]
@@ -184,18 +149,6 @@ Usage example:
         - Clean the 'karabogui' environment
         - Create it again
         - Install 'karabogui' in development mode
-
-    The installation is usually not needed as all code is added in the PYTHONPATH,
-    but installing it you will have access to the entrypoints (karabo-gui, etc)
-
-Usage example continued:
-
-    source build_conda_env.sh clean install karabo-cpp
-
-    Will:
-        - Clean the 'karabo-cpp' environment
-        - Create it again
-        - Install 'karabo-cpp' the 'karabo-cpp' environment
 
     The installation is usually not needed as all code is added in the PYTHONPATH,
     but installing it you will have access to the entrypoints (karabo-gui, etc)
@@ -276,12 +229,6 @@ for ENV_NAME in $ENVS; do
     case "$ENV_NAME" in
         karabogui)
             karaboCondaInstallGUIEnvironment || return 1
-            ;;
-        karabo-cpp)
-            karaboCondaInstallCPPEnvironment || return 1
-            ;;
-        karabo-mdl)
-            karaboCondaInstallMDLEnvironment || return 1
             ;;
     esac
 done
