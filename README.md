@@ -15,7 +15,14 @@ location in src/pythonGui and its subtrees.
 
 # Copyright notice:
 
-> Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+    Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
+    Karabo is free software: you can redistribute it and/or modify it under
+    the terms of the appropriate licenses mentioned above.
+
+    Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE."""
 
 # Available Operating Systems
 
