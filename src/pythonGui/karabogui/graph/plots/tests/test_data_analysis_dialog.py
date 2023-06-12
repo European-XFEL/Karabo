@@ -87,3 +87,58 @@ def test_multiple_proxies(gui_app, mocker):
     assert dialog.proxy == combo_box.currentData()
     assert dialog.proxy == additional_proxy
     assert method.call_count == 1
+
+
+def test_sub_region_roi(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    value = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+    proxy.value = value
+
+    additional_proxy = get_class_property_proxy(schema, "prop2")
+    additional_proxy.value = [0.1, 0.2, 0.3, 0.4]
+
+    dialog = DataAnalysisDialog(
+        proxies=[proxy, additional_proxy], config=config, parent=None)
+    # Before fitting
+    assert not dialog.show_line_roi_button.isChecked()
+    assert dialog.left_line
+    assert dialog.right_line
+    assert not dialog.left_line.isVisible()
+    assert not dialog.right_line.isVisible()
+
+    assert dialog.fit_curve.getData() == (None, None)
+    assert dialog._min_width == 1.0
+
+    # Fit with no line roi defined.
+    dialog.fit()
+    _, y_values = dialog.fit_curve.getData()
+    assert len(y_values) == 7
+
+    # With line roi
+    dialog.show_line_roi_button.click()
+    assert dialog.show_line_roi_button.isChecked()
+    assert dialog.left_line.isVisible()
+    assert dialog.right_line.isVisible()
+    assert dialog.left_line.pos().x() == 0
+    assert dialog.right_line.pos().x() == 6.0
+
+    # With whole plot selected
+    dialog.fit()
+    _, y_values = dialog.fit_curve.getData()
+    assert len(y_values) == 7
+
+    # With only a region selected
+    dialog.left_line.setPos(1.0)
+    dialog.right_line.setPos(5.0)
+    dialog.fit()
+    _, y_values = dialog.fit_curve.getData()
+    assert len(y_values) == 5
+
+    # Change property should update the lines position
+    dialog.property_comboBox.setCurrentIndex(1)
+    assert dialog.property_comboBox.currentText() == "prop2"
+    assert dialog.left_line.pos().x() == 0
+    assert dialog.right_line.pos().x() == 3.0
+    assert dialog.left_pos_line_edit.text() == "0"
+    assert dialog.right_pos_line_edit.text() == "3"
