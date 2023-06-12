@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 # -*- coding: utf-8 -*-
+#
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 #
 # Karabo documentation build configuration file, created by
 # sphinx-quickstart on Fri Sep 26 14:09:55 2014.
