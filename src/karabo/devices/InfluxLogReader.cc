@@ -682,8 +682,7 @@ namespace karabo {
                     // No digest has been found - it's not possible to go ahead.
                     // Note that following text is expected in BaseLogging_Test::testCfgFromPastRestart
                     std::ostringstream oss;
-                    oss << "No active schema could be found for device at (or before) '" << ctxt->atTime.toIso8601Ext()
-                        << "'.";
+                    oss << "No active schema could be found for device at (or before) timepoint.";
                     Epochstamp currTime;
                     TimeDuration elapsed = currTime - ctxt->atTime;
                     const TimeValue atTimeSecsAgo = elapsed.getTotalSeconds();
