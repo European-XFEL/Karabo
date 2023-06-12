@@ -17,13 +17,15 @@
 from pathlib import Path
 
 import numpy as np
+from pyqtgraph import InfiniteLine
 from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog
 from scipy.optimize import curve_fit
 
+from karabogui import icons
 from karabogui.controllers.api import get_array_data
-from karabogui.graph.common.api import make_pen
+from karabogui.graph.common.api import create_button, make_pen
 from karabogui.graph.common.fitting import (
     gaussian_fit, linear_function_fit, normal_cdf)
 from karabogui.graph.common.formatting import (
@@ -47,6 +49,11 @@ FIT_FUNCTION_MAP = {
     }
 
 
+LINE_EDIT_STYLE = """
+QLineEdit {color:gray;}
+"""
+
+
 class DataAnalysisDialog(QDialog):
     """
     A dialog to perform curve fitting based on different fit functions.
@@ -66,7 +73,7 @@ class DataAnalysisDialog(QDialog):
         self._plot_widget.restore(config)
         self._plot_widget.add_legend()
         self._plot_widget.enable_data_toggle()
-        self._plot_widget.add_toolbar()
+        toolbar = self._plot_widget.add_toolbar()
         self._plot_widget.enable_export()
         self.plot_layout.addWidget(self._plot_widget)
         pen = make_pen(color="r")
@@ -85,6 +92,85 @@ class DataAnalysisDialog(QDialog):
         self.proxy = proxies[0]
         self.setWindowTitle(f"Data Analysis Dialog|{self.proxy.key}")
         self.update_data()
+
+        self._create_vertical_line_roi()
+        self.set_line_pos()
+
+        self.show_line_roi_button = create_button(
+            icon=icons.split, checkable=True,
+            tooltip="Fit Data from Selection",
+            on_clicked=self._show_vertical_line_roi)
+        toolbar.add_button(self.show_line_roi_button)
+
+        self.stackedWidget.setCurrentIndex(0)
+
+        self.left_pos_line_edit.setStyleSheet(LINE_EDIT_STYLE)
+        self.right_pos_line_edit.setStyleSheet(LINE_EDIT_STYLE)
+        self.on_left_line_moved()
+        self.on_right_line_moved()
+
+    def _create_vertical_line_roi(self):
+        """Create two vertical lines to define the selection. By default,
+        both are hidden"""
+        pen = make_pen('o', alpha=255, width=2)
+        self.left_line = InfiniteLine(
+            angle=90, pen=pen, movable=True, hoverPen=pen)
+        self.right_line = InfiniteLine(
+            angle=90, pen=pen, movable=True, hoverPen=pen)
+        self._plot_widget.plotItem.addItem(
+            self.left_line, ignoreBounds=True)
+        self._plot_widget.plotItem.addItem(
+            self.right_line, ignoreBounds=True)
+        self.left_line.sigPositionChangeFinished.connect(
+            self.on_left_line_moved)
+        self.right_line.sigPositionChangeFinished.connect(
+            self.on_right_line_moved)
+
+        self.left_line.setVisible(False)
+        self.right_line.setVisible(False)
+
+    def set_line_pos(self):
+        """
+        Position the lines at first and last points on X-axis. Set their
+        bounds by keeping one unit distance between them so that they never
+        come at the same position.
+        """
+        if not len(self.x_values) or not len(self.y_values):
+            return
+        left = self.x_values[0]
+        right = self.x_values[-1]
+        min_width = self._min_width
+        self.left_line.setBounds((left, right - min_width))
+        self.right_line.setBounds((left + min_width, right))
+        self.left_line.setPos(left)
+        self.right_line.setPos(right)
+        self.left_pos_line_edit.setText(float_to_string(left))
+        self.right_pos_line_edit.setText(float_to_string(right))
+
+    @Slot(bool)
+    def _show_vertical_line_roi(self, toggled):
+        """ Set visibility of the lines."""
+        self.left_line.setVisible(toggled)
+        self.right_line.setVisible(toggled)
+        self.stackedWidget.setCurrentIndex(int(toggled))
+
+    @Slot()
+    def on_left_line_moved(self):
+        left_pos = self.left_line.pos().x()
+        self.left_pos_line_edit.setText(float_to_string(left_pos))
+        bounds = (left_pos + self._min_width, self.x_values[-1])
+        self.right_line.setBounds(bounds)
+
+    @Slot()
+    def on_right_line_moved(self):
+        right_pos = self.right_line.pos().x()
+        self.right_pos_line_edit.setText(float_to_string(right_pos))
+        bounds = (self.x_values[0], right_pos - self._min_width)
+        self.left_line.setBounds(bounds)
+
+    @property
+    def _min_width(self):
+        return (self.x_values[-1] - self.x_values[0] + 1) / len(self.x_values)
 
     def set_up_property_combobox(self, proxies: list):
         """
@@ -117,6 +203,7 @@ class DataAnalysisDialog(QDialog):
         self.proxy = proxy
         self.update_data()
         self.setWindowTitle(f"Data Analysis Dialog|{proxy.key}")
+        self.set_line_pos()
 
     def update_data(self):
         """Fetch the latest data points from the parent plot"""
@@ -139,16 +226,30 @@ class DataAnalysisDialog(QDialog):
         """Fit data with the selected function"""
         if self.x_values is None or self.y_values is None:
             return
-        xfit = self.x_values
+        x_values = self.x_values
+        y_values = self.y_values
+        if self.show_line_roi_button.isChecked():
+            min_value = self.left_line.getPos()[0]
+            max_value = self.right_line.getPos()[0]
+            x_values = []
+            y_values = []
+            for x, y in zip(self.x_values, self.y_values):
+                if min_value <= x <= max_value:
+                    x_values.append(x)
+                    y_values.append(y)
+        self._fit(x_values, y_values)
+
+    def _fit(self, x_values, y_values):
+        xfit = x_values
         fit_option = self.fit_options_combobox.currentText()
         fit_func = FIT_FUNCTION_MAP[fit_option].get("func")
         try:
-            params, pcov = curve_fit(fit_func, self.x_values, self.y_values)
+            params, pcov = curve_fit(fit_func, x_values, y_values)
         except (RuntimeError, TypeError, ValueError):
             xfit = yfit = np.array([])
             params = perr = np.array([])
         else:
-            yfit = fit_func(self.x_values, *params)
+            yfit = fit_func(x_values, *params)
             perr = np.sqrt(np.diag(pcov))
 
         self.fit_curve.setData(xfit, yfit, width=10)
