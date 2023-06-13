@@ -42,7 +42,7 @@
 #include "CppUnitMacroExtension.hh"
 
 #define KRB_TEST_MAX_TIMEOUT \
-    7 // larger than the 5 s input channel reconnect interval, for testOutputRecreatesOnSchemaChange
+    10 // larger than the 6 s input channel reconnect interval, for testOutputRecreatesOnSchemaChange
 
 using karabo::core::DeviceClient;
 using karabo::core::DeviceServer;

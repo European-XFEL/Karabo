@@ -30,7 +30,7 @@
 using namespace std;
 
 #define LOG_LEVEL "FATAL"
-#define KRB_TEST_MAX_TIMEOUT 5
+#define KRB_TEST_MAX_TIMEOUT 10
 // Next line must be kept in sync with DeviceClient.hh:
 #define CONNECTION_KEEP_ALIVE 15
 
