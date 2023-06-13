@@ -179,7 +179,6 @@ class BoundDeviceTestCase(TestCase):
         interval = maxTimeoutSec / maxTries
         counter = maxTries
         while counter > 0:
-            print("waitUntilTrue", counter)
             if condition():
                 return True
             else:
