@@ -528,6 +528,8 @@ namespace karabo {
             }
 
             // Post handlers - with some bad luck, first data arrived before they are executed...
+            // With some other bad luck, the output channel may not yet have processed (though received) our "hello"
+            // and will thus not yet serve us immediately if one of the handlers instructs the output to send data.
             // Which order of handlers? InputOutputChannel_Test::testConnectDisconnect assumes first connection tracker
             auto status = (ec ? net::ConnectionStatus::DISCONNECTED : net::ConnectionStatus::CONNECTED);
             postConnectionTracker(outputChannelString, status);
