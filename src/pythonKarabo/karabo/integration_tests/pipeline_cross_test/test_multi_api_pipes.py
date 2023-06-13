@@ -142,7 +142,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # static buffer on the Memory class
         apis = ["cpp", "cpp", "bound", "bound", "mdl", "mdl",
                 "cpp", "mdl", "bound"] * 14
-        logLevel='FATAL'
+        logLevel = 'FATAL'
         if "bound" in apis:
             self.start_server_num("bound", 1, logLevel=logLevel)
         if "cpp" in apis:
@@ -268,7 +268,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                             "i.e. device failed forwarding")
         # Checks that the data reached the final receiver.
         checkReceiverProp("inputCounter", out_count,
-                          f"i.e. does not match sender output.")
+                          "i.e. does not match sender output.")
 
         # Check that no endOfStream received so far
         checkForwardersProp("inputCounterAtEos", 0, "non-zero!")
@@ -289,7 +289,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
                             "i.e. device did not receive 'endOfStream'")
         checkReceiverProp("inputCounterAtEos", at_eos_count,
                           "i.e. device did not receive 'endOfStream'")
-
 
         # Cleanup the devices used in the test.
         for devid in devices_present:
@@ -373,6 +372,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                   self._max_timeout)
         self.assertTrue(res,
                         "Receiver didn't connect within {self._max_timeout} s")
+        # (Only checking "input.missingConnections" not 100% reliable, see
+        #  InputChannel::onConnect.)
+        assert self.waitUntilOutputKnowsInput("sender", "output",
+                                              "receiver:input",
+                                              self._max_timeout)
 
         start_time = time()
 
@@ -442,6 +446,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                   self._max_timeout)
         self.assertTrue(res,
                         "Receiver didn't connect within {self._max_timeout} s")
+        # (Only checking "input.missingConnections" not 100% reliable, see
+        #  InputChannel::onConnect.)
+        assert self.waitUntilOutputKnowsInput("sender", "output",
+                                              "receiver:input",
+                                              self._max_timeout)
 
         start_time = time()
 
@@ -503,6 +512,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                   self._max_timeout)
         self.assertTrue(res,
                         "Receiver didn't connect within {self._max_timeout} s")
+        # (Only checking "input.missingConnections" not 100% reliable, see
+        #  InputChannel::onConnect.)
+        assert self.waitUntilOutputKnowsInput("sender", "output",
+                                              "receiver:input",
+                                              self._max_timeout)
 
         start_time = time()
 
@@ -637,10 +651,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
         else:
             print("waitUntilEqual: DeviceClient not responsible for",
                   f"{devId}.{propertyName} being wrong:",
-                  f"{dev_props.get(propertyName)} != {whatItShouldBe}"
-            )
+                  f"{dev_props.get(propertyName)} != {whatItShouldBe}")
             return False
-
 
     def waitUntilEqual2(self, devId, propertyName, devId2, propertyName2,
                         timeout):
@@ -684,3 +696,22 @@ class TestCrossPipelining(BoundDeviceTestCase):
                   f"{devId}.{propertyName} != {devId2}.{propertyName2}:",
                   f"{res} vs {res2}")
             return False
+
+    def waitUntilOutputKnowsInput(self, outputDevId, output, inputId, timeout):
+        """
+        Wait until an output channel lists an input in its connections
+
+        :param outputDevId deviceId of device with output channel
+        :param output key of output channel in schema of outputDevId
+        :param inputId id of expected input channel, e.g. "receiver:input"
+        :return boolean whether successfully waited (else timeout)
+        """
+
+        def condition():
+            connections = self.dc.get(outputDevId, output + ".connections")
+            for connection in connections:
+                if connection["remoteId"] == inputId:
+                    return True
+            return False
+
+        return self.waitUntilTrue(condition, timeout)
