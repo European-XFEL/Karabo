@@ -231,12 +231,14 @@ class DataAnalysisDialog(QDialog):
         if self.show_line_roi_button.isChecked():
             min_value = self.left_line.getPos()[0]
             max_value = self.right_line.getPos()[0]
-            x_values = []
-            y_values = []
-            for x, y in zip(self.x_values, self.y_values):
-                if min_value <= x <= max_value:
-                    x_values.append(x)
-                    y_values.append(y)
+
+            # Slice the data according to position
+            size = len(x_values) - 1
+            dx = float(x_values[-1] - x_values[0]) / size
+            x_min = np.clip(int((min_value - x_values[0]) / dx), 0, size)
+            x_max = np.clip(int((max_value - x_values[0]) / dx), 0, size)
+            x_values = x_values[x_min:x_max]
+            y_values = y_values[x_min:x_max]
         self._fit(x_values, y_values)
 
     def _fit(self, x_values, y_values):
