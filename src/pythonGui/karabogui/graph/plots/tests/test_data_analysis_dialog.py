@@ -126,14 +126,14 @@ def test_sub_region_roi(gui_app):
     # With whole plot selected
     dialog.fit()
     _, y_values = dialog.fit_curve.getData()
-    assert len(y_values) == 7
+    assert len(y_values) == 6
 
     # With only a region selected
     dialog.left_line.setPos(1.0)
     dialog.right_line.setPos(5.0)
     dialog.fit()
     _, y_values = dialog.fit_curve.getData()
-    assert len(y_values) == 5
+    assert len(y_values) == 4
 
     # Change property should update the lines position
     dialog.property_comboBox.setCurrentIndex(1)
@@ -142,3 +142,22 @@ def test_sub_region_roi(gui_app):
     assert dialog.right_line.pos().x() == 3.0
     assert dialog.left_pos_line_edit.text() == "0"
     assert dialog.right_pos_line_edit.text() == "3"
+
+
+def test_sub_region_value_type(gui_app):
+    """ Test that no traceback with Linear fit with selection"""
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    value = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+    proxy.value = value
+
+    dialog = DataAnalysisDialog(
+        proxies=[proxy], config=config, parent=None)
+    fit_option = dialog.fit_options_combobox
+    fit_option.setCurrentIndex(2)
+    assert fit_option.currentText() == "Linear function"
+    assert not dialog.show_line_roi_button.isChecked()
+    dialog.fit_button.click()
+
+    dialog.show_line_roi_button.setChecked(True)
+    dialog.fit_button.click()
