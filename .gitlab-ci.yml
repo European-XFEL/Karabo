@@ -745,10 +745,12 @@ internal_mirror_publish:
     - cd FrameworkHead
     # To be on the safe side and prevent any push to the origin, remove it from the list of remotes (this is what git-filter-repo does).
     - git remote rm origin
-    # Pushes the master branch and the tags to the internal mirror.
+    # Renames master branch to main and pushes main and tags to the internal mirror.
     # The KARABO_FRAMEWORK_MIRROR_TOKEN must be an environment variable defined in the Framework Gitlab project whose
     # value is a project access token generated for the FrameworkMirror Gitlab project.
     - git remote add internal_mirror https://oauth2:$KARABO_FRAMEWORK_MIRROR_TOKEN@git.xfel.eu/Karabo/FrameworkMirror.git
+    # Move the master branch to main (keep history)
+    - git branch -m main
     - git push --mirror internal_mirror
     # Removes the local copy of the Karabo Framework repository - all the filtering will happen on the internal mirror.
     - cd ..
@@ -760,8 +762,6 @@ internal_mirror_publish:
     - git-filter-repo --invert-paths --path src/environment.in/KARABO_BROKER
     - git-filter-repo --strip-blobs-bigger-than 100M
     - git-filter-repo --mailmap ../contriboptouts/karabo-mailmap
-    # Move the master branch to main (keep history)
-    - git branch -m master main
     # As git-filter-repo for safety reasons removes the "origin" remote, we set again the new remote,
     # "internal_mirror" (a remote with the same name had been defined a few steps back, but for another local).
     # Details about how git-filter-repo works (the removal of the origin remote is the third step) can be
