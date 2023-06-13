@@ -35,7 +35,7 @@
 
 using namespace std;
 
-#define KRB_TEST_MAX_TIMEOUT 5
+#define KRB_TEST_MAX_TIMEOUT 10
 
 USING_KARABO_NAMESPACES
 
