@@ -189,7 +189,7 @@ def has_sub_imports(tree, global_module, ignore=[]):
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
             module = node.module
-            if ignore and module in ignore:
+            if ignore and module in ignore or module is None:
                 continue
             if not _check_sub_imports(module):
                 warning_msg = (
