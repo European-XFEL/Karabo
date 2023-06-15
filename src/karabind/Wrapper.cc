@@ -29,13 +29,116 @@
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
+#include <karabo/xms/ImageData.hh>
 
+#include "FromNumpy.hh"
 #include "PyTypes.hh"
+#include "ToNumpy.hh"
 
 using namespace std;
 
 
 namespace karabind {
+    namespace hashwrap {
+
+        /**
+         * Get either a reference to the Hash subtree for Hash and VectorHash or get a value for
+         * leaf element.
+         *
+         * @param self Hash
+         * @param path path string
+         * @param sep separator string
+         * @return Hash/VectorHash reference to subtree in parent
+         */
+        py::object getRef(karabo::util::Hash& self, const std::string& path, const std::string& sep) {
+            using namespace karabo::util;
+            Hash::Node& node = self.getNode(path, sep.at(0));
+            if (node.getType() == Types::HASH) {
+                boost::shared_ptr<Hash> hp = boost::shared_ptr<Hash>(&node.getValue<Hash>(), [](const void*) {});
+                if (node.hasAttribute(KARABO_HASH_CLASS_ID)) {
+                    const std::string& classId = node.getAttribute<std::string>(KARABO_HASH_CLASS_ID);
+                    if (classId == "NDArray") {
+                        return py::cast(self).attr("_get_ndarray_")(*hp);
+                    }
+                    if (classId == "ImageData") {
+                        using namespace karabo::xms;
+                        const ImageData& imgData = reinterpret_cast<const ImageData&>(*hp);
+                        return py::cast(boost::shared_ptr<ImageData>(new ImageData(imgData)));
+                    }
+                }
+                return py::cast(self).attr("_getref_hash_")(hp);
+            }
+            if (node.getType() == Types::VECTOR_HASH) {
+                std::vector<Hash>* vhp = &node.getValue<std::vector<Hash>>();
+                return py::cast(self).attr("_getref_vector_hash_")(vhp);
+            }
+            return wrapper::castAnyToPy(node.getValueAsAny());
+        }
+
+        py::object getAs(const karabo::util::Hash& self, const std::string& path,
+                         const karabo::util::Types::ReferenceType& target, const std::string& separator) {
+            const karabo::util::Hash::Node& node = self.getNode(path, separator.at(0));
+            return wrapper::detail::castElementToPy(node, target);
+        }
+
+        py::object get(const karabo::util::Hash& self, const std::string& path, const std::string& separator,
+                       const py::object& default_return) {
+            // This implements the standard Python dictionary behavior for get()
+            if (!self.has(path, separator.at(0))) {
+                return default_return;
+            }
+            return getRef(const_cast<karabo::util::Hash&>(self), path, separator);
+        }
+
+        const karabo::util::Hash& setPyDictAsHash(karabo::util::Hash& self, const py::dict& dictionary,
+                                                  const char sep) {
+            std::string separator(1, sep);
+            for (auto item : dictionary) {
+                const py::object& obj = py::reinterpret_borrow<py::object>(item.second);
+                if (py::isinstance<py::dict>(obj)) {
+                    const auto& dictobj = obj.cast<py::dict>();
+                    karabo::util::Hash h;
+                    self.set(item.first.cast<std::string>(), setPyDictAsHash(h, dictobj, sep), sep);
+                } else {
+                    set(self, item.first.cast<std::string>(), obj, separator);
+                }
+            }
+            return self;
+        }
+
+        void set(karabo::util::Hash& self, const std::string& key, const py::object& o, const std::string& separator) {
+            using namespace karabo::util;
+            if (py::isinstance<Hash>(o)) {
+                const Hash& h = o.cast<Hash>();
+                self.set(key, h, separator.at(0));
+                return;
+            }
+            // Check if this is ndarray
+            if (py::isinstance<py::array>(o)) {
+                const NDArray arr = karabind::wrapper::castPyArrayToND(o);
+                self.set(key, arr, separator.at(0));
+                return;
+            }
+            // Check if it is ImageData
+            if (py::isinstance<karabo::xms::ImageData>(o)) {
+                const auto& img = o.cast<karabo::xms::ImageData>();
+                self.set(key, img, separator.at(0));
+                return;
+            }
+            // Check if it is a python dictionary
+            if (py::isinstance<py::dict>(o)) {
+                const py::dict& d = o.cast<py::dict>();
+                Hash h;
+                self.set(key, karabind::hashwrap::setPyDictAsHash(h, d, separator.at(0)), separator.at(0));
+                return;
+            }
+            boost::any any;
+            karabind::wrapper::castPyToAny(o, any);
+            self.set(key, std::move(any), separator.at(0));
+        }
+    } // namespace hashwrap
+
+
     namespace wrapper {
         namespace detail {
 
@@ -129,6 +232,22 @@ namespace karabind {
         } // namespace detail
 
 
+        std::vector<std::string> fromPySequenceToVectorString(const py::object& o) {
+            std::vector<std::string> vs;
+            if (py::isinstance<py::str>(o)) {
+                vs.push_back(o.cast<std::string>());
+                return vs;
+            }
+            for (const auto& item : o) {
+                if (!py::isinstance<py::str>(item)) {
+                    throw KARABO_CAST_EXCEPTION("Sequence element is not of 'str' type");
+                }
+                vs.push_back(item.cast<std::string>());
+            }
+            return vs;
+        }
+
+
         karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype) {
             using namespace karabo::util;
             Types::ReferenceType targetType = Types::UNKNOWN;
@@ -181,6 +300,8 @@ namespace karabind {
                     return py::cast(boost::any_cast<boost::filesystem::path>(operand).string());
                 } else if (operand.type() == typeid(karabo::util::CppNone)) {
                     return py::none();
+                } else if (operand.type() == typeid(karabo::util::NDArray)) {
+                    return castNDArrayToPy(boost::any_cast<karabo::util::NDArray>(operand));
                 } else if (operand.type() == typeid(karabo::util::Hash)) {
                     return py::cast(boost::any_cast<karabo::util::Hash>(operand));
                 } else if (operand.type() == typeid(karabo::util::Hash::Pointer)) {
@@ -330,6 +451,12 @@ namespace karabind {
                 any = std::vector<char>(s.begin(), s.end());
                 return karabo::util::Types::VECTOR_CHAR;
             }
+            if (py::isinstance<py::array>(o)) {
+                using namespace karabo::util;
+                NDArray nda = wrapper::castPyArrayToND(o);
+                any = std::move(nda);
+                return karabo::util::Types::HASH;
+            }
             if (py::isinstance<karabo::util::Hash>(o)) {
                 any = o.cast<karabo::util::Hash>();
                 return karabo::util::Types::HASH;
@@ -350,24 +477,159 @@ namespace karabind {
                 any = o.cast<std::vector<karabo::util::Hash::Pointer>>();
                 return karabo::util::Types::VECTOR_HASH_POINTER;
             }
-            if (py::isinstance<py::list>(o)) {
-                // python list object ...
-                py::list lo = o.cast<py::list>();
+            if (py::hasattr(o, "__name__")) { // python function
+                any = o;
+                return karabo::util::Types::ANY;
+            }
+
+            auto lo = py::list();
+            for (auto item : o) lo.append(item);
+            size_t size = py::len(lo);
+            if (size == 0) {
+                any = std::vector<std::string>();
+                return karabo::util::Types::VECTOR_STRING;
+            }
+            py::object list0 = lo[0];
+            if (list0.is_none()) {
+                any = std::vector<karabo::util::CppNone>(size, karabo::util::CppNone());
+                return karabo::util::Types::VECTOR_NONE;
+            }
+            if (py::isinstance<py::bool_>(list0)) {
+                any = lo.cast<std::vector<bool>>();
+                return karabo::util::Types::VECTOR_BOOL;
+            }
+            if (py::isinstance<py::int_>(list0)) {
+                // First item is an integer - assume that all items are!
+                karabo::util::Types::ReferenceType broadestType = karabo::util::Types::INT32;
+                for (size_t i = 0; i < size; ++i) {
+                    const karabo::util::Types::ReferenceType type = bestIntegerType(lo[i]);
+                    // This relies on the fact that the enums ReferenceType have the order INT32, UINT32, INT64,
+                    // UINT64
+                    if (type > broadestType) {
+                        broadestType = type;
+                        // Stop loop if cannot get broader...
+                        if (broadestType == karabo::util::Types::UINT64) break;
+                    }
+                }
+                if (broadestType == karabo::util::Types::INT32) {
+                    any = lo.cast<std::vector<int>>();
+                    return karabo::util::Types::VECTOR_INT32;
+                } else if (broadestType == karabo::util::Types::UINT32) {
+                    any = lo.cast<std::vector<unsigned int>>();
+                    return karabo::util::Types::VECTOR_UINT32;
+                } else if (broadestType == karabo::util::Types::INT64) {
+                    any = lo.cast<std::vector<long long>>();
+                    return karabo::util::Types::VECTOR_INT64;
+                } else if (broadestType == karabo::util::Types::UINT64) {
+                    any = lo.cast<std::vector<unsigned long long>>();
+                    return karabo::util::Types::VECTOR_UINT64;
+                } else {
+                    // Should never come here!
+                    throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(broadestType));
+                }
+            }
+            if (py::isinstance<py::float_>(list0)) {
+                any = lo.cast<std::vector<double>>();
+                return karabo::util::Types::VECTOR_DOUBLE;
+            }
+            if (PyComplex_Check(list0.ptr())) {
+                any = lo.cast<std::vector<std::complex<double>>>();
+                return karabo::util::Types::VECTOR_COMPLEX_DOUBLE;
+            }
+            if (py::isinstance<py::str>(list0)) {
+                any = lo.cast<std::vector<std::string>>();
+                return karabo::util::Types::VECTOR_STRING;
+            }
+            if (py::isinstance<karabo::util::Hash>(list0)) {
+                // convert py::list of Hash into VectorHash object since we use `bind_vector`:
+                // vho = VectorHash(list_of_Hash) like VectorHash([Hash(...), Hash(...),...])
+                // TODO: Check if py::implicitly_convertable can be used...
+                auto vho = py::module_::import("karabind").attr("VectorHash")(o);
+                any = vho.cast<std::vector<karabo::util::Hash>>();
+                return karabo::util::Types::VECTOR_HASH;
+            }
+            if (py::isinstance<karabo::util::Hash::Pointer>(list0)) {
+                any = lo.cast<std::vector<karabo::util::Hash::Pointer>>();
+                return karabo::util::Types::VECTOR_HASH_POINTER;
+            }
+            if (py::isinstance<karabo::util::Schema>(list0)) {
+                any = lo.cast<std::vector<karabo::util::Schema>>();
+                return karabo::util::Types::VECTOR_SCHEMA;
+            }
+            // Nothing above ...
+            throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
+        }
+
+
+        void setAttributeAsPy(karabo::util::Hash& self, const std::string& path, const std::string& attr,
+                              const py::object& o) {
+            if (o.is_none()) {
+                self.setAttribute(path, attr, karabo::util::CppNone());
+            } else if (py::isinstance<py::bool_>(o)) {
+                self.setAttribute(path, attr, py::cast<bool>(o));
+            } else if (py::isinstance<py::int_>(o)) {
+                const karabo::util::Types::ReferenceType type = bestIntegerType(o);
+                if (type == karabo::util::Types::UINT64) {
+                    // Raises a Python exception if it overflows:
+                    self.setAttribute(path, attr, o.cast<unsigned long long>());
+                } else {
+                    const auto value = o.cast<long long>();
+                    switch (type) {
+                        case karabo::util::Types::INT32:
+                            self.setAttribute(path, attr, static_cast<int>(value));
+                            break;
+                        case karabo::util::Types::UINT32:
+                            self.setAttribute(path, attr, static_cast<unsigned int>(value));
+                            break;
+                        case karabo::util::Types::INT64:
+                            self.setAttribute(path, attr, static_cast<long long>(value));
+                            break;
+                        default:
+                            // Should never come here!
+                            throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(type));
+                    }
+                }
+            } else if (py::isinstance<py::float_>(o)) {
+                self.setAttribute(path, attr, o.cast<double>());
+            } else if (PyComplex_Check(o.ptr())) {
+                self.setAttribute(path, attr, o.cast<std::complex<double>>());
+            } else if (py::isinstance<py::str>(o)) {
+                self.setAttribute(path, attr, o.cast<std::string>());
+            } else if (py::isinstance<py::bytes>(o)) {
+                const auto& s = o.cast<std::string>();
+                self.setAttribute(path, attr, std::vector<char>(s.begin(), s.end()));
+            } else if (py::isinstance<py::bytearray>(o)) {
+                const auto& s = o.cast<std::string>();
+                self.setAttribute(path, attr, std::vector<char>(s.begin(), s.end()));
+            } else if (py::isinstance<karabo::util::Hash>(o)) {
+                // self.setAttribute(path, attr, o.cast<karabo::util::Hash>());
+                throw KARABO_PYTHON_EXCEPTION("Attribute cannot be Hash");
+            } else if (py::isinstance<karabo::util::Hash::Pointer>(o)) {
+                // self.setAttribute(path, attr, o.cast<karabo::util::Hash::Pointer>());
+                throw KARABO_PYTHON_EXCEPTION("Attribute cannot be Hash::Pointer");
+            } else if (py::isinstance<karabo::util::Schema>(o)) {
+                // self.setAttribute(path, attr, o.cast<karabo::util::Schema>());
+                throw KARABO_PYTHON_EXCEPTION("Attribute cannot be Schema");
+            } else if (py::isinstance<std::vector<karabo::util::Hash>>(o)) {
+                // self.setAttribute(path, attr, o.cast<std::vector<karabo::util::Hash>>());
+                throw KARABO_PYTHON_EXCEPTION("Attribute cannot be vector of Hash");
+            } else if (py::isinstance<std::vector<karabo::util::Hash::Pointer>>(o)) {
+                // self.setAttribute(path, attr, o.cast<std::vector<karabo::util::Hash::Pointer>>());
+                throw KARABO_PYTHON_EXCEPTION("Attribute cannot be vector of Hash:;Pointer");
+            } else {
+                auto lo = py::list();
+                for (auto item : o) lo.append(item);
                 size_t size = py::len(lo);
                 if (size == 0) {
-                    any = std::vector<std::string>();
-                    return karabo::util::Types::VECTOR_STRING;
+                    self.setAttribute(path, attr, std::vector<std::string>());
+                    return;
                 }
                 py::object list0 = lo[0];
                 if (list0.is_none()) {
-                    any = std::vector<karabo::util::CppNone>(size, karabo::util::CppNone());
-                    return karabo::util::Types::VECTOR_NONE;
-                }
-                if (py::isinstance<py::bool_>(list0)) {
-                    any = o.cast<std::vector<bool>>();
-                    return karabo::util::Types::VECTOR_BOOL;
-                }
-                if (py::isinstance<py::int_>(list0)) {
+                    self.setAttribute(path, attr, std::vector<karabo::util::CppNone>(size, karabo::util::CppNone()));
+                } else if (py::isinstance<py::bool_>(list0)) {
+                    self.setAttribute(path, attr, lo.cast<std::vector<bool>>());
+                } else if (py::isinstance<py::int_>(list0)) {
                     // First item is an integer - assume that all items are!
                     karabo::util::Types::ReferenceType broadestType = karabo::util::Types::INT32;
                     for (size_t i = 0; i < size; ++i) {
@@ -381,57 +643,113 @@ namespace karabind {
                         }
                     }
                     if (broadestType == karabo::util::Types::INT32) {
-                        any = o.cast<std::vector<int>>();
-                        return karabo::util::Types::VECTOR_INT32;
+                        self.setAttribute(path, attr, lo.cast<std::vector<int>>());
                     } else if (broadestType == karabo::util::Types::UINT32) {
-                        any = o.cast<std::vector<unsigned int>>();
-                        return karabo::util::Types::VECTOR_UINT32;
+                        self.setAttribute(path, attr, lo.cast<std::vector<unsigned int>>());
                     } else if (broadestType == karabo::util::Types::INT64) {
-                        any = o.cast<std::vector<long long>>();
-                        return karabo::util::Types::VECTOR_INT64;
+                        self.setAttribute(path, attr, lo.cast<std::vector<long long>>());
                     } else if (broadestType == karabo::util::Types::UINT64) {
-                        any = o.cast<std::vector<unsigned long long>>();
-                        return karabo::util::Types::VECTOR_UINT64;
+                        self.setAttribute(path, attr, lo.cast<std::vector<unsigned long long>>());
                     } else {
                         // Should never come here!
                         throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(broadestType));
                     }
-                }
-                if (py::isinstance<py::float_>(list0)) {
-                    any = o.cast<std::vector<double>>();
-                    return karabo::util::Types::VECTOR_DOUBLE;
-                }
-                if (PyComplex_Check(list0.ptr())) {
-                    any = o.cast<std::vector<std::complex<double>>>();
-                    return karabo::util::Types::VECTOR_COMPLEX_DOUBLE;
-                }
-                if (py::isinstance<py::str>(list0)) {
-                    any = o.cast<std::vector<std::string>>();
-                    return karabo::util::Types::VECTOR_STRING;
-                }
-                if (py::isinstance<karabo::util::Hash>(list0)) {
-                    // convert py::list of Hash into VectorHash object since we use `bind_vector`:
-                    // vho = VectorHash(list_of_Hash) like VectorHash([Hash(...), Hash(...),...])
-                    // TODO: Check if py::implicitly_convertable can be used...
-                    auto vho = py::module_::import("karabind").attr("VectorHash")(o);
-                    any = vho.cast<std::vector<karabo::util::Hash>>();
-                    return karabo::util::Types::VECTOR_HASH;
-                }
-                if (py::isinstance<karabo::util::Hash::Pointer>(list0)) {
-                    any = o.cast<std::vector<karabo::util::Hash::Pointer>>();
-                    return karabo::util::Types::VECTOR_HASH_POINTER;
-                }
-                if (py::isinstance<karabo::util::Schema>(list0)) {
-                    any = o.cast<std::vector<karabo::util::Schema>>();
-                    return karabo::util::Types::VECTOR_SCHEMA;
+                } else if (py::isinstance<py::float_>(list0)) {
+                    self.setAttribute(path, attr, lo.cast<std::vector<double>>());
+                } else if (PyComplex_Check(list0.ptr())) {
+                    self.setAttribute(path, attr, lo.cast<std::vector<std::complex<double>>>());
+                } else if (py::isinstance<py::str>(list0)) {
+                    self.setAttribute(path, attr, lo.cast<std::vector<std::string>>());
+                } else if (py::isinstance<karabo::util::Hash>(list0)) {
+                    // auto vho = py::module_::import("karabind").attr("VectorHash")(o);
+                    // self.setAttribute(path, attr, vho.cast<std::vector<karabo::util::Hash>>());
+                    throw KARABO_PYTHON_EXCEPTION("Attribute cannot be sequence of Hash");
+                } else if (py::isinstance<karabo::util::Hash::Pointer>(list0)) {
+                    // self.setAttribute(path, attr, lo.cast<std::vector<karabo::util::Hash::Pointer>>());
+                    throw KARABO_PYTHON_EXCEPTION("Attribute cannot be sequence of Hash::Pointer");
+                } else if (py::isinstance<karabo::util::Schema>(list0)) {
+                    // self.setAttribute(path, attr, lo.cast<std::vector<karabo::util::Schema>>());
+                    throw KARABO_PYTHON_EXCEPTION("Attribute cannot be sequence of Schema");
+                } else {
+                    self.setAttribute(path, attr, o);
                 }
             }
-            if (py::hasattr(o, "__name__")) { // python function
-                any = o;
-                return karabo::util::Types::ANY;
-            }
-            throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
         }
+
+
+        py::object castNDArrayToPy(const karabo::util::NDArray& ndarray) {
+            using namespace karabo::util;
+            const Types::ReferenceType krbRefType = ndarray.getType();
+            const int typenum = Types::to<ToNumpy>(krbRefType);
+            const size_t itemsize = Types::to<ToSize>(krbRefType);
+            const Dims dims = ndarray.getShape();
+            const int ndims = dims.rank();
+            std::vector<ssize_t> shape(ndims, 0);
+            for (int i = 0; i < ndims; ++i) shape[i] = dims.extentIn(i);
+            const ByteArray& bytearr = ndarray.getByteArray();
+            if (dims.size() * itemsize > bytearr.second) {
+                throw KARABO_PARAMETER_EXCEPTION("Inconsistent NDArray: " + toString(bytearr.second) +=
+                                                 " are too few bytes for shape [" + toString(dims.toVector()) +=
+                                                 "] of " + Types::to<ToLiteral>(krbRefType));
+            }
+            py::object dtype = py::dtype(typenum);
+            NDArray::DataPointer dataPtr(bytearr.first);
+            auto pBase = boost::make_shared<ArrayDataPtrBase>(dataPtr);
+            auto base = py::cast(pBase);
+            pBase.reset();
+            void* ptr = static_cast<void*>(dataPtr.get());
+            // NOTE: the base is incremented to protect against destruction by Python
+            return py::array(dtype, shape, {}, ptr, base.inc_ref());
+        }
+
+
+        karabo::util::NDArray castPyArrayToND(py::array arr) {
+            using namespace karabo::util;
+            // dimensions
+            size_t ndims = arr.ndim();
+            // PyArray shape -> C++ Dims
+            const ssize_t* shape = arr.shape();
+            std::vector<unsigned long long> dims(ndims);
+            for (size_t i = 0; i < ndims; ++i) dims[i] = shape[i];
+            // PyArray dtype -> typenum -> C++ reftype
+            py::dtype dt = arr.dtype();
+            int typenum = dt.num();
+            Types::ReferenceType krbRefType = Types::from<FromNumpy>(typenum);
+            // number of elements
+            size_t nelems = arr.size();
+            // compute dataPtr
+            NDArray::DataPointer dataPtr;
+            // Does input array have a 'base' where reference to array data stored?
+            const auto& base = arr.base();
+            if (base && !base.is_none()) {
+                // Check if it is our special storage
+                if (py::isinstance<ArrayDataPtrBase>(base)) {
+                    const auto& arrRef = base.cast<ArrayDataPtrBase>();
+                    dataPtr = arrRef.getDataPtr(); // here we increase shared_ptr use count
+                }
+            }
+            if (!dataPtr) {
+                // Python is an owner of array data (base is None)
+                // Create a copy for Python array (by 'PyArray_FromAny')
+                py::array newarr = py::array::ensure(arr); // steal reference
+                if (newarr) {
+                    // get mutable data as char* to build dataPtr
+                    char* data = static_cast<char*>(arr.mutable_data());
+                    // Use PyArrayDeleter class as a Deleter class to manage Python reference counter
+                    // for "stolen" (copy.refcount == orig.refcount) copy
+                    auto pydeleter = PyArrayDeleter(newarr.ptr());
+                    // Construct dataPtr with deleter which decrements Python refcount
+                    dataPtr = NDArray::DataPointer(data, pydeleter);
+                }
+            }
+            if (!dataPtr) {
+                throw KARABO_PYTHON_EXCEPTION("Failed conversion of Python ndarray to C++ NDArray.");
+            }
+
+            // Construct NDArray
+            return NDArray(dataPtr, krbRefType, nelems, Dims(dims));
+        }
+
     } // namespace wrapper
 
 } // namespace karabind

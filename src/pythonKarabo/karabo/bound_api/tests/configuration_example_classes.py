@@ -13,8 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ = "$Apr 14, 2013 12:07:53 PM$"
 
 from karabo.bound import (
     ALARM_ELEMENT, AMPERE, BOOL_ELEMENT, CENTI, CHOICE_ELEMENT, DOUBLE_ELEMENT,
@@ -23,7 +21,7 @@ from karabo.bound import (
     KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MILLI,
     NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
     PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
-    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
     MetricPrefix, Schema, Unit)
 from karabo.common.states import State
@@ -848,5 +846,80 @@ class GraphicsRenderer2:
             .setSpecialDisplayType("unitTest")
             .assignmentOptional().defaultValueFromString("P2,P3")
             .reconfigurable()
+            .commit(),
+        )
+
+
+@KARABO_CONFIGURATION_BASE_CLASS
+@KARABO_CLASSINFO("OtherSchemaElements", "1.0")
+class OtherSchemaElements(object):
+    def __init__(self, configuration):
+        super(OtherSchemaElements, self).__init__()
+
+    @staticmethod
+    def expectedParameters(expected):
+        (
+            PATH_ELEMENT(expected)
+            .description("File name")
+            .key("filename")
+            .alias(5)
+            .displayedName("Filename")
+            .isOutputFile()
+            .options("file1, file2")
+            .assignmentOptional()
+            .defaultValue("karabo.log")
+            .reconfigurable()
+            .commit(),
+
+            VECTOR_INT32_ELEMENT(expected)
+            .key("vecIntReconfig")
+            .assignmentOptional()
+            .defaultValue([10, 20, 30])
+            .reconfigurable()
+            .commit(),
+
+            VECTOR_INT32_ELEMENT(expected)
+            .key("vecIntReconfigStr")
+            .assignmentOptional()
+            .defaultValueFromString("11, 22, 33")
+            .reconfigurable()
+            .commit(),
+
+            VECTOR_DOUBLE_ELEMENT(expected)
+            .key("vecDoubleReconfigStr")
+            .assignmentOptional()
+            .defaultValueFromString("1.1, 2.2, 3.3")
+            .reconfigurable()
+            .commit(),
+
+            VECTOR_BOOL_ELEMENT(expected)
+            .key("vecBool")
+            .tags("h/w; d.m.y", ";")
+            .allowedStates(State.STARTED, State.STOPPED)
+            .minSize(2)
+            .maxSize(7)
+            .assignmentMandatory()
+            .commit(),
+
+            LIST_ELEMENT(expected)
+            .key("shapeList")
+            .description("A list of shapes")
+            .appendNodesOfConfigurationBase(Shape)
+            .assignmentOptional()
+            .defaultValueFromString("Circle,Rectangle")
+            .commit(),
+
+            # We can also add nodes to the list by hand:
+            NODE_ELEMENT(expected)
+            .key("shapeList.BizarreForm")
+            .description("A funny shape added by hand")
+            .commit(),
+
+            FLOAT_ELEMENT(expected)
+            .key("shapeList.BizarreForm.length")
+            .description("The single length parameter characterizing "
+                         "the bizarre form")
+            .assignmentOptional()
+            .defaultValue(10.)
             .commit(),
         )
