@@ -20,17 +20,41 @@
 
 #include <pybind11/pybind11.h>
 
+#include "Wrapper.hh"
+
 namespace py = pybind11;
 
 // util
-void exportPyUtilTypesReferenceType(py::module_ &);
-void exportPyUtilHashAttributes(py::module_ &);
-void exportPyUtilHashNode(py::module_ &);
-void exportPyUtilHash(py::module_ &);
+void exportPyUtilClassInfo(py::module_ &);              // PyUtilClassInfo.cc
+void exportPyUtilTypesReferenceType(py::module_ &);     // PyUtilTypesReferenceType.cc
+void exportPyUtilTimestamp(py::module_ &);              // PyUtilTimestamp.cc
+void exportPyUtilTimeDuration(py::module_ &);           // PyUtilTimeDuration.cc
+void exportPyUtilTrainstamp(py::module_ &);             // PyUtilTrainstamp.cc
+void exportPyUtilHashAttributes(py::module_ &);         // PyUtilHashAttributes.cc
+void exportPyUtilDims(py::module_ &);                   // PyUtilDims.cc
+void exportPyUtilHashNode(py::module_ &);               // PyUtilHashNode.cc
+void exportPyUtilNDArray(py::module_ &);                // PyUtilNDArray.cc
+void exportPyUtilHash(py::module_ &);                   // PyUtilHash.cc
+void exportPyUtilAlarmConditionElement(py::module_ &);  // PyUtilAlarmElement.cc
+void exportPyUtilStateElement(py::module_ &);           // PyUtilStateElement.cc
+void exportPyUtilDateTimeString(py::module_ &);         // PyUtilDateTimeString.cc
+void exportPyUtilDetectorGeometry(py::module_ &);       // PyUtilDetectortectorGeometry.cc
+void exportPyUtilEpochstamp(py::module_ &);             // PyUtilEpochstamp.cc
+void exportPyUtilException(py::module_ &);              // PyUtilException.cc
+void exportPyUtilSchema(py::module_ &);                 // PyUtilSchema.cc
+void exportPyUtilSchemaElement(py::module_ &);          // PyUtilSchemaElement.cc (simple & vector)
+void exportPyUtilSchemaNodeElement(py::module_ &);      // PyUtilSchemaNodeElement.cc
+void exportPyUtilSchemaChoiceElement(py::module_ &);    // PyUtilSchemaChoiceElement.cc
+void exportPyUtilSchemaListElement(py::module_ &);      // PyUtilSchemaListElement.cc
+void exportPyUtilSchemaOverwriteElement(py::module_ &); // PyUtilSchemaOverwriteElement.cc
+void exportPyUtilSchemaTableElement(py::module_ &);     // PyUtilSchemaTableElement.cc
+void exportPyUtilSchemaValidator(py::module_ &);        // PyUtilSchemaValidator.cc
+void exportPyUtilSchemaTest(py::module_ &);             // ConfigurationTestClasses.[cc,hh]
 
 // io
 
 // xms
+void exportPyXmsImageDataElement(py::module_ &); // PyXmsImageDataElement.cc
 
 // core
 
@@ -42,14 +66,36 @@ void exportPyUtilHash(py::module_ &);
 
 PYBIND11_MODULE(karabind, m) {
     // util
+    exportPyUtilClassInfo(m);
     exportPyUtilTypesReferenceType(m);
     exportPyUtilHashAttributes(m);
     exportPyUtilHashNode(m);
+    exportPyUtilNDArray(m);
     exportPyUtilHash(m);
+    exportPyUtilEpochstamp(m);
+    exportPyUtilException(m);
+    exportPyUtilTimestamp(m);
+    exportPyUtilTimeDuration(m);
+    exportPyUtilTrainstamp(m);
+    exportPyUtilDateTimeString(m);
+    exportPyUtilDetectorGeometry(m);
+    exportPyUtilDims(m);
+    exportPyUtilAlarmConditionElement(m);
+    exportPyUtilStateElement(m);
+    exportPyUtilSchema(m);
+    exportPyUtilSchemaElement(m);
+    exportPyUtilSchemaNodeElement(m);
+    exportPyUtilSchemaChoiceElement(m);
+    exportPyUtilSchemaListElement(m);
+    exportPyUtilSchemaOverwriteElement(m);
+    exportPyUtilSchemaTableElement(m);
+    exportPyUtilSchemaValidator(m);
+    exportPyUtilSchemaTest(m);
 
     // io
 
     // xms
+    exportPyXmsImageDataElement(m);
 
     // core
 

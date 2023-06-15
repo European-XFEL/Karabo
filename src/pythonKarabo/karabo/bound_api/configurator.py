@@ -16,11 +16,9 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ = "$Apr 11, 2013 4:20:13 PM$"
+import karabind
 
-from karathon import (
-    INIT, READ, WRITE, AccessType, AssemblyRules, Hash, Schema, Validator)
+import karathon
 
 
 class Configurator:
@@ -81,14 +79,15 @@ class Configurator:
         self.baseRegistry[derived.__classid__] = derived
         return self
 
-    def getSchema(self, classid,
-                  rules=AssemblyRules(AccessType(READ | WRITE | INIT))):
+    def getSchema(self, classid, rules=None):
         """
         Get schema for class with "classid" derived from base class given to
         constructor using assembly "rules".
         Example:
                 schema = Configurator(Shape).getSchema("Rectangle")
         """
+        if rules is None:
+            rules = karathon.AssemblyRules()
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -114,7 +113,12 @@ class Configurator:
         clist = []
         inheritanceChain(Derived, Derived.__bases_classid__, clist)
         # clist contains list of classes in inheritance order
-        schema = Schema(classid, rules)
+        if isinstance(rules, karathon.AssemblyRules):
+            schema = karathon.Schema(classid, rules)
+        elif isinstance(rules, karabind.AssemblyRules):
+            schema = karabind.Schema(classid, rules)
+        else:
+            raise ValueError("Unsupported binding framework!")
         for theClass in clist:
             try:
                 if hasattr(theClass, "expectedParameters"):
@@ -179,6 +183,13 @@ class Configurator:
             configuration = configuration[classid]
         else:
             raise TypeError("Wrong number of arguments and/or their types")
+        # Which binding framework is used?
+        if isinstance(configuration, karathon.Hash):
+            module = karathon
+        elif isinstance(configuration, karabind.Hash):
+            module = karabind
+        else:
+            raise ValueError("Unknown binding framework")
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -188,11 +199,12 @@ class Configurator:
             raise AttributeError("Unknown classid '{}' in base registry"
                                  .format(classid))
         Derived = self.baseRegistry[classid]
-        schema = Configurator(Derived.__base_classid__).getSchema(classid)
+
+        schema = Configurator(Derived.__base_classid__).getSchema(
+            classid, module.AssemblyRules())
         if not validation:
             return Derived(configuration)
-        validated = Hash()
-        validator = Validator()
+        validator = module.Validator()
         result, error, validated = validator.validate(schema, configuration)
         if not result:
             raise RuntimeError(f"Validation Exception: {error}")

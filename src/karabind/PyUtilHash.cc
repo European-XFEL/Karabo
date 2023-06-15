@@ -20,6 +20,7 @@
  */
 
 #include <pybind11/complex.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
@@ -27,6 +28,7 @@
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
+#include <karabo/xms/ImageData.hh>
 #include <sstream>
 #include <string>
 #include <typeinfo>
@@ -36,115 +38,62 @@
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::shared_ptr<T>);
-
 namespace karabo {
     namespace util {
-        namespace details {
-
-            static void set(karabo::util::Hash& self, const std::string& key, const py::object& o,
-                            const std::string& separator = ".") {
-                using namespace karabo::util;
-                if (py::isinstance<Hash>(o)) {
-                    const Hash& h = o.cast<Hash>();
-                    self.set(key, h, separator.at(0));
-                    return;
-                }
-                // FIXME: check if this is ndarray
-                // FIXME: check if it is ImageData
-                boost::any any;
-                karabind::wrapper::castPyToAny(o, any);
-                self.set<boost::any>(key, std::move(any), separator.at(0));
-            }
-        } // namespace details
 
         template <>
         Hash::Hash(const std::string& k, const py::object& o) {
-            details::set(*this, k, o);
+            karabind::hashwrap::set(*this, k, o);
         }
 
         template <>
         Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2) {
-            details::set(*this, k1, o1);
-            details::set(*this, k2, o2);
+            karabind::hashwrap::set(*this, k1, o1);
+            karabind::hashwrap::set(*this, k2, o2);
         }
 
         template <>
         Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
                    const std::string& k3, const py::object& o3) {
-            details::set(*this, k1, o1);
-            details::set(*this, k2, o2);
-            details::set(*this, k3, o3);
+            karabind::hashwrap::set(*this, k1, o1);
+            karabind::hashwrap::set(*this, k2, o2);
+            karabind::hashwrap::set(*this, k3, o3);
         }
 
         template <>
         Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
                    const std::string& k3, const py::object& o3, const std::string& k4, const py::object& o4) {
-            details::set(*this, k1, o1);
-            details::set(*this, k2, o2);
-            details::set(*this, k3, o3);
-            details::set(*this, k4, o4);
+            karabind::hashwrap::set(*this, k1, o1);
+            karabind::hashwrap::set(*this, k2, o2);
+            karabind::hashwrap::set(*this, k3, o3);
+            karabind::hashwrap::set(*this, k4, o4);
         }
 
         template <>
         Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
                    const std::string& k3, const py::object& o3, const std::string& k4, const py::object& o4,
                    const std::string& k5, const py::object& o5) {
-            details::set(*this, k1, o1);
-            details::set(*this, k2, o2);
-            details::set(*this, k3, o3);
-            details::set(*this, k4, o4);
-            details::set(*this, k5, o5);
+            karabind::hashwrap::set(*this, k1, o1);
+            karabind::hashwrap::set(*this, k2, o2);
+            karabind::hashwrap::set(*this, k3, o3);
+            karabind::hashwrap::set(*this, k4, o4);
+            karabind::hashwrap::set(*this, k5, o5);
         }
 
         template <>
         Hash::Hash(const std::string& k1, const py::object& o1, const std::string& k2, const py::object& o2,
                    const std::string& k3, const py::object& o3, const std::string& k4, const py::object& o4,
                    const std::string& k5, const py::object& o5, const std::string& k6, const py::object& o6) {
-            details::set(*this, k1, o1);
-            details::set(*this, k2, o2);
-            details::set(*this, k3, o3);
-            details::set(*this, k4, o4);
-            details::set(*this, k5, o5);
-            details::set(*this, k6, o6);
+            karabind::hashwrap::set(*this, k1, o1);
+            karabind::hashwrap::set(*this, k2, o2);
+            karabind::hashwrap::set(*this, k3, o3);
+            karabind::hashwrap::set(*this, k4, o4);
+            karabind::hashwrap::set(*this, k5, o5);
+            karabind::hashwrap::set(*this, k6, o6);
         }
     } // namespace util
 } // namespace karabo
 
-namespace karabind {
-    namespace hashwrap {
-
-        /**
-         * Get either a reference to the Hash subtree for Hash and VectorHash or get a value for
-         * leaf element.
-         *
-         * @param self Hash
-         * @param path path string
-         * @param sep separator string
-         * @return Hash/VectorHash reference to subtree in parent
-         */
-        py::object getRef(karabo::util::Hash& self, const std::string& path, const std::string& sep) {
-            using namespace karabo::util;
-            Hash::Node& node = self.getNode(path, sep.at(0));
-            if (node.getType() == Types::HASH) {
-                Hash* hp = &node.getValue<Hash>();
-                return py::cast(self).attr("_getref_hash_")(hp);
-            }
-            if (node.getType() == Types::VECTOR_HASH) {
-                std::vector<Hash>* vhp = &node.getValue<std::vector<Hash>>();
-                return py::cast(self).attr("_getref_vector_hash_")(vhp);
-            }
-            return wrapper::castAnyToPy(node.getValueAsAny());
-        }
-
-        py::object getAs(const karabo::util::Hash& self, const std::string& path,
-                         const karabo::util::Types::ReferenceType& target, const std::string& separator) {
-            const karabo::util::Hash::Node& node = self.getNode(path, separator.at(0));
-            return wrapper::detail::castElementToPy(node, target);
-        }
-
-    } // namespace hashwrap
-} // namespace karabind
 
 using namespace karabo::util;
 using namespace std;
@@ -158,7 +107,7 @@ void exportPyUtilHash(py::module_& m) {
           .value("REPLACE_ATTRIBUTES", Hash::REPLACE_ATTRIBUTES)
           .export_values();
 
-    py::class_<Hash> h(m, "Hash", R"pbdoc(
+    py::class_<Hash, boost::shared_ptr<Hash>> h(m, "Hash", R"pbdoc(
             The Hash class can be regarded as a generic hash container, which
             associates a string key to a value of any type.
             Optionally attributes of any value-type can be associated to each
@@ -189,6 +138,13 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "_getref_vector_hash_", [](const Hash& self, std::vector<Hash>* other) { return py::cast(other); },
           py::arg("ref"), py::return_value_policy::reference_internal, py::keep_alive<0, 1>());
+
+    h.def(
+          "_get_ndarray_",
+          [](Hash& self, const Hash& other) {
+              return wrapper::castNDArrayToPy(reinterpret_cast<const NDArray&>(other));
+          },
+          py::arg("ndarray"), py::return_value_policy::reference_internal, py::keep_alive<0, 1>());
 
     h.def("clear", &Hash::clear, "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
 
@@ -340,7 +296,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "set",
           [](Hash& self, const std::string& key, const py::object& o, const std::string& sep) {
-              details::set(self, key, o, sep);
+              karabind::hashwrap::set(self, key, o, sep);
           },
           py::arg("path"), py::arg("value"), py::arg("sep") = ".",
           R"pbdoc(
@@ -358,7 +314,7 @@ void exportPyUtilHash(py::module_& m) {
     h.def(
           "__setitem__",
           [](Hash& self, const std::string& key, const py::object& o, const std::string& sep) {
-              details::set(self, key, o, sep);
+              karabind::hashwrap::set(self, key, o, sep);
           },
           py::arg("path"), py::arg("value"), py::arg("sep") = ".",
           R"pbdoc(
@@ -377,7 +333,7 @@ void exportPyUtilHash(py::module_& m) {
           "setAs",
           [](Hash& self, const std::string& key, const py::object& value, const py::object& otype,
              const std::string& separator) {
-              details::set(self, key, value, separator);
+              karabind::hashwrap::set(self, key, value, separator);
               Hash::Node& node = self.getNode(key, separator.at(0));
               auto cppType = wrapper::pyObjectToCppType(otype);
               node.setType(cppType);
@@ -932,7 +888,25 @@ void exportPyUtilHash(py::module_& m) {
           )pbdoc");
 
     h.def("__copy__", [](const Hash& self) { return self; });
-    h.def("__deepcopy__", [](const Hash& self) { return self; });
+    using namespace pybind11::literals;
+    h.def(
+          "__deepcopy__",
+          [](const Hash& self, py::dict) {
+              Hash h;
+              std::vector<std::string> paths;
+              self.getPaths(paths); // Not a "deep" paths
+              for (const auto& path : paths) {
+                  const Hash::Node& node = self.getNode(path);
+                  if (node.hasAttribute(KARABO_HASH_CLASS_ID)) {
+                      const std::string& classId = node.getAttribute<string>(KARABO_HASH_CLASS_ID);
+                      throw KARABO_NOT_SUPPORTED_EXCEPTION("Currently no 'deepcopy' support for subtype: " + classId);
+                  } else {
+                      h.set(path, node.getValueAsAny());
+                  }
+              }
+              return py::cast(h);
+          },
+          "memo"_a);
 
     // These 2 lines provide binding of Hash operators: '==' and '!=' defined in C++ karabo::util::Hash class.
     // The binding looks the same as in boost python, see the link ...
@@ -964,6 +938,6 @@ void exportPyUtilHash(py::module_& m) {
               return t.cast<std::vector<Hash>>();
           }));
 
-    //     py::class_<CppArrayRefHandler, std::shared_ptr<CppArrayRefHandler>>(m, "_CppArrayRefHandler_")
+    //     py::class_<CppArrayRefHandler, boost::shared_ptr<CppArrayRefHandler>>(m, "_CppArrayRefHandler_")
     //         .def(py::init<CppArrayRefHandler>());
 }
