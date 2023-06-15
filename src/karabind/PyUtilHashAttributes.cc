@@ -31,8 +31,6 @@ namespace py = pybind11;
 
 using namespace karabo::util;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::shared_ptr<T>);
-
 
 void exportPyUtilHashAttributes(py::module_& m) {
     using namespace karabo::util;

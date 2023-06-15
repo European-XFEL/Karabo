@@ -13,8 +13,6 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ = "$Jul 30, 2012 9:03:51 PM$"
 
 import copy
 import os
