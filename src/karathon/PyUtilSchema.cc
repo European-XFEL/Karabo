@@ -232,7 +232,7 @@ struct ChoiceElementWrap {
         const vector<string>& nodeNames = boost::any_cast<vector<string>>(any);
         for (size_t i = 0; i < nodeNames.size(); i++) {
             std::string nodeName = nodeNames[i];
-            bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+            bp::object schemaObj = classobj.attr("getSchema")(nodeName, bp::object(Schema::AssemblyRules()));
             const Schema& schema = bp::extract<const Schema&>(schemaObj);
             Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
             node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
@@ -265,7 +265,7 @@ struct ChoiceElementWrap {
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
         string nodeName = nodeNameObj;
         if (nodeNameObj == "") nodeName = classid;
-        bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+        bp::object schemaObj = classobj.attr("getSchema")(nodeName, bp::object(Schema::AssemblyRules()));
         const Schema& schema = bp::extract<const Schema&>(schemaObj);
         Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
         node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
@@ -307,7 +307,7 @@ struct ListElementWrap {
         const vector<string>& nodeNames = boost::any_cast<vector<string>>(any);
         for (size_t i = 0; i < nodeNames.size(); i++) {
             std::string nodeName = nodeNames[i];
-            bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+            bp::object schemaObj = classobj.attr("getSchema")(nodeName, Schema::AssemblyRules());
             const Schema& schema = bp::extract<const Schema&>(schemaObj);
             Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
             node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
@@ -339,7 +339,7 @@ struct ListElementWrap {
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
         string nodeName = name;
         if (nodeName == "") nodeName = classid;
-        bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+        bp::object schemaObj = classobj.attr("getSchema")(nodeName, Schema::AssemblyRules());
         const Schema& schema = bp::extract<const Schema&>(schemaObj);
         Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
         node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
@@ -471,6 +471,9 @@ struct OverwriteElementWrap {
         if (className == "State") {
             const std::string state = bp::extract<std::string>(value.attr("name"));
             return self.setNewDefaultValue(karabo::util::State::fromString(state));
+        } else if (className == "AlarmCondition") {
+            const std::string condition = bp::extract<std::string>(value.attr("value"));
+            return self.setNewDefaultValue(karabo::util::AlarmCondition::fromString(condition));
         } else {
             boost::any any;
             karathon::Wrapper::toAny(value, any);
