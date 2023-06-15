@@ -17,6 +17,7 @@ import copy
 import unittest
 
 import karabind
+import numpy as np
 
 import karathon
 
@@ -1053,3 +1054,46 @@ class Tests(unittest.TestCase):
         inner(karabind.Hash, karabind.VectorHash, karabind.fullyEqual)
         # Run test in karathon version
         inner(karathon.Hash, karathon.VectorHash, karathon.fullyEqual)
+
+    def test_ndarray(self):
+        def inner(Hash):
+            arr = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10],
+                            [11, 12, 13, 14, 15]])
+            # The array owner is Python
+            self.assertTrue(arr.flags.owndata)
+            # Put array into Hash ...
+            h = Hash('a', arr)
+            # The array owner inside the Hash is not a C++ code ...
+            self.assertFalse(h['a'].flags.owndata)
+            # The other attributes are not changed ...
+            self.assertTrue(h['a'].dtype == np.dtype('int64'))
+            self.assertEqual(h['a'][0][0], 1)
+            self.assertTrue(h['a'][0][3] == 4)
+            self.assertTrue(h['a'][2][1] == 12)
+            self.assertTrue(h['a'].size == 15)
+            self.assertTrue(h['a'].itemsize == 8)
+            self.assertTrue(h['a'].nbytes == 120)
+            self.assertTrue(h['a'].ndim == 2)
+            self.assertTrue(h['a'].shape == (3, 5))
+            self.assertTrue(h['a'].strides == (40, 8))
+            self.assertTrue(h['a'].flags.c_contiguous)
+            self.assertTrue(h['a'].flags.carray)
+            self.assertTrue(h['a'].flags.aligned)
+            self.assertTrue(h['a'].flags.writeable)
+            self.assertIsInstance(h['a'], np.ndarray)
+
+            h2 = copy.copy(h)
+
+            self.assertIsInstance(h2['a'], np.ndarray)
+            self.assertEqual(h2['a'][0][0], 1)
+
+            h['a'][0][0] = 255
+
+            self.assertEqual(h['a'][0][0], 255)
+            self.assertEqual(h2['a'][0][0], 255)
+            self.assertEqual(arr[0][0], 255)
+
+        # Run test in karabind version
+        inner(karathon.Hash)
+        # Run test in karathon version
+        inner(karabind.Hash)

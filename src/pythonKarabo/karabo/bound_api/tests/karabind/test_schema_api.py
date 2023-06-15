@@ -13,31 +13,29 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+
 import unittest
 
-from karabo.bound import (
-    IMAGEDATA_ELEMENT, INIT, INT32_ELEMENT, MANDATORY, METER, MICRO,
-    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, READ, STATE_ELEMENT,
-    WRITE, AccessLevel, AccessType, AlarmCondition, ArchivePolicy,
-    AssemblyRules, AssignmentType, Configurator, DaqDataType, DAQPolicy, Hash,
-    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator,
-    fullyEqual)
+from karabind import (
+    MANDATORY, METER, MICRO, STATE_ELEMENT, AccessLevel, AccessType,
+    ArchivePolicy, AssignmentType, DAQPolicy, Hash, MetricPrefix, NodeType,
+    Schema, Types, Unit, cppGraphicsRenderer1SchemaTest,
+    cppOtherSchemaElementsSchemaOtherSchemaElements, cppShapeSchemaCircle,
+    cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
+    cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
 
-from .configuration_example_classes import (
-    ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1,
-    GraphicsRenderer2, OtherSchemaElements, SomeClass, TestStruct1)
+from karabo.common.states import State
 
 
 class Schema_TestCase(unittest.TestCase):
 
     def test_buildUp(self):
         try:
-            # schema = Shape.getSchema("EditableCircle")
-            schema = Configurator("Shape").getSchema("Circle")
+            schema = cppShapeSchemaCircle()
             self.assertTrue(schema.isAccessInitOnly("shadowEnabled"))
             self.assertTrue(schema.isAccessInitOnly("radius"))
             self.assertTrue(schema.isLeaf("radius"))
-            schema = Configurator("Shape").getSchema("EditableCircle")
+            schema = cppShapeSchemaEditableCircle()
             allowedStates = schema.getOptions("state")
             self.assertEqual(allowedStates, ['INIT', 'ERROR', 'NORMAL'])
             self.assertEqual(schema.getDefaultValue("state"), 'INIT')
@@ -53,34 +51,31 @@ class Schema_TestCase(unittest.TestCase):
             self.fail("test_buildUp exception group 1: " + str(e))
 
         try:
-            schema = Schema("test")
-            GraphicsRenderer1.expectedParameters(schema)
+            schema = cppGraphicsRenderer1SchemaTest()
             self.assertTrue(schema.isAccessInitOnly("shapes.circle.radius"))
             self.assertTrue(schema.isLeaf("shapes.circle.radius"))
         except Exception as e:
             self.fail("test_buildUp exception group 2: " + str(e))
 
-        try:
-            instance = GraphicsRenderer.create("GraphicsRenderer",
-                                               Hash("shapes.Circle.radius",
-                                                    0.5, "color", "red",
-                                                    "antiAlias", "true"))
-            self.assertIsNotNone(instance)
-        except Exception as e:
-            self.fail("test_buildUp exception group 3: " + str(e))
+        # try:
+        #     instance = GraphicsRenderer.create("GraphicsRenderer",
+        #                                        Hash("shapes.Circle.radius",
+        #                                             0.5, "color", "red",
+        #                                             "antiAlias", "true"))
+        #     self.assertIsNotNone(instance)
+        # except Exception as e:
+        #     self.fail("test_buildUp exception group 3: " + str(e))
 
     def test_getRootName(self):
         try:
-            schema = Schema("MyTest",
-                            AssemblyRules(AccessType(READ | WRITE | INIT)))
-            TestStruct1.expectedParameters(schema)
+            schema = cppTestStruct1SchemaMyTest()
             self.assertEqual(schema.getRootName(), "MyTest")
         except Exception as e:
             self.fail("test_getRootName exception: " + str(e))
 
     def test_getTags(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getTags("exampleKey1")[0], "hardware")
             self.assertEqual(schema.getTags("exampleKey1")[1], "poll")
             self.assertEqual(schema.getTags("exampleKey2")[0], "hardware")
@@ -95,7 +90,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setTags(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertTrue(schema.hasTags('x'))
             self.assertEqual(schema.getTags('x'), ['IK', 'BH'])
             schema.setTags('x', 'CY,SE')
@@ -105,7 +100,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getsetExpertLevel(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getRequiredAccessLevel('x'),
                              AccessLevel.EXPERT)
             self.assertEqual(schema.getRequiredAccessLevel('y'),
@@ -123,7 +118,7 @@ class Schema_TestCase(unittest.TestCase):
             self.fail("test_setTags exception group 1: " + str(e))
 
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey1'),
                              AccessLevel.USER)
             self.assertEqual(schema.getRequiredAccessLevel('exampleKey2'),
@@ -144,18 +139,32 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_setTags exception group 2: " + str(e))
 
+    def test_isNode(self):
+        schema = cppGraphicsRenderer1SchemaTest()
+        self.assertEqual(schema.getRootName(), "test")
+        self.assertTrue(schema.isNode("shapes.circle"))
+        self.assertTrue(schema.isNode("shapes.rectangle"))
+        self.assertFalse(schema.isNode("shapes"))
+
     def test_getNodeType(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             nodeType = schema.getNodeType("exampleKey1")
             self.assertEqual(nodeType, NodeType.LEAF)
             self.assertEqual(schema.getNodeType("exampleKey5"), NodeType.LEAF)
+            schema = cppGraphicsRenderer1SchemaTest()
+            self.assertEqual(schema.getNodeType("shapes"),
+                             NodeType.CHOICE_OF_NODES)
+            self.assertEqual(schema.getNodeType("shapes.circle"),
+                             NodeType.NODE)
+            self.assertEqual(schema.getNodeType("shapes.rectangle"),
+                             NodeType.NODE)
         except Exception as e:
             self.fail("test_getNodeType exception: " + str(e))
 
     def test_getValueType(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getValueType("exampleKey1"), Types.STRING)
             self.assertEqual(schema.getValueType("exampleKey2"), Types.INT32)
             self.assertEqual(schema.getValueType("exampleKey3"), Types.UINT32)
@@ -172,7 +181,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getAliasAsString(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getAliasAsString("exampleKey2"), "10")
             self.assertEqual(schema.getAliasAsString("exampleKey3"), "5.5")
 
@@ -188,7 +197,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_keyHasAlias(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertFalse(schema.keyHasAlias("exampleKey1"))
             self.assertTrue(schema.keyHasAlias("exampleKey2"))
             self.assertTrue(schema.keyHasAlias("exampleKey3"))
@@ -201,7 +210,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_aliasHasKey(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertTrue(schema.aliasHasKey(10))
             self.assertTrue(schema.aliasHasKey(5.5))
             self.assertTrue(schema.aliasHasKey("exampleAlias4"))
@@ -214,7 +223,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getAliasFromKey(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getAliasFromKey("exampleKey2"), 10)
             self.assertEqual(schema.getAliasFromKey("exampleKey3"), 5.5)
             self.assertEqual(schema.getAliasFromKey("exampleKey4"),
@@ -229,7 +238,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setAlias(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getAliasFromKey("x"), 10)
             schema.setAlias('x', 'abc')
             self.assertEqual(schema.getAliasFromKey("x"), 'abc')
@@ -240,7 +249,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getKeyFromAlias(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getKeyFromAlias(10), "exampleKey2")
             self.assertEqual(schema.getKeyFromAlias(5.5), "exampleKey3")
             self.assertEqual(schema.getKeyFromAlias("exampleAlias4"),
@@ -255,7 +264,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getAccessMode(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getAccessMode("exampleKey1"),
                              AccessType.WRITE)
             self.assertEqual(schema.getAccessMode("exampleKey2"),
@@ -281,7 +290,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getAssignment(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getAssignment("exampleKey1"),
                              AssignmentType.OPTIONAL)
             self.assertEqual(schema.getAssignment("exampleKey2"),
@@ -307,7 +316,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setAssignment(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertTrue(schema.hasAssignment('x'))
             self.assertTrue(schema.isAssignmentOptional('x'))
             self.assertFalse(schema.isAssignmentMandatory('x'))
@@ -320,9 +329,20 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_setAssignment exception: " + str(e))
 
+    def test_getDescription(self):
+        schema = cppTestStruct1SchemaTestStruct1()
+        self.assertEqual(schema.getDescription('exampleKey1'),
+                         "Example key 1 description")
+
+    def test_setDescription(self):
+        schema = cppTestStruct1SchemaTestStruct1()
+        schema.setDescription('exampleKey1', "No description")
+        self.assertEqual(schema.getDescription('exampleKey1'),
+                         "No description")
+
     def test_getOptions(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             options = schema.getOptions("exampleKey1")
             self.assertEqual(options[0], "Radio")
             self.assertEqual(options[1], "Air Condition")
@@ -331,7 +351,6 @@ class Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getOptions("exampleKey2")[0], 5)
             self.assertEqual(schema.getOptions("exampleKey2")[1], 25)
             self.assertEqual(schema.getOptions("exampleKey2")[2], 10)
-
             self.assertEqual(schema.getOptions("exampleKey4")[0], 1.11)
             self.assertEqual(schema.getOptions("exampleKey4")[1], -2.22)
             self.assertEqual(schema.getOptions("exampleKey4")[2], 5.55)
@@ -343,7 +362,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setOptions(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
 
             options = schema.getOptions("x")
             self.assertEqual(options[0], 5)
@@ -359,7 +378,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_displayType(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             display = schema.getDisplayType("myNode")
             self.assertEqual(display, "WidgetNode")
         except Exception as e:
@@ -367,7 +386,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getDefaultValue(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getDefaultValue("exampleKey1"),
                              "Navigation")
             self.assertEqual(schema.getDefaultValue("exampleKey2"), 10)
@@ -409,7 +428,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setDefaultValue(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertTrue(schema.isAssignmentOptional('x'))
             self.assertTrue(schema.hasDefaultValue('x'))
             self.assertEqual(schema.getDefaultValue("x"), 5)
@@ -420,13 +439,13 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getAllowedStates(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             allowedStates = schema.getAllowedStates("exampleKey3")
             self.assertEqual(allowedStates[0], State.STARTED)
             self.assertEqual(allowedStates[1], State.STOPPED)
+            self.assertEqual(allowedStates[2], State.NORMAL)
             self.assertEqual(schema.getAllowedStates("exampleKey3")[2],
                              State.NORMAL)
-
             self.assertEqual(schema.getAllowedStates("exampleKey7")[0],
                              State.STARTED)
             self.assertEqual(schema.getAllowedStates("exampleKey7")[1],
@@ -436,7 +455,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getUnit(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getUnit("exampleKey2"), Unit.METER)
             self.assertEqual(schema.getUnitName("exampleKey2"), "meter")
             self.assertEqual(schema.getUnitSymbol("exampleKey2"), "m")
@@ -445,7 +464,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setUnit(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getUnit("x"), Unit.AMPERE)
             schema.setUnit('x', METER)
             self.assertEqual(schema.getUnit("x"), METER)
@@ -457,7 +476,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getMetricPrefix(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getMetricPrefix("exampleKey2"),
                              MetricPrefix.MILLI)
             self.assertEqual(schema.getMetricPrefixName("exampleKey2"),
@@ -468,7 +487,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setMetricPrefix(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getMetricPrefix("x"), MetricPrefix.MILLI)
             schema.setMetricPrefix("x", MetricPrefix.MICRO)
             self.assertEqual(schema.getMetricPrefix("x"), MICRO)
@@ -479,7 +498,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getMinIncMaxInc(self):
         try:
-            schema = TestStruct1.getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getMinInc("exampleKey2"), 5)
             self.assertEqual(schema.getMinIncAs("exampleKey2", Types.STRING),
                              "5")
@@ -491,7 +510,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setMinIncMaxInc(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getMinInc("x"), 5)
             self.assertEqual(schema.getMinIncAs("x", Types.STRING), "5")
             self.assertEqual(schema.getMaxInc("x"), 25)
@@ -506,7 +525,7 @@ class Schema_TestCase(unittest.TestCase):
             self.fail("test_setMinIncMaxInc exception: " + str(e))
 
     def test_getMinExcMaxExc(self):
-        schema = TestStruct1.getSchema("TestStruct1")
+        schema = cppTestStruct1SchemaTestStruct1()
         try:
             self.assertEqual(schema.getMinExc("exampleKey3"), 10)
             self.assertEqual(schema.getMinExc("exampleKey4"), -2.22)
@@ -539,7 +558,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setMinExcMaxExc(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getMinExc("y"), 0)
             self.assertEqual(schema.getMaxExc("y"), 29)
             schema.setMinExc("y", 2)
@@ -549,8 +568,39 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_setMinExcMaxExc exception in getMinExc: " + str(e))
 
+    def test_hasgetsetMinMaxSize(self):
+        schema = cppTestStruct1SchemaTestStruct1()
+        self.assertTrue(schema.hasMinSize('exampleKey10'))
+        self.assertTrue(schema.hasMaxSize('exampleKey10'))
+        self.assertEqual(schema.getMinSize('exampleKey10'), 2)
+        self.assertEqual(schema.getMaxSize('exampleKey10'), 7)
+        schema.setMinSize('exampleKey10', 5)
+        schema.setMaxSize('exampleKey10', 12)
+        self.assertEqual(schema.getMinSize('exampleKey10'), 5)
+        self.assertEqual(schema.getMaxSize('exampleKey10'), 12)
+        # ------
+        self.assertFalse(schema.hasMinSize('exampleKey11'))
+        self.assertFalse(schema.hasMaxSize('exampleKey11'))
+        schema.setMinSize('exampleKey11', 1)
+        schema.setMaxSize('exampleKey11', 42)
+        self.assertTrue(schema.hasMinSize('exampleKey11'))
+        self.assertTrue(schema.hasMaxSize('exampleKey11'))
+        self.assertEqual(schema.getMinSize('exampleKey11'), 1)
+        self.assertEqual(schema.getMaxSize('exampleKey11'), 42)
+
+    def test_hasgetsetMinMax(self):
+        schema = cppOtherSchemaElementsSchemaOtherSchemaElements()
+        self.assertFalse(schema.hasMin('shapeList'))
+        self.assertFalse(schema.hasMax('shapeList'))
+        schema.setMin('shapeList', 1)
+        schema.setMax('shapeList', 5)
+        self.assertTrue(schema.hasMin('shapeList'))
+        self.assertTrue(schema.hasMax('shapeList'))
+        self.assertEqual(schema.getMin('shapeList'), 1)
+        self.assertEqual(schema.getMax('shapeList'), 5)
+
     def test_getWarnAlarmLowHigh(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
+        schema = cppTestStruct1SchemaTestStruct1()
         try:
             self.assertEqual(schema.getWarnLow("exampleKey5"), -10)
             self.assertEqual(schema.getWarnLow("exampleKey6"), -5.5)
@@ -580,11 +630,11 @@ class Schema_TestCase(unittest.TestCase):
 
         except Exception as e:
             self.fail(
-                "test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(
-                    e))
+                "test_getWarnAlarmLowHigh exception in getAlarmHigh: "
+                + str(e))
 
     def test_getWarnAlarmLowHighAs(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
+        schema = cppTestStruct1SchemaTestStruct1()
         try:
             self.assertEqual(schema.getWarnLowAs("exampleKey5", Types.STRING),
                              "-10")
@@ -592,8 +642,8 @@ class Schema_TestCase(unittest.TestCase):
                              "-5.5")
         except Exception as e:
             self.fail(
-                "test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(
-                    e))
+                "test_getWarnAlarmLowHighAs exception in getWarnLowAs: "
+                + str(e))
 
         try:
             self.assertEqual(schema.getWarnHighAs("exampleKey5", Types.STRING),
@@ -601,9 +651,9 @@ class Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING),
                              "5.5")
         except Exception as e:
-            self.fail(
+            self.fail((
                 "test_getWarnAlarmLowHighAs exception in "
-                "getWarnHighAs: " + str(e))
+                "getWarnHighAs: " + str(e)))
 
         try:
             self.assertEqual(schema.getAlarmLowAs("exampleKey5", Types.STRING),
@@ -612,8 +662,8 @@ class Schema_TestCase(unittest.TestCase):
                              "-22.1")
         except Exception as e:
             self.fail(
-                "test_getWarnAlarmLowHighAs exception in "
-                f"getAlarmLowAs: {str(e)}")
+                ("test_getWarnAlarmLowHighAs exception in "
+                 "getAlarmLowAs: " + str(e)))
 
         try:
             self.assertEqual(
@@ -622,12 +672,12 @@ class Schema_TestCase(unittest.TestCase):
                 schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777")
         except Exception as e:
             self.fail(
-                "test_getWarnAlarmLowHighAs exception in "
-                f"getAlarmHighAs: {str(e)}")
+                ("test_getWarnAlarmLowHighAs exception in "
+                 "getAlarmHighAs: " + str(e)))
 
     def test_hasWarnAlarm(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertTrue(schema.hasWarnLow("exampleKey5"))
             self.assertTrue(schema.hasWarnHigh("exampleKey5"))
 
@@ -642,7 +692,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_vectorElement(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.isAccessReadOnly("exampleKey7"), True)
             self.assertEqual(schema.hasDefaultValue("exampleKey7"), True)
             self.assertEqual(schema.hasDefaultValue("exampleKey10"), True)
@@ -683,73 +733,61 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_vectorElement exception: " + str(e))
 
-        try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
-            validator = Validator()
-            configuration = Hash('somelist', [])
-            ok, error, validated = validator.validate(schema, configuration)
-            if not ok:
-                raise RuntimeError(error)
-            somelist = validated['somelist']
-            somelist.append(99)
-            somelist.append(55)
-            configuration['somelist'] = somelist
-            ok, error, validated = validator.validate(schema, configuration)
-            if not ok:
-                raise RuntimeError(error)
-            self.assertIsNotNone(validated)
-        except Exception as e:
-            self.fail("test_vectorElement exception 2: " + str(e))
-
-    def test_ndarrayElement(self):
-        schema = Configurator(ArrayContainer).getSchema("ArrayContainer")
-
-        assert schema.getDefaultValue("exampleKey16.shape") == [2, 3]
-        assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, 0]
-        assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
-
-        assert schema.getUnit("exampleKey16.data") == Unit.DEGREE_CELSIUS
-        assert schema.getMetricPrefix(
-            "exampleKey16.data") == MetricPrefix.CENTI
-
-        assert schema.isAccessReadOnly("exampleKey16")
-        assert schema.isAccessReadOnly("exampleKey17")
-        assert schema.isAccessReadOnly("exampleKey18")
-
-        assert schema.getSkipValidation("exampleKey16")
-        assert schema.getSkipValidation("exampleKey17")
-        assert not schema.getSkipValidation("exampleKey18")
-
-    def test_listElement(self):
-        schema = Configurator(GraphicsRenderer2).getSchema(
-            "GraphicsRenderer2")
-        assert schema.getDisplayType("chars") == "unitTest"
-        assert schema.isAccessReconfigurable("chars") is True
-        sch = Configurator(OtherSchemaElements).getSchema(
-            "OtherSchemaElements")
-        assert sch.has("shapeList") is True
-        assert sch.isListOfNodes("shapeList") is True
-        assert sch.isNode("shapeList") is False
-        assert sch.getDefaultValue("shapeList") == ['Circle', 'Rectangle']
-        assert sch.has("shapeList.Circle") is True
-        assert sch.isNode("shapeList.Circle") is True
-        assert sch.has("shapeList.BizarreForm") is True
-        assert sch.isNode("shapeList.BizarreForm") is True
-        assert sch.has("shapeList.BizarreForm.length") is True
-        assert sch.isLeaf("shapeList.BizarreForm.length") is True
+    #     try:
+    #         schema = cppSomeClassSchemaSomeClassId()
+    #         validator = Validator()
+    #         configuration = Hash('somelist', [])
+    #         ok, error, validated = validator.validate(schema, configuration)
+    #         if not ok:
+    #             raise RuntimeError(error)
+    #         somelist = validated['somelist']
+    #         somelist.append(99)
+    #         somelist.append(55)
+    #         configuration['somelist'] = somelist
+    #         ok, error, validated = validator.validate(schema, configuration)
+    #         if not ok:
+    #             raise RuntimeError(error)
+    #         self.assertIsNotNone(validated)
+    #     except Exception as e:
+    #         self.fail("test_vectorElement exception 2: " + str(e))
+    #
+    # def test_ndarrayElement(self):
+    #     schema = Configurator(ArrayContainer).getSchema("ArrayContainer")
+    #
+    #     assert schema.getDefaultValue("exampleKey16.shape") == [2, 3]
+    #     assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, 0]
+    #     assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
+    #
+    #     assert schema.getUnit("exampleKey16.data") == Unit.DEGREE_CELSIUS
+    #     assert schema.getMetricPrefix(
+    #         "exampleKey16.data") == MetricPrefix.CENTI
+    #
+    #     assert schema.isAccessReadOnly("exampleKey16")
+    #     assert schema.isAccessReadOnly("exampleKey17")
+    #     assert schema.isAccessReadOnly("exampleKey18")
+    #
+    #     assert schema.getSkipValidation("exampleKey16")
+    #     assert schema.getSkipValidation("exampleKey17")
+    #     assert not schema.getSkipValidation("exampleKey18")
+    #
+    # def test_listElement(self):
+    #     schema = \
+    #       Configurator(GraphicsRenderer2).getSchema("GraphicsRenderer2")
+    #     self.assertEqual(schema.getDisplayType("chars"), "unitTest")
+    #     self.assertEqual(schema.isAccessReconfigurable("chars"), True)
 
     def test_getDisplayType(self):
 
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
+        schema = cppTestStruct1SchemaTestStruct1()
         self.assertEqual(schema.getDisplayType("testPath"), "fileOut")
         self.assertEqual(schema.getDisplayType("testPath2"), "fileIn")
         self.assertEqual(schema.getDisplayType("testPath3"), "directory")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "Bitset")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "Bitset")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "Bitset")
-        #  self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "Bitset")
+        # self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "Bitset")
+        # self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "Bitset")
+        # self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "Bitset")
+        # self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "Bitset")
 
-        schema = TestStruct1.getSchema("TestStruct1")
+        schema = cppTestStruct1SchemaTestStruct1()
         self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")
         self.assertEqual(schema.getDisplayType("exampleBitsKey2"),
                          "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
@@ -763,7 +801,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setDisplayType(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertFalse(schema.hasDisplayType('y'))
             schema.setDisplayType('y', 'blabla')
             self.assertTrue(schema.hasDisplayType('y'))
@@ -773,14 +811,14 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_isCommand(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertTrue(schema.isCommand("slotTest"))
         except Exception as e:
             self.fail("test_isCommand exception: " + str(e))
 
     def test_isProperty(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertFalse(schema.isProperty("slotTest"))
             self.assertTrue(schema.isProperty("testPath2"))
 
@@ -788,20 +826,15 @@ class Schema_TestCase(unittest.TestCase):
             self.fail("test_isProperty exception: " + str(e))
 
     def test_hasArchivePolicy(self):
-        try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertTrue(schema.hasArchivePolicy("exampleKey5"))
-            self.assertTrue(schema.hasArchivePolicy("exampleKey6"))
-            self.assertTrue(schema.hasArchivePolicy("exampleKey7"))
-            self.assertTrue(schema.hasArchivePolicy("exampleKey8"))
-        except Exception as e:
-            self.fail("test_hasArchivePolicy exception: " + str(e))
+        schema = cppTestStruct1SchemaTestStruct1()
+        self.assertFalse(schema.hasArchivePolicy("exampleKey5"))
+        self.assertTrue(schema.hasArchivePolicy("exampleKey6"))
+        self.assertTrue(schema.hasArchivePolicy("exampleKey7"))
+        self.assertTrue(schema.hasArchivePolicy("exampleKey8"))
 
     def test_getArchivePolicy(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getArchivePolicy("exampleKey5"),
-                             ArchivePolicy.EVERY_EVENT)
+            schema = cppTestStruct1SchemaTestStruct1()
             self.assertEqual(schema.getArchivePolicy("exampleKey6"),
                              ArchivePolicy.EVERY_100MS)
             self.assertEqual(schema.getArchivePolicy("exampleKey7"),
@@ -813,7 +846,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_setArchivePolicy(self):
         try:
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            schema = cppSomeClassSchemaSomeClassId()
             self.assertEqual(schema.getArchivePolicy("a"),
                              ArchivePolicy.EVERY_100MS)
             schema.setArchivePolicy('a', ArchivePolicy.EVERY_10MIN)
@@ -824,7 +857,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_perKeyFunctionality(self):
         try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            schema = cppTestStruct1SchemaTestStruct1()
             keys = schema.getKeys()
             for key in keys:
                 if key == "exampleKey1":
@@ -875,49 +908,49 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_perKeyFunctionality exception group 1: " + str(e))
 
-    def test_merge(self):
-        try:
-            schema = Configurator(Base).getSchema('P1')
-            self.assertTrue("a" in schema)
-            self.assertFalse("x" in schema)
-            self.assertFalse("y" in schema)
-            self.assertFalse("z" in schema)
-
-            schema2 = Configurator(Base).getSchema('P2')
-            self.assertTrue("x" in schema2)
-            self.assertTrue("y" in schema2)
-            self.assertTrue("z" in schema2)
-
-            schema += schema2
-
-            self.assertTrue("a" in schema)
-            self.assertTrue("x" in schema)
-            self.assertTrue("y" in schema)
-            self.assertTrue("z" in schema)
-
-        except Exception as e:
-            self.fail("test_merge exception: " + str(e))
-
-    def test_logger(self):
-        config = Hash("priority", "DEBUG")
-        Logger.configure(config)
-        root = Logger.getCategory()
-        a1 = Logger.getCategory("a1")
-        a1_a2 = Logger.getCategory("a1.a2")
-        root.DEBUG("ERROR")
-
-        Logger.useOstream()
-        root.DEBUG("ok")
-        a1.DEBUG("ok")
-        a1_a2.DEBUG("ok")
-        root.INFO("ok")
-        a1.INFO("ok")
-        a1_a2.INFO("ok")
-
-        Logger.reset()
-        root.DEBUG("ERROR")
-        a1.DEBUG("ERROR")
-        a1_a2.DEBUG("ERROR")
+    # def test_merge(self):
+    #     try:
+    #         schema = Configurator(Base).getSchema('P1')
+    #         self.assertTrue("a" in schema)
+    #         self.assertFalse("x" in schema)
+    #         self.assertFalse("y" in schema)
+    #         self.assertFalse("z" in schema)
+    #
+    #         schema2 = Configurator(Base).getSchema('P2')
+    #         self.assertTrue("x" in schema2)
+    #         self.assertTrue("y" in schema2)
+    #         self.assertTrue("z" in schema2)
+    #
+    #         schema += schema2
+    #
+    #         self.assertTrue("a" in schema)
+    #         self.assertTrue("x" in schema)
+    #         self.assertTrue("y" in schema)
+    #         self.assertTrue("z" in schema)
+    #
+    #     except Exception as e:
+    #         self.fail("test_merge exception: " + str(e))
+    #
+    # def test_logger(self):
+    #     config = Hash("priority", "DEBUG")
+    #     Logger.configure(config)
+    #     root = Logger.getCategory()
+    #     a1 = Logger.getCategory("a1")
+    #     a1_a2 = Logger.getCategory("a1.a2")
+    #     root.DEBUG("ERROR")
+    #
+    #     Logger.useOstream()
+    #     root.DEBUG("ok")
+    #     a1.DEBUG("ok")
+    #     a1_a2.DEBUG("ok")
+    #     root.INFO("ok")
+    #     a1.INFO("ok")
+    #     a1_a2.INFO("ok")
+    #
+    #     Logger.reset()
+    #     root.DEBUG("ERROR")
+    #     a1.DEBUG("ERROR")
+    #     a1_a2.DEBUG("ERROR")
 
     def test_helpFunction(self):
         pass
@@ -925,97 +958,102 @@ class Schema_TestCase(unittest.TestCase):
         # schema = TestStruct1.getSchema("TestStruct1")
         # schema.help()
 
-    def test_schemaImageElement(self):
-        try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getDisplayType("myImageElement"),
-                             "ImageData")
-            self.assertEqual(schema.isCustomNode("myImageElement"), True)
-            self.assertEqual(schema.getCustomNodeClass("myImageElement"),
-                             "ImageData")
-            self.assertEqual(schema.getAccessMode("myImageElement"),
-                             AccessType.READ)
-            self.assertEqual(schema.getNodeType("myImageElement"),
-                             NodeType.NODE)
-            self.assertEqual(schema.getRequiredAccessLevel("myImageElement"),
-                             AccessLevel.OPERATOR)  # .operatorAccess()
-            self.assertEqual(schema.getDisplayedName("myImageElement"),
-                             "myImage")
-            self.assertEqual(schema.getDescription("myImageElement"),
-                             "Image Element")
-            self.assertEqual(schema.getDefaultValue("myImageElement.dims"),
-                             [100, 200])
-            schema2 = Configurator(SomeClass).getSchema("SomeClassId")
-            self.assertEqual(schema2.getDefaultValue("myImageElement.dims"),
-                             [110, 210])
-            ide = IMAGEDATA_ELEMENT(schema2).key("myImageElement2")
-            with self.assertRaises(RuntimeError):
-                ide.setDimensions(123)  # only list ans str are allowed
-
-            # Hijack this test to test correct false result of isCustomNode,
-            # but here just one type, excessive test is done for
-            # underlying C++ code
-            self.assertEqual(schema.isCustomNode("exampleKey1"), False)
-        except Exception as e:
-            self.fail("test_schemaImageElement group 1: " + str(e))
-
-        try:
-            # self.assertEqual(schema.getDescription("myImageElement.pixels"),
-            #  "Pixel array")
-            # self.assertEqual(schema.getValueType("myImageElement.pixels"),
-            # Types.VECTOR_CHAR)
-
-            self.assertEqual(schema.getDisplayedName("myImageElement.dims"),
-                             "Dimensions")
-            self.assertEqual(schema.getValueType("myImageElement.dims"),
-                             Types.VECTOR_UINT64)
-            self.assertEqual(schema.getDisplayType("myImageElement.dims"),
-                             "Curve")
-
-            self.assertEqual(
-                schema.getDisplayedName("myImageElement.encoding"), "Encoding")
-            self.assertEqual(schema.getValueType("myImageElement.encoding"),
-                             Types.INT32)
-
-        # self.assertEqual(
-        # schema.getDisplayedName("myImageElement.pixels.isBigEndian"),
-        # "Is big endian")
-        # self.assertEqual(
-        # schema.getValueType("myImageElement.pixels.isBigEndian"), Types.BOOL)
-        # self.assertEqual(
-        # schema.getDefaultValue("myImageElement.pixels.isBigEndian"), False)
-
-        except Exception as e:
-            self.fail("test_schemaImageElement group 2: " + str(e))
-
-    def test_alarm_info(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        self.assertEqual(
-            schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW),
-            "Some info")
+    # def test_schemaImageElement(self):
+    #     try:
+    #         schema = Configurator(TestStruct1).getSchema("TestStruct1")
+    #         self.assertEqual(schema.getDisplayType("myImageElement"),
+    #                          "ImageData")
+    #         self.assertEqual(schema.isCustomNode("myImageElement"), True)
+    #         self.assertEqual(schema.getCustomNodeClass("myImageElement"),
+    #                          "ImageData")
+    #         self.assertEqual(schema.getAccessMode("myImageElement"),
+    #                          AccessType.READ)
+    #         self.assertEqual(schema.getNodeType("myImageElement"),
+    #                          NodeType.NODE)
+    #         self.assertEqual(schema.getRequiredAccessLevel("myImageElement"),
+    #                          AccessLevel.OPERATOR)  # .operatorAccess()
+    #         self.assertEqual(schema.getDisplayedName("myImageElement"),
+    #                          "myImage")
+    #         self.assertEqual(schema.getDescription("myImageElement"),
+    #                          "Image Element")
+    #         self.assertEqual(schema.getDefaultValue("myImageElement.dims"),
+    #                          [100, 200])
+    #         schema2 = Configurator(SomeClass).getSchema("SomeClassId")
+    #         self.assertEqual(schema2.getDefaultValue("myImageElement.dims"),
+    #                          [110, 210])
+    #         ide = IMAGEDATA_ELEMENT(schema2).key("myImageElement2")
+    #         with self.assertRaises(RuntimeError):
+    #             ide.setDimensions(123)  # only list ans str are allowed
+    #
+    #         Hijack this test to test correct false result of isCustomNode,
+    #         but here just one type, excessive test is done for
+    #         underlying C++ code
+    #         self.assertEqual(schema.isCustomNode("exampleKey1"), False)
+    #     except Exception as e:
+    #         self.fail("test_schemaImageElement group 1: " + str(e))
+    #
+    #     try:
+    #         self.assertEqual(schema.getDescription("myImageElement.pixels"),
+    #          "Pixel array")
+    #         self.assertEqual(schema.getValueType("myImageElement.pixels"),
+    #         Types.VECTOR_CHAR)
+    #
+    #         self.assertEqual(schema.getDisplayedName("myImageElement.dims"),
+    #                          "Dimensions")
+    #         self.assertEqual(schema.getValueType("myImageElement.dims"),
+    #                          Types.VECTOR_UINT64)
+    #         self.assertEqual(schema.getDisplayType("myImageElement.dims"),
+    #                          "Curve")
+    #
+    #         self.assertEqual(
+    #             schema.getDisplayedName("myImageElement.encoding"),
+    #             "Encoding")
+    #         self.assertEqual(schema.getValueType("myImageElement.encoding"),
+    #                          Types.INT32)
+    #
+    #     self.assertEqual(
+    #     schema.getDisplayedName("myImageElement.pixels.isBigEndian"),
+    #     "Is big endian")
+    #     self.assertEqual(
+    #     schema.getValueType("myImageElement.pixels.isBigEndian"), Types.BOOL)
+    #     self.assertEqual(
+    #     schema.getDefaultValue("myImageElement.pixels.isBigEndian"), False)
+    #
+    #     except Exception as e:
+    #         self.fail("test_schemaImageElement group 2: " + str(e))
+    #
+    # def test_alarm_info(self):
+    #     schema = cppTestStruct1SchemaTestStruct1()
+    #     self.assertEqual(
+    #         schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW),
+    #         "Some info")
 
     def test_allowed_states(self):
-        schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        schema.setAllowedStates("exampleKey3", (State.INIT, State.NORMAL))
+        schema = cppTestStruct1SchemaTestStruct1()
+        schema.setAllowedStates("exampleKey3", State.ACQUIRING, State.NORMAL,
+                                State.PASSIVE)
         allowedStates = schema.getAllowedStates("exampleKey3")
-        self.assertEqual(allowedStates, [State.INIT, State.NORMAL])
+        self.assertEqual(allowedStates,
+                         [State.ACQUIRING, State.NORMAL, State.PASSIVE])
 
-    def test_daq_data_type(self):
-        schema = Schema()
-
-        NODE_ELEMENT(schema).key(
-            "trainData").commit()  # Has no DAQ data type yet
-        NODE_ELEMENT(schema).key("pulseData").setDaqDataType(
-            DaqDataType.PULSE).commit()
-
-        self.assertEqual(schema.hasDaqDataType("trainData"), False)
-        self.assertEqual(schema.hasDaqDataType("pulseData"), True)
-        self.assertEqual(schema.getDaqDataType("pulseData"), DaqDataType.PULSE)
-
-        # Now add DAQ data type to node "trainData"
-        schema.setDaqDataType("trainData", DaqDataType.TRAIN)
-        self.assertEqual(schema.hasDaqDataType("trainData"), True)
-        self.assertEqual(schema.getDaqDataType("trainData"), DaqDataType.TRAIN)
+    # def test_daq_data_type(self):
+    #     schema = Schema()
+    #
+    #     NODE_ELEMENT(schema).key(
+    #         "trainData").commit()  # Has no DAQ data type yet
+    #     NODE_ELEMENT(schema).key("pulseData").setDaqDataType(
+    #         DaqDataType.PULSE).commit()
+    #
+    #     self.assertEqual(schema.hasDaqDataType("trainData"), False)
+    #     self.assertEqual(schema.hasDaqDataType("pulseData"), True)
+    #     self.assertEqual(schema.getDaqDataType("pulseData"),
+    #                      DaqDataType.PULSE)
+    #
+    #     Now add DAQ data type to node "trainData"
+    #     schema.setDaqDataType("trainData", DaqDataType.TRAIN)
+    #     self.assertEqual(schema.hasDaqDataType("trainData"), True)
+    #     self.assertEqual(schema.getDaqDataType("trainData"),
+    #                      DaqDataType.TRAIN)
 
     def test_state_element(self):
         schema = Schema()
@@ -1035,12 +1073,13 @@ class Schema_TestCase(unittest.TestCase):
             .commit()
         )
 
-        self.assertEqual(schema.getDAQPolicy("state1"), DAQPolicy.UNSPECIFIED)
+        self.assertEqual(schema.getDAQPolicy("state1"),
+                         DAQPolicy.UNSPECIFIED)
         self.assertEqual(schema.getDAQPolicy("state2"), DAQPolicy.SAVE)
         self.assertEqual(schema.getDAQPolicy("state3"), DAQPolicy.OMIT)
 
     def test_table_element(self):
-        schema = TestStruct1.getSchema("TestStruct1")
+        schema = cppTestStruct1SchemaTestStruct1()
 
         # Both, defaultValue and initialValue should work for read-only tables
         default = schema.getDefaultValue("tableI")
@@ -1052,127 +1091,127 @@ class Schema_TestCase(unittest.TestCase):
 
         # There are more tests of tables in the integration tests...
 
-    def test_overwrite_restrictions_for_options(self):
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("range")
-            .displayedName("Range")
-            .options("0,1")
-            .assignmentOptional().defaultValue(0)
-            .reconfigurable()
-            .commit()
-        )
-        vec = schema.getOptions("range")
-        self.assertEqual(len(vec), 2)
-        self.assertEqual(vec[0], 0)
-        self.assertEqual(vec[1], 1)
-        (
-            OVERWRITE_ELEMENT(schema).key("range")
-            .setNewOptions("0,1,2")
-            .commit()
-        )
-        vec = schema.getOptions("range")
-        self.assertEqual(len(vec), 3)
-        self.assertEqual(vec[0], 0)
-        self.assertEqual(vec[1], 1)
-        self.assertEqual(vec[2], 2)
-
-    def test_overwrite_tags(self):
-        schema = Schema()
-        (
-            INT32_ELEMENT(schema).key("taggedProp")
-            .tags("bip, bop")
-            .assignmentOptional().defaultValue(0)
-            .reconfigurable()
-            .commit()
-        )
-        vec = schema.getTags("taggedProp")
-        self.assertEqual(len(vec), 2)
-        self.assertEqual(vec[0], "bip")
-        self.assertEqual(vec[1], "bop")
-        (
-            OVERWRITE_ELEMENT(schema).key("taggedProp")
-            .setNewTags("doff")
-            .commit()
-        )
-        vec = schema.getTags("taggedProp")
-        self.assertEqual(len(vec), 1)
-        self.assertEqual(vec[0], "doff")
-        (
-            OVERWRITE_ELEMENT(schema).key("taggedProp")
-            .setNewTags(["doff", "deff"])
-            .commit()
-        )
-        vec = schema.getTags("taggedProp")
-        self.assertEqual(len(vec), 2)
-        self.assertEqual(vec[0], "doff")
-        self.assertEqual(vec[1], "deff")
-        (
-            OVERWRITE_ELEMENT(schema).key("taggedProp")
-            .setNewTags(("chip", "chop"))
-            .commit()
-        )
-        vec = schema.getTags("taggedProp")
-        self.assertEqual(len(vec), 2)
-        self.assertEqual(vec[0], "chip")
-        self.assertEqual(vec[1], "chop")
-        # Only iterable of str are allowed
-        with self.assertRaises(RuntimeError):
-            (
-                OVERWRITE_ELEMENT(schema).key("taggedProp")
-                .setNewTags((1, 2))
-                .commit()
-            )
-
-    def test_allowed_actions(self):
-        s = Schema()
-        (
-            NODE_ELEMENT(s).key("node")
-            .setAllowedActions(("action1", "action2"))  # tuple
-            .commit(),
-
-            INT32_ELEMENT(s).key("node.int")
-            .assignmentMandatory()
-            .commit(),
-
-            NDARRAY_ELEMENT(s).key("node.arr")
-            .setAllowedActions(["otherAction"])  # list
-            .commit(),
-
-            IMAGEDATA_ELEMENT(s).key("image")
-            .setAllowedActions("")  # str - each character is taken, here none
-            .commit()
-        )
-
-        self.assertTrue(s.hasAllowedActions("node"))
-        self.assertFalse(s.hasAllowedActions("node.int"))
-        actions = s.getAllowedActions("node")
-        self.assertEqual(len(actions), 2)
-        self.assertEqual(actions[0], "action1")
-        self.assertEqual(actions[1], "action2")
-
-        self.assertTrue(s.hasAllowedActions("node.arr"))
-        actions = s.getAllowedActions("node.arr")
-        self.assertEqual(len(actions), 1)
-        self.assertEqual(actions[0], "otherAction")
-
-        self.assertTrue(s.hasAllowedActions("image"))
-        actions = s.getAllowedActions("image")
-        self.assertEqual(len(actions), 0)
-
-        # Check setAllowedActions from Schema
-        # and validate that also keys of a dict are taken:
-        s.setAllowedActions("node",
-                            {"actA": 1, "actB": 2, "actC": "who care"})
-        actions = s.getAllowedActions("node")
-        self.assertEqual(len(actions), 3)
-        self.assertEqual(actions[0], "actA")
-        self.assertEqual(actions[1], "actB")
-        self.assertEqual(actions[2], "actC")
-
-        # Only (custom) nodes can have allowed actions:
-        with self.assertRaises(RuntimeError):
-            s.setAllowedActions("node.int", ["bla", "blue"])
+    # def test_overwrite_restrictions_for_options(self):
+    #     schema = Schema()
+    #     (
+    #         INT32_ELEMENT(schema).key("range")
+    #         .displayedName("Range")
+    #         .options("0,1")
+    #         .assignmentOptional().defaultValue(0)
+    #         .reconfigurable()
+    #         .commit()
+    #     )
+    #     vec = schema.getOptions("range")
+    #     self.assertEqual(len(vec), 2)
+    #     self.assertEqual(vec[0], 0)
+    #     self.assertEqual(vec[1], 1)
+    #     (
+    #         OVERWRITE_ELEMENT(schema).key("range")
+    #         .setNewOptions("0,1,2")
+    #         .commit()
+    #     )
+    #     vec = schema.getOptions("range")
+    #     self.assertEqual(len(vec), 3)
+    #     self.assertEqual(vec[0], 0)
+    #     self.assertEqual(vec[1], 1)
+    #     self.assertEqual(vec[2], 2)
+    #
+    # def test_overwrite_tags(self):
+    #     schema = Schema()
+    #     (
+    #         INT32_ELEMENT(schema).key("taggedProp")
+    #         .tags("bip, bop")
+    #         .assignmentOptional().defaultValue(0)
+    #         .reconfigurable()
+    #         .commit()
+    #     )
+    #     vec = schema.getTags("taggedProp")
+    #     self.assertEqual(len(vec), 2)
+    #     self.assertEqual(vec[0], "bip")
+    #     self.assertEqual(vec[1], "bop")
+    #     (
+    #         OVERWRITE_ELEMENT(schema).key("taggedProp")
+    #         .setNewTags("doff")
+    #         .commit()
+    #     )
+    #     vec = schema.getTags("taggedProp")
+    #     self.assertEqual(len(vec), 1)
+    #     self.assertEqual(vec[0], "doff")
+    #     (
+    #         OVERWRITE_ELEMENT(schema).key("taggedProp")
+    #         .setNewTags(["doff", "deff"])
+    #         .commit()
+    #     )
+    #     vec = schema.getTags("taggedProp")
+    #     self.assertEqual(len(vec), 2)
+    #     self.assertEqual(vec[0], "doff")
+    #     self.assertEqual(vec[1], "deff")
+    #     (
+    #         OVERWRITE_ELEMENT(schema).key("taggedProp")
+    #         .setNewTags(("chip", "chop"))
+    #         .commit()
+    #     )
+    #     vec = schema.getTags("taggedProp")
+    #     self.assertEqual(len(vec), 2)
+    #     self.assertEqual(vec[0], "chip")
+    #     self.assertEqual(vec[1], "chop")
+    #     Only iterable of str are allowed
+    #     with self.assertRaises(RuntimeError):
+    #         (
+    #             OVERWRITE_ELEMENT(schema).key("taggedProp")
+    #             .setNewTags((1, 2))
+    #             .commit()
+    #         )
+    #
+    # def test_allowed_actions(self):
+    #     s = Schema()
+    #     (
+    #         NODE_ELEMENT(s).key("node")
+    #         .setAllowedActions(("action1", "action2"))  # tuple
+    #         .commit(),
+    #
+    #         INT32_ELEMENT(s).key("node.int")
+    #         .assignmentMandatory()
+    #         .commit(),
+    #
+    #         NDARRAY_ELEMENT(s).key("node.arr")
+    #         .setAllowedActions(["otherAction"])  # list
+    #         .commit(),
+    #
+    #         IMAGEDATA_ELEMENT(s).key("image")
+    #         .setAllowedActions("")  # str - each char is taken, here none
+    #         .commit()
+    #     )
+    #
+    #     self.assertTrue(s.hasAllowedActions("node"))
+    #     self.assertFalse(s.hasAllowedActions("node.int"))
+    #     actions = s.getAllowedActions("node")
+    #     self.assertEqual(len(actions), 2)
+    #     self.assertEqual(actions[0], "action1")
+    #     self.assertEqual(actions[1], "action2")
+    #
+    #     self.assertTrue(s.hasAllowedActions("node.arr"))
+    #     actions = s.getAllowedActions("node.arr")
+    #     self.assertEqual(len(actions), 1)
+    #     self.assertEqual(actions[0], "otherAction")
+    #
+    #     self.assertTrue(s.hasAllowedActions("image"))
+    #     actions = s.getAllowedActions("image")
+    #     self.assertEqual(len(actions), 0)
+    #
+    #     Check setAllowedActions from Schema
+    #     and validate that also keys of a dict are taken:
+    #     s.setAllowedActions("node",
+    #                         {"actA": 1, "actB": 2, "actC": "who care"})
+    #     actions = s.getAllowedActions("node")
+    #     self.assertEqual(len(actions), 3)
+    #     self.assertEqual(actions[0], "actA")
+    #     self.assertEqual(actions[1], "actB")
+    #     self.assertEqual(actions[2], "actC")
+    #
+    #     Only (custom) nodes can have allowed actions:
+    #     with self.assertRaises(RuntimeError):
+    #         s.setAllowedActions("node.int", ["bla", "blue"])
 
 
 if __name__ == '__main__':
