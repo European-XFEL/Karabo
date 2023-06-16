@@ -17,8 +17,6 @@ Summary – Release highlights
 
 - **A new dependency system based on conan and pip.**
 
-- GUI: Enable move of scenes and macros in the project.
-
 
 Breaking Changes
 ++++++++++++++++
