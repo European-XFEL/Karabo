@@ -244,6 +244,7 @@ class AsyncTimer:
         instance = loop.instance()
         if instance is None:
             raise RuntimeError("A timer needs an instance to run ...")
+        self.instance = ref(instance)
         self._register(instance)
 
         assert callable(callback)
@@ -317,7 +318,8 @@ class AsyncTimer:
             return
 
         coro = ensure_coroutine(callback)
-        self.loop.call_soon_threadsafe(self.loop.create_task, coro())
+        self.loop.call_soon_threadsafe(self.loop.create_task, coro(),
+                                       self.instance())
         self._handle = None
         self._time = None
         if not self._single_shot:

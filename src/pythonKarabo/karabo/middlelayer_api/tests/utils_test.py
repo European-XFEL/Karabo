@@ -383,7 +383,9 @@ async def test_async_timer(event_loop):
         nonlocal called
         assert asyncio.get_event_loop().instance() is instance
         # Can create a new timer inside callback
-        assert AsyncTimer(timeout=0.2, callback=lambda: None) is not None
+        t = AsyncTimer(timeout=0.2, callback=call)
+        assert t.instance() is instance
+        del t
         called += 1
 
     timer = AsyncTimer(timeout=0.2, callback=call)
@@ -431,7 +433,9 @@ async def test_async_timer(event_loop):
         nonlocal called
         assert asyncio.get_event_loop().instance() is instance
         # Can create a new timer inside callback
-        assert AsyncTimer(timeout=0.2, callback=lambda: None) is not None
+        t = AsyncTimer(timeout=0.2, callback=call)
+        assert t.instance() is instance
+        del t
         called += 1
 
     timer = AsyncTimer(timeout=0.2, callback=call)
