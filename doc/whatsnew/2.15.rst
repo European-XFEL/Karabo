@@ -7,6 +7,7 @@ for middlelayer devices, a minor GUI client issue related to an erroneous deprec
 and enable the GUI client to use a new class of editable widgets available via the
 GUI extensions.
 
+
 Detailed Merge-Log
 ++++++++++++++++++
 
