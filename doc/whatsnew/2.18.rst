@@ -5,10 +5,159 @@
 What's New in Karabo 2.18.0
 ***************************
 
-Release scheduled for the **13.06.2023**.
+Release date was the **13.06.2023**. This release is the first tailored open source
+release. The dependency system has been changed and now makes use of conan center and the python package index PyPi.
+Additionally, all h5 related code has been removed from the software framework.
+
+Hence, this release is NOT for production, but **experimental** and a development release.
 
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
 - **A new dependency system based on conan and pip.**
+
+- GUI: Enable move of scenes and macros in the project.
+
+
+Breaking Changes
+++++++++++++++++
+
+- C++/Bound: h5 related code has been removed from the Karabo Framework.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+MDL/Native core
+===============
+
+- MDL: Skip device server track test on jms !7518
+- MDL: Provide get_image_data helper with path declaration !7536
+- MDL: Extend AsyncTimer tests !7640
+- MDL: Change broker scheme tests !7642
+- MDL: Protect DaemonManager against quick down/up call from an operator !7551
+- MDL: Fix macro disconnect test being flaky !7555
+- MDL test: sleepUntil in device_server_test.py !7549
+- MDL Test: Make timeout statements working in injection test of pipeline !7628
+- MDL: Don't close channels automatically for services with broadcasts, as they are unique per connection !7556
+- Common: Format python to newer style !7570
+- MDL/Bound: Extend copyright statement, point to license !7625
+- MDL: Adapt style to newer python versions !7567
+- MDL: Include config_changes to cli namespace !7594
+- Native: adapt native to newer python style !7566
+
+
+Bound/cpp core
+==============
+
+- C++: Direct EventLoop::post with potential delay !7514
+- C++/Bound::Two and a half CI robustness fixes, once more debug !7517
+- C++: Protect against dereferencing first element of empty vector !7525
+- C++: Fix deserialisation of VECTOR_HASH_POINTER !7527
+- C++/bound Tests: Increase timeouts !7529
+- C++ Failing reception of error message with more details !7533
+- C++ Test: Proper wait until device logged !7535
+- C++: Add MQTimestamp also for repliesCloses #381 !7546
+- C++: Restrict configured ports to valid TCP range !7538
+- C++: DeviceClient throws on timeout !7547
+- C++ test: Longer timeout in InputOutputChannel_LongTest !7539
+- C++/Bound: Change defaults to avoid copies in pipelining. !7541
+- C++: DEBUG level logging for the saving of device schemas on Influx. !7580
+- C++ Device Template: Fix for cmake based build not able to find the Karabo library and its dependencies. !7590
+- C++: Provide clang precommit !7605
+- Bound: adapt python style to newer versions !7568
+- C++: Extend copyright statement, point to license !7624
+- Karabind: Extend copyright statement, point to license !7634
+
+
+Graphical User Interface
+========================
+
+- GUI: Development Topology DialogCloses #207 !7619
+- GUI: Move project items !7629
+- GUI: Make BaseArrayGraph public in api !7632
+- GUI: Extend copyright statement, point to license !7631
+- GUI: "Data Analysis Dialog: Provide ROI (Vertical lines) for fitting area on demand"Closes #304 !7584
+- GUI: Transport checkbox controller test to pytest !7497
+- GUI: Transport choiceelement controller test to pytest !7498
+- GUI: Transport combobox controller test to pytest !7499
+- GUI: Transport intspinbox controller test to pytest !7502
+- GUI: Transport floatspinbox controller test to pytest !7500
+- GUI: Transport lineedit controller test to pytest !7506
+- GUI: Transport list controller test to pytest !7507
+- GUI: Transport runconfigurator controller test to pytest !7510
+- GUI: Transport slider controller test to pytest !7511
+- GUI: Enable to restore scenes in project reload !7509
+- GUI: Transport table controller test to pytest !7513
+- GUI: Transport strlist controller test to pytest !7512
+- GUI: Transport textedit controller test to pytest !7524
+- GUI: Transport custom table controller test to pytest !7526
+- GUI: Transport model view controller test to pytest !7531
+- GUI: Provide emphasis on column description if available !7437
+- GUI: Provide index information on project items and move macros !7609
+- GUI: test_client_toplogy.py : Unittest to pytest !7614
+- GUI: Provide mechanism to select models in the project !7613
+- GUI: Data Analysis Dialog - Traceback with Linear Fit on selection. !7639
+- GUI: Data Analysis Dialog: Handle multiple proxies.Closes #303 !7578
+- GUI: Format style !7565
+- GUI: Data Analysis Dialog fails to open from NDArray Graph Closes #414 !7620
+
+
+Core Devices
+============
+
+- InfluxLogger: Default value for maxStringValueSize below the allowed maximum of 1 Mb !7599
+- Influx: Better message for getConfigurationFromPast when no active schema is found. !7637
+
+
+Dependencies, Documentation and Tools
+=====================================
+
+- Framework: Cleanup more files !7504
+- Clean karabo !7501
+- Add karabo-less helper !7494
+- FOSS: filter out files > 100 Mb (GitHub imposed limit). !7496
+- FOSS: Publish to the definitive GitHub repository on release tags !7515
+- FOSS: Remove broker information from the repository !7562
+- FOSS: Contributing to Framework in python !7563
+- DOC: Update reference to C/C++ VSCode Extensions. !7530
+- DEPS: let pip resolve dependencies found in setup.py of karabo devices !7542
+- DEPS: Packaging use conan and pip !7325
+- CI: Provide SystemTest debug output !7523
+- CI: Mirror on all release tags !7604
+- CI: Fix mirror stage on main branch !7638
+- Framework: Include isort in precommit !7564
+- Framework: Add precommit configuration !7503
+- Framework: Lint bash scripts !7606
+- DEPS: Remove python softlinks again !7574
+- TOOLS: protect auto_build_all.sh from being called from other OSes !7553
+- CI: Fix/Add a check which fails if python linker paths are wrong !7550
+- Tools: 'karabo new ...' uses main instead of masterCloses #356 !7545
+- DEPS: Fix/ln python on extract !7560
+- Include pyupgrade into precommit configuration !7572
+- Remove quite flag to see which external dept packages are being used. !7573
+- Framework: Move interactive and devices ... to newer python style !7571
+- TOOLS: clean up stray print from auto_build_all script !7581
+- Framework: Use central templates !7593
+- Write up changelog until 2.17.0rc15 !7595
+- DOC: Fix readthedocs build !7596
+- Downgrade docker images (no openblas) !7589
+- C++ test: Fix instability of schema rate test !7577
+- Make sure $ORIGIN is preserved in the ELF !7583
+- Add additional comments on RPATH !7600
+- Add a little change !7601
+- DOC: Provide a new line for 2.17 !7603
+- DOCS: Add 2.18 Skeletton !7608
+- Code quality: Pyupgrade on integration tests and db implementations !7598
+- use gitlab CI features to cache conan and pip builds !7544
+- Lint: add json formatting and xml checkup !7610
+- Move the constants to the function. !7611
+- Remove non breaking change in 2.17.X !7617
+- Tests: Change Distributed system test environment !7618
+- Move master to main on mirror !7622
+- DEPS: Copy and generalize .pc files in conan !7615
+- FW: Add license info by hand where script failed and in README.md !7630
+- FW: Extend copyright statement, point to license- files related to build, CI, formatting !7626
+- FW: Extend copyright statement, point to license - remnantsCloses #400 !7635
+- Templates: Remove copyright statement !7633
