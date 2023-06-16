@@ -6,6 +6,7 @@ stages:
 .build_template: &build
   stage: build
   script:
+    - source set_lsb_release_info.sh
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
 
@@ -40,12 +41,18 @@ stages:
   stage: test
   <<: *services_template
   script:
+    - source set_lsb_release_info.sh
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/test "$CI_BUILD_NAME"
   <<: *artifacts-spec
 
 .image_almalinux8_: &image_almalinux8
   image: europeanxfel/karabo-ci:almalinux-8-001
+  tags:
+    - KaraboFramework
+
+.image_almalinux9_: &image_almalinux9
+  image: europeanxfel/karabo-ci:almalinux-9-001
   tags:
     - KaraboFramework
 
@@ -296,6 +303,10 @@ release build almalinux8:
   <<: *image_almalinux8
   <<: *release-build
 
+release build almalinux9:
+  <<: *image_almalinux9
+  <<: *release-build
+
 release build centos7:
   <<: *image_centos7
   <<: *release-build
@@ -338,6 +349,10 @@ release build miniconda-win64:
 
 prerelease build almalinux8:
   <<: *image_almalinux8
+  <<: *prerelease-build
+
+prerelease build almalinux9:
+  <<: *image_almalinux9
   <<: *prerelease-build
 
 prerelease build centos7:
@@ -384,6 +399,10 @@ nightly build almalinux8:
   <<: *image_almalinux8
   <<: *nightly-build
 
+nightly build almalinux9:
+  <<: *image_almalinux9
+  <<: *nightly-build
+
 nightly build centos7:
   <<: *image_centos7
   <<: *nightly-build
@@ -428,6 +447,10 @@ deps build almalinux8:
   <<: *image_almalinux8
   <<: *deps-build
 
+deps build almalinux9:
+  <<: *image_almalinux9
+  <<: *deps-build
+
 deps build centos7:
   <<: *image_centos7
   <<: *deps-build
@@ -454,6 +477,10 @@ cpp_deps tests almalinux8:
   <<: *image_almalinux8
   <<: *deps-tests
 
+cpp_deps tests almalinux9:
+  <<: *image_almalinux9
+  <<: *deps-tests
+
 cpp_deps tests centos7:
   <<: *image_centos7
   <<: *deps-tests
@@ -476,6 +503,10 @@ cpp_deps tests ubuntu22:
 
 python_deps tests almalinux8:
   <<: *image_almalinux8
+  <<: *deps-tests
+
+python_deps tests almalinux9:
+  <<: *image_almalinux9
   <<: *deps-tests
 
 python_deps tests centos7:
@@ -504,6 +535,10 @@ python_unit tests almalinux8:
   <<: *image_almalinux8
   <<: *python-unit-tests
 
+python_unit tests almalinux9:
+  <<: *image_almalinux9
+  <<: *python-unit-tests
+
 python_unit tests centos7:
   <<: *image_centos7
   <<: *python-unit-tests
@@ -526,6 +561,10 @@ python_unit tests ubuntu18:
 
 cpp_unit tests almalinux8:
   <<: *image_almalinux8
+  <<: *cpp-unit-tests
+
+cpp_unit tests almalinux9:
+  <<: *image_almalinux9
   <<: *cpp-unit-tests
 
 cpp_unit tests centos7:
@@ -590,6 +629,10 @@ python_integration tests almalinux8:
   <<: *image_almalinux8
   <<: *integration-tests
 
+python_integration tests almalinux9:
+  <<: *image_almalinux9
+  <<: *integration-tests
+
 python_integration tests centos7:
   <<: *image_centos7
   <<: *integration-tests
@@ -612,6 +655,10 @@ python_integration tests ubuntu18:
 
 cpp_integration tests almalinux8:
   <<: *image_almalinux8
+  <<: *integration-tests
+
+cpp_integration tests almalinux9:
+  <<: *image_almalinux9
   <<: *integration-tests
 
 cpp_integration tests centos7:
@@ -642,6 +689,10 @@ coverage tests centos7:
 
 long tests almalinux8:
   <<: *image_almalinux8
+  <<: *long-tests
+
+long tests almalinux9:
+  <<: *image_almalinux9
   <<: *long-tests
 
 long tests centos7:

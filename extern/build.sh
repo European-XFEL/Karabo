@@ -21,6 +21,10 @@ msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist
 mqtt_python peewee async-timeout hiredis aioredis multidict yarl pamqp aiormq aio-pika
 pg8000 )
 
+
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+source "$scriptDir/../set_lsb_release_info.sh"
+
 ##############################################################################
 # Important constants
 
@@ -30,20 +34,17 @@ if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
     KARABO_UPLOAD_CURL_PREFIX=http://exflserv05.desy.de/karabo
 fi
 DEP_URL_BASE="${KARABO_UPLOAD_CURL_PREFIX}/karaboDevelopmentDeps"
-DEPS_OS_IDENTIFIER=$(lsb_release -is)$(lsb_release -rs | sed -r 's/^([0-9]+).*/\1/')
+DEPS_OS_IDENTIFIER=$LSB_RELEASE_DIST$(echo $LSB_RELEASE_VERSION | sed -r 's/^([0-9]+).*/\1/')
 DEP_TAG_PATTERN="deps-*"
 
 declare -A DEPS_BASE_NAME_MAP
-DEPS_BASE_NAME_MAP['Ubuntu14']='Ubuntu-14'
-DEPS_BASE_NAME_MAP['Ubuntu15']='Ubuntu-14'
-DEPS_BASE_NAME_MAP['Ubuntu16']='Ubuntu-16'
-DEPS_BASE_NAME_MAP['Ubuntu17']='Ubuntu-16'
 DEPS_BASE_NAME_MAP['Ubuntu18']='Ubuntu-18'
 DEPS_BASE_NAME_MAP['Ubuntu19']='Ubuntu-18'
 DEPS_BASE_NAME_MAP['Ubuntu20']='Ubuntu-20'
 DEPS_BASE_NAME_MAP['Ubuntu22']='Ubuntu-22'
 DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
 DEPS_BASE_NAME_MAP['AlmaLinux8']='AlmaLinux-8'
+DEPS_BASE_NAME_MAP['AlmaLinux9']='AlmaLinux-9'
 DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
 
 ##############################################################################
