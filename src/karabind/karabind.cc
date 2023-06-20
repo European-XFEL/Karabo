@@ -55,12 +55,14 @@ void exportPyUtilSchemaTest(py::module_ &);             // ConfigurationTestClas
 
 // xms
 void exportPyXmsImageDataElement(py::module_ &); // PyXmsImageDataElement.cc
+void exportPyXmsSignalSlotable(py::module_ &);   // PyXmsSignalSlotable.cc
 
 // core
 
 // log
 
 // net
+
 
 // Build one big module, 'karabind.so', similar to how we build 'karathon' module
 
@@ -96,6 +98,7 @@ PYBIND11_MODULE(karabind, m) {
 
     // xms
     exportPyXmsImageDataElement(m);
+    exportPyXmsSignalSlotable(m);
 
     // core
 
