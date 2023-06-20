@@ -108,6 +108,10 @@ void PipelinedProcessing_Test::appTestRunner() {
     // "round-robin").
     testPipeTwoSharedReceiversWait();
 
+    // test assumes  "output1"  = Hash("noInputShared", "wait", "distributionMode","round-robin").
+    testSharedReceiversSelector();
+
+
     // Test does not care about "output1.distributionMode == round-robin",
     // but after test it will be back to load-balanced and have "output1.noInputShared == drop".
     testPipeTwoSharedReceiversDrop();
@@ -1419,6 +1423,103 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& 
           << " ms: total data sent: " << nData << ", received when sent: " << receivedWhenWriteDone1 << "/"
           << receivedWhenWriteDone2 << ", received at the end: " << finallyReceived1 << "/" << finallyReceived2
           << std::endl;
+}
+
+void PipelinedProcessing_Test::testSharedReceiversSelector() {
+    std::clog << "---\ntestSharedReceiversSelector\n";
+
+    const Hash senderCfgBackup = m_deviceClient->get(m_sender);
+    const unsigned int nData = 4;
+    m_deviceClient->set(m_sender, Hash("nData", nData, "dataSize", 10u)); // decrease to ten to save energy
+
+    // Check expectations from previous run
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
+    CPPUNIT_ASSERT_EQUAL(std::string("round-robin"),
+                         m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
+
+    karabo::util::Hash config1(m_receiverBaseConfig);
+    config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
+
+    karabo::util::Hash config2(config1);
+    config2.set<std::string>("deviceId", m_receiver2);
+
+    instantiateDeviceWithAssert("PipeReceiverDevice", config1);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config2);
+
+    // Ensure that connected
+    testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "drop", "local",
+                                       {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
+
+    // ==========================================================
+    // Tell output channel to direct all data to receiver2
+    m_deviceClient->set(m_sender, "nextSharedInput", m_receiver2 + ":input");
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Check that all data items arrived at receiver2 (and nothing at receiver1)
+    pollDeviceProperty<unsigned int>(m_receiver2, "nTotalData", nData);
+    CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData"));
+    CPPUNIT_ASSERT_EQUAL(0u, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
+
+    // ==========================================================
+    // Tell output channel to direct all data to receiver1
+    m_deviceClient->set(m_sender, "nextSharedInput", m_receiver1 + ":input");
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Check that all data arrived at receiver1 (and nothing at receiver2)
+    pollDeviceProperty<unsigned int>(m_receiver1, "nTotalData", nData);
+    CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
+    CPPUNIT_ASSERT_EQUAL(
+          nData, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData")); // as before, no increase (and no reset)
+
+    // ==========================================================
+    // Tell output channel to direct all data to something not connected (data will be dropped)
+    m_deviceClient->set(m_sender, "nextSharedInput", "not_existing_device:input");
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Ensure sender is done and then sleep a bit, so any data would have had enough time to travel
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+    // No further new data has arrived at connected destinations
+    CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
+    CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData"));
+
+    // ==========================================================
+    // Tell output channel that desired destination is not connected (by making selector return empty string - data will
+    // be dropped)
+    m_deviceClient->set(m_sender, "nextSharedInput",
+                        "returnEmptyString"); // magic value, see P2PSenderDevice::preReconfigure
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Ensure sender is done and then sleep a bit, so any data would have had enough time to travel
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+    // Also now: no further new data has arrived at connected destinations
+    CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
+    CPPUNIT_ASSERT_EQUAL(nData, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData"));
+
+    // ==========================================================
+    // Unregister selector from output channel - now all inputs are served again
+    m_deviceClient->set(m_sender, "nextSharedInput", std::string());
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Check that both receivers are served again
+    // Caveat: In case this falls back to "load-balanced", there is no 100% guarantee that both receive data.
+    //         But if this ever fails, increasing m_sender.nData for this subtest should help.
+    pollDeviceProperty<unsigned int>(m_receiver1, "nTotalData", nData, false); // not equals, so increased
+    pollDeviceProperty<unsigned int>(m_receiver2, "nTotalData", nData, false); // dito
+    CPPUNIT_ASSERT_GREATEREQUAL(nData + 1u, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData"));
+    CPPUNIT_ASSERT_GREATEREQUAL(nData + 1u, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData"));
+
+    killDeviceWithAssert(m_receiver1);
+    killDeviceWithAssert(m_receiver2);
+    testSenderOutputChannelConnections();
+
+    // Leave sender as found in the beginning
+    m_deviceClient->set(m_sender, Hash("nData", senderCfgBackup.get<unsigned int>("nData"), //
+                                       "dataSize", senderCfgBackup.get<unsigned int>("dataSize")));
+    std::clog << "Passed!\n" << std::endl;
 }
 
 void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
