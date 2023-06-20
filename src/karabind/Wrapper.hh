@@ -81,14 +81,6 @@ namespace karabind {
     };
 
 
-    namespace detail {
-
-        /// Helper when catching Python exceptions
-        void treatError_already_set(const py::object& handler, const char* where);
-
-    } // namespace detail
-
-
     namespace hashwrap {
 
         /**
@@ -105,14 +97,45 @@ namespace karabind {
         py::object getAs(const karabo::util::Hash& self, const std::string& path,
                          const karabo::util::Types::ReferenceType& target, const std::string& separator);
 
-        py::object get(const karabo::util::Hash& self, const std::string& path, const std::string& separator,
-                       const py::object& default_return);
+        py::object get(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".",
+                       const py::object& default_return = py::none());
 
         const karabo::util::Hash& setPyDictAsHash(karabo::util::Hash& self, const py::dict& dictionary, const char sep);
 
         void set(karabo::util::Hash& self, const std::string& key, const py::object& o,
                  const std::string& separator = ".");
+
+
     } // namespace hashwrap
+
+
+    namespace detail {
+
+        /// Helper when catching Python exceptions
+        void treatError_already_set(const py::object& handler, const char* where);
+
+        inline void packPy_r(karabo::util::Hash& hash, char i) {}
+
+        template <class Tfirst, class... Trest>
+        inline void packPy_r(karabo::util::Hash& hash, char i, const Tfirst& first, const Trest&... rest) {
+            char name[4] = "a ";
+            name[1] = i;
+            // Besides the following line, 'packPy_r' is identical to the C++ version 'karabo::util::pack_r'.
+            hashwrap::set(hash, name, first);
+            detail::packPy_r(hash, i + 1, rest...);
+        }
+
+    } // namespace detail
+
+    /**
+     * Pack the parameters into a hash for transport over the network.
+     * @param hash Will be filled with keys a1, a2, etc. and associated values
+     * @param args Any type and number of arguments to associated to hash keys
+     */
+    template <class... Ts>
+    inline void packPy(karabo::util::Hash& hash, const Ts&... args) {
+        detail::packPy_r(hash, '1', args...);
+    }
 
 
     namespace wrapper {
@@ -208,14 +231,38 @@ namespace karabind {
             }
         };
 
-
         template <typename T>
         std::vector<T> castPySequenceToStdVector(const py::sequence& sequence) {
             std::vector<T> vt;
             for (auto item : sequence) vt.push_back(item.cast<T>());
             return std::move(vt);
         }
+
+        /**
+         * How many non-keyword arguments does 'callable' expect?
+         *
+         * Works for free functions, member methods and objects with simple __call__ method (even with @staticmethod),
+         * but not for functools.partial objects.
+         *
+         */
+        size_t numArgs(const py::object& o);
+
+        karabo::util::Hash deepCopy_r(const karabo::util::Hash& h);
+
+        py::object deepCopyHashLike(const py::object& o);
+
     } /* namespace wrapper */
+
+    /**
+     * Provide exception text and details (i.e. traceback)
+     * To be called from within a "catch (const py::error_already_set& e)" block.
+     *
+     * @return tuple of two strings:
+     *         - first is (Python) exception text,
+     *         - second the multiline traceback like from traceback.print_exception (skipping last line)
+     */
+    std::tuple<std::string, std::string> getPythonExceptionStrings();
+
 } // namespace karabind
 
 #endif /* KARABIND_WRAPPER_HH */
