@@ -48,6 +48,8 @@ namespace karabo {
         typedef boost::function<void(const std::vector<unsigned long long>&, const std::vector<unsigned long long>&)>
               ShowStatisticsHandler;
 
+        typedef boost::function<std::string(const std::vector<std::string>&)> SharedInputSelector;
+
         /**
          * @class OutputChannel
          * @brief An OutputChannel for passing data to pipelined processing
@@ -159,6 +161,7 @@ namespace karabo {
             mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
             ShowStatisticsHandler m_showStatisticsHandler;
+            SharedInputSelector m_roundRobinInputSelector; // protected by m_registeredSharedInputsMutex
             std::vector<karabo::util::Hash> m_connections;
             boost::asio::deadline_timer m_updateDeadline;
             int m_period;
@@ -348,6 +351,18 @@ namespace karabo {
             void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
 
             void registerShowStatisticsHandler(const ShowStatisticsHandler& handler);
+
+            /**
+             * Register handler that selects which of the connected input channels that have dataDistribution = "shared"
+             * is to be served.
+             *
+             * The handler will be called during update() with the ids of the connected "shared" input channels (e.g.
+             * "deviceId:input") as argument. The returned channel id will receive the data. If an empty string or an
+             * unknown id is returned, the data will be dropped.
+             *
+             * @param: selector takes vector<string> as argument and returns string
+             */
+            void registerSharedInputSelector(SharedInputSelector&& selector);
 
             /**
              * Shut down all underlying connections, object will not be usable afterwards.
