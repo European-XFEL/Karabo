@@ -123,6 +123,16 @@ namespace karabo {
         BOOL_ELEMENT(expected).key("copyAllData").assignmentOptional().defaultValue(true).reconfigurable().commit();
 
         BOOL_ELEMENT(expected).key("safeNDArray").assignmentOptional().defaultValue(true).reconfigurable().commit();
+
+        STRING_ELEMENT(expected)
+              .key("nextSharedInput")
+              .description(
+                    "An input channel id to register at 'output1' for non-load-balanced shared distribution. "
+                    "Empty string means reset such a handler.")
+              .assignmentOptional()
+              .defaultValue(std::string())
+              .reconfigurable()
+              .commit();
     }
 
 
@@ -140,6 +150,20 @@ namespace karabo {
         KARABO_LOG_DEBUG << "As dead as you can be!";
     }
 
+    void P2PSenderDevice::preReconfigure(Hash& incomingCfg) {
+        boost::optional<Hash::Node&> nextSharedInputNode = incomingCfg.find("nextSharedInput");
+        if (nextSharedInputNode) {
+            const std::string& nextSharedInput = nextSharedInputNode->getValue<std::string>();
+            xms::SharedInputSelector selector; // empty function pointer
+            if (nextSharedInput == "returnEmptyString") {
+                selector = [](const std::vector<std::string>&) { return std::string(); };
+            } else if (!nextSharedInput.empty()) {
+                selector = [nextSharedInput](const std::vector<std::string>&) { return nextSharedInput; };
+            }
+            // set new selector (or unset selection if nextSharedInput empty)
+            getOutputChannel("output1")->registerSharedInputSelector(std::move(selector));
+        }
+    }
 
     void P2PSenderDevice::write() {
         // There might be a remnant (but finished) thread from previous write

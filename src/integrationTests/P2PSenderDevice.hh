@@ -44,6 +44,8 @@ namespace karabo {
         virtual ~P2PSenderDevice();
 
        private:
+        void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
+
         // slot for write command
         void write();
         // slot for stopping the writing activity
