@@ -1076,6 +1076,10 @@ namespace karabo {
                 m_showStatisticsHandler = handler;
             }
         }
+        void OutputChannel::registerSharedInputSelector(SharedInputSelector&& selector) {
+            boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
+            m_roundRobinInputSelector = std::move(selector);
+        }
 
         void OutputChannel::registerWritersOnChunk(unsigned int chunkId) {
             {
@@ -1168,7 +1172,27 @@ namespace karabo {
         void OutputChannel::distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock,
                                                  bool safeNDArray) {
             // Next input
-            InputChannels::iterator itIdChannelInfo = getNextRoundRobinChannel();
+            InputChannels::iterator itIdChannelInfo = m_registeredSharedInputs.end();
+            if (m_roundRobinInputSelector) {
+                std::vector<std::string> allInputIds;
+                allInputIds.reserve(m_registeredSharedInputs.size());
+                for (auto& keyValue : m_registeredSharedInputs) {
+                    allInputIds.push_back(keyValue.first);
+                }
+                const std::string nextInputId = m_roundRobinInputSelector(allInputIds);
+                if (!nextInputId.empty()) {
+                    itIdChannelInfo = m_registeredSharedInputs.find(nextInputId);
+                }
+                if (itIdChannelInfo == m_registeredSharedInputs.end()) {
+                    unregisterWriterFromChunk(chunkId);
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId "
+                                               << chunkId << " since selected input '" << nextInputId
+                                               << "' is not connected";
+                    return;
+                }
+            } else {
+                itIdChannelInfo = getNextRoundRobinChannel();
+            }
             karabo::util::Hash& channelInfo = itIdChannelInfo->second;
             const std::string& instanceId = itIdChannelInfo->first; // channelInfo.get<std::string>("instanceId");
 
@@ -1183,9 +1207,12 @@ namespace karabo {
                 bool haveToWait = false;
                 bool haveToWaitForQueue = false;
                 if (m_onNoSharedInputChannelAvailable == "drop") {
-                    // Drop data and try same destination again next time
-                    undoGetNextRoundRobinChannel(); // lock must not yet be unlocked() after getNextSharedInputIdx()
-                                                    // above!
+                    // Drop data
+                    if (!m_roundRobinInputSelector) {
+                        // Try same destination again next time, lock must not yet be unlocked() after
+                        // getNextRoundRobinChannel() above!
+                        undoGetNextRoundRobinChannel();
+                    }
                     unregisterWriterFromChunk(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                                                << " Dropping (shared) data package with chunkId: " << chunkId;
