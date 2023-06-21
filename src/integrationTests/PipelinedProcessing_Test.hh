@@ -163,6 +163,12 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
                                        unsigned int senderDelay, bool expectDataLoss, bool slowReceivers);
 
     /**
+     * Testing shared inputs where a selector was registered at the output channel to select which channel should be
+     * served
+     */
+    void testSharedReceiversSelector();
+
+    /**
      * "Driving" method that takes care of calling testQueueClearOnDisconnectCopyQueue and
      * testQueueClearOnDisconnectSharedQueue.
      */
