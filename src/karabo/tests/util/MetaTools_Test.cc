@@ -52,7 +52,7 @@ void MetaTools_Test::testMethod() {
 
 void MetaTools_Test::testWeakBind() {
     std::vector<std::string> messages;
-    Test_DeviceServer* d = new Test_DeviceServer(&messages);
+    std::unique_ptr<Test_DeviceServer> d(new Test_DeviceServer(&messages));
     karabo::net::EventLoop::addThread(4);
     karabo::net::EventLoop::run();
 
@@ -61,8 +61,6 @@ void MetaTools_Test::testWeakBind() {
     CPPUNIT_ASSERT(messages[1] == "Tick 5");
     CPPUNIT_ASSERT(messages[2] == "Tick 6");
     CPPUNIT_ASSERT(messages[messages.size() - 1] == "Test_Device deleted");
-    karabo::net::EventLoop::stop();
-    delete d;
 }
 
 
