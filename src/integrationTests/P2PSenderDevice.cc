@@ -156,13 +156,19 @@ namespace karabo {
             const std::string& nextSharedInput = nextSharedInputNode->getValue<std::string>();
             xms::SharedInputSelector selector; // empty function pointer
             if (nextSharedInput == "returnEmptyString") {
+                // test with lambda...
                 selector = [](const std::vector<std::string>&) { return std::string(); };
             } else if (!nextSharedInput.empty()) {
-                selector = [nextSharedInput](const std::vector<std::string>&) { return nextSharedInput; };
+                // ...and test with bind_weak of member function
+                selector = bind_weak(&P2PSenderDevice::selectSharedInput, this, nextSharedInput, _1);
             }
             // set new selector (or unset selection if nextSharedInput empty)
             getOutputChannel("output1")->registerSharedInputSelector(std::move(selector));
         }
+    }
+
+    std::string P2PSenderDevice::selectSharedInput(const std::string& result, const std::vector<std::string>&) const {
+        return result;
     }
 
     void P2PSenderDevice::write() {
