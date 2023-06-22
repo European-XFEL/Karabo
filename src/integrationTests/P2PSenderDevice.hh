@@ -46,6 +46,9 @@ namespace karabo {
        private:
         void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
 
+        std::string selectSharedInput(const std::string& result,
+                                      const std::vector<std::string>& connectedSharedInputs) const;
+
         // slot for write command
         void write();
         // slot for stopping the writing activity
