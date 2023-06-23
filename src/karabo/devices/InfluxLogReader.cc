@@ -759,7 +759,11 @@ namespace karabo {
 
                 int schemaChunks = 1;
                 if (colMap.find("n_schema_chunks") != colMap.end()) {
-                    schemaChunks = respValues[colMap["n_schema_chunks"]].get<int>();
+                    // Schemas saved before schema chunking will have null for the
+                    // n_schema_chunks metrics
+                    if (respValues[colMap["n_schema_chunks"]].is_number()) {
+                        schemaChunks = respValues[colMap["n_schema_chunks"]].get<int>();
+                    }
                 }
 
                 std::stringstream base64Sch;
