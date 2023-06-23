@@ -758,11 +758,12 @@ namespace karabo {
                 const auto &respValues = respObj["results"][0]["series"][0]["values"][0];
 
                 int schemaChunks = 1;
-                if (colMap.find("n_schema_chunks") != colMap.end()) {
+                const auto nChunksIt = colMap.find("n_schema_chunks");
+                if (nChunksIt != colMap.end()) {
                     // Schemas saved before schema chunking will have null for the
                     // n_schema_chunks metrics
-                    if (respValues[colMap["n_schema_chunks"]].is_number()) {
-                        schemaChunks = respValues[colMap["n_schema_chunks"]].get<int>();
+                    if (respValues[nChunksIt->second].is_number()) {
+                        schemaChunks = respValues[nChunksIt->second].get<int>();
                     }
                 }
 
