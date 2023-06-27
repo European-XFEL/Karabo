@@ -126,6 +126,7 @@ cd -
 
 # bundle scripts for plugin packages
 cd $scriptDir
+cp set_lsb_release_info.sh $PACKAGEDIR/bin/.set_lsb_release_info.sh
 cp bundle-cppplugin.sh $PACKAGEDIR/bin/.bundle-cppplugin.sh
 cp bundle-pythonplugin.sh $PACKAGEDIR/bin/.bundle-pythonplugin.sh
 cp bundle-dependency.sh $PACKAGEDIR/bin/.bundle-dependency.sh

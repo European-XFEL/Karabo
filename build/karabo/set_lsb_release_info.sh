@@ -1,0 +1,1 @@
+../../set_lsb_release_info.sh
