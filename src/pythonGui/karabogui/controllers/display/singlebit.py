@@ -61,13 +61,16 @@ class SingleBit(BaseBindingController):
         def _flip_invert():
             self.model.invert = not self.model.invert
 
-        logicAction = QAction('Invert color logic', widget)
+        logicAction = QAction("Invert color logic", widget)
         logicAction.triggered.connect(_flip_invert)
-        changeAction = QAction('Change Bit...', widget)
+        changeAction = QAction("Change Bit...", widget)
         changeAction.triggered.connect(self._on_change_bit)
         widget.addAction(logicAction)
         widget.addAction(changeAction)
         return widget
+
+    def binding_update(self, proxy):
+        self.widget.update_unit_label(proxy)
 
     def set_read_only(self, ro):
         self._internal_widget.setEnabled(not ro)
@@ -81,9 +84,8 @@ class SingleBit(BaseBindingController):
                  else STATE_COLORS[State.PASSIVE])
         style = self._style_sheet.format(color)
         self._internal_widget.setStyleSheet(style)
-        self.widget.update_label(proxy)
 
-    @on_trait_change('model.invert,model.bit', post_init=True)
+    @on_trait_change("model.invert,model.bit", post_init=True)
     def _model_update(self):
         self.value_update(self.proxy)
 
@@ -93,11 +95,11 @@ class SingleBit(BaseBindingController):
             return
 
         dt = binding.display_type
-        if dt.startswith('bin|'):
-            s, ok = QInputDialog.getItem(self.widget, 'Select Bit',
-                                         'Select Bit:', dt[4:].split(','))
+        if dt.startswith("bin|"):
+            s, ok = QInputDialog.getItem(self.widget, "Select Bit",
+                                         "Select Bit:", dt[4:].split(","))
             if ok:
-                bit = int(s.split(':')[0])
+                bit = int(s.split(":")[0])
         else:
             _, high = get_min_max(binding)
             bit, ok = QInputDialog.getInt(
