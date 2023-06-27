@@ -16,6 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from pathlib import Path
 
+import numpy as np
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal, Slot
 from qtpy.QtWidgets import QDialog
@@ -23,6 +24,15 @@ from qtpy.QtWidgets import QDialog
 from karabogui.graph.common.utils import float_to_string
 from karabogui.util import SignalBlocker
 from karabogui.widgets.range_slider import RangeSlider
+
+
+def get_decimals(array, offset=2, default=1):
+    """Calculates the number of decimals to display with the input number
+    e.g., 0.01 -> 0.0100
+          10.0 -> 10.0
+    """
+    decimals = max(-1 * np.floor(np.log10(np.abs(array))))
+    return int(decimals + offset if decimals >= 0 else default)
 
 
 class LevelsDialog(QDialog):
@@ -56,6 +66,20 @@ class LevelsDialog(QDialog):
         slider_max = max(max_level, max_range)
         self.slider.initialize(slider_min, slider_max)
 
+        # Handle floats
+        is_float = (isinstance(slider_min, np.floating)
+                    or isinstance(slider_max, np.floating))
+        decimals = get_decimals([slider_min, slider_max]) if is_float else 0
+
+        # Set decimals
+        self.min_spinbox.setDecimals(decimals)
+        self.max_spinbox.setDecimals(decimals)
+
+        # Set single steps
+        step = 10 ** -(decimals - 1) if decimals else 1
+        self.min_spinbox.setSingleStep(step)
+        self.max_spinbox.setSingleStep(step)
+
         if limits is not None:
             min_value, max_value = limits
             self.min_spinbox.setMinimum(min_value)
@@ -79,15 +103,16 @@ class LevelsDialog(QDialog):
     def _set_editor_default(self, levels):
         """Set the default values of the editor widgets and the slider"""
         min_level, max_level = levels
+        decimals = get_decimals(levels)
 
-        self.min_label.setText(float_to_string(min_level))
-        self.max_label.setText(float_to_string(max_level))
+        self.min_label.setText(float_to_string(min_level, decimals))
+        self.max_label.setText(float_to_string(max_level, decimals))
         self.min_spinbox.setValue(min_level)
         self.max_spinbox.setValue(max_level)
         self.slider.setValue(min_level, max_level)
 
-    @Slot(float)
-    def levelChanged(self, float):
+    @Slot()
+    def levelChanged(self):
         values = [self.min_spinbox.value(), self.max_spinbox.value()]
         min_level = min(values)
         max_level = max(values)
