@@ -15,9 +15,10 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
+from numpy.testing import assert_allclose
 from qtpy.QtCore import Slot
 
-from karabogui.graph.image.dialogs.levels import LevelsDialog
+from karabogui.graph.image.dialogs.levels import LevelsDialog, get_decimals
 from karabogui.graph.image.plot import KaraboImagePlot
 from karabogui.testing import GuiTestCase
 
@@ -121,6 +122,39 @@ class TestLevelsDialog(GuiTestCase):
         # Check dialog widget values
         self.assertEqual(dialog.min_spinbox.value(), image_levels[0])
         self.assertEqual(dialog.max_spinbox.value(), image_levels[1])
+
+        # Check slider range
+        self.assertFalse(dialog.slider.isEnabled())
+        self.assertEqual(dialog.slider.minimum(), image_range[0])
+        self.assertEqual(dialog.slider.maximum(), image_range[1])
+
+    def test_image_float_range(self):
+        # Setup levels dialog
+        image = np.random.randn(100, 100)
+        image_range = image.min(), image.max()
+
+        self.imageItem.setImage(image)
+        image_levels = self.imageItem.levels
+        auto_levels = self.imageItem.auto_levels
+
+        # Do some prior checking before the actual tests
+        np.testing.assert_array_equal(image_levels, image_range)
+        self.assertTrue(auto_levels)
+
+        # Instantiate dialog
+        dialog = LevelsDialog(image_levels, image_range, auto_levels)
+
+        # Check dialog widgets if enabled
+        self.assertTrue(dialog.automatic_checkbox.isChecked())
+        self.assertFalse(dialog.min_spinbox.isEnabled())
+        self.assertFalse(dialog.max_spinbox.isEnabled())
+
+        # Check dialog widget values
+        assert_allclose(dialog.min_spinbox.value(), image_levels[0], rtol=1e-2)
+        assert_allclose(dialog.max_spinbox.value(), image_levels[1], rtol=1e-2)
+
+        # Check slider range
+        self.assertFalse(dialog.slider.isEnabled())
 
     def test_image_not_autolevel(self):
         """Tests the dialog initialization for imageItems with
@@ -234,3 +268,11 @@ class TestLevelsDialog(GuiTestCase):
 
         # Check if changes are saved
         np.testing.assert_array_equal(dialog.levels, input_levels)
+
+
+def test_get_decimals():
+    assert get_decimals([-10.0, 1.0]) == 2
+    assert get_decimals([-10.0, 10.0]) == 1
+    assert get_decimals([1e-4, 1e-5]) == 7
+    assert get_decimals([1e4, 1e-5]) == 7
+    assert get_decimals([1e4, 1e5]) == 1
