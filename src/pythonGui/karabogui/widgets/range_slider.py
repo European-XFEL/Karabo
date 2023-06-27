@@ -77,9 +77,11 @@ class RangeSlider(QSlider):
     def initialize(self, low, high):
         """Initialize the Slider with a low and high position and a new range
         """
-        assert high > low, "Maximum range must be larger than minimum range!"
+        assert high >= low, "Maximum range must be larger than minimum range!"
+
         # Signed 32 bit integer protection as Qt cannot handle. Segfault ...
-        if (low <= INT32_MIN // 2
+        if (high - low < 1
+                or low <= INT32_MIN // 2
                 or high >= INT32_MAX // 2):
             self.setEnabled(False)
             self.setVisible(False)
