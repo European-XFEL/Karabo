@@ -150,7 +150,7 @@ hiddenimports = get_controllers_modules() + [
 
 modules_to_exclude = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-qt',
                       'pytest-subtests', 'conda-package-handling', 'conda',
-                      'flake8', 'isort', 'pre-commit', 'pyflakes']
+                      'flake8', 'isort', 'pre-commit']
 
 
 block_cipher = None
