@@ -503,15 +503,6 @@ install_from_deps() {
 
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $compiler_opts $sys_req_opts $cmake_opts"
 
-        # for whatever reason conan does not reliably copy *.pc files from it's root directory
-        # we do this here instead
-        safeRunCommand "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
-        safeRunCommand "cp $INSTALL_PREFIX/*.pc $INSTALL_PREFIX/lib/pkgconfig/"
-        # now fix occorances of prefixes such that packages can used the "--define-prefix" approach
-        safeRunCommand "sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
-        safeRunCommand "sed -i 's|libdir=.*|libdir=\${prefix}/lib|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
-        safeRunCommand "sed -i 's|includedir=.*|includedir=\${prefix}/include|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
-        safeRunCommand "sed -i 's|exec_prefix=.*|exec_prefix=\${prefix}|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
         echo "conan" >> $marker_path
     fi
     
@@ -573,6 +564,18 @@ install_from_deps() {
 
     # check numpy capabilities
     $INSTALL_PREFIX/bin/python -c "import numpy; print(numpy.show_config())"
+
+    # for whatever reason conan does not reliably copy *.pc files from its root directory
+    # we do this here instead, and also capture any .pc files our from source builds created
+    # in the process
+    safeRunCommand "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
+    safeRunCommand "cp $INSTALL_PREFIX/*.pc $INSTALL_PREFIX/lib/pkgconfig/"
+    # now fix occorances of prefixes such that packages can use the "--define-prefix" option
+    # of pkgconfig
+    safeRunCommand "sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
+    safeRunCommand "sed -i 's|libdir=.*|libdir=\${prefix}/lib|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
+    safeRunCommand "sed -i 's|includedir=.*|includedir=\${prefix}/include|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
+    safeRunCommand "sed -i 's|exec_prefix=.*|exec_prefix=\${prefix}|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
 
     popd
 
