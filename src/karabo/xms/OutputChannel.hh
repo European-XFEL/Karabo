@@ -270,41 +270,44 @@ namespace karabo {
             karabo::util::Hash getInformation() const;
 
             /**
-             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
+             * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
+             * called.
+             *
              * @param data input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
-             * @param copyAllData If false, serialization is optimized to avoid copies for big (i.e. NDArray) data.
              *
-             * Note: When using copyAllData==false (default!), any NDArray/ImageData inside data must stay untouched
-             *       at least until update() has been called for the channel.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
+             *       See also the documentation of the safeNDArray flag of the update() method.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData = false);
+            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool /*unused*/ = false);
 
             /**
-             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
+             * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
+             * called.
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
-             * @param data input Hash object
-             * @param copyAllData If false, serialization is optimized to avoid copies for big (i.e. NDArray) data.
              *
-             * Note: When using copyAllData==false (default!), any NDArray/ImageData inside data must stay untouched
-             *       at least until update() has been called for the channel.
+             * @param data input Hash object
+             *
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
+             *       See also the documentation of the safeNDArray flag of the update() method.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void write(const karabo::util::Hash& data, bool copyAllData = false);
+            void write(const karabo::util::Hash& data, bool /*unused*/ = false);
 
             /**
-             * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
+             * Writes a Hash containing data to the output channel. Sending to the network happens when update() is
+             * called.
              * @param data shared pointer to input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
              *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called for
-             *       the channel.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
+             *       See also the documentation of the safeNDArray flag of the update() method.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
@@ -317,8 +320,8 @@ namespace karabo {
              * name are used as data source.
              * @param data shared pointer to input Hash object
              *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called for
-             *       the channel.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
+             *       See also the documentation of the safeNDArray flag of the update() method.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
@@ -331,13 +334,13 @@ namespace karabo {
              *
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
              *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
-             *                    finished. Default is 'true'. If false, safety copies are done when needed, i.e. when
+             *                    finished. Default is 'false', 'true' can avoid safety copies of NDArray content when
              *                    data is queued or sent locally.
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
              */
-            void update(bool safeNDArray = true);
+            void update(bool safeNDArray = false);
 
             /**
              * Send end-of-stream (EOS) notification to all connected input channels to indicate a logical break

@@ -1700,16 +1700,11 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
     std::clog << "---\ntestProfileTransferTimes\n";
 
     const auto testStartTime = chrono::high_resolution_clock::now();
-    // flags mean:      noShortCut, copy, safeNDArray
-    testProfileTransferTimes(false, true, false);
-    testProfileTransferTimes(false, false, false);
-    testProfileTransferTimes(true, true, false);
-    testProfileTransferTimes(true, false, false);
-
-    testProfileTransferTimes(false, true, true);
-    testProfileTransferTimes(false, false, true);
-    testProfileTransferTimes(true, true, true);
-    testProfileTransferTimes(true, false, true);
+    // flags mean:      noShortCut, safeNDArray
+    testProfileTransferTimes(false, false);
+    testProfileTransferTimes(true, false);
+    testProfileTransferTimes(false, true);
+    testProfileTransferTimes(true, true);
     std::clog
           << "Test duration (ms): "
           << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
@@ -1719,9 +1714,9 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
 }
 
 
-void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy, bool safeNDArray) {
-    std::clog << "- (" << (copy ? "   copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "   short cut")
-              << ", " << (safeNDArray ? "    safe ndarray" : "not safe ndarray") << "): " << std::flush;
+void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool safeNDArray) {
+    std::clog << "- (" << (noShortCut ? "no short cut" : "   short cut") << ", "
+              << (safeNDArray ? "    safe ndarray" : "not safe ndarray") << "): " << std::flush;
     if (noShortCut) {
         setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
     }
@@ -1735,7 +1730,6 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
 
     // set the scenario
     m_deviceClient->set(m_sender, "scenario", "profile");
-    m_deviceClient->set(m_sender, "copyAllData", copy);
     m_deviceClient->set(m_sender, "safeNDArray", safeNDArray);
     // make sure the sender has stopped sending data
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
