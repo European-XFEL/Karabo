@@ -20,8 +20,8 @@ from contextlib import ContextDecorator
 from textwrap import dedent
 from time import gmtime, strftime, strptime
 
-from eulexistdb.db import ExistDB
-from eulexistdb.exceptions import ExistDBException
+from pyexistdb.db import ExistDB
+from pyexistdb.exceptions import ExistDBException
 
 from ..bases import DatabaseBase
 from .dbsettings import DbSettings
