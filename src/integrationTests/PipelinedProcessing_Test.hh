@@ -191,7 +191,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
      */
     void testQueueClearOnDisconnectSharedQueue(bool useRoundRobin);
 
-    void testProfileTransferTimes(bool noShortCut, bool copy, bool safeNDArray);
+    void testProfileTransferTimes(bool noShortCut, bool safeNDArray);
 
     template <typename T>
     bool pollDeviceProperty(const std::string& deviceId, const std::string& propertyName, const T& expected,
