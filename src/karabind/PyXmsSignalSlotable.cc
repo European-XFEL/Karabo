@@ -26,6 +26,7 @@
 
 namespace py = pybind11;
 
+
 namespace karabind {
 
     class ErrorHandlerWrap : public HandlerWrap<> {
@@ -55,8 +56,8 @@ namespace karabind {
                 if (*m_handler) {
                     (*m_handler)(msg, details);
                 }
-            } catch (const py::error_already_set& e) {
-                karabind::detail::treatError_already_set(*m_handler, m_where);
+            } catch (py::error_already_set& e) {
+                karabind::detail::treatError_already_set(e, *m_handler, m_where);
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -128,8 +129,8 @@ namespace karabind {
         void callFunction0(const karabo::util::Hash& body) {
             try {
                 (*m_slotFunction)();
-            } catch (const py::error_already_set&) {
-                rethrowPythonException();
+            } catch (py::error_already_set& e) {
+                rethrowPythonException(e);
             }
         }
 
@@ -137,8 +138,8 @@ namespace karabind {
             py::object a1 = getBodyArgument(body, "a1");
             try {
                 (*m_slotFunction)(a1);
-            } catch (const py::error_already_set&) {
-                rethrowPythonException();
+            } catch (py::error_already_set& e) {
+                rethrowPythonException(e);
             }
         }
 
@@ -147,8 +148,8 @@ namespace karabind {
             py::object a2 = getBodyArgument(body, "a2");
             try {
                 (*m_slotFunction)(a1, a2);
-            } catch (const py::error_already_set&) {
-                rethrowPythonException();
+            } catch (py::error_already_set& e) {
+                rethrowPythonException(e);
             }
         }
 
@@ -158,8 +159,8 @@ namespace karabind {
             py::object a3 = getBodyArgument(body, "a3");
             try {
                 (*m_slotFunction)(a1, a2, a3);
-            } catch (const py::error_already_set&) {
-                rethrowPythonException();
+            } catch (py::error_already_set& e) {
+                rethrowPythonException(e);
             }
         }
 
@@ -170,8 +171,8 @@ namespace karabind {
             py::object a4 = getBodyArgument(body, "a4");
             try {
                 (*m_slotFunction)(a1, a2, a3, a4);
-            } catch (const py::error_already_set&) {
-                rethrowPythonException();
+            } catch (py::error_already_set& e) {
+                rethrowPythonException(e);
             }
         }
 
@@ -183,10 +184,9 @@ namespace karabind {
             return karabind::hashwrap::getRef(const_cast<karabo::util::Hash&>(body), key, ".");
         }
 
-        void rethrowPythonException() {
+        void rethrowPythonException(py::error_already_set& e) {
             std::string pythonErrorMessage, pythonErrorDetails;
-            std::tie(pythonErrorMessage, pythonErrorDetails) = getPythonExceptionStrings();
-
+            std::tie(pythonErrorMessage, pythonErrorDetails) = getPythonExceptionStrings(e);
             throw KARABO_PYTHON_EXCEPTION2(pythonErrorMessage, pythonErrorDetails);
         }
     };
