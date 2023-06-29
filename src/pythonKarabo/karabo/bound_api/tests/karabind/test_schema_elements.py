@@ -361,7 +361,7 @@ class TestStruct1:
             VECTOR_STRING_ELEMENT = karabind.VECTOR_STRING_ELEMENT
             PATH_ELEMENT = karabind.PATH_ELEMENT
             NDARRAY_ELEMENT = karabind.NDARRAY_ELEMENT
-            # SLOT_ELEMENT = karabind.SLOT_ELEMENT
+            SLOT_ELEMENT = karabind.SLOT_ELEMENT
             NODE_ELEMENT = karabind.NODE_ELEMENT
             TABLE_ELEMENT = karabind.TABLE_ELEMENT
             CHOICE_ELEMENT = karabind.CHOICE_ELEMENT
@@ -387,7 +387,7 @@ class TestStruct1:
             VECTOR_STRING_ELEMENT = karathon.VECTOR_STRING_ELEMENT
             PATH_ELEMENT = karathon.PATH_ELEMENT
             NDARRAY_ELEMENT = karathon.NDARRAY_ELEMENT
-            # SLOT_ELEMENT = karathon.SLOT_ELEMENT
+            SLOT_ELEMENT = karathon.SLOT_ELEMENT
             NODE_ELEMENT = karathon.NODE_ELEMENT
             TABLE_ELEMENT = karathon.TABLE_ELEMENT
             CHOICE_ELEMENT = karathon.CHOICE_ELEMENT
@@ -657,12 +657,40 @@ class TestStruct1:
             .assignmentMandatory()
             .commit(),
 
-            # SLOT_ELEMENT(expected)
-            # .key("slotTest")
-            # .displayedName("Reset")
-            # .description("Test slot element")
-            # .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
-            # .commit(),
+            SLOT_ELEMENT(expected)
+            .key("slotTest")
+            .alias(0x12345678)
+            .tags("hard, soft")  # [...] & (...) supported only in karabind
+            .displayedName("Reset")
+            .description("Test slot element")
+            .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
+            .userAccess()
+            .commit(),
+
+            SLOT_ELEMENT(expected)
+            .key("slotClean")
+            .alias("aliasClean")
+            .displayedName("Clean")
+            .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
+            .observerAccess()
+            .commit(),
+
+            SLOT_ELEMENT(expected)
+            .key("slotStart")
+            .alias("aliasStart")
+            .tags('hard; soft')
+            .displayedName("Start")
+            .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
+            .expertAccess()
+            .commit(),
+
+            SLOT_ELEMENT(expected)
+            .key("slotStop")
+            .alias("aliasStop")
+            .displayedName("Stop")
+            .allowedStates(State.STARTED, State.STOPPED, State.NORMAL)
+            .adminAccess()
+            .commit(),
 
             CHOICE_ELEMENT(expected)
             .key("testChoice1")
@@ -741,7 +769,7 @@ class OtherSchemaElementsX:
             Hash = karabind.Hash
             Schema = karabind.Schema
             FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            # SLOT_ELEMENT = karabind.SLOT_ELEMENT
+            SLOT_ELEMENT = karabind.SLOT_ELEMENT
             PATH_ELEMENT = karabind.PATH_ELEMENT
             STRING_ELEMENT = karabind.STRING_ELEMENT
             VECTOR_INT32_ELEMENT = karabind.VECTOR_INT32_ELEMENT
@@ -762,7 +790,7 @@ class OtherSchemaElementsX:
             Hash = karathon.Hash
             Schema = karathon.Schema
             FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            # SLOT_ELEMENT = karathon.SLOT_ELEMENT
+            SLOT_ELEMENT = karathon.SLOT_ELEMENT
             PATH_ELEMENT = karathon.PATH_ELEMENT
             STRING_ELEMENT = karathon.STRING_ELEMENT
             VECTOR_INT32_ELEMENT = karathon.VECTOR_INT32_ELEMENT
@@ -782,12 +810,12 @@ class OtherSchemaElementsX:
         else:
             raise TypeError("Unsupported argument type")
         (
-            # SLOT_ELEMENT(expected)
-            # .key("slotTest")
-            # .displayedName("Reset")
-            # .description("Test slot element")
-            # .allowedStates(State.STARTED, State.STOPPED, State.ERROR)
-            # .commit(),
+            SLOT_ELEMENT(expected)
+            .key("slotTest")
+            .displayedName("Reset")
+            .description("Test slot element")
+            .allowedStates(State.STARTED, State.STOPPED, State.ERROR)
+            .commit(),
 
             PATH_ELEMENT(expected)
             .description("File name")
@@ -2120,3 +2148,37 @@ def test_imagedata_element(Schema, Encoding, AccessLevel):
     assert h.getAttribute("myImageElement.dimScales",
                           'defaultValue') == "Dimscales"
     assert sch.getRequiredAccessLevel("myImageElement") == AccessLevel.ADMIN
+
+
+@pytest.mark.parametrize(
+    "Schema, Encoding, AccessLevel",
+    [(karathon.Schema, karathon.Encoding, karathon.AccessLevel),
+     (karabind.Schema, karabind.Encoding, karabind.AccessLevel)])
+def test_slot_element(Schema, Encoding, AccessLevel):
+    sch = Schema()
+    TestStruct1.expectedParameters(sch)
+    assert sch.has("slotTest") is True
+    assert sch.getAliasFromKey("slotTest") == 0x12345678
+    assert sch.isCommand("slotTest") is True
+    assert sch.getDisplayedName("slotTest") == "Reset"
+    assert sch.getTags("slotTest") == ['hard', 'soft']
+    assert sch.getDescription("slotTest") == "Test slot element"
+    assert sch.getAllowedStates("slotTest") == [
+        State.STARTED, State.STOPPED, State.NORMAL]
+    assert sch.getRequiredAccessLevel("slotTest") == AccessLevel.USER
+    assert sch.has("slotClean") is True
+    assert sch.getAliasFromKey("slotClean") == "aliasClean"
+    assert sch.isCommand("slotClean") is True
+    assert sch.getDisplayedName("slotClean") == "Clean"
+    assert sch.getRequiredAccessLevel("slotClean") == AccessLevel.OBSERVER
+    assert sch.has("slotStart") is True
+    assert sch.getAliasFromKey("slotStart") == "aliasStart"
+    assert sch.getTags("slotStart") == ['hard', 'soft']
+    assert sch.isCommand("slotStart") is True
+    assert sch.getDisplayedName("slotStart") == "Start"
+    assert sch.getRequiredAccessLevel("slotStart") == AccessLevel.EXPERT
+    assert sch.has("slotStop") is True
+    assert sch.getAliasFromKey("slotStop") == "aliasStop"
+    assert sch.isCommand("slotStop") is True
+    assert sch.getDisplayedName("slotStop") == "Stop"
+    assert sch.getRequiredAccessLevel("slotStop") == AccessLevel.ADMIN

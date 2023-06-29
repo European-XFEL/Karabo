@@ -112,7 +112,7 @@ namespace karabind {
     namespace detail {
 
         /// Helper when catching Python exceptions
-        void treatError_already_set(const py::object& handler, const char* where);
+        void treatError_already_set(py::error_already_set& e, const py::object& handler, const char* where);
 
         inline void packPy_r(karabo::util::Hash& hash, char i) {}
 
@@ -255,13 +255,13 @@ namespace karabind {
 
     /**
      * Provide exception text and details (i.e. traceback)
-     * To be called from within a "catch (const py::error_already_set& e)" block.
+     * To be called from within a "catch (py::error_already_set& e)" block.
      *
      * @return tuple of two strings:
      *         - first is (Python) exception text,
      *         - second the multiline traceback like from traceback.print_exception (skipping last line)
      */
-    std::tuple<std::string, std::string> getPythonExceptionStrings();
+    std::tuple<std::string, std::string> getPythonExceptionStrings(py::error_already_set& e);
 
 } // namespace karabind
 
