@@ -29,8 +29,8 @@ namespace karabind {
             if (*m_handler) {
                 (*m_handler)(wrapper::castAnyToPy(a1));
             }
-        } catch (const py::error_already_set& e) {
-            detail::treatError_already_set(*m_handler, m_where);
+        } catch (py::error_already_set& e) {
+            detail::treatError_already_set(e, *m_handler, m_where);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -42,8 +42,8 @@ namespace karabind {
             if (*m_handler) {
                 (*m_handler)(wrapper::castAnyToPy(a1), wrapper::castAnyToPy(a2));
             }
-        } catch (const py::error_already_set& e) {
-            detail::treatError_already_set(*m_handler, m_where);
+        } catch (py::error_already_set& e) {
+            detail::treatError_already_set(e, *m_handler, m_where);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -55,8 +55,8 @@ namespace karabind {
             if (*m_handler) {
                 (*m_handler)(wrapper::castAnyToPy(a1), wrapper::castAnyToPy(a2), wrapper::castAnyToPy(a3));
             }
-        } catch (const py::error_already_set& e) {
-            detail::treatError_already_set(*m_handler, m_where);
+        } catch (py::error_already_set& e) {
+            detail::treatError_already_set(e, *m_handler, m_where);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -70,8 +70,8 @@ namespace karabind {
                 (*m_handler)(wrapper::castAnyToPy(a1), wrapper::castAnyToPy(a2), wrapper::castAnyToPy(a3),
                              wrapper::castAnyToPy(a4));
             }
-        } catch (const py::error_already_set& e) {
-            detail::treatError_already_set(*m_handler, m_where);
+        } catch (py::error_already_set& e) {
+            detail::treatError_already_set(e, *m_handler, m_where);
         } catch (...) {
             KARABO_RETHROW
         }
@@ -84,8 +84,8 @@ namespace karabind {
             if (*m_handler) {
                 (*m_handler)(py::cast(v1), py::cast(v2));
             }
-        } catch (const py::error_already_set& e) {
-            detail::treatError_already_set(*m_handler, m_where);
+        } catch (py::error_already_set& e) {
+            detail::treatError_already_set(e, *m_handler, m_where);
         } catch (...) {
             KARABO_RETHROW
         }
