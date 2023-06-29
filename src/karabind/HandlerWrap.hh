@@ -61,8 +61,8 @@ namespace karabind {
                     // Just call handler with individually unpacked arguments:
                     (*m_handler)(py::cast(args)...); // std::forward(args)?
                 }
-            } catch (const py::error_already_set& e) {
-                karabind::detail::treatError_already_set(*m_handler, m_where);
+            } catch (py::error_already_set& e) {
+                detail::treatError_already_set(e, *m_handler, m_where);
             } catch (...) {
                 KARABO_RETHROW
             }

@@ -24,44 +24,43 @@
 
 namespace py = pybind11;
 
-void exportPyUtilException(py::module_& m) {
-    // Register exception translator
-    static py::exception<karabo::util::Exception> exc(m, "KaraboError", PyExc_RuntimeError);
-    static py::exception<karabo::util::RemoteException> rexc(m, "KaraboRemoteError", PyExc_RuntimeError);
-    static py::exception<karabo::util::TimeoutException> texc(m, "KaraboTimeoutError", PyExc_TimeoutError);
 
+void exportPyUtilException(py::module_& m) {
+    // Translate C++ karabo::util::Exception into python RuntimeError exception
     py::register_exception_translator([](std::exception_ptr p) {
         try {
             if (p) {
                 std::rethrow_exception(p);
             }
-        } catch (const karabo::util::TimeoutException& te) {
-            const std::string msg(te.userFriendlyMsg(true)); // Clear stack
-            texc(msg.c_str());
-        } catch (const karabo::util::RemoteException& re) {
+        } catch (const karabo::util::RemoteException& e) {
             // Assemble message from both, friendly message and details with "\nDETAILS:" as separator
-            std::string msg(re.type());
+            std::string msg(e.type());
             msg += ": ";
-            msg += re.userFriendlyMsg(
+            msg += e.userFriendlyMsg(
                   true); // Clear stack - details() below is not using it (and it should be empty anyway...)
             msg += "\nDETAILS: ";
-            msg += re.type(); // Contains instanceId where exception occurred, so repeat also in details
+            msg += e.type(); // Contains instanceId where exception occurred, so repeat also in details
             msg += ": ";
-            msg += re.details(); // See ErrorHandlerWrap::operator() concerning details() vs detailedMsg()
-            rexc(msg.c_str());
-        } catch (const karabo::util::Exception& ee) {
+            msg += e.details(); // See ErrorHandlerWrap::operator() concerning details() vs detailedMsg()
+
+            // Pass C-pointer to Python
+            PyErr_SetString(PyExc_RuntimeError, msg.c_str());
+        } catch (const karabo::util::TimeoutException& e) {
+            const std::string msg(e.userFriendlyMsg(true)); // Clear stack
+
+            // Pass C-pointer to Python
+            PyErr_SetString(PyExc_TimeoutError, msg.c_str());
+        } catch (const karabo::util::Exception& e) {
             // Assemble message from type, friendly message and - separated by \nDETAILS:\n" - detailed message.
-            // Set Exception as the active python error
-            std::string msg(ee.type());
+            std::string msg(e.type());
             msg += ": ";
-            msg += ee.userFriendlyMsg(false);
+            msg += e.userFriendlyMsg(false);
             msg += "\nDETAILS:\n";
             // Order of calls to userFriendlyMsg(false) and detailedMsg() matters since the latter clears the stack.
-            msg += ee.detailedMsg();
-            exc(msg.c_str());
+            msg += e.detailedMsg();
+
+            // Pass C-pointer to Python
+            PyErr_SetString(PyExc_RuntimeError, msg.c_str());
         }
     });
-
-    // One could translate ParameterException to Python KeyError, but that does not well match:
-    // ParameterException is also used when other input than keys are bad.
 }
