@@ -182,7 +182,7 @@ else:
         ],
     }
     try:
-        import eulexistdb
+        import pyexistdb
         install_args['entry_points']['karabo.project_db'].append(
             'exist_db=karabo.project_db.exist_db.node:DbConnectionNode'
         )
