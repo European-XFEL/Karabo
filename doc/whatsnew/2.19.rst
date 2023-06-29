@@ -1,0 +1,43 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
+***************************
+What's New in Karabo 2.19.0
+***************************
+
+Release date will be towards the end of 2023.
+
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+
+
+Breaking Changes
+++++++++++++++++
+
+- C++/Bound: The default value of the safeNDArray flag of the methods
+  Device.writeChannel and OutputChannel.update have been switched back to true
+  for safety.
+  On the other hand the copyAllData flag of OutputChannel.write is ignored now
+  and the method behaves as if previously the flag was false.
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+
+MDL/Native core
+===============
+
+
+Bound/cpp core
+==============
+
+
+Graphical User Interface
+========================
+
+
+Core Devices
+============
