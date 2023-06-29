@@ -18,8 +18,8 @@ from functools import wraps
 from subprocess import check_call
 from time import sleep
 
-from eulexistdb.db import ExistDB
-from eulexistdb.exceptions import ExistDBException
+from pyexistdb.db import ExistDB
+from pyexistdb.exceptions import ExistDBException
 from requests.packages.urllib3.exceptions import HTTPError
 
 from karabo.project_db.bases import HandleABC
