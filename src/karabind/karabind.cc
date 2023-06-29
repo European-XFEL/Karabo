@@ -56,6 +56,7 @@ void exportPyUtilSchemaTest(py::module_ &);             // ConfigurationTestClas
 // xms
 void exportPyXmsImageDataElement(py::module_ &); // PyXmsImageDataElement.cc
 void exportPyXmsSignalSlotable(py::module_ &);   // PyXmsSignalSlotable.cc
+void exportPyXmsSlotElement(py::module_ &);      // PyXmsSlotElement.cc
 
 // core
 
@@ -100,6 +101,7 @@ PYBIND11_MODULE(karabind, m) {
     // xms
     exportPyXmsImageDataElement(m);
     exportPyXmsSignalSlotable(m);
+    exportPyXmsSlotElement(m);
 
     // core
 
