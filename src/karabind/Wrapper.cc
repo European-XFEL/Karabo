@@ -898,14 +898,10 @@ namespace karabind {
     } // namespace wrapper
 
 
-    std::tuple<std::string, std::string> getPythonExceptionStrings() {
-        // Fetch parameters of error indicator ... the error indicator is getting cleared!
-        // ... the new references returned!
-        PyObject *pexceptType, *pexception, *ptraceback;
+    std::tuple<std::string, std::string> getPythonExceptionStrings(py::error_already_set& e) {
+        PyObject *pexceptType(e.type().ptr()), *pexception(e.value().ptr()), *ptraceback(e.trace().ptr());
 
-        PyErr_Fetch(&pexceptType, &pexception, &ptraceback); // ref count incremented
-        PyErr_NormalizeException(&pexceptType, &pexception, &ptraceback);
-
+        // Use the existing code from karathon
         std::string pythonErrorMessage;
         std::string pythonErrorDetails;
 
@@ -948,10 +944,10 @@ namespace karabind {
     }
 
     namespace detail {
-        void treatError_already_set(const py::object& handler, const char* where) {
+        void treatError_already_set(py::error_already_set& e, const py::object& handler, const char* where) {
             std::string errStr, errDetails;
             if (PyErr_Occurred()) {
-                std::tie(errStr, errDetails) = getPythonExceptionStrings();
+                std::tie(errStr, errDetails) = getPythonExceptionStrings(e);
             }
             const std::string funcName(py::hasattr(handler, "__name__")
                                              ? std::string(handler.attr("__name__").cast<std::string>())
