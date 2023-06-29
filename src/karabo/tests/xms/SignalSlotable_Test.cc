@@ -655,7 +655,10 @@ void SignalSlotable_Test::_testConnectAsync() {
             connectTimeout = true;
         } catch (const karabo::util::SignalSlotException& e) {
             connectFailedMsg = e.what();
+        } catch (const std::exception& e) {
+            connectFailedMsg = e.what();
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+            connectFailedMsg = "non-std::exception";
         }
     };
     auto dummyHandler = []() {};
@@ -1321,13 +1324,20 @@ void SignalSlotable_Test::_testAutoConnectSlot() {
     auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
     demo2->start();
 
-    // Give demo some time to auto-connect now that demo2 is there (failed with 100 in a CI at least once):
-    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+    int count = 0;
+    do {
+        if (count == 0) {
+            // Give demo some time to auto-connect now that demo2 is there (failed with 100 in a CI at least once):
+            boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+        } else {
+            std::clog << "\t\tEmit again signalA, count is " << count << std::endl;
+        }
 
-    demo->emit("signalA", "Hello World 2!");
-    // Time for all signaling (although it is all short-cutting the broker):
-    // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
-    waitDemoOk(demo2, 2);
+        demo->emit("signalA", "Hello World 2!");
+        // Time for all signaling (although it is all short-cutting the broker):
+        // -> slotA (of other instance) -> connect slotB to signalB -> signalB -> slotB
+        waitDemoOk(demo2, 2, 8); // 8: about 500 ms max waiting
+    } while (!demo2->wasOk(2) && ++count < 10);
     CPPUNIT_ASSERT(demo2->wasOk(2));
 }
 
