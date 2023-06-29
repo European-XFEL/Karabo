@@ -581,21 +581,23 @@ void exportPyXmsInputOutputChannel() {
                    (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData") = false),
                    "data - a Hash with the data to write\n"
                    "meta - ChannelMetaData\n"
-                   "copyAllData - if true, ndarray data inside 'data' is copied and thus safe to\n"
-                   "              be re-used immediately. Default is 'false' for performance.\n"
-                   "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
-                   "      be called concurrently")
+                   "copyAllData - unused\n\n"
+                   "Note 1: Any NDArray/ImageData inside data must stay untouched at least\n"
+                   "        until update() has been called. See also the documentation of the\n"
+                   "        safeNDArray flag of the update() method.\n"
+                   "Note 2: The methods 'write(..)', 'update()' and 'signalEndOfStream()'\n"
+                   "        must not be called concurrently")
 
-              .def("update", &karathon::OutputChannelWrap().updatePy, (bp::arg("safeNDArray") = true),
+              .def("update", &karathon::OutputChannelWrap().updatePy, (bp::arg("safeNDArray") = false),
                    "Update the output channel, i.e. send all data over the wire that was\n"
-                   "previously written by calling write(..).\n"
+                   "previously written by calling write(..).\n\n"
                    "safeNdarray - boolean to indicate whether all ndarrays inside the Hash\n"
                    "              passed to write(..) before are 'safe', i.e. their memory\n"
                    "              will not be referred to elsewhere after update is finished.\n"
-                   "              If 'false', safety copies are done when needed, i.e. when\n"
-                   "              data is queued. Default is 'true' for performance.\n"
-                   "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
-                   "      be called concurrently")
+                   "              Default is 'false', 'true' can avoid safety copies of NDArray\n"
+                   "              content when data is queued or sent locally.\n"
+                   "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must\n"
+                   "      not be called concurrently")
 
               .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy,
                    "Send end-of-stream (EOS) notification to all connected input channels to\n"

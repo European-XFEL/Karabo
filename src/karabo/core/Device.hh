@@ -673,11 +673,10 @@ namespace karabo {
              * Writes a hash to the specified channel. The hash internally must
              * follow exactly the data schema as defined in the expected parameters.
              *
-             * Note that since 2.17.0 it is assumed that any NDArray/ImageData inside 'data' completely owns ist data,
-             * that means that the NDArray must not be constructed from a data location that is accessed after this call
-             * to writeChannel.
-             * If this assumption is wrong, use the overload of this method that has the 'safeNDArray' argument and set
-             * that to 'false'.
+             * If 'data' contains an 'NDArray', consider to use the overload of this method that has the 'safeNDArray'
+             * flag. If that flag can be set to 'true', data copies can be avoided:
+             *
+             * writeChannel(channelName, data, getActualTimestamp(), true);
              *
              * @param channelName The output channel name
              * @param data Hash with the data
@@ -697,22 +696,21 @@ namespace karabo {
              * @param channelName The output channel name
              * @param data Hash with the data
              * @param timestamp A user provided timestamp (if e.g. retrieved from h/w)
-             * @param safeNDArray Boolean that must be set to 'false' if data of any 'NDArray' that is inside 'data' is
-             *                    accessed after this 'writeChannel'. If 'false', data will be copied if needed, i.e.
-             *                    when the output channel has to queue or serves inner-process receivers.
-             *                    Default change in 2.17.0 and was 'false' before.
+             * @param safeNDArray Boolean that should be set to 'true' if 'data' contains any 'NDArray' and their data
+             *                    is not changed after this 'writeChannel'. Otherwise, data will be copied if needed,
+             *                    i.e. when the output channel has to queue or serves inner-process receivers.
              *
              * Thread safety:
              * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
              * for the same 'channelName'.
              */
             void writeChannel(const std::string& channelName, const karabo::util::Hash& data,
-                              const karabo::util::Timestamp& timestamp, bool safeNDArray = true) {
+                              const karabo::util::Timestamp& timestamp, bool safeNDArray = false) {
                 using namespace karabo::xms;
                 OutputChannel::Pointer channel = this->getOutputChannel(channelName);
                 // Provide proper meta data information, as well as correct train- and timestamp
                 OutputChannel::MetaData meta(m_instanceId + ":" + channelName, timestamp);
-                channel->write(data, meta, false); // false means "no copy"
+                channel->write(data, meta);
                 channel->update(safeNDArray);
             }
 
