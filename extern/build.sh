@@ -7,7 +7,7 @@
 # we will use the conan version.
 DEPENDENCIES_BASE=( belle-Cpp14 daemontools lapack log4cpp openmq openmqc mqtt redisclient patchelf )
 
-DEPENDENCIES_PYTHON=( eulexist hdf5 )
+DEPENDENCIES_PYTHON=( hdf5 )
 
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
