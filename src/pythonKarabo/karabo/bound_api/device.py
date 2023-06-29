@@ -904,7 +904,7 @@ class PythonDevice(NoFsm):
         self.set(key, value, self.getActualTimestamp())
 
     def writeChannel(self, channelName, data,
-                     timestamp=None, safeNDArray=True):
+                     timestamp=None, safeNDArray=False):
         """Write data to an output channel.
 
         :param channelName: name given to an OUTPUT_CHANNEL in
@@ -913,11 +913,12 @@ class PythonDevice(NoFsm):
                      channel
         :param timestamp: optional timestamp; if none is given, the current
                           timestamp is used
-        :param safeNDArray: Boolean that must be set to 'false' if data of any
-                            'NDArray' that is inside 'data' is accessed after
-                            this 'writeChannel'. If 'false', data will be
-                            copied if needed, i.e. when the output channel has
-                            to queue or serves inner-process receivers.
+        :param safeNDArray: Boolean that should be set to 'True' if 'data'
+                            contains any 'NDArray' and their data is not
+                            changed after this 'writeChannel'. Otherwise,
+                            data will be copied if needed, i.e. when the output
+                            channel has to queue or serves inner-process
+                            receivers.
 
         Example for an output channel sending an image (key: "image") and
         a frame number (key: "frame"):
@@ -935,9 +936,7 @@ class PythonDevice(NoFsm):
         if not timestamp:
             timestamp = self.getActualTimestamp()
         meta = ChannelMetaData(sourceName, timestamp)
-        # sync. interface so no need to copy data. It will have been sent
-        # when this call is done
-        channel.write(data, meta, False)
+        channel.write(data, meta)
         channel.update(safeNDArray=safeNDArray)
 
     def signalEndOfStream(self, channelName):
