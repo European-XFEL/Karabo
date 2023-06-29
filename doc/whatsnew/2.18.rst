@@ -22,6 +22,15 @@ Breaking Changes
 ++++++++++++++++
 
 - C++/Bound: h5 related code has been removed from the Karabo Framework.
+- C++/Bound: If an NDArray inside a Hash that is sent via an output channel
+  contains data that is touched after Device.writeChannel (or
+  OutputChannel.update), the safeNDArray flag of these methods now explicitly
+  must be set to false to guarantee data integrity.
+  Similarly the copyAllData flag of OutputChannel.write has changed to false.
+  Note this will again change in future releases:
+  The default of the safeNDArray flag will change back to false whereas the
+  copyAllData flag will be unused and write behave always as if the flag would
+  be false.
 
 
 Detailed Merge-Log

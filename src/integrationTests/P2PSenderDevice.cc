@@ -120,8 +120,6 @@ namespace karabo {
               .reconfigurable()
               .commit();
 
-        BOOL_ELEMENT(expected).key("copyAllData").assignmentOptional().defaultValue(true).reconfigurable().commit();
-
         BOOL_ELEMENT(expected).key("safeNDArray").assignmentOptional().defaultValue(true).reconfigurable().commit();
 
         STRING_ELEMENT(expected)
@@ -271,7 +269,6 @@ namespace karabo {
             Hash data2;
             Hash data3;
             Hash data4;
-            bool copyAllData = get<bool>("copyAllData");
             bool safeNDArray = get<bool>("safeNDArray");
             auto channel = this->getOutputChannel("output2");
 
@@ -303,13 +300,13 @@ namespace karabo {
                 OutputChannel::MetaData meta4("source4", Timestamp());
 
                 // Write four items from different sources
-                channel->write(data1, meta1, copyAllData);
-                channel->write(data2, meta2, copyAllData);
-                channel->write(data3, meta3, copyAllData);
-                channel->write(data4, meta4, copyAllData);
-                // In our scenario, safeNDArray==true is a bit fake if copyAllData==false:
+                channel->write(data1, meta1);
+                channel->write(data2, meta2);
+                channel->write(data3, meta3);
+                channel->write(data4, meta4);
+                // In our scenario, safeNDArray==true is a bit fake:
                 // The data sent survives the update and is re-used (i.e. sent again).
-                // If the array data inside the loop would be changed that would lead to data curruption.
+                // If the array data inside the loop would be changed that would lead to data corruption.
                 // But we do not do that and are anyway only interested in data throughput.
                 // To cure that completely, the NDArray would have to be created (and thus its underlying data
                 // allocated) inside the loop.
