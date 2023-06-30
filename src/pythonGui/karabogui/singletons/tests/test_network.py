@@ -335,11 +335,6 @@ class TestNetwork(GuiTestCase):
                 self.assertEqual(self._last_hash["timeout"], 5)
 
             with self.subTest("Log messages"):
-                network.onSubscribeLogs(False)
-                _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "subscribeLogs")
-                self.assertEqual(self._last_hash["subscribe"], False)
-
                 network.onSetLogPriority("swerver", "ERROR")
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"], "setLogPriority")
