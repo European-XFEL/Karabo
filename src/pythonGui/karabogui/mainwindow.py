@@ -44,8 +44,8 @@ from karabogui.events import (
 from karabogui.indicators import get_processing_color
 from karabogui.logger import StatusLogWidget, get_logger
 from karabogui.panels.api import (
-    AlarmPanel, ConfigurationPanel, DevicePanel, LoggingPanel, PanelContainer,
-    ProjectPanel, ScriptingPanel, TopologyPanel)
+    AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
+    ScriptingPanel, TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
@@ -55,7 +55,6 @@ from karabogui.wizards import TipsTricksWizard
 SERVER_INFO_WIDTH = 250
 
 CONSOLE_TITLE = 'Console'
-LOG_TITLE = 'Log'
 AlARM_TITLE = 'Alarms'
 
 CONFIGURATOR_TITLE = 'Configuration Editor'
@@ -65,7 +64,6 @@ PROJECT_TITLE = 'Projects'
 
 _PANEL_TITLE_CONFIG = {
     CONSOLE_TITLE: 'console_visible',
-    LOG_TITLE: 'log_visible',
     AlARM_TITLE: 'alarm_visible'
 }
 
@@ -156,7 +154,6 @@ def set_panel_visible(name, visible):
 _CLOSABLE_PANELS = {
     # Title: (class, position, icon)
     CONSOLE_TITLE: (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
-    LOG_TITLE: (LoggingPanel, PanelAreaEnum.Middle, icons.logMenu),
     AlARM_TITLE: (AlarmPanel, PanelAreaEnum.Middle, icons.alarmWarning)
 }
 
@@ -719,7 +716,6 @@ class MainWindow(QMainWindow):
         assert panel.allow_closing
 
         self.addPanel(panel, area_enum)
-        self.onPanelOpen(name)
         panel.signalPanelClosed.connect(self.onPanelClose)
         action = self.panelActions.get(name)
         if action is not None:
@@ -759,10 +755,6 @@ class MainWindow(QMainWindow):
             msg_box.setDefaultButton(QMessageBox.Cancel)
             return msg_box.exec() != QMessageBox.Yes
         return False
-
-    def onPanelOpen(self, name):
-        if name == LOG_TITLE:
-            get_network().onSubscribeLogs(True)
 
     def _open_link(self, link):
         try:
@@ -894,8 +886,6 @@ class MainWindow(QMainWindow):
         action = self.panelActions.get(name)
         if action is not None:
             action.setEnabled(True)
-        if name == LOG_TITLE:
-            get_network().onSubscribeLogs(False)
 
         self._active_closable_panels.pop(name)
 
