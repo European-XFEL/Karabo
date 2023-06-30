@@ -852,12 +852,3 @@ class TestManager(GuiTestCase):
             manager.handle_saveConfigurationFromName(**info)
             mbox.show_error.assert_called_with(
                 'Saving a configuration for XFEL/CAM/1 failed!', details='')
-
-    def test_handle_subscribeLogsReply(self):
-        target = 'karabogui.singletons.manager.messagebox'
-        with patch(target) as mbox:
-            manager = Manager()
-            info = {"success": False}
-            manager.handle_subscribeLogsReply(**info)
-            mbox.show_error.assert_called_with(
-                'Could not reconfigure the logs for the gui server')

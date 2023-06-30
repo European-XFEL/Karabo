@@ -277,13 +277,6 @@ class Manager(QObject):
                     "client disconnect.")
             self._request_handlers.clear()
 
-    def handle_subscribeLogsReply(self, **info):
-        """Handle the subscribe logs reply of the gui server"""
-        if not info.get('success', True):
-            # Ignoring any "reason" supplied by gui server
-            text = "Could not reconfigure the logs for the gui server"
-            messagebox.show_error(text)
-
     def handle_setLogPriorityReply(self, **info):
         """Handle the log priority reconfiguration reply of the server"""
         if not info.get("success", True):
