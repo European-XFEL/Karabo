@@ -87,10 +87,10 @@ class Tests(unittest.TestCase):
             # Tests for node can be found in "test_hash_attributes_node.py".
 
             # Test "__delitem__" ... reference to "minerale" node
-            del(node)
+            del node
             self.assertTrue("minerale" in attrs)
             # delete attribute
-            del(attrs['minerale'])
+            del attrs['minerale']
             self.assertTrue('minerale' not in attrs)
             # attribute 'ua' is still in attrs container
             self.assertFalse(attrs.empty())

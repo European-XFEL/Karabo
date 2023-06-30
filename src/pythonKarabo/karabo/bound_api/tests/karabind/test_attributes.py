@@ -123,7 +123,7 @@ class Tests(unittest.TestCase):
                 self.assertTrue(ha.isType('attr17', "VECTOR_COMPLEX_DOUBLE"))
                 ha.erase('attr17')
                 ha['attr17'] = [complex(1.0, -5), complex(-2., 188)]
-                del(ha['attr17'])
+                del ha['attr17']
 
             # VECTOR_STRING
             ha['attr18'] = ['aaaa', 'bbb', 'cccccccc', 'www']
