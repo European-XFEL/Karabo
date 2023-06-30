@@ -525,7 +525,7 @@ class DeviceServer:
                                               deviceid, 1, False)
                     try:
                         # Too lazy to use async techniques for this corner case
-                        request.waitForReply(2000)  # in milliseconds
+                        request.waitForReply(3000)  # in milliseconds
                     except TimeoutError:
                         # Indeed dead Karabo-wise:
                         self.log.WARN("Kill previous incarnation of "
