@@ -55,3 +55,5 @@ safeRunCommand cmake \
 cd $BUILD_DIR
 safeRunCommand cmake $BUILD_OPT
 safeRunCommand cp $BUILD_DIR/__PACKAGE_NAME__/lib*.so $TARGET_DIR
+# $(patchelf --force-rpath --set-rpath '$ORIGIN/../lib:$ORIGIN/../extern/lib:$ORIGIN/../extern/lib64:$ORIGIN' $TARGET_DIR/*.so)
+safeRunCommand patchelf --force-rpath --set-rpath '$ORIGIN/../lib:$ORIGIN/../extern/lib:$ORIGIN/../extern/lib64:$ORIGIN' $TARGET_DIR/lib*.so
