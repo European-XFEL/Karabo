@@ -42,9 +42,6 @@ def create_cinema(ns):
                         'target': uuid}
             broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
 
-        # We are logged in and can now unsubscribe to logs!
-        get_network().onSubscribeLogs(False)
-
     topology = get_topology()
     # Attach to the topology
     topology.system_tree.on_trait_change(

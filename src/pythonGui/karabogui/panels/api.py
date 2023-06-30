@@ -19,7 +19,6 @@ from .alarmpanel import AlarmPanel
 from .configurationpanel import ConfigurationPanel
 from .container import PanelContainer
 from .devicepanel import DevicePanel
-from .loggingpanel import LoggingPanel
 from .macropanel import MacroPanel
 from .navigationpanel import TopologyPanel
 from .placeholderpanel import PlaceholderPanel

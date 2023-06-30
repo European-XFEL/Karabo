@@ -15,12 +15,12 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from collections import namedtuple
-from unittest import main, mock
 
 from karabogui.programs.theatre import DEVSCENE_PROG, create_theatre
 from karabogui.singletons.network import Network
-from karabogui.testing import GuiTestCase, singletons, system_hash
+from karabogui.testing import singletons, system_hash
 from karabogui.topology.api import SystemTopology
+from karabogui.util import process_qt_events
 
 
 def test_device_link_regex():
@@ -34,66 +34,59 @@ namespace = namedtuple("namespace", "host port username nosplash "
                                     "scene_id timeout")
 
 
-class TestExtraApplication(GuiTestCase):
+def test_theatre_normal(gui_app, mocker):
+    """Test the karabo theatre with a topology"""
+    ns = namespace("myhost", "myport", "admin", True,
+                   ["divvy|scene"], 1)
 
-    def test_theatre_normal(self):
-        """Test the karabo theatre with a topology"""
-        ns = namespace("myhost", "myport", "admin", True,
-                       ["divvy|scene"], 1)
+    network = Network()
+    network.connectToServerDirectly = mocker.Mock()
+    network.connectToServerDirectly.return_value = True
+    network.onSubscribeLogs = mocker.Mock()
 
-        network = Network()
-        network.connectToServerDirectly = mock.Mock()
-        network.connectToServerDirectly.return_value = True
-        network.onSubscribeLogs = mock.Mock()
+    topology = SystemTopology()
+    path = "karabogui.programs.theatre.get_scene_from_server"
+    with singletons(network=network, topology=topology):
+        scene = mocker.patch(path)
+        success, waiter, app = create_theatre(ns)
+        # Make sure no settings are erased in tests
+        app.setOrganizationName("NoXFEL")
 
-        topology = SystemTopology()
-        path = "karabogui.programs.theatre.get_scene_from_server"
-        with singletons(network=network, topology=topology):
-            with mock.patch(path) as scene:
-                success, waiter, app = create_theatre(ns)
-                # Make sure no settings are erased in tests
-                app.setOrganizationName("NoXFEL")
+        assert success
+        assert len(waiter.device_scenes) == 1
+        network.signalServerConnectionChanged.emit(True)
 
-                self.assertTrue(success)
-                self.assertEqual(len(waiter.device_scenes), 1)
-                network.signalServerConnectionChanged.emit(True)
-
-                network.onSubscribeLogs.assert_not_called()
-                # Initialize the trees
-                topology.initialize(system_hash())
-                self.process_qt_events(1000)
-                scene.assert_called_with("divvy", "scene")
-
-                network.onSubscribeLogs.assert_called_with(False)
-
-    def test_theatre_timeout(self):
-        """Test the karabo theatre with a timeout for the topology"""
-        ns = namespace("myhost", "myport", "admin", True,
-                       ["divvy|scene"], 0)
-
-        network = Network()
-        network.connectToServerDirectly = mock.Mock()
-        network.connectToServerDirectly.return_value = True
-        network.onSubscribeLogs = mock.Mock()
-
-        topology = SystemTopology()
-        scene_path = "karabogui.programs.theatre.get_scene_from_server"
-        box_path = "karabogui.programs.theatre.messagebox"
-        with singletons(network=network, topology=topology):
-            with mock.patch(scene_path) as scene, mock.patch(box_path) as mbox:
-                success, waiter, app = create_theatre(ns)
-                # Make sure no settings are erased in tests
-                app.setOrganizationName("NoXFEL")
-
-                self.assertTrue(success)
-                self.assertEqual(len(waiter.device_scenes), 1)
-                network.signalServerConnectionChanged.emit(True)
-
-                self.process_qt_events(1000)
-                scene.assert_not_called()
-                mbox.show_warning.assert_called_once()
-                network.onSubscribeLogs.assert_not_called()
+        network.onSubscribeLogs.assert_not_called()
+        # Initialize the trees
+        topology.initialize(system_hash())
+        process_qt_events(timeout=1000)
+        scene.assert_called_with("divvy", "scene")
 
 
-if __name__ == "__main__":
-    main()
+def test_theatre_timeout(gui_app, mocker):
+    """Test the karabo theatre with a timeout for the topology"""
+    ns = namespace("myhost", "myport", "admin", True,
+                   ["divvy|scene"], 0)
+
+    network = Network()
+    network.connectToServerDirectly = mocker.Mock()
+    network.connectToServerDirectly.return_value = True
+    network.onSubscribeLogs = mocker.Mock()
+
+    topology = SystemTopology()
+    scene_path = "karabogui.programs.theatre.get_scene_from_server"
+    box_path = "karabogui.programs.theatre.messagebox"
+    with singletons(network=network, topology=topology):
+        scene = mocker.patch(scene_path)
+        mbox = mocker.patch(box_path)
+        success, waiter, app = create_theatre(ns)
+        # Make sure no settings are erased in tests
+        app.setOrganizationName("NoXFEL")
+
+        assert success
+        assert len(waiter.device_scenes) == 1
+        network.signalServerConnectionChanged.emit(True)
+
+        process_qt_events(timeout=1000)
+        scene.assert_not_called()
+        mbox.show_warning.assert_called_once()
