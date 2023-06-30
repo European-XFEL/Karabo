@@ -234,8 +234,9 @@ namespace karabind {
         template <typename T>
         std::vector<T> castPySequenceToStdVector(const py::sequence& sequence) {
             std::vector<T> vt;
-            for (auto item : sequence) vt.push_back(item.cast<T>());
-            return std::move(vt);
+            vt.reserve(sequence.size());
+            for (const auto& item : sequence) vt.push_back(item.cast<T>());
+            return vt;
         }
 
         /**
