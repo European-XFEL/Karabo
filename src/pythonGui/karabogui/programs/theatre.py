@@ -139,9 +139,6 @@ class DeviceWaiter(QObject):
         # We specified devices that are not available in the topology, exit!
         if self.no_scenes:
             close_app()
-        else:
-            # We are logged in and can now unsubscribe to logs!
-            get_network().onSubscribeLogs(False)
 
 
 def create_theatre(ns):
