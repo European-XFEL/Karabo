@@ -102,7 +102,7 @@ def test_imagedata_hash(Hash, ImageData, Dims, Encoding, DetectorGeometry):
     # NOTE: Dims defines shape
     img = ImageData(arr, Dims(3, 4), Encoding.RGBA, 32)
     # delete original array
-    del(arr)
+    del arr
     # Store image data into Hash
     h = Hash('image', img, 'a', 12)
     assert h['image'].getData().flags.owndata is False
