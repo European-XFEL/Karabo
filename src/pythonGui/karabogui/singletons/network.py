@@ -608,10 +608,6 @@ class Network(QObject):
         h = Hash("type", "error", "traceback", error)
         self._write_hash(h)
 
-    def onSubscribeLogs(self, subscribe):
-        h = Hash("type", "subscribeLogs", "subscribe", subscribe)
-        self._write_hash(h)
-
     def onSetLogPriority(self, instanceId, priority):
         h = Hash("type", "setLogPriority", "instanceId", instanceId,
                  "priority", priority)
