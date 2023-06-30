@@ -27,7 +27,7 @@ class TestDeviceServer(BoundDeviceTestCase):
         serverId = "PropTestServer"
         deviceId = "propTestDevice"
         classId = "PropertyTest"
-        self.start_server("bound", serverId, [classId])  # logLevel="INFO")
+        self.start_server("bound", serverId, [classId], logLevel="WARN")
 
         # Need a helper to call slots with arguments:
         sigSlot = SignalSlotable("sigSlotTestServer")
@@ -52,6 +52,7 @@ class TestDeviceServer(BoundDeviceTestCase):
         self.assertEqual(msg, "Encountered unexpected configuration parameter"
                          ": \"int32Property_y\"")
 
+        # Cannot instantiate twice with same deviceId
         ok, msg = sigSlot.request(serverId, "slotStartDevice",
                                   cfg).waitForReply(self._max_timeoutMs)
         self.assertFalse(ok, msg)
