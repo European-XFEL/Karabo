@@ -191,13 +191,13 @@ class Tests(unittest.TestCase):
             self.assertFalse('p' in f)
 
             # Test "__delitem__"
-            del(f['w.r'])
+            del f['w.r']
             self.assertFalse('w.r' in f)
             self.assertTrue('w' in f)
             self.assertEqual(f['w'], Hash())
             self.assertEqual(h['w'], Hash('r.a.p', 123456789999))
 
-            del(f)
+            del f
 
             # Test "__iter__"
             self.assertEqual(len(h), 5)
@@ -281,7 +281,7 @@ class Tests(unittest.TestCase):
             self.assertEqual(g['d.e.f'], 88)
             self.assertEqual(h['a.b.c.d.e.f'], 88)
             # drop the parent Hash in Python
-            del(h)
+            del h
             # attempt to access 'g' or 't' gives crash!!!
             # Now only in karathon! karabind is fixed using lifetime
             # control via 'keep_alive<...>()' magic
@@ -296,7 +296,7 @@ class Tests(unittest.TestCase):
             self.assertEqual(h["a"][1]["a"], 1, "Value should be 1")
             # destroy parent Hash in C++
             h.clear()
-            del(g)  # the subtree is invalidated. SEGFAULT if accessed.
+            del g  # the subtree is invalidated. SEGFAULT if accessed.
             self.assertTrue(h.empty())
 
             # Comparison of 2 Hashes using operators: "==" and "!="
