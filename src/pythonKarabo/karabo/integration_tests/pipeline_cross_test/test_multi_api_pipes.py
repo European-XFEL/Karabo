@@ -240,10 +240,27 @@ class TestCrossPipelining(BoundDeviceTestCase):
             num_of_waits = num_of_waits - 1
             sleep(sleep_wait_interv)
 
-        self.assertTrue(len(outputs_not_connected) == 0,
-                        "Failed to connect '{}' of the '{}' "
-                        "output channels in the chain."
-                        .format(outputs_not_connected, len(start_info)-1))
+        infoMsg = ""
+        if len(outputs_not_connected):
+            # Get here only in case of trouble! Collect info:
+            caller = SignalSlotable("debugHelperConn")
+            caller.start()
+            for devId in outputs_not_connected:
+                req = caller.request(devId, "slotGetConfiguration")
+                try:
+                    cfg, _ = req.waitForReply(2000)
+                except Exception as e:
+                    infoMsg += f"\n{devId} cfg problem: {repr(e)}"
+                else:
+                    tableStr = ""
+                    for row in cfg['output.connections']:
+                        tableStr += str(row)
+                    infoMsg += (f"\n{devId} connections: {tableStr}")
+
+        self.assertEqual(len(outputs_not_connected), 0,
+                        f"Failed to connect {outputs_not_connected} of the "
+                        f"{len(start_info)-1} output channels in the chain: "
+                        f"{infoMsg}")
         print("========== all connected ===============")
 
         self.dc.execute("sender", "writeOutput")
