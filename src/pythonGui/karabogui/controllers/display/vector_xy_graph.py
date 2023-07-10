@@ -22,14 +22,18 @@ from weakref import WeakValueDictionary
 
 from traits.api import Instance
 
-from karabo.common.scenemodel.api import VectorXYGraphModel, build_model_config
+from karabo.common.scenemodel.api import (
+    VectorXYGraphModel, build_graph_config, build_model_config)
+from karabogui import icons
 from karabogui.binding.api import (
     VectorBoolBinding, VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import get_pen_cycler
+from karabogui.graph.common.toolbar.widgets import create_button
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, get_view_range)
+from karabogui.graph.plots.dialogs.data_analysis import DataAnalysisDialog
 
 
 def _is_compatible(binding):
@@ -58,13 +62,24 @@ class DisplayVectorXYGraph(BaseBindingController):
         widget.stateChanged.connect(self._change_model)
         widget.add_legend(visible=False)
         widget.add_cross_target()
-        widget.add_toolbar()
+        toolbar = widget.add_toolbar()
         widget.enable_data_toggle()
         widget.enable_export()
 
         widget.restore(build_model_config(self.model))
 
+        button = create_button(
+            icon=icons.data_analysis, checkable=False, tooltip="Data Analysis",
+            on_clicked=self.show_data_analysis_dialog)
+        toolbar.add_button(button)
         return widget
+
+    def show_data_analysis_dialog(self):
+        config = build_graph_config(self.model)
+        data_analysis_dialog = DataAnalysisDialog(
+            proxies=self.proxies[1:], config=config, baseline_proxy=self.proxy,
+            parent=self.widget)
+        data_analysis_dialog.show()
 
     def __pens_default(self):
         return get_pen_cycler()
