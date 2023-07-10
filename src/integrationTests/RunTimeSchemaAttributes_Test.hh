@@ -33,7 +33,6 @@
 #include "TcpAdapter.hh"
 #include "karabo/core/DeviceClient.hh"
 #include "karabo/core/DeviceServer.hh"
-#include "karabo/devices/AlarmService.hh"
 #include "karabo/karabo.hpp"
 
 class RunTimeSchemaAttributes_Test : public CPPUNIT_NS::TestFixture {
