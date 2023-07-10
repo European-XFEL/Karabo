@@ -25,7 +25,7 @@
 
 #include "TcpNetworking_Test.hh"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/thread.hpp>
 #include <cassert>
 #include <fstream>
@@ -42,6 +42,10 @@
 #include "karabo/util/Dims.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/NDArray.hh"
+
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+using boost::placeholders::_3;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
 

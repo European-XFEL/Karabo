@@ -25,7 +25,7 @@
 #include "ReadAsyncStringUntil_Test.hh"
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/thread.hpp>
 #include <cassert>
 #include <fstream>
@@ -40,6 +40,9 @@
 
 using boost::asio::ip::tcp;
 using namespace std;
+
+using boost::placeholders::_1;
+using boost::placeholders::_2;
 
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ReadAsyncStringUntil_Test);
