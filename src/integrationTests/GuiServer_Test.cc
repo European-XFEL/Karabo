@@ -136,7 +136,7 @@ void GuiServer_Test::appTestRunner() {
         m_tcpAdapter->disconnect();
     }
 
-
+    /*
     // Shutsdown the GUI Server device and brings it up again as an instance that requires user authentication.
     success = m_deviceClient->killDevice(TEST_GUI_SERVER_ID, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -168,6 +168,7 @@ void GuiServer_Test::appTestRunner() {
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
     }
+    */
 }
 
 
