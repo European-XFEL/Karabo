@@ -35,6 +35,10 @@ using namespace karabo::util;
 using namespace karabo::net;
 using namespace karabo::log;
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+using boost::placeholders::_3;
+
 CPPUNIT_TEST_SUITE_REGISTRATION(MqttClient_Test);
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(MqttClient_Test, "MqttClient");
 

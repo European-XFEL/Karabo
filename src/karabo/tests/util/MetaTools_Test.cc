@@ -32,6 +32,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(MetaTools_Test);
 
 using namespace karabo::util;
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+using boost::placeholders::_3;
+
 
 MetaTools_Test::MetaTools_Test() {}
 

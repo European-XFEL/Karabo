@@ -168,8 +168,8 @@ list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
 # For this project, we always want to find the Boost installation in the
 # CMAKE_PREFIX_PATH tree.
 set(Boost_NO_BOOST_CMAKE 1)
-find_package(Boost 1.68 EXACT REQUIRED
-             COMPONENTS chrono date_time filesystem regex system thread)
+find_package(Boost 1.82 EXACT REQUIRED
+             COMPONENTS atomic chrono date_time filesystem regex system thread)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
 
 macro(add_dep LIBNAME INCLUDE_PATH)
@@ -225,6 +225,7 @@ target_include_directories(
 # Adding dependecy libraries into the karabo project
 target_link_libraries(
         ${KARABO_LIB_TARGET_NAME}
+        ${Boost_ATOMIC_LIBRARY}
         ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
         ${Boost_CHRONO_LIBRARY}

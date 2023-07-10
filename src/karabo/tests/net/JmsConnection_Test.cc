@@ -36,6 +36,9 @@
 using namespace karabo::util;
 using namespace karabo::net;
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+
 CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 
 
