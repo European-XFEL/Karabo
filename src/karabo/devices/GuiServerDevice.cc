@@ -1770,7 +1770,6 @@ namespace karabo {
 
                     tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_NEW_EVENT);
 
-                    connectPotentialAlarmService(topologyEntry);
                     registerPotentialProjectManager(topologyEntry);
                 }
             } catch (const std::exception& e) {
@@ -2448,20 +2447,6 @@ namespace karabo {
                 safeClientWrite(channel, h, LOSSLESS);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.what();
-            }
-        }
-
-
-        void GuiServerDevice::connectPotentialAlarmService(const karabo::util::Hash& topologyEntry) {
-            std::string type, instanceId;
-            typeAndInstanceFromTopology(topologyEntry, type, instanceId);
-            if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
-                topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService") {
-                // Connect to signal and then
-                // actively ask this previously unknown device to submit its alarms as init messages on all channels
-                asyncConnect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate",
-                             bind_weak(&GuiServerDevice::onRequestAlarms, this, WeakChannelPointer(),
-                                       Hash("alarmInstanceId", instanceId), true));
             }
         }
 
