@@ -33,6 +33,9 @@ using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xms;
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+
 namespace karabo {
 
 

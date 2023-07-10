@@ -5,7 +5,7 @@
 
 # note that patchelf will actually build for CentOs7 only, for all others
 # we will use the conan version.
-DEPENDENCIES_BASE=( belle-Cpp14 daemontools lapack log4cpp openmq openmqc mqtt redisclient patchelf )
+DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc mqtt redisclient patchelf )
 
 DEPENDENCIES_PYTHON=( hdf5 )
 
@@ -423,7 +423,7 @@ install_from_deps() {
     # and force a rebuild if they changed.
     local package_status=$(get_package_manager_status)
     local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
-    
+
     # make sure we have paths set to where conan will place artifacts
     OLD_PATH=$PATH
     OLD_PYTHONPATH=$PYTHONPATH
@@ -448,7 +448,7 @@ install_from_deps() {
     # chains affecting its own requirements.
     local pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
     local pip_target="--target $INSTALL_PREFIX/lib/$python_version"
-    
+
     # force a reinstall of pip first, such that it works properly
     element_in "pip-upgrade" "${package_status[@]}"
     local vin=$?
@@ -458,7 +458,7 @@ install_from_deps() {
         safeRunCommand "rm get-pip.py"
         echo "pip-upgrade" >> $marker_path
     fi
-     
+
     # install requirements that should be installed before everything else,
     # such as pip, conan, and other tools to build/install packages
     # since this includes conan, we need to force a reinstall, otherwise
@@ -470,7 +470,7 @@ install_from_deps() {
         safeRunCommandQuiet "$pip_install_cmd --force-reinstall -r requirements-pre.txt"
         echo "pip-pre-requirements" >> $marker_path
     fi
-    
+
     # next is conan
     element_in "conan" "${package_status[@]}"
     local vin=$?
@@ -485,17 +485,17 @@ install_from_deps() {
 
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
-        
+
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         local build_opts="--build=missing"
 
         # define the C++ standard to use - this needs to be compatible with the Framework itself
         local cxx_std=$CPP_STD
-        
+
         local compiler_opts="-s compiler.cppstd=$cxx_std -s compiler.libcxx=$cxx_lib"
 
         local cmake_opt="-c general.conan_cmake_program=$INSTALL_PREFIX/bin/cmake"
-        
+
         # how to handle any system requirements that might be defined by a package.
         # check means to verify presence and complain. Since we don't want to require
         # sudo rights on installation of Karabo, this is all we can do here.
@@ -505,7 +505,7 @@ install_from_deps() {
 
         echo "conan" >> $marker_path
     fi
-    
+
     # with conan installed, now build shipped dependencies
     # this way python can already pick them up.
     # What have we been asked to build? - this builds the rest
@@ -514,8 +514,8 @@ install_from_deps() {
     # Build the dependencies
     build_dependencies
 
-    # install python requirements 
-    # we do this in multiple stages, as pip has issues resolving a 
+    # install python requirements
+    # we do this in multiple stages, as pip has issues resolving a
     # too complex dependency chain with many pinned versions.
     # In the best case it will need forever to resolve it, attempting
     # any version starting with the lates one. In the worst case,

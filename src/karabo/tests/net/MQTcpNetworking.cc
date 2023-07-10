@@ -29,6 +29,10 @@
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/Hash.hh>
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+using boost::placeholders::_3;
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION(MQTcpNetworking);
 

@@ -161,7 +161,6 @@ attrs                20.3.0            MIT                                      
 backcall             0.2.0             BSD-3                                                       yes                   yes
 backports-abc        0.4               PSFL                                                        no                    no
 backports.ssl-match  3.5.0.1           PSFL                                                        no                    no
-belle (C++14 Fork)   0.5.2             MIT                                                         yes                   no
 boost                1.68              Boost License                                               yes                   no
 bzip2                1.0.6             BSD                                                         yes                   yes
 certifi              2018.4.16         MPL2.0                                                      no                    no

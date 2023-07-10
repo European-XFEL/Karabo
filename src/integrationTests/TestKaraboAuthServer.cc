@@ -22,12 +22,12 @@
 
 #include "TestKaraboAuthServer.hh"
 
-#include <belle.hh>
+// #include <belle.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/StringTools.hh>
 #include <nlohmann/json.hpp>
 
-namespace Belle = OB::Belle;
+// namespace Belle = OB::Belle;
 namespace nl = nlohmann;
 using namespace std;
 using namespace karabo::util;
@@ -49,6 +49,7 @@ class TestKaraboAuthServer::Impl {
      * internal Belle web server starts its own event loop and blocks the calling thread.
      */
     void run() {
+        /*
         // Sets up the server
         m_srv.address(m_addr);
         m_srv.port(m_port);
@@ -80,12 +81,13 @@ class TestKaraboAuthServer::Impl {
         });
 
         m_srv.listen();
+        */
     }
 
    private:
     const std::string m_addr;
     int m_port;
-    Belle::Server m_srv;
+    // Belle::Server m_srv;
 };
 
 
