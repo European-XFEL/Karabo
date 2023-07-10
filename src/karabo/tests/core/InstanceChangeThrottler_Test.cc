@@ -23,9 +23,11 @@
 
 #include "InstanceChangeThrottler_Test.hh"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <cmath>
+
+using boost::placeholders::_1;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(InstanceChangeThrottler_Test);
 
