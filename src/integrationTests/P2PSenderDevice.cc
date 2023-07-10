@@ -27,6 +27,8 @@
 
 using namespace std;
 
+using boost::placeholders::_1;
+
 USING_KARABO_NAMESPACES;
 
 namespace karabo {
