@@ -39,6 +39,8 @@
 using namespace karabo::util;
 using namespace karabo::xms;
 
+using boost::placeholders::_1;
+
 const int numWaitIterations = 1000;
 const int sleepPerWaitIterationMs = 5;
 const int slotCallTimeout = 2000;

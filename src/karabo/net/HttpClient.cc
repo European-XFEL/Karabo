@@ -22,7 +22,7 @@
 
 #include "HttpClient.hh"
 
-#include <belle.hh>
+// #include <belle.hh>
 #include <boost/algorithm/string.hpp>
 
 #include "karabo/net/utils.hh"
@@ -60,6 +60,7 @@ namespace karabo {
                         }
                     }
 
+                    /*
                     m_cli.address(host);
                     m_cli.port(port);
                     if (protocol == "https") {
@@ -70,23 +71,25 @@ namespace karabo {
                     } else {
                         m_cli.ssl(false);
                     }
+                    */
                 }
             }
 
             void asyncPost(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
                            const ResponseHandler& respHandler) {
-                asyncRequest(OB::Belle::Method::post, route, reqHeaders, reqBody, respHandler);
+                // asyncRequest(OB::Belle::Method::post, route, reqHeaders, reqBody, respHandler);
             }
 
             void asyncGet(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
                           const ResponseHandler& respHandler) {
-                asyncRequest(OB::Belle::Method::get, route, reqHeaders, reqBody, respHandler);
+                // asyncRequest(OB::Belle::Method::get, route, reqHeaders, reqBody, respHandler);
             }
 
            private:
-            OB::Belle::Client m_cli;
+            // OB::Belle::Client m_cli;
             const std::string m_baseURL;
 
+            /*
             void asyncRequest(OB::Belle::Method method, const std::string& route, const HttpHeaders& reqHeaders,
                               const std::string& reqBody, const ResponseHandler& respHandler) {
                 if (m_baseURL.empty()) {
@@ -104,6 +107,7 @@ namespace karabo {
                 // Submit the request
                 m_cli.connect();
             }
+            */
         };
 
         HttpClient::HttpClient(const std::string& baseURL) {

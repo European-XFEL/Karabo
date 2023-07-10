@@ -21,7 +21,7 @@ patchelf/0.13 # will not work with CentOs7, 0.8 version not available, so go via
 pugixml/1.10
 
 # minor-any
-# boost/1.69.0 #- succeeds locally, but not on any of the CIs, falling back to local build.
+# boost/1.82.0 #- succeeds locally, but not on any of the CIs, falling back to local build.
 cppunit/1.15.1
 libjpeg/9c
 libtiff/4.0.8
