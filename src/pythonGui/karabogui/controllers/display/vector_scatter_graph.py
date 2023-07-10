@@ -22,13 +22,15 @@ from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import ArrayOrNone, Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
-    VectorScatterGraphModel, build_model_config)
+    VectorScatterGraphModel, build_graph_config, build_model_config)
 from karabogui import icons
 from karabogui.binding.api import (
     PropertyProxy, VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.graph.common.toolbar.widgets import create_button
 from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
+from karabogui.graph.plots.dialogs.data_analysis import DataAnalysisDialog
 
 MIN_POINT_SIZE = 0.1
 MAX_POINT_SIZE = 10.0
@@ -52,7 +54,7 @@ class DisplayVectorScatterGraph(BaseBindingController):
     def create_widget(self, parent):
         widget = KaraboPlotView(parent=parent)
         widget.add_cross_target()
-        widget.add_toolbar()
+        toolbar = widget.add_toolbar()
         widget.enable_export()
         widget.stateChanged.connect(self._change_model)
 
@@ -67,10 +69,21 @@ class DisplayVectorScatterGraph(BaseBindingController):
         point_size_action.triggered.connect(self._configure_point_size)
         point_size_action.setIcon(icons.scatter)
         widget.addAction(point_size_action)
+        button = create_button(
+            icon=icons.data_analysis, checkable=False, tooltip="Data Analysis",
+            on_clicked=self.show_data_analysis_dialog)
+        toolbar.add_button(button)
 
         return widget
 
     # ----------------------------------------------------------------
+
+    def show_data_analysis_dialog(self):
+        config = build_graph_config(self.model)
+        dialog = DataAnalysisDialog(
+            proxies=self.proxies[1:], config=config, baseline_proxy=self.proxy,
+            parent=self.widget)
+        dialog.show()
 
     def add_proxy(self, proxy):
         if self._y_proxy is None:
