@@ -24,8 +24,12 @@
 
 #include "RunTimeSchemaAttributes_Test.hh"
 
+using namespace karabo::core;
+using namespace karabo::net;
+using namespace karabo::util;
 
-USING_KARABO_NAMESPACES;
+using boost::placeholders::_1;
+using boost::placeholders::_2;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(RunTimeSchemaAttributes_Test);
 

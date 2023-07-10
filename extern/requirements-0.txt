@@ -1,5 +1,5 @@
 # requirements in this file might be forced to compile from sources by specifying the --no-binary :all:.
-# for many packages this will not be required, nor preferable. Such packages should hence not be 
+# for many packages this will not be required, nor preferable. Such packages should hence not be
 # added to this file.
 
 numpy==1.21.4

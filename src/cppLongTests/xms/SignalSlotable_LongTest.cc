@@ -38,6 +38,8 @@
 using namespace karabo::util;
 using namespace karabo::xms;
 
+using boost::placeholders::_1;
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_LongTest);
 
