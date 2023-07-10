@@ -51,7 +51,7 @@ message(STATUS "NumPy include dirs = '${Python3_NumPy_INCLUDE_DIRS}'")
 # For this project, we always want to find the Boost installation in the
 # CMAKE_PREFIX_PATH tree.
 set(Boost_NO_BOOST_CMAKE 1)
-find_package(Boost 1.68 EXACT REQUIRED COMPONENTS python38)
+find_package(Boost 1.82 EXACT REQUIRED COMPONENTS python38)
 
 file(GLOB_RECURSE KARATHON_SRCS CONFIGURE_DEPENDS "*.cc")
 
