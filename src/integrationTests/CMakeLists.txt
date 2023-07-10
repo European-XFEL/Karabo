@@ -65,7 +65,6 @@ target_link_libraries(
 
 
 set(INTEGRATION_TEST_TARGETS
-    alarmServiceIntegrTestRunner
     dataLoggingIntegrTestRunner
     deviceIntegrTestRunner
     deviceLockingIntegrTestRunner
@@ -77,12 +76,6 @@ set(INTEGRATION_TEST_TARGETS
     timingIntegrTestRunner
 )
 
-set(alarmServiceIntegrTestRunner_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/AlarmService_Test.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/AlarmTesterDevice.cc
-    $<TARGET_OBJECTS:TCP_ADAPTER>
-    $<TARGET_OBJECTS:INTEGRATION_RUNNER>
-)
 
 set(dataLoggingIntegrTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseLogging_Test.cc

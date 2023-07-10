@@ -942,11 +942,6 @@ namespace karabo {
              */
             void onRequestedAttributeUpdate(WeakChannelPointer channel, const karabo::util::Hash& reply);
 
-            /**
-             * Checks if an instance at instanceId is an alarmService and connects to its signals if it is.
-             * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
-             */
-            void connectPotentialAlarmService(const karabo::util::Hash& topologyEntry);
 
             /**
              * Returns the instance type and instance id from a topology entry
