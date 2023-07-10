@@ -15,12 +15,13 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
+from numpy.testing import assert_array_equal
 
 from karabo.native import Configurable, VectorFloat
 from karabogui.graph.plots.dialogs.data_analysis import DataAnalysisDialog
 from karabogui.testing import get_class_property_proxy
 
-config = {'half_samples': 6000, 'roi_items': [], 'roi_tool': 0, 'offset': 0.0,
+CONFIG = {'half_samples': 6000, 'roi_items': [], 'roi_tool': 0, 'offset': 0.0,
           'step': 1.0, 'x_grid': True, 'y_grid': True, 'title': '',
           'background': 'transparent', 'x_label': '',
           'y_label': 'vectorProperty', 'x_units': '', 'y_units': '',
@@ -32,6 +33,7 @@ config = {'half_samples': 6000, 'roi_items': [], 'roi_tool': 0, 'offset': 0.0,
 class Object(Configurable):
     prop = VectorFloat(defaultValue=[1.1, 2.0, 3.2, 4.5])
     prop2 = VectorFloat()
+    baseline = VectorFloat()
 
 
 def test_fetch_data(gui_app):
@@ -41,7 +43,7 @@ def test_fetch_data(gui_app):
     proxy.value = value
 
     dialog = DataAnalysisDialog(
-        proxies=[proxy], config=config, parent=None)
+        proxies=[proxy], config=CONFIG, parent=None)
 
     # Initial values
     combo = dialog.fit_options_combobox
@@ -52,6 +54,8 @@ def test_fetch_data(gui_app):
     x, y = dialog.data_curve.getData()
     assert all(y == np.array(value))
     assert dialog.result_label.text() == ""
+    assert list(dialog.x_values) == list(range(len(proxy.value)))
+    assert_array_equal(dialog.y_values, proxy.value)
 
     # Update from the parent plot.
     value = [10, 20, 30]
@@ -74,7 +78,7 @@ def test_multiple_proxies(gui_app, mocker):
     additional_proxy.value = [0.1, 0.2, 0.3, 0.4]
 
     dialog = DataAnalysisDialog(
-        proxies=[proxy, additional_proxy], config=config, parent=None)
+        proxies=[proxy, additional_proxy], config=CONFIG, parent=None)
     combo_box = dialog.property_comboBox
     assert combo_box.currentText() == proxy.key
     assert combo_box.itemText(0) == proxy.key
@@ -99,7 +103,7 @@ def test_sub_region_roi(gui_app):
     additional_proxy.value = [0.1, 0.2, 0.3, 0.4]
 
     dialog = DataAnalysisDialog(
-        proxies=[proxy, additional_proxy], config=config, parent=None)
+        proxies=[proxy, additional_proxy], config=CONFIG, parent=None)
     # Before fitting
     assert not dialog.show_line_roi_button.isChecked()
     assert dialog.left_line
@@ -152,7 +156,7 @@ def test_sub_region_value_type(gui_app):
     proxy.value = value
 
     dialog = DataAnalysisDialog(
-        proxies=[proxy], config=config, parent=None)
+        proxies=[proxy], config=CONFIG, parent=None)
     fit_option = dialog.fit_options_combobox
     fit_option.setCurrentIndex(2)
     assert fit_option.currentText() == "Linear function"
@@ -161,3 +165,36 @@ def test_sub_region_value_type(gui_app):
 
     dialog.show_line_roi_button.setChecked(True)
     dialog.fit_button.click()
+
+
+def test_baseline_proxy(gui_app):
+    """Make sure the X-axis values are from baseline_proxy"""
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    value = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
+    proxy.value = value
+
+    baseline = get_class_property_proxy(schema, "baseline")
+    baseline.value = [70, 60, 50, 40, 30, 20, 10]
+
+    dialog = DataAnalysisDialog(
+        proxies=[proxy], config=CONFIG, baseline_proxy=baseline)
+    assert_array_equal(dialog.x_values, baseline.value)
+    assert_array_equal(dialog.y_values, proxy.value)
+
+    # Make sure the config options are affected only when generating
+    # baseline and not with baseline_proxy.
+    config = CONFIG.copy()
+    config["step"] = 1.5
+    config["offset"] = 3.0
+    dialog = DataAnalysisDialog(
+        proxies=[proxy], config=CONFIG, baseline_proxy=baseline)
+    assert_array_equal(dialog.x_values, baseline.value)
+    assert_array_equal(dialog.y_values, proxy.value)
+
+    dialog = DataAnalysisDialog(
+        proxies=[proxy], config=config, baseline_proxy=None)
+    expected = np.array([3.0, 4.5, 6.0, 7.5, 9.0, 10.5, 12])
+    assert_array_equal(dialog.x_values, expected)
+
+    assert np.isclose(dialog._min_width, 1.425, rtol=0.005)
