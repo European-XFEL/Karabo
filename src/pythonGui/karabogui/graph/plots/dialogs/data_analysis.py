@@ -62,12 +62,29 @@ class DataAnalysisDialog(QDialog):
         - Linear function.
     """
 
-    def __init__(self, proxies, config=None, parent=None):
+    def __init__(
+            self, proxies, config=None, baseline_proxy=None,
+            parent=None):
+        """
+        Define the optional baseline_proxy to set the values on X-axis,
+        otherwise they are generated based on Y-axis values.
+
+        :param proxies: Proxies to be plotted on Y-axis
+        :type proxies: List[PropertyProxy]
+        :param config: Graph Configuration
+        :type config: Dict
+        :param baseline_proxy: Optional Values to be set on X-axis
+        :type baseline_proxy: None or PropertyProxy
+        :param parent: Parent Widget
+        :type parent: QObject
+        """
         super().__init__(parent)
+
         ui_path = Path(__file__).parent / "data_analysis.ui"
         uic.loadUi(ui_path, self)
         self.config = config
         self.x_values = self.y_values = []
+        self.baseline_proxy = baseline_proxy
 
         self._plot_widget = KaraboPlotView()
         self._plot_widget.restore(config)
@@ -89,8 +106,9 @@ class DataAnalysisDialog(QDialog):
         self.update_data_button.clicked.connect(self.update_data)
 
         self.set_up_property_combobox(proxies)
-        self.proxy = proxies[0]
-        self.setWindowTitle(f"Data Analysis Dialog|{self.proxy.key}")
+        self.proxy = proxies[0] if proxies else None
+        title = self.proxy.key if proxies else self.baseline_proxy.key
+        self.setWindowTitle(f"Data Analysis Dialog|{title}")
         self.update_data()
 
         self._create_vertical_line_roi()
@@ -137,8 +155,8 @@ class DataAnalysisDialog(QDialog):
         """
         if not len(self.x_values) or not len(self.y_values):
             return
-        left = self.x_values[0]
-        right = self.x_values[-1]
+        left = min(self.x_values)
+        right = max(self.x_values)
         min_width = self._min_width
         self.left_line.setBounds((left, right - min_width))
         self.right_line.setBounds((left + min_width, right))
@@ -156,21 +174,26 @@ class DataAnalysisDialog(QDialog):
 
     @Slot()
     def on_left_line_moved(self):
+        if not len(self.x_values):
+            return
         left_pos = self.left_line.pos().x()
         self.left_pos_line_edit.setText(float_to_string(left_pos))
-        bounds = (left_pos + self._min_width, self.x_values[-1])
+        bounds = (left_pos + self._min_width, max(self.x_values))
         self.right_line.setBounds(bounds)
 
     @Slot()
     def on_right_line_moved(self):
+        if not len(self.x_values):
+            return
         right_pos = self.right_line.pos().x()
         self.right_pos_line_edit.setText(float_to_string(right_pos))
-        bounds = (self.x_values[0], right_pos - self._min_width)
+        bounds = (min(self.x_values), right_pos - self._min_width)
         self.left_line.setBounds(bounds)
 
     @property
     def _min_width(self):
-        return (self.x_values[-1] - self.x_values[0] + 1) / len(self.x_values)
+        return (max(self.x_values) - min(self.x_values) + 1) / len(
+            self.x_values)
 
     def set_up_property_combobox(self, proxies: list):
         """
@@ -207,14 +230,26 @@ class DataAnalysisDialog(QDialog):
 
     def update_data(self):
         """Fetch the latest data points from the parent plot"""
+        if self.proxy is None:
+            return
         value, _ = get_array_data(self.proxy)
         if value is None:
             return
         self.y_values = value
-        offset = self.config.get("offset", 0.0)
-        step = self.config.get("step", 1.0)
-        self.x_values = generate_baseline(self.y_values, offset=offset,
-                                          step=step)
+
+        if self.baseline_proxy is None:
+            offset = self.config.get("offset", 0.0)
+            step = self.config.get("step", 1.0)
+            self.x_values = generate_baseline(
+                self.y_values, offset=offset, step=step)
+        else:
+            value, _ = get_array_data(self.baseline_proxy)
+            if value is None:
+                return
+            self.x_values = value
+
+        if len(self.x_values) != len(self.y_values):
+            return
         self.data_curve.setData(self.x_values, self.y_values)
         if self.auto_update_checkbox.isChecked():
             self.fit()
