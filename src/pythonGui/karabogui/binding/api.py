@@ -32,9 +32,9 @@ from .binding_types import (
 from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
-    apply_project_configuration, extract_attribute_modifications,
-    extract_configuration, extract_edits, extract_init_configuration,
-    extract_online_edits, extract_sparse_configurations)
+    apply_project_configuration, extract_configuration, extract_edits,
+    extract_init_configuration, extract_online_edits,
+    extract_sparse_configurations)
 from .enums import (
     NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES,
     ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus)
