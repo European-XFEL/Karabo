@@ -33,8 +33,7 @@ from karabogui import messagebox
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import Priority, executeLater
 from karabogui.binding.api import (
-    ProxyStatus, apply_fast_data, extract_attribute_modifications,
-    extract_configuration)
+    ProxyStatus, apply_fast_data, extract_configuration)
 from karabogui.const import KARABO_CLIENT_ID
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
@@ -159,14 +158,8 @@ class Manager(QObject):
             for key in readonly_paths:
                 config.erase(key)
 
-            # Compute a runtime schema from the project device proxy and an
-            # unmodified copy of the device class schema.
-            attr_updates = extract_attribute_modifications(
-                schema, proxy.binding)
-
             # Send signal to network
-            get_network().onInitDevice(serverId, classId, deviceId, config,
-                                       attrUpdates=attr_updates)
+            get_network().onInitDevice(serverId, classId, deviceId, config)
 
         if len(proxy.binding.value) > 0:
             _instantiate_device()

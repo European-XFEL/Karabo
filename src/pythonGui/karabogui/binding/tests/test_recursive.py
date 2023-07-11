@@ -17,13 +17,11 @@
 from pytest import raises as assert_raises
 from traits.api import TraitError
 
-from karabo.common.api import KARABO_WARN_HIGH
 from karabo.native import Hash
 from karabogui.binding.api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
     Int32Binding, ListOfNodesBinding, NodeBinding, apply_configuration,
-    apply_default_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration)
+    apply_default_configuration, build_binding, extract_configuration)
 from karabogui.binding.recursive import duplicate_binding
 from karabogui.testing import get_recursive_schema
 
@@ -164,29 +162,3 @@ def test_extract_configuration():
     assert 'lon' in ret
     assert ret['con'] == Hash('_NodeTwo', Hash('one', 'Second'))
     assert ret['lon'] == [Hash('_NodeOne', Hash('zero', 'First'))]
-
-
-def test_extract_attribute_modifications():
-    schema = get_recursive_schema()
-    binding = build_binding(schema)
-
-    apply_default_configuration(binding)
-    ret = extract_attribute_modifications(schema, binding)
-    # no changes
-    assert ret is None
-
-    # Change warnHigh to _NodeOne
-    # (for testing purposes it doesn't matter that this is nonsense)
-    binding.value.con.attributes[KARABO_WARN_HIGH] = '_NodeOne'
-    ret = extract_attribute_modifications(schema, binding)
-    assert ret[0] == Hash('path', 'con',
-                          'attribute', KARABO_WARN_HIGH,
-                          'value', '_NodeOne')
-
-    binding = build_binding(schema)
-    binding.value.lon.attributes[KARABO_WARN_HIGH] = ['_NodeOne',
-                                                      '_NodeTwo']
-    ret = extract_attribute_modifications(schema, binding)
-    assert ret[0] == Hash('path', 'lon',
-                          'attribute', KARABO_WARN_HIGH,
-                          'value', ['_NodeOne', '_NodeTwo'])
