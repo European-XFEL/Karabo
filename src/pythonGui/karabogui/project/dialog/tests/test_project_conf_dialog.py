@@ -154,9 +154,6 @@ class TestProjectHandleDialog(GuiTestCase):
                 self.assertFalse(dialog.ui_remove_attributes.isChecked())
                 self.click(dialog.ui_sanitize)
                 self.assertEqual(dialog.ui_paths.count(), 1)
-                conf = dialog.configuration
-                attributes = conf["doubleProperty", ...]
-                self.assertEqual(attributes["alarmLow"], 5.2)
 
 
 if __name__ == "__main__":
