@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from unittest.mock import Mock
 
-from karabo.common.api import KARABO_WARN_HIGH, InstanceStatus
+from karabo.common.api import InstanceStatus
 from karabo.native import Configurable, Hash, String
 from karabogui.binding.api import ProxyStatus
 from karabogui.singletons.mediator import Mediator
@@ -62,11 +62,8 @@ def test_project_device():
         assert device._offline_proxy.binding.value.val.value == 'foo'
 
         config = Hash('val', 'bar')
-        config['val', KARABO_WARN_HIGH] = 42
         device.set_project_config_hash(config)
         assert device._offline_proxy.binding.value.val.value == 'bar'
-        extracted_config = device.get_user_edited_config_hash()
-        assert extracted_config['val', KARABO_WARN_HIGH] == 42
 
         device.start_monitoring()
         assert device._online_proxy._monitor_count == 1
