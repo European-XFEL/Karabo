@@ -21,19 +21,18 @@ from glob import glob
 import numpy as np
 from traits.api import Undefined
 
-from karabo.common.api import KARABO_ALARM_LOW, State
+from karabo.common.api import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Int32,
     Schema, String, Timestamp, VectorHash, decodeBinary)
 from karabogui.testing import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
-    get_simple_schema, get_vectorattr_schema)
+    get_simple_schema)
 
 from ..api import (
     apply_configuration, apply_default_configuration, apply_fast_data,
-    apply_project_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration, extract_edits,
-    extract_init_configuration, extract_online_edits)
+    apply_project_configuration, build_binding, extract_configuration,
+    extract_edits, extract_init_configuration, extract_online_edits)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -201,15 +200,6 @@ def test_apply_project_configuration():
         apply_project_configuration(config, binding)
     assert not binding.value.a.value
 
-    config = Hash('e', 0.5)
-    # change one item in attributes
-    attr = {KARABO_ALARM_LOW: 0.0}
-    config['e', ...] = attr
-    old_attrs = {k: v for k, v in binding.value.e.attributes.items()}
-    apply_project_configuration(config, binding)
-    new_attrs = {k: v for k, v in binding.value.e.attributes.items()}
-    assert _dict_diff(old_attrs, new_attrs) == attr
-
     config = Hash('not', 'exist')
     apply_project_configuration(config, binding)
     # Non exist property is ignored
@@ -255,7 +245,6 @@ def test_extract_edit():
     # 'a' has default value == True, give 'e' an alarm low attribute
     # XXX: j1 will always be extracted
     config = Hash('a', False, 'e', 0.0, 'j1', [])
-    config['e', ...] = {KARABO_ALARM_LOW: 42.0}
     apply_project_configuration(config, binding)
 
     extracted = extract_edits(schema, binding)
@@ -322,22 +311,6 @@ def test_extract_online_devicenode():
     assert extracted == config
 
 
-def test_attribute_modification():
-    schema = get_all_props_schema()
-    binding = build_binding(schema)
-
-    modifications = extract_attribute_modifications(schema, binding)
-    assert modifications is None
-
-    attributes = binding.value.h.attributes
-    attributes[KARABO_ALARM_LOW] = 42
-    modifications = extract_attribute_modifications(schema, binding)
-    assert len(modifications) == 1
-    assert modifications[0] == Hash('path', 'h',
-                                    'attribute', KARABO_ALARM_LOW,
-                                    'value', 42)
-
-
 def test_property_attributes():
     schema = get_all_props_schema()
     binding = build_binding(schema)
@@ -355,22 +328,6 @@ def test_property_attributes():
 
     assert binding.value.k1.is_allowed(State.INTERLOCKED)
     assert binding.value.k1.is_allowed(State.ACTIVE.value)
-
-
-def test_extract_attribute_modifications_vectorattr():
-    schema = get_vectorattr_schema()
-    binding = build_binding(schema)
-
-    apply_default_configuration(binding)
-    ret = extract_attribute_modifications(schema, binding)
-    assert ret is None
-
-    # Change alarmLow from [True, True] to [False, False]
-    newv = np.array([False, False])
-    binding.value.vec.attributes[KARABO_ALARM_LOW] = newv
-    ret = extract_attribute_modifications(schema, binding)
-    # XXX: middlelayer Hash can't compare np array either
-    assert all(ret[0]['value'] == newv)
 
 
 def test_extract_reconfigurable_configuration():
@@ -391,26 +348,21 @@ def test_extract_reconfigurable_configuration():
     )
     config["floatProperty", ...].update({"alarmLow": 2})
 
-    # DaqPolicy runattr check
-    config["boolProperty", ...].update({"daqPolicy": -1})
-    config["node.foo", ...].update({"daqPolicy": 1})
-
     extracted = extract_init_configuration(binding, config)
     assert "boolProperty" in extracted
     bool_attrs = extracted["boolProperty", ...]
     assert "daqPolicy" not in bool_attrs
     assert "doubleProperty" in extracted
     assert "falseProperty" not in extracted
-    assert "floatProperty" in extracted
+    assert "floatProperty" not in extracted
     assert "intProperty" not in extracted
     assert "stringProperty" in extracted
     assert "table" in extracted
     assert "node.charlie" not in extracted
     assert "node.foo" in extracted
     foo_attr = extracted["node.foo", ...]
-    assert "daqPolicy" not in foo_attr
+    # attributes belong to schema and are not considered for configuration
+    assert not foo_attr
     assert "node.bar" not in extracted
-    assert "floatProperty" in extracted
-    assert extracted["floatProperty", "alarmLow"] == 2
     # Assignment.INTERNAL property not considered!
     assert "internal" not in extracted
