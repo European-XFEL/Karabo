@@ -169,8 +169,7 @@ def save_configuration_to_file(device_proxy, parent=None):
                               parent=parent)
         return
 
-    config = Hash(class_id, extract_configuration(device_proxy.binding,
-                                                  include_attributes=True))
+    config = Hash(class_id, extract_configuration(device_proxy.binding))
 
     # Save configuration to file
     with open(filename, 'w') as fp:
