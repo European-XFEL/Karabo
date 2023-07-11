@@ -242,7 +242,12 @@ stages:
       - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
       - "src/pythonKarabo/karabo/influxdb/**/*"
   except:
-    - schedules
+    refs:
+      - schedules
+    changes:
+      - extern/**/*  # changes in extern are covered by deps_tests
+   
+    
 
 .cpp_unit_tests: &cpp-unit-tests
   <<: *test
@@ -252,6 +257,9 @@ stages:
     changes:
       - "src/karabo/**/*"
   <<: *except-main
+  except:
+    changes:
+      - extern/**/*  # changes in extern are covered by deps_tests
 
 .python_unit_tests: &python-unit-tests
   <<: *test
@@ -263,6 +271,9 @@ stages:
       - "src/karabo/**/*" # bound api depends on the c++ build
       - "src/pythonKarabo/**/*"
   <<: *except-main
+  except:
+    changes:
+      - extern/**/*  # changes in extern are covered by deps_tests
 
 # GUI tests to be executed in a Conda environment
 .gui_unit_tests: &gui-unit-tests
@@ -291,8 +302,12 @@ stages:
     refs:
       - merge_requests
     changes:
-      - "extern/**/*"
-
+      - "extern/**/*" # "deps_tests" also runs unit and integration tests.
+                      # Those tests would use the wrong dependencies package
+                      # when changes to "extern" happen and are thus surpressed
+                      # in ".cpp_unit_tests", ".python_unit_tests", and 
+                      # ".integration_tests" if there are  changes at any depth
+                      # under "extern".
 .long_tests: &long-tests
   <<: *test
   only:
