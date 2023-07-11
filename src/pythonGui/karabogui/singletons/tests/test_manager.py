@@ -321,8 +321,7 @@ class TestManager(GuiTestCase):
                 TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID,
                 # The configuration will be stripped of all the keys
                 # that are read-only or not in the schema
-                Hash('init_prop', 42), attrUpdates=None
-            )
+                Hash('init_prop', 42))
 
     def test_init_device_empty_config(self):
         network, topology = Mock(), Mock()
@@ -340,7 +339,7 @@ class TestManager(GuiTestCase):
                                                    TEST_CLASS_ID)
             network.onInitDevice.assert_called_with(
                 TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID,
-                Hash(), attrUpdates=None)
+                Hash())
 
     def test_init_device_badschema(self):
         network, topology = Mock(), Mock()
