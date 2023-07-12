@@ -18,11 +18,12 @@ from unittest import TestCase, main, skip
 
 import numpy as np
 from numpy import e, pi
-from pint import DimensionalityError
+from pint import DimensionalityError, __version__ as pint_version
 
 from karabo.native.data import MetricPrefix, Timestamp, Unit
 from karabo.native.schema import (
     Int32, QuantityValue as QV, VectorComplexDouble, VectorDouble, VectorInt32)
+from packaging import version
 
 
 def _is_numpy_old():
@@ -493,13 +494,14 @@ class Tests(TestCase):
     def test_positive(self):
         """
         Numerical positive, element-wise.
-
-        New in version 1.13.0.
-
-        XXX: Returns numpy.array
         """
-        with self.assertRaises(NotImplementedError):
+        # this was introduced only in numpy 1.13.0
+        if version.parse(pint_version) >= version.parse("0.21.0"):
             self.assertUnaryUfunc(np.positive, self.v1, self.v1)
+        # else should throw a not implemented error
+        else:
+            with self.assertRaises(NotImplementedError):
+                self.assertUnaryUfunc(np.positive, self.v1, self.v1)
 
     def test_power(self):
         """
