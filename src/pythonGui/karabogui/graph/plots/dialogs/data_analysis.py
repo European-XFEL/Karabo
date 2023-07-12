@@ -62,9 +62,7 @@ class DataAnalysisDialog(QDialog):
         - Linear function.
     """
 
-    def __init__(
-            self, proxies, config=None, baseline_proxy=None,
-            parent=None):
+    def __init__(self, proxies, config=None, baseline_proxy=None, parent=None):
         """
         Define the optional baseline_proxy to set the values on X-axis,
         otherwise they are generated based on Y-axis values.
@@ -79,7 +77,6 @@ class DataAnalysisDialog(QDialog):
         :type parent: QObject
         """
         super().__init__(parent)
-
         ui_path = Path(__file__).parent / "data_analysis.ui"
         uic.loadUi(ui_path, self)
         self.config = config
@@ -111,7 +108,7 @@ class DataAnalysisDialog(QDialog):
         self.setWindowTitle(f"Data Analysis Dialog|{title}")
         self.update_data()
 
-        self._create_vertical_line_roi()
+        self.setup_roi()
         self.set_line_pos()
 
         self.show_line_roi_button = create_button(
@@ -127,7 +124,7 @@ class DataAnalysisDialog(QDialog):
         self.on_left_line_moved()
         self.on_right_line_moved()
 
-    def _create_vertical_line_roi(self):
+    def setup_roi(self):
         """Create two vertical lines to define the selection. By default,
         both are hidden"""
         pen = make_pen('o', alpha=255, width=2)
@@ -259,8 +256,9 @@ class DataAnalysisDialog(QDialog):
     @Slot()
     def fit(self):
         """Fit data with the selected function"""
-        if self.x_values is None or self.y_values is None:
+        if not len(self.x_values) or not len(self.y_values):
             return
+
         x_values = self.x_values
         y_values = self.y_values
         if self.show_line_roi_button.isChecked():
