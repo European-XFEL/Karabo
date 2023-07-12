@@ -558,7 +558,6 @@ install_from_deps() {
         # install everything else, these will also use cache if possible
         # (automatically determined by pip)
         safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
-        safeRunCommandQuiet "$pip_install_cmd -r requirements-2.txt"
         echo "pip-requirements" >> $marker_path
     fi
 
