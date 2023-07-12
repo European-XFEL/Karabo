@@ -1194,7 +1194,9 @@ class Tests(TestCase):
                                   "number", 5, "counter", 2,
                                   "vectorString", ["Itchy", "Burns"])]))
         # numpy.delete is not supported by pint
-        with pytest.raises(TypeError):
+        # later pint version will raise a RecursionError,
+        # older ones a TypeError
+        with pytest.raises((RecursionError, TypeError)):
             a.table.pop(QuantityValue(numpy.int32(0)))
 
     def test_overwrite(self):
