@@ -94,6 +94,8 @@ class AmqpBroker(Broker):
         self.exit_event = asyncio.Event()
         self.heartbeat_task = None
         self.subscribe_lock = Lock()
+        # Flag to indicate when a channel is about to be closed
+        self.shutdown_channel = False
 
     async def subscribe_default(self):
         """Subscribe to 'default' exchanges to allow a communication
@@ -436,6 +438,9 @@ class AmqpBroker(Broker):
 
     def close_channel(self, cb):
         """Close channel callback after slotKillDevice"""
+        if self.shutdown_channel:
+            return
+        self.shutdown_channel = True
 
         async def closing_channel():
             if self.channel is not None:
