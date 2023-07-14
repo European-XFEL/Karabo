@@ -27,7 +27,7 @@ from karabogui import icons
 from karabogui.controllers.api import get_array_data
 from karabogui.graph.common.api import create_button, make_pen
 from karabogui.graph.common.fitting import (
-    gaussian_fit, linear_function_fit, normal_cdf)
+    gaussian_fit, linear_function_fit, normal_cdf, sqsech)
 from karabogui.graph.common.formatting import (
     table_body, table_header, table_row)
 from karabogui.graph.common.utils import float_to_string
@@ -42,6 +42,9 @@ FWHM_COEFF = 2 * np.sqrt(2 * np.log(2))
 FIT_FUNCTION_MAP = {
     "Gaussian": {
         "func": gaussian_fit, "param_names": ["Amplitude", "Max Pos", "fwhm"]},
+    "Sech Square": {
+        "func": sqsech, "param_names": ["Amplitude", "Max Pos", "Center",
+                                        "Sigma"]},
     "Step function (CDF)": {
         "func": normal_cdf, "param_names": ["Sigma"]},
     "Linear function": {
