@@ -306,6 +306,17 @@ namespace karathon {
     }
 
 
+    bp::object InputChannelWrap::getConnectionStatusPy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
+        typedef std::unordered_map<std::string, karabo::net::ConnectionStatus> ConnStatusMap;
+        ConnStatusMap csmap = self->getConnectionStatus();
+        bp::dict d;
+        for (auto it = csmap.begin(); it != csmap.end(); ++it) {
+            d[it->first] = bp::object(it->second);
+        }
+        return bp::object(d);
+    }
+
+
     bp::object InputChannelWrap::getConnectedOutputChannelsPy(
           const boost::shared_ptr<karabo::xms::InputChannel>& self) {
         typedef std::map<std::string, karabo::util::Hash> OutputChannels;
@@ -329,10 +340,30 @@ namespace karathon {
     }
 
 
+    bp::object InputChannelWrap::connectSyncPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
+                                               const karabo::util::Hash& outputChannelInfo) {
+        std::string msg;
+        {
+            ScopedGILRelease nogil;
+            auto promi = std::make_shared<std::promise<boost::system::error_code>>();
+            auto futur = promi->get_future();
+            self->connect(outputChannelInfo, [promi](const boost::system::error_code& e) { promi->set_value(e); });
+            auto e = futur.get();
+            if (e.value()) msg = e.message();
+        }
+        return bp::object(msg);
+    }
+
+
     void InputChannelWrap::connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
-                                     const karabo::util::Hash& outputChannelInfo) {
+                                     const karabo::util::Hash& outputChannelInfo, const bp::object& handler) {
+        auto wrappedHandler = HandlerWrap<const std::string&>(handler, "Connect");
         ScopedGILRelease nogil;
-        self->connect(outputChannelInfo);
+        self->connect(outputChannelInfo, [wrappedHandler](const boost::system::error_code& e) {
+            std::string msg;
+            if (e.value()) msg = e.message();
+            wrappedHandler(msg);
+        });
     }
 
 
@@ -344,7 +375,7 @@ namespace karathon {
 
 
     bp::object InputChannelWrap::getMetaData(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
-        auto ret = boost::make_shared<std::vector<karabo::util::Hash> >();
+        auto ret = boost::make_shared<std::vector<karabo::util::Hash>>();
         {
             ScopedGILRelease nogil;
             std::vector<karabo::xms::InputChannel::MetaData> md = self->getMetaData();
@@ -417,7 +448,7 @@ void exportPyXmsInputOutputChannel() {
     }
 
     {
-        bp::class_<karabo::xms::ImageData, boost::shared_ptr<karabo::xms::ImageData> >("ImageData", bp::init<>())
+        bp::class_<karabo::xms::ImageData, boost::shared_ptr<karabo::xms::ImageData>>("ImageData", bp::init<>())
 
               .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5, bp::default_call_policies(),
                                                     (bp::arg("array"), bp::arg("dims") = karabo::util::Dims(),
@@ -577,6 +608,12 @@ void exportPyXmsInputOutputChannel() {
 
               .def("getInformation", &karabo::xms::OutputChannel::getInformation)
 
+              .def("hasRegisteredCopyInputChannel", &karabo::xms::OutputChannel::hasRegisteredCopyInputChannel,
+                   (bp::arg("instanceId")))
+
+              .def("hasRegisteredSharedInputChannel", &karabo::xms::OutputChannel::hasRegisteredSharedInputChannel,
+                   (bp::arg("instanceId")))
+
               .def("write", &karathon::OutputChannelWrap().writePy,
                    (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData") = false),
                    "data - a Hash with the data to write\n"
@@ -664,6 +701,8 @@ void exportPyXmsInputOutputChannel() {
                    " * the output channel string like '<deviceId>:<outChannel>'\n"
                    " * the ConnectionStatus")
 
+              .def("getConnectionStatus", &karathon::InputChannelWrap().getConnectionStatusPy)
+
               .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannelsPy)
 
               .def("read", &karathon::InputChannelWrap().readPy, (bp::arg("idx")))
@@ -672,7 +711,10 @@ void exportPyXmsInputOutputChannel() {
 
               .def("getMinimumNumberOfData", &karabo::xms::InputChannel::getMinimumNumberOfData)
 
-              .def("connect", &karathon::InputChannelWrap().connectPy, (bp::arg("outputChannelInfo")))
+              .def("connectSync", &karathon::InputChannelWrap().connectSyncPy, (bp::arg("outputChannelInfo")))
+
+              .def("connect", &karathon::InputChannelWrap().connectPy,
+                   (bp::arg("outputChannelInfo"), bp::arg("handler") = bp::object()))
 
               .def("disconnect", &karathon::InputChannelWrap().disconnectPy, (bp::arg("outputChannelInfo")))
 

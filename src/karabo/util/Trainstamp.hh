@@ -74,13 +74,9 @@ namespace karabo {
 
             virtual ~Trainstamp();
 
-            inline bool operator==(const Trainstamp& other) const {
-                return m_trainId == other.m_trainId;
-            }
+            friend bool operator==(const Trainstamp& lhs, const Trainstamp& rhs);
 
-            inline bool operator!=(const Trainstamp& other) const {
-                return !(*this == other);
-            }
+            friend bool operator!=(const Trainstamp& lhs, const Trainstamp& rhs);
 
            private:
         };
