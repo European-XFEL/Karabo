@@ -235,14 +235,27 @@ namespace karabind {
         std::vector<std::string> fromPySequenceToVectorString(const py::object& o) {
             std::vector<std::string> vs;
             if (py::isinstance<py::str>(o)) {
-                vs.push_back(o.cast<std::string>());
-                return vs;
-            }
-            for (const auto& item : o) {
-                if (!py::isinstance<py::str>(item)) {
-                    throw KARABO_CAST_EXCEPTION("Sequence element is not of 'str' type");
+                // Align with karathon: py::str -> list of characters
+                const auto& s = o.cast<std::string>();
+                vs.reserve(s.size());
+                for (size_t i = 0; i < s.size(); ++i) vs.push_back(std::string(1, s.at(i)));
+            } else if (py::isinstance<py::dict>(o)) {
+                py::dict dict = o.cast<py::dict>();
+                for (auto item : dict) {
+                    if (!py::isinstance<py::str>(item.first)) {
+                        throw KARABO_CAST_EXCEPTION("Dict key is not of 'str' type");
+                    }
+                    vs.push_back(item.first.cast<std::string>());
                 }
-                vs.push_back(item.cast<std::string>());
+            } else if (py::isinstance<py::sequence>(o)) {
+                for (const auto& item : o) {
+                    if (!py::isinstance<py::str>(item)) {
+                        throw KARABO_CAST_EXCEPTION("Sequence element is not of 'str' type");
+                    }
+                    vs.push_back(item.cast<std::string>());
+                }
+            } else {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("This object is not tuple, list or dict");
             }
             return vs;
         }
