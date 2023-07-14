@@ -365,6 +365,7 @@ class TestStruct1:
             NODE_ELEMENT = karabind.NODE_ELEMENT
             TABLE_ELEMENT = karabind.TABLE_ELEMENT
             CHOICE_ELEMENT = karabind.CHOICE_ELEMENT
+            BYTEARRAY_ELEMENT = karabind.BYTEARRAY_ELEMENT
             Unit = karabind.Unit
             MetricPrefix = karabind.MetricPrefix
             EVERY_100MS = karabind.EVERY_100MS
@@ -391,6 +392,7 @@ class TestStruct1:
             NODE_ELEMENT = karathon.NODE_ELEMENT
             TABLE_ELEMENT = karathon.TABLE_ELEMENT
             CHOICE_ELEMENT = karathon.CHOICE_ELEMENT
+            BYTEARRAY_ELEMENT = karathon.BYTEARRAY_ELEMENT
             Unit = karathon.Unit
             MetricPrefix = karathon.MetricPrefix
             EVERY_100MS = karathon.EVERY_100MS
@@ -455,7 +457,40 @@ class TestStruct1:
             .assignmentInternal()
             .noDefaultValue()
             .commit(),
+        )
 
+        if BYTEARRAY_ELEMENT is karabind.BYTEARRAY_ELEMENT:
+            (
+                # Always readOnly(), by default as well
+                BYTEARRAY_ELEMENT(expected)
+                .key("rarray")
+                .alias("aliasReadArray")
+                .tags("software")
+                .displayedName("Example read array")
+                .description("Example of ByteArray for reading")
+                .userAccess()
+                .readOnly()
+                .initialValue(bytes('abcdef привет 012345', 'u8'))
+                .commit(),
+
+                BYTEARRAY_ELEMENT(expected)
+                .key("rarray1")
+                .displayedName("ReadArrayStr")
+                .adminAccess()
+                .readOnly()
+                .initialValue('hello world')
+                .commit(),
+
+                BYTEARRAY_ELEMENT(expected)
+                .key("rarray2")
+                .displayedName("ReadByteArray")
+                .observerAccess()
+                .readOnly()
+                .initialValue(bytearray('Tschüß!', 'u8'))
+                .commit(),
+            )
+
+        (
             INT64_ELEMENT(expected)
             .key("exampleKey5")
             .alias("exampleAlias5")
@@ -1286,6 +1321,8 @@ def test_getTags(Schema):
     assert schema.getTags("exampleKey4")[0] == "software"
     assert schema.getTags("exampleKey5")[0] == "h/w"
     assert schema.getTags("exampleKey5")[1] == "d.m.y"
+    if Schema is karabind.Schema:
+        assert schema.getTags("rarray")[0] == "software"
 
 
 @pytest.mark.parametrize(
@@ -1327,6 +1364,8 @@ def test_getsetAccessLevel(Schema, AccessLevel):
     assert sch.getRequiredAccessLevel('exampleKey10') == AccessLevel.USER
     # observerAccess in reconfigurable
     assert sch.getRequiredAccessLevel('exampleKey11') == AccessLevel.OBSERVER
+    if Schema is karabind.Schema:
+        assert sch.getRequiredAccessLevel('rarray') == AccessLevel.USER
 
 
 @pytest.mark.parametrize(
@@ -1374,6 +1413,8 @@ def test_getValueType(Schema, Types):
     assert schema.getValueType("exampleKey7b") == Types.VECTOR_UINT32
     assert schema.getValueType("exampleKey8") == Types.VECTOR_DOUBLE
     assert schema.getValueType("exampleKey9") == Types.VECTOR_STRING
+    if Schema is karabind.Schema:
+        assert schema.getValueType("rarray") == Types.BYTE_ARRAY
 
 
 @pytest.mark.parametrize(
@@ -1387,6 +1428,8 @@ def test_getAliasAsString(Schema):
     assert schema.getAliasAsString("exampleKey5") == "exampleAlias5"
     assert schema.getAliasAsString("exampleKey6") == "1193046,43724"
     assert schema.getAliasAsString("testPath") == "5"
+    if Schema is karabind.Schema:
+        assert schema.getAliasAsString("rarray") == "aliasReadArray"
 
 
 @pytest.mark.parametrize(
@@ -1401,6 +1444,8 @@ def test_keyHasAlias(Schema):
     assert schema.keyHasAlias("exampleKey5") is True
     assert schema.keyHasAlias("exampleKey6") is True
     assert schema.keyHasAlias("testPath") is True
+    if Schema is karabind.Schema:
+        assert schema.keyHasAlias("rarray") is True
 
 
 @pytest.mark.parametrize(
@@ -1415,6 +1460,8 @@ def test_aliasHasKey(Schema):
     assert schema.aliasHasKey([0x00123456, 0x0000aacc]) is True
     assert schema.aliasHasKey(7) is False
     assert schema.aliasHasKey(5) is True
+    if Schema is karabind.Schema:
+        assert schema.aliasHasKey("aliasReadArray") is True
 
 
 @pytest.mark.parametrize(
@@ -1428,6 +1475,8 @@ def test_getAliasFromKey(Schema):
     assert schema.getAliasFromKey("exampleKey5") == "exampleAlias5"
     assert schema.getAliasFromKey("exampleKey6") == [0x00123456, 0x0000aacc]
     assert schema.getAliasFromKey("testPath") == 5
+    if Schema is karabind.Schema:
+        assert schema.getAliasFromKey("rarray") == "aliasReadArray"
 
 
 @pytest.mark.parametrize(
@@ -1453,6 +1502,8 @@ def test_getKeyFromAlias(Schema):
     assert schema.getKeyFromAlias("exampleAlias5") == "exampleKey5"
     assert schema.getKeyFromAlias([0x00123456, 0x0000aacc]) == "exampleKey6"
     assert schema.getKeyFromAlias(5) == "testPath"
+    if Schema is karabind.Schema:
+        assert schema.getKeyFromAlias("aliasReadArray") == "rarray"
 
 
 @pytest.mark.parametrize(
@@ -1472,6 +1523,8 @@ def test_getAccessMode(Schema, AccessType):
     assert schema.getAccessMode("testPath") == AccessType.WRITE
     assert schema.getAccessMode("testPath2") == AccessType.READ
     assert schema.getAccessMode("testPath3") == AccessType.INIT
+    if Schema is karabind.Schema:
+        assert schema.getAccessMode("rarray") == AccessType.READ
 
 
 @pytest.mark.parametrize(
@@ -1516,6 +1569,9 @@ def test_getDescription(Schema):
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getDescription('exampleKey1') == "Example key 1 description"
+    if Schema is karabind.Schema:
+        assert schema.getDescription('rarray') == \
+            "Example of ByteArray for reading"
 
 
 @pytest.mark.parametrize(
@@ -1608,6 +1664,11 @@ def test_getDefaultValue(Schema, Types):
     # readOnly default specified by 'defaultValue'. not 'initialValue':
     assert schema.getDefaultValue("exampleKey5b") == 42
     assert schema.getDefaultValue("exampleKey7b") == [11, 22, 33]
+    if Schema is karabind.Schema:
+        assert schema.getDefaultValue("rarray") == \
+            b'abcdef \xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 012345'
+        assert schema.getDefaultValue("rarray1") == b'hello world'
+        assert schema.getDefaultValue("rarray2") == b'Tsch\xc3\xbc\xc3\x9f!'
 
 
 @pytest.mark.parametrize(

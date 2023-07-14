@@ -86,6 +86,8 @@ namespace karabind {
             NONE = karabo::util::Types::NONE, // CppNone type used during serialization/de-serialization
             VECTOR_NONE = karabo::util::Types::VECTOR_NONE,
 
+            BYTE_ARRAY = karabo::util::Types::BYTE_ARRAY,
+
             UNKNOWN = karabo::util::Types::UNKNOWN, // unknown type
             SIMPLE = karabo::util::Types::SIMPLE,
             SEQUENCE = karabo::util::Types::SEQUENCE,
@@ -174,6 +176,8 @@ namespace karabind {
                     return NONE;
                 case karabo::util::Types::VECTOR_NONE:
                     return VECTOR_NONE;
+                case karabo::util::Types::BYTE_ARRAY:
+                    return BYTE_ARRAY;
                 case karabo::util::Types::UNKNOWN:
                     return UNKNOWN;
                 case karabo::util::Types::SIMPLE:
@@ -267,6 +271,8 @@ namespace karabind {
                     return karabo::util::Types::NONE;
                 case VECTOR_NONE:
                     return karabo::util::Types::VECTOR_NONE;
+                case BYTE_ARRAY:
+                    return karabo::util::Types::BYTE_ARRAY;
                 case UNKNOWN:
                     return karabo::util::Types::UNKNOWN;
                 case SIMPLE:
