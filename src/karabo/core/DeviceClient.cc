@@ -75,7 +75,7 @@ namespace karabo {
             : m_internalSignalSlotable(),
               m_signalSlotable(),
               m_isShared(false),
-              m_internalTimeout(2000),
+              m_internalTimeout(3000),
               m_topologyInitialized(false),
               m_ageingTimer(karabo::net::EventLoop::getIOService()),
               m_getOlder(false) // Sic! To start aging in setAgeing below.
