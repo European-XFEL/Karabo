@@ -26,6 +26,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <karabo/xms/InputChannel.hh>
+
 #include "Wrapper.hh"
 
 
@@ -141,6 +143,29 @@ namespace karabind {
         void operator()(const std::vector<unsigned long long>& v1, const std::vector<unsigned long long>& v2) const;
     };
 
+
+    class InputChannelDataHandler
+        : public HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&> {
+       public:
+        InputChannelDataHandler(const py::object& handler, char const* const where)
+            : HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&>(handler, where) {}
+
+        void operator()(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) const {
+            py::gil_scoped_acquire gil;
+            try {
+                if (*m_handler) {
+                    // TODO: wrap MetaData to expose full interface, right now this makes it look like a Hash within
+                    // Python (Then one can get rid of InputChannelDataHandler and directly
+                    // use HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&>)
+                    (*m_handler)(data, *(reinterpret_cast<const karabo::util::Hash*>(&meta)));
+                }
+            } catch (py::error_already_set& e) {
+                detail::treatError_already_set(e, *m_handler, m_where); // from Wrapper.hh
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+    };
 } // namespace karabind
 
 #endif /* KARABIND_HANDLERWRAP_HH */
