@@ -160,6 +160,8 @@ namespace karabind {
 
         karabo::util::Types::ReferenceType castPyToAny(const py::object& operand, boost::any& a);
 
+        karabo::util::ByteArray copyPyToByteArray(const py::object& o);
+
         py::object castNDArrayToPy(const karabo::util::NDArray& nda);
 
         karabo::util::NDArray castPyArrayToND(py::array arr);

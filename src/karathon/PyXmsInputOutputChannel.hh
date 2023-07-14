@@ -15,12 +15,6 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-/*
- * File:   PyXmsInputOutputChannel.hh
- * Author: Sergey Esenov <serguei.essenov at xfel.eu>
- *
- * Created on June 8, 2015, 5:38 PM
- */
 
 #ifndef KARATHON_PYXMSINPUTOUTPUTCHANNEL_HH
 #define KARATHON_PYXMSINPUTOUTPUTCHANNEL_HH
