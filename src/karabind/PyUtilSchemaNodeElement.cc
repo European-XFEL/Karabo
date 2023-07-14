@@ -120,14 +120,16 @@ void exportPyUtilSchemaNodeElement(py::module_& m) {
                 "setAllowedActions",
                 [](NodeElement& self, const py::object& actions) -> NodeElement& {
                     // Accept any Python sequence (list, tuple, set, etc) that provides strings
-                    return self.setAllowedActions(wrapper::fromPySequenceToVectorString(actions));
+                    self.setAllowedActions(wrapper::fromPySequenceToVectorString(actions));
+                    return self;
                 },
-                py::arg("actions"), py::return_value_policy::reference_internal,
-                "Specify one or more actions that are allowed on this node.\n"
-                "If a Karabo device specifies allowed actions for a node,\n"
-                "that means that it offers a specific slot interface to operate\n"
-                "on this node. Which allowed actions require which interface\n"
-                "is defined elsewhere.");
+                py::arg("actions"), py::return_value_policy::reference_internal, R"pbdoc(
+                    Specify one or more actions that are allowed on this node.
+                    If a Karabo device specifies allowed actions for a node,
+                    that means that it offers a specific slot interface to operate
+                    on this node. Which allowed actions require which interface
+                    is defined elsewhere
+                )pbdoc");
 
     // TODO: evaluate if implicitly_convertible should be applied
     // py::implicitly_convertible<Schema&, NodeElement>();
