@@ -283,5 +283,34 @@ namespace karabo {
             output << txt << " s";
             return output;
         }
+
+        bool operator==(const Epochstamp& lhs, const Epochstamp& rhs) {
+            return (lhs.m_fractionalSeconds == rhs.m_fractionalSeconds) && (lhs.m_seconds == rhs.m_seconds);
+        }
+
+        bool operator!=(const Epochstamp& lhs, const Epochstamp& rhs) {
+            return (lhs.m_fractionalSeconds != rhs.m_fractionalSeconds) || (lhs.m_seconds != rhs.m_seconds);
+        }
+
+        bool operator>(const Epochstamp& lhs, const Epochstamp& rhs) {
+            return (lhs.m_seconds > rhs.m_seconds) ||
+                   ((lhs.m_seconds == rhs.m_seconds) && (lhs.m_fractionalSeconds > rhs.m_fractionalSeconds));
+        }
+
+        bool operator>=(const Epochstamp& lhs, const Epochstamp& rhs) {
+            return (lhs.m_seconds > rhs.m_seconds) ||
+                   ((lhs.m_seconds == rhs.m_seconds) && (lhs.m_fractionalSeconds >= rhs.m_fractionalSeconds));
+        }
+
+        bool operator<(const Epochstamp& lhs, const Epochstamp& rhs) {
+            return (lhs.m_seconds < rhs.m_seconds) ||
+                   ((lhs.m_seconds == rhs.m_seconds) && (lhs.m_fractionalSeconds < rhs.m_fractionalSeconds));
+        }
+
+        bool operator<=(const Epochstamp& lhs, const Epochstamp& rhs) {
+            return (lhs.m_seconds < rhs.m_seconds) ||
+                   ((lhs.m_seconds == rhs.m_seconds) && (lhs.m_fractionalSeconds <= rhs.m_fractionalSeconds));
+        }
+
     } // namespace util
 } // namespace karabo

@@ -15,6 +15,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 
 #include <karabo/util/Timestamp.hh>
@@ -57,4 +58,8 @@ void exportPyUtilTimestamp(py::module_ &m) {
     ts.def("toTimestamp", &Timestamp::toTimestamp);
 
     ts.def("toHashAttributes", &Timestamp::toHashAttributes, py::arg("attributes"));
+
+    ts.def(py::self == py::self);
+
+    ts.def(py::self != py::self);
 }
