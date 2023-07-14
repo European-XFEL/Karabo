@@ -69,6 +69,7 @@ void exportPyUtilTypesReferenceType(py::module_& m) {
           .value("ANY", PyTypes::ANY)
           .value("NONE", PyTypes::NONE)
           .value("VECTOR_NONE", PyTypes::VECTOR_NONE)
+          .value("BYTE_ARRAY", PyTypes::BYTE_ARRAY)
           .value("UNKNOWN", PyTypes::UNKNOWN)
           .value("SIMPLE", PyTypes::SIMPLE)
           .value("SEQUENCE", PyTypes::SEQUENCE)

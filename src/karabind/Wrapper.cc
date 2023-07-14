@@ -346,6 +346,9 @@ namespace karabind {
                     return py::cast(boost::any_cast<std::vector<karabo::util::Hash>>(operand));
                 } else if (operand.type() == typeid(std::vector<karabo::util::Hash::Pointer>)) {
                     return py::cast(boost::any_cast<std::vector<karabo::util::Hash::Pointer>>(operand));
+                } else if (operand.type() == typeid(karabo::util::ByteArray)) {
+                    const auto& ba = boost::any_cast<karabo::util::ByteArray>(operand);
+                    return py::bytes(ba.first.get(), ba.second);
                 }
                 std::ostringstream oss;
                 oss << "Failed to convert inner Hash type: " << operand.type().name() << " to python";
@@ -558,6 +561,18 @@ namespace karabind {
             }
             // Nothing above ...
             throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
+        }
+
+
+        karabo::util::ByteArray copyPyToByteArray(const py::object& o) {
+            if (py::isinstance<py::str>(o) || py::isinstance<py::bytes>(o) || py::isinstance<py::bytearray>(o)) {
+                const auto& s = o.cast<std::string>();
+                const size_t n = s.size();
+                char* cp = new char[n + 1]{};
+                std::copy(s.begin(), s.end(), cp);
+                return std::make_pair(boost::shared_ptr<char>(cp), n);
+            }
+            throw KARABO_PYTHON_EXCEPTION("Python type can not be converted to ByteArray");
         }
 
 
