@@ -43,7 +43,7 @@ using namespace std;
 using namespace karabind;
 
 
-void exportPyUtilSchemaElement(py::module_ &m) {
+void exportPyUtilSchemaElement(py::module_& m) {
     /////////////////////////////////////////////////////////////
     // DefaultValue<SimpleElement< EType >, EType >, where EType:
     // INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
@@ -61,6 +61,24 @@ void exportPyUtilSchemaElement(py::module_ &m) {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(PathElement, string, PATH)
     // KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(ByteArrayElement, ByteArray, BYTEARRAY)
+    {
+        typedef DefaultValue<ByteArrayElement, ByteArray> DefValue;
+        py::class_<DefValue>(m, "DefaultValueBYTEARRAY")
+              .def(
+                    "defaultValue",
+                    [](DefValue& self, const py::object& val) -> ByteArrayElement& {
+                        auto value = wrapper::copyPyToByteArray(val);
+                        return self.defaultValue(value);
+                    },
+                    py::arg("defaultValue"))
+              .def(
+                    "defaultValueFromString",
+                    [](DefValue& self, const std::string& valstr) -> ByteArrayElement& {
+                        return self.defaultValueFromString(valstr);
+                    },
+                    py::arg("defaultValue"))
+              .def("noDefaultValue", [](DefValue& self) -> ByteArrayElement& { return self.noDefaultValue(); });
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +148,28 @@ void exportPyUtilSchemaElement(py::module_ &m) {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
     // KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(ByteArrayElement, ByteArray, BYTEARRAY)
+    {
+        typedef ReadOnlySpecific<ByteArrayElement, ByteArray> ReadOnlySpec;
+        typedef AlarmSpecific<ByteArrayElement, ByteArray, ReadOnlySpec> AlarmSpec;
+        typedef RollingStatsSpecific<ByteArrayElement, ByteArray> RollingStatsSpec;
+        py::class_<ReadOnlySpec>(m, "ReadOnlySpecificBYTEARRAY")
+              .def("initialValue",
+                   [](ReadOnlySpec& self, const py::object& o) -> ReadOnlySpec& {
+                       auto value = wrapper::copyPyToByteArray(o);
+                       return self.initialValue(value);
+                   })
+              .def("defaultValue",
+                   [](ReadOnlySpec& self, const py::object& o) -> ReadOnlySpec& {
+                       auto value = wrapper::copyPyToByteArray(o);
+                       return self.initialValue(value);
+                   })
+              .def("archivePolicy",
+                   [](ReadOnlySpec& self, const py::object& o) -> ReadOnlySpec& {
+                       auto policy = o.cast<karabo::util::Schema::ArchivePolicy>();
+                       return self.archivePolicy(policy);
+                   })
+              .def("commit", &ReadOnlySpec::commit);
+    }
 
     ////////////////////////////////////////////////////////////////////
     // ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
@@ -167,7 +207,7 @@ void exportPyUtilSchemaElement(py::module_ &m) {
     {
         // py::implicitly_convertible<Schema&, ByteArrayElement>();
         py::class_<ByteArrayElement>(m, "BYTEARRAY_ELEMENT")
-              .def(py::init<Schema &>(), py::arg("expected")) KARABO_PYTHON_COMMON_ATTRIBUTES(ByteArrayElement);
+              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_COMMON_ATTRIBUTES(ByteArrayElement);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -177,7 +217,7 @@ void exportPyUtilSchemaElement(py::module_ &m) {
         // py::implicitly_convertible<Schema&, PathElement>();
         typedef std::string EType;
         py::class_<PathElement>(m, "PATH_ELEMENT")
-              .def(py::init<Schema &>(), py::arg("expected")) KARABO_PYTHON_COMMON_ATTRIBUTES(PathElement)
+              .def(py::init<Schema&>(), py::arg("expected")) KARABO_PYTHON_COMMON_ATTRIBUTES(PathElement)
                     KARABO_PYTHON_OPTIONS_NONVECTOR(PathElement)
               .def("isInputFile", &PathElement::isInputFile, py::return_value_policy::reference_internal)
               .def("isOutputFile", &PathElement::isOutputFile, py::return_value_policy::reference_internal)
@@ -207,17 +247,17 @@ void exportPyUtilSchemaElement(py::module_ &m) {
     {
         // py::implicitly_convertible<Schema&, NDArrayElement>();
         py::class_<NDArrayElement>(m, "NDARRAY_ELEMENT")
-              .def(py::init<Schema &>(), py::arg("expected"))
+              .def(py::init<Schema&>(), py::arg("expected"))
               .def(
                     "dtype",
-                    [](karabo::util::NDArrayElement &self, const py::object &otype) {
+                    [](karabo::util::NDArrayElement& self, const py::object& otype) {
                         Types::ReferenceType reftype = wrapper::pyObjectToCppType(otype);
                         return self.dtype(reftype);
                     },
                     py::arg("type"), py::return_value_policy::reference_internal)
               .def(
                     "shape",
-                    [](karabo::util::NDArrayElement &self, const py::object &obj) {
+                    [](karabo::util::NDArrayElement& self, const py::object& obj) {
                         if (py::isinstance<py::str>(obj)) {
                             return self.shape(obj.cast<std::string>());
                         } else if (py::isinstance<py::list>(obj)) {
