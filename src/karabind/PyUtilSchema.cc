@@ -1133,8 +1133,8 @@ void exportPyUtilSchema(py::module_& m) {
 
         s.def(
               "setAllowedActions",
-              [](Schema& self, const std::string& path, const std::vector<std::string>& actions) {
-                  self.setAllowedActions(path, actions);
+              [](Schema& self, const std::string& path, const py::object& actions) {
+                  self.setAllowedActions(path, wrapper::fromPySequenceToVectorString(actions));
               },
               py::arg("path"), py::arg("actions"), R"pbdoc(
                     Specify one or more actions that are allowed on the element.
