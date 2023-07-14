@@ -48,7 +48,8 @@ def test_fetch_data(gui_app):
     # Initial values
     combo = dialog.fit_options_combobox
     items = [combo.itemText(i) for i in range(combo.count())]
-    expected = ["Gaussian", "Step function (CDF)", "Linear function"]
+    expected = ["Gaussian", "Sech Square", "Step function (CDF)",
+                "Linear function"]
     assert items == expected
     assert not dialog.auto_update_checkbox.isChecked()
     x, y = dialog.data_curve.getData()
@@ -158,7 +159,7 @@ def test_sub_region_value_type(gui_app):
     dialog = DataAnalysisDialog(
         proxies=[proxy], config=CONFIG, parent=None)
     fit_option = dialog.fit_options_combobox
-    fit_option.setCurrentIndex(2)
+    fit_option.setCurrentIndex(3)
     assert fit_option.currentText() == "Linear function"
     assert not dialog.show_line_roi_button.isChecked()
     dialog.fit_button.click()
@@ -198,3 +199,22 @@ def test_baseline_proxy(gui_app):
     assert_array_equal(dialog.x_values, expected)
 
     assert np.isclose(dialog._min_width, 1.425, rtol=0.005)
+
+
+def test_sech_sequred(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    value = [1.0, 2.0, 3.0, 5.0, 7.0, 9.0, 10.0, 8.0, 6.0, 4.0]
+    proxy.value = value
+
+    dialog = DataAnalysisDialog(
+        proxies=[proxy], config=CONFIG, parent=None)
+    fit_option = dialog.fit_options_combobox
+    fit_option.setCurrentIndex(1)
+    assert fit_option.currentText() == "Sech Square"
+    dialog.fit()
+    fit_x, fit_y = dialog.fit_curve.getData()
+    expected = np.array([0.98434883, 1.76325783, 3.04367143, 4.930586,
+                        7.21354721, 9.10750318, 9.56312261, 8.27814066,
+                        6.0563046, 3.91234989])
+    np.isclose(expected, fit_y)
