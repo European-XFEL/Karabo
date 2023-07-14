@@ -177,6 +177,8 @@ void Schema_Test::testGetTags() {
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey4")[0] == "software");
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[0] == "h/w");
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[1] == "d.m.y");
+    CPPUNIT_ASSERT(m_schema.getTags("warray")[0] == "software");
+    CPPUNIT_ASSERT(m_schema.getTags("rarray")[0] == "software");
 }
 
 
@@ -185,6 +187,8 @@ void Schema_Test::testGetNodeType() {
     CPPUNIT_ASSERT(nodeType == Schema::LEAF);
 
     CPPUNIT_ASSERT(m_schema.getNodeType("exampleKey5") == Schema::LEAF);
+    CPPUNIT_ASSERT(m_schema.getNodeType("warray") == Schema::LEAF);
+    CPPUNIT_ASSERT(m_schema.getNodeType("rarray") == Schema::LEAF);
 }
 
 
@@ -196,6 +200,8 @@ void Schema_Test::testGetValueType() {
     CPPUNIT_ASSERT(m_schema.getValueType("exampleKey3") == Types::UINT32);
     CPPUNIT_ASSERT(m_schema.getValueType("exampleKey4") == Types::FLOAT);
     CPPUNIT_ASSERT(m_schema.getValueType("exampleKey5") == Types::INT64);
+    CPPUNIT_ASSERT(m_schema.getValueType("warray") == Types::BYTE_ARRAY);
+    CPPUNIT_ASSERT(m_schema.getValueType("rarray") == Types::BYTE_ARRAY);
 }
 
 
@@ -205,6 +211,7 @@ void Schema_Test::testKeyHasAlias() {
     CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey3") == true);
     CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey4") == true);
     CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("warray") == true);
 }
 
 
@@ -212,6 +219,7 @@ void Schema_Test::testAliasHasKey() {
     CPPUNIT_ASSERT(m_schema.aliasHasKey(10) == true);
     CPPUNIT_ASSERT(m_schema.aliasHasKey(5.5) == true);
     CPPUNIT_ASSERT(m_schema.aliasHasKey("exampleAlias4") == true);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey("aliasWriteArray") == true);
 
     vector<int> vecIntAlias;
     vecIntAlias.push_back(10);
@@ -227,6 +235,7 @@ void Schema_Test::testGetAliasFromKey() {
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<int>("exampleKey2") == 10);
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<double>("exampleKey3") == 5.5);
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<string>("exampleKey4") == "exampleAlias4");
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<string>("rarray") == "aliasReadArray");
 
     vector<int> aliasVec = m_schema.getAliasFromKey<vector<int>>("exampleKey5");
     CPPUNIT_ASSERT(aliasVec[0] == 10);
@@ -239,6 +248,7 @@ void Schema_Test::testGetKeyFromAlias() {
     CPPUNIT_ASSERT(m_schema.getKeyFromAlias(10) == "exampleKey2");
     CPPUNIT_ASSERT(m_schema.getKeyFromAlias(5.5) == "exampleKey3");
     CPPUNIT_ASSERT(m_schema.getKeyFromAlias("exampleAlias4") == "exampleKey4");
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias("aliasWriteArray") == "warray");
 
     vector<int> vecIntAlias;
     vecIntAlias.push_back(10);
@@ -252,6 +262,7 @@ void Schema_Test::testGetAliasAsString() {
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey2") == "10");
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.5");
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey4") == "exampleAlias4");
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("rarray") == "aliasReadArray");
 
     string aliasStr = m_schema.getAliasAsString("exampleKey5");
     CPPUNIT_ASSERT(aliasStr == "10,20,30");
@@ -266,6 +277,8 @@ void Schema_Test::testGetAccessMode() {
     CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey3") == WRITE);
     CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey4") == INIT);
     CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey5") == READ);
+    // CPPUNIT_ASSERT(m_schema.getAccessMode("warray") == INIT);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("rarray") == READ);
 }
 
 
@@ -277,6 +290,7 @@ void Schema_Test::testGetAssignment() {
     CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey3") == Schema::MANDATORY_PARAM);
     CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey4") == Schema::INTERNAL_PARAM);
     CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey5") == Schema::OPTIONAL_PARAM);
+    CPPUNIT_ASSERT(m_schema.getAssignment("warray") == Schema::OPTIONAL_PARAM);
 }
 
 
@@ -326,6 +340,8 @@ void Schema_Test::testGetDefaultValue() {
 
     CPPUNIT_ASSERT(m_schema.hasDefaultValue("sampleKey2") == true);
     CPPUNIT_ASSERT(m_schema.getDefaultValue<int>("sampleKey2") == 0);
+
+    CPPUNIT_ASSERT(m_schema.hasDefaultValue("warray") == true);
 }
 
 
