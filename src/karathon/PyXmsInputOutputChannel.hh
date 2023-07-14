@@ -187,10 +187,13 @@ namespace karathon {
                                                       const bp::object& handler);
         static void registerConnectionTrackerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
                                                 const bp::object& handler);
+        static bp::object getConnectionStatusPy(const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static bp::object getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx);
         static void connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
-                              const karabo::util::Hash& outputChannelInfo);
+                              const karabo::util::Hash& outputChannelInfo, const bp::object& handler = bp::object());
+        static bp::object connectSyncPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
+                                        const karabo::util::Hash& outputChannelInfo);
         static void disconnectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
                                  const karabo::util::Hash& outputChannelInfo);
         static bp::object getMetaData(const boost::shared_ptr<karabo::xms::InputChannel>& self);
