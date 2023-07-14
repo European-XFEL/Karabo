@@ -498,6 +498,7 @@ if [ -d $FRAMEWORK_INSTALL_DIR ]; then
         # Activate the karabo environment to allow tests to be run from the
         # build tree.
         source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+        activateKarabo  # take care of KARABO_TEST_BROKER
         # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
         # a 'test_coverage_report' target, than when built runs the tests and
         # generates the coverage report.
@@ -516,6 +517,7 @@ if [ -d $FRAMEWORK_INSTALL_DIR ]; then
         # build tree.
         typeset tests_ret_code
         source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+        activateKarabo  # take care of KARABO_TEST_BROKER
         # clear previous tests
         for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
             rm -f ${name}
