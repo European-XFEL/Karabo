@@ -40,3 +40,12 @@ def linear_function_fit(x, m, b):
     :type b: Float
     """
     return m * x + b
+
+
+def sqsech(x, height, x0, sx):
+    """Returns a squared hyperbolic secant  with the given parameters.
+    The hyperbolic secant curve is in the form
+    height / ((np.cosh((x0 - x) / sx)) ** 2)
+    """
+
+    return height / ((np.cosh((x0 - x) / sx)) ** 2)
