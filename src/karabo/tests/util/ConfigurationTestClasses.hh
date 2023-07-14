@@ -25,6 +25,7 @@
 #define KARABO_UTIL_TEST_EXPECTEDPARAMETERCLASSES_HH
 
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
+#include <karabo/util/ByteArrayElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/ListElement.hh>
@@ -382,6 +383,27 @@ namespace configurationTest {
                   .adminAccess()
                   .assignmentInternal()
                   .noDefaultValue()
+                  .commit();
+
+            BYTEARRAY_ELEMENT(expected)
+                  .key("warray")
+                  .alias("aliasWriteArray")
+                  .tags("software")
+                  .displayedName("Example write array")
+                  .description("Example of ByteArray for writing")
+                  .assignmentOptional()
+                  .defaultValueFromString("")
+                  .adminAccess()
+                  .commit();
+
+            BYTEARRAY_ELEMENT(expected)
+                  .key("rarray")
+                  .alias("aliasReadArray")
+                  .tags("software")
+                  .displayedName("Example read array")
+                  .description("Example of ByteArray for reading")
+                  .userAccess()
+                  .readOnly()
                   .commit();
 
             std::vector<int> vecIntAlias;
