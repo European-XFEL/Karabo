@@ -504,15 +504,6 @@ namespace karabind {
             }
         }
 
-        py::tuple existsPy(const std::string& instanceId) {
-            std::pair<bool, std::string> result;
-            {
-                py::gil_scoped_release release;
-                result = exists(instanceId);
-            }
-            return py::make_tuple(result.first, py::cast(result.second));
-        }
-
         void registerSlotPy(const py::object& slotFunction, std::string slotName, int numArgs) {
             if (slotName.empty()) {
                 slotName = slotFunction.attr("__name__").cast<std::string>();
@@ -586,76 +577,30 @@ namespace karabind {
             registerReply(reply);
         }
 
-        //         karabo::xms::OutputChannel::Pointer createOutputChannelPy(
-        //               const std::string& channelName, const karabo::util::Hash& config,
-        //               const py::object& onOutputPossibleHandler = py::none()) {
-        //             using Wrap = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>;
-        //             return createOutputChannel(channelName, config, Wrap(onOutputPossibleHandler, "IOEvent"));
-        //         }
-        //
-        //         karabo::xms::InputChannel::Pointer createInputChannelPy(const std::string& channelName,
-        //                                                                 const karabo::util::Hash& config,
-        //                                                                 const py::object& onDataHandler = py::none(),
-        //                                                                 const py::object& onInputHandler =
-        //                                                                 py::none(), const py::object&
-        //                                                                 onEndOfStreamHandler = py::none(), const
-        //                                                                 py::object& connectionTracker = py::none()) {
-        //             Basically just call createInputChannel from C++, but take care that data and input handlers
-        //             stay empty if their input is empty, although the proxies are able
-        //             to deal with 'None' Python handlers (as we make use of for the end of stream handler).
-        //             DataHandler dataHandler = DataHandler();
-        //             InputHandler inputHandler = InputHandler();
-        //             if (onDataHandler != py::none()) {
-        //                 or: if (onDataHandler.ptr() != Py_None) {
-        //                 dataHandler = InputChannelWrap::DataHandlerWrap(onDataHandler, "data");
-        //             }
-        //             if (onInputHandler != py::none()) {
-        //                 inputHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onInputHandler,
-        //                 "input");
-        //             }
-        //
-        //             return this->createInputChannel(
-        //                   channelName, config, dataHandler, inputHandler,
-        //                   HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"),
-        //                   HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker,
-        //                                                                                  "channelStatusTracker"));
-        //         }
+        karabo::xms::InputChannel::Pointer createInputChannelPy(const std::string& channelName,
+                                                                const karabo::util::Hash& config,
+                                                                const py::object& onDataHandler = py::none(),
+                                                                const py::object& onInputHandler = py::none(),
+                                                                const py::object& onEndOfStreamHandler = py::none(),
+                                                                const py::object& connectionTracker = py::none()) {
+            // Basically just call createInputChannel from C++, but take care that data and input handlers
+            // stay empty if their input is empty, although the proxies are able
+            // to deal with 'None' Python handlers (as we make use of for the end of stream handler).
+            DataHandler dataHandler = DataHandler();
+            InputHandler inputHandler = InputHandler();
+            if (onDataHandler != py::none()) { // or: if (onDataHandler.ptr() != Py_None) {
+                dataHandler = InputChannelDataHandler(onDataHandler, "data");
+            }
+            if (onInputHandler != py::none()) {
+                inputHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onInputHandler, "input");
+            }
 
-        // void connectInputChannelsPy() {
-        //     py::gil_scoped_release release;
-        //     this->connectInputChannels(boost::system::error_code());
-        // }
-
-        // py::object getOutputChannelPy(const std::string& name) {
-        //     return py::cast(getOutputChannel(name));
-        // }
-
-        // py::object getInputChannelPy(const std::string& name) {
-        //     return py::cast(getInputChannel(name));
-        // }
-
-        // py::list getInputChannelNamesPy() {
-        //     py::list result;
-        //     for (const auto& inputNameChannel : getInputChannels()) {
-        //         result.append(inputNameChannel.first);
-        //     }
-        //     return result;
-        // }
-
-        //         void registerDataHandlerPy(const std::string& channelName, const py::object& handler) {
-        //             registerDataHandler(channelName, InputChannelWrap::DataHandlerWrap(handler, "data"));
-        //         }
-        //
-        //         void registerInputHandlerPy(const std::string& channelName, const py::object& handler) {
-        //             registerInputHandler(channelName, HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler,
-        //             "input"));
-        //         }
-        //
-        //         void registerEndOfStreamHandlerPy(const std::string& channelName, const py::object& handler) {
-        //             registerEndOfStreamHandler(channelName,
-        //                                        HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler,
-        //                                        "EOS"));
-        //         }
+            return this->createInputChannel(
+                  channelName, config, dataHandler, inputHandler,
+                  HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"),
+                  HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker,
+                                                                                 "channelStatusTracker"));
+        }
     };
 
 } // namespace karabind
@@ -866,27 +811,65 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                "Create an AsyncReply to postpone the reply of a slot.\n\n"
                "Only call within a slot call - and then take care to use the AsyncReply to\n"
                "either reply or report an error since no automatic reply will happen.")
-          //           .def("createOutputChannel", &SignalSlotableWrap::createOutputChannelPy,
-          //                py::arg("channelName"), py::arg("configuration"), py::arg("handler") = py::none())
-          //           .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy,
-          //                py::arg("channelName"), py::arg("configuration"), py::arg("onData") = py::none(),
-          //                py::arg("onInput") = py::none(), py::arg("onEndOfStream") = py::none(),
-          //                py::arg("connectionTracker") = py::none())
-          //           .def("connectInputChannels", &SignalSlotableWrap::connectInputChannelsPy)
-          //           .def("getOutputChannel", &SignalSlotableWrap::getOutputChannelPy, py::arg("channelName"))
-          //           .def("getInputChannel", &SignalSlotableWrap::getInputChannelPy, py::arg("channelName"))
-          //           .def("getOutputChannelNames", &SignalSlotable::getOutputChannelNames)
-          //           .def("getInputChannelNames", &SignalSlotableWrap::getInputChannelNamesPy)
-          //           .def("removeInputChannel", &SignalSlotable::removeInputChannel, py::arg("channelName"))
-          //           .def("removeOutputChannel", &SignalSlotable::removeOutputChannel, py::arg("channelName"))
-          //           .def("registerDataHandler", &SignalSlotableWrap::registerDataHandlerPy,
-          //                py::arg("channelName"), py::arg("handlerPerData") = py::none())
-          //           .def("registerInputHandler", &SignalSlotableWrap::registerInputHandlerPy,
-          //                (py::arg("channelName"), py::arg("handlerPerInput") = py::none()))
-          //           .def("registerEndOfStreamHandler", &SignalSlotableWrap::registerEndOfStreamHandlerPy,
-          //                py::arg("channelName"), py::arg("handler") = py::none())
-
-          .def("exists", &SignalSlotableWrap::existsPy, py::arg("instanceId"))
+          .def(
+                "createOutputChannel",
+                [](SignalSlotable& self, const std::string& channelName, const Hash& config,
+                   const py::object& onOutput) {
+                    using Wrap = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>;
+                    return self.createOutputChannel(channelName, config, Wrap(onOutput, "IOEvent"));
+                },
+                py::arg("channelName"), py::arg("configuration"), py::arg("handler") = py::none())
+          .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy, py::arg("channelName"),
+               py::arg("configuration"), py::arg("onData") = py::none(), py::arg("onInput") = py::none(),
+               py::arg("onEndOfStream") = py::none(), py::arg("connectionTracker") = py::none())
+          .def("connectInputChannels",
+               [](SignalSlotable& self) {
+                   py::gil_scoped_release release;
+                   self.connectInputChannels(boost::system::error_code());
+               })
+          .def("getOutputChannel", &SignalSlotable::getOutputChannel, py::arg("channelName"))
+          .def("getInputChannel", &SignalSlotable::getInputChannel, py::arg("channelName"))
+          .def("getOutputChannelNames", &SignalSlotable::getOutputChannelNames)
+          .def("getInputChannelNames",
+               [](SignalSlotable& self) -> py::list {
+                   py::list result;
+                   for (const auto& inputNameChannel : self.getInputChannels()) {
+                       result.append(inputNameChannel.first);
+                   }
+                   return result;
+               })
+          .def("removeInputChannel", &SignalSlotable::removeInputChannel, py::arg("channelName"))
+          .def("removeOutputChannel", &SignalSlotable::removeOutputChannel, py::arg("channelName"))
+          .def(
+                "registerDataHandler",
+                [](SignalSlotable& self, const std::string& channelName, const py::object& handler) {
+                    self.registerDataHandler(channelName, InputChannelDataHandler(handler, "data"));
+                },
+                py::arg("channelName"), py::arg("handlerPerData") = py::none())
+          .def(
+                "registerInputHandler",
+                [](SignalSlotable& self, const std::string& channelName, const py::object& handler) {
+                    self.registerInputHandler(channelName, HandlerWrap<const InputChannel::Pointer&>(handler, "input"));
+                },
+                py::arg("channelName"), py::arg("handlerPerInput") = py::none())
+          .def(
+                "registerEndOfStreamHandler",
+                [](SignalSlotable& self, const std::string& channelName, const py::object& handler) {
+                    self.registerEndOfStreamHandler(channelName,
+                                                    HandlerWrap<const InputChannel::Pointer&>(handler, "EOS"));
+                },
+                py::arg("channelName"), py::arg("handler") = py::none())
+          .def(
+                "exists",
+                [](SignalSlotable& self, const std::string& instanceId) -> py::tuple {
+                    std::pair<bool, std::string> result;
+                    {
+                        py::gil_scoped_release release;
+                        result = self.exists(instanceId);
+                    }
+                    return py::make_tuple(result.first, py::cast(result.second));
+                },
+                py::arg("instanceId"))
           .def("getConnection", &SignalSlotable::getConnection)
           .def("getTopic", &SignalSlotable::getTopic, py::return_value_policy::reference_internal);
 }

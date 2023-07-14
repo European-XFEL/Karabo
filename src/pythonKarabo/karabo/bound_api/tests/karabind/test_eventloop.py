@@ -16,7 +16,7 @@
 
 import os
 from signal import SIGTERM
-from threading import Thread
+from threading import Lock, Thread
 from time import sleep
 
 import karabind
@@ -66,6 +66,29 @@ def test_eventloop_post(EventLoop, Epochstamp):
     durationSec += duration.getFractions() / 1.e9  # nanosec
     assert durationSec > .2
 
+    lock = Lock()
+    status = "timeout"
+
+    def callback():
+        nonlocal status
+        status = "success"
+        if lock.locked():
+            lock.release()
+
+    lock.acquire()
+    assert status == "timeout"
+    # post callback with 0.5 sec delay ...
+    EventLoop.post(callback, delay=0.5)
+    t = Thread(target=EventLoop.run)
+    t.start()
+    # block here until callback release
+    lock.acquire(blocking=True, timeout=2)
+    EventLoop.stop()
+    lock.release()
+    assert status == "success"
+
+    t.join()
+
 
 @pytest.mark.parametrize(
     "EventLoop",
@@ -76,6 +99,7 @@ def test_eventloop_signalHandler(EventLoop):
     def handler(sig):
         nonlocal signal
         signal = sig
+        EventLoop.stop()
 
     EventLoop.setSignalHandler(handler)
 
