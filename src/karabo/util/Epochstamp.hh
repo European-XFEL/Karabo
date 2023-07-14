@@ -113,12 +113,14 @@ namespace karabo {
              * @param other Epochstamp object
              * @return bool
              */
-            bool operator==(const Epochstamp& other) const;
-            bool operator!=(const Epochstamp& other) const;
-            bool operator>(const Epochstamp& other) const;
-            bool operator>=(const Epochstamp& other) const;
-            bool operator<(const Epochstamp& other) const;
-            bool operator<=(const Epochstamp& other) const;
+            friend bool operator==(const Epochstamp& lhs, const Epochstamp& rhs);
+            friend bool operator!=(const Epochstamp& lhs, const Epochstamp& rhs);
+
+            friend bool operator>(const Epochstamp& lhs, const Epochstamp& rhs);
+            friend bool operator>=(const Epochstamp& lhs, const Epochstamp& rhs);
+
+            friend bool operator<(const Epochstamp& lhs, const Epochstamp& rhs);
+            friend bool operator<=(const Epochstamp& lhs, const Epochstamp& rhs);
 
             /**
              * Move a timestamp forward/backward with given time distance,
@@ -325,31 +327,6 @@ namespace karabo {
             m_seconds = ts.tv_sec;
             m_fractionalSeconds = static_cast<unsigned long long>(ts.tv_nsec) * NANOSEC;
             return *this;
-        }
-
-        inline bool Epochstamp::operator==(const Epochstamp& other) const {
-            return (this->m_fractionalSeconds == other.m_fractionalSeconds) && (this->m_seconds == other.m_seconds);
-        }
-
-        inline bool Epochstamp::operator!=(const Epochstamp& other) const {
-            return !(*this == other);
-        }
-
-        inline bool Epochstamp::operator>(const Epochstamp& other) const {
-            return (this->m_seconds > other.m_seconds) ||
-                   ((this->m_seconds == other.m_seconds) && (this->m_fractionalSeconds > other.m_fractionalSeconds));
-        }
-
-        inline bool Epochstamp::operator>=(const Epochstamp& other) const {
-            return (*this == other) || (*this > other);
-        }
-
-        inline bool Epochstamp::operator<(const Epochstamp& other) const {
-            return !(*this >= other);
-        }
-
-        inline bool Epochstamp::operator<=(const Epochstamp& other) const {
-            return !(*this > other);
         }
 
         inline TimeDuration Epochstamp::operator-(const Epochstamp& other) const {

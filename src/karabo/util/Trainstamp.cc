@@ -66,5 +66,14 @@ namespace karabo {
             out << trainstamp.getTrainId();
             return out;
         }
+
+        bool operator==(const Trainstamp& lhs, const Trainstamp& rhs) {
+            return lhs.m_trainId == rhs.m_trainId;
+        }
+
+        bool operator!=(const Trainstamp& lhs, const Trainstamp& rhs) {
+            return lhs.m_trainId != rhs.m_trainId;
+        }
+
     } // namespace util
 } // namespace karabo
