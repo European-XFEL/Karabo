@@ -26,6 +26,7 @@
 #include <karabo/util/Exception.hh>
 #include <karabo/util/FromType.hh>
 #include <map>
+#include <mutex>
 
 namespace karabind {
 
@@ -41,17 +42,16 @@ namespace karabind {
         }
 
        private:
+        static FromNumpy* singleInstance;
+        static std::once_flag staticFlag;
+
         FromNumpy();
 
         FromNumpy(const FromNumpy&){};
 
-        virtual ~FromNumpy(){};
+        virtual ~FromNumpy();
 
-        static FromNumpy& init() {
-            static FromNumpy singleInstance;
-            return singleInstance;
-        }
-
+        static FromNumpy& init();
 
         typedef std::map<ArgumentType, karabo::util::Types::ReferenceType> TypeInfoMap;
 

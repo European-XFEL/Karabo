@@ -32,6 +32,8 @@ namespace py = pybind11;
 
 namespace karabind {
 
+    FromNumpy* FromNumpy::singleInstance;
+    std::once_flag FromNumpy::staticFlag;
 
     FromNumpy::FromNumpy() {
         //#define _KARABO_HELPER_MACRO(fromType, refType) (fromType, karabo::util::Types::refType)
@@ -68,5 +70,14 @@ namespace karabind {
                             _KARABO_HELPER_MACRO(py::detail::npy_api::NPY_DOUBLE_, DOUBLE)};
         }
 #undef _KARABO_HELPER_MACRO
+    }
+
+    FromNumpy::~FromNumpy() {
+        delete singleInstance;
+    }
+
+    FromNumpy& FromNumpy::init() {
+        std::call_once(staticFlag, [&]() { singleInstance = new FromNumpy(); });
+        return *singleInstance;
     }
 } // namespace karabind
