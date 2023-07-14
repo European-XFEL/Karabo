@@ -54,9 +54,10 @@ void exportPyUtilSchemaTest(py::module_ &);             // ConfigurationTestClas
 // io
 
 // xms
-void exportPyXmsImageDataElement(py::module_ &); // PyXmsImageDataElement.cc
-void exportPyXmsSignalSlotable(py::module_ &);   // PyXmsSignalSlotable.cc
-void exportPyXmsSlotElement(py::module_ &);      // PyXmsSlotElement.cc
+void exportPyXmsImageDataElement(py::module_ &);   // PyXmsImageDataElement.cc
+void exportPyXmsSignalSlotable(py::module_ &);     // PyXmsSignalSlotable.cc
+void exportPyXmsSlotElement(py::module_ &);        // PyXmsSlotElement.cc
+void exportPyXmsInputOutputChannel(py::module_ &); // PyXmsInputOutputChannel.cc
 
 // core
 
@@ -102,6 +103,7 @@ PYBIND11_MODULE(karabind, m) {
     exportPyXmsImageDataElement(m);
     exportPyXmsSignalSlotable(m);
     exportPyXmsSlotElement(m);
+    exportPyXmsInputOutputChannel(m);
 
     // core
 

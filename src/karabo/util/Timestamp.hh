@@ -164,16 +164,14 @@ namespace karabo {
              * @param other
              * @return
              */
-            bool operator==(const Timestamp& other) const;
+            friend bool operator==(const Timestamp& lhs, const Timestamp& rhs);
 
             /**
              * Compare if the Epochstamp and/or Trainstamp of this Timestamp are not the same of other
              * @param other
              * @return
              */
-            inline bool operator!=(const Timestamp& other) const {
-                return !(*this == other);
-            }
+            friend bool operator!=(const Timestamp& lhs, const Timestamp& rhs);
 
            private:
         };
