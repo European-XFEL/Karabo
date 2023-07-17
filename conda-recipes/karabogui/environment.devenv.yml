@@ -44,7 +44,7 @@ dependencies:
   - qtconsole=5.0.2
   - ipython=7.13.0
   - ipykernel=5.2.0
-  - qscintilla2=2.13.3
+  - qscintilla2=2.14.0
   # Plotting and utils
   - numpy=1.23.*
   - scipy=1.9.*
