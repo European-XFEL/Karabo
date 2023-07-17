@@ -60,7 +60,7 @@ def test_find_match(gui_app):
     def assert_mouse_position(line, index):
         assert code_editor.getCursorPosition() == (line, index)
 
-    assert_mouse_position(0, 0)
+    assert_mouse_position(6, 0)
 
     assert code_editor.find_match("Number", False, False)
     assert code_editor.selectedText() == "Number"
@@ -99,7 +99,7 @@ def test_replace(gui_app):
     def assert_mouse_position(line, index):
         assert code_editor.getCursorPosition() == (line, index)
 
-    assert_mouse_position(0, 0)
+    assert_mouse_position(6, 0)
     match_case = False
     # When no selection, just selects the next hit.
     code_editor.replace_text("number", "Line", match_case)
