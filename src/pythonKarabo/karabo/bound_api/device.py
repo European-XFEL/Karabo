@@ -543,19 +543,24 @@ class PythonDevice(NoFsm):
         return self._client
 
     def set(self, *args, **kwargs):
-        """Updates the state of the device.
-
-        This function automatically notifies any observers.
+        """Updates device properties and notifies any observers.
+        Note that an update of the device "state" property must be done using
+        updateState(..).
 
         args: can be of length
 
-            * one: expects a hash, and uses current timestamp
+            * one: expects a Hash, and uses current timestamp
             * two: expects a key, value pair and uses current timestamp or a
-                   hash, timestamp pair
+                   Hash, timestamp pair
             * three: expects key, value and timestamp
 
         kwargs: validate: specifies if validation of args should be performed
-                before notification.
+                before notification. Skipping validation should not be used
+                with State or AlarmCondition.
+
+        If a Hash is provided, its keys should be device properties and the
+        values should have the proper types. A State or AlarmCondition inside
+        a Hash should be given as a string.
         """
         with self._stateChangeLock:
             self._setNoStateLock(*args, **kwargs)
@@ -580,14 +585,13 @@ class PythonDevice(NoFsm):
                 raise TypeError("The 3rd argument should be Timestamp")
 
             h = Hash()
-            # assure we are allowed to set states and alarms to
-            # appropriate elements
+            # State and AlarmCondition are set as strings - the validator will
+            # add necessary "indicateState"/"indicateAlarm" attributes.
+            # (Will not work if validate=False!)
             if isinstance(value, State):
                 h.set(key, value.name)
-                h.setAttribute(key, "indicateState", True)
             elif isinstance(value, AlarmCondition):
                 h.set(key, value.asString())
-                h.setAttribute(key, "indicateAlarm", True)
             else:
                 h.set(key, value)
             pars = tuple([h, stamp])
@@ -605,12 +609,11 @@ class PythonDevice(NoFsm):
                 key, value = pars
 
                 h = Hash()
+                # See comment above about State and AlarmCondition
                 if isinstance(value, State):
                     h.set(key, value.name)
-                    h.setAttribute(key, "indicateState", True)
                 elif isinstance(value, AlarmCondition):
                     h.set(key, value.asString())
-                    h.setAttribute(key, "indicateAlarm", True)
                 else:
                     h.set(key, value)
                 pars = tuple([h, self.getActualTimestamp()])
@@ -1344,27 +1347,45 @@ class PythonDevice(NoFsm):
         self._fullSchema = Schema(self.classid)
         self._fullSchema.copy(self._staticSchema)
 
-    def updateState(self, currentState):
-        """Update the state of the device to a new state.
+    def updateState(self, newState, propertyUpdates=None, timestamp=None):
+        """Update the state property of the device to a new state.
 
         This should be used for NoFSM devices and should *not* be used if you
         have an underlying FSM.
-        :param currentState: the state to set the device to
+        :param newState: the state to set the device to
+        :propertyUpdates: a Hash with further properties to update (or None)
+        :timestamp: timestamp to be assigned to the update,
+                    if None, use self.getActualTimestamp()
         :return:
         """
-        assert isinstance(currentState, State)
-        stateName = currentState.name
+        assert isinstance(newState, State)
+        stateName = newState.name
         self.log.DEBUG(f"updateState: {stateName}")
-        if self["state"] != currentState:
-            self.set("state", currentState)
-            if currentState is State.ERROR:
-                self._ss.updateInstanceInfo(Hash("status", "error"))
-            elif currentState is State.UNKNOWN:
-                self._ss.updateInstanceInfo(Hash("status", "unknown"))
-            else:
-                statuses = ("error", "unknown")
-                if self._ss.getInstanceInfo()["status"] in statuses:
-                    self._ss.updateInstanceInfo(Hash("status", "ok"))
+        if propertyUpdates is None:
+            propertyUpdates = Hash()
+        if timestamp is None:
+            timestamp = self.getActualTimestamp()
+
+        newStatus = None
+        with self._stateChangeLock:
+            if self._parameters["state"] != stateName:
+                propertyUpdates.set("state", stateName)
+                # Validator adds "indicateState" attribute
+                if newState is State.ERROR:
+                    newStatus = "error"
+                elif newState is State.UNKNOWN:
+                    newStatus = "unknown"
+                else:
+                    statuses = ("error", "unknown")
+                    if self._ss.getInstanceInfo()["status"] in statuses:
+                        newStatus = "ok"
+
+            if propertyUpdates:
+                self._setNoStateLock(propertyUpdates, timestamp)
+
+        # Send potential instanceInfo update without state change lock
+        if newStatus:
+            self._ss.updateInstanceInfo(Hash("status", newStatus))
         # place new state as default reply to interested event initiators
         self._ss.reply(stateName)
 
