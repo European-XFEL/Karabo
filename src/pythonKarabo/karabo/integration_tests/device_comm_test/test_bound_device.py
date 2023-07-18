@@ -122,16 +122,20 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
 
-    def test_instance_info_status(self):
-        """Test the instanceInfo status setting of bound devices"""
+    def test_updateState(self):
+        """
+        Test the instanceInfo status of bound devices and other things
+        done in Device.updateState
+        """
         SERVER_ID = "testServerInstanceInfo"
         class_ids = ['CommTestDevice']
+        deviceId = "testStateInfo"
         self.start_server("bound", SERVER_ID, class_ids,
                           namespace="karabo.bound_device_test")
 
         config = Hash("remote", "NoRemoteNeeded")
         classConfig = Hash("classId", "CommTestDevice",
-                           "deviceId", "testStateInfo",
+                           "deviceId", deviceId,
                            "configuration", config)
 
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig, instTimeout)
@@ -140,43 +144,80 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         sigSlotInfo = SignalSlotable("sigSlotInfo")
         sigSlotInfo.start()
 
-        timeOutInMs = 500
-        state = "ON"
-        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
-                                  state).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0], state)
+        timeOutInMs = 1500
 
-        ret = sigSlotInfo.request("testStateInfo", "slotPing",
-                                  "testStateInfo", 1, False
-                                  ).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0]["status"], "ok")
+        with self.subTest(msg="InstanceInfo status setting"):
+            state = "ON"
+            ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
+                                      state).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], state)
 
-        state = "ERROR"
-        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
-                                  state).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0], state)
-        ret = sigSlotInfo.request("testStateInfo", "slotPing",
-                                  "testStateInfo", 1, False
-                                  ).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0]["status"], "error")
+            ret = sigSlotInfo.request(deviceId, "slotPing",
+                                      deviceId, 1, False
+                                      ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0]["status"], "ok")
 
-        state = "UNKNOWN"
-        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
-                                  state).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0], state)
-        ret = sigSlotInfo.request("testStateInfo", "slotPing",
-                                  "testStateInfo", 1, False
-                                  ).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0]["status"], "unknown")
+            state = "ERROR"
+            ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
+                                      state).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], state)
+            ret = sigSlotInfo.request(deviceId, "slotPing",
+                                      deviceId, 1, False
+                                      ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0]["status"], "error")
 
-        state = "NORMAL"
-        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
-                                  state).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0], state)
-        ret = sigSlotInfo.request("testStateInfo", "slotPing",
-                                  "testStateInfo", 1, False
-                                  ).waitForReply(timeOutInMs)
-        self.assertEqual(ret[0]["status"], "ok")
+            state = "UNKNOWN"
+            ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
+                                      state).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], state)
+            ret = sigSlotInfo.request(deviceId, "slotPing",
+                                      deviceId, 1, False
+                                      ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0]["status"], "unknown")
+
+            state = "NORMAL"
+            ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdate",
+                                      state).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], state)
+            ret = sigSlotInfo.request(deviceId, "slotPing",
+                                      deviceId, 1, False
+                                      ).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0]["status"], "ok")
+
+        with self.subTest(msg="Setting other properties and timestamp"):
+            # Assemble Hash to set further properties and timestamps
+            # and pass these to updateState via slotRequestStateUpdatePlus
+            h = Hash("status", "Set via updateState!",
+                     "timestamp", True)
+            # A stamp passed directly to updateState
+            ts = Timestamp()
+            ts.toHashAttributes(h.getAttributes("timestamp"))
+            sleep(0.01)  # make stamps distinct
+            # A 2nd stamp passed via Hash attributes of "status"
+            # (overwrites ts for "status").
+            ts2 = Timestamp()
+            ts2.toHashAttributes(h.getAttributes("status"))
+            ret = sigSlotInfo.request(deviceId, "slotRequestStateUpdatePlus",
+                                      "ON", h).waitForReply(timeOutInMs)
+            self.assertEqual(ret[0], "ON")
+
+            # Now request back and check
+            request = sigSlotInfo.request(deviceId, "slotGetConfiguration")
+            cfg = request.waitForReply(timeOutInMs)[0]
+            self.assertEqual("ON", cfg["state"])
+            self.assertEqual("Set via updateState!", cfg["status"])
+            attrs = cfg.getAttributes("state")
+            tsState = Timestamp.fromHashAttributes(attrs)
+            self.assertEqual(tsState.getSeconds(),
+                             ts.getSeconds())
+            self.assertEqual(tsState.getFractionalSeconds(),
+                             ts.getFractionalSeconds())
+            attrs = cfg.getAttributes("status")
+            tsStatus = Timestamp.fromHashAttributes(attrs)
+            self.assertEqual(tsStatus.getSeconds(),
+                             ts2.getSeconds())
+            self.assertEqual(tsStatus.getFractionalSeconds(),
+                             ts2.getFractionalSeconds())
 
         del sigSlotInfo
 
