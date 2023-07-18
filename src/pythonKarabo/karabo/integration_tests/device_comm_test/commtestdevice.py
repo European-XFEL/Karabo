@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.bound import (
     KARABO_CLASSINFO, SLOT_ELEMENT, STRING_ELEMENT, VECTOR_INT32_ELEMENT,
-    Epochstamp, Hash, PythonDevice, State, launchPythonDevice)
+    Epochstamp, Hash, PythonDevice, State, Timestamp, launchPythonDevice)
 
 
 @KARABO_CLASSINFO("CommTestDevice", "2.0")
@@ -55,6 +55,7 @@ class CommTestDevice(PythonDevice):
         self.KARABO_SLOT(self.slotRequestArgs)
         self.KARABO_SLOT(self.slotRequestArgsAsync)
         self.KARABO_SLOT(self.slotRequestStateUpdate)
+        self.KARABO_SLOT(self.slotRequestStateUpdatePlus)
 
         self.registerSlot(self.slotWithoutArguments)
         self.registerSlot(self.slotWithArguments)
@@ -77,6 +78,17 @@ class CommTestDevice(PythonDevice):
     def slotRequestStateUpdate(self, state):
         # Note: `updateState` replies slot call with state
         self.updateState(State(state))
+
+    def slotRequestStateUpdatePlus(self, state, other):
+        timestamp = None
+        if "timestamp" in other:
+            attrs = other.getAttributes("timestamp")
+            print("Hash received:\n", other)
+            timestamp = Timestamp.fromHashAttributes(attrs)
+            del other["timestamp"]
+        self.updateState(State(state),
+                         propertyUpdates=other,
+                         timestamp=timestamp)
 
     def slotWithoutArguments(self):
         self.set("someString", "slotWithoutArguments was called")
