@@ -20,7 +20,7 @@ from uuid import uuid4
 
 from karabo.middlelayer import (
     Device, Hash, String, call, connectDevice, slot, updateDevice)
-from karabo.middlelayer_api.tests.eventloop import async_tst
+from karabo.middlelayer.testing import async_tst, sleepUntil
 from karabo.project_db.tests.util import create_hierarchy
 
 UUIDS = [str(uuid4()) for i in range(5)]
@@ -180,6 +180,9 @@ class VerificationProjectManager():
             self.assertTrue(item.get("success"))
 
             await updateDevice(proxy)
+            await sleepUntil(
+                lambda: proxy.projectManagerUpdate == "projManTest",
+                timeout=3)
             self.assertEqual(proxy.projectManagerUpdate, "projManTest")
             self.assertEqual(proxy.client, "client-587")
 
