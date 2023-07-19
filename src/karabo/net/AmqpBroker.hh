@@ -179,12 +179,8 @@ namespace karabo {
            protected:
             // "main" producer/consumer client
             karabo::net::AmqpClient::Pointer m_client;
-            karabo::net::consumer::MessageHandler m_clientConsumerHandler;
-            karabo::net::consumer::ErrorNotifier m_clientErrorNotifier;
             // optional consumers ...
             karabo::net::AmqpClient::Pointer m_heartbeatClient;
-            karabo::net::consumer::MessageHandler m_heartbeatConsumerHandler;
-            karabo::net::consumer::ErrorNotifier m_heartbeatErrorNotifier;
 
            private:
             karabo::net::Strand::Pointer m_handlerStrand;
