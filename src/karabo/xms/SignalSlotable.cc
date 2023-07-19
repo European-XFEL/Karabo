@@ -478,8 +478,11 @@ namespace karabo {
             const string& replyId = header->get<string>("replyFrom");
             std::pair<boost::shared_ptr<boost::asio::deadline_timer>, Requestor::AsyncErrorHandler> timerAndHandler =
                   getReceiveAsyncErrorHandles(replyId);
-            // Check if the timer was registered for the reply ... and cancel it
-            if (timerAndHandler.first) timerAndHandler.first->cancel(); // message arrived before expiration
+            // Check if a timer was registered for the reply and cancel it since message handled here before expiration
+            if (timerAndHandler.first && timerAndHandler.first->cancel() == 0) {
+                // Cancelling failed, error handler was already put to event loop and will handle timeout
+                return;
+            }
 
             // Check whether the reply is an error
             bool asyncErrorHandlerCalled = false;
