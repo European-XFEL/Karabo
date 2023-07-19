@@ -54,13 +54,7 @@ namespace karabo {
 
 
         AmqpBroker::AmqpBroker(const karabo::util::Hash& config)
-            : Broker(config),
-              m_client(),
-              m_clientConsumerHandler(),
-              m_clientErrorNotifier(),
-              m_heartbeatConsumerHandler(),
-              m_heartbeatErrorNotifier(),
-              m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())) {
+            : Broker(config), m_client(), m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())) {
             Hash amqpConfig("brokers", m_availableBrokerUrls);
             amqpConfig.set("instanceId", m_instanceId);
             amqpConfig.set("domain", m_topic);
@@ -334,9 +328,6 @@ namespace karabo {
 
         void AmqpBroker::startReading(const consumer::MessageHandler& handler,
                                       const consumer::ErrorNotifier& errorNotifier) {
-            m_clientConsumerHandler = handler;
-            m_clientErrorNotifier = errorNotifier;
-
             std::string exchange = m_topic + ".slots";
             std::string bindingKey = m_instanceId;
 
@@ -369,20 +360,11 @@ namespace karabo {
             if (m_topic.empty() || m_instanceId.empty()) return;
             m_client->close();
             if (m_heartbeatClient) m_heartbeatClient->close();
-
-            // clear handlers as well
-            m_clientConsumerHandler = karabo::net::consumer::MessageHandler();
-            m_clientErrorNotifier = karabo::net::consumer::ErrorNotifier();
-            m_heartbeatConsumerHandler = karabo::net::consumer::MessageHandler();
-            m_heartbeatErrorNotifier = karabo::net::consumer::ErrorNotifier();
         }
 
 
         void AmqpBroker::startReadingHeartbeats(const consumer::MessageHandler& handler,
                                                 const consumer::ErrorNotifier& errorNotifier) {
-            m_heartbeatConsumerHandler = handler;
-            m_heartbeatErrorNotifier = errorNotifier;
-
             if (!m_heartbeatClient) {
                 Hash config("brokers", m_availableBrokerUrls);
                 config.set("instanceId", m_instanceId + ":beats");
