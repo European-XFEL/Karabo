@@ -103,7 +103,7 @@ def validate_value(binding, value):
         # There might be cases that values are saved as strings. This typically
         # occurs for table elements.
         if not isinstance(binding, (StringBinding, CharBinding)):
-            value = convert_string(value)
+            value, _ = convert_string(value)
     try:
         if isinstance(binding, VectorNumberBinding):
             # Check if binding is a vector, then test array against its
@@ -253,12 +253,15 @@ def get_default_value(binding, force=False):
 
 
 def convert_string(value: str):
-    """Try to convert the string value `value` to a literal"""
+    """Try to convert the string value `value` to a literal
+
+    :returns: Tuple of value and success boolean
+    """
     try:
-        return literal_eval(value)
+        return literal_eval(value), True
     except (SyntaxError, ValueError):
         # Conversion of string to a literal failed, we return the value as is.
-        return value
+        return value, False
 
 
 def validate_binding_minimum(binding, value):
