@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=42", "setuptools-scm[toml]>=4.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+root = "."
+write_to = "src/__PACKAGE_NAME__/_version.py"
+git_describe_command = "git describe --tags --match '*.*.*' --dirty --long"
+version_scheme = "post-release"
+local_scheme = "node-and-date"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+__CLASS_NAME__ = ["data/*.*"]
+
+[project.entry-points."karabo.middlelayer_device"]
+__CLASS_NAME__ = "__PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__"
+
+[project]
+dynamic = ["version"]
+name = "__CLASS_NAME__"
+authors = [
+    {name = "__EMAIL__", email = "__EMAIL__"},
+]
+description = ""
+readme = "README.md"
+dependencies = [
+]
