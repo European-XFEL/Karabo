@@ -18,7 +18,7 @@ from traits.api import Undefined
 
 from karabogui.binding.api import FloatBinding
 
-from ..alarm_dialog import AlarmDialog
+from ..alarm_dialog import LABEL_NOTE, AlarmDialog
 
 
 def test_alarm_configuration_dialog(gui_app):
@@ -83,3 +83,34 @@ def test_alarm_configuration_dialog(gui_app):
     assert dialog.values["alarmHigh"] == 4.2
 
     dialog.destroy()
+
+
+def test_warning_note(gui_app):
+    """ Test the warning message when the """
+    binding = FloatBinding()
+    error_message = "Please make sure the values are in the order:"
+    model = {"alarmLow": 1.2, "warnLow": 2.8,
+             "warnHigh": 4.2, "alarmHigh": Undefined}
+    default_style = "QLabel#label_note {}"
+    error_style = "QLabel#label_note {color:red;}"
+    dialog = AlarmDialog(binding, model)
+    dialog.edit_alarmHigh.setText("0.8")
+    order = " < ".join(model.keys())
+    text = f"{error_message} {order}"
+    assert dialog.label_note.text() == text
+    assert dialog.label_note.styleSheet() == error_style
+
+    dialog.edit_alarmHigh.setText("8.2")
+    assert dialog.label_note.text() == LABEL_NOTE
+    assert dialog.label_note.styleSheet() == default_style
+
+    # Keep a value empty
+    dialog.edit_alarmHigh.setText("")
+    assert dialog.label_note.text() == LABEL_NOTE
+    assert dialog.label_note.styleSheet() == default_style
+
+    # Include only non-empty field names in the warning.
+    dialog.edit_warnHigh.setText("0.02")
+    expected = f"{error_message} alarmLow < warnLow < warnHigh"
+    assert dialog.label_note.text() == expected
+    assert dialog.label_note.styleSheet() == error_style
