@@ -21,7 +21,7 @@ from karabo.common.api import (
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import build_model_config
 from karabogui.binding.api import (
-    FloatBinding, StringBinding, get_binding_format, get_binding_value)
+    FloatBinding, get_binding_format, get_binding_value)
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.unitlabel import add_unit_label
 from karabogui.dialogs.api import (
@@ -73,7 +73,7 @@ class BaseLabelController(BaseBindingController):
     def value_update(self, proxy):
         binding = proxy.binding
         value = get_binding_value(proxy, "")
-        if value == "" or isinstance(binding, StringBinding):
+        if isinstance(value, str):
             # Early bail out for Long binary data (e.g. image) or
             # if the property is not set (Undefined)
             self.internal_widget.setText(value[:255])
