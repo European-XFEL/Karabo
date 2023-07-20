@@ -208,6 +208,8 @@ def test_simple_validator():
     assert result == QValidator.Acceptable
     result, _, _ = validator.validate("256", None)
     assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("0001", None)
+    assert result == QValidator.Intermediate
 
     # Test with binding attributes
     attributes = {KARABO_SCHEMA_MIN_INC: 2, KARABO_SCHEMA_MAX_EXC: 128}
