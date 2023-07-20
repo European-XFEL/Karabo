@@ -191,7 +191,9 @@ class SimpleValidator(QValidator):
 
     def inside_limits(self, value):
         """Check if a value is within limits"""
-        value = convert_string(value)
+        value, success = convert_string(value)
+        if not success:
+            return False
         if value < self.minInc or value > self.maxInc:
             return False
 
