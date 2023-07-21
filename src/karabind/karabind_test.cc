@@ -101,4 +101,11 @@ void exportPyUtilSchemaTest(py::module_& m) {
         NDArray nda(someData.begin(), someData.end(), shape);
         return karabind::wrapper::castNDArrayToPy(nda);
     });
+    m.def("cppNDArrayCopy", []() {
+        const Dims shape(3, 4);
+        std::vector<int> someData(3 * 4, 7);
+        for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+        NDArray nda(someData.begin(), someData.end(), shape);
+        return karabind::wrapper::copyNDArrayToPy(nda);
+    });
 }

@@ -1,10 +1,4 @@
 /*
- * $Id$
- *
- * Author: <serguei.essenov@xfel.eu>
- *
- * Created on April 24, 2015, 2:32 PM
- *
  * This file is part of Karabo.
  *
  * http://www.karabo.eu

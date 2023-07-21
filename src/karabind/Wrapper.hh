@@ -162,9 +162,30 @@ namespace karabind {
 
         karabo::util::ByteArray copyPyToByteArray(const py::object& o);
 
+        /**
+         * Create py::array from C++ NDArray without data copying
+         * No change in data ownership
+         */
         py::object castNDArrayToPy(const karabo::util::NDArray& nda);
 
+        /**
+         * Create NDArray from python numpy array without data copying
+         * No change in data ownership
+         */
         karabo::util::NDArray castPyArrayToND(py::array arr);
+
+        /**
+         * Create py::array from C++ NDArray with data copying
+         * As a result, python is data owner.  This function is not needed
+         * since we can use 'castNDArrayToPy' and apply `copy` method in python
+         */
+        py::object copyNDArrayToPy(const karabo::util::NDArray& nda);
+
+        /**
+         * Create NDArray from python numpy array with data copying
+         * As a result, C++ is data owner
+         */
+        karabo::util::NDArray copyPyArrayToND(py::array arr);
 
         namespace detail {
 
