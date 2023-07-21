@@ -72,10 +72,17 @@ namespace karabo {
 
 
         NDArray::NDArray(const DataPointer& ptr, const karabo::util::Types::ReferenceType& type, const size_t& numElems,
-                         const Dims& shape, const bool isBigEndian) {
+                         const Dims& shape, const bool isBigEndian, bool copy) {
             const size_t itemSize = Types::to<ToSize>(type);
             const size_t byteSize = numElems * itemSize;
-            set("data", std::make_pair(ptr, byteSize));
+            if (copy) {
+                // Allocate space for the new DataPointer and copy
+                auto newptr = DataPointer(new char[byteSize]);
+                std::copy(ptr.get(), ptr.get() + byteSize, newptr.get());
+                set("data", std::make_pair(newptr, byteSize));
+            } else {
+                set("data", std::make_pair(ptr, byteSize));
+            }
             set("type", static_cast<int>(type));
             setShape(shape);
             setBigEndian(isBigEndian);
@@ -188,6 +195,11 @@ namespace karabo {
 
         void NDArray::deallocator(const char* p) {
             delete[] p;
+        }
+
+
+        NDArray NDArray::copy() const {
+            return NDArray(getDataPtr(), getType(), size(), getShape(), isBigEndian(), true);
         }
 
     } // namespace util

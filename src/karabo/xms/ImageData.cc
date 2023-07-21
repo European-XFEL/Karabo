@@ -452,5 +452,10 @@ namespace karabo {
             }
             return factor * numBytes * CHAR_BIT; // CHAR_BIT from <climits> - usually 8
         }
+
+
+        ImageData ImageData::copy() const {
+            return ImageData(getData().copy(), EncodingType(getEncoding()), getBitsPerPixel());
+        }
     } // namespace xms
 } // namespace karabo
