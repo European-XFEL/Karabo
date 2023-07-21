@@ -779,6 +779,55 @@ namespace karabind {
         }
 
 
+        py::object copyNDArrayToPy(const karabo::util::NDArray& ndarray) {
+            using namespace karabo::util;
+            // calculate 'dtype'
+            const Types::ReferenceType krbRefType = ndarray.getType();
+            const int typenum = Types::to<ToNumpy>(krbRefType);
+            py::object dtype = py::dtype(typenum);
+            // calculate 'shape'
+            const size_t itemsize = Types::to<ToSize>(krbRefType);
+            const Dims dims = ndarray.getShape();
+            const int ndims = dims.rank();
+            std::vector<ssize_t> shape(ndims, 0);
+            for (int i = 0; i < ndims; ++i) shape[i] = dims.extentIn(i);
+            // calculate 'data' ptr
+            const ByteArray& bytearr = ndarray.getByteArray();
+            if (dims.size() * itemsize > bytearr.second) {
+                throw KARABO_PARAMETER_EXCEPTION("Inconsistent NDArray: " + toString(bytearr.second) +=
+                                                 " are too few bytes for shape [" + toString(dims.toVector()) +=
+                                                 "] of " + Types::to<ToLiteral>(krbRefType));
+            }
+            void* ptr = static_cast<void*>(bytearr.first.get());
+            // create new array copy since base is not used
+            return py::array(dtype, shape, {}, ptr);
+        }
+
+
+        karabo::util::NDArray copyPyArrayToND(py::array arr) {
+            using namespace karabo::util;
+            // calculate Dims
+            size_t ndims = arr.ndim();
+            const ssize_t* shape = arr.shape();
+            std::vector<unsigned long long> dims(ndims);
+            for (size_t i = 0; i < ndims; ++i) dims[i] = shape[i];
+            // calculate karabo reference type ...
+            py::dtype dt = arr.dtype();
+            int typenum = dt.num();
+            Types::ReferenceType krbRefType = Types::from<FromNumpy>(typenum);
+            // calculate number of elements
+            size_t nelems = arr.size();
+            // allocate space for data copy ...
+            NDArray::DataPointer dataCopy = NDArray::DataPointer(new char[arr.nbytes()]);
+            // get mutable data as char* to copy from ...
+            char* data = static_cast<char*>(arr.mutable_data());
+            // copy 'nbytes' from python array
+            std::copy(data, data + arr.nbytes(), dataCopy.get());
+            // Construct NDArray using data copy...
+            return NDArray(dataCopy, krbRefType, nelems, Dims(dims));
+        }
+
+
         size_t numArgs(const py::object& o) {
             size_t result = 0;
             size_t numSelfArgs = 0;

@@ -1093,6 +1093,16 @@ class Tests(unittest.TestCase):
             self.assertEqual(h2['a'][0][0], 255)
             self.assertEqual(arr[0][0], 255)
 
+            if Hash is karabind.Hash:
+                # Check 'deepcopy' ...
+                g = copy.deepcopy(h)
+                self.assertEqual(g['a'][0][0], 255)
+
+                h['a'][0][0] = 1
+
+                self.assertEqual(h['a'][0][0], 1)
+                self.assertEqual(g['a'][0][0], 255)
+
         # Run test in karabind version
         inner(karathon.Hash)
         # Run test in karathon version
