@@ -251,6 +251,8 @@ namespace karabo {
 
             void setHeader(const karabo::util::Hash& header);
 
+            ImageData copy() const;
+
            private:
             static int defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data);
         };
