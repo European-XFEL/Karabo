@@ -316,7 +316,7 @@ class TestLoadSceneModel(BaseSceneViewTest):
 
     def test_tool_widgets(self):
         self._assert_geometry(sm.ImageRendererModel,
-                              image=sm.convert_to_svg_image("svg", b"karabo"))
+                              image=sm.create_base64image("svg", b"karabo"))
 
     def test_trend_graph_widgets(self):
         self._assert_geometry(sm.AlarmGraphModel)
