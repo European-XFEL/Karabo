@@ -27,7 +27,7 @@ from karabo.common.scenemodel.io_utils import (
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
-from .tools import ImageRendererModel, convert_to_svg_image
+from .tools import ImageRendererModel, create_base64image
 
 
 class DisplayIconsetModel(BaseWidgetObjectData):
@@ -78,9 +78,9 @@ def _deprecated_icon_set_reader(element):
     traits = read_base_widget_data(element)
     data = base64.b64decode(element.get("data", b""))
     try:
-        traits["image"] = convert_to_svg_image("png", data)
+        traits["image"] = create_base64image("png", data)
     except Exception:
-        traits["image"] = convert_to_svg_image("svg", b"")
+        traits["image"] = create_base64image("svg", b"")
     return ImageRendererModel(**traits)
 
 
@@ -183,9 +183,9 @@ def _deprecated_icon_set_version_1_reader(element):
         if filename is not None:
             image = filename
     try:
-        traits["image"] = convert_to_svg_image("png", image)
+        traits["image"] = create_base64image("png", image)
     except Exception:
-        traits["image"] = convert_to_svg_image("svg", b"")
+        traits["image"] = create_base64image("svg", b"")
     return ImageRendererModel(**traits)
 
 

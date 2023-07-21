@@ -20,8 +20,7 @@ from qtpy.QtCore import QSize
 from qtpy.QtSvg import QSvgWidget
 from qtpy.QtWidgets import QLabel, QWidget
 
-from karabo.common.scenemodel.api import (
-    ImageRendererModel, convert_to_svg_image)
+from karabo.common.scenemodel.api import ImageRendererModel, create_base64image
 from karabogui import icons
 from karabogui.sceneview.widget.renderer import ImageRendererWidget
 from karabogui.testing import GuiTestCase
@@ -46,7 +45,7 @@ class TestRenderers(GuiTestCase):
             with open(path, "rb") as fp:
                 b = fp.read()
 
-            image = convert_to_svg_image("svg", b)
+            image = create_base64image("svg", b)
             model = ImageRendererModel(
                 x=0, y=0, image=image, width=100, height=100)
             widget = ImageRendererWidget(model=model, parent=self.parent)
@@ -62,7 +61,7 @@ class TestRenderers(GuiTestCase):
             with open(path, "rb") as fp:
                 b = fp.read()
 
-            image = convert_to_svg_image("png", b)
+            image = create_base64image("png", b)
             model = ImageRendererModel(
                 x=0, y=0, image=image, width=50, height=50)
 
