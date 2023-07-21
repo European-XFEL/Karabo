@@ -120,7 +120,7 @@ namespace karabo {
 
 
             /**
-             * Non-templated no-copy construction.
+             * Non-templated copy/no-copy construction depending on 'copy' flag (default is false).
              * @param ptr Shared_ptr to external memory location
              * @param type Type of provided data
              * @param numElems Number of elements of provided type
@@ -128,7 +128,8 @@ namespace karabo {
              * @param isBigEndian Endianess flag
              */
             NDArray(const DataPointer& ptr, const karabo::util::Types::ReferenceType& type, const size_t& numElems,
-                    const Dims& shape = Dims(), const bool isBigEndian = karabo::util::isBigEndian());
+                    const Dims& shape = Dims(), const bool isBigEndian = karabo::util::isBigEndian(),
+                    bool copy = false);
 
             virtual ~NDArray() {}
 
@@ -235,6 +236,8 @@ namespace karabo {
              * Convert data to big endian
              */
             void toBigEndian();
+
+            NDArray copy() const;
 
            private:
             template <typename T>
