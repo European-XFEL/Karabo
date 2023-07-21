@@ -899,7 +899,18 @@ void exportPyUtilHash(py::module_& m) {
                   const Hash::Node& node = self.getNode(path);
                   if (node.hasAttribute(KARABO_HASH_CLASS_ID)) {
                       const std::string& classId = node.getAttribute<string>(KARABO_HASH_CLASS_ID);
-                      throw KARABO_NOT_SUPPORTED_EXCEPTION("Currently no 'deepcopy' support for subtype: " + classId);
+                      if (classId == "NDArray") {
+                          const NDArray& nda = reinterpret_cast<const NDArray&>(node.getValue<Hash>());
+                          NDArray arr = nda.copy(); // copied NDArray
+                          h.set(path, arr);
+                      } else if (classId == "ImageData") {
+                          using karabo::xms::ImageData;
+                          const ImageData& img = reinterpret_cast<const ImageData&>(node.getValue<Hash>());
+                          ImageData newimg = img.copy();
+                          h.set(path, newimg);
+                      } else
+                          throw KARABO_NOT_SUPPORTED_EXCEPTION("Currently no 'deepcopy' support for subtype: " +
+                                                               classId);
                   } else {
                       h.set(path, node.getValueAsAny());
                   }
