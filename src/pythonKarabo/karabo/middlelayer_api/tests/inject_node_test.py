@@ -17,9 +17,21 @@ import pytest
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Configurable, DeviceNode, Double,
-    Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, Unit, unit)
+    Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, String, Unit,
+    unit)
 from karabo.middlelayer_api.injectable import InjectMixin
 from karabo.middlelayer_api.tests import eventloop
+
+
+class InjectConfigurable(InjectMixin):
+    def _register_slots(self):
+        pass
+
+    def _notifyNewSchema(self):
+        pass
+
+    def signalChanged(self, deviceId, hsh):
+        pass
 
 
 def test_deviceNode():
@@ -45,7 +57,7 @@ def test_deviceNode_default():
 
 @pytest.mark.asyncio
 async def test_overwrite_inject(event_loop: eventloop):
-    class Mandy(InjectMixin):
+    class Mandy(InjectConfigurable):
         number = Int32(displayedName="whatever", minExc=7,
                        accessMode=AccessMode.READONLY,
                        allowedStates={State.ON}, tags=set(),
@@ -62,15 +74,6 @@ async def test_overwrite_inject(event_loop: eventloop):
             pass
 
         deviceId = None
-
-        def _register_slots(self):
-            pass
-
-        def _notifyNewSchema(self):
-            pass
-
-        def signalChanged(self, deviceId, hsh):
-            pass
 
     mandy = Mandy()
     setter_before_inject = mandy.__class__.number.setter
@@ -114,7 +117,7 @@ async def test_overwrite_inject(event_loop: eventloop):
 
 @pytest.mark.asyncio
 async def test_inject_parameter(event_loop: eventloop):
-    class Mandy(InjectMixin):
+    class Mandy(InjectConfigurable):
         number = Int32(displayedName="whatever", minExc=7,
                        accessMode=AccessMode.READONLY,
                        allowedStates={State.ON}, tags=set(),
@@ -127,15 +130,6 @@ async def test_inject_parameter(event_loop: eventloop):
                            enum=AccessLevel)
 
         deviceId = None
-
-        def _register_slots(self):
-            pass
-
-        def _notifyNewSchema(self):
-            pass
-
-        def signalChanged(self, deviceId, hsh):
-            pass
 
     mandy = Mandy()
     mandy.__class__.newInt = Int32(displayedName="New Int")
@@ -158,19 +152,10 @@ async def test_inject_parameter(event_loop: eventloop):
 
 @pytest.mark.asyncio
 async def test_inject_node(event_loop: eventloop):
-    class Mandy(InjectMixin):
+    class Mandy(InjectConfigurable):
         integer = Int32(defaultValue=0)
 
         deviceId = None
-
-        def _register_slots(self):
-            pass
-
-        def _notifyNewSchema(self):
-            pass
-
-        def signalChanged(self, deviceId, hsh):
-            pass
 
     mandy = Mandy()
     mandy.__class__.nested = Node(Mandy)
@@ -181,20 +166,26 @@ async def test_inject_node(event_loop: eventloop):
 
 
 @pytest.mark.asyncio
+async def test_inject_options(event_loop: eventloop):
+    class Mandy(InjectConfigurable):
+        integer = String(defaultValue=None, accessMode=AccessMode.READONLY)
+
+    mandy = Mandy()
+    assert mandy.integer.value is None
+    assert mandy.integer.descriptor.options is None
+    mandy.__class__.integer = String(options=["serial", "tcp"],
+                                     accessMode=AccessMode.READONLY)
+    await mandy.publishInjectedParameters()
+    assert mandy.integer.descriptor.options == ["serial", "tcp"]
+    assert mandy.integer.value is None
+
+
+@pytest.mark.asyncio
 async def test_inject_raise_parameter(event_loop: eventloop):
-    class Mandy(InjectMixin):
+    class Mandy(InjectConfigurable):
         integer = Int32(defaultValue=0)
 
         deviceId = None
-
-        def _register_slots(self):
-            pass
-
-        def _notifyNewSchema(self):
-            pass
-
-        def signalChanged(self, deviceId, hsh):
-            pass
 
     mandy = Mandy()
     mandy.__class__.extraInteger = Int32(defaultValue=10)
