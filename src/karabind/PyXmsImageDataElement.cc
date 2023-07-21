@@ -95,6 +95,12 @@ void exportPyXmsImageDataElement(py::module_& m) {
               "setData", [](ImageData& self, const py::array& arr) { self.setData(wrapper::castPyArrayToND(arr)); },
               py::arg("arr"));
 
+        img.def("getDataCopy", [](const ImageData& self) { return wrapper::copyNDArrayToPy(self.getData()); });
+
+        img.def(
+              "setDataCopy", [](ImageData& self, const py::array& arr) { self.setData(wrapper::copyPyArrayToND(arr)); },
+              py::arg("arr"));
+
         img.def("getType", [](const ImageData& self) { return py::cast(static_cast<int>(self.getDataType())); });
 
         img.def(
