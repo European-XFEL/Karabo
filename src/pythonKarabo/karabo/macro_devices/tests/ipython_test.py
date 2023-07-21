@@ -151,7 +151,7 @@ async def test_init_macros(deviceTest):
     # this test is flaky, the test client interface seems to fail
     # with ~1/20 chance.
     try:
-        await wait_for(waitUntilNew(client.output), timeout=1)
+        await wait_for(waitUntilNew(client.output), timeout=5)
     except TimeoutError:
         pass
     assert client.output == 'hello\n'
