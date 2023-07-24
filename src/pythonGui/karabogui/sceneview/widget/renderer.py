@@ -25,7 +25,7 @@ from qtpy.QtGui import QPixmap
 from qtpy.QtSvg import QSvgRenderer, QSvgWidget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from karabo.common.scenemodel.api import convert_from_svg_image
+from karabo.common.scenemodel.api import extract_base64image
 from karabogui import icons
 from karabogui.widgets.hints import KaraboSceneWidget
 
@@ -40,7 +40,7 @@ class ImageRendererWidget(KaraboSceneWidget, QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
-        image_format, data = convert_from_svg_image(model.image)
+        image_format, data = extract_base64image(model.image)
         self.setToolTip(f"ImageRenderer - Format: {image_format}")
         if image_format == "svg":
             widget = QSvgWidget(self)

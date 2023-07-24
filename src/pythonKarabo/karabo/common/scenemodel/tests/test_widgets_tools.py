@@ -20,7 +20,7 @@ from .utils import (
 
 def test_svg_renderer():
     traits = base_widget_traits()
-    traits["image"] = api.convert_to_svg_image("svg", b"asd")
+    traits["image"] = api.create_base64image("svg", b"asd")
     model = api.ImageRendererModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
