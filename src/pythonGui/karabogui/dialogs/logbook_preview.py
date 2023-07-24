@@ -51,26 +51,23 @@ class LogBookPreview(QDialog):
         ok_button.setText("Save")
 
         self._event_map = {
-            KaraboEvent.ActiveProposalList: self._event_proposals}
+            KaraboEvent.ActiveDestinations: self._event_destinations}
         register_for_broadcasts(self._event_map)
-        get_network().requestActiveProposals()
+        get_network().listDestinations()
 
-    def _event_proposals(self, data):
+    def _event_destinations(self, data):
         """Show the available logbooks for the instrument, in a combobox.
 
         :param data: A Hash with information about available LogBooks,
             as the following fields:
-                "number": The proposal number.
-                "title" : The proposal title.
-                "logBookId" : Logbook identifier (name of a Zulip stream).
-                "logbookUrl": Url of the logbook.
+                "name" : Logbook identifier
+                "destination": Url or folder of the logbook.
         """
         for index, proposal in enumerate(data):
-            logbook_id = proposal.get("logbookId")
-            logbook_url = proposal.get("logbookUrl")
-            if logbook_id.strip():
-                self.combo_proposals.addItem(logbook_id)
-                self.combo_proposals.setItemData(index, logbook_url)
+            name = proposal.get("name")
+            destination = proposal.get("destination")
+            self.combo_name.addItem(name)
+            self.combo_name.setItemData(index, destination)
 
     def _extract_image_data(self):
         """Convert the QPixmap to an embedded href format."""
@@ -105,11 +102,11 @@ class LogBookPreview(QDialog):
 
     def request_save(self):
         """Request saving a Hash to the KaraboLogBook"""
-        proposal = self.combo_proposals.currentText()
-        proposalId = proposal.split("_")[0]
+        name = self.combo_name.currentText()
+        name = name.split("_")[0]
         dataType = self.combo_datatype.currentData().value
         data = self._get_logbook_data()
         caption = self.caption_edit.toPlainText()
         get_network().onSaveLogBook(
-            proposalId=proposalId, dataType=dataType, data=data,
+            name=name, dataType=dataType, data=data,
             caption=caption)
