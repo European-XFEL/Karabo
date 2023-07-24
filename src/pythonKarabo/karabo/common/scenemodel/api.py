@@ -76,5 +76,5 @@ from .widgets.simple import (
     TickSliderModel, WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
-    ImageRendererModel, convert_from_svg_image, convert_to_svg_image)
+    ImageRendererModel, create_base64image, extract_base64image)
 from .widgets.vacuum import VacuumWidgetModel

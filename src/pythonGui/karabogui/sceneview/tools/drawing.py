@@ -27,7 +27,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import (
     ARROW_HEAD, ArrowModel, DeviceSceneLinkModel, ImageRendererModel,
     InstanceStatusModel, LineModel, RectangleModel, SceneLinkModel,
-    SceneTargetWindow, StickerModel, WebLinkModel, convert_to_svg_image)
+    SceneTargetWindow, StickerModel, WebLinkModel, create_base64image)
 from karabogui import messagebox
 from karabogui.dialogs.api import (
     DeviceCapabilityDialog, SceneLinkDialog, TextDialog, TopologyDeviceDialog,
@@ -364,7 +364,7 @@ class ImageRendererTool(BaseSceneTool):
             size = pixmap.size()
 
         mouse_pos = event.pos()
-        image = convert_to_svg_image(image_format, b)
+        image = create_base64image(image_format, b)
         model = ImageRendererModel(x=mouse_pos.x(), y=mouse_pos.y(),
                                    image=image,
                                    width=size.width(), height=size.height())
