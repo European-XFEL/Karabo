@@ -27,6 +27,7 @@ from qtpy.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget)
 
 from karabogui import icons
+from karabogui.dialogs.logbook_preview import LogBookPreview
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.util import generateObjectName
 from karabogui.widgets.toolbar import ToolBar
@@ -98,6 +99,9 @@ class BasePanelWidget(QFrame):
         """
         return []
 
+    def get_panel_info(self):
+        """Called for panel info for the KaraboLogBook"""
+
     # --------------------------------------
     # public methods
 
@@ -125,6 +129,11 @@ class BasePanelWidget(QFrame):
 
     # --------------------------------------
     # Qt slots and callbacks
+
+    @Slot()
+    def handleLogBookPreview(self):
+        dialog = LogBookPreview(parent=self)
+        dialog.show()
 
     @Slot()
     def handlePreview(self):
@@ -205,6 +214,12 @@ class BasePanelWidget(QFrame):
         """This toolbar is shown by all panels which are attached to a
         container.
         """
+        text = "Save LogBook"
+        self.acSaveLogBook = QAction(icons.send, "&Save", self)
+        self.acSaveLogBook.setToolTip(text)
+        self.acSaveLogBook.setStatusTip(text)
+        self.acSaveLogBook.triggered.connect(self.handleLogBookPreview)
+
         text = "Print"
         self.acPrint = QAction(icons.printer, "&Print", self)
         self.acPrint.setToolTip(text)
@@ -239,6 +254,7 @@ class BasePanelWidget(QFrame):
 
         self.standard_toolbar = ToolBar("Standard", parent=self)
         self.standard_toolbar.add_expander()
+        self.standard_toolbar.addAction(self.acSaveLogBook)
         self.standard_toolbar.addAction(self.acPrint)
         self.standard_toolbar.addAction(self.acUndock)
         self.standard_toolbar.addAction(self.acDock)
