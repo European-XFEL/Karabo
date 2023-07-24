@@ -33,12 +33,12 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Active Proposals:</string>
+          <string>Name</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="combo_proposals">
+        <widget class="QComboBox" name="combo_name">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
