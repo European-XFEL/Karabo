@@ -758,6 +758,30 @@ class Manager(QObject):
             data = extract_alarms_data(instanceId, rows)
             self._alarm_model.update_alarms_info(data)
 
+    def handle_activeProposals(self, success, request, reply, reason=""):
+        """
+        Broadcast the available proposals in the Topic, fetched by the
+        KaraboELogger, so that the PreviewDialog can  list them.
+        """
+        proposals = reply.get("activeProposals")
+        broadcast_event(KaraboEvent.ActiveProposalList, proposals)
+
+    def handle_saveLogBook(self, success, request, reply, reason=""):
+        """
+        Show messagebox when the KaraboELogger fails to send the message to
+        the logbook.
+        """
+        if success:
+            args = request.get("args")
+            data_type = args.get("dataType")
+            message = f"Posted the {data_type} to LogBook successfully"
+            get_logger().info(message)
+        else:
+            error, details = get_reason_parts(reason)
+            message = f"Failed to send the screenshot of the scene.\n{error}"
+            messagebox.show_warning(title="Send to eLog Failed",
+                                    text=message, details=details)
+
     # ------------------------------------------------------------------
     # Private methods
 
