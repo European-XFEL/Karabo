@@ -698,19 +698,19 @@ class Network(QObject):
             self._write_hash(r)
         self._request_queue = []
 
-    def requestActiveProposals(self):
+    def listDestinations(self):
         logger.info("Fetching available active proposals in the Topic.")
         h = Hash("type", "requestGeneric")
         h["instanceId"] = KARABO_LOGBOOK_MANAGER
-        h["slot"] = "slotGetActiveProposals"
-        h["replyType"] = "activeProposals"
+        h["slot"] = "slotListDestinations"
+        h["replyType"] = "listDestinations"
         h["args"] = Hash()
         self._write_hash(h)
 
-    def onSaveLogBook(self, proposalId, dataType, data, caption):
+    def onSaveLogBook(self, name, dataType, data, caption):
         h = Hash()
         h["type"] = "requestGeneric"
-        args = Hash("proposalId", proposalId,
+        args = Hash("name", name,
                     "dataType", dataType,
                     "data", data,
                     "caption", caption)
