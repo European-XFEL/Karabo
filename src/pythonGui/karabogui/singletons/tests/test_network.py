@@ -14,7 +14,6 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from unittest import main
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -357,6 +356,31 @@ class TestNetwork(GuiTestCase):
                     # We are asked to relogin on error
                     dia.call_count = call_count
 
+            with self.subTest("Active Proposals"):
+                network.requestActiveProposals()
+                _trigger_message_parse()
+                h = Hash("type", "requestGeneric",
+                         "instanceId", "KaraboLogBook",
+                         "slot", "slotGetActiveProposals",
+                         "replyType", "activeProposals",
+                         "args", Hash(),
+                         )
+                assert self._last_hash.fullyEqual(h)
 
-if __name__ == "__main__":
-    main()
+            with self.subTest("SaveLogBook"):
+                proposalId = "TestProposal"
+                dataType = "Image"
+                data = "Test data"
+                caption = "This is a test message"
+                network.onSaveLogBook(
+                    proposalId=proposalId, dataType=dataType, data=data,
+                    caption=caption)
+
+                _trigger_message_parse()
+                self.assertEqual(self._last_hash["type"], "requestGeneric")
+                self.assertEqual(
+                    self._last_hash["instanceId"], "KaraboLogBook")
+                self.assertEqual(
+                    self._last_hash["args.proposalId"], proposalId)
+                self.assertEqual(
+                    self._last_hash["args.dataType"], dataType)
