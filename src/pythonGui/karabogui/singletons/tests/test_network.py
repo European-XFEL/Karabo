@@ -357,23 +357,23 @@ class TestNetwork(GuiTestCase):
                     dia.call_count = call_count
 
             with self.subTest("Active Proposals"):
-                network.requestActiveProposals()
+                network.listDestinations()
                 _trigger_message_parse()
                 h = Hash("type", "requestGeneric",
                          "instanceId", "KaraboLogBook",
-                         "slot", "slotGetActiveProposals",
-                         "replyType", "activeProposals",
+                         "slot", "slotListDestinations",
+                         "replyType", "listDestinations",
                          "args", Hash(),
                          )
                 assert self._last_hash.fullyEqual(h)
 
             with self.subTest("SaveLogBook"):
-                proposalId = "TestProposal"
+                name = "TestProposal"
                 dataType = "Image"
                 data = "Test data"
                 caption = "This is a test message"
                 network.onSaveLogBook(
-                    proposalId=proposalId, dataType=dataType, data=data,
+                    name=name, dataType=dataType, data=data,
                     caption=caption)
 
                 _trigger_message_parse()
@@ -381,6 +381,6 @@ class TestNetwork(GuiTestCase):
                 self.assertEqual(
                     self._last_hash["instanceId"], "KaraboLogBook")
                 self.assertEqual(
-                    self._last_hash["args.proposalId"], proposalId)
+                    self._last_hash["args.name"], name)
                 self.assertEqual(
                     self._last_hash["args.dataType"], dataType)
