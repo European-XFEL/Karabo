@@ -1,0 +1,115 @@
+# This file is part of the Karabo Gui.
+#
+# http://www.karabo.eu
+#
+# Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+#
+# The Karabo Gui is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 3 or higher.
+#
+# You should have received a copy of the General Public License, version 3,
+# along with the Karabo Gui.
+# If not, see <https://www.gnu.org/licenses/gpl-3.0>.
+#
+# The Karabo Gui is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.\
+
+from enum import Enum
+
+from qtpy import uic
+from qtpy.QtCore import QBuffer, QByteArray, QIODevice
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
+
+from karabo.common.scenemodel.api import create_base64image
+from karabo.native import Hash
+from karabogui.dialogs.utils import get_dialog_ui
+from karabogui.events import (
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
+from karabogui.singletons.api import get_network
+
+
+class LogBookType(Enum):
+    Image = "image"
+    Table = "table"
+
+
+class LogBookPreview(QDialog):
+    """A Dialog to preview the data to the LogBook"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setModal(False)
+        uic.loadUi(get_dialog_ui("logbook.ui"), self)
+
+        self.pixmap = parent.grab()
+        for mode in LogBookType:
+            self.combo_datatype.addItem(mode.name, mode)
+
+        self.combo_datatype.setCurrentIndex(0)
+        ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        ok_button.setText("Save")
+
+        self._event_map = {
+            KaraboEvent.ActiveProposalList: self._event_proposals}
+        register_for_broadcasts(self._event_map)
+        get_network().requestActiveProposals()
+
+    def _event_proposals(self, data):
+        """Show the available logbooks for the instrument, in a combobox.
+
+        :param data: A Hash with information about available LogBooks,
+            as the following fields:
+                "number": The proposal number.
+                "title" : The proposal title.
+                "logBookId" : Logbook identifier (name of a Zulip stream).
+                "logbookUrl": Url of the logbook.
+        """
+        for index, proposal in enumerate(data):
+            logbook_id = proposal.get("logbookId")
+            logbook_url = proposal.get("logbookUrl")
+            if logbook_id.strip():
+                self.combo_proposals.addItem(logbook_id)
+                self.combo_proposals.setItemData(index, logbook_url)
+
+    def _extract_image_data(self):
+        """Convert the QPixmap to an embedded href format."""
+        pixmap = self.pixmap
+        image_byte = QByteArray()
+        buffer = QBuffer(image_byte)
+        buffer.open(QIODevice.WriteOnly)
+        pixmap.save(buffer, "PNG")
+        return create_base64image("png", image_byte)
+
+    def _extract_panel_info(self):
+        """Extract the panel data"""
+        widget = self.parent()
+        data = widget.get_panel_info()
+        if data is None:
+            data = Hash()
+
+        return data
+
+    def _get_logbook_data(self):
+        dataType = self.combo_datatype.currentData()
+        if dataType is LogBookType.Table:
+            return self._extract_panel_info()
+        elif dataType is LogBookType.Image:
+            return self._extract_image_data()
+
+    def done(self, result):
+        if result:
+            self.request_save()
+        unregister_from_broadcasts(self._event_map)
+        return super().done(result)
+
+    def request_save(self):
+        """Request saving a Hash to the KaraboLogBook"""
+        proposal = self.combo_proposals.currentText()
+        proposalId = proposal.split("_")[0]
+        dataType = self.combo_datatype.currentData().value
+        data = self._get_logbook_data()
+        caption = self.caption_edit.toPlainText()
+        get_network().onSaveLogBook(
+            proposalId=proposalId, dataType=dataType, data=data,
+            caption=caption)

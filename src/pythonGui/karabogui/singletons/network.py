@@ -23,7 +23,8 @@ from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
 from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 
 import karabogui.access as krb_access
-from karabo.common.api import KARABO_CONFIG_MANAGER, KARABO_PROJECT_MANAGER
+from karabo.common.api import (
+    KARABO_CONFIG_MANAGER, KARABO_LOGBOOK_MANAGER, KARABO_PROJECT_MANAGER)
 from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
@@ -696,3 +697,25 @@ class Network(QObject):
         for r in self._request_queue:
             self._write_hash(r)
         self._request_queue = []
+
+    def requestActiveProposals(self):
+        logger.info("Fetching available active proposals in the Topic.")
+        h = Hash("type", "requestGeneric")
+        h["instanceId"] = KARABO_LOGBOOK_MANAGER
+        h["slot"] = "slotGetActiveProposals"
+        h["replyType"] = "activeProposals"
+        h["args"] = Hash()
+        self._write_hash(h)
+
+    def onSaveLogBook(self, proposalId, dataType, data, caption):
+        h = Hash()
+        h["type"] = "requestGeneric"
+        args = Hash("proposalId", proposalId,
+                    "dataType", dataType,
+                    "data", data,
+                    "caption", caption)
+        h["args"] = args
+        h["instanceId"] = KARABO_LOGBOOK_MANAGER
+        h["slot"] = "slotSaveLogBook"
+        h["replyType"] = "saveLogBook"
+        self._write_hash(h)
