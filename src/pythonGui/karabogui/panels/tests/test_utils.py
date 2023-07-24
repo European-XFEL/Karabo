@@ -14,10 +14,13 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from karabogui.testing import system_hash
+from traits.api import Undefined
+
+from karabogui.binding.api import apply_default_configuration, build_binding
+from karabogui.testing import get_all_props_schema, system_hash
 from karabogui.topology.api import SystemTopology
 
-from ..utils import compare_proxy_essential
+from ..utils import compare_proxy_essential, extract_proxy_info
 
 
 def test_proxy_essential_compare():
@@ -45,3 +48,39 @@ def test_proxy_essential_compare():
     showing_proxy = topology.get_project_device_proxy("divvy", "swerver",
                                                       "BarClass")
     assert compare_proxy_essential(proxy, showing_proxy)
+
+
+def test_extract_proxy_info():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    assert binding.value.a.value is Undefined
+    assert binding.value.b.value is Undefined
+    assert binding.value.c.value is Undefined
+
+    apply_default_configuration(binding)
+
+    assert binding.value.a.value
+    assert binding.value.b.value == "c"
+    assert binding.value.c.value is Undefined
+
+    # Make sure the extracted default conversion is minimal
+    # It should include properties with default values, options, or node types
+    config = extract_proxy_info(binding)
+    default_props = ("a", "b", "h1", "i1", "j1")
+    for prop in default_props:
+        assert prop != "Undefined"
+
+    # List and Choice of Node and not present
+    assert "i1" not in config
+    assert "j1" not in config
+
+    # Slot k1 is not present
+    assert "k1" not in config
+
+    # m has no default value, but present with Undefined
+    assert "m" in config
+    assert config["m"] == "Undefined"
+
+    assert "c" in config
+    assert config["c"] == "Undefined"
