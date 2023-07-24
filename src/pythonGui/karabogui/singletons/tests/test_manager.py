@@ -851,3 +851,31 @@ class TestManager(GuiTestCase):
             manager.handle_saveConfigurationFromName(**info)
             mbox.show_error.assert_called_with(
                 'Saving a configuration for XFEL/CAM/1 failed!', details='')
+
+
+def test_handle_activeProposals(gui_app, mocker):
+    network = mocker.Mock()
+    with singletons(network=network):
+        manager = Manager()
+        with singletons(manager=manager):
+            broadcast = mocker.patch(
+                "karabogui.singletons.manager.broadcast_event")
+            reply = Hash("activeProposals", ["one", "two", "three"])
+            manager.handle_activeProposals(success=True,
+                                           request=Hash(), reply=reply)
+            broadcast.assert_called_with(
+                KaraboEvent.ActiveProposalList, ["one", "two", "three"])
+
+
+def test_handle_saveLogBook(gui_app, mocker):
+    network = mocker.Mock()
+    logger = mocker.patch("karabogui.singletons.manager.get_logger")
+    with singletons(network=network):
+        manager = Manager()
+        with singletons(manager=manager):
+            args = Hash("dataType", "image")
+            h = Hash("args", args)
+            manager.handle_saveLogBook(success=True, request=h, reply=h)
+            message = "Posted the image to LogBook successfully"
+            logger().info.assert_called_with(message)
+            assert logger().info.call_count == 1

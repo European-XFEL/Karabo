@@ -46,7 +46,7 @@ from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
 from .tool_widget import ConfiguratorSearch
 from .utils import (
-    compare_proxy_essential, format_property_details,
+    compare_proxy_essential, extract_proxy_info, format_property_details,
     format_vector_hash_details)
 
 BLANK_PAGE = 0
@@ -694,6 +694,13 @@ class ConfigurationPanel(BasePanelWidget):
         if event.isAccepted():
             self.signalPanelClosed.emit(self.windowTitle())
             unregister_from_broadcasts(self.event_map)
+
+    def get_panel_info(self):
+        proxy = self._showing_proxy
+        if proxy is None:
+            return
+
+        return extract_proxy_info(proxy.binding)
 
     # -----------------------------------------------------------------------
     # slots
