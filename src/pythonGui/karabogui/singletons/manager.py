@@ -758,13 +758,13 @@ class Manager(QObject):
             data = extract_alarms_data(instanceId, rows)
             self._alarm_model.update_alarms_info(data)
 
-    def handle_activeProposals(self, success, request, reply, reason=""):
+    def handle_listDestinations(self, success, request, reply, reason=""):
         """
         Broadcast the available proposals in the Topic, fetched by the
         KaraboELogger, so that the PreviewDialog can  list them.
         """
-        proposals = reply.get("activeProposals")
-        broadcast_event(KaraboEvent.ActiveProposalList, proposals)
+        destinations = reply.get("destinations")
+        broadcast_event(KaraboEvent.ActiveDestinations, destinations)
 
     def handle_saveLogBook(self, success, request, reply, reason=""):
         """
