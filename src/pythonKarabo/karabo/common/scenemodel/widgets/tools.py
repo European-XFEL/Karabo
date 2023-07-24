@@ -28,7 +28,7 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 
-def convert_from_svg_image(href):
+def extract_base64image(href):
     """converts a `href` attribute to format and bytes
 
     takes the xlink:href attribute of an svg:image tag
@@ -51,12 +51,11 @@ def convert_from_svg_image(href):
     return image_format, data
 
 
-def convert_to_svg_image(image_format, image_bytes):
+def create_base64image(image_format, image_bytes):
     """Convert the image bytes to an embedded href format expected by
     svg:image."""
     data = base64.b64encode(image_bytes).decode("ascii")
-    svg_image = f"data:image/{image_format};base64,{data}"
-    return svg_image
+    return f"data:image/{image_format};base64,{data}"
 
 
 class ImageRendererModel(BaseWidgetObjectData):
@@ -84,7 +83,7 @@ def _svg_image_data_writer(model, parent):
     image = model.image
     if image is None or len(image) == 0:
         # Save an image at all cost ...
-        image = convert_to_svg_image("svg", b"")
+        image = create_base64image("svg", b"")
     element.set(IMAGE_ELEMENT_KEY, image)
     # Keep the quality and the exact resize as in the GUI
     element.set("preserveAspectRatio", "none")
