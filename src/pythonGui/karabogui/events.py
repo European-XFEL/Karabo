@@ -25,7 +25,7 @@ from karabogui.singletons.api import get_mediator
 # Enum for karabo broadcast event senders
 class KaraboEvent(Enum):
     AccessLevelChanged = "Global Access Level changed"
-    ActiveProposalList = "Active Proposal (Logbook) list "
+    ActiveDestinations = "Active Proposal (Logbook) list "
     BigDataProcessing = "Big data delay"
     ClearConfigurator = "Clear configurator"
     ConnectMacroInstance = "Connect macro instance"

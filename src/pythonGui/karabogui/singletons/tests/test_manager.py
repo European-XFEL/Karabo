@@ -853,18 +853,18 @@ class TestManager(GuiTestCase):
                 'Saving a configuration for XFEL/CAM/1 failed!', details='')
 
 
-def test_handle_activeProposals(gui_app, mocker):
+def test_handle_destinations(gui_app, mocker):
     network = mocker.Mock()
     with singletons(network=network):
         manager = Manager()
         with singletons(manager=manager):
             broadcast = mocker.patch(
                 "karabogui.singletons.manager.broadcast_event")
-            reply = Hash("activeProposals", ["one", "two", "three"])
-            manager.handle_activeProposals(success=True,
-                                           request=Hash(), reply=reply)
+            reply = Hash("destinations", ["one", "two", "three"])
+            manager.handle_listDestinations(success=True,
+                                            request=Hash(), reply=reply)
             broadcast.assert_called_with(
-                KaraboEvent.ActiveProposalList, ["one", "two", "three"])
+                KaraboEvent.ActiveDestinations, ["one", "two", "three"])
 
 
 def test_handle_saveLogBook(gui_app, mocker):
