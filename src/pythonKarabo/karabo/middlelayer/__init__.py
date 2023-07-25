@@ -26,49 +26,6 @@ from karabo.common.project.api import (
     MacroModel, ProjectModel)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.common.states import State
-from karabo.middlelayer_api import numeric
-from karabo.middlelayer_api.configuration import (
-    config_changes, extract_modified_schema_attributes,
-    sanitize_init_configuration, sanitize_write_configuration)
-from karabo.middlelayer_api.device import Device, DeviceClientBase
-# Middlelayer api
-from karabo.middlelayer_api.device_client import (
-    Queue, call, callNoWait, compareConfigurationsFromPast,
-    compareDeviceConfiguration, compareDeviceWithPast, connectDevice,
-    disconnectDevice, execute, executeNoWait, filterByTags, findDevices,
-    findServers, getClasses, getClassSchema, getClients, getConfiguration,
-    getConfigurationFromName, getConfigurationFromPast, getDescriptors,
-    getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
-    getProperties, getSchema, getSchemaFromPast, getServers, getTimeInfo,
-    getTopology, instantiate, instantiateFromName, instantiateNoWait, isAlive,
-    listConfigurationFromName, listDevicesWithConfiguration, lock,
-    saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
-    updateDevice, waitUntil, waitUntilNew, waitWhile)
-from karabo.middlelayer_api.device_server import (
-    DeviceServerBase, MiddleLayerDeviceServer)
-from karabo.middlelayer_api.devicenode import DeviceNode
-from karabo.middlelayer_api.eventloop import (
-    EventLoop, KaraboFuture, NoEventLoop, global_sync, synchronize,
-    synchronize_notimeout)
-from karabo.middlelayer_api.injectable import Injectable
-from karabo.middlelayer_api.logger import CacheLog
-from karabo.middlelayer_api.macro import (
-    EventThread, Macro, MacroSlot, Monitor, RemoteDevice, TopologyMacro)
-from karabo.middlelayer_api.pipeline import (
-    Channel, InputChannel, NetworkInput, NetworkOutput, OutputChannel,
-    OutputProxy, PipelineContext, PipelineMetaData, RingQueue)
-from karabo.middlelayer_api.proxy import (
-    ProxyBase as Proxy, ProxyNodeBase as ProxyNode, ProxySlotBase as ProxySlot,
-    SubProxyBase as SubProxy)
-from karabo.middlelayer_api.signalslot import (
-    Signal, SignalSlotable, coslot, slot)
-from karabo.middlelayer_api.synchronization import (
-    allCompleted, background, firstCompleted, firstException, gather,
-    processEvents, sleep, synchronous)
-from karabo.middlelayer_api.unitutil import (
-    StateSignifier, maximum, minimum, removeQuantity)
-from karabo.middlelayer_api.utils import (
-    AsyncTimer, build_karabo_value, get_property, profiler, set_property)
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
     BoolValue, ByteArray, Char, ChoiceOfNodes, ComplexDouble, ComplexFloat,
@@ -93,3 +50,44 @@ from karabo.native import (
     minutesAgo, newest_timestamp, read_project_model, sanitize_table_schema,
     saveToFile, simple_deepcopy, string_from_hashtype, unit_registry as unit,
     write_project_model, writeBinary, writeXML)
+
+from . import numeric
+from .configuration import (
+    config_changes, extract_modified_schema_attributes,
+    sanitize_init_configuration, sanitize_write_configuration)
+from .device import Device, DeviceClientBase
+# Middlelayer api
+from .device_client import (
+    Queue, call, callNoWait, compareConfigurationsFromPast,
+    compareDeviceConfiguration, compareDeviceWithPast, connectDevice,
+    disconnectDevice, execute, executeNoWait, filterByTags, findDevices,
+    findServers, getClasses, getClassSchema, getClients, getConfiguration,
+    getConfigurationFromName, getConfigurationFromPast, getDescriptors,
+    getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
+    getProperties, getSchema, getSchemaFromPast, getServers, getTimeInfo,
+    getTopology, instantiate, instantiateFromName, instantiateNoWait, isAlive,
+    listConfigurationFromName, listDevicesWithConfiguration, lock,
+    saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
+    updateDevice, waitUntil, waitUntilNew, waitWhile)
+from .device_server import DeviceServerBase, MiddleLayerDeviceServer
+from .devicenode import DeviceNode
+from .eventloop import (
+    EventLoop, KaraboFuture, NoEventLoop, global_sync, synchronize,
+    synchronize_notimeout)
+from .injectable import Injectable
+from .logger import CacheLog
+from .macro import (
+    EventThread, Macro, MacroSlot, Monitor, RemoteDevice, TopologyMacro)
+from .pipeline import (
+    Channel, InputChannel, NetworkInput, NetworkOutput, OutputChannel,
+    OutputProxy, PipelineContext, PipelineMetaData, RingQueue)
+from .proxy import (
+    ProxyBase as Proxy, ProxyNodeBase as ProxyNode, ProxySlotBase as ProxySlot,
+    SubProxyBase as SubProxy)
+from .signalslot import Signal, SignalSlotable, coslot, slot
+from .synchronization import (
+    allCompleted, background, firstCompleted, firstException, gather,
+    processEvents, sleep, synchronous)
+from .unitutil import StateSignifier, maximum, minimum, removeQuantity
+from .utils import (
+    AsyncTimer, build_karabo_value, get_property, profiler, set_property)
