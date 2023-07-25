@@ -68,7 +68,7 @@ if SUBMODULE == 'NATIVE':
 elif SUBMODULE == 'MDL':
     install_args['packages'] = find_packages(include=[
         'karabo', 'karabo.common*', 'karabo.native*', 'karabo.testing*',
-        'karabo.interactive*', 'karabo.middlelayer_api*',
+        'karabo.interactive*', 'karabo.middlelayer*',
         'karabo.middlelayer_devices*',
         'karabo.packaging*',
     ])
@@ -78,14 +78,14 @@ elif SUBMODULE == 'MDL':
             'data/*.svg', 'data/inkscape/*.svg', 'data/legacy/*.svg',
             'data/legacy/icon_data/*.svg'
         ],
-        'karabo.middlelayer_api.tests': ['*.xml'],
+        'karabo.middlelayer.tests': ['*.xml'],
         'karabo.testing': ['resources/*.*'],
     }
 
     install_args['entry_points'] = {
         'console_scripts': [
             'karabo=karabo.interactive.karabo:main',
-            'karabo-middlelayerserver=karabo.middlelayer_api.device_server:MiddleLayerDeviceServer.main',
+            'karabo-middlelayerserver=karabo.middlelayer.device_server:MiddleLayerDeviceServer.main',
             'ikarabo=karabo.interactive.ikarabo:main',
         ],
         'karabo.middlelayer_device': [
@@ -102,7 +102,7 @@ else:
             'data/*.svg', 'data/inkscape/*.svg', 'data/legacy/*.svg',
             'data/legacy/icon_data/*.svg'
         ],
-        'karabo.middlelayer_api.tests': ['*.xml'],
+        'karabo.middlelayer.tests': ['*.xml'],
         'karabo.project_db': ['config_stubs/*.*'],
         'karabo.interactive': [
             'jupyter_spec/kernel.json',
@@ -119,7 +119,7 @@ else:
         'console_scripts': [
             'karabo=karabo.interactive.karabo:main',
             'karabo-pythonserver=karabo.bound_api.device_server:main',
-            'karabo-middlelayerserver=karabo.middlelayer_api.device_server:DeviceServer.main',
+            'karabo-middlelayerserver=karabo.middlelayer.device_server:DeviceServer.main',
             'karabo-macroserver=karabo.macro_devices.macro_server:MacroServer.main',
             'karabo-cli=karabo.interactive.ideviceclient:main',
             'ikarabo=karabo.interactive.ikarabo:main',

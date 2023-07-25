@@ -26,7 +26,7 @@ from random import choice
 
 from karabo.influxdb import InfluxDbClient, get_line_fromdicts
 from karabo.influxdb.dl_migrator import DlMigrator
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
 from karabo.native import decodeBinary
 
 _host = os.environ.get("KARABO_TEST_INFLUXDB_HOST", "localhost")

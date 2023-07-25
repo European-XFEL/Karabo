@@ -21,9 +21,9 @@ import pytest
 
 from karabo.common.states import State
 from karabo.middlelayer.testing import assertLogs, event_loop
-from karabo.middlelayer_api.unitutil import (
+from karabo.middlelayer.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
-from karabo.middlelayer_api.utils import (
+from karabo.middlelayer.utils import (
     AsyncTimer, build_karabo_value, countdown, profiler, suppress)
 from karabo.native import (
     Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
