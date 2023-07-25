@@ -16,8 +16,8 @@
 from asyncio import TimeoutError, wait_for
 from collections import OrderedDict, namedtuple
 
-from karabo.middlelayer_api.device_client import call, get_instance
-from karabo.middlelayer_api.eventloop import synchronize
+from karabo.middlelayer.device_client import call, get_instance
+from karabo.middlelayer.eventloop import synchronize
 from karabo.native import Timestamp
 
 # Alarm basic definitions

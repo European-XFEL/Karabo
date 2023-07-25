@@ -19,9 +19,9 @@ from weakref import ref
 from karabo.middlelayer import (
     Hash, Proxy, ProxyNode, ProxySlot, Schema, State, SubProxy, Timestamp,
     Unit, isSet, unit)
-from karabo.middlelayer_api.device_client import (
+from karabo.middlelayer.device_client import (
     filterByTags, getAliasFromKey, getDescriptors, getKeyFromAlias)
-from karabo.middlelayer_api.proxy import ProxyFactory
+from karabo.middlelayer.proxy import ProxyFactory
 from karabo.native import NodeType
 
 

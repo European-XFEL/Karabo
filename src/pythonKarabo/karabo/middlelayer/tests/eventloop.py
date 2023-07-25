@@ -23,10 +23,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
-from karabo.middlelayer_api.eventloop import EventLoop, ensure_coroutine
-from karabo.middlelayer_api.signalslot import SignalSlotable
-from karabo.middlelayer_api.synchronization import synchronize_notimeout
+from karabo.middlelayer.device_server import MiddleLayerDeviceServer
+from karabo.middlelayer.eventloop import EventLoop, ensure_coroutine
+from karabo.middlelayer.signalslot import SignalSlotable
+from karabo.middlelayer.synchronization import synchronize_notimeout
 
 SHUTDOWN_TIME = 2
 

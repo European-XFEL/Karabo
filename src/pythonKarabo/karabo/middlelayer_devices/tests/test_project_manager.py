@@ -17,7 +17,7 @@ import os
 from contextlib import contextmanager
 
 from karabo.middlelayer import Hash
-from karabo.middlelayer_api.tests.eventloop import DeviceTest
+from karabo.middlelayer.tests.eventloop import DeviceTest
 from karabo.middlelayer_devices.project_manager import ProjectManager
 from karabo.project_db.exist_db.database import ProjectDatabase
 from karabo.project_db.exist_db.tests.util import stop_local_database
