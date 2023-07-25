@@ -23,8 +23,8 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     MetricPrefix, QuantityValue, Unit, allCompleted, background,
     firstCompleted, firstException, gather, sleep, synchronous, unit)
+from karabo.middlelayer.synchronization import FutureDict
 from karabo.middlelayer.testing import assertLogs, event_loop, run_test
-from karabo.middlelayer_api.synchronization import FutureDict
 
 global called
 called = False

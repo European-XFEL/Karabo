@@ -19,8 +19,8 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Configurable, DeviceNode, Double,
     Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, String, Unit,
     unit)
-from karabo.middlelayer_api.injectable import InjectMixin
-from karabo.middlelayer_api.tests import eventloop
+from karabo.middlelayer.injectable import InjectMixin
+from karabo.middlelayer.tests import eventloop
 
 
 class InjectConfigurable(InjectMixin):
