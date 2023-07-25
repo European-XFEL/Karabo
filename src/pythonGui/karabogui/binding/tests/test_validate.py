@@ -25,8 +25,8 @@ from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 from karabogui.binding.builder import build_binding
 from karabogui.binding.validate import (
-    get_default_value, sanitize_table_value, validate_binding_configuration,
-    validate_table_value, validate_value)
+    convert_string, get_default_value, sanitize_table_value,
+    validate_binding_configuration, validate_table_value, validate_value)
 from karabogui.testing import get_simple_props_schema
 
 
@@ -866,3 +866,17 @@ def test_validate_binding_configuration():
     config = Hash("table", None)
     fails = validate_binding_configuration(binding, config)
     assert "table" in fails
+
+
+def test_convert_string():
+    value, success = convert_string("2")
+    assert value == 2
+    assert success
+
+    value, success = convert_string("00001")
+    assert value == "00001"
+    assert not success
+
+    value, success = convert_string("1.3")
+    assert value == 1.3
+    assert success
