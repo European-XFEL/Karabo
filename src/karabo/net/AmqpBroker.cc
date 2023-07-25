@@ -127,7 +127,7 @@ namespace karabo {
                 std::ostringstream oss;
                 oss << "Message -> ...\n" << *msg << ": Error code #" << ec.value() << " -- " << ec.message();
                 if (errorNotifier) {
-                    errorNotifier(consumer::Error::drop, oss.str()); // call error handler
+                    m_handlerStrand->post(boost::bind(errorNotifier, consumer::Error::drop, oss.str()));
                 } else {
                     throw KARABO_NETWORK_EXCEPTION(oss.str());
                 }
@@ -148,7 +148,12 @@ namespace karabo {
                                                       const AsyncHandler& completionHandler) {
             const std::string exchange = m_topic + ".signals";
             const std::string bindingKey = signalInstanceId + "." + signalFunction;
-            m_client->subscribeAsync(exchange, bindingKey, completionHandler);
+            auto wrapHandler = [completionHandler](const boost::system::error_code& ec) {
+                // Ensure that the passed handler is not running in the AMQP event loop - it may contain synchronous
+                // writing to the broker that would then block that event loop
+                karabo::net::EventLoop::post(boost::bind(completionHandler, ec));
+            };
+            m_client->subscribeAsync(exchange, bindingKey, wrapHandler);
         }
 
 
@@ -172,7 +177,11 @@ namespace karabo {
             }
             const std::string exchange = m_topic + ".signals";
             const std::string bindingkey = signalInstanceId + "." + signalFunction;
-            m_client->unsubscribeAsync(exchange, bindingkey, completionHandler);
+            // Wrap handler - see comment in subscribeToRemoteSignalAsync
+            auto wrapHandler = [completionHandler](const boost::system::error_code& ec) {
+                karabo::net::EventLoop::post(boost::bind(completionHandler, ec));
+            };
+            m_client->unsubscribeAsync(exchange, bindingkey, wrapHandler);
         }
 
 
