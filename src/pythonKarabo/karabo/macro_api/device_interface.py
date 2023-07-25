@@ -14,7 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from karabo.common.enums import Capabilities, Interfaces
-from karabo.middlelayer_api.device_client import getTopology
+from karabo.middlelayer.device_client import getTopology
 
 DEVICE = "device"
 

@@ -137,7 +137,7 @@ class Macro(Macro):
 
 SUB_IMPORT_MACRO = """
 from karabo.middlelayer import Slot, String
-from karabo.middlelayer_api.device_client import DeviceClientBase
+from karabo.middlelayer.device_client import DeviceClientBase
 
 class Macro(DeviceClientBase):
     name = String()
@@ -255,4 +255,4 @@ class Tests(TestCase):
 
     def test_sub_imports(self):
         res = validate_macro(SUB_IMPORT_MACRO)
-        self.assertEqual(len(res), 2)
+        self.assertEqual(len(res), 1)

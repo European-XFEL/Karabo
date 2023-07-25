@@ -23,8 +23,8 @@ from karabo.middlelayer import (
     Device, DeviceClientBase, Hash, KaraboError, Schema,
     getConfigurationFromPast, getInstanceInfo, getSchemaFromPast, getTopology,
     slot)
-from karabo.middlelayer_api.synchronization import background, synchronize
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer.synchronization import background, synchronize
+from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
 
 DEVICE_ID = "data_logger_device_id"
 
@@ -80,7 +80,7 @@ class TestDeviceClient(DeviceTest):
 
     @async_tst
     async def test_getConfigurationSchemaFromPast(self):
-        with mock.patch('karabo.middlelayer_api.device_client._getLogReaderId',
+        with mock.patch('karabo.middlelayer.device_client._getLogReaderId',
                         new=_getLogReaderId):
 
             time = datetime.now().isoformat()
