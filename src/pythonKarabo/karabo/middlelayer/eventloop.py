@@ -27,7 +27,7 @@ from asyncio import (
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
-from karabo.middlelayer_api.broker import Broker, check_broker_scheme
+from karabo.middlelayer.broker import Broker, check_broker_scheme
 from karabo.native import KaraboValue, unit_registry as unit
 
 # Number of threads that can be scheduled in the thread pool executor.

@@ -20,8 +20,8 @@ from inspect import isfunction
 from weakref import WeakSet
 
 from karabo.common.api import WeakMethodRef
-from karabo.middlelayer_api.broker import suppressBrokerException
-from karabo.middlelayer_api.synchronization import synchronize, synchronous
+from karabo.middlelayer.broker import suppressBrokerException
+from karabo.middlelayer.synchronization import synchronize, synchronous
 from karabo.native import (
     Descriptor, Hash, KaraboError, KaraboValue, NDArray, NodeType, NoneValue,
     Slot, Timestamp, Type, Weak, get_timestamp, isSet)

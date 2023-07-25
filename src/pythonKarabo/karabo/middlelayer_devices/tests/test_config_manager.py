@@ -26,7 +26,7 @@ from karabo.middlelayer import (
     connectDevice, getConfigurationFromName, getLastConfiguration,
     instantiateFromName, listConfigurationFromName,
     listDevicesWithConfiguration, saveConfigurationFromName, slot)
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer.tests.eventloop import DeviceTest, async_tst
 
 from ..configuration_manager import ConfigurationManager
 

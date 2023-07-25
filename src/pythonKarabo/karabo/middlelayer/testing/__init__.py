@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa: F401
 
-from karabo.middlelayer_api.tests.eventloop import (
+from karabo.middlelayer.tests.eventloop import (
     AsyncDeviceContext, DeviceTest, async_tst, create_device_server,
     create_instanceId, event_loop, setEventLoop, sleepUntil, switch_instance,
     sync_tst)

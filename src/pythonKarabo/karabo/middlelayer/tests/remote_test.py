@@ -32,9 +32,9 @@ from karabo.middlelayer import (
     connectDevice, disconnectDevice, execute, filterByTags, getDevice,
     getInstanceInfo, getSchema, getTimeInfo, isAlive, isSet, lock, setNoWait,
     setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
+from karabo.middlelayer.logger import CacheLog
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
-from karabo.middlelayer_api.logger import CacheLog
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
