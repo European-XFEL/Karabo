@@ -18,14 +18,14 @@ from functools import partial
 import karabo.bound_api as bound_pkg
 import karabo.common as common_pkg
 import karabo.macro_api as macro_pgk
-import karabo.middlelayer_api as middlelayer_pkg
+import karabo.middlelayer as middlelayer_pkg
 from karabo.testing.import_checker import (
     check_for_disallowed_module_imports, check_for_star_imports,
     run_checker_on_package)
 
 
 def test_bound_no_middlelayer_imports():
-    for forbidden in ('karabo.middlelayer', 'karabo.middlelayer_api'):
+    for forbidden in ('karabo.middlelayer', 'karabo.middlelayer'):
         checker = partial(check_for_disallowed_module_imports, forbidden)
         run_checker_on_package(bound_pkg, checker)
 
@@ -43,7 +43,7 @@ def test_common_no_bound_imports():
 
 
 def test_common_no_middlelayer_imports():
-    for forbidden in ('karabo.middlelayer', 'karabo.middlelayer_api'):
+    for forbidden in ('karabo.middlelayer', 'karabo.middlelayer'):
         checker = partial(check_for_disallowed_module_imports, forbidden)
         run_checker_on_package(common_pkg, checker)
 

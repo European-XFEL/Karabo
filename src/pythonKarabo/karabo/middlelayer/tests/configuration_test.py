@@ -18,11 +18,11 @@ from copy import deepcopy
 import numpy as np
 
 from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_HIGH
-from karabo.middlelayer_api.configuration import (
+from karabo.middlelayer.configuration import (
     attr_fast_deepcopy, config_changes, extract_modified_schema_attributes,
     is_equal, sanitize_init_configuration, sanitize_write_configuration,
     validate_init_configuration)
-from karabo.middlelayer_api.macro import MacroSlot
+from karabo.middlelayer.macro import MacroSlot
 from karabo.native import (
     AccessMode, Assignment, Configurable, Double, Hash, Int32, MetricPrefix,
     Node, Overwrite, Schema, Slot, Unit)

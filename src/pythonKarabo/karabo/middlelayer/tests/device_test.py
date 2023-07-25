@@ -24,14 +24,14 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
     waitUntil, waitWhile)
+from karabo.middlelayer.device import Device
+from karabo.middlelayer.device_client import (
+    call, get_instance, getProperties, getSchema)
+from karabo.middlelayer.pipeline import InputChannel, OutputChannel
+from karabo.middlelayer.signalslot import slot
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, event_loop, run_test, sleepUntil)
-from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import (
-    call, get_instance, getProperties, getSchema)
-from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
-from karabo.middlelayer_api.signalslot import slot
-from karabo.middlelayer_api.utils import AsyncTimer, get_property, set_property
+from karabo.middlelayer.utils import AsyncTimer, get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
 
