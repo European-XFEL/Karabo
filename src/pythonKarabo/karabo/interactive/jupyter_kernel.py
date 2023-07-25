@@ -24,8 +24,7 @@ from ipykernel.kernelapp import IPKernelApp
 from tornado.platform.asyncio import AsyncIOMainLoop
 from zmq.asyncio import ZMQEventLoop
 
-from karabo.middlelayer import Device, DeviceClientBase, background
-from karabo.middlelayer_api import eventloop
+from karabo.middlelayer import Device, DeviceClientBase, background, eventloop
 
 
 class EventLoop(eventloop.EventLoop, ZMQEventLoop):
@@ -102,7 +101,7 @@ class KaraboKernelApp(IPKernelApp):
     kernel_class = KaraboKernel
     exec_lines = ["%pylab inline",
                   "from karabo.middlelayer import *",
-                  "from karabo.middlelayer_api.numeric import *"]
+                  "from karabo.middlelayer.numeric import *"]
 
     def start(self):
         hostname = socket.gethostname().split(".", 1)[0]
