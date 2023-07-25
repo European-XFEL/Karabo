@@ -19,9 +19,9 @@ from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main
 
 from karabo.middlelayer import getDevice, updateDevice
-from karabo.middlelayer_api.broker import jms
-from karabo.middlelayer_api.signalslot import SignalSlotable
-from karabo.middlelayer_api.tests.eventloop import EventLoop
+from karabo.middlelayer.broker import jms
+from karabo.middlelayer.signalslot import SignalSlotable
+from karabo.middlelayer.tests.eventloop import EventLoop
 from karabo.native import Hash
 
 from ..macro_server import MacroServer

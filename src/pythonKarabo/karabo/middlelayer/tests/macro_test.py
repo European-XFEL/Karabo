@@ -22,18 +22,18 @@ import pytest
 import pytest_asyncio
 
 from karabo.common.states import State
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
-from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import (
+from karabo.middlelayer.device import Device
+from karabo.middlelayer.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
     getDevice, getProperties, getSchema, lock, setNoWait, setWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
-from karabo.middlelayer_api.device_server import KaraboStream
-from karabo.middlelayer_api.macro import Macro, MacroSlot
-from karabo.middlelayer_api.pipeline import OutputChannel, PipelineContext
-from karabo.middlelayer_api.signalslot import slot
-from karabo.middlelayer_api.synchronization import background, sleep
+from karabo.middlelayer.device_server import KaraboStream
+from karabo.middlelayer.macro import Macro, MacroSlot
+from karabo.middlelayer.pipeline import OutputChannel, PipelineContext
+from karabo.middlelayer.signalslot import slot
+from karabo.middlelayer.synchronization import background, sleep
+from karabo.middlelayer.testing import (
+    AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32 as Int, KaraboError, Node, Slot)
 

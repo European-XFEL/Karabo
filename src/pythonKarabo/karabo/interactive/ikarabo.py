@@ -21,7 +21,7 @@ from karabo.middlelayer.cli import *
 from karabo.macros.cli import *
 
 # This initializes everything
-from karabo.middlelayer_api import ikarabo
+from karabo.middlelayer import ikarabo
 ikarabo.start_ikarabo()
 del ikarabo
 """

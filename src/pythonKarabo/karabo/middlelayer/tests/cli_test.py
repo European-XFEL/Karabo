@@ -24,14 +24,14 @@ from itertools import count
 import pytest
 
 from karabo.common.states import State
-from karabo.middlelayer.testing import assertLogs, setEventLoop, sleepUntil
-from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import (
+from karabo.middlelayer.device import Device
+from karabo.middlelayer.device_client import (
     callNoWait, findDevices, getClients, getDevice, getDevices, shutdown)
-from karabo.middlelayer_api.eventloop import NoEventLoop, global_sync
-from karabo.middlelayer_api.ikarabo import (
+from karabo.middlelayer.eventloop import NoEventLoop, global_sync
+from karabo.middlelayer.ikarabo import (
     DeviceClient, connectDevice, start_device_client)
-from karabo.middlelayer_api.macro import EventThread, Macro, RemoteDevice
+from karabo.middlelayer.macro import EventThread, Macro, RemoteDevice
+from karabo.middlelayer.testing import assertLogs, setEventLoop, sleepUntil
 from karabo.native import Int32 as Int, KaraboError, Slot
 
 
