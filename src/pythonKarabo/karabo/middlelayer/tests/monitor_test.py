@@ -19,11 +19,10 @@ from asyncio import Future, ensure_future, sleep
 import pytest
 import pytest_asyncio
 
+from karabo.middlelayer.device import Device
+from karabo.middlelayer.macro import Macro, Monitor, RemoteDevice
 from karabo.middlelayer.testing import assertLogs, run_test
-from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
-from karabo.middlelayer_api.tests.eventloop import (
-    AsyncDeviceContext, event_loop)
+from karabo.middlelayer.tests.eventloop import AsyncDeviceContext, event_loop
 from karabo.native import Int32 as Int, Slot
 
 

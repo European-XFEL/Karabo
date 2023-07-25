@@ -43,7 +43,7 @@ def validate_macro(code):
         ret.extend(lines)
 
     # Make sure there are no sub module imports
-    for mod in ["karabo.middlelayer_api", "karabo.middlelayer"]:
+    for mod in ["karabo.middlelayer"]:
         lines = has_sub_imports(tree, mod)
         if lines:
             ret.extend(lines)

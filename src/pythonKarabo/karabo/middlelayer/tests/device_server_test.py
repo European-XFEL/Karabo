@@ -19,12 +19,12 @@ from asyncio import gather, sleep, wait
 
 import pytest
 
+from karabo.middlelayer.broker.compat import amqp
+from karabo.middlelayer.device import Device
+from karabo.middlelayer.device_client import (
+    call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
 from karabo.middlelayer.testing import (
     create_device_server, create_instanceId, event_loop, sleepUntil)
-from karabo.middlelayer_api.broker.compat import amqp
-from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import (
-    call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
 from karabo.native import Hash, KaraboError, Schema, Timestamp
 
 SHUTDOWN_TIME = 1

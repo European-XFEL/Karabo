@@ -22,7 +22,7 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Device, Hash, Overwrite, Slot, String, TypeHash,
     VectorString, dictToHash, slot)
-from karabo.middlelayer_api.signalslot import Signal
+from karabo.middlelayer.signalslot import Signal
 from karabo.native import read_project_model
 from karabo.project_db.util import ProjectDBError, get_node, get_project
 

@@ -17,12 +17,12 @@ import asyncio
 
 import pytest
 
-from karabo.middlelayer_api.tests.eventloop import event_loop
+from karabo.middlelayer.tests.eventloop import event_loop
 from karabo.native import Hash
 
 from ..heartbeat_mixin import HeartBeatMixin
 
-TARGET = 'karabo.middlelayer_api.heartbeat_mixin.HeartBeatMixin._topology_changed'  # noqa
+TARGET = 'karabo.middlelayer.heartbeat_mixin.HeartBeatMixin._topology_changed'  # noqa
 
 
 _SERVER_INSTANCES = Hash(

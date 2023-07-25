@@ -17,7 +17,7 @@ import os
 import tempfile
 from contextlib import contextmanager
 
-from karabo.middlelayer_api.tests.eventloop import DeviceTest
+from karabo.middlelayer.tests.eventloop import DeviceTest
 from karabo.middlelayer_devices.project_manager import ProjectManager
 from karabo.native import Hash
 from karabo.project_db.file_db.database import ProjectDatabase
