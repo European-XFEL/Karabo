@@ -215,7 +215,7 @@ class BasePanelWidget(QFrame):
         container.
         """
         text = "Save LogBook"
-        self.acSaveLogBook = QAction(icons.send, "&Save", self)
+        self.acSaveLogBook = QAction(icons.logbook, "&Save LogBook", self)
         self.acSaveLogBook.setToolTip(text)
         self.acSaveLogBook.setStatusTip(text)
         self.acSaveLogBook.triggered.connect(self.handleLogBookPreview)
