@@ -18,15 +18,30 @@
 from enum import Enum
 
 from qtpy import uic
-from qtpy.QtCore import QBuffer, QByteArray, QIODevice
-from qtpy.QtWidgets import QDialog, QDialogButtonBox
+from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QGraphicsScene, QLineEdit
 
 from karabo.common.scenemodel.api import create_base64image
 from karabo.native import Hash
+from karabogui import icons
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_network
+from karabogui.validators import NumberValidator
+
+MIN_ZOOM_FACTOR = 25
+MAX_ZOOM_FACTOR = 250
+ZOOM_INCREMENT = 1.1
+
+TOOLBUTTON_STYLE = """
+QToolButton {
+    border: none;
+}
+QToolButton:hover {
+    border: 1px solid gray;
+}
+"""
 
 
 class LogBookType(Enum):
@@ -54,6 +69,66 @@ class LogBookPreview(QDialog):
             KaraboEvent.ActiveDestinations: self._event_destinations}
         register_for_broadcasts(self._event_map)
         get_network().listDestinations()
+
+        self.scene = QGraphicsScene()
+        self.scene.addPixmap(self.pixmap)
+        self.image_view.setScene(self.scene)
+
+        self.zoom_factor.setCurrentText("100")
+        self.zoom_factor.currentIndexChanged.connect(self.change_zoom_factor)
+
+        validator = NumberValidator(
+            minInc=MIN_ZOOM_FACTOR, maxInc=MAX_ZOOM_FACTOR, decimals=1)
+        self.zoom_factor_edit = QLineEdit()
+        self.zoom_factor_edit.setValidator(validator)
+        self.zoom_factor_edit.editingFinished.connect(self.change_zoom_factor)
+
+        self.zoom_factor.setLineEdit(self.zoom_factor_edit)
+
+        self.zoom_in_button.clicked.connect(self.zoom_in)
+        self.zoom_out_button.clicked.connect(self.zoom_out)
+        self.zoom_in_button.setIcon(icons.zoomIn)
+        self.zoom_out_button.setIcon(icons.zoomOut)
+
+        self.zoom_in_button.setStyleSheet(TOOLBUTTON_STYLE)
+        self.zoom_out_button.setStyleSheet(TOOLBUTTON_STYLE)
+
+        size = QSize(23, 23)
+        self.zoom_in_button.setIconSize(size)
+        self.zoom_out_button.setIconSize(size)
+
+        self.combo_datatype.currentIndexChanged.connect(
+            self.stackedWidget.setCurrentIndex)
+
+    @Slot()
+    def zoom_in(self):
+        value = float(self.zoom_factor_edit.text()) * ZOOM_INCREMENT
+        self._apply_zoom(value)
+
+    @Slot()
+    def zoom_out(self):
+        value = float(self.zoom_factor_edit.text()) * (1/ZOOM_INCREMENT)
+        self._apply_zoom(value)
+
+    def _apply_zoom(self, value):
+        if not MIN_ZOOM_FACTOR < value < MAX_ZOOM_FACTOR:
+            return
+        factor = value / 100
+        self._scale_image(factor)
+        value = round(value, 1)
+        self.zoom_factor_edit.setText(str(value))
+
+    @Slot()
+    def change_zoom_factor(self):
+        value = self.zoom_factor_edit.text()
+        self.zoom_factor_edit.text()
+
+        factor = float(value) / 100
+        self._scale_image(factor=factor)
+
+    def _scale_image(self, factor):
+        self.image_view.resetTransform()
+        self.image_view.scale(factor, factor)
 
     def _event_destinations(self, data):
         """Show the available logbooks for the instrument, in a combobox.
