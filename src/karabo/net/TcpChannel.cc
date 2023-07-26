@@ -604,12 +604,14 @@ namespace karabo {
 
                             for (const karabo::util::Hash& layout :
                                  m_inHashHeader->get<std::vector<karabo::util::Hash>>("_bufferSetLayout_")) {
-                                if (!layout.has("sizes") || !layout.has("types"))
+                                if (!layout.has("sizes") || !layout.has("types")) {
                                     throw KARABO_LOGIC_EXCEPTION("Pipeline Protocol violation!");
+                                }
                                 const auto& sizes = layout.get<vector<unsigned int>>("sizes");
                                 const auto& types = layout.get<vector<int>>("types");
-                                if (sizes.size() != types.size())
+                                if (sizes.size() != types.size()) {
                                     throw KARABO_LOGIC_EXCEPTION("Pipeline Protocol violation!");
+                                }
                                 karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
                                 for (size_t ii = 0; ii < sizes.size(); ii++) buffer->add(sizes[ii], types[ii]);
                                 buffers.push_back(buffer);
