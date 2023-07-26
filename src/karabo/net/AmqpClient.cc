@@ -1358,7 +1358,7 @@ namespace karabo {
 
             disconnectAsync(cb);
 
-            auto status = futur.wait_for(std::chrono::seconds(3));
+            auto status = futur.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
@@ -1379,7 +1379,7 @@ namespace karabo {
 
             closeAsync(cb);
 
-            auto status = futur.wait_for(std::chrono::seconds(3));
+            auto status = futur.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
@@ -1403,7 +1403,7 @@ namespace karabo {
 
             subscribeAsync(exchange, routingKey, cb);
 
-            auto status = futur.wait_for(std::chrono::seconds(3));
+            auto status = futur.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
@@ -1440,7 +1440,7 @@ namespace karabo {
 
             unsubscribeAsync(exchange, routingKey, cb);
 
-            auto status = futur.wait_for(std::chrono::seconds(3));
+            auto status = futur.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
