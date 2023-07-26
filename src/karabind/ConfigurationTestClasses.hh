@@ -925,7 +925,6 @@ namespace configurationTest {
                   .archivePolicy(Schema::EVERY_100MS)
                   .commit();
 
-            std::vector<int> vempty();
             VECTOR_INT32_ELEMENT(expected)
                   .key("somelist")
                   .displayedName("Ykey")
