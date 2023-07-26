@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>625</width>
-    <height>154</height>
+    <height>538</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,7 +25,7 @@
   <property name="windowTitle">
    <string>Logbook: Preview</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,2,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,6,0,0">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -101,6 +101,136 @@
     </layout>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <property name="lineWidth">
+      <number>2</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <widget class="QWidget" name="image_page">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,0,0,0,0">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Zoom Factor:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="zoom_factor">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <item>
+            <property name="text">
+             <string>25</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>50</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>75</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>100</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>125</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>150</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>200</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>250</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>%</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="zoom_in_button">
+           <property name="toolTip">
+            <string>Zoom In</string>
+           </property>
+           <property name="text">
+            <string>In</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="zoom_out_button">
+           <property name="toolTip">
+            <string>Zoom Out</string>
+           </property>
+           <property name="text">
+            <string>out</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>200</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGraphicsView" name="image_view">
+         <property name="styleSheet">
+          <string notr="true">background: transparent;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="table_page"/>
+    </widget>
+   </item>
+   <item>
     <widget class="QPlainTextEdit" name="caption_edit">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
@@ -111,11 +241,11 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>16777215</height>
+       <height>100</height>
       </size>
      </property>
      <property name="placeholderText">
-      <string>Additional message to log</string>
+      <string>Additional message to logbook</string>
      </property>
     </widget>
    </item>
