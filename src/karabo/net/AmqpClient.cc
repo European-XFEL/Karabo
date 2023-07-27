@@ -1331,16 +1331,18 @@ namespace karabo {
         void AmqpClient::deserialize(const std::string& exch, const std::string& key,
                                      const std::shared_ptr<std::vector<char>>& vec) {
             karabo::util::Hash::Pointer msg = boost::make_shared<Hash>();
-            Hash& header = msg->bindReference<Hash>("header");
-            size_t bytes = m_binarySerializer->load(header, vec->data(), vec->size());
-            header.set<std::string>("exchange", exch);
-            header.set<std::string>("routingkey", key);
+            Hash::Pointer header(boost::make_shared<Hash>());
+            size_t bytes = m_binarySerializer->load(*header, vec->data(), vec->size());
+            header->set<std::string>("exchange", exch);
+            header->set<std::string>("routingkey", key);
+            msg->set("header", header);
             if (m_skipFlag) {
                 std::vector<char>& raw = msg->bindReference<std::vector<char>>("raw");
                 std::copy(vec->data() + bytes, vec->data() + vec->size(), std::back_inserter(raw));
             } else {
-                Hash& body = msg->bindReference<Hash>("body");
-                m_binarySerializer->load(body, vec->data() + bytes, vec->size() - bytes);
+                Hash::Pointer body(boost::make_shared<Hash>());
+                m_binarySerializer->load(*body, vec->data() + bytes, vec->size() - bytes);
+                msg->set("body", body);
             }
             m_strand->post(boost::bind(m_onRead, KARABO_ERROR_CODE_SUCCESS, msg));
         }
@@ -1478,8 +1480,8 @@ namespace karabo {
                                                       const karabo::util::Hash::Pointer& msg) {
             auto payload = std::make_shared<std::vector<char>>();
             if (msg) {
-                m_binarySerializer->save2(msg->get<Hash>("header"), *payload); // header -> payload
-                m_binarySerializer->save2(msg->get<Hash>("body"), *payload);   // body   -> payload
+                m_binarySerializer->save2(*(msg->get<Hash::Pointer>("header")), *payload); // header -> payload
+                m_binarySerializer->save2(*(msg->get<Hash::Pointer>("body")), *payload);   // body   -> payload
             }
 
             auto promi = std::make_shared<std::promise<boost::system::error_code>>();
