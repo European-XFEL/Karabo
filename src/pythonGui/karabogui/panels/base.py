@@ -99,8 +99,8 @@ class BasePanelWidget(QFrame):
         """
         return []
 
-    def get_panel_info(self):
-        """Called for panel info for the KaraboLogBook"""
+    def info(self):
+        """Retrieve the info for the KaraboLogBook"""
 
     # --------------------------------------
     # public methods

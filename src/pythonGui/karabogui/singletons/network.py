@@ -707,14 +707,10 @@ class Network(QObject):
         h["args"] = Hash()
         self._write_hash(h)
 
-    def onSaveLogBook(self, name, dataType, data, caption):
+    def onSaveLogBook(self, **info):
         h = Hash()
         h["type"] = "requestGeneric"
-        args = Hash("name", name,
-                    "dataType", dataType,
-                    "data", data,
-                    "caption", caption)
-        h["args"] = args
+        h["args"] = Hash(info)
         h["instanceId"] = KARABO_LOGBOOK_MANAGER
         h["slot"] = "slotSaveLogBook"
         h["replyType"] = "saveLogBook"
