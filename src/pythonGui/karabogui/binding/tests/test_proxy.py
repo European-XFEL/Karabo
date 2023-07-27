@@ -55,6 +55,8 @@ def test_device_class_proxy_status():
         schema = get_simple_schema()
         binding = build_binding(schema)
         proxy = DeviceClassProxy(server_id='swerver', binding=binding)
+        assert repr(proxy) == ("<DeviceClassProxy classId=Simple "
+                               "serverId=swerver>")
 
         assert proxy.status == ProxyStatus.NOSERVER
         topology.get_attributes.assert_called_with('server.swerver')
@@ -107,6 +109,7 @@ def test_device_proxy_status():
         proxy = DeviceProxy(device_id='dev', server_id='swerver',
                             binding=binding)
 
+        assert repr(proxy) == "<DeviceProxy deviceId=dev>"
         assert proxy.status == ProxyStatus.OFFLINE
         proxy.add_monitor()
         proxy.status = ProxyStatus.ONLINE
@@ -198,6 +201,8 @@ def test_property_proxy_device_value():
     root_proxy = DeviceProxy(device_id='dev', binding=binding)
     proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
     proxy.value = 'Remote'
+    assert repr(proxy) == "<PropertyProxy key=dev.bar>"
+
     assert proxy.get_device_value() == 'Remote'
 
     # Then a class proxy

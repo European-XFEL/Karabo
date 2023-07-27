@@ -20,8 +20,9 @@ from .schema import (
     get_pipeline_vector_schema, get_recursive_schema, get_simple_props_schema,
     get_simple_schema, get_slotted_schema, get_vectorattr_schema)
 from .utils import (
-    GuiTestCase, SimpleDeviceSchema, alarm_data, assert_trait_change,
-    check_renderer_against_svg, click_button, development_system_hash,
-    device_hash, flushed_registry, get_class_property_proxy, get_device_schema,
-    get_property_proxy, keySequence, set_proxy_hash, set_proxy_value,
-    singletons, system_hash, system_hash_server_and_plugins)
+    GuiTestCase, SimpleDeviceSchema, access_level, alarm_data,
+    assert_trait_change, check_renderer_against_svg, click_button,
+    development_system_hash, device_hash, flushed_registry,
+    get_class_property_proxy, get_device_schema, get_property_proxy,
+    keySequence, set_proxy_hash, set_proxy_value, singletons, system_hash,
+    system_hash_server_and_plugins)
