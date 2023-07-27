@@ -305,9 +305,10 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     Epochstamp beforeFirstBurst;
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrA).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
-    // Makes sure that data has been written to Influx.
+    // Makes sure that data has been received by logger and written to Influx.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     Epochstamp afterFirstBurst;
 
     // Checks that the schema update has not been flagged as bad data.
@@ -329,9 +330,10 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrB).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrC).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
-    // Makes sure that data has been written to Influx.
+    // Makes sure that data has been received by logger and written to Influx.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     Epochstamp afterSecondBurst;
 
     // Checks that one of the schema updates failed.
@@ -358,9 +360,10 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     Epochstamp beforeThirdBurst;
     CPPUNIT_ASSERT_NO_THROW(
           m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStrD).timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
-    // Makes sure that data has been written to Influx.
+    // Makes sure that data has been received by logger and written to Influx.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     Epochstamp afterThirdBurst;
     // Checks that the schema update succeeded.
     badDataAllDevices.clear();
@@ -379,10 +382,15 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     Hash pastCfg;
     bool cfgAtTime;
     std::string cfgTime;
-    CPPUNIT_ASSERT_NO_THROW(
-          m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterThirdBurst.toIso8601())
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                .receive(pastCfg, schema, cfgAtTime, cfgTime));
+    int nTries = NUM_RETRY;
+    do {
+        CPPUNIT_ASSERT_NO_THROW(
+              m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, afterThirdBurst.toIso8601())
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                    .receive(pastCfg, schema, cfgAtTime, cfgTime));
+        if (schema.has("stringPropertyD")) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+    } while (nTries-- > 0);
     CPPUNIT_ASSERT_MESSAGE("Schema lacks expected key, \"stringPropertyD\"", schema.has("stringPropertyD"));
     CPPUNIT_ASSERT_EQUAL(Types::STRING, schema.getValueType("stringPropertyD"));
     CPPUNIT_ASSERT_EQUAL(pastCfg.get<std::string>("stringPropertyD"), "D_" + defValueSuffix);
