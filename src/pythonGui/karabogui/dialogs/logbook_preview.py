@@ -18,7 +18,7 @@
 from enum import Enum
 
 from qtpy import uic
-from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Slot
+from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QGraphicsScene, QLineEdit
 
 from karabo.common.scenemodel.api import create_base64image
@@ -99,6 +99,18 @@ class LogBookPreview(QDialog):
 
         self.combo_datatype.currentIndexChanged.connect(
             self.stackedWidget.setCurrentIndex)
+
+        # Adjust the image's size to fit the QGraphicsView, ensuring the
+        # entire image is visible.
+        scene_rect = self.image_view.sceneRect()
+        self.image_view.fitInView(scene_rect, Qt.KeepAspectRatio)
+
+        # Show the current zoom factor of the image.
+        transform = self.image_view.transform()
+        width_scale = transform.m11()
+        height_scale = transform.m22()
+        zooming_factor = ((width_scale + height_scale) / 2) * 100
+        self.zoom_factor_edit.setText(str(round(zooming_factor, 1)))
 
     @Slot()
     def zoom_in(self):
