@@ -351,10 +351,7 @@ class SceneView(QWidget):
     def apply_editor_changes(self):
         """Apply user edits to a remote device instance
         """
-        widgets = [obj for obj in self._scene_obj_cache.values()
-                   if isinstance(obj, ControllerContainer)]
-        proxies = [proxy for widget in widgets
-                   for proxy in widget.widget_controller.proxies
+        proxies = [proxy for proxy in self.cached_proxies()
                    if proxy.edit_value is not None]
         send_property_changes(proxies)
 
@@ -596,6 +593,14 @@ class SceneView(QWidget):
             self.set_cursor('none')
             self.set_tool(None)
             self.enable_mouse_event_handling(False)
+
+    def cached_proxies(self):
+        """Return all available property proxies from the scene obj cache"""
+        widgets = [obj for obj in self._scene_obj_cache.values()
+                   if isinstance(obj, ControllerContainer)]
+        proxies = [proxy for widget in widgets
+                   for proxy in widget.widget_controller.proxies]
+        return proxies
 
     # --------------------------------------------------------------------
     # Private methods

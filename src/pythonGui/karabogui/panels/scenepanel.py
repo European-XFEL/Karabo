@@ -44,6 +44,7 @@ from karabogui.util import move_to_cursor
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
+from .panel_info import create_scene_info
 
 # NOTE: This is the amount of padding added by ScenePanel's QFrame parent
 # We need to take it into account when undocking!!
@@ -217,6 +218,9 @@ class ScenePanel(BasePanelWidget):
         if not value and self.scene_view.design_mode:
             self.ac_design_mode.setChecked(False)
         self.ac_design_mode.setVisible(value)
+
+    def info(self):
+        return create_scene_info(self)
 
     # ----------------------------
     # ToolBar and Action creators
@@ -531,6 +535,9 @@ class ScenePanel(BasePanelWidget):
         frame_width = self.model.width + QFRAME_PADDING
         frame_height = self.model.height + tb_height + QFRAME_PADDING
         return (frame_width, frame_height)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} name={self.model.simple_name}>"
 
 
 class ResizableScrollArea(QScrollArea):
