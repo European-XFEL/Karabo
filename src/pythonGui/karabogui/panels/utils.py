@@ -16,13 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import os.path as op
 
-from traits.api import Undefined
-
-from karabo.native import Hash
 from karabogui import icons
-from karabogui.binding.api import (
-    BindingRoot, ChoiceOfNodesBinding, ListOfNodesBinding, NodeBinding,
-    PipelineOutputBinding)
 
 from .alarmpanel import AlarmPanel
 from .macropanel import MacroPanel
@@ -89,35 +83,3 @@ def get_panel_ui(ui_name):
     assert ui_name.endswith(".ui"), f"{ui_name} is not a `.ui` file"
 
     return op.join(op.abspath(op.dirname(__file__)), "ui", ui_name)
-
-
-def extract_proxy_info(binding):
-    """Get all the values set on a proxy binding into a Hash object.
-
-    If a value is not set yet, an `Undefined` string is placed.
-    """
-    assert isinstance(binding, BindingRoot)
-
-    ignored = (ListOfNodesBinding, ChoiceOfNodesBinding, PipelineOutputBinding)
-
-    def _iter_binding(node, base=''):
-        namespace = node.value
-        base = base + '.' if base else ''
-        for name in namespace:
-            subname = base + name
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, ignored):
-                continue
-            if isinstance(subnode, NodeBinding):
-                yield from _iter_binding(subnode, base=subname)
-            else:
-                yield subname, subnode
-
-    retval = Hash()
-    for key, node in _iter_binding(binding):
-        value = node.value
-        if value is Undefined:
-            value = "Undefined"
-        retval[key] = value
-
-    return retval
