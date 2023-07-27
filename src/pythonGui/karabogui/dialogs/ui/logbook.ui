@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>625</width>
-    <height>538</height>
+    <width>655</width>
+    <height>681</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,7 +25,7 @@
   <property name="windowTitle">
    <string>Logbook: Preview</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,6,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,6,0">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -71,7 +71,7 @@
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Send to LogBook as</string>
+            <string>Save as </string>
            </property>
           </widget>
          </item>
@@ -115,6 +115,9 @@
    </item>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
      <widget class="QWidget" name="image_page">
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -219,34 +222,34 @@
         </layout>
        </item>
        <item>
-        <widget class="QGraphicsView" name="image_view">
+        <widget class="QGraphicsView" name="view">
          <property name="styleSheet">
           <string notr="true">background: transparent;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="caption_edit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="placeholderText">
+          <string>Additional image caption ...</string>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="table_page"/>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPlainTextEdit" name="caption_edit">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>100</height>
-      </size>
-     </property>
-     <property name="placeholderText">
-      <string>Additional message to logbook</string>
-     </property>
     </widget>
    </item>
    <item>
