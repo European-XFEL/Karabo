@@ -21,14 +21,18 @@ from traits.api import Undefined
 
 from karabo.common.api import State
 from karabo.native import (
-    AccessMode, Assignment, Bool, Configurable, Float, Hash, HashList, String,
-    UInt32, VectorBool, VectorHash, VectorUInt32)
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, Float, Hash,
+    HashList, String, UInt32, VectorBool, VectorHash, VectorUInt32)
 from karabogui.binding.api import (
     DeviceProxy, ProjectDeviceProxy, ProxyStatus, VectorHashBinding,
-    apply_configuration, build_binding, validate_table_value, validate_value)
-from karabogui.testing import GuiTestCase
+    apply_configuration, apply_default_configuration, build_binding,
+    validate_table_value, validate_value)
+from karabogui.singletons.mediator import Mediator
+from karabogui.testing import (
+    GuiTestCase, access_level, get_all_props_schema, singletons)
 
 from ..configurationpanel import CONFIGURATION_PAGE, ConfigurationPanel
+from ..panel_info import create_configurator_info
 
 CONFIG_PANEL_PATH = "karabogui.panels.configurationpanel.ConfigurationPanel"
 SHOW_NOT_LOADED_PROPERTIES_PATH = (CONFIG_PANEL_PATH
@@ -545,3 +549,53 @@ class TestSetProxyConfiguration(GuiTestCase):
 
     def _get_offline_property_binding(self, path):
         return self.offline_device_proxy.get_property_binding(path)
+
+
+def test_configuration_panel_info(gui_app):
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    assert binding.value.a.value is Undefined
+    assert binding.value.b.value is Undefined
+    assert binding.value.c.value is Undefined
+
+    apply_default_configuration(binding)
+    assert binding.value.a.value
+    assert binding.value.b.value == "c"
+    assert binding.value.c.value is Undefined
+
+    mediator = Mediator()
+    with singletons(mediator=mediator):
+        proxy = DeviceProxy(binding=binding,
+                            server_id="Test",
+                            status=ProxyStatus.ONLINE)
+
+        panel = ConfigurationPanel()
+        panel.model().root = proxy
+        panel._set_configuration(proxy)
+        # Make sure the extracted default conversion is minimal
+        # It should include properties with default values,
+        # options, or node types
+        with access_level(AccessLevel.ADMIN):
+            data = create_configurator_info(panel)
+        config = data["data"]
+        data_type = data["dataType"]
+        assert data_type == "hash"
+
+        default_props = ("a", "b", "h1")
+        for prop in default_props:
+            assert config[prop] != "<undefined>"
+
+        # List and Choice of Node and not present
+        assert "i1" not in config
+        assert "j1" not in config
+
+        # Slot k1 is not present
+        assert "k1" not in config
+
+        # m has no default value, but present with Undefined
+        assert "m" in config
+        assert config["m"] == "<undefined>"
+
+        assert "c" in config
+        assert config["c"] == "<undefined>"
