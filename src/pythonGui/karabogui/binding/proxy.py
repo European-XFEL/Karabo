@@ -218,6 +218,9 @@ class DeviceProxy(BaseDeviceProxy):
         if self.status in (ProxyStatus.ALIVE, ProxyStatus.MONITORING):
             self.status = ProxyStatus.ONLINE
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} deviceId={self.device_id}>"
+
 
 class DeviceClassProxy(BaseDeviceProxy):
     """The proxy for device classes. Used for editing before instantiation.
@@ -245,6 +248,11 @@ class DeviceClassProxy(BaseDeviceProxy):
                                            self.binding.class_id)
             self.status = ProxyStatus.REQUESTED
 
+    def __repr__(self):
+        return (f"<{self.__class__.__name__} "
+                f"classId={getattr(self.binding, 'class_id', None)} "
+                f"serverId={self.server_id}>")
+
 
 class ProjectDeviceProxy(DeviceClassProxy):
     """A device class proxy used in ProjectDeviceInstance
@@ -263,6 +271,9 @@ class ProjectDeviceProxy(DeviceClassProxy):
         topology = get_topology()
         topology.ensure_proxy_class_schema(
             self.device_id, self.server_id, self.binding.class_id)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} deviceId={self.device_id}>"
 
 
 class PropertyProxy(HasStrictTraits):
@@ -480,3 +491,6 @@ class PropertyProxy(HasStrictTraits):
         default __hash__ implementation.
         """
         return id(self)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} key={self.key}>"
