@@ -22,7 +22,7 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call,
-    getDevice, isAlive, setWait, slot, waitUntil)
+    getDevice, getSchema, isAlive, setWait, slot, waitUntil)
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, event_loop, run_test, sleepUntil)
 
@@ -445,7 +445,6 @@ async def test_output_reconnect_device(deviceTest):
     await output_device.slotKillDevice()
 
 
-@pytest.mark.fail
 @pytest.mark.timeout(30)
 @run_test
 async def test_output_change_schema(deviceTest):
@@ -471,6 +470,12 @@ async def test_output_change_schema(deviceTest):
         # We received data and now change the schema
         output_schema = proxy.output.schema
         assert output_schema.data.descriptor.displayedName == ""
+
+        # Displaytype should be set for the output schema
+        proxy_schema = await getSchema(proxy)
+        displayType = proxy_schema.hash.getAttribute(
+            "output.schema", "displayType")
+        assert displayType == "OutputSchema"
         await output_device.changeSchema("TestDisplayed")
 
         # Wait for schema arrival
@@ -478,6 +483,12 @@ async def test_output_change_schema(deviceTest):
             lambda: output_schema.data.descriptor.
             displayedName == "TestDisplayed")
         assert output_schema.data.descriptor.displayedName == "TestDisplayed"
+
+        # Check for displayType after injection
+        proxy_schema = await getSchema(proxy)
+        displayType = proxy_schema.hash.getAttribute(
+            "output.schema", "displayType")
+        assert displayType == "OutputSchema"
 
         # Changing schema closes output channel, hence we wait
         # for connection
