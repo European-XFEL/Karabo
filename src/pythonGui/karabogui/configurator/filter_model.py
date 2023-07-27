@@ -32,6 +32,11 @@ class ConfiguratorFilterModel(QSortFilterProxyModel):
         self.setDynamicSortFilter(False)
         self.setSourceModel(source_model)
 
+    @property
+    def root(self):
+        """Return the root proxy of the source model"""
+        return self.sourceModel().root
+
     # --------------------------------------------------------------------
     # Index Methods
 
