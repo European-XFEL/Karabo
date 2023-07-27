@@ -44,9 +44,10 @@ from karabogui.util import (
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
+from .panel_info import create_configurator_info
 from .tool_widget import ConfiguratorSearch
 from .utils import (
-    compare_proxy_essential, extract_proxy_info, format_property_details,
+    compare_proxy_essential, format_property_details,
     format_vector_hash_details)
 
 BLANK_PAGE = 0
@@ -689,21 +690,23 @@ class ConfigurationPanel(BasePanelWidget):
 
             self._show_configuration(proxy)
 
-    def closeEvent(self, event):
-        super().closeEvent(event)
-        if event.isAccepted():
-            self.signalPanelClosed.emit(self.windowTitle())
-            unregister_from_broadcasts(self.event_map)
+    # -----------------------------------------------------------------------
+    # Public Interface
 
-    def get_panel_info(self):
-        proxy = self._showing_proxy
-        if proxy is None:
-            return
+    def model(self):
+        """Returns the `QAbstractItemModel` associated with the tree view"""
+        tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
+        return tree_widget.model()
 
-        return extract_proxy_info(proxy.binding)
+    def info(self):
+        """Returns the panel data for the `KaraboLogBook`"""
+        return create_configurator_info(self)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} proxy={repr(self.model().root)}>"
 
     # -----------------------------------------------------------------------
-    # slots
+    # Qt Slot
 
     @Slot(bool)
     def _on_button_changes(self, has_changes):
@@ -751,3 +754,12 @@ class ConfigurationPanel(BasePanelWidget):
         classId = proxy.binding.class_id
         deviceId = proxy.device_id
         get_manager().initDevice(serverId, classId, deviceId)
+
+    # -----------------------------------------------------------------------
+    # Qt
+
+    def closeEvent(self, event):
+        super().closeEvent(event)
+        if event.isAccepted():
+            self.signalPanelClosed.emit(self.windowTitle())
+            unregister_from_broadcasts(self.event_map)
