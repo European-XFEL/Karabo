@@ -36,11 +36,14 @@
 #include "karabo/net/utils.hh"
 #include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/Exception.hh"
+#include "karabo/util/Hash.hh"
 #include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 
 using boost::placeholders::_1;
 using boost::placeholders::_2;
+
+
 
 namespace karabo {
     namespace xms {
@@ -49,6 +52,10 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::net;
+
+        using karabo::util::Hash;
+
+        static Hash getHeartbeatInfo(const Hash& instanceInfo);
 
         /// Milliseconds of timeout when asking for validity of my id at startup:
         const int msPingTimeoutInIsValidInstanceId = 1000;
@@ -1147,7 +1154,7 @@ namespace karabo {
             if (e) return;
             try {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
-                emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
+                emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, getHeartbeatInfo(m_instanceInfo));
             } catch (std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e.what();
             }
@@ -3104,6 +3111,13 @@ namespace karabo {
         float SignalSlotable::LatencyStats::average() const {
             return counts > 0 ? sum / static_cast<float>(counts) : 0.f;
         }
+
+
+        Hash getHeartbeatInfo(Hash const& instanceInfo) {
+            return Hash("type", instanceInfo.get<std::string>("type"), //
+                        "heartbeatInterval", instanceInfo.get<std::string>("heartbeatInterval"));
+        }
+
 
     } // namespace xms
 } // namespace karabo
