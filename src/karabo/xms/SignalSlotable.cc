@@ -36,6 +36,7 @@
 #include "karabo/net/utils.hh"
 #include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/Exception.hh"
+#include "karabo/util/Hash.hh"
 #include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 
@@ -49,6 +50,8 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::net;
+
+        static Hash getHeartbeatInfo(const Hash& instanceInfo);
 
         /// Milliseconds of timeout when asking for validity of my id at startup:
         const int msPingTimeoutInIsValidInstanceId = 1000;
@@ -1013,7 +1016,7 @@ namespace karabo {
             }
 
             // Listener for heartbeats
-            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
+            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*heartbeatInfo*/)
 
             KARABO_SYSTEM_SIGNAL("signalInstanceNew", string, Hash);
 
@@ -1147,7 +1150,7 @@ namespace karabo {
             if (e) return;
             try {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
-                emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
+                emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, getHeartbeatInfo(m_instanceInfo));
             } catch (std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "emitHeartbeat triggered an exception: " << e.what();
             }
@@ -1312,7 +1315,7 @@ namespace karabo {
 
 
         void SignalSlotable::slotHeartbeat(const std::string& instanceId, const int& heartbeatInterval,
-                                           const Hash& instanceInfo) {
+                                           const Hash& heartbeatInfo) {
             if (m_trackAllInstances) {
                 if (!hasTrackedInstance(instanceId)) {
                     KARABO_LOG_FRAMEWORK_INFO << "Tracking instances, but received heart beat from unknown '"
@@ -1325,7 +1328,7 @@ namespace karabo {
                     call(instanceId, "slotPing", m_instanceId, 0, /*unused*/ true);
                 } else {
                     // Merge the potentially partial instanceInfo and re-set the countdown
-                    addTrackedInstance(instanceId, instanceInfo);
+                    addTrackedInstance(instanceId, heartbeatInfo);
                 }
             }
         }
@@ -3104,6 +3107,13 @@ namespace karabo {
         float SignalSlotable::LatencyStats::average() const {
             return counts > 0 ? sum / static_cast<float>(counts) : 0.f;
         }
+
+
+        Hash getHeartbeatInfo(const Hash& instanceInfo) {
+            return Hash("type", instanceInfo.get<std::string>("type"), //
+                        "heartbeatInterval", instanceInfo.get<std::string>("heartbeatInterval"));
+        }
+
 
     } // namespace xms
 } // namespace karabo
