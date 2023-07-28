@@ -999,7 +999,7 @@ namespace karabo {
             }
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval,
-                               const karabo::util::Hash& heartbeatInfo);
+                               const karabo::util::Hash& instanceInfo);
 
             void letInstanceSlowlyDieWithoutHeartbeat(const boost::system::error_code& e);
 
