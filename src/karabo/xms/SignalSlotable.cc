@@ -1020,7 +1020,7 @@ namespace karabo {
             }
 
             // Listener for heartbeats
-            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
+            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*heartbeatInfo*/)
 
             KARABO_SYSTEM_SIGNAL("signalInstanceNew", string, Hash);
 
@@ -1319,7 +1319,7 @@ namespace karabo {
 
 
         void SignalSlotable::slotHeartbeat(const std::string& instanceId, const int& heartbeatInterval,
-                                           const Hash& instanceInfo) {
+                                           const Hash& heartbeatInfo) {
             if (m_trackAllInstances) {
                 if (!hasTrackedInstance(instanceId)) {
                     KARABO_LOG_FRAMEWORK_INFO << "Tracking instances, but received heart beat from unknown '"
@@ -1332,7 +1332,7 @@ namespace karabo {
                     call(instanceId, "slotPing", m_instanceId, 0, /*unused*/ true);
                 } else {
                     // Merge the potentially partial instanceInfo and re-set the countdown
-                    addTrackedInstance(instanceId, instanceInfo);
+                    addTrackedInstance(instanceId, heartbeatInfo);
                 }
             }
         }
