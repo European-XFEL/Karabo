@@ -17,7 +17,6 @@ from functools import partial
 
 import karabo.bound_api as bound_pkg
 import karabo.common as common_pkg
-import karabo.macro_api as macro_pgk
 import karabo.middlelayer as middlelayer_pkg
 from karabo.testing.import_checker import (
     check_for_disallowed_module_imports, check_for_star_imports,
@@ -25,25 +24,19 @@ from karabo.testing.import_checker import (
 
 
 def test_bound_no_middlelayer_imports():
-    for forbidden in ('karabo.middlelayer', 'karabo.middlelayer'):
-        checker = partial(check_for_disallowed_module_imports, forbidden)
-        run_checker_on_package(bound_pkg, checker)
-
-
-def test_bound_no_macro_imports():
-    for forbidden in ('karabo.macro', 'karabo.macro_api'):
+    for forbidden in ['karabo.middlelayer']:
         checker = partial(check_for_disallowed_module_imports, forbidden)
         run_checker_on_package(bound_pkg, checker)
 
 
 def test_common_no_bound_imports():
-    for forbidden in ('karabo.bound', 'karabo.bound_api'):
+    for forbidden in ['karabo.bound', 'karabo.bound_api']:
         checker = partial(check_for_disallowed_module_imports, forbidden)
         run_checker_on_package(common_pkg, checker)
 
 
 def test_common_no_middlelayer_imports():
-    for forbidden in ('karabo.middlelayer', 'karabo.middlelayer'):
+    for forbidden in ['karabo.middlelayer']:
         checker = partial(check_for_disallowed_module_imports, forbidden)
         run_checker_on_package(common_pkg, checker)
 
@@ -53,18 +46,6 @@ def test_common_no_star_imports():
 
 
 def test_middlelayer_no_bound_imports():
-    for forbidden in ('karabo.bound', 'karabo.bound_api'):
+    for forbidden in ['karabo.bound', 'karabo.bound_api']:
         checker = partial(check_for_disallowed_module_imports, forbidden)
         run_checker_on_package(middlelayer_pkg, checker)
-
-
-def test_middlelayer_no_macro_imports():
-    for forbidden in ('karabo.macro', 'karabo.macro_api'):
-        checker = partial(check_for_disallowed_module_imports, forbidden)
-        run_checker_on_package(middlelayer_pkg, checker)
-
-
-def test_macro_no_bound_imports():
-    for forbidden in ('karabo.bound', 'karabo.bound_api'):
-        checker = partial(check_for_disallowed_module_imports, forbidden)
-        run_checker_on_package(macro_pgk, checker)
