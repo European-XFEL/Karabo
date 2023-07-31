@@ -5,3 +5,4 @@
 numpy==1.22.4  # limited by the below scipy version to < 1.23
 scipy==1.7.3  # this is as far as we can go on CentOs7, as newer version require a GCC 5+ compiler
 pyzmq==25.1.0
+Pillow==10.0.0
