@@ -29,6 +29,9 @@ from karabo.middlelayer.device_client import (
     listDevicesWithConfiguration, printHistory, saveConfigurationFromName,
     setNoWait, setWait, shutdown, shutdownNoWait, updateDevice, waitUntil,
     waitUntilNew, waitWhile)
+from karabo.middlelayer.device_interface import (
+    listCameras, listDeviceInstantiators, listMotors, listMultiAxisMotors,
+    listProcessors, listTriggers)
 from karabo.middlelayer.eventloop import global_sync
 from karabo.middlelayer.ikarabo import connectDevice, getDevice
 from karabo.middlelayer.pipeline import PipelineContext, PipelineMetaData
