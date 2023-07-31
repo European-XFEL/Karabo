@@ -121,7 +121,8 @@ namespace karabo {
         DeviceData::DeviceData(const karabo::util::Hash& input)
             : m_deviceToBeLogged(input.get<std::string>("deviceToBeLogged")),
               m_initLevel(InitLevel::NONE),
-              m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
+              m_strand(karabo::util::Configurator<karabo::net::Strand>::create(
+                    "Strand", Hash("guaranteeToRun", true, "maxInARow", 10u))),
               m_currentSchema(),
               m_user("."),
               m_lastTimestampMutex(),
@@ -482,8 +483,7 @@ namespace karabo {
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
                 // See DataLogger::slotSchemaUpdated for  a consideration about using boost::bind with 'data' instead
                 // of bind_weak with bare pointer
-                data->m_strand->post(
-                      karabo::util::bind_weak(&DeviceData::handleChanged, data.get(), configuration, user));
+                data->m_strand->post(boost::bind(&DeviceData::handleChanged, data, configuration, user));
             } else {
                 // Throttled logging, see above.
                 const unsigned int numLogs = ++m_nonTreatedSlotChanged[deviceId]; // prefix increment
@@ -634,13 +634,15 @@ namespace karabo {
                 Timestamp stamp; // Best time stamp we can get for this schema change (or take it from broker message
                                  // header?)
                 DeviceData::Pointer data = it->second;
-                // Or boost::bind the shared pointer instead of bind_weak with this?
-                // That would create a potentially dangerous cyclic reference: data has a strand that has a queue that
-                // contains a handler that has a pointer to data until processed.
-                // The advantage would be a kind of guarantee that our update will be processed,
-                // even if data is removed from m_perDeviceData
-                data->m_strand->post(
-                      karabo::util::bind_weak(&DeviceData::handleSchemaUpdated, data.get(), schema, stamp));
+                // Or bind_weak with 'data.get()' instead of boost::bind the shared pointer 'data'?
+                //
+                // Using the latter introduces a cyclic reference:
+                // data has a strand that has a queue that contains a handler that has a pointer to data.
+                // But that is only until the strand has processed all its tasks, i.e. for a limited period of time
+                // since the strand is not fed with further tasks if 'data' removed from m_perDeviceData.
+                // Together with the strand configuration "guaranteeToRun" = true, this has the advantage that our
+                // update will be processed even if 'data' is removed from m_perDeviceData.
+                data->m_strand->post(boost::bind(&DeviceData::handleSchemaUpdated, data, schema, stamp));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }
