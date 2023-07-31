@@ -69,6 +69,9 @@ from .device_client import (
     listConfigurationFromName, listDevicesWithConfiguration, lock,
     saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
     updateDevice, waitUntil, waitUntilNew, waitWhile)
+from .device_interface import (
+    listCameras, listDeviceInstantiators, listMotors, listMultiAxisMotors,
+    listProcessors, listTriggers)
 from .device_server import DeviceServerBase, MiddleLayerDeviceServer
 from .devicenode import DeviceNode
 from .eventloop import (
