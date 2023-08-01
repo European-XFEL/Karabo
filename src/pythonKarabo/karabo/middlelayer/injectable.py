@@ -35,20 +35,6 @@ class MetaInjectable(MetaConfigurable):
                     value.overwrite(getattr(super(self, self), name)))
 
 
-class Injectable(Configurable):
-    """This is a dummy class for backward compatiblity
-    """
-
-    def __init__(self, configuration={}):
-        super().__init__(configuration)
-        import warnings
-        warnings.warn(
-            "'Injectable' is not required anymore for Schema injection "
-            "and has been deprecated. 'Injectable' will be removed "
-            "in Karabo 2.13.",
-            DeprecationWarning, stacklevel=2)
-
-
 class InjectMixin(Configurable):
     """This is a mixin class for all classes that want to inject parameters
 
