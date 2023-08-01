@@ -1199,6 +1199,9 @@ class OutputChannel(Node):
         else:
             assert issubclass(cls, Configurable)
 
+            assert cls.displayType is None
+            cls.displayType = "OutputSchema"
+
             class Output(NetworkOutput):
                 schema = SchemaNode(cls)
 
