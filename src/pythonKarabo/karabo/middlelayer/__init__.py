@@ -74,7 +74,6 @@ from .devicenode import DeviceNode
 from .eventloop import (
     EventLoop, KaraboFuture, NoEventLoop, global_sync, synchronize,
     synchronize_notimeout)
-from .injectable import Injectable
 from .logger import CacheLog
 from .macro import (
     EventThread, Macro, MacroSlot, Monitor, RemoteDevice, TopologyMacro)
