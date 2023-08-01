@@ -850,11 +850,10 @@ void BaseLogging_Test::testDropBadData() {
 
 void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing logger and readers instantiations ... " << std::flush;
-    int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
-    vector<string> devices;
-    devices.push_back(karabo::util::DATALOGGER_PREFIX + m_server);
-    devices.push_back(karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server));
-    devices.push_back(karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server));
+    int timeout = 2 * KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds - instantiate three devices => factor 2
+    const vector<string> devices({karabo::util::DATALOGGER_PREFIX + m_server,
+                                  karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server),
+                                  karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server)});
     while (timeout > 0) {
         const Hash topo(m_deviceClient->getSystemTopology());
         CPPUNIT_ASSERT(topo.has("device"));
