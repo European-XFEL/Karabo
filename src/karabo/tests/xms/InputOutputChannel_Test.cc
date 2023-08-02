@@ -37,6 +37,8 @@
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/OutputChannel.hh"
 
+using namespace std::string_literals; // for '"abc"s'
+
 using namespace karabo;
 using util::Configurator;
 using util::Hash;
@@ -621,8 +623,8 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
     //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
     //    karabo::log::Logger::useOstream();
 
-    for (const std::string& dataDistribution : {"copy", "shared"}) {
-        for (const std::string& onSlowness : {"wait", "queue"}) {
+    for (const std::string& dataDistribution : {"copy"s, "shared"s}) {
+        for (const std::string& onSlowness : {"wait"s, "queue"s}) {
             // Setup output channel
             Hash cfgOut;
             std::vector<std::string> distributionModes(1, "load-balanced");
@@ -640,13 +642,15 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                 output->initialize(); // needed due to int == 0 argument above
 
                 // Check both data transport ways: local via shared Memory or remote, i.e. tcp
-                for (const std::string& memoryLocation : std::vector<std::string>{"local", "remote"}) {
+                for (const std::string& memoryLocation : {"local"s, "remote"s}) {
                     // Setup input channel
                     const std::string outputChannelId(output->getInstanceId() + ":output");
                     const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId),
                                    "dataDistribution", dataDistribution, "onSlowness", onSlowness);
                     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
-                    input->setInstanceId("inputChannel");
+                    const std::string inputId("inputChannel"s + dataDistribution + onSlowness + distributionMode +
+                                              memoryLocation);
+                    input->setInstanceId(inputId);
 
                     // Connect preparations
                     Hash outputInfo(output->getInformation());
@@ -694,6 +698,21 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                         bool safeNDArray, shouldPtrBeEqual;
                         std::tie(safeNDArray, shouldPtrBeEqual) = tup;
                         const std::string testFlags(test + " " + memoryLocation + " " + toString(safeNDArray));
+
+                        // Currently (2.19.0a6), the fact that the input channel is connected (as checked above) only
+                        // means that tcp is established. But the output channel needs to receive and process the
+                        // "hello" message to register the channel. Only then it will send data to the input channel.
+                        int timeout = 1000;
+                        while (timeout > 0) {
+                            if (dataDistribution == "shared") {
+                                if (output->hasRegisteredSharedInputChannel(inputId)) break;
+                            } else { // i.e. if (dataDistribution == "copy") {
+                                if (output->hasRegisteredCopyInputChannel(inputId)) break;
+                            }
+                            timeout -= 2;
+                            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+                        }
+                        CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
 
                         for (size_t i = 0; i < nData; ++i) {
                             output->write(data);
