@@ -531,7 +531,7 @@ namespace karabo {
                           "Bad output channel key with device/channel id delimiter (':' '@') : " + key);
                 }
                 m_outputChannel.key(key);
-                m_dataSchema.key(key + ".schema");
+                m_dataSchema.key(key + ".schema").setSpecialDisplayType("OutputSchema");
                 return *this;
             }
 
