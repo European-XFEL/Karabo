@@ -61,11 +61,11 @@ class JmsBroker(Broker):
         m.properties = p
         self.producer.send(m, 1, _MSG_PRIORITY_HIGH, _MSG_TIME_TO_LIVE)
 
-    def heartbeat(self, interval):
+    def heartbeat(self, interval, info):
         h = Hash()
         h["a1"] = self.deviceId
         h["a2"] = interval
-        h["a3"] = self.info
+        h["a3"] = info
         m = openmq.BytesMessage()
         m.data = encodeBinary(h)
         p = openmq.Properties()
@@ -82,15 +82,17 @@ class JmsBroker(Broker):
         :param info: the info Hash that should be published regularly.
         """
         self.info = info
+        interval = self.info["heartbeatInterval"]
+        heartbeat_info = Hash("type", info["type"],
+                              "heartbeatInterval", interval)
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
 
         async def heartbeat():
-            interval = self.info["heartbeatInterval"]
             try:
                 while True:
                     await sleep(interval)
-                    self.heartbeat(interval)
+                    self.heartbeat(interval, heartbeat_info)
             except CancelledError:
                 pass
             finally:
