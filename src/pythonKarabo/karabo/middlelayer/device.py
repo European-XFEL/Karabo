@@ -162,17 +162,10 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
 
         This device instance can be used to shortcut broker communication.
 
-        This returns a strong reference, create a weakref reference if
-        really needed. You can also provide a callback when the local device
-        is destroyed::
+        This returns a strong reference::
 
             async def onInitialization(self):
                 device = self.getLocalDevice(instanceId)
-
-                def delete(weak_dev):
-                    # Handle device being removed
-
-                self.local_device = weakref.ref(device, delete)
 
         :returns: Device instance or `None` if not found.
 
