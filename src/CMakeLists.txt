@@ -148,7 +148,7 @@ ${KARABO_PATH}/integrationTests\
 ${KARABO_PATH}/cppLongTests\
 ")
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/karabo/activateKarabo.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/karabo/cmake/activateKarabo.in"
     "${CMAKE_BINARY_DIR}/activateKarabo.sh"
     @ONLY
 )
