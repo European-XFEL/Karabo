@@ -56,6 +56,16 @@ activateKarabo() {
     fi
 }
 
+activateKaraboBuildTree() {
+    # Partially activates Karabo in cmake's build tree. 
+    # Details on what is activated can be seen on the "activateKarabo.sh" script.
+    source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+    # set the broker variable if KARABO_TEST_BROKER is set
+    if [ -n "$KARABO_TEST_BROKER" ]; then
+        export KARABO_BROKER=$KARABO_TEST_BROKER
+    fi
+}
+
 checkCppUnitTestResults() {
     # activate karabo to get a python environment
     activateKarabo
@@ -497,8 +507,7 @@ if [ -d $FRAMEWORK_INSTALL_DIR ]; then
         echo
         # Activate the karabo environment to allow tests to be run from the
         # build tree.
-        source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
-        activateKarabo  # take care of KARABO_TEST_BROKER
+        activateKaraboBuildTree  
         # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
         # a 'test_coverage_report' target, than when built runs the tests and
         # generates the coverage report.
@@ -516,8 +525,7 @@ if [ -d $FRAMEWORK_INSTALL_DIR ]; then
         # Activate the karabo environment to allow tests to be run from the
         # build tree.
         typeset tests_ret_code
-        source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
-        activateKarabo  # take care of KARABO_TEST_BROKER
+        activateKaraboBuildTree
         # clear previous tests
         for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
             rm -f ${name}
