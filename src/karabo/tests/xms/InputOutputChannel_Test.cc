@@ -89,6 +89,7 @@ void InputOutputChannel_Test::testOutputChannelElement() {
     CPPUNIT_ASSERT_NO_THROW(
           OUTPUT_CHANNEL_ELEMENT(s).key("validkey").displayedName("Valid output").dataSchema(pipeSchema).commit());
     CPPUNIT_ASSERT(s.has("validkey.schema.int32"));
+    CPPUNIT_ASSERT_EQUAL(std::string("OutputSchema"), s.getDisplayType("validkey.schema"));
 
     // The deviceId/channel delimiters ':' and (for backward compatibility) '@' are not allowed in keys.
     CPPUNIT_ASSERT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid:key"), karabo::util::ParameterException);
