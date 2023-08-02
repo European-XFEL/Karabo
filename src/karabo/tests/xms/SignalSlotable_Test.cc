@@ -650,7 +650,6 @@ void SignalSlotable_Test::_testConnectAsync() {
     bool connectTimeout = false;
     std::string connectFailedMsg;
     auto connectFailedHandler = [&connectFailed, &connectTimeout, &connectFailedMsg]() {
-        connectFailed = true;
         try {
             throw;
         } catch (const karabo::util::TimeoutException& e) {
@@ -662,6 +661,7 @@ void SignalSlotable_Test::_testConnectAsync() {
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
             connectFailedMsg = "non-std::exception";
         }
+        connectFailed = true; // set after connectTimeout and connectFailedMsg since loop checks this
     };
     auto dummyHandler = []() {};
     signaler->asyncConnect("signalInstance", "NOT_A_signal", "slotInstance", "slot", dummyHandler,
@@ -803,7 +803,6 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     bool connectTimeout = false;
     std::string connectFailedMsg;
     auto connectFailedHandler = [&connectFailed, &connectTimeout, &connectFailedMsg]() {
-        connectFailed = true;
         try {
             throw;
         } catch (const karabo::util::TimeoutException& e) {
@@ -813,6 +812,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
             connectFailedMsg = "unknown exception";
         }
+        connectFailed = true; // set after connectTimeout and connectFailedMsg since checked in loop
     };
 
     std::vector<SignalSlotConnection> badConnections(connections);
@@ -942,7 +942,6 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     bool disconnectTimeout = false;
     std::string disconnectFailedMsg;
     auto disconnectFailedHandler = [&disconnectFailed, &disconnectTimeout, &disconnectFailedMsg]() {
-        disconnectFailed = true;
         try {
             throw;
         } catch (const karabo::util::TimeoutException& e) {
@@ -951,7 +950,9 @@ void SignalSlotable_Test::_testDisconnectAsync() {
         } catch (const karabo::util::SignalSlotException& e) {
             disconnectFailedMsg = e.what();
         } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+            disconnectFailedMsg = "unknown exception";
         }
+        disconnectFailed = true; // set after disconnectTimeout and disconnectFailedMsg since loop checks this
     };
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot", disconnectSuccessHandler,
                               disconnectFailedHandler);
