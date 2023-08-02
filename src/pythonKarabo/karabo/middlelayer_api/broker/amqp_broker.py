@@ -175,13 +175,13 @@ class AmqpBroker(Broker):
         msg = self.encode_binary_message(header, arguments)
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
 
-    async def heartbeat(self, interval):
+    async def heartbeat(self, interval, info):
         header = Hash("signalFunction", "signalHeartbeat")
         header["signalInstanceId"] = self.deviceId
         body = Hash()
         body["a1"] = self.deviceId
         body["a2"] = interval
-        body["a3"] = self.info
+        body["a3"] = info
         msg = b"".join([encodeBinary(header), encodeBinary(body)])
         exch = f"{self.domain}.signals"
         key = f"{self.deviceId}.signalHeartbeat"
@@ -195,15 +195,18 @@ class AmqpBroker(Broker):
         :param info: the info Hash that should be published regularly.
         """
         self.info = info
+
+        interval = self.info["heartbeatInterval"]
+        heartbeat_info = Hash("type", info["type"],
+                              "heartbeatInterval", interval)
         await self.async_emit("call", {"*": ["slotInstanceNew"]},
                               self.deviceId, self.info)
 
         async def heartbeat():
-            interval = self.info["heartbeatInterval"]
             try:
                 while True:
                     await sleep(interval)
-                    await self.heartbeat(interval)
+                    await self.heartbeat(interval, heartbeat_info)
             except CancelledError:
                 pass
             finally:
