@@ -78,32 +78,32 @@ stages:
   <<: *artifacts-spec
 
 .image_almalinux8_: &image_almalinux8
-  image: europeanxfel/karabo-ci:almalinux-8-001
+  image: europeanxfel/karabo-ci:almalinux-8-004
   tags:
     - KaraboFramework
 
 .image_almalinux9_: &image_almalinux9
-  image: europeanxfel/karabo-ci:almalinux-9-001
+  image: europeanxfel/karabo-ci:almalinux-9-005
   tags:
     - KaraboFramework
 
 .image_centos7_: &image_centos7
-  image: europeanxfel/karabo-ci:centos-7-001
+  image: europeanxfel/karabo-ci:centos-7-004
   tags:
     - KaraboFramework
 
 .image_ubuntu20_: &image_ubuntu20
-  image: europeanxfel/karabo-ci:ubuntu-20-001
+  image: europeanxfel/karabo-ci:ubuntu-20-004
   tags:
     - KaraboFramework
 
 .image_ubuntu22_: &image_ubuntu22
-  image: europeanxfel/karabo-ci:ubuntu-22
+  image: europeanxfel/karabo-ci:ubuntu-22-003
   tags:
     - KaraboFramework
 
 .image_debian10_: &image_debian10
-  image: europeanxfel/karabo-ci:debian-10-001
+  image: europeanxfel/karabo-ci:debian-10-004
   tags:
     - KaraboFramework
 
