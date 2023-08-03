@@ -119,9 +119,8 @@ namespace karabo {
                                              const consumer::MessageHandler& handler,
                                              const consumer::ErrorNotifier& errorNotifier) {
             if (!ec) {
-                auto header = boost::make_shared<Hash>(msg->get<Hash>("header"));
-                auto body = boost::make_shared<Hash>(msg->get<Hash>("body"));
-                m_handlerStrand->post(boost::bind(handler, header, body));
+                m_handlerStrand->post(
+                      boost::bind(handler, msg->get<Hash::Pointer>("header"), msg->get<Hash::Pointer>("body")));
             } else {
                 // Error ...
                 std::ostringstream oss;
@@ -203,7 +202,7 @@ namespace karabo {
                 routingkey = m_instanceId + ".signalHeartbeat";
                 // Use m_heartbeatClient if exists ...
                 if (m_heartbeatClient) {
-                    auto msg = boost::make_shared<Hash>("header", *header, "body", *body);
+                    auto msg = boost::make_shared<Hash>("header", header, "body", body);
                     boost::system::error_code ec = m_heartbeatClient->publish(exchange, routingkey, msg);
                     if (ec) {
                         std::ostringstream oss;
@@ -311,7 +310,7 @@ namespace karabo {
                 throw KARABO_LOGIC_EXCEPTION("Attempt to 'write' to unknown target: \"" + target + "\"");
             }
 
-            auto msg = boost::make_shared<Hash>("header", *header, "body", *body);
+            auto msg = boost::make_shared<Hash>("header", header, "body", body);
 
             try {
                 this->publish(exchange, routingkey, msg);
