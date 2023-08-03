@@ -109,8 +109,8 @@ class LogBookPreview(QDialog):
     def _event_destinations(self, data):
         """Show the available logbooks for the instrument, in a combobox.
 
-        :param data: A Hash with information about available LogBooks,
-            as the following fields:
+        :param data: A HashList with available LogBooks: Hash with the
+            following fields:
                 "name" : Logbook identifier
                 "destination": Url or folder of the logbook.
         """
@@ -119,7 +119,7 @@ class LogBookPreview(QDialog):
             destination = proposal.get("destination")
             self.combo_name.addItem(name)
             self.combo_name.setItemData(index, destination)
-        self.ok_button.setDisabled(data.empty())
+        self.ok_button.setEnabled(bool(data))
 
     # -----------------------------------------------------------------------
     # Qt Slots
