@@ -61,8 +61,9 @@ class LogBookPreview(QDialog):
         self.combo_datatype.currentIndexChanged.connect(
             self.stackedWidget.setCurrentIndex)
 
-        ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
-        ok_button.setText("Save")
+        self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.ok_button.setText("Save")
+        self.ok_button.setEnabled(False)
 
         self.scene = QGraphicsScene()
         self.scene.addPixmap(self.pixmap)
@@ -118,6 +119,7 @@ class LogBookPreview(QDialog):
             destination = proposal.get("destination")
             self.combo_name.addItem(name)
             self.combo_name.setItemData(index, destination)
+        self.ok_button.setDisabled(data.empty())
 
     # -----------------------------------------------------------------------
     # Qt Slots
