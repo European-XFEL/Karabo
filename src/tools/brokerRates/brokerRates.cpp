@@ -610,18 +610,17 @@ void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string
     // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
     // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
     auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
-    util::Hash::Pointer body(boost::make_shared<util::Hash>());
 
-    auto readHandler = [stats, binSerializer, body](const boost::system::error_code& ec,
-                                                    const util::Hash::Pointer& msg) {
+    auto readHandler = [stats, binSerializer](const boost::system::error_code& ec, const util::Hash::Pointer& msg) {
         if (!ec) {
+            util::Hash::Pointer body(boost::make_shared<util::Hash>());
             std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
             if (msg->has("raw")) {
                 raw.swap(msg->get<std::vector<char>>("raw"));
             } else {
-                binSerializer->save(msg->get<util::Hash>("body"), raw); // body -> raw
+                binSerializer->save(*msg->get<util::Hash::Pointer>("body"), raw); // body -> raw
             }
-            stats->registerMessage(boost::make_shared<util::Hash>(msg->get<util::Hash>("header")), body);
+            stats->registerMessage(msg->get<util::Hash::Pointer>("header"), body);
         }
     };
 
