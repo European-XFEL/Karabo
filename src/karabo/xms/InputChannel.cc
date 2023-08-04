@@ -974,7 +974,6 @@ namespace karabo {
 
         void InputChannelElement::commit() {
             m_inputChannel.commit();
-            m_dataSchema.commit();
         }
 
     } // namespace xms
