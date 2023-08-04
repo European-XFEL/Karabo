@@ -421,16 +421,14 @@ namespace karabo {
 
         class InputChannelElement {
             karabo::util::NodeElement m_inputChannel;
-            karabo::util::NodeElement m_dataSchema;
 
            public:
-            InputChannelElement(karabo::util::Schema& s) : m_inputChannel(s), m_dataSchema(s) {
+            InputChannelElement(karabo::util::Schema& s) : m_inputChannel(s) {
                 m_inputChannel.appendParametersOf<InputChannel>();
             }
 
             InputChannelElement& key(const std::string& key) {
                 m_inputChannel.key(key);
-                m_dataSchema.key(key + ".schema");
                 return *this;
             }
 
@@ -444,8 +442,9 @@ namespace karabo {
                 return *this;
             }
 
-            InputChannelElement& dataSchema(const karabo::util::Schema& schema) {
-                m_dataSchema.appendSchema(schema);
+            [[deprecated(
+                  "dataSchema does nothing since Karabo 2.19 and will be removed in the future")]] InputChannelElement&
+            dataSchema(const karabo::util::Schema& schema) {
                 return *this;
             }
 
