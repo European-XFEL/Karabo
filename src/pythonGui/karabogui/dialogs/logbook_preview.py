@@ -17,9 +17,12 @@
 
 from qtpy import uic
 from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Slot
-from qtpy.QtWidgets import QDialog, QDialogButtonBox, QGraphicsScene, QLineEdit
+from qtpy.QtWidgets import (
+    QCheckBox, QDialog, QDialogButtonBox, QGraphicsScene, QLineEdit,
+    QTableWidgetItem)
 
 from karabo.common.scenemodel.api import create_base64image
+from karabo.native import Hash
 from karabogui import icons
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
@@ -37,6 +40,13 @@ QToolButton {
 }
 QToolButton:hover {
     border: 1px solid gray;
+}
+"""
+CHECKBOX_STYLE = """
+QCheckBox {
+    text-align: center;
+    margin-left:50%;
+    margin-right:50%;
 }
 """
 
@@ -103,6 +113,11 @@ class LogBookPreview(QDialog):
         register_for_broadcasts(self._event_map)
         get_network().listDestinations()
 
+        self.checkboxes = []
+        self._load_table()
+        self.select_all.clicked.connect(self._select_all)
+        self.deselect_all.clicked.connect(self._deselect_all)
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -150,8 +165,48 @@ class LogBookPreview(QDialog):
         value = round(value, 1)
         self.zoom_factor_edit.setText(str(value))
 
+    @Slot()
+    def _select_all(self):
+        for checkbox in self.checkboxes:
+            checkbox.setChecked(True)
+
+    @Slot()
+    def _deselect_all(self):
+        for checkbox in self.checkboxes:
+            checkbox.setChecked(False)
+
     # -----------------------------------------------------------------------
     # Internal Interface
+
+    def _load_table(self):
+        data = self.parent().info()
+        if data is None:
+            return
+
+        self.table.setColumnCount(2)
+        self.table.setHorizontalHeaderLabels(["Select", "Property"])
+        self.table.setSelectionBehavior(self.table.SelectRows)
+
+        row = 0
+        for (k, v, _) in Hash.flat_iterall(data, empty=False):
+            if isinstance(v, (bytes, bytearray)):
+                continue
+            self.table.insertRow(row)
+
+            checkbox = QCheckBox()
+            checkbox.setChecked(True)
+            checkbox.setStyleSheet(CHECKBOX_STYLE)
+            self.checkboxes.append(checkbox)
+            self.table.setCellWidget(row, 0, checkbox)
+
+            item = QTableWidgetItem(k)
+            flags = item.flags()
+            flags &= ~ Qt.ItemIsEditable
+            item.setFlags(flags)
+            item.setData(Qt.UserRole, v)
+            self.table.setItem(row, 1, item)
+
+            row += 1
 
     def _scale_image(self, factor):
         self.view.resetTransform()
@@ -167,13 +222,23 @@ class LogBookPreview(QDialog):
                 "dataType": "image",
                 "caption": self.caption_edit.toPlainText()}
 
+    def _extract_panel_data(self):
+        h = Hash()
+        for row, checkbox in enumerate(self.checkboxes):
+            if checkbox.isChecked():
+                item = self.table.item(row, 1)
+                name = item.data(Qt.DisplayRole)
+                value = item.data(Qt.UserRole)
+                h[name] = value
+        return {"data": h, "dataType": "hash"}
+
     def _create_logbook_data(self):
         panel = self.parent()
         stack = self.combo_datatype.currentText()
         info = {}
         if stack == LOGBOOK_DATA:
             info["title"] = f"Data: {repr(panel)}"
-            info.update(panel.info())
+            info.update(self._extract_panel_data())
         elif stack == LOGBOOK_IMAGE:
             info["title"] = f"Image: {repr(panel)}"
             info.update(self._extract_panel_image())
