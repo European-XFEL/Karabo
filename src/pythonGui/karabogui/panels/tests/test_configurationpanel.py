@@ -577,10 +577,9 @@ def test_configuration_panel_info(gui_app):
         # It should include properties with default values,
         # options, or node types
         with access_level(AccessLevel.ADMIN):
-            data = create_configurator_info(panel)
-        config = data["data"]
-        data_type = data["dataType"]
-        assert data_type == "hash"
+            config = create_configurator_info(panel)
+
+        assert isinstance(config, Hash)
 
         default_props = ("a", "b", "h1")
         for prop in default_props:
