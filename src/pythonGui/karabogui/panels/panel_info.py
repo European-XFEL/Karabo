@@ -7,10 +7,6 @@ from karabogui.binding.api import (
 
 _RECURSIVE_BINDINGS = (ListOfNodesBinding, ChoiceOfNodesBinding)
 
-HASH_TYPE = "hash"
-LOGBOOK_KEY_DATA_DTYPE = "dataType"
-LOGBOOK_KEY_DATA = "data"
-
 
 def _friendly_repr(binding, value):
     """Return a user-friendly value"""
@@ -50,12 +46,7 @@ def create_configurator_info(panel):
 
     data = Hash({key: value for key, value
                  in _get_row_data(QModelIndex())})
-
-    ret = {}
-    ret[LOGBOOK_KEY_DATA] = data
-    ret[LOGBOOK_KEY_DATA_DTYPE] = HASH_TYPE
-
-    return ret
+    return data
 
 
 def create_scene_info(panel):
@@ -65,9 +56,4 @@ def create_scene_info(panel):
                if not isinstance(proxy.binding, NodeBinding)]
     data = Hash({proxy.key: _friendly_repr(proxy.binding, proxy.value)
                  for proxy in proxies})
-
-    ret = {}
-    ret[LOGBOOK_KEY_DATA] = data
-    ret[LOGBOOK_KEY_DATA_DTYPE] = HASH_TYPE
-
-    return ret
+    return data
