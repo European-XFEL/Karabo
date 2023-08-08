@@ -69,7 +69,7 @@ class LogBookPreview(QDialog):
 
         self.combo_datatype.setCurrentIndex(0)
         self.combo_datatype.currentIndexChanged.connect(
-            self.stackedWidget.setCurrentIndex)
+            self._on_datatype_changed)
 
         self.ok_button = self.buttonBox.button(QDialogButtonBox.Ok)
         self.ok_button.setText("Save")
@@ -169,11 +169,28 @@ class LogBookPreview(QDialog):
     def _select_all(self):
         for checkbox in self.checkboxes:
             checkbox.setChecked(True)
+        self.ok_button.setEnabled(bool(self.checkboxes))
 
     @Slot()
     def _deselect_all(self):
         for checkbox in self.checkboxes:
             checkbox.setChecked(False)
+        self.ok_button.setEnabled(False)
+
+    @Slot(int)
+    def _on_datatype_changed(self, index):
+        self.stackedWidget.setCurrentIndex(index)
+        self._update_save_button()
+
+    @Slot()
+    def _update_save_button(self):
+        """Enable the Save button when at least one of the property is
+        selected and disable, otherwise.
+        For image preview , it is always enabled."""
+        enabled = self.stackedWidget.currentWidget() == self.image_page
+        if not enabled:
+            enabled = any(checkbox.isChecked() for checkbox in self.checkboxes)
+        self.ok_button.setEnabled(enabled)
 
     # -----------------------------------------------------------------------
     # Internal Interface
@@ -196,6 +213,7 @@ class LogBookPreview(QDialog):
             checkbox = QCheckBox()
             checkbox.setChecked(True)
             checkbox.setStyleSheet(CHECKBOX_STYLE)
+            checkbox.toggled.connect(self._update_save_button)
             self.checkboxes.append(checkbox)
             self.table.setCellWidget(row, 0, checkbox)
 
