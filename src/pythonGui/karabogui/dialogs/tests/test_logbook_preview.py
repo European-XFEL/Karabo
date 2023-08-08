@@ -1,5 +1,6 @@
 import pytest
 
+from karabo.native import Hash, HashList
 from karabogui.binding.api import DeviceClassProxy, build_binding
 from karabogui.dialogs.logbook_preview import LogBookPreview
 from karabogui.panels.api import ConfigurationPanel
@@ -76,3 +77,40 @@ def test_logbook_table_preview(dialog, mocker):
         assert "foo" not in data
         for item in ("bar", "charlie"):
             assert item in data
+
+
+def test_save_button(dialog):
+    """Test the enabled state of the Save button"""
+
+    assert dialog.ok_button.text() == "Save"
+    assert dialog.combo_datatype.currentText() == "Image"
+    # Disabled when no proposals.
+    assert not dialog.ok_button.isEnabled()
+
+    h_list = HashList()
+    h_list.append(Hash())
+    dialog._event_destinations(h_list)
+    assert dialog.ok_button.isEnabled()
+
+    dialog.combo_datatype.setCurrentIndex(1)
+    assert dialog.combo_datatype.currentText() == "Data"
+    assert dialog.ok_button.isEnabled()
+
+    # Disabled on deselecting all properties.
+    dialog._deselect_all()
+    assert not dialog.ok_button.isEnabled()
+
+    # Enabled always for Image.
+    dialog.combo_datatype.setCurrentIndex(0)
+    assert dialog.combo_datatype.currentText() == "Image"
+    assert dialog.ok_button.isEnabled()
+
+    # Enabled when at least one property is selected in the table.
+    dialog.combo_datatype.setCurrentIndex(1)
+    assert not dialog.ok_button.isEnabled()
+    dialog.checkboxes[0].setChecked(True)
+    assert dialog.ok_button.isEnabled()
+
+    # Disabled when no property is selected.
+    dialog.checkboxes[0].setChecked(False)
+    assert not dialog.ok_button.isEnabled()
