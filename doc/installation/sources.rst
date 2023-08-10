@@ -22,7 +22,8 @@ Get and install the Karabo framework (quick - no details)
 
   .. code-block:: bash
 
-    git clone https://in.xfel.eu/Karabo/Framework.git karaboFramework
+    git clone https://git.xfel.eu/Karabo/Framework.git karaboFramework
+    cd karaboFramework
 
 3. Compile the Karabo bundle by running the following command for the
    Debug version
@@ -112,27 +113,25 @@ Install dependencies
 Supported Operating Systems
 ---------------------------
 
-The operating systems which are currently supported by Karabo are: Centos 7,
-Ubuntu 18.04, 20.04, and 22.04, Debian 10 and AlmaLinux 8. To learn which
+The operating systems which are currently officially supported by Karabo are: Centos 7,
+Ubuntu 20.04, and 22.04, Debian 10, and AlmaLinux 9. To learn which
 packages must be installed before building Karabo, refer to the following
 project on the XFEL GitLab server:
 
-https://in.xfel.eu/Karabo/ci-containers/
+https://git.xfel.eu/Karabo/ci-containers/
 
 There you will find the following Dockerfiles which list the packages needed
 on each platform.
 
 https://git.xfel.eu/Karabo/ci-containers/-/blob/master/centos/7gcc7/Dockerfile
 
-https://in.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/18.04/Dockerfile
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/20.04/Dockerfile
 
-https://in.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/20.04/Dockerfile
-
-https://in.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/22.04/Dockerfile
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/ubuntu/22.04/Dockerfile
 
 https://git.xfel.eu/Karabo/ci-containers/-/blob/master/debian/10/Dockerfile
 
-https://git.xfel.eu/Karabo/ci-containers/-/blob/master/almalinux/8/Dockerfile
+https://git.xfel.eu/Karabo/ci-containers/-/blob/master/almalinux/9/Dockerfile
 
 Framework/-/merge_requests
 
@@ -141,7 +140,8 @@ These same files are used to generate the continuous integration infrastructure
 for Karabo, so they are more up to date than any documentation can hope to be.
 
 Even though these are docker scripts, they are quite simple and consist mainly
-of ``apt-get install`` or ``yum install`` commands (depending on the platform).
+of ``apt-get install``, ``yum install`` or ``dnf install`` commands
+(depending on the platform).
 
 In addition, in order to run the system in completely local mode or run unit tests,
 the host should have a working installation of ``Docker`` for the user that will run
@@ -170,11 +170,11 @@ command. In the example below, all tests are run in the default non verbose
 mode (please note that ``build_debug`` is specific to this example; for Release
 builds from `auto_build_all.sh`, for instance, it would be `build_release`)::
 
-   .. code-block: bash
+.. code-block:: bash
 
-     cd $REPO_ROOT/build_debug
-     source ./activateKarabo.sh
-     ctest
+  cd $REPO_ROOT/build_debug
+  source ./activateKarabo.sh
+  ctest
 
 In the example above, $REPO_ROOT is the directory where you have git cloned the
 Karabo Framework repository (the directory where file `auto_build_all.sh` is).
@@ -188,17 +188,21 @@ in either verbose mode (`-V` option) or extra verbose mode (`-VV`). In the examp
 below, `dataLoggingIntegrTestRunner` is the only test run, and in extra verbose
 mode::
 
-   ctest -VV -R "dataLogging*"
+.. code-block:: bash
+
+  ctest -VV -R "dataLogging*"
 
 Verbose and extra verbose modes cause `ctest` to output, among other things,
 one line per successful test case execution. The default verbosity
-level only emits intermediate reports for failed test cases - the number of
-successful test cases executed, without their names, is reported at the end
-of the test execution when in default verbosity level.
+level only emits intermediate reports for failed test cases. The number (but not
+names) of successful test cases is printed at the end of the `ctest` run, when the
+default verbosity level is used.
 
 To list all the tests that are available for `ctest`::
 
-   ctest -N
+.. code-block:: bash
+
+  ctest -N
 
 `ctest` also supports a `-E` option which is the complement of the `-R` option,
 meaning execute all tests that do not match the given regular expression.
@@ -215,9 +219,13 @@ To test Python code be aware that if you depend on Karathon (and
 Karabo C++ code) you must install and deploy the changes you may have
 done in Karabo/Karathon in your system.
 
-In Terminal you can do that running:
+In a Terminal session, you can do that by running:
 
 .. code-block:: bash
+
+  # $REPO_ROOT is the directory where the local working copy of the Karabo Framework
+  # repository is.
+  cd $REPO_ROOT
 
   ./auto_build_all.sh Debug/Release
 
@@ -225,8 +233,12 @@ To run the Unit Tests using the Terminal, execute the following scripts:
 
 .. code-block:: bash
 
-  # This will run ZERO tests if you are in the framework root directory
-  nosetests-3.4 -sv karabo  # or karabo.bound_api or karabo.middlelayer_api or karabo.tests, etc.
+  source $REPO_ROOT/karabo/activate
+
+  cd $REPO_ROOT/src/pythonKarabo
+
+  # This will run all the Python tests.
+  pytest -v karabo 
 
 
 Get and install the Karabo framework (all the details)
