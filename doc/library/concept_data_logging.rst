@@ -16,8 +16,8 @@ logging device creation on a list of servers it holds. Load-balancing of the
 logging servers is provided in a round-robin fashion, i.e. servers are
 subsequently assigned to new logging devices.
 
-Upon initialization the logging manager requests the current system topology
-and on basis of this information initiates any logging devices needed. Afterwards,
+Upon initialization, the logging manager requests the current system topology
+and based on this information initiates any logging devices needed. Afterwards,
 it monitors whether new device instances appear or existing instances are shutdown.
 For new instances it assigns the instance to a logging device. For device
 instances which are shutdown it makes sure the logging device flushes all the logged
@@ -25,16 +25,48 @@ data.
 
 The data logger originally used a text file based archiving backend. Then a new
 backend, based on InFluxDB, has been integrated into the data logging infrastructure.
+The run configuration file for the device server that hosts the DataLoggerManager
+instance is where the definition and configuration of the archiving backend to use is
+made. On a default Karabo installation, this run configuration file is located at
+"$KARABO/var/service/karabo_dataLoggerManager". For reference, an example of a run
+configuration file using the text file based backend is presented below:
+
+.. code-block:: bash
+   #!/bin/bash
+   # This file is part of the initial configuration of Karabo
+   cd $KARABO/var/data
+   exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLoggerManager \
+   'deviceClasses=DataLoggerManager' \
+   'autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger}' \
+   'visibility=4' 'Logger.priority=INFO' 2>&1
+
+
+An example of a run configuration file using the InfluxDB based backend:
+
+.. code-block:: bash
+
+   #!/bin/bash
+   # Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+   # This file is part of the initial configuration of Karabo
+   cd $KARABO/var/data
+   exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/dataLoggerManager \
+   'deviceClasses=DataLoggerManager' \
+   autoStart[0]={DataLoggerManager.serverList=karabo/dataLogger, \
+   DataLoggerManager.logger.InfluxDataLogger={ urlRead='tcp://localhost:8086' urlWrite='tcp://localhost:8086' maxBatchPoints=200 }} \
+   'visibility=4' 'Logger.priority=INFO' 2>&1
+
+A default Karabo installation comes configured to use the text file based archiving backend.
+
 
 Distinction from Data Acquisition
 =================================
 
-The data acquisition system provided by the IT and data management group (ITDM) is
+In XFEL, a data acquisition system provided by its IT and data management group (ITDM) is
 responsible for main scientific data acquisition, organized on a per-run basis. It has
 the requirement to provide for strict train and pulse id correlation between different
 data sources and persisting of all configured and available data-sources is paramount.
 
-This contrasts to the data loggers, which do not have these strict correlation
+This contrasts with the data loggers, which do not have those strict correlation
 requirements: train ids are tagged and provided, but data sources providing
 only time-stamps or much less regular updates to their values are much more common.
 In terms of persisting data, the requirement is somewhat relaxed for each individual
@@ -146,15 +178,16 @@ Logging Format
 Log files are created and updated by the logging devices. Specifically,
 two files are created in a directory corresponding to the logged device's
 device id, containing subdirectories *raw* and *idx* for the log files and
-index files respectively.
+index files, respectively. The tree with the log files for the different devices
+is rooted at $KARABO/var/data/karaboHistory.
 
 The raw directory
-    holds *archive* files, suffixed by the index of the file which contain
-    configuration changes of a device in the row format
+    holds *archive_<n>.txt* files, where the suffix *n* is the index of the file which contains
+    configuration changes of a device in the row format:
 
-    ========= ========== ========= ======== ======== ======== ========== =====
+    ==================== ================== ======== ======== ========== =====
     timestamp (ISO 8601) timestamp (karabo) train id property value type value
-    ========= ========== ========= ======== ======== ======== ========== =====
+    ==================== ================== ======== ======== ========== =====
 
     Additionally, each row is designated as pending to be logged into the
     archival index (LOGIN), or if it has already been validated (VALID).
@@ -164,11 +197,13 @@ The raw directory
     These files are in ASCII text format and all properties of a device are
     stored subsequently in a single table.
 
-    Additionally, an entry of the appended entry's index is maintained in
-    an *archive_index* file each time a new log file is created or an existing
-    one is reopened.
+    An entry of the appended entry's index is maintained in an *archive_index.txt*
+    file each time a new log file is created or an existing one is reopened.
 
-    Finally, schema updates to the device are stored in a *archive_schema* file
+    A file named *archive.last* stores the last index used as a suffix for naming the
+    configuration changes files of the device.
+
+    Finally, schema updates to the device are stored in a *archive_schema.txt* file
     while saves the XML serialized schema, alongside timestamp and train id
     information.
 
