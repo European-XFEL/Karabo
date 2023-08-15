@@ -1,0 +1,23 @@
+[requires]
+cpython/3.8.16@karaboFramework/2.19
+
+[generators]
+deploy
+
+[options]
+# statically-link libraries for
+# python deps and python loadable modules
+*:shared=False
+# shared libpython3.so
+cpython:shared=True
+cpython:with_tkinter=False
+cpython:optimizations=True
+
+[imports]
+lib, * -> lib
+lib64, * -> lib64
+bin, * -> bin
+include, * -> include
+res, * -> res
+share, * -> share
+local, * -> local

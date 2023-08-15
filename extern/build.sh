@@ -36,7 +36,6 @@ DEPS_BASE_NAME_MAP['AlmaLinux8']='AlmaLinux-8'
 DEPS_BASE_NAME_MAP['AlmaLinux9']='AlmaLinux-9'
 DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
 
-SQLITE_VERSION=3.38.5
 PYTHON_VERSION=3.8.16
 PYTHON_PATH_VERSION=3.8
 CPP_STD_LIB_VERSION=c++11
@@ -83,6 +82,24 @@ check_for_curl() {
         echo
         echo "!!! 'curl' command not found!"
         echo "Please install 'curl' so that dependencies can be downloaded!"
+        echo
+        echo
+        # Give the user time to see the message
+        sleep 2
+        return 1
+    fi
+
+    # Installed and ready!
+    return 0
+}
+
+check_for_conan() {
+    which conan &> /dev/null
+    if [ $? -ne 0 ]; then
+        echo
+        echo
+        echo "!!! 'conan 1.x' command not found!"
+        echo "Please install latest 'conan 1.x' so that dependencies can be downloaded!"
         echo
         echo
         # Give the user time to see the message
@@ -175,6 +192,11 @@ download_latest_deps() {
 
     # Make sure curl is available
     check_for_curl
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    # Make sure conan is available
+    check_for_conan
     if [ $? -ne 0 ]; then
         return 1
     fi
@@ -344,38 +366,31 @@ try_dependency_download() {
     fi
 }
 
-download_python() {
+install_python() {
     local package_status=$(get_package_manager_status)
     local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
-    element_in "python-download" "${package_status[@]}"
+
+    element_in "python-install" "${package_status[@]}"
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-        pushd $scriptDir/resources/sqlite
-        mkdir -p sqlite
-        safeRunCommand "curl https://github.com/sqlite/sqlite/archive/refs/tags/version-$SQLITE_VERSION.zip -L -o sqlite.zip"
-        safeRunCommand "unzip -qq sqlite.zip -d tmp"
-        safeRunCommand "rm sqlite.zip"
-        safeRunCommand "mv tmp/* sqlite-$SQLITE_VERSION"
-        safeRunCommand "rm -rf tmp"
-        safeRunCommand "tar -cf sqlite-$SQLITE_VERSION.tar ./"
-        popd
-        echo "sqlite-download" >> $marker_path
-        pushd $scriptDir/resources/python
-        mkdir -p python
-        safeRunCommand "curl https://github.com/python/cpython/archive/refs/tags/v$PYTHON_VERSION.zip -L -o python.zip"
-        safeRunCommand "unzip -qq python.zip -d tmp"
-        safeRunCommand "rm python.zip"
-        safeRunCommand "mv tmp/* Python-$PYTHON_VERSION"
-        safeRunCommand "rm -rf tmp"
-        safeRunCommand "tar -cf Python-$PYTHON_VERSION.tar ./"
-        popd
-        echo "python-download" >> $marker_path
-    fi
-}
+        pushd $scriptDir
 
-install_python() {
-    DEPENDENCIES=( sqlite python )
-    build_dependencies
+        # conan package opts
+        package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karaboFramework/2.19"
+        # configure prefix paths
+        folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
+        # build python if not found in conan cache
+        build_opts="--build=missing -s build_type=Release"
+        # apply custom profile on top of default profile
+        safeRunCommandQuiet "conan profile new default --detect --force"
+        profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
+        # create the python package locally
+        safeRunCommandQuiet "conan create $package_opts $build_opts $profile_opts"
+        safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
+
+        popd
+        echo "python-install" >> $marker_path
+    fi
 }
 
 install_cmake_boost_nss() {
@@ -480,7 +495,7 @@ install_from_deps() {
         # make sure we use the c++11 ABI everywhere
         local cxx_lib=libstd$CPP_STD_LIB_VERSION
 
-        safeRunCommand "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
         safeRunCommand "$INSTALL_PREFIX/bin/conan profile update settings.compiler.libcxx=$cxx_lib default"
 
         # configure prefix paths
@@ -654,10 +669,7 @@ if [ "$WHAT" = "ALL" ]; then
     try_dependency_download
 fi
 
-# python download is specialy to allow full boostrap
-download_python
-
-# install python
+# python download and install to allow full bootstrap
 install_python
 
 # download any sources we build ourselfs
