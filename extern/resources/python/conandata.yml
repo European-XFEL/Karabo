@@ -1,0 +1,28 @@
+patches:
+  3.8.12:
+  - base_path: source_subfolder
+    patch_file: patches/3.8.12-0001-msvc.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.8.12-0002-_ctypes-ffi.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.8.12-0003-setup.py-pass-CFLAGS-CPPFLAGS.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.8.12-0004-disable-macos-tcltk.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.x-0001-relocatable-python-config.patch
+  3.8.16:
+  - base_path: source_subfolder
+    patch_file: patches/3.8.12-0002-_ctypes-ffi.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.8.12-0003-setup.py-pass-CFLAGS-CPPFLAGS.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.8.16-0004-disable-macos-tcltk.patch
+  - base_path: source_subfolder
+    patch_file: patches/3.x-0001-relocatable-python-config.patch
+sources:
+  3.8.12:
+    sha256: 316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a
+    url: https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz
+  3.8.16:
+    sha256: 71ca9d935637ed2feb59e90a368361dc91eca472a90acb1d344a2e8178ccaf10
+    url: https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
