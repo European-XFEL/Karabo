@@ -393,8 +393,8 @@ install_python() {
     fi
 }
 
-install_cmake_boost_nss() {
-    DEPENDENCIES=( cmake boost nss )
+install_boost_nss() {
+    DEPENDENCIES=( boost nss )
     build_dependencies
 }
 
@@ -675,8 +675,8 @@ install_python
 # download any sources we build ourselfs
 download_sources
 
-# now install cmake, conan will use it
-install_cmake_boost_nss
+# now install boost
+install_boost_nss
 
 # install via conan and pip next
 install_from_deps
