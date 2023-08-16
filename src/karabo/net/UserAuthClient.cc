@@ -22,17 +22,13 @@
 
 #include "UserAuthClient.hh"
 
-#include <boost/algorithm/string.hpp>
 #include <nlohmann/json.hpp>
-
-#include "karabo/net/utils.hh"
-#include "karabo/util/Exception.hh"
-#include "karabo/util/StringTools.hh"
 
 namespace karabo {
     namespace net {
 
         namespace nl = nlohmann;
+        namespace http = boost::beast::http;
 
         UserAuthClient::UserAuthClient(const std::string& authServerUrl) : m_cli(authServerUrl) {}
 
@@ -44,7 +40,7 @@ namespace karabo {
             reqHeaders.set(HttpHeader::user_agent, "Karabo User Auth Client");
             reqHeaders.set(HttpHeader::content_type, "application/json");
 
-            const std::string reqBody{"{\"tk\": \"" + token + "\", \"topic\": \"" + topic + "\"}"};
+            const std::string reqBody{R"({"tk": ")" + token + R"(", "topic": ")" + topic + "\"}"};
 
             m_cli.asyncPost("/authorize_once_tk", reqHeaders, reqBody,
                             [authHandler](const http::response<http::string_body>& resp) {
@@ -54,7 +50,8 @@ namespace karabo {
                                           .success = false,
                                           .userId = "",
                                           .accessLevel = Schema::OBSERVER,
-                                          .errMsg = std::string(resp.reason().data(), resp.reason().size())});
+                                          .errMsg = karabo::util::toString(resp.result_int()) + " - " +
+                                                    std::string(resp.reason().data(), resp.reason().size())});
                                 } else {
                                     try {
                                         nl::json respObj = nl::json::parse(resp.body());

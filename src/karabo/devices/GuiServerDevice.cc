@@ -631,6 +631,7 @@ namespace karabo {
                                            << "\nErrMsg: " << authResult.errMsg;
                 if (!authResult.success) {
                     const string errorMsg = "Error validating token: " + authResult.errMsg;
+                    KARABO_LOG_FRAMEWORK_ERROR << errorMsg;
                     sendLoginErrorAndDisconnect(channel, clientId, clientVersion.getString(), errorMsg);
                     return;
                 } else {
