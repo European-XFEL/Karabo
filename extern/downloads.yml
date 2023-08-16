@@ -3,10 +3,6 @@ boost:
     source_format: tar.gz
     target: boost_1_82_0.tar
 
-cmake:
-    source: https://github.com/Kitware/CMake/archive/refs/tags/v3.27.1.zip
-    source_format: zip
-    target: cmake-3.27.1.tar
 daemontools:
     source: https://github.com/tecki/daemontools-encore/archive/refs/heads/master.zip
     source_format: zip
