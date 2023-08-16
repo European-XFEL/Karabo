@@ -1,5 +1,6 @@
 [requires]
 cpython/3.8.16@karaboFramework/2.19
+cmake/3.27.1
 
 [generators]
 deploy
