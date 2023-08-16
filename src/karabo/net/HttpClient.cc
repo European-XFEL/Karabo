@@ -22,9 +22,12 @@
 
 #include "HttpClient.hh"
 
-// #include <belle.hh>
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/beast/ssl.hpp>
 
+#include "karabo/net/HttpRequestRunner.hh"
+#include "karabo/net/HttpsRequestRunner.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/StringTools.hh"
@@ -32,97 +35,102 @@
 namespace karabo {
     namespace net {
 
+        namespace beast = boost::beast;   // from <boost/beast.hpp>
+        namespace http = beast::http;     // from <boost/beast/http.hpp>
+        namespace asio = boost::asio;     // from <boost/asio.hpp>
+        namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
+        using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
+
+        /**
+         * @brief Implementation of the WebClient class.
+         */
         class HttpClient::Impl {
            public:
-            Impl(const std::string& baseURL) : m_baseURL(baseURL) {
-                if (!baseURL.empty()) {
+            Impl(const std::string& baseURL, bool verifyCerts)
+                : m_baseURL{baseURL}, m_sslCtx{ssl::context::tlsv12_client} {
+                if (!m_baseURL.empty()) {
                     const auto& urlParts = parseUrl(baseURL);
                     const std::string& protocol = boost::algorithm::to_lower_copy(urlParts.get<0>());
                     if (protocol != "http" && protocol != "https") {
                         throw KARABO_PARAMETER_EXCEPTION("Unsupported protocol, '" + protocol +
                                                          "' in baseURL argument, '" + baseURL + "'.");
                     }
-                    const std::string host = urlParts.get<1>();
-                    if (host.empty()) {
+                    m_ssl = (protocol == "https");
+                    m_host = urlParts.get<1>();
+                    if (m_host.empty()) {
                         throw KARABO_PARAMETER_EXCEPTION("No host specified in baseURL argument, '" + baseURL + "'.");
                     }
                     const std::string portStr = urlParts.get<2>();
-                    unsigned short port = 0;
+                    m_port = 0;
                     if (portStr.empty()) {
-                        port = (protocol == "http" ? 80 : 443);
+                        m_port = (m_ssl ? 443 : 80);
                     } else {
-                        port = karabo::util::fromString<unsigned short>(portStr);
-                        if (port == 0) {
+                        m_port = karabo::util::fromString<unsigned short>(portStr);
+                        if (m_port == 0) {
                             // As fromString ends up using strtoul, a zero is interpreted as "no valid conversion could
                             // be performed". A port 0 is invalid anyway; the valid range for ports is 1 through 65535.
                             throw KARABO_PARAMETER_EXCEPTION("Invalid port '" + portStr + "' in baseURL argument, '" +
                                                              baseURL + "'.");
                         }
                     }
-
-                    /*
-                    m_cli.address(host);
-                    m_cli.port(port);
-                    if (protocol == "https") {
-                        m_cli.ssl(true);
-                        // NOTE: Once none of the certificates used in test and production environments are self-signed,
-                        //       remove the line below and rely on the default, "boost::asio::ssl::verify_peer".
-                        m_cli.ssl_context().set_verify_mode(boost::asio::ssl::verify_none);
-                    } else {
-                        m_cli.ssl(false);
+                    if (m_ssl) {
+                        m_sslCtx.set_verify_mode(verifyCerts ? ssl::verify_peer : ssl::verify_none);
                     }
-                    */
                 }
             }
 
             void asyncPost(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
-                           const ResponseHandler& respHandler) {
-                // asyncRequest(OB::Belle::Method::post, route, reqHeaders, reqBody, respHandler);
+                           const HttpResponseHandler& respHandler) {
+                asyncRequest(http::verb::post, route, reqHeaders, reqBody, respHandler);
             }
 
             void asyncGet(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
-                          const ResponseHandler& respHandler) {
-                // asyncRequest(OB::Belle::Method::get, route, reqHeaders, reqBody, respHandler);
+                          const HttpResponseHandler& respHandler) {
+                asyncRequest(http::verb::get, route, reqHeaders, reqBody, respHandler);
+            }
+
+            void asyncRequest(http::verb method, const std::string& route, const HttpHeaders& reqHeaders,
+                              const std::string& reqBody, const HttpResponseHandler& respHandler) {
+                if (m_baseURL.empty()) {
+                    throw KARABO_PARAMETER_EXCEPTION(
+                          "A non-empty base URL with protocol, host and optional port specification is required.");
+                }
+                // NOTE: The request runner objects can currently handle a single request at a time.
+                //       To comply with this limitation, the HttpClient instantiates a request runner per
+                //       request.
+                asio::io_context ioc;
+                if (m_ssl) {
+                    std::make_shared<HttpsRequestRunner>(boost::asio::make_strand(ioc), m_sslCtx, method, HTTP_VERSION)
+                          ->run(m_host, m_port, route, reqHeaders, reqBody, respHandler);
+                } else {
+                    std::make_shared<HttpRequestRunner>(ioc, method, HTTP_VERSION)
+                          ->run(m_host, m_port, route, reqHeaders, reqBody, respHandler);
+                }
+                ioc.run();
             }
 
            private:
-            // OB::Belle::Client m_cli;
             const std::string m_baseURL;
+            bool m_ssl;
+            std::string m_host;
+            unsigned short m_port;
+            ssl::context m_sslCtx;
 
-            /*
-            void asyncRequest(OB::Belle::Method method, const std::string& route, const HttpHeaders& reqHeaders,
-                              const std::string& reqBody, const ResponseHandler& respHandler) {
-                if (m_baseURL.empty()) {
-                    throw KARABO_PARAMETER_EXCEPTION(
-                          "Invalid use of karabo::net::HttpClient: baseURL provided for HttpClient is empty");
-                }
-                m_cli.on_http(method, route, reqHeaders, reqBody,
-                              [respHandler](const OB::Belle::Client::Http_Ctx& ctx) {
-                                  // Calls the supplied response handler passing the boost::beast::http::response part
-                                  // of the Belle Http_Ctx.
-                                  if (respHandler) {
-                                      respHandler(ctx.res);
-                                  }
-                              });
-                // Submit the request
-                m_cli.connect();
-            }
-            */
-        };
+        }; // class WebClient::Impl
 
-        HttpClient::HttpClient(const std::string& baseURL) {
-            m_impl = std::make_unique<Impl>(baseURL);
+        HttpClient::HttpClient(const std::string& baseURL, bool verifyCerts) {
+            m_impl = std::make_unique<Impl>(baseURL, verifyCerts);
         }
 
         HttpClient::~HttpClient() = default;
 
         void HttpClient::asyncPost(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
-                                   const ResponseHandler& respHandler) {
+                                   const HttpResponseHandler& respHandler) {
             m_impl->asyncPost(route, reqHeaders, reqBody, respHandler);
         }
 
         void HttpClient::asyncGet(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
-                                  const ResponseHandler& respHandler) {
+                                  const HttpResponseHandler& respHandler) {
             m_impl->asyncGet(route, reqHeaders, reqBody, respHandler);
         }
     } // namespace net
