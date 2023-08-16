@@ -2,12 +2,7 @@
  * HttpClient.hh
  *
  * An HttpClient supporting simple GET and POST assynchronous requests over
- * TCP or SSL.
- *
- * Note: this is actually an interface class, that internally uses a wrapping
- * library for Boost Beast as its implementation. The goal is to be able to
- * replace the underlying Boost Beast wrapping library without affecting users
- * of the HttpClient class.
+ * secure and plain connections.
  *
  * Created on February, 09, 2023.
  *
@@ -31,24 +26,26 @@
 #ifndef KARABO_NET_HTTPCLIENT_HH
 #define KARABO_NET_HTTPCLIENT_HH
 
-#include <boost/beast/http.hpp>
 #include <functional>
 #include <memory>
 #include <string>
 
+#include "karabo/net/HttpCommon.hh"
+
 namespace karabo {
     namespace net {
 
-        namespace http = boost::beast::http;
-
-        using HttpHeader = boost::beast::http::field;
-        using HttpHeaders = boost::beast::http::fields;
-
-        using ResponseHandler = std::function<void(const http::response<http::string_body>)>;
-
         class HttpClient {
            public:
-            explicit HttpClient(const std::string& baseURL);
+            /**
+             * @brief Creates a web client capable of submitting GET and POST requests to a given URL, over a secure or
+             * a plain connection.
+             *
+             * @param baseURL the base URL to be prepended to each request path.
+             * @param verifyCerts when set to false, allows self generated server certificates when connecting securely
+             * (by bypassing certificate origin verification).
+             */
+            explicit HttpClient(const std::string& baseURL, bool verifyCerts = false);
 
             // The destructor has to be declared even if it is the default
             // to guarantee that the implementation class is fully defined
@@ -59,9 +56,10 @@ namespace karabo {
             ~HttpClient();
 
             void asyncPost(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
-                           const ResponseHandler& respHandler);
+                           const HttpResponseHandler& respHandler);
+
             void asyncGet(const std::string& route, const HttpHeaders& reqHeaders, const std::string& reqBody,
-                          const ResponseHandler& respHandler);
+                          const HttpResponseHandler& respHandler);
 
            private:
             class Impl; // forward declaration of the implementation class
