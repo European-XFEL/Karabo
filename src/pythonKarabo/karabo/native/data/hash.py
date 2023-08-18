@@ -58,14 +58,14 @@ SEPARATOR = "."
 class Hash(OrderedDict):
     """This is the serialization data structure of Karabo
 
-    Every data that gets transfered over the network or saved to file
+    Every data that gets transferred over the network or saved to file
     by Karabo is in this format.
 
     It is mostly an extended :class:`dict`.
 
     The big difference to normal Python containers is the dot-access method.
     The hash has a built-in knowledge about it containing itself. Thus,
-    one can access subhashes by ``hash['key.subhash']``.
+    one can access sub-hashes by ``hash['key.subhash']``.
 
     The other speciality are attributes. In Python, these can be accessed
     using a second parameter to the brackets, as in
@@ -210,7 +210,7 @@ class Hash(OrderedDict):
                 OrderedDict.__setitem__(s, p, HashElement(value, attrs))
 
     def __getitem__(self, item):
-        """Get an item from the Hash. Specifit either a single `key` or both
+        """Get an item from the Hash. Specify either a single `key` or both
         key and attribute with [`key`, `attribute`] to retrieve data.
 
         To retrieve the full attribute dictionary for a specific key, use
@@ -312,6 +312,17 @@ class Hash(OrderedDict):
         return item in self
 
     def getKeys(self, keys=None):
+        """
+        Retrieve a list of keys from the Hash. If the 'keys' parameter
+        is provided, the specified keys are added to the given list.
+
+        :param  keys :A list of keys to be added to the result.
+        Example:
+            h = Hash('a', 1, 'b', 2)
+            assert h.getKeys() == ['a', 'b']
+            custom_keys = ['c', 'd']
+            assert h.getKeys(keys=custom_keys) == ['c', 'd', 'a', 'b']
+        """
         if keys is None:
             return list(self.keys())
         return keys.extend(list(self.keys()))
@@ -508,7 +519,7 @@ class HashList(list):
         return HashListFormat.Unknown
 
     def __repr__(self):
-        """Return the pretty represenation of a HashList"""
+        """Return the pretty representation of a HashList"""
         if not len(self):
             return "<HashList([])>"
 
