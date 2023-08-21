@@ -9,5 +9,8 @@ compiler.cppstd=14
 ncurses:CC=gcc
 ncurses:CXX=g++
 
+[tool_requires]
+cmake/3.27.1
+
 [conf]
 tools.system.package_manager:mode=check
