@@ -1,5 +1,5 @@
 [requires]
-cpython/3.8.16@karaboFramework/2.19
+cpython/3.8.16@karabo/py38
 cmake/3.27.1
 
 [generators]

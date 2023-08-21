@@ -6,7 +6,7 @@
 
 # exact
 amqp-cpp/4.3.16
-bzip2/1.0.6
+bzip2/1.0.8
 gtest/1.11.0
 libxml2/2.9.10
 nlohmann_json/3.2.0
@@ -21,13 +21,12 @@ patchelf/0.13 # will not work with CentOs7, 0.8 version not available, so go via
 pugixml/1.10
 
 # minor-any
-# boost/1.82.0 #- succeeds locally, but not on any of the CIs, falling back to local build.
+boost/1.82.0@karabo/py38
 cppunit/1.15.1
 libjpeg/9c
 libtiff/4.0.8
 
 # any
-# cmake/3.25.2 - this is too big of a version jump for CentOs7, see https://stackoverflow.com/questions/44205687/glibcxx-3-4-21-not-found-on-centos-7
 libev/4.33
 # nss/3.88.1 # - our custom one uses the system version, which leads to less runtime conflicts. Specifically, CentOs7 and Ubuntu20+ will not find a commen version due to a NSSUTIL conflict
 # we could use this if we update the framework
@@ -49,17 +48,27 @@ pkg_config
 # These options will become relevant, when we install boost using conan
 # I keep them here for documentation already, as this is bound to happen.
 # 
-# boost needs python: this is important, as otherwise we end up with an 
-# installation that is not usable for karabo.bound. 
-# However, this also means that boost will be compiled from source!
-#
-# boost:without_python=False
-#
 # the boost recipe for conan has an issue with finding libbackrace
 # https://github.com/conan-io/conan-center-index/issues/13448
 # this likely will be fixed in newer boost releases
 #
 # boost:with_stacktrace_backtrace=False
+# 
+# build these boost libraries
+boost:without_atomic=False
+boost:without_date_time=False
+boost:without_chrono=False
+boost:without_container=False
+boost:without_exception=False
+boost:without_filesystem=False
+boost:without_regex=False
+boost:without_thread=False
+boost:without_system=False
+boost:without_program_options=False
+# build libboost_python (for karabo.bound!)
+boost:without_python=False
+# do not build libboost_numpy
+boost:without_numpy=True
 
 [imports]
 lib, * -> lib
