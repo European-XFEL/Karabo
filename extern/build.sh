@@ -38,6 +38,8 @@ DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
 
 PYTHON_VERSION=3.8.16
 PYTHON_PATH_VERSION=3.8
+CONAN_RECIPE_CHANNEL=py38
+BOOST_VERSION=1.82.0
 CPP_STD_LIB_VERSION=c++11
 CPP_STD=14
 
@@ -375,17 +377,22 @@ install_python() {
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         pushd $scriptDir
 
-        # conan package opts
-        package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karaboFramework/2.19"
-        # configure prefix paths
-        folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
-        # build python if not found in conan cache
-        build_opts="--build=missing -s build_type=Release"
-        # apply custom profile on top of default profile
+        # create default build profile
         safeRunCommandQuiet "conan profile new default --detect --force"
-        profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
-        # create the python package locally
-        safeRunCommandQuiet "conan create $package_opts $build_opts $profile_opts"
+
+        # python package opts
+        local package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+        # configure prefix paths
+        local folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
+        # build python if not found in conan cache
+        local build_opts="--build=missing -s build_type=Release"
+        # apply custom profile on top of default profile
+        local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
+        # always compile b2 from source (needed by boost later), avoids CentOS7 failures
+        safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 $profile_opts"
+        # copy conan recipe from extern/resources/python to local conan cache
+        safeRunCommandQuiet "conan export $package_opts"
+        # install packages listed in the extern/conanfile-bootstrap.txt
         safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
         popd
@@ -393,8 +400,8 @@ install_python() {
     fi
 }
 
-install_boost_nss() {
-    DEPENDENCIES=( boost nss )
+install_nss() {
+    DEPENDENCIES=( nss )
     build_dependencies
 }
 
@@ -490,33 +497,24 @@ install_from_deps() {
     element_in "conan" "${package_status[@]}"
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-        # create a profile
 
-        # make sure we use the c++11 ABI everywhere
-        local cxx_lib=libstd$CPP_STD_LIB_VERSION
+        # create default build profile
+        safeRunCommandQuiet "conan profile new default --detect --force"
 
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
-        safeRunCommand "$INSTALL_PREFIX/bin/conan profile update settings.compiler.libcxx=$cxx_lib default"
-
+        # boost package opts
+        local package_opts="./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
-
         # when should conan build from sources? missing means if no pre-compiled binary package exists
-        local build_opts="--build=missing"
+        # boost:python_executable comes from a variable, so it must be defined here
+        local build_opts="--build=missing -o boost:python_executable=$INSTALL_PREFIX/bin/python"
+        # apply custom profile on top of default profile
+        local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
 
-        # define the C++ standard to use - this needs to be compatible with the Framework itself
-        local cxx_std=$CPP_STD
-
-        local compiler_opts="-s compiler.cppstd=$cxx_std -s compiler.libcxx=$cxx_lib"
-
-        local cmake_opt="-c general.conan_cmake_program=$INSTALL_PREFIX/bin/cmake"
-
-        # how to handle any system requirements that might be defined by a package.
-        # check means to verify presence and complain. Since we don't want to require
-        # sudo rights on installation of Karabo, this is all we can do here.
-        local sys_req_opts="-c tools.system.package_manager:mode=check"
-
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $compiler_opts $sys_req_opts $cmake_opts"
+        # copy conan recipe from extern/resources/boost to local conan cache
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export $package_opts"
+        # install packages listed in the extern/conanfile.txt
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
 
         echo "conan" >> $marker_path
     fi
@@ -675,8 +673,8 @@ install_python
 # download any sources we build ourselfs
 download_sources
 
-# now install boost
-install_boost_nss
+# now install nss/nspr
+install_nss
 
 # install via conan and pip next
 install_from_deps
