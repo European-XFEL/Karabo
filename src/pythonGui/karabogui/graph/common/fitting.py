@@ -42,10 +42,22 @@ def linear_function_fit(x, m, b):
     return m * x + b
 
 
-def sqsech(x, height, x0, sx):
+def sqsech(x, height, x0, sx, offset):
     """Returns a squared hyperbolic secant  with the given parameters.
     The hyperbolic secant curve is in the form
     height / ((np.cosh((x0 - x) / sx)) ** 2)
     """
 
-    return height / ((np.cosh((x0 - x) / sx)) ** 2)
+    return height / ((np.cosh((x0 - x) / sx)) ** 2) + offset
+
+
+def guess_initial_parameters(x, y):
+    """
+    Generate initial parameter for 'curve_fit' function for gaussian and
+    sech squared fitting
+    """
+    height_guess = max(y)
+    x0_guess = x[np.argmax(y)]
+    sigma_guess = np.std(x)
+    offset_guess = np.min(y)
+    return [height_guess, x0_guess, sigma_guess, offset_guess]
