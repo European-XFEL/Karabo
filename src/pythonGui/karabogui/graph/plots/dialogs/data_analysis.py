@@ -27,7 +27,8 @@ from karabogui import icons
 from karabogui.controllers.api import get_array_data
 from karabogui.graph.common.api import create_button, make_pen
 from karabogui.graph.common.fitting import (
-    gaussian_fit, linear_function_fit, normal_cdf, sqsech)
+    gaussian_fit, guess_initial_parameters, linear_function_fit, normal_cdf,
+    sqsech)
 from karabogui.graph.common.formatting import (
     table_body, table_header, table_row)
 from karabogui.graph.common.utils import float_to_string
@@ -38,6 +39,7 @@ header = """<b><u>{FUNC} Fit Result</b></u>"""
 row = table_row(table_body(header="{param}", tabs=("{value}", "{error}")))
 
 FWHM_COEFF = 2 * np.sqrt(2 * np.log(2))
+BELL_CURVES = ("Gaussian", "Sech Square")
 
 FIT_FUNCTION_MAP = {
     "Gaussian": {
@@ -281,8 +283,12 @@ class DataAnalysisDialog(QDialog):
         xfit = x_values
         fit_option = self.fit_options_combobox.currentText()
         fit_func = FIT_FUNCTION_MAP[fit_option].get("func")
+        initial_parameters = None
+        if fit_option in BELL_CURVES:
+            initial_parameters = guess_initial_parameters(x_values, y_values)
         try:
-            params, pcov = curve_fit(fit_func, x_values, y_values)
+            params, pcov = curve_fit(f=fit_func, xdata=x_values,
+                                     ydata=y_values, p0=initial_parameters)
         except (RuntimeError, TypeError, ValueError):
             xfit = yfit = np.array([])
             params = perr = np.array([])
