@@ -7,7 +7,7 @@ External Dependency Management in Karabo
 ========================================
 
 The Karabo Framework bundles a large number of third party packages upon which
-it is dependent. This includes things like boost, Qt, and HDF5.
+it is dependent. This includes things like boost, Qt, and AMQP.
 
 Because building these dependencies has become a time consuming and sensitive
 process, they are now being managed by an automated system. Using the
@@ -161,8 +161,8 @@ attrs                20.3.0            MIT                                      
 backcall             0.2.0             BSD-3                                                       yes                   yes
 backports-abc        0.4               PSFL                                                        no                    no
 backports.ssl-match  3.5.0.1           PSFL                                                        no                    no
-boost                1.68              Boost License                                               yes                   no
-bzip2                1.0.6             BSD                                                         yes                   yes
+boost                1.82.0            Boost License                                               yes                   no
+bzip2                1.0.8             BSD                                                         yes                   yes
 certifi              2018.4.16         MPL2.0                                                      no                    no
 chardet              3.0.4             LGPL                                                        yes                   no
 colorama             0.4.4             BSD                                                         yes                   yes
@@ -182,7 +182,6 @@ flake8               3.8.4             MIT                                      
 flaky                3.7.0             Apache-2.0                                                  no                    no
 freetype             2.5.2             FTL/GPLv2                                                   no                    yes
 gmock                1.7.0             BSD                                                         no                    no
-hdf5                 1.8.12            BSD                                                         yes                   no
 h5py                 2.7.1             BSD                                                         no                    no
 httplib2             0.9.1             MIT                                                         yes                   yes
 idna                 2.7               PSFL                                                        yes                   no
@@ -203,7 +202,7 @@ lapack               3.6.0             BSD                                      
 libev-git            4.33dev           BSD/GPLv2                                                   yes                   no
 libpng               1.6.8             libpng (MIT like)                                           yes                   yes
 libxml2              2.9.10            MIT                                                         yes                   yes
-libxslt              1.1.38            MIT                                                         yes                   yes
+libxslt              1.1.34            MIT                                                         yes                   yes
 libzmq               4.2.5             LGPLv3                                                      yes                   yes
 log4cpp              1.1.3             LGPLv2.1                                                    yes                   no
 lxml                 3.6.4             BSD                                                         yes                   no
@@ -218,7 +217,7 @@ nbformat             4.1.0             BSD                                      
 nose                 1.3.0             LGPL                                                        no                    no
 notebook             4.2.2             BSD                                                         yes                   yes
 nss                  ?                 MPL                                                         yes                   no
-numpy                1.21.4            BSD                                                         yes                   yes
+numpy                1.22.4            BSD                                                         yes                   yes
 openmq               5.0.1             EPL/GPLv2                                                   yes                   yes
 paho.mqtt.python     1.5.1             EPLv1/EDLv1                                                 yes                   no
 packaging            20.8              apache/BSD                                                  yes                   no
@@ -229,7 +228,7 @@ patchelf             0.8               GPLv3                                    
 pexpect              4.8.0             ISC license (BSD like)                                      yes                   yes
 pg8000               1.21.2            BSD                                                         yes                   no
 pickleshare          0.7.5             MIT                                                         yes                   yes
-Pillow               2.5.3             PIL (MIT like)                                              no                    yes
+Pillow               10.0.0            PIL (MIT like)                                              no                    yes
 Pint                 0.17              BSD-3-Clause                                                yes                   yes
 pip                  7.1               MIT                                                         yes                   yes
 pkgconfig            1.2.2             MIT                                                         yes                   yes
@@ -252,7 +251,7 @@ pytest               6.2.1             MIT                                      
 pytest-runner        2.11.1            MIT                                                         no                    no
 pytz                 2013.9            MIT                                                         no                    yes
 PyYAML               3.12              MIT                                                         no                    no
-pyzmq                22.3.0            LGPL+BSD                                                    yes                   yes
+pyzmq                25.1.0            LGPL+BSD                                                    yes                   yes
 qtconsole            4.2.1             BSD                                                         yes                   yes
 qt                   5.9.7             GPLv3/Commercial                                            no                    yes
 qtpy                 1.9               MIT                                                         no                    yes
@@ -260,7 +259,7 @@ redisclient          1.0.2dev          MIT                                      
 requests             2.19.1            APLv2                                                       no                    no
 rpathology           0.0.1             MIT                                                         no                    no
 scikit-learn         0.14.1            BSD                                                         no                    no
-scipy                1.6.3             BSD                                                         no                    no
+scipy                1.7.3             BSD                                                         no                    no
 setuptools           39.1.0            MIT                                                         yes                   yes
 setuptools-scm       1.15.6            MIT                                                         yes                   yes
 simplegeneric        0.8.1             ZPLv2.1 (BSD plus trademark)                                yes                   yes
@@ -303,7 +302,6 @@ Here are the dependencies of the ``karabo-cpp`` python module:
 
     "karabo-cpp" -> "openmq"
     "karabo-cpp" -> "boost"
-    "karabo-cpp" -> "hdf5"
     "karabo-cpp" -> "redisclient"
     "karabo-cpp" -> "amqpcpp"
     "karabo-cpp" -> "mqtt_cpp"
