@@ -99,16 +99,6 @@ class ValidatorWrap {
     }
 
 
-    static bp::object hasParametersInWarnOrAlarm(Validator& self) {
-        return bp::object(self.hasParametersInWarnOrAlarm());
-    }
-
-
-    static bp::object getParametersInWarnOrAlarm(Validator& self) {
-        return bp::object(self.getParametersInWarnOrAlarm());
-    }
-
-
     static bp::object hasReconfigurableParameter(Validator& self) {
         return bp::object(self.hasReconfigurableParameter());
     }
@@ -2425,12 +2415,9 @@ void exportPyUtilSchema() {
                    (bp::arg("schema"), bp::arg("configuration"), bp::arg("timestamp") = bp::object()))
               .def("setValidationRules", &ValidatorWrap::setValidationRules, (bp::arg("rules")))
               .def("getValidationRules", &ValidatorWrap::getValidationRules)
-              .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
-              .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
               .def("hasReconfigurableParameter", &ValidatorWrap::hasReconfigurableParameter)
               .def("getRollingStatistics", &ValidatorWrap::getRollingStatistics, bp::arg("key"),
-                   bp::return_internal_reference<>())
-              .def_readonly("kAlarmParamPathSeparator", &Validator::kAlarmParamPathSeparator);
+                   bp::return_internal_reference<>());
     }
 
     {
