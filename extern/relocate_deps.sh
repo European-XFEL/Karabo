@@ -77,7 +77,7 @@ rewrite_rpaths() {
     done
 
     # These are specific libs which need to be relocated
-    local target_libs=(libtiffxx.so libhdf5_hl.so libfreetype.so libxslt.so libexslt.so libxml2mod.so libzmq.so)
+    local target_libs=(libtiffxx.so libfreetype.so libxslt.so libexslt.so libxml2mod.so libzmq.so)
 
     # Relocate the libraries
     count=0

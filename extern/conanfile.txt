@@ -14,7 +14,6 @@ zeromq/4.3.2
 
 # patch-any
 fftw/3.3.8
-# hdf5/1.8.21 for now going via download of package because Cmake will not reliably find the conan build.
 libpng/1.6.37
 libxslt/1.1.34
 patchelf/0.13 # will not work with CentOs7, 0.8 version not available, so go via download for now
