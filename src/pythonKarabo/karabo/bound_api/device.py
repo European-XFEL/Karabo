@@ -711,125 +711,6 @@ class PythonDevice(NoFsm):
             # Finally update the property
             self._setNoStateLock(key, vec, timestamp)
 
-    def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
-                                         silent):
-        """Evaluate the device's alarm condition
-
-        It sets it to the most severe alarm condition present on its properties
-        or explicitly set via `setAlarmCondition`.
-        :param forceUpdate: if set to true  the global alarm condition will
-                            always be returned, even if no parameter based
-                            alarm conditions are present.
-        :param prevParamsInAlarm: parameters in alarm before current update,
-                                  needed only if silent=False
-        :param silent: If True, suppress any log messages about changed alarms
-        :return:
-
-        Calling this method must be protected by a state change lock!
-        """
-
-        if self.validatorIntern.hasParametersInWarnOrAlarm():
-            warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-            conditions = [self.globalAlarmCondition]
-
-            for node in warnings:
-                desc = warnings[node]
-                key = node.getKey()
-                alarmType = desc["type"]
-                if (not silent and
-                        (key not in prevParamsInAlarm or
-                         prevParamsInAlarm.get(key + ".type") != alarmType)):
-                    # A new alarm - so it is worth to notify the sysyem:
-                    self.log.WARN("{}: {}".format(alarmType, desc["message"]))
-                conditions.append(AlarmCondition.fromString(alarmType))
-
-            topCondition = AlarmCondition.returnMostSignificant(conditions)
-            return topCondition
-        elif forceUpdate:
-            return self.globalAlarmCondition
-        else:
-            return None
-
-    def _evaluateAlarmUpdates(self, previous, forceUpdate=False):
-        """Evaluates the difference between current and previous alarms
-
-        Evaluates difference between previous and current parameter in alarm
-        conditions and emits a signal with the update
-        :param previous: alarm conditions previously present on the device.
-        :param forceUpdate: force updating alarms even if no change occurred
-               on validator side.
-        :return: a Hash containing the alarm changes
-
-        Calling this method must be protected by a state change lock!
-        """
-        toClear = Hash()
-        toAdd = Hash()
-        knownAlarms = {}
-
-        current = self.validatorIntern.getParametersInWarnOrAlarm()
-        # Check if we need to clear/clean alarms
-        for p in previous:  # p is a HashNode
-            pKey = p.getKey()
-            currentEntry = current.find(pKey)
-            desc = p.getValue()
-            exType = desc.get("type")
-            if (currentEntry is not None and
-                    exType == currentEntry.getValue().get("type")):
-                if not forceUpdate:
-                    # on force update we don't care if timestamps match
-                    timeStampPrevious = Timestamp.fromHashAttributes(
-                        p.getAttributes())
-                    timeStampCurrent = Timestamp.fromHashAttributes(
-                        currentEntry.getAttributes())
-                    # TODO: Once equality comparison for Timestamp works, use
-                    #       'timeStampPrevious == timeStampCurrent' here:
-                    if (timeStampPrevious.getFractionalSeconds()
-                            == timeStampCurrent.getFractionalSeconds()
-                        and timeStampPrevious.getSeconds()
-                            == timeStampCurrent.getSeconds()):
-                        types = knownAlarms.setdefault(pKey, set())
-                        types.add(exType)
-
-                # alarmCondition still exists nothing to clean
-                continue
-
-            # alarm is gone: we should clean
-            existingEntries = []
-            existingEntryNode = toClear.find(pKey)
-            if existingEntryNode is not None:
-                existingEntries = existingEntryNode.getValue()
-
-            existingEntries.append(exType)
-            toClear.set(pKey, existingEntries)
-
-        # Add new alarms
-        for c in current:
-            cKey = c.getKey()
-            desc = c.getValue()
-            conditionString = desc.get("type")
-            # avoid unnecessary chatter of already sent messages
-            if (forceUpdate
-                    or conditionString not in knownAlarms.get(cKey, set())):
-
-                condition = AlarmCondition(conditionString)
-                pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
-
-                alarmDesc = self._fullSchema.getInfoForAlarm(pSep, condition)
-                needAck = self._fullSchema.doesAlarmNeedAcknowledging(
-                    pSep, condition)
-
-                entry = Hash("type", conditionString,
-                             "description", alarmDesc,
-                             "needsAcknowledging", needAck)
-
-                prop = Hash(conditionString, entry)
-                entryNode = prop.getNode(conditionString)
-                occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
-                occuredAt.toHashAttributes(entryNode.getAttributes())
-                toAdd.set(cKey, prop)
-
-        return Hash("toClear", toClear, "toAdd", toAdd)
-
     def slotLoggerContent(self, info):
         """Slot call to receive logger content from the print logger
 
@@ -1923,68 +1804,21 @@ class PythonDevice(NoFsm):
             self["performanceStatistics.messagingProblems"] = True
             self.lastBrokerErrorStamp = time.time()
 
-    def setAlarmCondition(self, condition, needsAcknowledging=False,
-                          description=""):
+    def setAlarmCondition(self, condition, **deprecated):
         """Set the global alarm condition
 
         :param condition: condition to set
-        :param needsAcknowledging: if this condition will require
-               acknowledgment on the alarm service
-        :param description: an optional description of the condition.
-                Consider including remarks on how to resolve
-        :return:
+        :return: None
         """
         if not isinstance(condition, AlarmCondition):
             raise TypeError("First argument must be 'AlarmCondition',"
                             " not '{}'".format(str(type(condition))))
-        resultingCondition = None
-        currentCondition = None
 
         timestamp = self.getActualTimestamp()
         with self._stateChangeLock:
-
-            self.globalAlarmCondition = condition
-            if condition != AlarmCondition.NONE:
-                info = (condition, description, needsAcknowledging, timestamp)
-                # May overwrite a previously existing alarm
-                self.accumulatedGlobalAlarms[condition] = info
-            resultingCondition = \
-                self._evaluateAndUpdateAlarmCondition(
-                    forceUpdate=True, prevParamsInAlarm=Hash(), silent=True)
-            currentCondition = self._parameters.get("alarmCondition")
-
-            if (resultingCondition is not None
-                    and resultingCondition.asString() != currentCondition):
-                self._setNoStateLock("alarmCondition", resultingCondition,
-                                     timestamp, validate=False)
-
-            emitHash = Hash("toClear", Hash(), "toAdd", Hash())
-
-            # Clear all previous alarms that are more critical than the new one
-            alarmsToClear = [k for k in self.accumulatedGlobalAlarms.keys()
-                             if k.criticalityLevel()
-                             > condition.criticalityLevel()]
-            if alarmsToClear:
-                for level in alarmsToClear:
-                    del self.accumulatedGlobalAlarms[level]
-                emitHash.set("toClear.global",
-                             [a.value for a in alarmsToClear])
-
-            # Add the new alarm if not NONE
-            if condition != AlarmCondition.NONE:
-                entry = Hash("type", condition.value,
-                             "description", description,
-                             "needsAcknowledging", needsAcknowledging)
-
-                prop = Hash(condition.value, entry)
-                entryNode = prop.getNode(condition.value)
-                # attach current timestamp
-                timestamp.toHashAttributes(entryNode.getAttributes())
-                emitHash.set("toAdd.global", prop)
-
-        if (not emitHash.get("toClear").empty() or
-                not emitHash.get("toAdd").empty()):
-            self._ss.emit("signalAlarmUpdate", self.getInstanceId(), emitHash)
+            self._setNoStateLock(
+                "alarmCondition", condition.asString(),
+                timestamp, validate=False)
 
     def getAlarmCondition(self, key=None, separator="."):
         if key is None:
@@ -2006,21 +1840,15 @@ class PythonDevice(NoFsm):
             # defined as 'bp::return_internal_reference<>()' in PyUtilSChema.cc
             return self.validatorIntern.getRollingStatistics(key)
 
+    @karabo_deprecated
     def getAlarmInfo(self):
         """Output information on current alarms on this device
 
         :return: a Hash containing the property as key and as string for
          the alarm information as value.
         """
-        info = Hash()
-        with self._stateChangeLock:
-            warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-            for key in warnings.getKeys():
-                desc = warnings.get(key)
-                condition = AlarmCondition.fromString(desc.get("type"))
-                thisinfo = self._fullSchema.getInfoForAlarm(key, condition)
-                info.set(key, thisinfo)
-        return info
+        alarm = self.get("alarmCondition")
+        return Hash("alarmCondition", alarm.asString())
 
     @staticmethod
     def loadConfiguration(xmlfile):

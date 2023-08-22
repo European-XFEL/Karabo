@@ -285,18 +285,6 @@ struct NDArrayElementWrap {
         typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                                                      \
         typedef AlarmSpecific<U, EType, RollingStatsSpec> AlarmSpec;                                                  \
         bp::class_<RollingStatsSpec, boost::noncopyable>("RollingStatsSpecific" #e, bp::no_init)                      \
-              .def("warnVarianceLow",                                                                                 \
-                   (AlarmSpec & (RollingStatsSpec::*)(const double))(&RollingStatsSpec::warnVarianceLow),             \
-                   bp::return_internal_reference<>())                                                                 \
-              .def("warnVarianceHigh",                                                                                \
-                   (AlarmSpec & (RollingStatsSpec::*)(const double))(&RollingStatsSpec::warnVarianceHigh),            \
-                   bp::return_internal_reference<>())                                                                 \
-              .def("alarmVarianceLow",                                                                                \
-                   (AlarmSpec & (RollingStatsSpec::*)(const double))(&RollingStatsSpec::alarmVarianceLow),            \
-                   bp::return_internal_reference<>())                                                                 \
-              .def("alarmVarianceHigh",                                                                               \
-                   (AlarmSpec & (RollingStatsSpec::*)(const double))(&RollingStatsSpec::alarmVarianceHigh),           \
-                   bp::return_internal_reference<>())                                                                 \
               .def("evaluationInterval",                                                                              \
                    (ReadOnlySpec & (RollingStatsSpec::*)(const unsigned int))(&RollingStatsSpec::evaluationInterval), \
                    bp::return_internal_reference<>());                                                                \
