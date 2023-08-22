@@ -218,17 +218,6 @@ namespace karabo {
             karabo::util::Schema m_fullSchema;
             std::map<std::string, karabo::util::Schema> m_stateDependentSchema;
 
-            karabo::util::AlarmCondition m_globalAlarmCondition; /// actual global alarm condition
-
-            struct GlobalAlarmInfo {
-                karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::NONE;
-                std::string description;
-                bool needsAcknowledging = false;
-                karabo::util::Timestamp timestamp = karabo::util::Timestamp(karabo::util::Epochstamp(0ull, 0ull), 0ull);
-            };
-            // not unordered_map since we erase while iterating over it (in C++14 should be OK)
-            std::map<std::string, GlobalAlarmInfo> m_accumulatedGlobalAlarms; /// all accumulated ones (incl. actual)
-
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
 
 
@@ -497,7 +486,7 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration)
-                : m_globalAlarmCondition(karabo::util::AlarmCondition::NONE), m_lastBrokerErrorStamp(0ull, 0ull) {
+                : m_lastBrokerErrorStamp(0ull, 0ull) {
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
@@ -778,8 +767,6 @@ namespace karabo {
                 using namespace karabo::util;
                 std::pair<bool, std::string> result;
 
-                const Hash previousParametersInAlarm(m_validatorIntern.getParametersInWarnOrAlarm());
-
                 Hash validated;
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
 
@@ -787,23 +774,6 @@ namespace karabo {
                     const std::string msg("Bad parameter setting attempted, validation reports: " + result.second);
                     KARABO_LOG_WARN << msg;
                     throw KARABO_PARAMETER_EXCEPTION(msg);
-                }
-
-                // Check for parameters being in a bad condition
-                const std::pair<bool, const AlarmCondition> resultingCondition = evaluateAndUpdateAlarmCondition(
-                      !previousParametersInAlarm.empty(), previousParametersInAlarm, false);
-                if (resultingCondition.first &&
-                    resultingCondition.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
-                    Hash::Node& node = validated.set("alarmCondition", resultingCondition.second.asString());
-                    Hash::Attributes& attributes = node.getAttributes();
-                    timestamp.toHashAttributes(attributes);
-                }
-
-                // notify of alarm changes
-                Hash changedAlarms;
-                evaluateAlarmUpdates(previousParametersInAlarm, changedAlarms);
-                if (!changedAlarms.get<Hash>("toClear").empty() || !changedAlarms.get<Hash>("toAdd").empty()) {
-                    emit("signalAlarmUpdate", getInstanceId(), changedAlarms);
                 }
 
                 if (!validated.empty()) {
@@ -1516,58 +1486,11 @@ namespace karabo {
 
                 const Timestamp timestamp(getActualTimestamp());
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                m_globalAlarmCondition = condition;
-                if (condition != AlarmCondition::NONE) {
-                    // May overwrite a previously existing alarm
-                    GlobalAlarmInfo& info = m_accumulatedGlobalAlarms[condition.asString()];
-                    info.condition = condition;
-                    info.description = description;
-                    info.needsAcknowledging = needsAcknowledging;
-                    info.timestamp = timestamp;
-                }
-
-                std::pair<bool, const AlarmCondition> result =
-                      this->evaluateAndUpdateAlarmCondition(true, Hash(), true);
-                if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
-                    Hash h;
-                    h.set("alarmCondition", result.second.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
-                    // also set the fields attribute to this condition
-                    this->setNoValidateNoLock(h, timestamp);
-                    this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, result.second.asString());
-                }
-                // emit signal to alarm service
-                Hash emitHash;
-                Hash& toClear = emitHash.bindReference<Hash>("toClear");
-                Hash& toAdd = emitHash.bindReference<Hash>("toAdd");
-
-                // Clear all previous alarms that are more critical than the new one
-                std::vector<std::string> alarmsToClear;
-                for (auto it = m_accumulatedGlobalAlarms.begin(); it != m_accumulatedGlobalAlarms.end();) {
-                    const AlarmCondition& cond = it->second.condition;
-
-                    if (cond.isMoreCriticalThan(m_globalAlarmCondition)) {
-                        alarmsToClear.push_back(cond.asString());
-                        it = m_accumulatedGlobalAlarms.erase(it);
-                    } else {
-                        ++it;
-                    }
-                }
-                if (!alarmsToClear.empty()) {
-                    toClear.set("global", alarmsToClear);
-                }
-                // Add the new alarm if not NONE
-                if (condition != AlarmCondition::NONE) {
-                    Hash::Node& entryNode = toAdd.set("global." + condition.asString(), Hash());
-                    Hash& entry = entryNode.getValue<Hash>();
-                    entry.set("type", condition.asString());
-                    entry.set("description", description);
-                    entry.set("needsAcknowledging", needsAcknowledging);
-                    timestamp.toHashAttributes(entryNode.getAttributes()); // attach current time stamp
-                }
-                lock.unlock(); // release lock before sending data
-                if (!toClear.empty() || !toAdd.empty()) {
-                    emit("signalAlarmUpdate", getInstanceId(), emitHash);
-                }
+                Hash h;
+                h.set("alarmCondition", condition.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                // also set the fields attribute to this condition
+                this->setNoValidateNoLock(h, timestamp);
+                this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, condition.asString());
             }
 
             /**
@@ -1601,27 +1524,6 @@ namespace karabo {
              */
             karabo::util::RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string& path) const {
                 return m_validatorIntern.getRollingStatistics(path);
-            }
-
-            /**
-             * Returns a hash containing the info field information
-             * for current alarms on the device
-             *
-             * @return a hash with structure key: path to property -> alarm info (string)
-             */
-            const karabo::util::Hash getAlarmInfo() const {
-                using namespace karabo::util;
-                Hash info;
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
-                for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                    const Hash& desc = it->getValue<Hash>();
-                    const AlarmCondition& cond = AlarmCondition::fromString(desc.get<std::string>("type"));
-                    std::string propertyDotSep(it->getKey());
-                    boost::replace_all(propertyDotSep, Validator::kAlarmParamPathSeparator, ".");
-                    info.set(propertyDotSep, m_fullSchema.getInfoForAlarm(propertyDotSep, cond));
-                }
-                return info;
             }
 
             void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac,
@@ -1924,10 +1826,6 @@ namespace karabo {
 
                 KARABO_SYSTEM_SIGNAL("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
-                // To ensure that this signal is delivered before any reply to a slot triggering the signal,
-                // this has to be a SYSTEM_SIGNAL.
-                KARABO_SYSTEM_SIGNAL("signalAlarmUpdate", std::string, karabo::util::Hash);
-
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
 
                 KARABO_SLOT(slotGetConfiguration)
@@ -1937,8 +1835,6 @@ namespace karabo {
                 KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
 
                 KARABO_SLOT(slotKillDevice)
-
-                KARABO_SLOT(slotReSubmitAlarms, karabo::util::Hash);
 
                 KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
 
@@ -2279,185 +2175,6 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Broker consumption problem: " << message;
                 }
-            }
-
-            const std::pair<bool, const karabo::util::AlarmCondition> evaluateAndUpdateAlarmCondition(
-                  bool forceUpdate, const karabo::util::Hash& previousParametersInAlarm, bool silent) {
-                using namespace karabo::util;
-                if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
-                    const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
-                    std::vector<AlarmCondition> v;
-
-                    v.push_back(m_globalAlarmCondition);
-
-                    for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                        using std::string;
-                        const Hash& desc = it->getValue<Hash>();
-                        const string& type = desc.get<string>("type");
-                        if (!silent) {
-                            const string& propertyName = it->getKey();
-                            // log message only if alarm is new on property or of new type
-                            if (!previousParametersInAlarm.has(propertyName) ||
-                                previousParametersInAlarm.get<string>(propertyName + ".type") != type) {
-                                KARABO_LOG_WARN << type << ": " << desc.get<string>("message");
-                            }
-                        }
-                        v.push_back(AlarmCondition::fromString(type));
-                    }
-                    return std::pair<bool, const AlarmCondition>(true, AlarmCondition::returnMostSignificant(v));
-                } else if (forceUpdate) {
-                    return std::pair<bool, const AlarmCondition>(true, m_globalAlarmCondition);
-                }
-                return std::pair<bool, const AlarmCondition>(false, AlarmCondition::NONE);
-            }
-
-            /**
-             * Evaluates difference between previous and current parameter in alarm conditions and returns
-             * the update by reference
-             *
-             * @param previous: alarm conditions previously present on the device.
-             * @param result return value with Hashes at the keys "toClear" and "toAdd"
-             * @param forceUpdate: force updating alarms even if no change occurred on validator side.
-             *
-             * Note: calling this method must be protected by a state change mutex!
-             */
-            void evaluateAlarmUpdates(const karabo::util::Hash& previous, karabo::util::Hash& result,
-                                      bool forceUpdate = false) {
-                using namespace karabo::util;
-
-
-                Hash& toClear = result.bindReference<Hash>("toClear");
-                Hash& toAdd = result.bindReference<Hash>("toAdd");
-                std::map<std::string, std::unordered_set<std::string>>
-                      knownAlarms; // alarms already known to the system which have not updated
-
-                const Hash& current = m_validatorIntern.getParametersInWarnOrAlarm();
-                if (!previous.empty()) {
-                    for (Hash::const_iterator it = previous.begin(); it != previous.end(); ++it) {
-                        const boost::optional<const Hash::Node&> currentEntry = current.find(it->getKey());
-                        const Hash& desc = it->getValue<Hash>();
-                        const std::string& exType = desc.get<std::string>("type");
-                        if (currentEntry && exType == currentEntry->getValue<Hash>().get<std::string>("type")) {
-                            if (!forceUpdate // on force update we don't care if timestamps match
-                                && (Timestamp::fromHashAttributes(it->getAttributes()) ==
-                                    Timestamp::fromHashAttributes(currentEntry->getAttributes()))) {
-                                knownAlarms[it->getKey()].insert(exType);
-                            }
-
-                            continue; // alarmCondition still exists nothing to clean
-                        }
-                        // add simple entry to allow for cleaning
-                        const std::string& property = it->getKey();
-
-                        boost::optional<Hash::Node&> typesListN = toClear.find(property);
-                        if (!typesListN) {
-                            typesListN = toClear.set(property, std::vector<std::string>());
-                        }
-                        std::vector<std::string>& typesList = typesListN->getValue<std::vector<std::string>>();
-                        typesList.push_back(desc.get<std::string>("type"));
-                        std::string propertyDotSep(it->getKey());
-                        boost::replace_all(propertyDotSep, Validator::kAlarmParamPathSeparator, ".");
-                        KARABO_LOG_DEBUG << "Clearing alarm condition " << propertyDotSep << " -> "
-                                         << desc.get<std::string>("type");
-                    }
-                }
-
-                // now add new alarms
-                for (Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
-                    const Hash& desc = it->getValue<Hash>();
-                    const std::string& conditionString = desc.get<std::string>("type");
-                    // avoid unnecessary chatter of already sent messages.
-                    if (forceUpdate ||
-                        knownAlarms[it->getKey()].find(conditionString) == knownAlarms[it->getKey()].end()) {
-                        const AlarmCondition& condition = AlarmCondition::fromString(conditionString);
-
-                        const std::string& property = it->getKey();
-                        std::string propertyDotSep(property);
-                        boost::replace_all(propertyDotSep, Validator::kAlarmParamPathSeparator, ".");
-
-                        Hash::Node& propertyNode = toAdd.set(property, Hash());
-                        Hash::Node& entryNode = propertyNode.getValue<Hash>().set(conditionString, Hash());
-                        Hash& entry = entryNode.getValue<Hash>();
-
-                        entry.set("type", conditionString);
-                        // We expect to be protected by locking of m_objectStateChangeMutex outside of the current
-                        // function
-                        entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
-                        entry.set("needsAcknowledging",
-                                  m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
-                        const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
-                        occuredAt.toHashAttributes(entryNode.getAttributes());
-                    }
-                }
-            }
-
-            /**
-             * This slot is called by the alarm service when it gets (re-) instantiated. The alarm service will pass
-             * any for this instances that it recovered from its persisted data. These should be checked against whether
-             * they are still valid and if new ones appeared
-             *
-             * @param existingAlarms: A hash containing existing alarms pertinent to this device. May be empty.
-             */
-            void slotReSubmitAlarms(const karabo::util::Hash& existingAlarms) {
-                using namespace karabo::util;
-
-                std::set<std::string> globalAlarmsToCheck;
-                if (existingAlarms.has("global")) {
-                    existingAlarms.get<Hash>("global").getKeys(globalAlarmsToCheck);
-                    // Would be cleaner than 'continue' treatment in loop below (but existingAlarms is const):
-                    // existingAlarms.erase("global");
-                }
-
-                Hash existingAlarmsRF; // reformatted to match format updateAlarmServiceWithParametersInAlarm expects as
-                                       // previous
-                for (Hash::const_iterator propIt = existingAlarms.begin(); propIt != existingAlarms.end(); ++propIt) {
-                    const Hash& propertyHash = propIt->getValue<Hash>();
-                    const std::string& property = propIt->getKey();
-                    if (property == "global") continue; // see above
-                    for (Hash::const_iterator aTypeIt = propertyHash.begin(); aTypeIt != propertyHash.end();
-                         ++aTypeIt) {
-                        // If 'existingAlarms' have more than one alarm type per property, all but the last one are lost
-                        // here. Could not yet identify a higher level problem, but note that a property could have
-                        // WARN_LOW and ALARM_VARIANCE_HIGH at the same time!
-                        // TODO: Check whether that is a problem!
-                        existingAlarmsRF.set(
-                              boost::replace_all_copy(property, ".", Validator::kAlarmParamPathSeparator),
-                              Hash("type", aTypeIt->getKey()));
-                    }
-                }
-
-                Hash alarmsToUpdate;
-                {
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                    evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate, true);
-
-                    // Add all global alarm condition since last setting to NONE
-                    for (auto it = m_accumulatedGlobalAlarms.begin(); it != m_accumulatedGlobalAlarms.end(); ++it) {
-                        const GlobalAlarmInfo& globalCondInfo = it->second;
-
-                        const AlarmCondition& globalAlarmCondition = globalCondInfo.condition; // or it->first;
-                        Hash::Node& globalNode =
-                              alarmsToUpdate.set("toAdd.global." + globalAlarmCondition.asString(), Hash());
-                        Hash& globalEntry = globalNode.getValue<Hash>();
-                        globalEntry.set("type", globalAlarmCondition.asString());
-                        globalEntry.set("description", globalCondInfo.description);
-                        globalEntry.set("needsAcknowledging", globalCondInfo.needsAcknowledging);
-                        const Timestamp& stamp = globalCondInfo.timestamp;
-                        stamp.toHashAttributes(globalNode.getAttributes());
-                    }
-
-                    // Check which global alarms to clear - not the accumulated ones.
-                    std::vector<std::string> globalAlarmsToClear;
-                    for (const std::string& alarm : globalAlarmsToCheck) {
-                        if (m_accumulatedGlobalAlarms.find(alarm) == m_accumulatedGlobalAlarms.end()) {
-                            globalAlarmsToClear.push_back(alarm);
-                        }
-                    }
-                    if (!globalAlarmsToClear.empty()) {
-                        alarmsToUpdate.set("toClear.global", globalAlarmsToClear);
-                    }
-                }
-                reply(getInstanceId(), alarmsToUpdate);
             }
 
             /**
