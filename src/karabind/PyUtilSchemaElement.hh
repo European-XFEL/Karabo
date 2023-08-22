@@ -218,14 +218,14 @@ struct ReadOnlySpecificVectorWrap {
 
 /////////////////////////////////////////////////////////////
 
-#define KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(U, EType, e)                                                         \
-    {                                                                                                                  \
-        typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                                                               \
-        typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                                                       \
-        typedef AlarmSpecific<U, EType, RollingStatsSpec> AlarmSpec;                                                   \
-        py::class_<RollingStatsSpec>(m, "RollingStatsSpecific" #e)                                                     \
-              .def("evaluationInterval", &RollingStatsSpec::evaluationInterval,                                        \
-                   py::return_value_policy::reference_internal);                                                       \
+#define KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(U, EType, e)                  \
+    {                                                                           \
+        typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                        \
+        typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                \
+        typedef AlarmSpecific<U, EType, RollingStatsSpec> AlarmSpec;            \
+        py::class_<RollingStatsSpec>(m, "RollingStatsSpecific" #e)              \
+              .def("evaluationInterval", &RollingStatsSpec::evaluationInterval, \
+                   py::return_value_policy::reference_internal);                \
     }
 
 /////////////////////////////////////////////////////////////
