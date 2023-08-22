@@ -189,9 +189,9 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         self.classVersion = f"{classPackage}-{type(self).__version__}"
         self.karaboVersion = karaboVersion
         self.pid = os.getpid()
-        self._statusInfo = self.__get_status_info()
+        self._statusInfo = self._get_instance_info_status()
 
-    def __get_status_info(self):
+    def _get_instance_info_status(self):
         if self.state == State.UNKNOWN:
             status = "unknown"
         elif self.state == State.ERROR:
@@ -296,7 +296,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     def update(self):
         """Update the instanceInfo Hash according to the status info
         """
-        statusInfo = self.__get_status_info()
+        statusInfo = self._get_instance_info_status()
         if statusInfo != self._statusInfo:
             self.updateInstanceInfo(Hash("status", statusInfo))
             self._statusInfo = statusInfo
