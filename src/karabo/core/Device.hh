@@ -485,8 +485,7 @@ namespace karabo {
              *
              * @param configuration
              */
-            Device(const karabo::util::Hash& configuration)
-                : m_lastBrokerErrorStamp(0ull, 0ull) {
+            Device(const karabo::util::Hash& configuration) : m_lastBrokerErrorStamp(0ull, 0ull) {
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
