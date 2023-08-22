@@ -612,9 +612,10 @@ namespace karabo {
                 }
 
                 const karabo::util::Types::ReferenceType workType = workNode.getType();
-                if (karabo::util::Types::isNumericPod(workType) && (masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS))) {
-                    assureRollingStatsInitialized(
-                            scope, masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
+                if (karabo::util::Types::isNumericPod(workType) &&
+                    (masterNode.hasAttribute(KARABO_SCHEMA_ENABLE_ROLLING_STATS))) {
+                    assureRollingStatsInitialized(scope,
+                                                  masterNode.getAttributeAs<double>(KARABO_SCHEMA_ROLLING_STATS_EVAL));
                     RollingWindowStatistics::Pointer rollingStats = m_parameterRollingStats[scope];
                     rollingStats->update(workNode.getValueAs<double>());
                 }
