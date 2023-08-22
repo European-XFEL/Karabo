@@ -663,7 +663,7 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail(
                 "test_getWarnAlarmLowHighAs exception in "
-                 "getAlarmLowAs: " + str(e))
+                "getAlarmLowAs: " + str(e))
 
         try:
             self.assertEqual(
@@ -673,7 +673,7 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail(
                 "test_getWarnAlarmLowHighAs exception in "
-                 "getAlarmHighAs: " + str(e))
+                "getAlarmHighAs: " + str(e))
 
     def test_hasWarnAlarm(self):
         try:
