@@ -852,9 +852,9 @@ class GraphicsRenderer2:
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("OtherSchemaElements", "1.0")
-class OtherSchemaElements(object):
+class OtherSchemaElements:
     def __init__(self, configuration):
-        super(OtherSchemaElements, self).__init__()
+        super().__init__()
 
     @staticmethod
     def expectedParameters(expected):

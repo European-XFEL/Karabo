@@ -354,11 +354,6 @@ class PythonDevice(NoFsm):
         # External validator for slotReconfigure(..)
         self.validatorExtern = Validator(rules)
 
-        # actual global alarm condition and all accumulated ones
-        self.globalAlarmCondition = AlarmCondition.NONE
-        # key, value will be AlarmCondition, info tuple
-        self.accumulatedGlobalAlarms = dict()
-
         # For broker error handler
         self.lastBrokerErrorStamp = 0
 
@@ -622,9 +617,6 @@ class PythonDevice(NoFsm):
 
             validated = None
 
-            prevAlarmParams = self.validatorIntern \
-                .getParametersInWarnOrAlarm()
-
             if validate:
                 result, error, validated = self.validatorIntern.validate(
                     self._fullSchema, hash, stamp)
@@ -633,27 +625,6 @@ class PythonDevice(NoFsm):
                                        "ignore keys {}. Validation "
                                        "reports: {}".format(hash.keys(),
                                                             error))
-
-                resultingCondition = self._evaluateAndUpdateAlarmCondition(
-                    forceUpdate=not prevAlarmParams.empty(),
-                    prevParamsInAlarm=prevAlarmParams, silent=False)
-                # set the overal alarm condition if needed
-                if (resultingCondition is not None
-                        and resultingCondition.asString()
-                        != self._parameters.get("alarmCondition")):
-                    validated.set("alarmCondition",
-                                  resultingCondition.asString())
-                    node = validated.getNode("alarmCondition")
-                    attributes = node.getAttributes()
-                    attributes.set("indicateAlarm", True)
-                    stamp.toHashAttributes(attributes)
-                changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
-                if not changedAlarms.get("toClear").empty() or not \
-                        changedAlarms.get("toAdd").empty():
-                    self._ss.emit("signalAlarmUpdate",
-                                  self.getInstanceId(),
-                                  changedAlarms)
-
             else:
                 validated = hash
                 # Add timestamps
@@ -722,63 +693,6 @@ class PythonDevice(NoFsm):
         nMessages = info.get("logs", default=KARABO_LOGGER_CONTENT_DEFAULT)
         content = Logger.getCachedContent(nMessages)
         self._ss.reply(Hash("deviceId", self.deviceid, "content", content))
-
-    def slotReSubmitAlarms(self, existingAlarms):
-        """
-        This slot is called by the alarm service when it gets  (re-)
-        instantiated. The alarm service will pass any alarm for this instance
-        that
-        it recovered from its persisted data. These should be checked
-        against whether they are still valid and if new ones appeared
-        :param existingAlarms: A hash containing existing alarms pertinent to
-               this device. May be empty
-        """
-        globalAlarmsToCheck = existingAlarms.get("global",
-                                                 default=Hash()).keys()
-
-        # reformat input to match the needs of _evaluateAlarmUpdates
-        existingAlarmsRF = Hash()
-        for propNode in existingAlarms:
-            property = propNode.getKey()
-            if property == "global":
-                continue  # treated via globalAlarmsToCheck
-            entry = Hash()
-            for typeNode in propNode.getValue():  # getValue gives Hash
-                # If 'existingAlarms' have more than one alarm type per
-                # property, all but the last one are lost here.
-                # Could not yet identify a higher level problem, but note that
-                # a property could have WARN_LOW and ALARM_VARIANCE_HIGH at the
-                # same time!
-                # TODO: Check whether that is a problem!
-                entry["type"] = typeNode.getKey()
-            existingAlarmsRF[property] = entry
-
-        with self._stateChangeLock:
-            alarmsToUpdate = self._evaluateAlarmUpdates(existingAlarmsRF,
-                                                        forceUpdate=True)
-            # Add all global alarm condition since last setting to NONE
-            for globalCondTup in self.accumulatedGlobalAlarms.values():
-                globalAlarmCondition = globalCondTup[0]
-                tmpKey = "toAdd.global." + globalAlarmCondition.value
-                alarmsToUpdate.set(tmpKey, Hash())
-                globalNode = alarmsToUpdate.getNode(tmpKey)
-                globalEntry = globalNode.getValue()
-                globalEntry.set("type", globalAlarmCondition.value)
-                globalEntry.set("description", globalCondTup[1])
-                globalEntry.set("needsAcknowledging", globalCondTup[2])
-                stamp = globalCondTup[3]
-                stamp.toHashAttributes(globalNode.getAttributes())
-
-            # Check which global alarms to clear - not the accumulated ones.
-            # Note: Exception for bad input, i.e. invalid alarm condition
-            #       string in globalAlarmsToCheck.
-            globalAlarmsToClear = [a for a in globalAlarmsToCheck
-                                   if AlarmCondition(a)
-                                   not in self.accumulatedGlobalAlarms]
-            if globalAlarmsToClear:
-                alarmsToUpdate.set("toClear.global", globalAlarmsToClear)
-
-        self._ss.reply(self.getInstanceId(), alarmsToUpdate)
 
     def __setitem__(self, key, value):
         """Alternative to `self.set`: `self[key] = value`
@@ -1346,9 +1260,6 @@ class PythonDevice(NoFsm):
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)
         # schema, deviceid
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)
-        # To ensure that this signal is delivered before any reply to a slot
-        # triggering the signal, this has to be a SYSTEM_SIGNAL.
-        self._ss.registerSystemSignal("signalAlarmUpdate", str, Hash)
 
         # Register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)
@@ -1357,7 +1268,6 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.slotUpdateSchemaAttributes)
-        self._ss.registerSlot(self.slotReSubmitAlarms)
         # Timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotGetTime)
@@ -1848,7 +1758,7 @@ class PythonDevice(NoFsm):
          the alarm information as value.
         """
         alarm = self.get("alarmCondition")
-        return Hash("alarmCondition", alarm.asString())
+        return Hash("alarmCondition", alarm)
 
     @staticmethod
     def loadConfiguration(xmlfile):
