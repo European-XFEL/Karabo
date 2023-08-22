@@ -227,7 +227,6 @@ namespace karabo {
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
             void assureRollingStatsInitialized(const std::string& scope, const unsigned int& evalInterval);
-
         };
     } // namespace util
 } // namespace karabo
