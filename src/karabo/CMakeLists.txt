@@ -149,15 +149,6 @@ add_library(
 # finding dependencies
 set(EXTERN_DEPS_INCLUDE "" )
 
-find_package(HDF5 REQUIRED)
-
-# Karabo currently expect to find the hdf5 libraries in an `hdf5` folder
-# here we trick the system by creating a link.
-list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
-set(HDF5_SPOOF_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
-file(MAKE_DIRECTORY "${HDF5_SPOOF_INCLUDE_DIR}")
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include/hdf5)
-
 find_package(OpenSSL REQUIRED)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
 
@@ -214,7 +205,6 @@ target_include_directories(
 target_include_directories(
     ${KARABO_LIB_TARGET_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>  $<INSTALL_INTERFACE:include>
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include/hdf5> $<INSTALL_INTERFACE:include/hdf5>
 )
 
 target_include_directories(
@@ -233,7 +223,6 @@ target_link_libraries(
         ${Boost_REGEX_LIBRARY}
         ${Boost_SIGNALS_LIBRARY}
         ${Boost_THREAD_LIBRARY}
-        ${HDF5_LIBRARIES}
         ${OPENSSL_LIBRARIES}
         ${openmqc_LIB}
         ${amqpcpp_LIB}
@@ -290,18 +279,6 @@ message(CHECK_PASS "done")
 # Creating karabo folder in include and lib folders
 install(DIRECTORY DESTINATION "lib")
 install(DIRECTORY DESTINATION "include/karabo")
-
-# Creates a symlink for the hdf5 include path expected by Karabo in the install target.
-# This is the equivalent of what is done above to support building the library itself and
-# is a requirement for building tests and any other device or application that deals with
-# HDF5.
-set(HDF5_SYMLINK_PATH "${CMAKE_INSTALL_PREFIX}/include/hdf5")
-set(HDF5_SYMLINK_DEST "${CMAKE_INSTALL_PREFIX}/include")
-install(
-    CODE
-    "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_SYMLINK_DEST} ${HDF5_SYMLINK_PATH})"
-)
-install(CODE "message(STATUS \"Created symlink: ${HDF5_SYMLINK_PATH} -> ${HDF5_SYMLINK_DEST}\")")
 
 # Adding headers with the same tree directory of the project.
 set(SRC_INCLUDE_PATH_PREFIX "/src/karabo/")

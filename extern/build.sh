@@ -7,9 +7,6 @@
 # we will use the conan version.
 DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc mqtt redisclient patchelf )
 
-DEPENDENCIES_PYTHON=( hdf5 )
-
-
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
 
@@ -147,16 +144,7 @@ determine_build_packages() {
     case "$WHAT" in
         CI|ALL)
             # Build everything
-            DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} ${DEPENDENCIES_PYTHON[@]}
-                           ${DEPENDENCIES_DB[@]} )
-            ;;
-        PYTHON)
-            # Python packages
-            DEPENDENCIES=( ${DEPENDENCIES_PYTHON[@]} )
-            ;;
-        DB)
-            # eXistDB packages
-            DEPENDENCIES=( ${DEPENDENCIES_DB[@]} )
+            DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} )
             ;;
         *)
             # FORCE building of whatever the user specified.
@@ -454,9 +442,9 @@ install_from_deps() {
     export PATH=$INSTALL_PREFIX/bin:$PATH
     export PYTHONPATH=$INSTALL_PREFIX/lib/python$PYTHON_PATH_VERSION
     if [ -n "$CPATH" ] ; then
-        export CPATH=$INSTALL_PREFIX/include:$INSTALL_PREFIX/include/hdf5
+        export CPATH=$INSTALL_PREFIX/include
     else
-        export CPATH=$INSTALL_PREFIX/include:$INSTALL_PREFIX/include/hdf5:$CPATH
+        export CPATH=$INSTALL_PREFIX/include:$CPATH
     fi
     export LD_RUN_PATH=$INSTALL_PREFIX/lib
 
