@@ -2,6 +2,19 @@
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 ***************************
+What's New in Karabo 2.17.1
+***************************
+
+A dedicated release for backward compatibility of datalogging after the introduction of schema chunking.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- C++/Influx: Fix reading of new schema if old schema was written pre-2.17.0 (backport to 2.17.X) !7658
+- Influx/C++: Avoid unneeded map look-ups in the log reader (Backport to 2.17.X). !7660
+
+
+***************************
 What's New in Karabo 2.17.0
 ***************************
 
