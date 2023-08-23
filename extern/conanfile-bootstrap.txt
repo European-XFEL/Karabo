@@ -6,10 +6,9 @@ cmake/3.27.1
 deploy
 
 [options]
-# statically-link libraries for
-# python deps and python loadable modules
+# statically link by default
 *:shared=False
-# shared libpython3.so
+# make shared libs for python
 cpython:shared=True
 cpython:with_tkinter=False
 cpython:optimizations=True
