@@ -27,12 +27,13 @@ libtiff/4.0.8
 
 # any
 libev/4.33
-# nss/3.88.1 # - our custom one uses the system version, which leads to less runtime conflicts. Specifically, CentOs7 and Ubuntu20+ will not find a commen version due to a NSSUTIL conflict
+nss/3.72
 # we could use this if we update the framework
 # redboltz-mqtt_cpp/13.0.0
 
 # forced - these are pinned to allow conan to resolve dependency conflicts
 zlib/1.2.13
+sqlite3/3.36.0
 openssl/1.0.2t  # Centos7 cannot handle newer versions
 openblas/0.3.20
 
