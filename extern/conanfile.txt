@@ -20,7 +20,7 @@ patchelf/0.13 # will not work with CentOs7, 0.8 version not available, so go via
 pugixml/1.10
 
 # minor-any
-boost/1.82.0@karabo/py38
+boost/1.82.0@karabo/with-py38-and-certify
 cppunit/1.15.1
 libjpeg/9c
 libtiff/4.0.8
@@ -46,13 +46,13 @@ pkg_config
 
 # These options will become relevant, when we install boost using conan
 # I keep them here for documentation already, as this is bound to happen.
-# 
+#
 # the boost recipe for conan has an issue with finding libbackrace
 # https://github.com/conan-io/conan-center-index/issues/13448
 # this likely will be fixed in newer boost releases
 #
 # boost:with_stacktrace_backtrace=False
-# 
+#
 # build these boost libraries
 boost:without_atomic=False
 boost:without_date_time=False
