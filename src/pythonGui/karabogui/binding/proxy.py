@@ -18,7 +18,7 @@ from collections import Counter
 
 from traits.api import (
     Any, Bool, DelegatesTo, Enum, Event, HasStrictTraits, Instance, Int,
-    Property, String, Tuple, WeakRef, on_trait_change)
+    Property, String, WeakRef, on_trait_change)
 
 from karabo.common import const
 from karabogui.events import KaraboEvent, broadcast_event
@@ -305,8 +305,6 @@ class PropertyProxy(HasStrictTraits):
     # Check whether we are existing or not
     existing = Bool(True)
 
-    # Names of attributes in `binding.attributes` which are editable
-    editable_attributes = Tuple
     # An extra binding instance for `edit_value` validation
     _edit_binding = Instance(BaseBinding)
 
@@ -360,7 +358,6 @@ class PropertyProxy(HasStrictTraits):
     @on_trait_change('root_proxy.schema_update,path')
     def _binding_update(self):
         # Clear some edit related traits no matter what
-        self.editable_attributes = ()
         self._edit_binding = None
         if self.root_proxy is None:
             return
