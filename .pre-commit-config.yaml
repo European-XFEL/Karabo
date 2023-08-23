@@ -28,10 +28,12 @@ repos:
     hooks:
       - id: clang-format
         args: [ "-style=file" ]
+        entry: clang-format -i
         files: |
           (?x)(
               ^src/karabo/|
               ^src/karathon/|
+              ^src/karabind/|
               ^src/integrationTests/|
               ^src/brokerMessageLogger/|
               ^src/cppLongTests/|
