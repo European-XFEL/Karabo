@@ -1407,6 +1407,13 @@ class BoostConan(ConanFile):
             for bin_file in dll_pdbs:
                 rename(self, bin_file, os.path.join(self.package_folder, "bin", os.path.basename(bin_file)))
 
+        copy(
+            self, "*",
+            src=os.path.join(self.recipe_folder, "certify"),
+            dst=os.path.join(self.package_folder,
+                             "include", "boost", "certify")
+        )
+
         rm(self, "*.pdb", os.path.join(self.package_folder, "bin"))
 
     def _create_emscripten_libs(self):
