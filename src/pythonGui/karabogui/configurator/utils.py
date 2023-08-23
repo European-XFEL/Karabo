@@ -22,9 +22,7 @@ from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QStyle
 
 import karabogui.access as krb_access
-from karabo.common.api import (
-    KARABO_EDITABLE_ATTRIBUTES, KARABO_SCHEMA_DAQ_POLICY,
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL, State)
+from karabo.common.api import State
 from karabo.native import AccessMode, Assignment
 from karabogui import icons
 from karabogui.binding.api import (
@@ -97,16 +95,11 @@ def dragged_configurator_items(proxies):
 
 
 def get_child_names(proxy):
-    """Return all the names of a proxy's accessible children.
-
-    In the case of a `BaseDeviceProxy` binding, this is a list of properties.
-    For others, this is a list of attribute names.
-    """
+    """Return all the names of a proxy's accessible children."""
     ret = []
-    level = krb_access.GLOBAL_ACCESS_LEVEL
-
     binding = proxy.binding
     if isinstance(binding, RECURSIVE_BINDING):
+        level = krb_access.GLOBAL_ACCESS_LEVEL
         ret = binding.children_names.get(level, [])
         # lazily cache visible children names
         if len(ret) == 0:
@@ -115,12 +108,6 @@ def get_child_names(proxy):
                 if node.required_access_level <= level:
                     ret.append(name)
             binding.children_names[level] = ret
-    else:
-        # Use a lazy cache on the proxy
-        ret = proxy.editable_attributes
-        if len(ret) == 0:
-            ret = _get_editable_attributes(binding)
-            proxy.editable_attributes = ret
 
     return ret
 
@@ -197,25 +184,6 @@ def get_icon(binding):
     return icon
 
 
-def get_attr_icon(binding, name):
-    """Get the proper attribute icon to show next to an attribute
-    """
-    if name in (KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-                KARABO_SCHEMA_UNIT_SYMBOL):
-        return icons.enumAttribute
-    icon = icons.undefinedAttribute
-    if isinstance(binding, IntBinding):
-        icon = icons.intAttribute
-    elif isinstance(binding, FloatBinding):
-        icon = icons.floatAttribute
-    elif isinstance(binding, BoolBinding):
-        icon = icons.booleanAttribute
-    elif isinstance(binding, (StringBinding, CharBinding)):
-        icon = icons.stringAttribute
-
-    return icon
-
-
 def get_proxy_value(index, proxy, is_edit_col=False):
     """Return the actual value of the given `proxy`, depending on whether this
     is requested for an editable column
@@ -271,24 +239,6 @@ def set_fill_rect(painter, option, index):
 
 # ----------------------------------------------------------------------------
 # Private details
-
-def _get_editable_attributes(binding):
-    """Return the editable attribute names of a binding
-    """
-    names = []
-    attributes = binding.attributes
-    for name in KARABO_EDITABLE_ATTRIBUTES:
-        value = attributes.get(name)
-        if value is not None:
-            # Skip blank units
-            if name == KARABO_SCHEMA_UNIT_SYMBOL and value == '':
-                continue
-            # Skip metric prefixes with no associated units
-            if (name == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL and value == ''
-                    and attributes.get(KARABO_SCHEMA_UNIT_SYMBOL, '') == ''):
-                continue
-            names.append(name)
-    return tuple(names)
 
 
 def _proxy_value(proxy, is_edit_col):
