@@ -149,11 +149,18 @@ class KaraboViewBox(ViewBox):
     def _click_zoom_mode(self, event, direction):
         # Lifted from the PyQtGraph wheelEvent(). wheelScaleFactor can be
         # increased for larger scale/zoom
+
+        scene_rect = self.sceneBoundingRect()
+        pos = event.pos()
+        if not scene_rect.contains(pos):
+            event.ignore()
+            return
+
         mask = np.array([1, 1])
         s = ((mask * 0.02) + 1) ** \
             (120 * direction * self.state["wheelScaleFactor"])
 
-        center = self.mapToView(event.pos())
+        center = self.mapToView(pos)
         self._resetTarget()
         self.scaleBy(s, center)
         self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
