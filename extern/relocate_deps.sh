@@ -62,7 +62,7 @@ rewrite_python_shebangs() {
 
 rewrite_rpaths() {
     # These are the specific Python packages which need to be relocated
-    local target_packages=(Cython h5py lxml numpy PIL
+    local target_packages=(Cython lxml numpy PIL
         psutil scipy tornado traits zmq
     )
 
@@ -92,11 +92,11 @@ rewrite_rpaths() {
     # can't fix python if python is running the fixer script
     run_rpath_fixer "-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
     # now fix python forcing to RPATH: https://stackoverflow.com/questions/43616505/setting-rpath-for-python-not-working
-    # "RPATH affects the binary and all shared libraries, but RUNPATH affects only the binary, and does not recursively 
+    # "RPATH affects the binary and all shared libraries, but RUNPATH affects only the binary, and does not recursively
     # apply to shared libraries that this binary loads.". We theed the first behaviour."
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python"
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3"
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.8" 
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.8"
 }
 
 run_rpath_fixer() {
