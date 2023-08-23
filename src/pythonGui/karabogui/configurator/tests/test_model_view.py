@@ -130,17 +130,8 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         assert bar_index.isValid()
         assert bar_index.data() == "bar"
 
-        # Only warnHigh attributes
-        assert self.model.rowCount(parent=bar_index) == 1
-
-        # warnHigh
-        warnHigh_index = bar_index.child(0, 0)
-        assert warnHigh_index.data() == "warnHigh"
-        wv_index = bar_index.child(0, 1)
-        assert Qt.ItemIsEnabled & wv_index.flags() == Qt.ItemIsEnabled
-        assert Qt.ItemIsSelectable & wv_index.flags() == Qt.ItemIsSelectable
-        assert Qt.ItemIsEditable & wv_index.flags() != Qt.ItemIsEditable
-        assert Qt.ItemNeverHasChildren & wv_index.flags() == Qt.ItemNeverHasChildren  # noqa
+        # no more attributes
+        assert self.model.rowCount(parent=bar_index) == 0
 
         # ------------------------------------
         # Test the vector
@@ -158,9 +149,6 @@ class TestConfiguratorProjectDevice(GuiTestCase):
     def test_parent(self):
         bar_index = self.model.index(2, 0)
         assert not bar_index.parent().isValid()
-
-        warn_bar_index = bar_index.child(0, 0)
-        assert warn_bar_index.parent() == bar_index
 
     def test_swap(self):
         self.view.swap_models()
@@ -275,8 +263,16 @@ class TestConfiguratorDevice(GuiTestCase):
 
     def test_modeltester_qt(self):
         from pytestqt.modeltest import ModelTester
-        tester = ModelTester(None)
-        tester.check(self.model)
+
+        binding = build_binding(Object.getClassSchema())
+        for proxy_type in (DeviceProxy, ProjectDeviceProxy):
+            root = proxy_type(binding=binding, server_id="Test",
+                              status=ProxyStatus.ONLINE)
+            apply_default_configuration(root.binding)
+            self.view.assign_proxy(proxy=root)
+            self.model.root = root
+            tester = ModelTester(None)
+            tester.check(self.model)
 
 
 if __name__ == "__main__":
