@@ -132,6 +132,9 @@ class Remote(Device):
         alarmNeedsAck_warnLow=True,
         alarmHigh=20)
 
+    incrementNumber = Int32(
+        defaultValue=0)
+
     @Int32()
     def other(self, value):
         self.value = value
@@ -188,6 +191,26 @@ class Remote(Device):
     def slotGetConfiguration(self):
         self.got_config += 1
         return super().slotGetConfiguration()
+
+    @Slot()
+    async def startIncrement(self):
+        self.create_instance_task(self.increment())
+
+    @Slot()
+    async def startFaultyIncrement(self):
+        self.create_instance_task(self.increment)
+
+    @Slot()
+    def startIncrementSync(self):
+        self.create_instance_task(self.increment())
+
+    @Slot()
+    def startFaultyIncrementSync(self):
+        self.create_instance_task(self.increment)
+
+    async def increment(self):
+        await sleep(0.05)
+        self.incrementNumber += 1
 
 
 class Local(Device):
@@ -1550,3 +1573,28 @@ def test_async_with_yield_from_getDevice(deviceTest):
             assert d.counter == 29
     finally:
         yield from remote.slotKillDevice()
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_instance_task(deviceTest):
+    """test setting of values"""
+    with (await getDevice("remote")) as d:
+        assert d.incrementNumber == 0
+        await d.startIncrement()
+        assert d.incrementNumber == 0
+        await waitUntil(lambda: d.incrementNumber > 0)
+        assert d.incrementNumber == 1
+        with pytest.raises(KaraboError) as e:
+            await d.startFaultyIncrement()
+        assert "Input must be a of type coroutine" in str(e)
+
+        # Sync slot case
+        assert d.incrementNumber == 1
+        await d.startIncrementSync()
+        assert d.incrementNumber == 1
+        await waitUntil(lambda: d.incrementNumber > 1)
+        assert d.incrementNumber == 2
+        with pytest.raises(KaraboError) as e:
+            await d.startFaultyIncrementSync()
+        assert "Input must be a of type coroutine" in str(e)

@@ -22,7 +22,7 @@ import sys
 import weakref
 from asyncio import (
     CancelledError, TimeoutError, ensure_future, gather, get_event_loop,
-    iscoroutinefunction, wait_for)
+    iscoroutine, iscoroutinefunction, wait_for)
 from collections import defaultdict
 
 from karabo.native import (
@@ -456,6 +456,13 @@ class SignalSlotable(Configurable):
         if self._ss is not None and self._ss.loop.is_running():
             self._ss.loop.call_soon_threadsafe(
                 self._ss.loop.create_task, self.slotKillDevice())
+
+    def create_instance_task(self, coro):
+        """Wrap a coroutine into a task and attach it to the instance"""
+        text = f"Input must be a of type coroutine, got {type(coro)} instead."
+        assert iscoroutine(coro), text
+        loop = get_event_loop()
+        return loop.create_task(coro, instance=self)
 
     async def call(self, device, target, *args):
         return (await self._ss.request(device, target, *args))
