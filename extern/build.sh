@@ -388,11 +388,6 @@ install_python() {
     fi
 }
 
-install_nss() {
-    DEPENDENCIES=( nss )
-    build_dependencies
-}
-
 download_sources() {
     local package_status=$(get_package_manager_status)
     local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
@@ -660,9 +655,6 @@ install_python
 
 # download any sources we build ourselfs
 download_sources
-
-# now install nss/nspr
-install_nss
 
 # install via conan and pip next
 install_from_deps
