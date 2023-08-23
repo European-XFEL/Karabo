@@ -23,14 +23,13 @@ from weakref import WeakValueDictionary
 from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from qtpy.QtGui import QBrush, QColor
 
-import karabogui.access as krb_access
 from karabo.common.api import (
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
     State)
-from karabo.native import AccessLevel, AccessMode, Assignment, has_changes
+from karabo.native import AccessMode, Assignment, has_changes
 from karabogui.binding.api import (
-    BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
-    DeviceProxy, ImageBinding, ListOfNodesBinding, NDArrayBinding, NodeBinding,
+    BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy,
+    ImageBinding, ListOfNodesBinding, NDArrayBinding, NodeBinding,
     ProjectDeviceProxy, PropertyProxy, SlotBinding, StringBinding,
     WidgetNodeBinding, get_binding_value)
 from karabogui.fonts import get_qfont
@@ -42,9 +41,9 @@ from karabogui.request import send_property_changes
 from karabogui.singletons.api import get_config
 
 from .utils import (
-    dragged_configurator_items, get_attr_icon, get_child_names,
-    get_device_locked_string, get_device_state_string, get_icon,
-    get_proxy_value, get_qcolor_state, is_mandatory, threshold_triggered)
+    dragged_configurator_items, get_child_names, get_device_locked_string,
+    get_device_state_string, get_icon, get_proxy_value, get_qcolor_state,
+    is_mandatory, threshold_triggered)
 
 SPECIAL_BINDINGS = (SlotBinding, ImageBinding,
                     NDArrayBinding, WidgetNodeBinding)
@@ -74,7 +73,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         self._root_proxy = None
         self._property_proxies = {}
         self._model_index_refs = WeakValueDictionary()
-        self._attr_backreferences = WeakValueDictionary()
         self._header_labels = ('Property', 'Current value on device', 'Value')
         self._show_alarms = get_config()['property_alarm_color_configurator']
 
@@ -101,7 +99,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
             self.beginResetModel()
             self._property_proxies.clear()
             self._model_index_refs.clear()
-            self._attr_backreferences.clear()
             self._root_proxy = proxy
         finally:
             self.endResetModel()
@@ -181,19 +178,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     # ----------------------------
     # Private interface
-
-    def _add_attr_backref(self, binding, proxy):
-        """Add a mapping from a BaseBinding to its parent PropertyProxy.
-
-        This is necessary for supporting parent() on QModelIndex instances
-        which point to attributes.
-        """
-        if binding not in self._attr_backreferences:
-            self._attr_backreferences[binding] = proxy
-
-    def _attr_backref(self, binding):
-        """Return the PropertyProxy for a given BaseBinding"""
-        return self._attr_backreferences.get(binding)
 
     def _config_update(self):
         """Notify the view of item updates.
@@ -280,10 +264,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 color = get_qcolor_state(state)
             return QBrush(color)
 
-        if isinstance(obj, BaseBinding):
-            return self._attribute_data(obj, role, column, index.row())
-        else:
-            return self._proxy_data(index, obj, role, column)
+        return self._proxy_data(index, obj, role, column)
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
@@ -313,10 +294,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return flags
 
         # Value-specific flags
-        if isinstance(obj, BaseBinding):
-            flags |= self._attribute_flags(obj)
-        else:
-            flags |= self._proxy_flags(obj)
+        flags |= self._proxy_flags(obj)
 
         return flags
 
@@ -340,31 +318,22 @@ class ConfigurationTreeModel(QAbstractItemModel):
         else:
             parent_obj = self.index_ref(parent)
 
-        proxy_types = (DeviceClassProxy, DeviceProxy, PropertyProxy)
-        if isinstance(parent_obj, proxy_types):
-            binding = parent_obj.binding
-            if isinstance(binding, ChoiceOfNodesBinding):
-                names = [binding.choice]
-            else:
-                names = get_child_names(parent_obj)
-
-            if isinstance(binding, BindingRoot):
-                path = names[row]
-                if parent_obj is not self.root:
-                    # This is the child of a ChoiceOfNodes
-                    path = parent_obj.path + '.' + path
-                obj = self.property_proxy(path)
-            elif isinstance(binding, (ChoiceOfNodesBinding, NodeBinding)):
-                # Nodes have properties as children
-                path = parent_obj.path + '.' + names[row]
-                obj = self.property_proxy(path)
-            else:  # Normal binding type
-                # Leaves have attributes as children
-                self._add_attr_backref(binding, parent_obj)
-                obj = binding
+        binding = parent_obj.binding
+        if isinstance(binding, ChoiceOfNodesBinding):
+            names = [binding.choice]
         else:
-            # Only properties can have children
-            return QModelIndex()
+            names = get_child_names(parent_obj)
+
+        if isinstance(binding, BindingRoot):
+            path = names[row]
+            if parent_obj is not self.root:
+                # This is the child of a ChoiceOfNodes
+                path = parent_obj.path + '.' + path
+            obj = self.property_proxy(path)
+        elif isinstance(binding, (ChoiceOfNodesBinding, NodeBinding)):
+            # Nodes have properties as children
+            path = parent_obj.path + '.' + names[row]
+            obj = self.property_proxy(path)
 
         return self.createIndex(row, column, obj)
 
@@ -396,16 +365,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if child_obj is None:
             return QModelIndex()
 
-        # Handle special indices correctly
-        if isinstance(child_obj, BaseBinding):
-            proxy = self._attr_backref(child_obj)
-            if proxy is None:
-                return QModelIndex()
-        else:
-            parts = child_obj.path.rsplit('.', 1)
-            if len(parts) == 1:
-                return QModelIndex()
-            proxy = self.property_proxy(parts[0])
+        parts = child_obj.path.rsplit('.', 1)
+        if len(parts) == 1:
+            return QModelIndex()
+        proxy = self.property_proxy(parts[0])
 
         return self.createIndex(self._proxy_row(proxy), 0, proxy)
 
@@ -420,10 +383,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if proxy is None:
             return 0
 
-        # `proxy` might be a special marker
-        if isinstance(proxy, BaseBinding):
-            return 0
-
         # From here, we know `proxy` is really a `PropertyProxy` instance
         binding = proxy.binding
         if isinstance(binding, ChoiceOfNodesBinding):
@@ -434,9 +393,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return 0
         elif isinstance(binding, (BindingRoot, NodeBinding)):
             # Roots and nodes have children
-            return len(get_child_names(proxy))
-        elif isinstance(self.root, ProjectDeviceProxy):
-            # project device properties can have children (attributes)
             return len(get_child_names(proxy))
 
         # otherwise no children
@@ -453,68 +409,39 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if obj is None:
             return False
 
-        if isinstance(obj, BaseBinding):
-            proxy = self._attr_backref(obj)
-            if proxy is None:
-                return False
-            name = proxy.editable_attributes[index.row()]
-            obj.attributes[name] = value
-            # project needs to be informed
-            self.root.binding.config_update = True
+        proxy = obj
+        if proxy.binding is None:
+            return False
 
-        else:  # Normal property value setting
-            proxy = obj
-            if proxy.binding is None:
-                return False
-
-            binding = proxy.binding
-            state = get_device_state_string(self.root)
-            online_device = isinstance(self.root, DeviceProxy)
-            old_value = None if proxy.edit_value is None else proxy.value
-            if isinstance(binding, ChoiceOfNodesBinding):
-                old_value = binding.choice  # ChoiceOfNodes is "special"
-            changes = has_changes(old_value, value)
-            allowed = binding.is_allowed(state) or not online_device
-            if allowed and changes:
-                if online_device:
-                    proxy.edit_value = value
-                else:  # ProjectDeviceProxy or DeviceClassProxy
-                    # Put the value directly in the binding
-                    proxy.value = value
-                    # Then revert edit_value to avoid the CHANGING background
-                    proxy.revert_edit()
-                    self.root.binding.config_update = True
-            elif online_device or (allowed and not changes):
-                # The value was set to the original value. We remove the blue
-                # background here!
+        binding = proxy.binding
+        state = get_device_state_string(self.root)
+        online_device = isinstance(self.root, DeviceProxy)
+        old_value = None if proxy.edit_value is None else proxy.value
+        if isinstance(binding, ChoiceOfNodesBinding):
+            old_value = binding.choice  # ChoiceOfNodes is "special"
+        changes = has_changes(old_value, value)
+        allowed = binding.is_allowed(state) or not online_device
+        if allowed and changes:
+            if online_device:
+                proxy.edit_value = value
+            else:  # ProjectDeviceProxy or DeviceClassProxy
+                # Put the value directly in the binding
+                proxy.value = value
+                # Then revert edit_value to avoid the CHANGING background
                 proxy.revert_edit()
+                self.root.binding.config_update = True
+        elif online_device or (allowed and not changes):
+            # The value was set to the original value. We remove the blue
+            # background here!
+            proxy.revert_edit()
 
-            self.notify_of_modifications()
+        self.notify_of_modifications()
 
         # A value was successfully set!
         return True
 
     # ----------------------------
     # data() and flags() helper methods
-
-    def _attribute_data(self, binding, role, column, row):
-        """data() implementation for property attributes"""
-        proxy = self._attr_backref(binding)
-        if proxy is None:
-            return None
-
-        name = proxy.editable_attributes[row]
-        value = binding.attributes.get(name)
-        if column == 0:
-            if role == Qt.DisplayRole:
-                return name
-            elif role == Qt.DecorationRole:
-                return get_attr_icon(binding, name)
-        elif column in (1, 2):
-            if role == Qt.DisplayRole:
-                return str(value)
-            elif role == Qt.EditRole:
-                return value
 
     def _proxy_color(self, proxy):
         """data(role=Qt.ColorRole) for properties."""
@@ -578,13 +505,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return value
                 elif role == Qt.DisplayRole:
                     return _friendly_repr(proxy, value)
-
-    def _attribute_flags(self, binding):
-        """flags() implementation for property attributes"""
-        if krb_access.GLOBAL_ACCESS_LEVEL >= AccessLevel.USER:
-            return Qt.ItemIsEditable
-
-        return 0
 
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""

@@ -79,7 +79,7 @@ def test_get_child_names():
 
     property_names = get_child_names(proxy)
     # Attributes are empty for this proxy
-    assert property_names == ()
+    assert property_names == []
 
     device_names = get_child_names(proxy.root_proxy)
     assert device_names == ['string', 'integer', 'nodeMandatory',
