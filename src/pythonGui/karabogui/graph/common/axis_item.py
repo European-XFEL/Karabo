@@ -108,6 +108,10 @@ class TimeAxisItem(DateAxisItem):
         """Reimplemented function of PyQt"""
         event.ignore()
 
+    def mouseClickEvent(self, event):
+        """Reimplemented function of PyQt"""
+        event.ignore()
+
 
 class StateAxisItem(AxisItem):
     """The State Axis Item for displaying Karabo States as major ticks"""
