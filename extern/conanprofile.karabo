@@ -5,7 +5,9 @@ compiler.libcxx=libstdc++11
 compiler.cppstd=14
 
 [env]
-*:LDFLAGS="-Wl,--disable-new-dtags,-rpath,\$$ORIGIN/../lib,-z,origin"
+cpython:LDFLAGS="-Wl,--disable-new-dtags,-rpath,\$$ORIGIN/../lib,-z,origin"
+cppunit:LDFLAGS="-Wl,--disable-new-dtags,-rpath,\$$ORIGIN/../lib,-z,origin"
+libxslt:LDFLAGS="-Wl,--disable-new-dtags,-rpath,\$$ORIGIN/../lib,-z,origin"
 ncurses:CC=gcc
 ncurses:CXX=g++
 
@@ -14,3 +16,4 @@ cmake/3.27.1
 
 [conf]
 tools.system.package_manager:mode=check
+tools.build:sharedlinkflags=["-Wl,--disable-new-dtags,-rpath,'$ORIGIN/../lib',-z,origin"]
