@@ -183,7 +183,6 @@ flake8               3.8.4             MIT                                      
 flaky                3.7.0             Apache-2.0                                                  no                    no
 freetype             2.5.2             FTL/GPLv2                                                   no                    yes
 gmock                1.7.0             BSD                                                         no                    no
-h5py                 2.7.1             BSD                                                         no                    no
 httplib2             0.9.1             MIT                                                         yes                   yes
 idna                 2.7               PSFL                                                        yes                   no
 importlib-metadata   3.3.0             apache                                                      yes                   no
@@ -476,9 +475,7 @@ during development:
 	"setuptools"
 	"setuptools-scm"
 	"scipy"
-	"h5py"
-	"h5py" -> "numpy"
-	"h5py" -> "six"
+
 
 Remarks on miniconda3 Windows CI
 ================================
