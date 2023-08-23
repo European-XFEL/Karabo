@@ -25,8 +25,8 @@ from karabo.common.states import State
 from karabo.middlelayer.device import Device
 from karabo.middlelayer.device_client import (
     Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
-    getDevice, getProperties, getSchema, lock, setNoWait, setWait,
-    updateDevice, waitUntil, waitUntilNew, waitWhile)
+    getDevice, getInstanceInfo, getProperties, getSchema, lock, setNoWait,
+    setWait, updateDevice, waitUntil, waitUntilNew, waitWhile)
 from karabo.middlelayer.device_server import KaraboStream
 from karabo.middlelayer.macro import Macro, MacroSlot
 from karabo.middlelayer.pipeline import OutputChannel, PipelineContext
@@ -295,6 +295,16 @@ async def deviceTest(event_loop: event_loop):
         remote=remote, local=local, waitUntilRemote=waitUntilRemote,
             localMacro=localMacro, remotePipeline=remotePipeline) as ctx:
         yield ctx
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_macro_instance_info(deviceTest):
+    info = await getInstanceInfo("local")
+    assert info["status"] == "ok"
+    assert info["project"] == "test"
+    assert info["type"] == "macro"
+    assert deviceTest["local"].state == State.PASSIVE
 
 
 @pytest.mark.timeout(30)
