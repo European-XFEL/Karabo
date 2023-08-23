@@ -311,6 +311,10 @@ class Macro(Device):
             self.__local = True
             EventLoop.global_loop.start_device(self)
 
+    def _get_instance_info_status(self):
+        """The instanceInfo status is always `ok` for a macro"""
+        return "ok"
+
     def _initInfo(self):
         info = super()._initInfo()
         info["type"] = "macro" if self._has_server else "client"
