@@ -122,14 +122,23 @@ class Device(InjectMixin, SignalSlotable):
 
     alarmCondition = String(
         enum=AlarmCondition,
-        displayedName="Alarm condition", displayType='AlarmCondition',
-        description="The current alarm condition of the device. "
-                    "Evaluates to the highest condition on any property "
-                    "if not set manually.",
+        displayedName="Alarm condition",
+        displayType="AlarmCondition",
+        description="The current alarm condition of the device.",
         accessMode=AccessMode.READONLY,
         defaultValue=AlarmCondition.NONE,
         classId="AlarmCondition",
         daqPolicy=DaqPolicy.OMIT)
+
+    @property
+    def globalAlarmCondition(self):
+        """Backward compatible property for the legacy alarm implementation"""
+        return self.alarmCondition
+
+    @globalAlarmCondition.setter
+    def globalAlarmCondition(self, value):
+        """Backward compatible alarm setter for the legacy alarms"""
+        self.alarmCondition = value
 
     lockedBy = String(
         displayedName="Locked By",
