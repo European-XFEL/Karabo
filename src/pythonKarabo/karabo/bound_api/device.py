@@ -1750,16 +1750,6 @@ class PythonDevice(NoFsm):
             # defined as 'bp::return_internal_reference<>()' in PyUtilSChema.cc
             return self.validatorIntern.getRollingStatistics(key)
 
-    @karabo_deprecated
-    def getAlarmInfo(self):
-        """Output information on current alarms on this device
-
-        :return: a Hash containing the property as key and as string for
-         the alarm information as value.
-        """
-        alarm = self.get("alarmCondition")
-        return Hash("alarmCondition", alarm)
-
     @staticmethod
     def loadConfiguration(xmlfile):
         hash = Hash()
