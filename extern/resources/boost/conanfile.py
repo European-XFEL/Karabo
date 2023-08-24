@@ -161,6 +161,7 @@ class BoostConan(ConanFile):
 
     def export_sources(self):
         export_conandata_patches(self)
+        copy(self, "certify/*", src=self.recipe_folder, dst=self.export_sources_folder)
 
     @property
     def _min_compiler_version_default_cxx11(self):
@@ -1408,10 +1409,10 @@ class BoostConan(ConanFile):
                 rename(self, bin_file, os.path.join(self.package_folder, "bin", os.path.basename(bin_file)))
 
         copy(
-            self, "*",
-            src=os.path.join(self.recipe_folder, "certify"),
+            self, "certify/*",
+            src=self.export_sources_folder,
             dst=os.path.join(self.package_folder,
-                             "include", "boost", "certify")
+                             "include", "boost")
         )
 
         rm(self, "*.pdb", os.path.join(self.package_folder, "bin"))
