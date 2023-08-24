@@ -363,7 +363,7 @@ class PropertyTestMDL(Device):
           description="Set alarm to value of String property - if convertable")
     def setAlarm(self):
         level = AlarmCondition(self.stringProperty)
-        self.globalAlarmCondition = level
+        self.alarmCondition = level
 
     @Slot(displayedName="Set Alarm (no ackn.)",
           description="Foreseen for settting an alarm that does not require "
