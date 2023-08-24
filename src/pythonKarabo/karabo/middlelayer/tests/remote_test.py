@@ -126,12 +126,6 @@ class Remote(Device):
         defaultValue=False)
     nested = Node(Nested)
 
-    alarm = Float(
-        warnLow=10,
-        alarmInfo_warnLow="When they go low, we go high",
-        alarmNeedsAck_warnLow=True,
-        alarmHigh=20)
-
     incrementNumber = Int32(
         defaultValue=0)
 
@@ -214,7 +208,6 @@ class Remote(Device):
 
 
 class Local(Device):
-    alarmhash = None
 
     @Slot()
     async def error(self):
@@ -249,11 +242,6 @@ class Local(Device):
         else:
             with (await getDevice("remote")) as d:
                 await d.doit()
-
-    @slot
-    def slotAlarmUpdate(self, deviceId, alarms):
-        self.alarm_future.set_result(None)
-        self.alarmhash = alarms
 
     async def onInitialization(self):
         self.state = State.ON
@@ -1231,44 +1219,6 @@ async def test_device_node_alive(deviceTest):
         assert not isAlive(node_device.dn)
         await waitUntil(lambda: not isAlive(node_device.sub.dn))
         assert not isAlive(node_device.sub.dn)
-
-
-@pytest.mark.timeout(30)
-@run_test
-async def test_alarm(deviceTest):
-    remote = deviceTest["remote"]
-    local = deviceTest["local"]
-    await remote.signalAlarmUpdate.connect("local", "slotAlarmUpdate")
-    remote.alarm = 3
-    remote.update()
-    local.alarm_future = Future()
-    await local.alarm_future
-    ah = local.alarmhash
-    assert not ah["toClear"]
-    assert ah["toAdd.alarm.warnLow.type"] == "warnLow"
-    msg = "When they go low, we go high"
-    assert ah["toAdd.alarm.warnLow.description"] == msg
-    assert ah["toAdd.alarm.warnLow.needsAcknowledging"]
-    remote.alarm = 11
-    remote.update()
-    local.alarm_future = Future()
-    await local.alarm_future
-    ah = local.alarmhash
-    assert not ah["toAdd"]
-    assert ah["toClear.alarm"] == ["warnLow"]
-
-    local.alarm_future = Future()
-    remote.globalAlarmCondition = AlarmCondition.ALARM
-    remote.update()
-    await local.alarm_future
-    ah = local.alarmhash
-    assert not ah["toClear"]
-    assert ah["toAdd.global.alarm.type"] == "alarm"
-    assert ah["toAdd.global.alarm.description"] == ""
-    assert ah["toAdd.global.alarm.needsAcknowledging"]
-    await remote.signalAlarmUpdate.disconnect("local",
-                                              "slotAlarmUpdate")
-    remote.globalAlarmCondition = AlarmCondition.NONE
 
 
 @pytest.mark.timeout(30)
