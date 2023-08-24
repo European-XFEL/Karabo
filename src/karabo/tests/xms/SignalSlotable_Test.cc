@@ -176,23 +176,7 @@ void waitEqual(Type target, const Type& test, int trials = 10) {
 CPPUNIT_TEST_SUITE_REGISTRATION(SignalSlotable_Test);
 
 
-SignalSlotable_Test::SignalSlotable_Test()
-    : m_mqttTimeoutBackup(""),
-      m_redisTimeoutBackup(""),
-      m_amqpTimeoutBackup(""),
-      m_brokersUnderTest(getBrokersFromEnv()) {
-    const char* mqttTimeout = getenv("KARABO_MQTT_TIMEOUT");
-    if (mqttTimeout) {
-        m_mqttTimeoutBackup.assign(mqttTimeout);
-    } else {
-        setenv("KARABO_MQTT_TIMEOUT", "15", true);
-    }
-    const char* redisTimeout = getenv("KARABO_REDIS_TIMEOUT");
-    if (redisTimeout) {
-        m_redisTimeoutBackup.assign(redisTimeout);
-    } else {
-        setenv("KARABO_REDIS_TIMEOUT", "15", true);
-    }
+SignalSlotable_Test::SignalSlotable_Test() : m_amqpTimeoutBackup(""), m_brokersUnderTest(getBrokersFromEnv()) {
     const char* amqpTimeout = getenv("KARABO_AMQP_TIMEOUT");
     if (amqpTimeout) {
         m_amqpTimeoutBackup.assign(amqpTimeout);
@@ -204,12 +188,6 @@ SignalSlotable_Test::SignalSlotable_Test()
 
 
 SignalSlotable_Test::~SignalSlotable_Test() {
-    if (m_mqttTimeoutBackup.empty()) {
-        unsetenv("KARABO_MQTT_TIMEOUT");
-    }
-    if (m_redisTimeoutBackup.empty()) {
-        unsetenv("KARABO_REDIS_TIMEOUT");
-    }
     if (m_amqpTimeoutBackup.empty()) {
         unsetenv("KARABO_AMQP_TIMEOUT");
     }
