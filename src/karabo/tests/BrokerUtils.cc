@@ -84,7 +84,7 @@ karabo::util::Hash getBrokersFromEnv() {
             const std::string protocol = vBrokerUrl[0].substr(0, n);
             if (protocol == "tcp") {
                 ret.set("jms", vBrokerUrl);
-            } else if (protocol == "redis" || protocol == "mqtt" || protocol == "amqp") {
+            } else if (protocol == "amqp") {
                 ret.set(protocol, vBrokerUrl);
             }
         }
@@ -98,20 +98,6 @@ std::vector<std::string> getJmsBrokerFromEnv() {
     // try KARABO_BROKER
     if (brokers.empty()) {
         brokers = getBrokersFromEnvName("KARABO_BROKER", "tcp");
-    }
-    return brokers;
-}
-
-
-std::vector<std::string> getMqttBrokerFromEnv() {
-    std::vector<std::string> brokers = getBrokersFromEnvName("KARABO_CI_BROKERS", "mqtt");
-    // try KARABO_BROKER
-    if (brokers.empty()) {
-        brokers = getBrokersFromEnvName("KARABO_BROKER", "mqtt");
-    }
-    // try KARABO_BROKER_MQTT
-    if (brokers.empty()) {
-        brokers = getBrokersFromEnvName("KARABO_BROKER_MQTT", "mqtt");
     }
     return brokers;
 }
