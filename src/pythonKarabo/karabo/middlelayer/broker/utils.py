@@ -15,7 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import re
 
-_BROKER_SCHEMES = ("tcp", "amqp", "mqtt")
+_BROKER_SCHEMES = ("tcp", "amqp")
 _SCHEME_DELIMITER = "://"
 _AMQP_REGEX = re.compile(
     r"^(amqp:\/\/)([A-Za-z0-9]+)(\:)+([A-Za-z0-9]+)"
