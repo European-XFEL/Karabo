@@ -18,13 +18,13 @@ import socket
 from asyncio import sleep
 
 from karabo import __version__ as karaboVersion
+from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, DaqPolicy, Hash, Int32, KaraboError,
     Node, Slot, String, TimeMixin, TypeHash, TypeSchema, get_timestamp, isSet)
 
-from .alarm import AlarmMixin
 from .injectable import InjectMixin
 from .logger import build_logger_node
 from .pipeline import OutputChannel
@@ -32,7 +32,7 @@ from .signalslot import Signal, SignalSlotable, slot
 from .utils import get_property_hash
 
 
-class Device(InjectMixin, AlarmMixin, SignalSlotable):
+class Device(InjectMixin, SignalSlotable):
     """This is the base class for all devices.
 
     It inherits from :class:`~karabo.middlelayer.Configurable` and thus
@@ -118,6 +118,17 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         description="A more detailed status description",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
         defaultValue="",
+        daqPolicy=DaqPolicy.OMIT)
+
+    alarmCondition = String(
+        enum=AlarmCondition,
+        displayedName="Alarm condition", displayType='AlarmCondition',
+        description="The current alarm condition of the device. "
+                    "Evaluates to the highest condition on any property "
+                    "if not set manually.",
+        accessMode=AccessMode.READONLY,
+        defaultValue=AlarmCondition.NONE,
+        classId="AlarmCondition",
         daqPolicy=DaqPolicy.OMIT)
 
     lockedBy = String(
