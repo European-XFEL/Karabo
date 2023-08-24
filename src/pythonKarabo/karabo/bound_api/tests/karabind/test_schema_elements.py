@@ -13,7 +13,10 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import copy
+
 import karabind
+import numpy as np
 import pytest
 
 import karathon
@@ -2301,3 +2304,53 @@ def test_allowed_actions(Schema, NODE_ELEMENT, INT32_ELEMENT, NDARRAY_ELEMENT,
     # Only (custom) nodes can have allowed actions:
     with pytest.raises(RuntimeError):
         s.setAllowedActions("node.int", ["bla", "blue"])
+
+
+@pytest.mark.parametrize(
+    "cppNDArray, cppNDArrayCopy",
+    [(karabind.cppNDArray, karabind.cppNDArrayCopy)])
+def test_cpp_ndarray(cppNDArray, cppNDArrayCopy):
+    # Build numpy arrays on C++ side and convert them to the python objects
+    # using commented binding code below  (see "karabind_test.cc")
+    # Conversions happen at the last step...
+
+    # m.def("cppNDArray", []() {
+    #     const Dims shape(3, 4);
+    #     std::vector<int> someData(3 * 4, 7);
+    #     for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+    #     NDArray nda(someData.begin(), someData.end(), shape);
+    #     return karabind::wrapper::castNDArrayToPy(nda);
+    # });
+    # m.def("cppNDArrayCopy", []() {
+    #     const Dims shape(3, 4);
+    #    std::vector<int> someData(3 * 4, 7);
+    #    for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+    #    NDArray nda(someData.begin(), someData.end(), shape);
+    #    return karabind::wrapper::copyNDArrayToPy(nda);
+    # });
+
+    # create py::array (numpy.array) objects
+    a = cppNDArray()
+    b = cppNDArrayCopy()
+    # These binding return the same data
+    assert np.all(a == b)
+    # The only difference between them is data ownership ...
+    # C++ is an owner of data array
+    assert a.flags.owndata is False
+    assert a.base is not None
+    # Python is an owner of data array
+    assert b.flags.owndata is True
+    assert b.base is None
+    assert np.all(a == b)
+    # this works like 'deepcopy'
+    c = a.copy()
+    assert c.flags.owndata is True
+    assert c.base is None
+    # or use deepcopy directly ..
+    d = copy.deepcopy(a)
+    assert d.flags.owndata is True
+    assert d.base is None
+    # and copy works like deepcopy
+    e = copy.copy(a)
+    assert e.flags.owndata is True
+    assert e.base is None
