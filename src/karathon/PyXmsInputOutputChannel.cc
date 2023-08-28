@@ -171,29 +171,6 @@ namespace karathon {
     }
 
 
-    void ImageDataWrap::setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self,
-                                      const bp::object& geometry) {
-        karabo::util::DetectorGeometry geo = bp::extract<karabo::util::DetectorGeometry>(geometry);
-        self->setGeometry(geo);
-    }
-
-
-    karabo::util::DetectorGeometry ImageDataWrap::getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
-        return self->getGeometry();
-    }
-
-
-    void ImageDataWrap::setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header) {
-        karabo::util::Hash head = bp::extract<karabo::util::Hash>(header);
-        self->setHeader(head);
-    }
-
-
-    const karabo::util::Hash& ImageDataWrap::getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
-        return self->getHeader();
-    }
-
-
     ChannelMetaData::ChannelMetaData(const bp::object& src, const bp::object& ts)
         : karabo::xms::Memory::MetaData(bp::extract<std::string>(src), bp::extract<karabo::util::Timestamp>(ts)) {}
 
@@ -498,16 +475,7 @@ void exportPyXmsInputOutputChannel() {
               .def("getDimensionScales", &karabo::xms::ImageData::getDimensionScales,
                    bp::return_value_policy<bp::copy_const_reference>())
 
-              .def("setDimensionScales", &karabo::xms::ImageData::setDimensionScales, (bp::arg("scales")))
-
-              .def("setGeometry", &karathon::ImageDataWrap::setGeometryPy, (bp::arg("geometry")))
-
-              .def("getGeometry", &karathon::ImageDataWrap::getGeometryPy)
-
-              .def("getHeader", &karathon::ImageDataWrap::getHeaderPy,
-                   bp::return_value_policy<bp::copy_const_reference>())
-
-              .def("setHeader", &karathon::ImageDataWrap::setHeaderPy, (bp::arg("header")));
+              .def("setDimensionScales", &karabo::xms::ImageData::setDimensionScales, (bp::arg("scales")));
     }
     {
         bp::implicitly_convertible<karabo::util::Schema&, karabo::xms::ImageDataElement>();
@@ -565,9 +533,6 @@ void exportPyXmsInputOutputChannel() {
                    "h.setEncoding(encoding) set the encoding of an image in the schema. The encoding name must be a "
                    "string (all capitals).\nExample:\n\t"
                    "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setEncoding('RGB')\n\t\t.commit()")
-
-              .def("setGeometry", &karabo::xms::ImageDataElement::setGeometry, (bp::arg("geometry")),
-                   bp::return_internal_reference<>())
 
               .def("setAllowedActions", &karathon::ImageDataElementWrap::setAllowedActions, (bp::arg("actions")),
                    bp::return_internal_reference<>(),

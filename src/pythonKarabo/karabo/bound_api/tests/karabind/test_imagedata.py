@@ -56,11 +56,6 @@ def test_imagedata_buildUp(ImageData, Encoding, Dims, Hash, ROT_180):
     assert img.getFlipX() is False
     # ... and Y scale
     assert img.getFlipY() is False
-    # Get header ...
-    # ... it is a Hash ...
-    assert isinstance(img.getHeader(), Hash)
-    # ... empty ...
-    assert img.getHeader().empty()
     # Get ROI offesets ...
     assert img.getROIOffsets() == (0, 0)
     # No rotation ... (0 grad)
@@ -88,12 +83,10 @@ def test_imagedata_buildUp(ImageData, Encoding, Dims, Hash, ROT_180):
 
 
 @pytest.mark.parametrize(
-    "Hash, ImageData, Dims, Encoding, DetectorGeometry",
-    [(karathon.Hash, karathon.ImageData, karathon.Dims, karathon.Encoding,
-      karathon.DetectorGeometry),
-     (karabind.Hash, karabind.ImageData, karabind.Dims, karabind.Encoding,
-      karabind.DetectorGeometry)])
-def test_imagedata_hash(Hash, ImageData, Dims, Encoding, DetectorGeometry):
+    "Hash, ImageData, Dims, Encoding",
+    [(karathon.Hash, karathon.ImageData, karathon.Dims, karathon.Encoding),
+     (karabind.Hash, karabind.ImageData, karabind.Dims, karabind.Encoding)])
+def test_imagedata_hash(Hash, ImageData, Dims, Encoding):
     # Create numpy array
     arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
     # Python is an owner of data
@@ -108,10 +101,3 @@ def test_imagedata_hash(Hash, ImageData, Dims, Encoding, DetectorGeometry):
     assert h['image'].getData().flags.owndata is False
     assert isinstance(h['image'], ImageData) is True
     assert h['image'].getData().shape == (3, 4)
-    # Get default detector geometry
-    g = h['image'].getGeometry()
-    assert isinstance(g, DetectorGeometry) is True
-    assert g.getOffsets() == [0.0, 0.0, 0.0]
-    hh = g.toHash()
-    assert hh['alignment.rotations'] == [0.0, 0.0, 0.0]
-    assert hh['tileId'] == -1
