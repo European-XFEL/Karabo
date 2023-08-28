@@ -356,8 +356,6 @@ class TestStruct1:
             .alarmLow(-20).needsAcknowledging(True)
             .alarmHigh(20).info("bla").needsAcknowledging(True)
             .enableRollingStats()
-            .warnVarianceHigh(5).needsAcknowledging(True)
-            .alarmVarianceHigh(10).needsAcknowledging(True)
             .evaluationInterval(100)
             .archivePolicy(EVERY_EVENT)
             .commit(),
@@ -852,9 +850,9 @@ class GraphicsRenderer2:
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("OtherSchemaElements", "1.0")
-class OtherSchemaElements(object):
+class OtherSchemaElements:
     def __init__(self, configuration):
-        super(OtherSchemaElements, self).__init__()
+        super().__init__()
 
     @staticmethod
     def expectedParameters(expected):
