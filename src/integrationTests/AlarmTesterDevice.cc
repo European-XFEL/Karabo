@@ -270,13 +270,11 @@ namespace karabo {
     void AlarmTester::triggerAlarmLowAck() {
         set("intPropNeedsAck", -5);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmLowAck");
     }
 
     void AlarmTester::triggerAlarmHighAck() {
         set("intPropNeedsAck", 5);
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmHighAck");
     }
 
@@ -293,70 +291,60 @@ namespace karabo {
     void AlarmTester::triggerAlarmLowNoAck() {
         set("intPropNoAck", -5);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmLowNoAck");
     }
 
     void AlarmTester::triggerAlarmHighNoAck() {
         set("intPropNoAck", 5);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmHighNoAck");
     }
 
     void AlarmTester::triggerWarnLowAckNode() {
         set("nodeA.floatPropNeedsAck2", -2.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerWarnLowAckNode");
     }
 
     void AlarmTester::triggerWarnHighAckNode() {
         set("nodeA.floatPropNeedsAck2", 2.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerWarnHighAckNode");
     }
 
     void AlarmTester::triggerAlarmLowAckNode() {
         set("nodeA.floatPropNeedsAck2", -3.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmLowAckNode");
     }
 
     void AlarmTester::triggerAlarmHighAckNode() {
         set("nodeA.floatPropNeedsAck2", 3.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmHighAckNode");
     }
 
     void AlarmTester::triggerWarnLowNoAckNode() {
         set("nodeA.floatPropNoAck2", -2.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerWarnLowNoAckNode");
     }
 
     void AlarmTester::triggerWarnHighNoAckNode() {
         set("nodeA.floatPropNoAck2", 2.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerWarnHighNoAckNode");
     }
 
     void AlarmTester::triggerAlarmLowNoAckNode() {
         set("nodeA.floatPropNoAck2", -3.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmLowNoAckNode");
     }
 
     void AlarmTester::triggerAlarmHighNoAckNode() {
         set("nodeA.floatPropNoAck2", 3.2);
 
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmHighNoAckNode");
     }
 
@@ -372,7 +360,6 @@ namespace karabo {
 
     void AlarmTester::triggerGlobalAlarmAck() {
         setAlarmCondition(AlarmCondition::ALARM, true);
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerGlobalAlarmAck");
     }
 
@@ -388,8 +375,6 @@ namespace karabo {
 
     void AlarmTester::triggerGlobalAlarm() {
         setAlarmCondition(AlarmCondition::ALARM);
-
-        KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerGlobalAlarm");
     }
 

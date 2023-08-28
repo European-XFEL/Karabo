@@ -218,21 +218,14 @@ struct ReadOnlySpecificVectorWrap {
 
 /////////////////////////////////////////////////////////////
 
-#define KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(U, EType, e)                                                         \
-    {                                                                                                                  \
-        typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                                                               \
-        typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                                                       \
-        typedef AlarmSpecific<U, EType, RollingStatsSpec> AlarmSpec;                                                   \
-        py::class_<RollingStatsSpec>(m, "RollingStatsSpecific" #e)                                                     \
-              .def("warnVarianceLow", &RollingStatsSpec::warnVarianceLow, py::return_value_policy::reference_internal) \
-              .def("warnVarianceHigh", &RollingStatsSpec::warnVarianceHigh,                                            \
-                   py::return_value_policy::reference_internal)                                                        \
-              .def("alarmVarianceLow", &RollingStatsSpec::alarmVarianceLow,                                            \
-                   py::return_value_policy::reference_internal)                                                        \
-              .def("alarmVarianceHigh", &RollingStatsSpec::alarmVarianceHigh,                                          \
-                   py::return_value_policy::reference_internal)                                                        \
-              .def("evaluationInterval", &RollingStatsSpec::evaluationInterval,                                        \
-                   py::return_value_policy::reference_internal);                                                       \
+#define KARABO_PYTHON_ELEMENT_ROLLINGSTATSPECIFIC(U, EType, e)                  \
+    {                                                                           \
+        typedef ReadOnlySpecific<U, EType> ReadOnlySpec;                        \
+        typedef RollingStatsSpecific<U, EType> RollingStatsSpec;                \
+        typedef AlarmSpecific<U, EType, RollingStatsSpec> AlarmSpec;            \
+        py::class_<RollingStatsSpec>(m, "RollingStatsSpecific" #e)              \
+              .def("evaluationInterval", &RollingStatsSpec::evaluationInterval, \
+                   py::return_value_policy::reference_internal);                \
     }
 
 /////////////////////////////////////////////////////////////

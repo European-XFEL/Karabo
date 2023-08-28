@@ -142,8 +142,7 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
     std::vector<karabo::util::Hash> schemaUpdates;
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "warnHigh", "value", 50));
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", "this will Fail"));
-    schemaUpdates.push_back(Hash("path", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2",
-                                 "attribute", "maxInc", "value", "this will Fail"));
+    schemaUpdates.push_back(Hash("path", "nodeA.floatPropNeedsAck2", "attribute", "maxInc", "value", "this will Fail"));
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "alarmHigh", "value", 500));
 
     Hash message("type", "updateAttributes", "instanceId", "alarmTesterSchema", "updates", schemaUpdates);
