@@ -20,7 +20,6 @@
 #define KARATHON_PYXMSINPUTOUTPUTCHANNEL_HH
 
 #include <boost/python.hpp>
-#include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/NDArray.hh>
 #include <karabo/xms/ImageData.hh>
@@ -61,10 +60,6 @@ namespace karathon {
         static bp::object getBinningPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
         static void setBinningPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj);
         static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& geometry);
-        static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
-        static void setHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& header);
-        static const karabo::util::Hash& getHeaderPy(const boost::shared_ptr<karabo::xms::ImageData>& self);
     };
 
     struct ImageDataElementWrap {

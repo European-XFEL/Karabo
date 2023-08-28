@@ -23,7 +23,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/NDArray.hh>
@@ -223,25 +222,7 @@ void exportPyXmsImageDataElement(py::module_& m) {
         img.def("getDimensionScales", &ImageData::getDimensionScales);
 
         img.def("setDimensionScales", &ImageData::setDimensionScales, py::arg("scales"));
-
-        img.def(
-              "setGeometry",
-              [](ImageData& self, const py::object& geometry) {
-                  DetectorGeometry geo = geometry.cast<DetectorGeometry>();
-                  self.setGeometry(geo);
-              },
-              py::arg("geometry"));
-
-        img.def("getGeometry", [](const ImageData& self) { return self.getGeometry(); });
-
-        img.def("getHeader", [](const ImageData& self) { return self.getHeader(); });
-
-        img.def(
-              "setHeader", [](ImageData& self, const py::object& header) { self.setHeader(header.cast<Hash>()); },
-              py::arg("header"));
     }
-
-
     {
         py::class_<ImageDataElement> el(m, "IMAGEDATA_ELEMENT");
 
@@ -347,9 +328,6 @@ void exportPyXmsImageDataElement(py::module_& m) {
               "h.setEncoding(encoding) set the encoding of an image in the schema. The encoding name must be "
               "a string (all capitals) or Encoding enum.\nExample:\n\t"
               "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setEncoding('RGB')\n\t\t.commit()");
-
-        el.def("setGeometry", &ImageDataElement::setGeometry, py::arg("geometry"),
-               py::return_value_policy::reference_internal);
 
         el.def(
               "setAllowedActions",
