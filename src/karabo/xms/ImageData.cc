@@ -27,6 +27,7 @@
 #include <climits>
 #include <karabo/util/VectorElement.hh>
 
+#include "karabo/util/SimpleElement.hh"
 #include "karabo/util/ToSize.hh"
 #include "karabo/util/Types.hh"
 #include "karabo/util/Units.hh"
@@ -78,13 +79,16 @@ namespace karabo {
                         "dimension")
                   .readOnly()
                   .commit();
+
             VECTOR_INT32_ELEMENT(s)
                   .key("dimTypes")
                   .displayedName("Dimension Types")
                   .description("Any dimension should have an enumerated type")
                   .readOnly()
                   .commit();
+
             STRING_ELEMENT(s).key("dimScales").displayedName("Dimension Scales").description("").readOnly().commit();
+
             INT32_ELEMENT(s)
                   .key("encoding")
                   .displayedName("Encoding")
@@ -93,12 +97,14 @@ namespace karabo {
                         " the data (e.g. GRAY, RGB, JPG, PNG etc.).")
                   .readOnly()
                   .commit();
+
             INT32_ELEMENT(s)
                   .key("bitsPerPixel")
                   .displayedName("Bits per pixel")
                   .description("The number of bits needed for each pixel")
                   .readOnly()
                   .commit();
+
             VECTOR_UINT64_ELEMENT(s)
                   .key("roiOffsets")
                   .displayedName("ROI Offsets")
@@ -107,6 +113,7 @@ namespace karabo {
                         "it will contain zeros if the image has no ROI defined.")
                   .readOnly()
                   .commit();
+
             VECTOR_UINT64_ELEMENT(s)
                   .key("binning")
                   .displayedName("Binning")
@@ -115,6 +122,7 @@ namespace karabo {
                         "are reported out of the camera as a single pixel.")
                   .readOnly()
                   .commit();
+
             INT32_ELEMENT(s)
                   .key("rotation")
                   .displayedName("Rotation")
@@ -123,25 +131,19 @@ namespace karabo {
                   .unit(Unit::DEGREE)
                   .readOnly()
                   .commit();
+
             BOOL_ELEMENT(s)
                   .key("flipX")
                   .displayedName("Flip X")
                   .description("Image horizontal flip.")
                   .readOnly()
                   .commit();
+
             BOOL_ELEMENT(s)
                   .key("flipY")
                   .displayedName("Flip Y")
                   .description("Image vertical flip.")
                   .readOnly()
-                  .commit();
-            // TODO Convert into a serializable object later
-            // Will then read: GEOMETRY_ELEMENT(s).key("geometry") [...]
-            NODE_ELEMENT(s).key("geometry").displayedName("Geometry").commit();
-            NODE_ELEMENT(s)
-                  .key("header")
-                  .displayedName("Header")
-                  .description("Hash containing user-defined header data")
                   .commit();
         }
 
@@ -339,34 +341,6 @@ namespace karabo {
 
         void ImageData::setDimensionScales(const std::string& scales) {
             set("dimScales", scales);
-        }
-
-
-        karabo::util::DetectorGeometry ImageData::getGeometry() const {
-            boost::optional<const karabo::util::Hash::Node&> node = find("detectorGeometry");
-            return (node ? karabo::util::DetectorGeometry(node->getValue<karabo::util::Hash>())
-                         : karabo::util::DetectorGeometry());
-        }
-
-
-        void ImageData::setGeometry(const karabo::util::DetectorGeometry& geometry) {
-            set("detectorGeometry", geometry.toHash());
-        }
-
-
-        const karabo::util::Hash& ImageData::getHeader() const {
-            boost::optional<const karabo::util::Hash::Node&> node = find("header");
-            if (node) {
-                return node->getValue<karabo::util::Hash>();
-            } else {
-                static const karabo::util::Hash h;
-                return h;
-            }
-        }
-
-
-        void ImageData::setHeader(const karabo::util::Hash& header) {
-            set("header", header);
         }
 
 

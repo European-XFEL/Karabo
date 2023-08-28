@@ -83,14 +83,6 @@ void ImageData_Test::testConstructor() {
 
         CPPUNIT_ASSERT_EQUAL(std::string(), image.getDimensionScales());
         CPPUNIT_ASSERT_EQUAL((size_t)2u, image.getDimensionTypes().size());
-
-        // No header was specified: get an empty one
-        karabo::util::Hash header;
-        CPPUNIT_ASSERT_NO_THROW(header = image.getHeader());
-        CPPUNIT_ASSERT(header.empty());
-
-        // Don't care about what kind of geometry - but it must not throw...
-        CPPUNIT_ASSERT_NO_THROW(image.getGeometry());
     }
     {
         Dims dims(200, 100, 3);
@@ -131,8 +123,6 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT_NO_THROW(image.getDimensionTypes());
         CPPUNIT_ASSERT_NO_THROW(image.getDimensions());
         CPPUNIT_ASSERT_NO_THROW(image.getEncoding());
-        CPPUNIT_ASSERT_NO_THROW(image.getGeometry());
-        CPPUNIT_ASSERT_NO_THROW(image.getHeader());
         CPPUNIT_ASSERT_NO_THROW(image.getROIOffsets());
         CPPUNIT_ASSERT_NO_THROW(image.getBinning());
         CPPUNIT_ASSERT_NO_THROW(image.getRotation());
@@ -163,7 +153,6 @@ void ImageData_Test::testSetAndGetMethods() {
         image.setFlipX(true);
         image.setFlipY(false);
         image.setDimensionTypes(dimTypes);
-        image.setHeader(Hash("one", 1));
 
         // Get
         Dims imageDims(image.getDimensions());
@@ -191,8 +180,6 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT(imageDimTypes.size() == 2);
         CPPUNIT_ASSERT(imageDimTypes[0] == Dimension::DATA);
         CPPUNIT_ASSERT(imageDimTypes[1] == Dimension::STACK);
-
-        CPPUNIT_ASSERT_EQUAL(1, image.getHeader().get<int>("one"));
 
         CPPUNIT_ASSERT_EQUAL(8, image.getBitsPerPixel()); // as determined for UINT8
         image.setBitsPerPixel(5);
