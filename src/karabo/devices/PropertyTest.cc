@@ -25,6 +25,7 @@
 #include "karabo/util/Schema.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/TableElement.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/InputChannel.hh"
 
