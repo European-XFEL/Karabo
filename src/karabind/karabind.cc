@@ -38,7 +38,6 @@ void exportPyUtilHash(py::module_ &);                   // PyUtilHash.cc
 void exportPyUtilAlarmConditionElement(py::module_ &);  // PyUtilAlarmElement.cc
 void exportPyUtilStateElement(py::module_ &);           // PyUtilStateElement.cc
 void exportPyUtilDateTimeString(py::module_ &);         // PyUtilDateTimeString.cc
-void exportPyUtilDetectorGeometry(py::module_ &);       // PyUtilDetectortectorGeometry.cc
 void exportPyUtilEpochstamp(py::module_ &);             // PyUtilEpochstamp.cc
 void exportPyUtilException(py::module_ &);              // PyUtilException.cc
 void exportPyUtilSchema(py::module_ &);                 // PyUtilSchema.cc
@@ -83,7 +82,6 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilTimeDuration(m);
     exportPyUtilTrainstamp(m);
     exportPyUtilDateTimeString(m);
-    exportPyUtilDetectorGeometry(m);
     exportPyUtilDims(m);
     exportPyUtilAlarmConditionElement(m);
     exportPyUtilStateElement(m);
