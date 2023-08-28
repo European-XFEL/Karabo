@@ -28,7 +28,6 @@
 
 #include <karabo/util/ByteSwap.hh>
 #include <karabo/util/CustomNodeElement.hh>
-#include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
@@ -243,14 +242,6 @@ namespace karabo {
 
             void setDimensionScales(const std::string& scales);
 
-            void setGeometry(const karabo::util::DetectorGeometry& geometry);
-
-            karabo::util::DetectorGeometry getGeometry() const;
-
-            const karabo::util::Hash& getHeader() const;
-
-            void setHeader(const karabo::util::Hash& header);
-
             ImageData copy() const;
 
            private:
@@ -298,13 +289,6 @@ namespace karabo {
 
             ImageDataElement& setEncoding(const EncodingType& encoding) {
                 return ParentType::setDefaultValue("encoding", (int)encoding);
-            }
-
-            // TODO Make Geometry a serializable object, too
-
-            ImageDataElement& setGeometry(karabo::util::DetectorGeometry& geometry) {
-                geometry.toSchema("data.geometry", this->m_schema);
-                return ParentType::setDefaultValue("detectorGeometry", geometry.toHash());
             }
 
             void commit() {
