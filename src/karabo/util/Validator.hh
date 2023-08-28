@@ -63,15 +63,11 @@ namespace karabo {
             bool m_injectTimestamps;
             bool m_forceInjectedTimestamp;
 
-            karabo::util::Hash m_parametersInWarnOrAlarm;
             karabo::util::Timestamp m_timestamp;
             bool m_hasReconfigurableParameter;
 
             mutable boost::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
-
-           public:
-            static const std::string kAlarmParamPathSeparator;
 
            public:
             /**
@@ -103,9 +99,6 @@ namespace karabo {
              * set to true, i.e. the Validator is not allowed to resolve the issue, validation will
              * fail.
              *
-             * The Validator additionally perform warning and alarm condition checks and maintains
-             * a record of parameters currently in a warning or alarm condition. For this it also tracks
-             * the rolling window statistics for a given element
              */
             struct ValidationRules {
                 /**
@@ -192,9 +185,6 @@ namespace karabo {
              *
              * In addition for the above "sanity" checks, the Validator performs the following tasks:
              *
-             *  - check scalar values against their alarm bounds. If rolling window statistics are enabled also check
-             * the rolling window variance of the value
-             *
              *  - for sequence values validate that they fulfill their minimum and maximum size requirements if defined
              * by the Schema
              *
@@ -210,25 +200,6 @@ namespace karabo {
              */
             std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput,
                                                   Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
-
-            /**
-             * Check if the Validator is tracking any parameters in alarm.
-             * @return
-             */
-            bool hasParametersInWarnOrAlarm() const;
-
-            /**
-             * Return a Hash containing the current parameters in warning or alarm
-             * tracked by this Validator. The Hash is of the following structure:
-             *
-             * - key: the path to the parameter (defined as scope) with separators
-             *        in the path replaced by Validator::kAlarmParamPathSeparator
-             * - value: a Hash with the following entries:
-             *          type: string representation of the karabo::util::AlarmCondition
-             *          message: string identifying the condition violated
-             * @return
-             */
-            const karabo::util::Hash& getParametersInWarnOrAlarm() const;
 
             /**
              * Check if reconfigurable parameters exist in the last provided Schema
@@ -256,15 +227,6 @@ namespace karabo {
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
             void assureRollingStatsInitialized(const std::string& scope, const unsigned int& evalInterval);
-
-            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode,
-                                                      Hash::Node& workNode, std::ostringstream& report,
-                                                      const std::string& scope, bool checkGreater);
-
-            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value,
-                                                      const Hash::Node& masterNode, Hash::Node& workNode,
-                                                      std::ostringstream& report, const std::string& scope,
-                                                      bool checkGreater);
         };
     } // namespace util
 } // namespace karabo
