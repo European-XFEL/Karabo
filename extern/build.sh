@@ -3,9 +3,8 @@
 ##############################################################################
 # Packages that we know how to build
 
-# note that patchelf will actually build for CentOs7 only, for all others
-# we will use the conan version.
-DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc mqtt redisclient patchelf )
+# dependencies located in extern/resources/. to manually compile and install
+DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc mqtt redisclient )
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
@@ -376,7 +375,8 @@ install_python() {
         local build_opts="--build=missing -s build_type=Release"
         # apply custom profile on top of default profile
         local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
-        # always compile b2 from source (needed by boost later), avoids CentOS7 failures
+        # always compile patchelf and b2 from source (needed later), avoids CentOS7 failures
+        safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf $profile_opts"
         safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 $profile_opts"
         # copy conan recipe from extern/resources/python to local conan cache
         safeRunCommandQuiet "conan export $package_opts"
