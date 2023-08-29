@@ -16,7 +16,7 @@ zeromq/4.3.2
 fftw/3.3.8
 libpng/1.6.37
 libxslt/1.1.34
-patchelf/0.13 # will not work with CentOs7, 0.8 version not available, so go via download for now
+patchelf/0.13
 pugixml/1.10
 
 # minor-any
