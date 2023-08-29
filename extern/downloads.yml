@@ -11,10 +11,6 @@ mqtt:
     source: https://github.com/redboltz/mqtt_cpp/archive/refs/tags/v10.0.0.zip
     source_format: zip
     target: mqtt_cpp-10.0.0.tar
-patchelf:
-    source: https://github.com/NixOS/patchelf/archive/refs/tags/0.10.zip
-    source_format: zip
-    target: patchelf-0.10.tar.gz
 # TODO: I have no clue what version is in use here actually, or if it was patched by us
 # I cannot find the punsubribe function with a signature (handle, callback) anywhere in the git
 # repo. We should fix this in our usage of the library. For now, keeping it commented and
