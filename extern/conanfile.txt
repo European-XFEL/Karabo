@@ -71,11 +71,11 @@ boost:without_python=False
 boost:without_numpy=True
 
 [imports]
-lib, * -> lib
-lib64, * -> lib64
-bin, * -> bin
-include, * -> include
-res, * -> res
-share, * -> share
-local, * -> local
-include/libxml2, * -> include  # otherwise pip installs have issues
+lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
+lib64, * -> ../lib64
+bin, * -> ../bin
+include, * -> ../include
+res, * -> ../res
+share, * -> ../share
+local, * -> ../local
+include/libxml2, * -> ../include  # otherwise pip installs have issues
