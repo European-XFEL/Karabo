@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 # dependencies located in extern/resources/. to manually compile and install
-DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc mqtt redisclient )
+DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc  )
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"

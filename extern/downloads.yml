@@ -6,16 +6,3 @@ log4cpp:
     source: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/log4cpp/1.1.3-3/log4cpp_1.1.3.orig.tar.gz
     source_format: tar.gz
     target: log4cpp-1.1.3.tar
-# TODO: In principle available via conan, but not in version compatible with boost 1.6.x
-mqtt:
-    source: https://github.com/redboltz/mqtt_cpp/archive/refs/tags/v10.0.0.zip
-    source_format: zip
-    target: mqtt_cpp-10.0.0.tar
-# TODO: I have no clue what version is in use here actually, or if it was patched by us
-# I cannot find the punsubribe function with a signature (handle, callback) anywhere in the git
-# repo. We should fix this in our usage of the library. For now, keeping it commented and
-# Keeping our tar source.
-#redisclient:
-#    source: https://github.com/nekipelov/redisclient/archive/fbf052ef8e3772d17d1538468853523f1d827595.zip
-#    source_format: zip
-#    target: redisclient-1.0.2dev.tar
