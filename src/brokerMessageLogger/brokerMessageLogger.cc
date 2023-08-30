@@ -33,7 +33,6 @@
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
-#include <karabo/net/MqttClient.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/StringTools.hh>
 #include <karabo/xms/SignalSlotable.hh>
@@ -58,8 +57,6 @@ void printHelp(const char* execName) {
     cout << "                if not specified, use environment variable KARABO_BROKER" << endl;
     cout << "  -s selector : Broker type specific selection of messages" << endl;
     cout << "                OpenMQ: selector string, e.g. \"slotInstanceIds LIKE '%|deviceId|%'\"" << endl;
-    cout << "                MQTT:   comma separated list of MQTT subtopics," << endl;
-    cout << "                        e.g. \"signals/+/signalChanged,global_slots,slots/INSTANCE|1\"" << endl;
     cout << "                AMQP:   Selection criteria involves 2 values: exchange and binding key " << endl;
     cout << "                        separated by colon sign (:) and such pairs are comma separated. " << endl;
     cout << "                        e.g. signals:*.signalChanged,global_slots:,slots:INSTANCE/1\"" << endl << endl;
@@ -80,22 +77,6 @@ void jmsErrorNotifier(consumer::Error errCode, const string& errDesc) {
 }
 
 
-void mqttMessageHandler(const boost::system::error_code ec, const std::string& topic, const Hash::Pointer& message) {
-    if (ec) {
-        cout << "Error " << ec.value() << ": " << ec.message() << endl;
-    }
-    cout << "Topic: " << topic << endl;
-
-    if (message) {
-        cout << *message << endl;
-    } else {
-        cout << "MISSING MESSAGE" << endl; // Shouldn't happen - but print an indicator
-    }
-
-    cout << "-----------------------------------------------------------------------" << endl << endl;
-}
-
-
 void logOpenMQ(const std::vector<std::string>& brokerUrls, const std::string& topic, const std::string& selector) {
     JmsConnection::Pointer connection = boost::make_shared<JmsConnection>(brokerUrls);
     connection->connect();
@@ -112,44 +93,6 @@ void logOpenMQ(const std::vector<std::string>& brokerUrls, const std::string& to
     // Read and logs messages and errors.
     consumer->startReading(boost::bind(&jmsReadHandler, _1, _2), boost::bind(&jmsErrorNotifier, _1, _2));
     EventLoop::work(); // Block forever
-}
-
-void logMqtt(const std::vector<std::string>& brokerUrls, const std::string& domain, const std::string& subtopics) {
-    // Create client, but don't care which type, just take the first (vector::at(0) will throw if empty).
-    const string clientName = Configurator<MqttClient>::getRegisteredClasses().at(0);
-    const Hash config("brokers", brokerUrls, "domain", domain);
-    MqttClient::Pointer client = MqttClient::create(clientName, config);
-
-    // Connect and subscribe
-    auto ec = client->connect();
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to connect to MQTT broker at " + toString(brokerUrls));
-    }
-
-    TopicSubOptions subscriptions;
-    if (subtopics.empty()) {
-        subscriptions.emplace_back(domain + "/#", SubQos::AtMostOnce, boost::bind(&mqttMessageHandler, _1, _2, _3));
-    } else {
-        for (const string& t : fromString<string, vector>(subtopics)) {
-            subscriptions.emplace_back(domain + "/" + t, SubQos::AtMostOnce,
-                                       boost::bind(&mqttMessageHandler, _1, _2, _3));
-        }
-    }
-    cout << "# Starting to consume messages..." << std::endl;
-    cout << "# Broker (MQTT): " << client->getBrokerUrl() << endl;
-    cout << "# Domain: " << domain << endl;
-    if (!subtopics.empty()) {
-        cout << "# Subtopics: " << subtopics << endl;
-    }
-    cout << endl;
-    ec = client->subscribe(subscriptions);
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to MQTT broker");
-    }
-
-    // As of Karabo 2.11.0, MqttClient does not need the Karabo event loop (might change later).
-    // But here we need something to block for ever...
-    EventLoop::work(); // block for ever
 }
 
 
@@ -269,8 +212,6 @@ int main(int argc, char** argv) {
         cout << "# Trying to connect to broker '" << toString(brokerUrls) << "'...\n" << endl;
         if (brkType == "jms") {
             logOpenMQ(brokerUrls, topic, selector);
-        } else if (brkType == "mqtt") {
-            logMqtt(brokerUrls, topic, selector);
         } else if (brkType == "amqp") {
             logAmqp(brokerUrls, topic, selector);
         } else {

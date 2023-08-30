@@ -112,7 +112,6 @@ set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/InfluxDbClient_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/JmsConnection_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/MQTcpNetworking.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/net/MqttClient_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/ParseUrl_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/ReadAsyncStringUntil_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Strand_Test.cc

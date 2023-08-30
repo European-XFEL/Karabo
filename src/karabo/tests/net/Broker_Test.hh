@@ -37,7 +37,6 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testPublishSubscribeAsync);
     CPPUNIT_TEST(testReadingHeartbeats);
     CPPUNIT_TEST(testReadingGlobalCalls);
-    CPPUNIT_TEST(testReverseOrderedPublishSubscribe);
     CPPUNIT_TEST(testProducerRestartConsumerContinues);
     CPPUNIT_TEST(testProducerContinuesConsumerRestart);
     CPPUNIT_TEST_SUITE_END();
