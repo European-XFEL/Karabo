@@ -182,10 +182,6 @@ class Broker(ABC):
             from .jms_broker import JmsBroker
             return (JmsBroker.create_connection(hosts, connection),
                     JmsBroker)
-        elif scheme == "mqtt":
-            from .mqtt_broker import MqttBroker
-            return (MqttBroker.create_connection(hosts, connection),
-                    MqttBroker)
         elif scheme == "amqp":
             from .amqp_broker import AmqpBroker
             return (AmqpBroker.create_connection(hosts, connection),
