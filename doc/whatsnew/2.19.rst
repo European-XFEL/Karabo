@@ -19,7 +19,6 @@ Additionally, several updates for python packages have been done::
     ecdsa==0.18.0, was 0.11
     flake8==6.0.0, was 3.8.4
     flit==3.9.0, was 3.8.0
-    h5py==Removed, was 2.7.1
     httplib2==0.22.0, was 0.9.1
     importlib-metadata==6.7.0, was 3.3.0
     matplotlib==3.7.1, was 2.1.1
@@ -37,6 +36,7 @@ Additionally, several updates for python packages have been done::
     scipy==1.7.3, was 1.6.3
     pyzmq==25.1.0, was 22.3.0
 
+Packages that have been **removed**: h5py
 
 
 Summary – Release highlights
