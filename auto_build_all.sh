@@ -57,7 +57,7 @@ activateKarabo() {
 }
 
 activateKaraboBuildTree() {
-    # Partially activates Karabo in cmake's build tree. 
+    # Partially activates Karabo in cmake's build tree.
     # Details on what is activated can be seen on the "activateKarabo.sh" script.
     source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
     # set the broker variable if KARABO_TEST_BROKER is set
@@ -441,6 +441,9 @@ FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACH
 
 pushd $FRAMEWORK_BUILD_DIR
 
+# Cleans-up the artifacts produced by conan install that won't be needed anymore.
+rm -rf $EXTERN_DEPS_DIR/conan_out
+
 # Use the cmake from the EXTERN_DEPS_DIR - cmake is an external dependency
 # of Karabo as it is used to compile some other dependencies, like the
 # MQTT client lib.
@@ -464,7 +467,7 @@ fi
 if [ -d $FRAMEWORK_INSTALL_DIR ]; then
     for dir in $FRAMEWORK_INSTALL_DIR/*
     do
-        if [[  "$dir" = "$FRAMEWORK_INSTALL_DIR/devices" ||
+        if [[ "$dir" = "$FRAMEWORK_INSTALL_DIR/devices" ||
               "$dir" = "$FRAMEWORK_INSTALL_DIR/installed" ||
               "$dir" = "$FRAMEWORK_INSTALL_DIR/plugins" ||
               "$dir" = "$FRAMEWORK_INSTALL_DIR/var" ]]; then
@@ -507,7 +510,7 @@ if [ -d $FRAMEWORK_INSTALL_DIR ]; then
         echo
         # Activate the karabo environment to allow tests to be run from the
         # build tree.
-        activateKaraboBuildTree  
+        activateKaraboBuildTree
         # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
         # a 'test_coverage_report' target, than when built runs the tests and
         # generates the coverage report.

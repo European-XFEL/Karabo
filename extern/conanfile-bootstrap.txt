@@ -14,10 +14,10 @@ cpython:with_tkinter=False
 cpython:optimizations=True
 
 [imports]
-lib, * -> lib
-lib64, * -> lib64
-bin, * -> bin
-include, * -> include
-res, * -> res
-share, * -> share
-local, * -> local
+lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
+lib64, * -> ../lib64
+bin, * -> ../bin
+include, * -> ../include
+res, * -> ../res
+share, * -> ../share
+local, * -> ../local
