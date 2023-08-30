@@ -14,34 +14,29 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.\
+from functools import partial
 
 from qtpy import uic
-from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Slot
+from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Signal, Slot
 from qtpy.QtWidgets import (
-    QCheckBox, QDialog, QDialogButtonBox, QGraphicsScene, QLineEdit,
-    QTableWidgetItem)
+    QAction, QActionGroup, QCheckBox, QDialog, QDialogButtonBox,
+    QGraphicsScene, QLineEdit, QTableWidgetItem)
 
 from karabo.common.scenemodel.api import create_base64image
 from karabo.native import Hash
 from karabogui import icons
+from karabogui.dialogs.logbook_drawing_tools import BaseDrawingTool, get_tools
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_network
 from karabogui.validators import NumberValidator
+from karabogui.widgets.toolbar import ToolBar
 
 MIN_ZOOM_FACTOR = 25
 MAX_ZOOM_FACTOR = 250
 ZOOM_INCREMENT = 1.1
 
-TOOLBUTTON_STYLE = """
-QToolButton {
-    border: none;
-}
-QToolButton:hover {
-    border: 1px solid gray;
-}
-"""
 CHECKBOX_STYLE = """
 QCheckBox {
     text-align: center;
@@ -54,6 +49,42 @@ LOGBOOK_IMAGE = "Image"
 LOGBOOK_DATA = "Data"
 
 
+class Canvas(QGraphicsScene):
+    """
+    QGraphicsScene to draw shapes using mouse to annotate the image.
+    """
+    resetTool = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.drawing_tool = None
+
+    def mousePressEvent(self, event):
+        if self.drawing_tool is not None:
+            self.drawing_tool.mouse_down(self, event)
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.drawing_tool is not None:
+            self.drawing_tool.mouse_move(self, event)
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.drawing_tool is not None:
+            self.drawing_tool.mouse_up(self, event)
+            self.set_drawing_tool(None)
+        super().mouseReleaseEvent(event)
+
+    def set_drawing_tool(self, tool):
+        """
+        Set a drawing tool. Pass None to clear the active drawing tool.
+        """
+        assert tool is None or isinstance(tool, BaseDrawingTool)
+        self.drawing_tool = tool
+        if tool is None:
+            self.resetTool.emit()
+
+
 class LogBookPreview(QDialog):
     """A Dialog to preview the data to the LogBook"""
 
@@ -61,6 +92,8 @@ class LogBookPreview(QDialog):
         super().__init__(parent=parent)
         self.setModal(False)
         uic.loadUi(get_dialog_ui("logbook.ui"), self)
+
+        self.action_group_draw = {}
 
         self.pixmap = parent.grab()
         self.combo_datatype.addItem(LOGBOOK_IMAGE)
@@ -75,29 +108,18 @@ class LogBookPreview(QDialog):
         self.ok_button.setText("Save")
         self.ok_button.setEnabled(False)
 
-        self.scene = QGraphicsScene()
-        self.scene.addPixmap(self.pixmap)
-        self.view.setScene(self.scene)
+        self.canvas = Canvas(self)
+        self.canvas.addPixmap(self.pixmap)
+        self.view.setScene(self.canvas)
+        self.canvas.resetTool.connect(self.reset_tool)
 
         validator = NumberValidator(
             minInc=MIN_ZOOM_FACTOR, maxInc=MAX_ZOOM_FACTOR, decimals=1)
         self.zoom_factor_edit = QLineEdit()
         self.zoom_factor_edit.setValidator(validator)
         self.zoom_factor.setLineEdit(self.zoom_factor_edit)
-        self.zoom_in_button.clicked.connect(self.zoom_in)
-        self.zoom_out_button.clicked.connect(self.zoom_out)
-        self.zoom_in_button.setIcon(icons.zoomIn)
-        self.zoom_out_button.setIcon(icons.zoomOut)
-        self.zoom_in_button.setStyleSheet(TOOLBUTTON_STYLE)
-        self.zoom_out_button.setStyleSheet(TOOLBUTTON_STYLE)
-        size = QSize(23, 23)
-        self.zoom_in_button.setIconSize(size)
-        self.zoom_out_button.setIconSize(size)
 
-        # Adjust the image's size to fit the QGraphicsView, ensuring the
-        # entire image is visible.
-        scene_rect = self.view.sceneRect()
-        self.view.fitInView(scene_rect, Qt.KeepAspectRatio)
+        self._fit_in_view()
 
         # Show the current zoom factor of the image.
         transform = self.view.transform()
@@ -117,6 +139,12 @@ class LogBookPreview(QDialog):
         self._load_table()
         self.select_all.clicked.connect(self._select_all)
         self.deselect_all.clicked.connect(self._deselect_all)
+
+        self.draw_button.setIcon(icons.draw)
+        self._create_zoom_toolbar()
+        self.drawing_toolbar = self._create_drawing_toolbar()
+        self.draw_button.toggled.connect(self._set_drawing_mode)
+        self.drawing_toolbar.setVisible(False)
 
     # -----------------------------------------------------------------------
     # Karabo Events
@@ -192,6 +220,12 @@ class LogBookPreview(QDialog):
             enabled = any(checkbox.isChecked() for checkbox in self.checkboxes)
         self.ok_button.setEnabled(enabled)
 
+    @Slot(bool)
+    def _set_drawing_mode(self, enabled):
+        self.drawing_toolbar.setVisible(enabled)
+        if not enabled:
+            self.canvas.set_drawing_tool(None)
+
     # -----------------------------------------------------------------------
     # Internal Interface
 
@@ -231,11 +265,13 @@ class LogBookPreview(QDialog):
         self.view.scale(factor, factor)
 
     def _extract_panel_image(self):
+        self._fit_in_view()
         image_byte = QByteArray()
         io_buffer = QBuffer(image_byte)
         io_buffer.open(QIODevice.WriteOnly)
         image_format = "png"
-        self.pixmap.save(io_buffer, image_format)
+        pixmap = self.view.grab()
+        pixmap.save(io_buffer, image_format)
         return {"data": create_base64image(image_format, image_byte),
                 "dataType": "image",
                 "caption": self.caption_edit.toPlainText()}
@@ -263,6 +299,12 @@ class LogBookPreview(QDialog):
 
         return info
 
+    def _fit_in_view(self):
+        """Adjust the image's size to fit the QGraphicsView, ensuring the
+        entire image is visible."""
+        scene_rect = self.view.sceneRect()
+        self.view.fitInView(scene_rect, Qt.KeepAspectRatio)
+
     # -----------------------------------------------------------------------
     # Public interface
 
@@ -277,3 +319,51 @@ class LogBookPreview(QDialog):
         logbook = self.combo_name.currentText()
         info = self._create_logbook_data()
         get_network().onSaveLogBook(name=logbook, **info)
+
+    def _create_zoom_toolbar(self):
+        """ Create Toolbar with zooming options"""
+
+        zoom_toolbar = ToolBar(parent=self)
+        zoom_in_action = QAction(icons.zoomIn, "Zoom In", self)
+        zoom_in_action.triggered.connect(self.zoom_in)
+
+        zoom_out_action = QAction(icons.zoomOut, "Zoom Out", self)
+        zoom_out_action.triggered.connect(self.zoom_out)
+        zoom_toolbar.addAction(zoom_in_action)
+        zoom_toolbar.addAction(zoom_out_action)
+        size = QSize(23, 23)
+        zoom_toolbar.setIconSize(size)
+        zoom_toolbar.add_expander()
+        self.toolbar_layout.insertWidget(0, zoom_toolbar)
+
+    def _create_drawing_toolbar(self):
+        """Create a toolbar with annotate tools """
+        toolbar = ToolBar(parent=self)
+        self.action_group_draw = QActionGroup(self)
+        for tool_factory in get_tools():
+            text = tool_factory.name
+            action = QAction(tool_factory.icon, text, self)
+            tooltip = f"Add {text} to the Image"
+            if text == "Eraser":
+                tooltip = "Delete item"
+            action.setToolTip(tooltip)
+            action.setCheckable(True)
+            tool = tool_factory.drawing_tool()
+            action.triggered.connect(partial(self.activate_tool, tool))
+            toolbar.addAction(action)
+            self.action_group_draw.addAction(action)
+
+        self.action_group_draw.setExclusive(True)
+        self.toolbar_layout.insertWidget(1, toolbar)
+        return toolbar
+
+    @Slot()
+    def activate_tool(self, tool):
+        self.view.setCursor(Qt.CrossCursor)
+        self.canvas.set_drawing_tool(tool)
+
+    @Slot()
+    def reset_tool(self):
+        for action in self.action_group_draw.actions():
+            action.setChecked(False)
+        self.view.setCursor(Qt.ArrowCursor)
