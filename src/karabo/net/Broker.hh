@@ -64,10 +64,7 @@ namespace karabo {
             /**
              * The function creates broker communication object with the new identity
              * by cloning the parent object.  Concrete meaning of cloning  strategy
-             * is an implementation detail. Possible strategies might:
-             *  - use the same physical connection but new session (identity) in case of JMS
-             *  - build the new physical connection (and new identity) but using connection
-             *    parameters of parent object in case of MQTT
+             * is an implementation detail.
              * @param instanceId - unique ID
              * @return new broker communication object
              */

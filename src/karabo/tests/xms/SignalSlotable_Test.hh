@@ -97,8 +97,6 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
 
     std::string m_karaboBrokerBackup;
-    std::string m_mqttTimeoutBackup;
-    std::string m_redisTimeoutBackup;
     std::string m_amqpTimeoutBackup;
     // using a Karabo Hash to match the insertion order.
     karabo::util::Hash m_brokersUnderTest;
