@@ -36,7 +36,6 @@
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
-#include <karabo/net/MqttClient.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
@@ -516,77 +515,6 @@ void startJmsMonitor(const std::vector<std::string>& brokers, const std::string&
     net::EventLoop::work();
 }
 
-void startMqttMonitor(const std::vector<std::string>& brokers, const std::string& domain,
-                      const std::vector<std::string>& receivers, std::vector<std::string>& senders,
-                      const util::TimeValue& interval) {
-    // Create client object
-    const std::string clientName = util::Configurator<net::MqttClient>::getRegisteredClasses().at(0);
-    // Skip message body deserialization: "skipFlag"
-    const util::Hash config("brokers", brokers, "domain", domain, "skipFlag", true);
-    net::MqttClient::Pointer client = net::MqttClient::create(clientName, config);
-
-    // Connect and subscribe
-    auto ec = client->connect();
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to connect to MQTT broker at " + util::toString(brokers));
-    }
-
-    boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
-    // `BrokerStatistics' expects the message formatted as a Hash: with 'header' as Hash and 'raw' as vector of char
-    // which serialized 'body' value.  If the incoming message does not contain 'raw' key, serialize the body part.
-    auto binSerializer = io::BinarySerializer<util::Hash>::create("Bin");
-    util::Hash::Pointer body(boost::make_shared<util::Hash>());
-
-    auto readHandler = [stats, binSerializer, body](const boost::system::error_code ec, const std::string& topic,
-                                                    const util::Hash::Pointer& message) {
-        if (!ec) {
-            std::vector<char>& raw = body->bindReference<std::vector<char>>("raw");
-            if (message->has("raw")) {
-                raw.swap(message->get<std::vector<char>>("raw"));
-            } else {
-                binSerializer->save(message->get<util::Hash>("body"), raw); // body -> raw
-            }
-            stats->registerMessage(boost::make_shared<util::Hash>(message->get<util::Hash>("header")), body);
-        }
-    };
-
-    net::TopicSubOptions subscriptions;
-    if (receivers.empty() && senders.empty()) {
-        // No input on commandline ...
-        subscriptions.emplace_back(domain + "/slots/+", net::SubQos::AtMostOnce, readHandler);
-        subscriptions.emplace_back(domain + "/signals/+/+", net::SubQos::AtMostOnce, readHandler);
-    } else {
-        for (const auto& rid : receivers) {
-            std::string topic = domain + "/slots/" + boost::replace_all_copy(rid, "/", "|");
-            subscriptions.emplace_back(topic, net::SubQos::AtMostOnce, readHandler);
-        }
-        for (const auto& sid : senders) {
-            std::string topic = domain + "/signals/" + boost::replace_all_copy(sid, "/", "|") + "/+";
-            subscriptions.emplace_back(topic, net::SubQos::AtMostOnce, readHandler);
-        }
-    }
-
-    std::cout << "\nStart monitoring signal and slot rates of \n   domain         '" << domain
-              << "'\n   on broker     '" << client->getBrokerUrl() << "',\n   ";
-    if (!receivers.empty()) {
-        std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
-    }
-    if (!senders.empty()) {
-        std::cout << "messages from '" << util::toString(senders) << "',\n   ";
-    }
-    std::cout << "interval is   " << interval << " s." << std::endl;
-
-    // subscribing means 'start reading'...
-    ec = client->subscribe(subscriptions);
-    if (ec) {
-        throw KARABO_NETWORK_EXCEPTION("Failed to subscribe to MQTT broker");
-    }
-
-    if (debug) std::cout << "\n------------------ wait on work" << std::endl;
-    // Block forever
-    net::EventLoop::work();
-}
-
 
 void startAmqpMonitor(const std::vector<std::string>& brokers, const std::string& domain,
                       const std::vector<std::string>& receivers, std::vector<std::string>& senders,
@@ -724,8 +652,6 @@ int main(int argc, const char** argv) {
     try {
         if (brkType == "jms") {
             startJmsMonitor(brokers, topic, receivers, senders, interval);
-        } else if (brkType == "mqtt") {
-            startMqttMonitor(brokers, topic, receivers, senders, interval);
         } else if (brkType == "amqp") {
             startAmqpMonitor(brokers, topic, receivers, senders, interval);
         } else {
