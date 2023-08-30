@@ -151,11 +151,9 @@ development directly from the distributed platform:
 ==================== ================= =========================================================== ===================== =========================
 **library**          **version**       **license**                                                 **Karabo depends**    **KaraboGUI depends**
 ==================== ================= =========================================================== ===================== =========================
-aio-pika             6.8.0             Apache-2.0                                                  yes                   no
 aioredis             1.3.1             MIT                                                         yes                   no
 aiormq               3.3.1             Apache-2.0                                                  yes                   no
 AMQP-CPP             4.3.12            Apache-2.0                                                  yes                   no
-asyncio-mqtt         0.8.1             BSD-3                                                       yes                   yes
 atomicwrites         1.4.0             MIT                                                         yes                   yes
 attrs                20.3.0            MIT                                                         yes                   yes
 backcall             0.2.0             BSD-3                                                       yes                   yes
@@ -209,7 +207,6 @@ lxml                 3.6.4             BSD                                      
 MarkupSafe           0.18              BSD                                                         no                    no
 matplotlib           2.1.1             PSFL                                                        no                    no
 more-itertools       8.6.0             MIT                                                         yes                   no
-mqtt_cpp             10.0.0            Boost SL 1                                                  yes                   no
 msgpack              0.5.6             APL2                                                        no                    no
 msgpack-numpy        0.4.3             BSD                                                         no                    no
 multidict            1.5.0             Apache-2.0                                                  yes                   no
@@ -219,7 +216,6 @@ notebook             4.2.2             BSD                                      
 nss                  ?                 MPL                                                         yes                   no
 numpy                1.22.4            BSD                                                         yes                   yes
 openmq               5.0.1             EPL/GPLv2                                                   yes                   yes
-paho.mqtt.python     1.5.1             EPLv1/EDLv1                                                 yes                   no
 packaging            20.8              apache/BSD                                                  yes                   no
 pamqp                2.3.0             BSD-3-Clause                                                yes                   no
 parse                1.6.3             BSD                                                         no                    no
@@ -304,9 +300,6 @@ Here are the dependencies of the ``karabo-cpp`` python module:
     "karabo-cpp" -> "boost"
     "karabo-cpp" -> "redisclient"
     "karabo-cpp" -> "amqpcpp"
-    "karabo-cpp" -> "mqtt_cpp"
-    "mqtt_cpp" -> "boost"
-    "redisclient" -> "boost"
     "boost" -> "libxml2"
     "boost" -> "libxslt"
     "libxml2" -> "bzip2"
@@ -355,10 +348,6 @@ the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in th
     "karabo.middlelayer" -> "lxml"
     "karabo.middlelayer" -> "IPython"
     "karabo.middlelayer" -> "jupyter_client"
-    "karabo.middlelayer" -> "aio-pika"
-    "karabo.middlelayer" -> "paho.mqtt.python"
-    "karabo.middlelayer" -> "aioredis"
-    "aio-pika" -> "aiormq"
     "aiormq" -> "pamqp"
     "aiormq" -> "yarl"
     "yarl" -> "multidict"
@@ -370,8 +359,6 @@ the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in th
 	"karabogui" -> "karabo.native"
 	"karabogui" -> "pyqt"
 	"pyqt" -> "qt5"
-	"karabogui" -> "pythonqwt"
-	"karabogui" -> "guiqwt"
 	"karabogui" -> "qtconsole"
 	"karabogui" -> "matplotlib"
 	"karabogui" -> "ipython"
