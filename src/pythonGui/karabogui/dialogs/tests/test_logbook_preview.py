@@ -1,7 +1,14 @@
 import pytest
+from qtpy.QtCore import QPoint, Qt
+from qtpy.QtTest import QTest
+from qtpy.QtWidgets import (
+    QDialog, QGraphicsLineItem, QGraphicsPixmapItem, QGraphicsRectItem,
+    QGraphicsTextItem)
 
 from karabo.native import Hash, HashList
 from karabogui.binding.api import DeviceClassProxy, build_binding
+from karabogui.dialogs.logbook_drawing_tools import (
+    LineTool, RectTool, TextTool)
 from karabogui.dialogs.logbook_preview import LogBookPreview
 from karabogui.panels.api import ConfigurationPanel
 from karabogui.singletons.mediator import Mediator
@@ -114,3 +121,68 @@ def test_save_button(dialog):
     # Disabled when no property is selected.
     dialog.checkboxes[0].setChecked(False)
     assert not dialog.ok_button.isEnabled()
+
+
+def test_toolbar(dialog):
+    toolbar = dialog.drawing_toolbar
+    assert not toolbar.isVisibleTo(dialog)
+
+    dialog.draw_button.setChecked(True)
+    assert toolbar.isVisibleTo(dialog)
+    actions = toolbar.actions()
+    assert len(actions) == 4
+    expected = ["Line", "Rect", "Text", "Eraser"]
+    assert [action.text() for action in actions] == expected
+
+
+def test_drawing_tools(dialog, mocker):
+    canvas = dialog.canvas
+    assert canvas.drawing_tool is None
+    assert len(canvas.items()) == 1
+    assert isinstance(canvas.items()[0], QGraphicsPixmapItem)
+
+    pos = QPoint(100, 100)
+    widget = dialog.view.viewport()
+    dialog.draw_button.setChecked(True)
+    line_tool = LineTool()
+    canvas.set_drawing_tool(line_tool)
+    QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier)
+    QTest.mouseMove(widget, pos)
+    QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier)
+    assert len(canvas.items()) == 2
+    assert isinstance(canvas.items()[0], QGraphicsLineItem)
+    assert isinstance(canvas.items()[1], QGraphicsPixmapItem)
+
+    rect_tool = RectTool()
+    canvas.set_drawing_tool(rect_tool)
+    QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
+    QTest.mouseMove(widget, QPoint(200, 200))
+    QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier)
+    assert len(canvas.items()) == 3
+    assert isinstance(canvas.items()[0], QGraphicsRectItem)
+    assert isinstance(canvas.items()[1], QGraphicsLineItem)
+    assert isinstance(canvas.items()[2], QGraphicsPixmapItem)
+
+    text_tool = TextTool()
+    text_dialog = mocker.patch(
+        "karabogui.dialogs.logbook_drawing_tools.TextDialog")
+    text_dialog().exec.return_value = QDialog.Accepted
+    text_dialog().text = "Hello Karabo"
+    canvas.set_drawing_tool(text_tool)
+    QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
+    assert len(canvas.items()) == 3
+    QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier, pos)
+    assert len(canvas.items()) == 4
+    assert isinstance(canvas.items()[0], QGraphicsTextItem)
+    assert isinstance(canvas.items()[1], QGraphicsRectItem)
+    assert isinstance(canvas.items()[2], QGraphicsLineItem)
+    assert isinstance(canvas.items()[3], QGraphicsPixmapItem)
+    assert canvas.items()[0].toPlainText() == "Hello Karabo"
+
+    # Clear the active drawing tool.
+    canvas.set_drawing_tool(None)
+    assert canvas.drawing_tool is None
+    QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
+    QTest.mouseMove(widget, QPoint(200, 200))
+    QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier)
+    assert len(canvas.items()) == 4
