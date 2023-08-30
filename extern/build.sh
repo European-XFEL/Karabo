@@ -370,7 +370,7 @@ install_python() {
         # python package opts
         local package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         # configure prefix paths
-        local folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
+        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # build python if not found in conan cache
         local build_opts="--build=missing -s build_type=Release"
         # apply custom profile on top of default profile
@@ -487,7 +487,7 @@ install_from_deps() {
         # boost package opts
         local package_opts="./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/with-$CONAN_RECIPE_CHANNEL-and-certify"
         # configure prefix paths
-        local folder_opts="--install-folder=$INSTALL_PREFIX --output-folder=$INSTALL_PREFIX"
+        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         # boost:python_executable comes from a variable, so it must be defined here
         local build_opts="--build=missing -o boost:python_executable=$INSTALL_PREFIX/bin/python"
@@ -562,10 +562,10 @@ install_from_deps() {
 
     # for whatever reason conan does not reliably copy *.pc files from its root directory
     # we do this here instead, and also capture any .pc files our from source builds created
-    # in the process
+    # in the process.
     safeRunCommand "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
-    safeRunCommand "cp $INSTALL_PREFIX/*.pc $INSTALL_PREFIX/lib/pkgconfig/"
-    # now fix occorances of prefixes such that packages can use the "--define-prefix" option
+    cp $INSTALL_PREFIX/conan_out/*.pc $INSTALL_PREFIX/lib/pkgconfig/
+    # now fix occurrences of prefixes such that packages can use the "--define-prefix" option
     # of pkgconfig
     safeRunCommand "sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
     safeRunCommand "sed -i 's|libdir=.*|libdir=\${prefix}/lib|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
