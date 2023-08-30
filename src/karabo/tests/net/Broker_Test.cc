@@ -25,7 +25,6 @@
 #include "Broker_Test.hh"
 
 #include <karabo/net/EventLoop.hh>
-#include <karabo/net/MqttBroker.hh>
 #include <karabo/tests/BrokerUtils.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/StringTools.hh>
@@ -35,112 +34,21 @@
 
 constexpr uint32_t TEST_EXPIRATION_TIME_IN_SECONDS = 3;
 
-namespace karabo {
-    namespace net {
-
-
-        typedef std::tuple<std::string, karabo::util::Hash::Pointer, PubOpts> PubMessageTuple;
-
-
-        class MqttBrokerOrderTest : public MqttBroker {
-           public:
-            KARABO_CLASSINFO(MqttBrokerOrderTest, "MqttBrokerOrderTest", "1.0")
-
-            MqttBrokerOrderTest(const karabo::util::Hash& input)
-                : MqttBroker(input), m_firstMsgSent(), m_maxStackSize(4), m_stack() {}
-
-            virtual ~MqttBrokerOrderTest() {}
-
-           protected:
-            void publish(const std::string& topic, const karabo::util::Hash::Pointer& msg, PubOpts options) override;
-
-           private:
-            void report(const boost::system::error_code& ec, const std::string& t, PubOpts o);
-
-           private:
-            std::unordered_set<std::string> m_firstMsgSent;
-            std::uint32_t m_maxStackSize;
-            std::stack<PubMessageTuple> m_stack;
-        };
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(Broker, MqttBroker, MqttBrokerOrderTest);
-
-        void MqttBrokerOrderTest::report(const boost::system::error_code& ec, const std::string& t, PubOpts o) {
-            std::ostringstream oss;
-            oss << "Failed to publish to \"" << t << "\", pubopts=" << o << " : code #" << ec.value() << " -- "
-                << ec.message();
-            throw KARABO_NETWORK_EXCEPTION(oss.str());
-        }
-
-        void MqttBrokerOrderTest::publish(const std::string& topic, const karabo::util::Hash::Pointer& msg,
-                                          PubOpts option) {
-            using namespace karabo::util;
-            boost::system::error_code ec = KARABO_ERROR_CODE_SUCCESS;
-            bool stop = false;
-            // Ordering code trusts the first message being in order...
-            if (m_firstMsgSent.find(topic) == m_firstMsgSent.end()) {
-                m_firstMsgSent.insert(topic);
-                ec = m_client->publish(topic, msg, option);
-                if (ec) report(ec, topic, option);
-                return;
-            }
-            if (!msg->has("body.stop")) {
-                // Push message to the stack first ...
-                m_stack.push(std::make_tuple(topic, msg, option));
-                if (m_stack.size() < m_maxStackSize) return; // just accumulate
-            } else {
-                stop = true;
-            }
-
-            // publish accumulated messages in reverse order ...
-
-            while (!m_stack.empty()) {
-                std::string t;
-                Hash::Pointer m;
-                PubOpts o;
-
-                std::tie(t, m, o) = m_stack.top();
-                ec = m_client->publish(t, m, o);
-                if (ec) report(ec, t, o);
-
-                // publish same message again to test handling of duplicates
-                karabo::util::Hash::Pointer mcopy = boost::make_shared<karabo::util::Hash>();
-                *mcopy = *m;
-                ec = m_client->publish(t, mcopy, o);
-                if (ec) report(ec, t, o);
-
-                m_stack.pop();
-            }
-
-            if (stop) {
-                ec = m_client->publish(topic, msg, option);
-                if (ec) report(ec, topic, option);
-            }
-        }
-    } // namespace net
-} // namespace karabo
-
 
 using namespace karabo::util;
 using namespace karabo::net;
 using boost::system::error_code;
 
-
 CPPUNIT_TEST_SUITE_REGISTRATION(Broker_Test);
-
 
 Broker_Test::Broker_Test()
     : m_domain(Broker::brokerDomainFromEnv()),
       m_thread(),
       m_config(),
       m_brokersUnderTest(getBrokersFromEnv()),
-      m_invalidBrokers(
-            {{"jms", INVALID_JMS}, {"mqtt", INVALID_MQTT}, {"amqp", INVALID_AMQP}, {"redis", INVALID_REDIS}}) {}
-
+      m_invalidBrokers({{"jms", INVALID_JMS}, {"amqp", INVALID_AMQP}}) {}
 
 Broker_Test::~Broker_Test() {}
-
 
 void Broker_Test::setUp() {
     auto prom = std::promise<void>();
@@ -316,8 +224,6 @@ void Broker_Test::_testPublishSubscribeAsync() {
           },
           [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
-    // NOTE:  MQTT: make sure that subscribing to signals is done AFTER startReading
-    //        JMS:  doesn't matter
     {
         auto p = std::make_shared<std::promise<boost::system::error_code>>();
         auto f = p->get_future();
@@ -577,7 +483,7 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     // Prepare and send global message
     auto hdr = boost::make_shared<Hash>("signalInstanceId", sender->getInstanceId(), "signalFunction", "__call__",
                                         "slotInstanceIds", "|*|", "slotFunctions",
-                                        "|*:aSlot|"); // MQTT global message needs to know the slot
+                                        "|*:aSlot|"); //
     auto bodyGlobal = boost::make_shared<Hash>("msgToAll", "A global message");
     sender->write(m_domain, hdr, bodyGlobal, 4, 0);
 
@@ -604,111 +510,6 @@ void Broker_Test::_testReadingGlobalCalls(const std::vector<std::string>& broker
     CPPUNIT_ASSERT_EQUAL(std::future_status::timeout, status);
 
     std::clog << "OK." << std::endl;
-}
-
-
-void Broker_Test::testReverseOrderedPublishSubscribe() {
-    if (!m_brokersUnderTest.has("mqtt")) {
-        // This test is specific for MQTT brokers. Ignoring
-        return;
-    }
-    const std::vector<std::string>& urls = m_brokersUnderTest.get<std::vector<std::string>>("mqtt");
-    // NOTE: use "deadline" setting for stack size >= 4: Alice has to wait for message with order #1!!!
-    Hash input("brokers", urls, "domain", m_domain, "instanceId", "alice", "deadline", 300);
-
-    auto alice = Configurator<Broker>::create("mqtt", input);
-    CPPUNIT_ASSERT_NO_THROW(alice->connect());
-    CPPUNIT_ASSERT(alice->isConnected());
-    CPPUNIT_ASSERT_EQUAL(std::string("mqtt"), alice->getBrokerType());
-    CPPUNIT_ASSERT_EQUAL(urls[0], alice->getBrokerUrl());
-    CPPUNIT_ASSERT_EQUAL(std::string("alice"), alice->getInstanceId());
-
-    constexpr unsigned int maxLoop = 20;
-    auto prom = std::make_shared<std::promise<bool>>();
-    auto fut = prom->get_future();
-
-    std::vector<unsigned int> monotonic;
-
-    auto parseMessage = [maxLoop, prom, &monotonic](Hash::Pointer h, Hash::Pointer d) {
-        if (d->has("stop")) {
-            prom->set_value(true);
-            return;
-        }
-        try {
-            CPPUNIT_ASSERT_EQUAL(std::string("bob"), h->get<std::string>("signalInstanceId"));
-            CPPUNIT_ASSERT_EQUAL(std::string("signalFromBob"), h->get<std::string>("signalFunction"));
-            CPPUNIT_ASSERT_EQUAL(std::string("|alice|"), h->get<std::string>("slotInstanceIds"));
-            CPPUNIT_ASSERT_EQUAL(std::string("|alice:aliceSlot|"), h->get<std::string>("slotFunctions"));
-            CPPUNIT_ASSERT(d->has("a"));
-            CPPUNIT_ASSERT_EQUAL(std::string("free text"), d->get<std::string>("a"));
-            CPPUNIT_ASSERT(d->has("b"));
-            CPPUNIT_ASSERT_EQUAL(3.1415F, d->get<float>("b"));
-            CPPUNIT_ASSERT(d->has("c"));
-            unsigned int n = d->get<unsigned int>("c");
-            monotonic.push_back(n);
-            // Uncomment next line to see the reading order ...
-            // std::clog << "*** Alice: n -> " << n << std::endl;
-        } catch (const std::exception& e) {
-            std::clog << "Exception in 'parseMessage' lambda: " << e.what() << std::endl;
-            prom->set_value(false);
-        }
-    };
-
-    auto errorMessage = [prom](consumer::Error err, const std::string& desc) {
-        std::clog << "Error handling: " << int(err) << " -- " << desc << std::endl;
-        prom->set_value(false);
-    };
-    // Register handlers for message processing ...
-    alice->startReading(parseMessage, errorMessage);
-
-    // subscribe to Bob's signal
-    boost::system::error_code ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
-    CPPUNIT_ASSERT(!ec);
-
-    input.set("instanceId", "bob");
-    auto t = std::thread([this, input, maxLoop, alice]() {
-        using namespace std::chrono_literals;
-
-        // 'Bob' is instance of class MqttBrokerorderTest with modified 'publish' method..
-        // The 'publish' method writes some portion of messages in reverse order ...
-        auto bob = Configurator<Broker>::create("MqttBrokerOrderTest", input);
-        CPPUNIT_ASSERT_NO_THROW(bob->connect());
-        CPPUNIT_ASSERT(bob->isConnected());
-        CPPUNIT_ASSERT_EQUAL(std::string("MqttBrokerOrderTest"), bob->getBrokerType());
-        CPPUNIT_ASSERT_EQUAL(std::string("bob"), bob->getInstanceId());
-        CPPUNIT_ASSERT_EQUAL(alice->getDomain(), bob->getDomain());
-
-        Hash::Pointer header(new Hash("signalInstanceId", "bob", "signalFunction", "signalFromBob"));
-        header->set("slotInstanceIds", "|alice|");
-        header->set("slotFunctions", "|alice:aliceSlot|");
-        Hash::Pointer data(new Hash("a", std::string("free text"), "b", 3.1415F));
-
-        for (unsigned int i = 1; i <= maxLoop; ++i) {
-            // while writing the "c" parameter is incremented monotonically.
-            data->set("c", i);
-            // 4 converted to QoS = PubQos::AtLeastOnce, so ordering is possible
-            CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, data, 4, 0));
-        }
-
-        Hash::Pointer stop(new Hash("stop", Hash()));
-        CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, stop, 4, 0));
-        CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-    });
-
-    // wait for reader to reach maxLoop
-    bool result = fut.get();
-    t.join(); // join otherwise terminate() is called
-    CPPUNIT_ASSERT(result);
-
-    ec = alice->unsubscribeFromRemoteSignal("bob", "signalFromBob");
-    CPPUNIT_ASSERT(!ec);
-    alice->stopReading();
-    CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
-
-    CPPUNIT_ASSERT_EQUAL(std::size_t(maxLoop), monotonic.size());
-    for (unsigned int i = 0; i < monotonic.size(); ++i) {
-        CPPUNIT_ASSERT_EQUAL(i + 1, monotonic[i]);
-    }
 }
 
 
@@ -785,7 +586,6 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
         }
 
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-        if (classId == "mqtt") CPPUNIT_ASSERT(!bob->isConnected());
         bob.reset();
 
         // Bob restarts ... Alice continues ...
@@ -804,7 +604,6 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
         Hash::Pointer stop(new Hash("stop", Hash()));
         CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, header, stop, 4, 0));
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-        if (classId == "mqtt") CPPUNIT_ASSERT(!bob->isConnected());
     });
 
     bool result = fut.get(); // wait until bottles are filled
@@ -816,7 +615,6 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
     CPPUNIT_ASSERT(!ec);
 
     CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
-    if (classId == "mqtt") CPPUNIT_ASSERT(!alice->isConnected());
 
     CPPUNIT_ASSERT_EQUAL(16ul, bottle1.size());
     for (int i = 1; i <= int(bottle1.size()); ++i) CPPUNIT_ASSERT_EQUAL(i, bottle1[i - 1]);
@@ -902,7 +700,6 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     alice->stopReading();
 
     CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
-    if (classId == "mqtt" || classId == "redis") CPPUNIT_ASSERT(!alice->isConnected());
 
     bottle.clear();
     alice.reset();
@@ -946,10 +743,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     alice->stopReading();
 
     CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
-    if (classId == "mqtt" || classId == "redis") CPPUNIT_ASSERT(!alice->isConnected());
 
     CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
-    if (classId == "mqtt" || classId == "redis") CPPUNIT_ASSERT(!bob->isConnected());
 
     CPPUNIT_ASSERT_EQUAL(maxLoop2, int(bottle.size()));
     for (int i = 1; i <= int(bottle.size()); ++i) CPPUNIT_ASSERT_EQUAL(-i, bottle[i - 1]);
