@@ -35,8 +35,7 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy,
     DeviceClientBase, Hash, HashList, KaraboError, Overwrite, RegexString,
     Slot, State, String, Timestamp, UInt32, VectorHash, VectorString,
-    background, dictToHash, extract_modified_schema_attributes,
-    sanitize_init_configuration, slot)
+    background, dictToHash, sanitize_init_configuration, slot)
 
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')
@@ -541,8 +540,6 @@ class ConfigurationManager(DeviceClientBase):
                           f"{name} found!")
                 raise KaraboError(reason)
         config = hashFromBase64Bin(item["config"])
-        # Runtime schema for attributes
-        runtime_schema = schemaFromBase64Bin(item["schema"])
         # If the classId was provided we can validate!
         if classId is not None and classId != config["classId"]:
             raise KaraboError(f"The configuration for {deviceId} was "
@@ -599,16 +596,6 @@ class ConfigurationManager(DeviceClientBase):
         success, msg = await self.call(serverId, "slotStartDevice", h)
         if not success:
             raise KaraboError(msg)
-        else:
-            attrs = extract_modified_schema_attributes(
-                runtime_schema, class_schema=schema)
-            if attrs is not None:
-                try:
-                    await wait_for(self._call_once_alive(
-                        deviceId, "slotUpdateSchemaAttributes", attrs),
-                        timeout=INSTANCE_NEW_TIMEOUT)
-                except TimeoutError:
-                    raise
 
         return Hash("success", True)
 
