@@ -28,8 +28,6 @@
 
 #include "HttpsRequestRunner.hh"
 
-#include <boost/certify/extensions.hpp>
-#include <boost/certify/https_verification.hpp>
 #include <iostream>
 #include <memory>
 
