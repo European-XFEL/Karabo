@@ -41,7 +41,7 @@ namespace karabo {
         using HttpHeader = boost::beast::http::field;
         using HttpHeaders = boost::beast::http::fields;
         using HttpResponseHandler =
-              std::function<void(const boost::beast::http::response<boost::beast::http::string_body>)>;
+              std::function<void(const boost::beast::http::response<boost::beast::http::string_body>&)>;
         using postRequest = boost::beast::http::request<boost::beast::http::string_body>;
         using response = boost::beast::http::response<boost::beast::http::string_body>;
         using resolver = boost::asio::ip::tcp::resolver;
