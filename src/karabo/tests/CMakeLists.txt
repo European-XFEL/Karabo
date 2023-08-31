@@ -109,6 +109,7 @@ set(logTestRunner_FILES
 set(netTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/net/Broker_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/EventLoop_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/net/HttpClient_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/InfluxDbClient_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/JmsConnection_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/net/MQTcpNetworking.cc
