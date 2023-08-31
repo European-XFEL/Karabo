@@ -85,7 +85,7 @@ namespace karabo {
              * Check if connection is lost and try to re-establish connection to InfluxDB server
              * @param  hook function that will be called when connection is established
              */
-            void connectDbIfDisconnected(const InfluxConnectedHandler& hook = InfluxConnectedHandler());
+            void startDbConnectIfDisconnected(const InfluxConnectedHandler& hook = InfluxConnectedHandler());
 
             /**
              * Returns true if connection is established to InfluxDB server
@@ -156,11 +156,11 @@ namespace karabo {
              * Returns true if connection is established in "millis" time range, otherwise timeout
              * condition comes up and returns false.
              * @param millis time in milliseconds to wait for connection to be established
-             * @return true if connection establshed, or false in case of timeout
+             * @return true if connection established, or false in case of timeout
              */
             bool connectWait(std::size_t millis);
 
-            void disconnect();
+            void disconnect() noexcept;
 
            private:
             /**
