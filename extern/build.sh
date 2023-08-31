@@ -485,7 +485,7 @@ install_from_deps() {
         safeRunCommandQuiet "conan profile new default --detect --force"
 
         # boost package opts
-        local package_opts="./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/with-$CONAN_RECIPE_CHANNEL-and-certify"
+        local package_opts="./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
