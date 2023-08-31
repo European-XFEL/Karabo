@@ -31,8 +31,7 @@ from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, apply_configuration,
-    attr_fast_deepcopy, get_binding_value, validate_table_value,
-    validate_value)
+    get_binding_value, validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.events import (
@@ -463,13 +462,7 @@ class ConfigurationPanel(BasePanelWidget):
         # Load the configuration directly into the binding
         if len(valid):
             apply_configuration(valid, proxy.binding)
-            # Apply attributes in a second step
-            for path, _, attrs in Hash.flat_iterall(valid):
-                binding = proxy.get_property_binding(path)
-                if binding is not None:
-                    # only update editable attribute values
-                    binding.update_attributes(attr_fast_deepcopy(attrs, {}))
-            # Notify again. XXX: Schema update too?
+            # Notify again
             proxy.binding.config_update = True
 
         # Show a dialog for invalid keys:
