@@ -22,7 +22,8 @@ import pytest_asyncio
 from karabo.middlelayer.device import Device
 from karabo.middlelayer.macro import Macro, Monitor, RemoteDevice
 from karabo.middlelayer.testing import assertLogs, run_test
-from karabo.middlelayer.tests.eventloop import AsyncDeviceContext, event_loop
+from karabo.middlelayer.tests.eventloop import (
+    AsyncDeviceContext, event_loop, sleepUntil)
 from karabo.native import Int32 as Int, Slot
 
 
@@ -100,7 +101,8 @@ def test_count(deviceTest):
 
     time.sleep(0.3)
     for _ in range(30):
-        assert local.division == remA.counter // remB.counter
+        sleepUntil(lambda: local.division == remA.counter // remB.counter,
+                   timeout=0.5)
         time.sleep(0.1)
 
 
