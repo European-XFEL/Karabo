@@ -25,7 +25,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.const import DEFAULT_DECIMALS, DEFAULT_FORMAT
-from karabo.native import Hash, Timestamp, is_equal, simple_deepcopy
+from karabo.native import Hash, Timestamp, simple_deepcopy
 
 from . import binding_types as types
 
@@ -213,22 +213,10 @@ def get_binding_array_value(binding, default=None):
     return default, Timestamp()
 
 
-def attr_fast_deepcopy(d, ref=None):
+def attr_fast_deepcopy(d):
     """copy.deepcopy is criminally slow. We can bypass its fanciness as long
-    as we only copy 'simple' datastructures.
-
-    Pass a not None attributes dict to `ref` to get only changed attributes
-    """
-    out = {}
-
-    for k, v in d.items():
-        if ref is not None:
-            if (k not in const.KARABO_EDITABLE_ATTRIBUTES or
-                    is_equal(v, ref.get(k))):
-                continue
-        out[k] = simple_deepcopy(v)
-
-    return out
+    as we only copy 'simple' datastructures."""
+    return {k: simple_deepcopy(v) for k, v in d.items()}
 
 
 def realign_hash(hsh, reference):
