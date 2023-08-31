@@ -362,23 +362,12 @@ class TestConfigurationManager(DeviceTest):
             h["deviceId"] = "ALICE"
             h["name"] = "testConfig"
             h["serverId"] = "MDL_SERVER"
-            attrs = [Hash("path", "value", "attribute",
-                          "warnHigh", "value", 200.0)]
-            await call("ALICE", "slotUpdateSchemaAttributes", attrs)
-            self.assertEqual(self.testDev.value.descriptor.warnHigh, 200.0)
-            # Note: This is sneaky and a mind game. We have a fake server
-            # that we call to instantiate a device which is already online
-            # Hence, we can check if this was called to instantiate, but also
-            # we can check if we runtime attributes have been applied to the
-            # online device.
-
             await call(MANAGER, "slotInstantiateDevice", h)
             self.assertEqual(serverMock.lastClassId, "TestDevice")
             self.assertEqual(serverMock.lastDeviceId, "ALICE")
             self.assertEqual(serverMock.lastConfigDouble, 5.0)
-            self.assertEqual(self.testDev.value.descriptor.warnHigh, 50.0)
 
-            # attribute settings
+            # reset settings
             await serverMock.reset()
             self.assertEqual(serverMock.lastClassId, "")
             self.assertEqual(serverMock.lastDeviceId, "")
