@@ -28,6 +28,8 @@
 
 #include "HttpsRequestRunner.hh"
 
+#include <boost/certify/extensions.hpp>
+#include <boost/certify/https_verification.hpp>
 #include <iostream>
 #include <memory>
 
@@ -83,7 +85,6 @@ namespace karabo {
                 fail(ec, "resolve");
                 return;
             }
-
             // Set a timeout on the operation
             boost::beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(NET_OP_TIMEOUT_SECS));
 
@@ -97,7 +98,6 @@ namespace karabo {
                 fail(ec, "connect");
                 return;
             }
-
             // Perform the SSL handshake
             m_stream.async_handshake(
                   boost::asio::ssl::stream_base::client,
@@ -152,10 +152,12 @@ namespace karabo {
         }
 
         void HttpsRequestRunner::on_shutdown(errorCode ec) {
-            if (ec && ec != boost::asio::error::eof) {
+            if (ec && ec != boost::asio::error::eof && ec != boost::asio::ssl::error::stream_truncated) {
                 // Explanation on why a boost asio ssl async_shutdown always finishes with
                 // eof error:
                 // http://stackoverflow.com/questions/25587403/boost-asio-ssl-async-shutdown-always-finishes-with-an-error
+                // Explanation on why stream_truncated can sometimes occur - comment on
+                // https://github.com/boostorg/beast/issues/38.
                 return fail(ec, "shutdown");
             }
             // If this point is reached, the connection is closed gracefully.
