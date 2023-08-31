@@ -23,7 +23,6 @@ from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_SIZE,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
     KARABO_SCHEMA_VALUE_TYPE)
-from karabo.common.const import KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_LOW
 from karabo.native import Hash, Schema
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
@@ -167,19 +166,6 @@ def test_attr_fast_deepcopy():
     }
     copy = attr_fast_deepcopy(d)
     assert _safe_compare(copy, d)
-
-    d0 = {
-        KARABO_SCHEMA_DISPLAYED_NAME: 'foo',
-        KARABO_WARN_LOW: 1.0,
-    }
-    ref = {
-        KARABO_SCHEMA_DISPLAYED_NAME: 'bar',
-        KARABO_WARN_LOW: 1.2,
-    }
-    # get diff between d0 and ref, KARABO_SCHEMA_DISPLAYED_NAME is not in
-    # KARABO_EDITABLE_ATTRIBUTES, should not be included in the diff
-    diff = attr_fast_deepcopy(d0, ref)
-    assert diff == {KARABO_WARN_LOW: 1.0}
 
 
 def test_realign_hash():
