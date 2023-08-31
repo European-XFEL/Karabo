@@ -162,7 +162,6 @@ backports.ssl-match  3.5.0.1           PSFL                                     
 boost                1.82.0            Boost License                                               yes                   no
 bzip2                1.0.8             BSD                                                         yes                   yes
 certifi              2018.4.16         MPL2.0                                                      no                    no
-certify              cci.20201114      Boost License                                               yes                   no
 chardet              3.0.4             LGPL                                                        yes                   no
 colorama             0.4.4             BSD                                                         yes                   yes
 conan                1.57.0            MIT                                                         yes                   no
