@@ -13,21 +13,15 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import os
+import os.path as op
 import subprocess
-import unittest
+import sys
 
-import karabo.middlelayer_devices
-
-
-def get_python_files():
-    module = karabo.middlelayer_devices.__file__
-    dirlist = os.listdir(os.path.dirname(module))
-    return dirlist
+import karabo.middlelayer_devices as devices
 
 
-@unittest.skip(reason="New flake8 version")
 def test_code_quality_flake8():
-    file_list = get_python_files()
-    command = ['flake8', *[os.path.abspath(py_file) for py_file in file_list]]
+    # Just run flake8 as if from the commandline
+    command = [sys.executable, '-m', 'flake8',
+               op.dirname(op.abspath(devices.__file__))]
     subprocess.check_call(command)
