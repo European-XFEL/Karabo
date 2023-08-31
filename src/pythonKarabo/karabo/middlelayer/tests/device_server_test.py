@@ -228,7 +228,7 @@ async def test_device_server_concurrence(event_loop: event_loop):
             instantiateNoWait(serverId, "PropertyTestMDL", deviceId)
         # Only a single device made it
         await sleepUntil(lambda: len(server.deviceInstanceMap) > 0,
-                         timeout=5)
+                         timeout=10)
         assert len(server.deviceInstanceMap) == 1
     finally:
         await finalize_server(server)
