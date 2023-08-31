@@ -165,7 +165,7 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::connectDbIfDisconnected(const InfluxConnectedHandler& hook) {
+        void InfluxDbClient::startDbConnectIfDisconnected(const InfluxConnectedHandler& hook) {
             boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
             if (!m_dbChannel || !m_dbChannel->isOpen()) {
                 if (m_connectionRequested) return;
@@ -177,9 +177,13 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::disconnect() {
-            m_dbChannel.reset();
-            m_dbConnection.reset();
+        void InfluxDbClient::disconnect() noexcept {
+            if (m_dbChannel) {
+                m_dbChannel.reset();
+            }
+            if (m_dbConnection) {
+                m_dbConnection.reset();
+            }
         }
 
 
@@ -713,7 +717,7 @@ namespace karabo {
             if (isConnected()) return true;
             auto prom = boost::make_shared<std::promise<bool>>();
             std::future<bool> fut = prom->get_future();
-            connectDbIfDisconnected([prom](bool connected) { prom->set_value(connected); });
+            startDbConnectIfDisconnected([prom](bool connected) { prom->set_value(connected); });
             auto status = fut.wait_for(std::chrono::milliseconds(millis));
             if (status != std::future_status::ready) {
                 return false;
