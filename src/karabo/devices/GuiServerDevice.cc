@@ -695,7 +695,6 @@ namespace karabo {
                     } else {
                         registerConnect(clientVersion, channel);
                     }
-
                     sendSystemTopology(weakChannel);
                 }
 
@@ -1731,9 +1730,9 @@ namespace karabo {
 
         void GuiServerDevice::sendSystemTopology(WeakChannelPointer channel) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology";
-                KARABO_LOG_FRAMEWORK_DEBUG << remote().getSystemTopology();
-                Hash h("type", "systemTopology", "systemTopology", remote().getSystemTopology());
+                Hash topology(remote().getSystemTopology());
+                KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology:\n" << topology;
+                Hash h("type", "systemTopology", "systemTopology", std::move(topology));
                 safeClientWrite(channel, h);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendSystemTopology(): " << e.what();
@@ -1975,10 +1974,12 @@ namespace karabo {
                             }
                         }
                         // Any device that no-one is still monitoring has to get unregistered
-                        KARABO_LOG_FRAMEWORK_INFO << "Unregister from '" << toString(devIdsToUnregister)
-                                                  << "' since only client monitoring disconnected";
-                        for (const std::string& devId : devIdsToUnregister) {
-                            remote().unregisterDeviceFromMonitoring(devId);
+                        if (!devIdsToUnregister.empty()) {
+                            KARABO_LOG_FRAMEWORK_INFO << "Unregister from '" << toString(devIdsToUnregister)
+                                                      << "' since only client monitoring disconnected";
+                            for (const std::string& devId : devIdsToUnregister) {
+                                remote().unregisterDeviceFromMonitoring(devId);
+                            }
                         }
                     } else {
                         KARABO_LOG_FRAMEWORK_WARN << "Trying to disconnect non-existing client channel at "
