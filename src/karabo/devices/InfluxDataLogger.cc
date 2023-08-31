@@ -135,7 +135,7 @@ namespace karabo {
 
 
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
-            m_dbClientWrite->connectDbIfDisconnected();
+            m_dbClientWrite->startDbConnectIfDisconnected();
 
             if (user.empty()) {
                 m_user = ".";
@@ -882,7 +882,7 @@ namespace karabo {
 
 
         void InfluxDataLogger::initializeLoggerSpecific() {
-            m_clientWrite->connectDbIfDisconnected(bind_weak(&InfluxDataLogger::checkDb, this, _1));
+            m_clientWrite->startDbConnectIfDisconnected(bind_weak(&InfluxDataLogger::checkDb, this, _1));
         }
 
 

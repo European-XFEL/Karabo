@@ -38,7 +38,8 @@ namespace karabo {
         struct PropertyHistoryContext {
             PropertyHistoryContext(const std::string &deviceId, const std::string &property,
                                    const karabo::util::Epochstamp &from, const karabo::util::Epochstamp &to,
-                                   int maxDataPoints, const karabo::xms::SignalSlotable::AsyncReply &aReply);
+                                   int maxDataPoints, const karabo::xms::SignalSlotable::AsyncReply &aReply,
+                                   const karabo::net::InfluxDbClient::Pointer &influxClient);
 
             std::string deviceId;
             std::string property;
@@ -46,6 +47,7 @@ namespace karabo {
             karabo::util::Epochstamp to;
             unsigned int maxDataPoints;
             karabo::xms::SignalSlotable::AsyncReply aReply;
+            karabo::net::InfluxDbClient::Pointer influxClient;
 
             // return sampling interval in microsecond
             double getInterval() const;
@@ -65,7 +67,8 @@ namespace karabo {
         // Context of an ongoing slotGetConfigurationFromPast process.
         struct ConfigFromPastContext {
             ConfigFromPastContext(const std::string &deviceId, const karabo::util::Epochstamp &atTime,
-                                  const karabo::xms::SignalSlotable::AsyncReply &aReply);
+                                  const karabo::xms::SignalSlotable::AsyncReply &aReply,
+                                  const karabo::net::InfluxDbClient::Pointer &influxClient);
 
             std::string deviceId;
             karabo::util::Epochstamp atTime;
@@ -84,6 +87,7 @@ namespace karabo {
             std::deque<PropFromPastInfo> propsInfo;
 
             karabo::xms::SignalSlotable::AsyncReply aReply;
+            karabo::net::InfluxDbClient::Pointer influxClient;
         };
 
 
@@ -200,8 +204,8 @@ namespace karabo {
                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
             void slotGetBadData(const std::string &fromStr, const std::string &toStr);
-            void onGetBadData(const karabo::net::HttpResponse &response,
-                              karabo::xms::SignalSlotable::AsyncReply aReply);
+            void onGetBadData(const karabo::net::HttpResponse &response, karabo::xms::SignalSlotable::AsyncReply aReply,
+                              const karabo::net::InfluxDbClient::Pointer & /* influxClient */);
 
             std::string toInfluxDurationUnit(const karabo::util::TIME_UNITS &karaboDurationUnit);
 
@@ -230,7 +234,8 @@ namespace karabo {
              * code greater or equal to 300 is considered an error and will be handled by this method.
              *
              * The error handling consists of sending the appropriate error reply to the caller of
-             * the InfluxLogReader slot affected by the error.
+             * the InfluxLogReader slot affected by the error and of optionally disconnecting the
+             * InfluxDbClient used by the slot.
              *
              * @param httpResponse the response that potentially indicates an error.
              * @param asyncReply the reply to be sent to the caller of the slot where the error
@@ -246,9 +251,23 @@ namespace karabo {
              */
             karabo::util::Epochstamp toEpoch(unsigned long long timeFromInflux) const;
 
-            karabo::net::InfluxDbClient::Pointer m_influxClientPropHist;
-            karabo::net::InfluxDbClient::Pointer m_influxClientFromPast;
+            /**
+             * Builds and returns the configuration Hash for instantianting an InfluxDbClient to
+             * be used in the execution of one of the slots supported by the reader.
+             *
+             * @param dbUrlForSlot the URL to be used in the configuration - each slot can use a
+             * different database URL.
+             *
+             * @returns the configuration Hash for the InfluxDbClient.
+             */
+            karabo::util::Hash buildInfluxClientConfig(const std::string &dbUrlForSlot) const;
+
+            std::string m_dbName;
+            std::string m_dbUser;
+            std::string m_dbPassword;
             std::string m_durationUnit;
+            std::string m_urlConfigSchema;
+            std::string m_urlPropHistory;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_hashSerializer;
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
             int m_maxHistorySize;
