@@ -112,24 +112,6 @@ class VectorBarGraphPlot(BarGraphItem):
         # BUT could possibly be numpy scalars
         return x0, y0, x1, y1
 
-    def _prepareData(self):
-
-        x0, y0, x1, y1 = self._getNormalizedCoords()
-        if x0.size == 0 or y0.size == 0:
-            self._dataBounds = (None, None), (None, None)
-            self._rectarray.resize(0)
-            return
-
-        xmn, xmx = np.nanmin(x0), np.nanmax(x1)
-        ymn, ymx = np.nanmin(y0), np.nanmax(y1)
-        self._dataBounds = (xmn, xmx), (ymn, ymx)
-        self._rectarray.resize(max(x0.size, y0.size))
-        memory = self._rectarray.ndarray()
-        memory[:, 0] = x0
-        memory[:, 1] = y0
-        memory[:, 2] = x1 - x0
-        memory[:, 3] = y1 - y0
-
     def setLogMode(self, xMode, yMode):
         """Stores the log mode. This is called by the viewbox."""
         log_mode = [xMode, yMode]
