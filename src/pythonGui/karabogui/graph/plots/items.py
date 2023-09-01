@@ -15,10 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
-from pyqtgraph import (
-    BarGraphItem, ScatterPlotItem, functions as fn, getConfigOption)
-from qtpy.QtCore import QRectF
-from qtpy.QtGui import QPainter, QPainterPath, QPicture
+from pyqtgraph import BarGraphItem, ScatterPlotItem
 
 from karabogui.graph.common.api import make_brush, safe_log10
 
@@ -32,8 +29,10 @@ class VectorBarGraphPlot(BarGraphItem):
         super().__init__(
             x=X_DEFAULT, width=width, height=Y_DEFAULT, y0=0, brush=brush)
 
-        # Add the logMode in the options
-        self.opts['logMode'] = [False, False]
+    def setOpts(self, **opts):
+        if "logMode" not in self.opts:
+            self.opts["logMode"] = [False, False]
+        super().setOpts(**opts)
 
     def getData(self):
         """Returns the corrected x and y data from the bar attributes."""
@@ -59,38 +58,13 @@ class VectorBarGraphPlot(BarGraphItem):
     # -----------------------------------------------------------------------
     # Qt methods
 
-    def boundingRect(self):
-        if self._shape is None:
-            self.drawPicture()
-        return self._shape.boundingRect()
-
-    # -----------------------------------------------------------------------
-    # pyqtgraph methods
-
-    def drawPicture(self):
-        """Reimplemented pyqtgraph method to modify values calculation"""
-        self.picture = QPicture()
-        self._shape = QPainterPath()
-        p = QPainter(self.picture)
-
-        pen = self.opts['pen']
-        pens = self.opts['pens']
-
-        if pen is None and pens is None:
-            pen = getConfigOption('foreground')
-
-        brush = self.opts['brush']
-        brushes = self.opts['brushes']
-        if brush is None and brushes is None:
-            brush = (128, 128, 128)
-
+    def _getNormalizedCoords(self):
         def asarray(x):
             if x is None or np.isscalar(x) or isinstance(x, np.ndarray):
                 return x
             return np.array(x)
 
         # !----- Start modification -----!
-
         # MOD: Utilize corrected x- and y-data for the bar geometries
         x_data, y_data = self.getData()
 
@@ -126,43 +100,40 @@ class VectorBarGraphPlot(BarGraphItem):
             height[~np.isfinite(height)] = 0
 
         # !----- End modification -----!
+        # ensure x0 < x1 and y0 < y1
+        t0, t1 = x0, x0 + width
+        x0 = np.minimum(t0, t1, dtype=np.float64)
+        x1 = np.maximum(t0, t1, dtype=np.float64)
+        t0, t1 = y0, y0 + height
+        y0 = np.minimum(t0, t1, dtype=np.float64)
+        y1 = np.maximum(t0, t1, dtype=np.float64)
 
-        p.setPen(fn.mkPen(pen))
-        p.setBrush(fn.mkBrush(brush))
-        for i in range(len(x0 if not np.isscalar(x0) else y0)):
-            if pens is not None:
-                p.setPen(fn.mkPen(pens[i]))
-            if brushes is not None:
-                p.setBrush(fn.mkBrush(brushes[i]))
+        # here, all of x0, y0, x1, y1 are numpy objects,
+        # BUT could possibly be numpy scalars
+        return x0, y0, x1, y1
 
-            if np.isscalar(x0):
-                x = x0
-            else:
-                x = x0[i]
-            if np.isscalar(y0):
-                y = y0
-            else:
-                y = y0[i]
-            if np.isscalar(width):
-                w = width
-            else:
-                w = width[i]
-            if np.isscalar(height):
-                h = height
-            else:
-                h = height[i]
+    def _prepareData(self):
 
-            rect = QRectF(x, y, w, h)
-            p.drawRect(rect)
-            self._shape.addRect(rect)
+        x0, y0, x1, y1 = self._getNormalizedCoords()
+        if x0.size == 0 or y0.size == 0:
+            self._dataBounds = (None, None), (None, None)
+            self._rectarray.resize(0)
+            return
 
-        p.end()
-        self.prepareGeometryChange()
+        xmn, xmx = np.nanmin(x0), np.nanmax(x1)
+        ymn, ymx = np.nanmin(y0), np.nanmax(y1)
+        self._dataBounds = (xmn, xmx), (ymn, ymx)
+        self._rectarray.resize(max(x0.size, y0.size))
+        memory = self._rectarray.ndarray()
+        memory[:, 0] = x0
+        memory[:, 1] = y0
+        memory[:, 2] = x1 - x0
+        memory[:, 3] = y1 - y0
 
     def setLogMode(self, xMode, yMode):
         """Stores the log mode. This is called by the viewbox."""
         log_mode = [xMode, yMode]
-        if self.opts['logMode'] == log_mode:
+        if self.opts.get('logMode', None) == log_mode:
             return
         self.setOpts(logMode=log_mode)
 
