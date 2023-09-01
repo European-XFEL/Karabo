@@ -20,7 +20,7 @@ patchelf/0.13
 pugixml/1.10
 
 # minor-any
-boost/1.82.0@karabo/with-py38-and-certify
+boost/1.82.0@karabo/py38
 cppunit/1.15.1
 libjpeg/9c
 libtiff/4.0.8

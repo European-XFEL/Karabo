@@ -2,7 +2,6 @@
 /extern/resources/*/*/
 /extern/resources/*/*.whl
 /extern/*.tar.gz
-!/extern/resources/boost/certify/
 !/extern/resources/openmqc/openmqc-5.0.1/
 /extern/resources/openmqc/openmqc-5.0.1/include
 /extern/resources/openmqc/openmqc-5.0.1/lib

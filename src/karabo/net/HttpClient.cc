@@ -25,8 +25,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/ssl.hpp>
-#include <boost/certify/extensions.hpp>
-#include <boost/certify/https_verification.hpp>
 
 #include "karabo/net/HttpRequestRunner.hh"
 #include "karabo/net/HttpsRequestRunner.hh"
@@ -79,7 +77,6 @@ namespace karabo {
                         if (verifyCerts) {
                             m_sslCtx.set_verify_mode(ssl::verify_peer | ssl::context::verify_fail_if_no_peer_cert);
                             m_sslCtx.set_default_verify_paths();
-                            boost::certify::enable_native_https_server_verification(m_sslCtx);
                         }
                         m_sslCtx.set_verify_mode(verifyCerts ? ssl::verify_peer : ssl::verify_none);
                     }
