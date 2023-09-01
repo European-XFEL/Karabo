@@ -62,7 +62,7 @@ def test_bar_graph_basics(vector_bar_graph_setup):
 
 def test_bar_graph_width(vector_bar_graph_setup, mocker):
     controller, proxy = vector_bar_graph_setup
-    action = controller.widget.actions()[10]
+    action = controller.widget.actions()[9]
     assert action.text() == "Bar Width"
 
     dsym = "karabogui.controllers.display.vector_bar_graph.QInputDialog"
