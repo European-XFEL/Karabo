@@ -141,6 +141,9 @@ def test_drawing_tools(dialog, mocker):
     assert len(canvas.items()) == 1
     assert isinstance(canvas.items()[0], QGraphicsPixmapItem)
 
+    can_draw = mocker.patch.object(dialog.canvas, "_can_draw")
+    can_draw.return_value = True
+
     pos = QPoint(100, 100)
     widget = dialog.view.viewport()
     dialog.draw_button.setChecked(True)
@@ -182,6 +185,7 @@ def test_drawing_tools(dialog, mocker):
     # Clear the active drawing tool.
     canvas.set_drawing_tool(None)
     assert canvas.drawing_tool is None
+    can_draw.return_value = False
     QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
     QTest.mouseMove(widget, QPoint(200, 200))
     QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier)
