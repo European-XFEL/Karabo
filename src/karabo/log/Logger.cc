@@ -123,6 +123,7 @@ namespace karabo {
         }
 
         void Logger::reset() {
+            CacheAppender::reset();
             krb_log4cpp::Category::getRoot().removeAllAppenders();
             // Also remove all nested appenders
             boost::shared_lock<boost::shared_mutex> lock(m_logMutex);

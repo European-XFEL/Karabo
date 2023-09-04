@@ -77,6 +77,12 @@ namespace karabo {
             return p->getCachedContent(numMessages);
         }
 
+        void CacheAppender::reset() {
+            auto p = LogCache::getInstance();
+            if (!p) return;
+            p->reset();
+        }
+
 
         Log4CppCacheApp::Log4CppCacheApp() : LayoutAppender("CacheAppender") {
             // Time format should be ISO8601, but the log4cpp version misses a `T` adding here.
@@ -141,6 +147,11 @@ namespace karabo {
                 return {m_logCache.end() - numMessages, m_logCache.end()};
             }
             return m_logCache;
+        }
+
+
+        void LogCache::reset() {
+            m_logCache.clear();
         }
 
 
