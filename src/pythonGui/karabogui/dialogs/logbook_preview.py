@@ -18,6 +18,7 @@ from functools import partial
 
 from qtpy import uic
 from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Signal, Slot
+from qtpy.QtGui import QPainter, QPixmap
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QCheckBox, QDialog, QDialogButtonBox,
     QGraphicsScene, QLineEdit, QTableWidgetItem)
@@ -60,20 +61,26 @@ class Canvas(QGraphicsScene):
         self.drawing_tool = None
 
     def mousePressEvent(self, event):
-        if self.drawing_tool is not None:
+        if self._can_draw(event):
             self.drawing_tool.mouse_down(self, event)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        if self.drawing_tool is not None:
+        if self._can_draw(event):
             self.drawing_tool.mouse_move(self, event)
+        elif self.drawing_tool is not None:
+            self.set_drawing_tool(None)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if self.drawing_tool is not None:
+        if self._can_draw(event):
             self.drawing_tool.mouse_up(self, event)
-            self.set_drawing_tool(None)
+        self.set_drawing_tool(None)
         super().mouseReleaseEvent(event)
+
+    def _can_draw(self, event):
+        return (self.drawing_tool is not None and
+                self.sceneRect().contains(event.scenePos()))
 
     def set_drawing_tool(self, tool):
         """
@@ -265,12 +272,14 @@ class LogBookPreview(QDialog):
         self.view.scale(factor, factor)
 
     def _extract_panel_image(self):
-        self._fit_in_view()
         image_byte = QByteArray()
         io_buffer = QBuffer(image_byte)
         io_buffer.open(QIODevice.WriteOnly)
         image_format = "png"
-        pixmap = self.view.grab()
+        pixmap = QPixmap(self.pixmap.size())
+        with QPainter(pixmap) as painter:
+            self.canvas.render(painter, source=self.canvas.sceneRect(),
+                               mode=Qt.KeepAspectRatio)
         pixmap.save(io_buffer, image_format)
         return {"data": create_base64image(image_format, image_byte),
                 "dataType": "image",
