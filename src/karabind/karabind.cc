@@ -20,8 +20,6 @@
 
 #include <pybind11/pybind11.h>
 
-#include "Wrapper.hh"
-
 namespace py = pybind11;
 
 // util
@@ -51,6 +49,7 @@ void exportPyUtilSchemaValidator(py::module_ &);        // PyUtilSchemaValidator
 void exportPyUtilSchemaTest(py::module_ &);             // ConfigurationTestClasses.[cc,hh]
 
 // io
+void exportPyIoFileToolsAll(py::module_ &);
 
 // xms
 void exportPyXmsImageDataElement(py::module_ &);   // PyXmsImageDataElement.cc
@@ -63,8 +62,8 @@ void exportPyXmsInputOutputChannel(py::module_ &); // PyXmsInputOutputChannel.cc
 // log
 
 // net
-void exportPyNetEventLoop(py::module_ &); // PyNetEventLoop.cc
-
+void exportPyNetEventLoop(py::module_ &);         // PyNetEventLoop.cc
+void exportPyNetConnectionChannel(py::module_ &); // PyNetConnectionChannel.cc
 
 // Build one big module, 'karabind.so', similar to how we build 'karathon' module
 
@@ -96,6 +95,7 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilSchemaTest(m);
 
     // io
+    exportPyIoFileToolsAll(m);
 
     // xms
     exportPyXmsImageDataElement(m);
@@ -109,4 +109,5 @@ PYBIND11_MODULE(karabind, m) {
 
     // net
     exportPyNetEventLoop(m);
+    exportPyNetConnectionChannel(m);
 }
