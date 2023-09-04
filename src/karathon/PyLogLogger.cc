@@ -39,6 +39,25 @@ namespace karathon {
             return bp::object(krb_log4cpp::Priority::getPriorityName(priority));
         }
     };
+
+    struct LoggerWrap {
+        static void logDebug(const std::string& message, const std::string& category) {
+            karabo::log::Logger::logDebug(category) << message;
+        }
+
+        static void logInfo(const std::string& message, const std::string& category) {
+            karabo::log::Logger::logInfo(category) << message;
+        }
+
+        static void logWarn(const std::string& message, const std::string& category) {
+            karabo::log::Logger::logWarn(category) << message;
+        }
+
+        static void logError(const std::string& message, const std::string& category) {
+            karabo::log::Logger::logError(category) << message;
+        }
+    };
+
 } // namespace karathon
 
 
@@ -61,7 +80,7 @@ void exportPyLogLogger() {
         p.def("getPriorityName", &karathon::PriorityWrap::getPriorityNamePy, (bp::arg("priority")))
               .staticmethod("getPriorityName");
 
-        p.def("getPriorityValue", (int (*)(string const &))(&krb_log4cpp::Priority::getPriorityValue),
+        p.def("getPriorityValue", (int (*)(string const&))(&krb_log4cpp::Priority::getPriorityValue),
               (bp::arg("priorityName")))
               .staticmethod("getPriorityValue");
     }
@@ -69,11 +88,11 @@ void exportPyLogLogger() {
     { // krb_log4cpp::Category
         bp::class_<krb_log4cpp::Category, boost::noncopyable> ct("Category", bp::no_init);
 
-        ct.def("getInstance", (krb_log4cpp::Category & (*)(string const &))(&krb_log4cpp::Category::getInstance),
+        ct.def("getInstance", (krb_log4cpp::Category & (*)(string const&))(&krb_log4cpp::Category::getInstance),
                bp::arg("name"), bp::return_internal_reference<>())
               .staticmethod("getInstance");
 
-        ct.def("getName", (string const &(krb_log4cpp::Category::*)() const)(&krb_log4cpp::Category::getName),
+        ct.def("getName", (string const& (krb_log4cpp::Category::*)() const)(&krb_log4cpp::Category::getName),
                bp::return_value_policy<bp::copy_const_reference>());
 
         ct.def("getAdditivity", (bool(krb_log4cpp::Category::*)() const)(&krb_log4cpp::Category::getAdditivity));
@@ -91,16 +110,16 @@ void exportPyLogLogger() {
         ct.def("setRootPriority", (void (*)(int))(&krb_log4cpp::Category::setRootPriority), bp::arg("newprio"))
               .staticmethod("setRootPriority");
 
-        ct.def("WARN", (void(krb_log4cpp::Category::*)(string const &))(&krb_log4cpp::Category::warn),
+        ct.def("WARN", (void(krb_log4cpp::Category::*)(string const&))(&krb_log4cpp::Category::warn),
                bp::arg("message"));
 
-        ct.def("DEBUG", (void(krb_log4cpp::Category::*)(string const &))(&krb_log4cpp::Category::debug),
+        ct.def("DEBUG", (void(krb_log4cpp::Category::*)(string const&))(&krb_log4cpp::Category::debug),
                bp::arg("message"));
 
-        ct.def("INFO", (void(krb_log4cpp::Category::*)(string const &))(&krb_log4cpp::Category::info),
+        ct.def("INFO", (void(krb_log4cpp::Category::*)(string const&))(&krb_log4cpp::Category::info),
                bp::arg("message"));
 
-        ct.def("ERROR", (void(krb_log4cpp::Category::*)(string const &))(&krb_log4cpp::Category::error),
+        ct.def("ERROR", (void(krb_log4cpp::Category::*)(string const&))(&krb_log4cpp::Category::error),
                bp::arg("message"));
     }
 
@@ -120,20 +139,20 @@ void exportPyLogLogger() {
               .staticmethod("getCachedContent")
               .def("reset", &Logger::reset)
               .staticmethod("reset")
-              .def("logDebug", &Logger::logDebug, (bp::arg("category") = ""))
+              .def("logDebug", &karathon::LoggerWrap::logDebug, (bp::arg("message"), bp::arg("category") = ""))
               .staticmethod("logDebug")
-              .def("logInfo", &Logger::logInfo, (bp::arg("category") = ""))
+              .def("logInfo", &karathon::LoggerWrap::logInfo, (bp::arg("message"), bp::arg("category") = ""))
               .staticmethod("logInfo")
-              .def("logWarn", &Logger::logWarn, (bp::arg("category") = ""))
+              .def("logWarn", &karathon::LoggerWrap::logWarn, (bp::arg("message"), bp::arg("category") = ""))
               .staticmethod("logWarn")
-              .def("logError", &Logger::logError, (bp::arg("category") = ""))
+              .def("logError", &karathon::LoggerWrap::logError, (bp::arg("message"), bp::arg("category") = ""))
               .staticmethod("logError")
               .def("setPriority", &Logger::setPriority, (bp::arg("priority"), bp::arg("category") = ""))
               .staticmethod("setPriority")
               .def("getPriority", &Logger::getPriority, (bp::arg("category") = ""),
                    bp::return_value_policy<bp::copy_const_reference>())
               .staticmethod("getPriority")
-              .def("getCategory", (krb_log4cpp::Category & (*)(const string &))(&Logger::getCategory),
+              .def("getCategory", (krb_log4cpp::Category & (*)(const string&))(&Logger::getCategory),
                    (bp::arg("logCategorie") = ""), bp::return_internal_reference<>())
               .staticmethod("getCategory") KARABO_PYTHON_FACTORY_CONFIGURATOR(Logger);
         bp::register_ptr_to_python<boost::shared_ptr<Logger> >();
