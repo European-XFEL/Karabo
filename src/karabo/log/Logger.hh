@@ -83,7 +83,8 @@ namespace karabo {
             static void useFile(const std::string& category = "", bool inheritAppenders = true);
 
             /**
-             * Resets all appenders from all categories. Nothing will be logged after a call to this function.
+             * Resets all appenders from all categories and clear the cache.
+             * Nothing will be logged after a call to this function.
              *
              * Use this function to re-configure logger behavior at runtime.
              */
