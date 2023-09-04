@@ -54,6 +54,9 @@ namespace karabo {
             void setSize(unsigned int maxMessages);
 
             std::vector<karabo::util::Hash> getCachedContent(unsigned int numMessages);
+
+            void reset();
+
             void append(const karabo::util::Hash& entry);
 
            private:
@@ -110,6 +113,8 @@ namespace karabo {
             // returns a vector of hashes containing the cached content
             // or an empty vector if the cache does not exist.
             static std::vector<karabo::util::Hash> getCachedContent(unsigned int numMessages);
+
+            static void reset();
 
            private:
             Log4CppCacheApp* m_appender;
