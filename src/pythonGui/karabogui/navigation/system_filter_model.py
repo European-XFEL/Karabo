@@ -77,7 +77,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
 
         return super().filterAcceptsRow(source_row, source_parent)
 
-    def setFilterStatus(self, text):
+    def setFilterSelection(self, text):
         """Set a filter status for the filtering"""
         if text == "No Status Filtering":
             self._filter_status = None
