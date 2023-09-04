@@ -15,17 +15,13 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 from copy import deepcopy
 
-import numpy as np
-
-from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_HIGH
 from karabo.middlelayer.configuration import (
-    attr_fast_deepcopy, config_changes, extract_modified_schema_attributes,
-    is_equal, sanitize_init_configuration, sanitize_write_configuration,
+    config_changes, sanitize_init_configuration, sanitize_write_configuration,
     validate_init_configuration)
 from karabo.middlelayer.macro import MacroSlot
 from karabo.native import (
-    AccessMode, Assignment, Configurable, Double, Hash, Int32, MetricPrefix,
-    Node, Overwrite, Schema, Slot, Unit)
+    AccessMode, Assignment, Configurable, Double, Hash, Int32, Node, Schema,
+    Slot)
 
 
 class Nested(Configurable):
@@ -205,90 +201,3 @@ def test_config_changes():
         Hash("double", [2.0, 4.7],
              "notA", [None, True],
              "notB", [True, None]))
-
-
-def test_attr_fast_deepcopy():
-    def _safe_compare(a, b):
-        # Use repr() to get around the lack of Schema comparison
-        return len(a) == len(b) and all(repr(a[k]) == repr(b[k]) for k in a)
-
-    d = {
-        'a': [1, 2, 3],
-        'b': {'sub': 42},
-        'c': 'Hi there!',
-        'd': np.zeros((10,)),
-        'e': (1, 2, 3),
-        'f': Hash('simple', 32),
-        'g': Schema()
-    }
-    copy = attr_fast_deepcopy(d)
-    assert _safe_compare(copy, d)
-
-    d0 = {
-        KARABO_SCHEMA_DISPLAYED_NAME: 'foo',
-        KARABO_WARN_HIGH: 0,
-    }
-    ref = {
-        KARABO_SCHEMA_DISPLAYED_NAME: 'bar',
-        KARABO_WARN_HIGH: 1,
-    }
-    # get diff between d0 and ref, KARABO_SCHEMA_DISPLAYED_NAME is not in
-    # KARABO_EDITABLE_ATTRIBUTES, should not be included in the diff
-    diff = attr_fast_deepcopy(d0, ref)
-    assert diff == {KARABO_WARN_HIGH: 0}
-
-
-def test_attribute_schema_extract():
-
-    class Offline(Configurable):
-        double = Double(
-            defaultValue=2.0,
-            minInc=-10.0, maxInc=10.0, absoluteError=0.5,
-            accessMode=AccessMode.RECONFIGURABLE)
-
-        readOnlyDouble = Double(
-            defaultValue=2.0,
-            warnLow=-10.0, warnHigh=10.0,
-            accessMode=AccessMode.READONLY)
-
-        readOnlyInteger = Int32(
-            defaultValue=20,
-            accessMode=AccessMode.READONLY)
-
-        integer = Int32(
-            defaultValue=20,
-            unitSymbol=Unit.METER,
-            metricPrefixSymbol=MetricPrefix.MICRO,
-            accessMode=AccessMode.RECONFIGURABLE)
-
-    class Online(Offline):
-        integer = Overwrite(
-            unitSymbol=Unit.METER,
-            metricPrefixSymbol=MetricPrefix.MILLI)
-
-        onlyOnline = Int32(
-            defaultValue=20,
-            unitSymbol=Unit.METER,
-            metricPrefixSymbol=MetricPrefix.MICRO,
-            accessMode=AccessMode.RECONFIGURABLE)
-
-        readOnlyDouble = Overwrite(
-            warnLow=-20.0, warnHigh=15.0)
-
-    offline_schema = Offline.getClassSchema()
-    online_schema = Online.getClassSchema()
-
-    attrs = extract_modified_schema_attributes(
-        online_schema, offline_schema)
-    assert attrs is not None
-    assert len(attrs) == 2
-    assert attrs[0] == Hash('path', 'readOnlyDouble',
-                            'attribute', "warnHigh",
-                            'value', 15)
-    assert attrs[1] == Hash('path', 'readOnlyDouble',
-                            'attribute', "warnLow",
-                            'value', -20)
-
-
-def test_array_equal():
-    assert is_equal(np.array([1, 2, 3]), np.array([1, 2, 3]))
