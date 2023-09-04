@@ -152,6 +152,8 @@ namespace karabind {
             }
         }
 
+        bool fromPyObjectToString(const py::object& o, std::string& s);
+
         std::vector<std::string> fromPySequenceToVectorString(const py::object& o);
 
         karabo::util::Types::ReferenceType pyObjectToCppType(const py::object& otype);
@@ -287,6 +289,29 @@ namespace karabind {
      */
     std::tuple<std::string, std::string> getPythonExceptionStrings(py::error_already_set& e);
 
+    /**
+     * A proxy around a Python handler to be called with an arbitrary number of arguments
+     *
+     * @param handler A callable Python object
+     * @param which A C-string used to better identify the point of failure in case the Python
+     *              code throws an exception
+     * @param args An arbitrary number of arguments passed to the handler - each has to be a valid
+     *             argument to the constructor of the Python object.
+     */
+    template <typename... Args>
+    void proxyHandler(const py::object& handler, const char* which, const Args&... args) {
+        py::gil_scoped_acquire gil;
+        try {
+            if (handler) {
+                // Just call handler with individually unpacked arguments:
+                handler(py::cast(args)...);
+            }
+        } catch (py::error_already_set& e) {
+            detail::treatError_already_set(e, handler, which);
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
 } // namespace karabind
 
 #endif /* KARABIND_WRAPPER_HH */
