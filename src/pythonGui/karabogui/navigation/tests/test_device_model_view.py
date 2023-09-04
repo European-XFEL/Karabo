@@ -269,7 +269,7 @@ class TestCase(GuiTestCase):
         assert empty_node is None
 
         # Completely empty, no interface
-        self.model.setInterface("Motor")
+        self.model.setFilterSelection("Motor")
         self.model.setFilterFixedString("")
         domain_index = self.model.index(0, 0)
         assert not domain_index.isValid()
