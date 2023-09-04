@@ -67,7 +67,7 @@ class DeviceFilterModel(QSortFilterProxyModel):
     def _check_interface(self, mask, bit):
         return (mask & bit) == bit
 
-    def setInterface(self, text):
+    def setFilterSelection(self, text):
         """Set a interface bit for the filtering"""
         if text == "All Devices":
             self._interface = None
