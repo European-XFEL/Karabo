@@ -26,7 +26,9 @@ from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QHeaderView, QWidget
 
 import karabogui.icons as icons
+from karabo.common.api import State
 from karabo.common.enums import Interfaces
+from karabogui.indicators import STATE_COLORS
 from karabogui.util import wait_cursor
 
 from .utils import get_panel_ui
@@ -48,6 +50,31 @@ class SearchValidator(QValidator):
         return self.Acceptable, input, pos
 
 
+_QEDIT_STYLE = """
+QLineEdit {{
+    border: 1px solid gray;
+    border-radius: 2px;
+    background-color: rgba{};
+}}
+QLineEdit:focus
+{{
+    border: 1px solid rgb(48,140,198);
+}}
+"""
+
+
+_QCOMBOX_STYLE = """
+QComboBox {{
+    border: 1px solid gray;
+    border-radius: 2px;
+    background-color: rgba{};
+    selection-background-color: rgb(48,140,198);
+}}
+"""
+
+_CHANGED_COLOR = STATE_COLORS[State.CHANGING] + (128,)
+
+
 class BaseSearchBar(QWidget):
     ui_file = None
 
@@ -55,11 +82,16 @@ class BaseSearchBar(QWidget):
         super().__init__(parent=parent)
         uic.loadUi(get_panel_ui(self.ui_file), self)
         self.ui_filter.returnPressed.connect(self._search_clicked)
+        self.ui_filter.textChanged.connect(self._filter_modified)
         self.ui_search.clicked.connect(self._search_clicked)
         self.ui_clear.clicked.connect(self._clear_clicked)
         # Test typical instanceId, classId filtering
         self.ui_filter.setValidator(SearchValidator())
 
+        # Set StyleSheets
+        self._filter_normal = _QEDIT_STYLE.format((0, 0, 0, 0))
+        self._filter_changed = _QEDIT_STYLE.format(_CHANGED_COLOR)
+        self.ui_filter.setStyleSheet(self._filter_normal)
         self.tree_view = None
         self._enable_filter()
 
@@ -69,6 +101,10 @@ class BaseSearchBar(QWidget):
         self.ui_filter.setEnabled(enable)
         self.ui_search.setEnabled(enable)
         self.ui_clear.setEnabled(enable)
+
+    def _set_filter_modified(self, modified):
+        sheet = self._filter_changed if modified else self._filter_normal
+        self.ui_filter.setStyleSheet(sheet)
 
     # -----------------------------------------
     # Public interface
@@ -83,6 +119,10 @@ class BaseSearchBar(QWidget):
 
     # -----------------------------------------
     # Qt Slots
+
+    @Slot()
+    def _filter_modified(self):
+        self._set_filter_modified(True)
 
     @Slot()
     def _search_clicked(self):
@@ -100,6 +140,7 @@ class BaseSearchBar(QWidget):
             index = self.currentIndex()
             if index.isValid():
                 tree_view.scrollTo(index)
+            self._set_filter_modified(False)
             self.post_search()
 
     @Slot()
@@ -119,6 +160,7 @@ class BaseSearchBar(QWidget):
             index = self.currentIndex()
             if index.isValid():
                 tree_view.scrollTo(index)
+            self._set_filter_modified(False)
             self.post_clear()
 
     # -----------------------------------------
@@ -142,47 +184,68 @@ class BaseSearchBar(QWidget):
         return view.model().currentIndex()
 
 
-class SearchBar(BaseSearchBar):
-    ui_file = "status_filter.ui"
+class BaseSelectionBar(BaseSearchBar):
+    ui_file = "combo_filter.ui"
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.ui_status.setItemIcon(1, icons.statusOk)
-        self.ui_status.setItemIcon(2, icons.statusError)
-        self.ui_status.setItemIcon(3, icons.statusUnknown)
+        self.setup_combo()
+        # Set StyleSheets
+        self._combo_normal = _QCOMBOX_STYLE.format((0, 0, 0, 0))
+        self._combo_changed = _QCOMBOX_STYLE.format(_CHANGED_COLOR)
+        self.ui_combo.setStyleSheet(self._combo_normal)
+        self.ui_combo.currentIndexChanged.connect(self._combo_modified)
+
+    def setup_combo(self):
+        """Subclass this method to setup the combo filter box"""
+
+    # -----------------------------------------
+
+    def on_search(self):
+        model = self.tree_view().model()
+        model.setFilterSelection(self.ui_combo.currentText())
+
+    def on_clear(self):
+        self.ui_combo.setCurrentIndex(0)
+        model = self.tree_view().model()
+        model.setFilterSelection(self.ui_combo.currentText())
+
+    def post_search(self):
+        self._set_combo_modified(False)
+
+    def post_clear(self):
+        self._set_combo_modified(False)
 
     # -----------------------------------------
     # Qt Slots
 
-    def on_search(self):
-        model = self.tree_view().model()
-        model.setFilterStatus(self.ui_status.currentText())
+    @Slot()
+    def _combo_modified(self):
+        self._set_combo_modified(True)
 
-    def on_clear(self):
-        self.ui_status.setCurrentIndex(0)
-        model = self.tree_view().model()
-        model.setFilterStatus(self.ui_status.currentText())
+    def _set_combo_modified(self, modified):
+        sheet = self._combo_changed if modified else self._combo_normal
+        self.ui_combo.setStyleSheet(sheet)
 
 
-class InterfaceBar(BaseSearchBar):
-    ui_file = "interface_filter.ui"
+class SearchBar(BaseSelectionBar):
 
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def setup_combo(self):
+        self.ui_combo.addItem("No Status Filtering")
+        self.ui_combo.addItem("Health Status [OK]")
+        self.ui_combo.addItem("Health Status [ERROR]")
+        self.ui_combo.addItem("Health Status [UNKNOWN]")
+        self.ui_combo.setItemIcon(1, icons.statusOk)
+        self.ui_combo.setItemIcon(2, icons.statusError)
+        self.ui_combo.setItemIcon(3, icons.statusUnknown)
+
+
+class InterfaceBar(BaseSelectionBar):
+
+    def setup_combo(self):
+        self.ui_combo.addItem("All Devices")
         for interface in Interfaces:
-            self.ui_interface.addItem(interface.name)
-
-    # -----------------------------------------
-    # Qt Slots
-
-    def on_search(self):
-        model = self.tree_view().model()
-        model.setInterface(self.ui_interface.currentText())
-
-    def on_clear(self):
-        self.ui_interface.setCurrentIndex(0)
-        model = self.tree_view().model()
-        model.setInterface(self.ui_interface.currentText())
+            self.ui_combo.addItem(interface.name)
 
 
 class ConfiguratorSearch(BaseSearchBar):
@@ -212,6 +275,8 @@ class ConfiguratorSearch(BaseSearchBar):
     def resize_contents(self):
         header = self.tree_view().header()
         header.resizeSections(QHeaderView.ResizeToContents)
+
+    # -----------------------------------------
 
     def on_search(self):
         self.tree_view().close_popup_widget()
