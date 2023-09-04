@@ -26,11 +26,16 @@ from karabo.common.scenemodel.api import (
 from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
+from karabogui.graph.common.const import ACTION_ITEMS
 from karabogui.graph.plots.api import (
     KaraboPlotView, VectorBarGraphPlot, generate_down_sample, get_view_range)
 
 MAX_WIDTH = 100
 MAX_BARS = 3000
+
+# Do not allow to set logarithmic scale on X-axis.This is to avoid overriding
+# methods from upstream as pyqtgraph doesn't support log values on axes, yet
+actions = [action for action in ACTION_ITEMS if action != 'x_log']
 
 
 @register_binding_controller(
@@ -45,7 +50,7 @@ class DisplayVectorBarGraph(BaseBindingController):
     _plot = WeakRef(VectorBarGraphPlot)
 
     def create_widget(self, parent):
-        widget = KaraboPlotView(parent=parent)
+        widget = KaraboPlotView(parent=parent, actions=actions)
         widget.add_cross_target()
         widget.add_toolbar()
         widget.stateChanged.connect(self._change_model)
