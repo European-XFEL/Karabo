@@ -232,6 +232,21 @@ namespace karabind {
         } // namespace detail
 
 
+        bool fromPyObjectToString(const py::object& o, std::string& s) {
+            if (py::isinstance<py::bytes>(o)) {
+                s.assign(std::string(o.cast<py::bytes>()));
+            } else if (py::isinstance<py::bytearray>(o)) {
+                s.assign(std::string(o.cast<py::bytearray>()));
+            } else if (py::isinstance<py::str>(o)) {
+                s.assign(std::string(o.cast<py::str>()));
+            } else {
+                PyErr_SetString(PyExc_TypeError, "Python type in parameters is not supported");
+                return false;
+            }
+            return true;
+        }
+
+
         std::vector<std::string> fromPySequenceToVectorString(const py::object& o) {
             std::vector<std::string> vs;
             if (py::isinstance<py::str>(o)) {
