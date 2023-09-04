@@ -40,14 +40,15 @@ class Writer:
 
 
 @pytest.mark.parametrize(
-    "EventLoop, SignalSlotable, Hash, ChannelMetaData, Timestamp",
-    [(karathon.EventLoop, karathon.SignalSlotable, karathon.Hash,
-      karathon.ChannelMetaData, karathon.Timestamp),
-     (karabind.EventLoop, karabind.SignalSlotable, karabind.Hash,
-      karabind.ChannelMetaData, karabind.Timestamp)
-     ])
-def test_pipeline_many_to_one(EventLoop, SignalSlotable, Hash,
-                              ChannelMetaData, Timestamp):
+    "EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData, "
+    "Timestamp",
+    [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
+      karathon.Hash, karathon.ChannelMetaData, karathon.Timestamp),
+     (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
+      karabind.Hash, karabind.ChannelMetaData, karabind.Timestamp)])
+def test_pipeline_many_to_one(
+        EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData,
+        Timestamp):
     t = threading.Thread(target=EventLoop.work)
     t.start()
     assert t.is_alive() is True
@@ -56,8 +57,7 @@ def test_pipeline_many_to_one(EventLoop, SignalSlotable, Hash,
     EventLoop.addThread(n_threads)
     # Create SignalSlotable object to use later for OutputChannel creation
     # by C++ code.
-    sso = SignalSlotable("outputChannel" + str(uuid.uuid4()))
-    sso.start()
+    outputInstanceId = "outputChannel" + str(uuid.uuid4())
     oconf = Hash()
     outputs = []
     outputIds = []
@@ -67,17 +67,15 @@ def test_pipeline_many_to_one(EventLoop, SignalSlotable, Hash,
 
     for i in range(n_threads):
         chanid = f'output{i}'
-        oconf[chanid] = Hash()
-        # Creation of OutputChannel object by C++
-        out = sso.createOutputChannel(chanid, oconf, onOutputHandler)
+        out = OutputChannel.create(outputInstanceId, chanid, oconf)
+        out.registerIOEventHandler(onOutputHandler)
         outputs.append(out)
         outputIds.append(out.getInstanceId() + ':' + chanid)
 
     # Set up input channel
-    ssi = SignalSlotable("inputChannel" + str(uuid.uuid4()))
-    ssi.start()
-    iconf = Hash("input0.connectedOutputChannels", outputIds,
-                 "input0.onSlowness", "wait")
+    inputInstanceId = "inputChannel" + str(uuid.uuid4())
+    iconf = Hash("connectedOutputChannels", outputIds,
+                 "onSlowness", "wait")
     nReceivedEos = 0
     lockEos = threading.Lock()
     connectionStatus = {}
@@ -114,8 +112,12 @@ def test_pipeline_many_to_one(EventLoop, SignalSlotable, Hash,
         nonlocal connectionStatus
         connectionStatus[outId] = status
 
-    inputChannel = ssi.createInputChannel("input0", iconf, iData, None, iEos,
-                                          tracker)
+    # Use factory function to create InputChannel instance ...
+    inputChannel = InputChannel.create(inputInstanceId, "input0", iconf)
+    inputChannel.registerDataHandler(iData)
+    inputChannel.registerInputHandler(None)
+    inputChannel.registerEndOfStreamEventHandler(iEos)
+    inputChannel.registerConnectionTracker(tracker)
 
     # Store 'outputInfo' here
     infos = Hash()
@@ -184,10 +186,7 @@ def test_pipeline_many_to_one(EventLoop, SignalSlotable, Hash,
     for oid in outputIds:
         inputChannel.disconnect(infos[oid])
 
-    # time.sleep(0.1)
     EventLoop.stop()
-    # 'removeThread' works unreliable ... sometimes hangs
-    # EventLoop.removeThread(n_threads)
     t.join()
 
 
@@ -316,10 +315,6 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
     oInfo = copy.copy(outputInfo)
     badOutputInfos.append(oInfo)
     badOutputInfos[-1]["hostname"] = "exflblablupp-not-there.desy.de"
-    # --------------------------- "" : C++ returns success
-    # oInfo = copy.copy(outputInfo)
-    # badOutputInfos.append(oInfo)
-    # badOutputInfos[-1]["outputChannelString"] == "not configured"
     # --------------------------- code 33, "Numerical argument out of domain"
     oInfo = copy.copy(outputInfo)
     badOutputInfos.append(oInfo)
