@@ -53,8 +53,7 @@ from karabo.native import (
 
 from . import numeric
 from .configuration import (
-    config_changes, extract_modified_schema_attributes,
-    sanitize_init_configuration, sanitize_write_configuration)
+    config_changes, sanitize_init_configuration, sanitize_write_configuration)
 from .device import Device, DeviceClientBase
 # Middlelayer api
 from .device_client import (
