@@ -60,6 +60,7 @@ void exportPyXmsInputOutputChannel(py::module_ &); // PyXmsInputOutputChannel.cc
 // core
 
 // log
+void exportPyLogLogger(py::module_ &); // PyLogLogger.cc
 
 // net
 void exportPyNetEventLoop(py::module_ &);         // PyNetEventLoop.cc
@@ -106,6 +107,7 @@ PYBIND11_MODULE(karabind, m) {
     // core
 
     // log
+    exportPyLogLogger(m);
 
     // net
     exportPyNetEventLoop(m);
