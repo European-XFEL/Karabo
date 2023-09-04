@@ -53,6 +53,8 @@ void exportPyUtilAlarmConditionElement();
 void exportPyIo();
 void exportPyIoFileTools();
 template <class T>
+void exportPyIOFileTools1();
+template <class T>
 void exportPyIoOutput();
 template <class T>
 void exportPyIoInput();
@@ -130,6 +132,8 @@ BOOST_PYTHON_MODULE(karathon) {
     // io
     exportPyIo();
     exportPyIoFileTools();
+    exportPyIOFileTools1<karabo::util::Hash>();
+    exportPyIOFileTools1<karabo::util::Schema>();
 
     exportPyIoOutput<karabo::util::Hash>();
     exportPyIoOutput<karabo::util::Schema>();
