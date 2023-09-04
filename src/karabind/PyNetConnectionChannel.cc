@@ -257,10 +257,18 @@ void exportPyNetConnectionChannel(py::module_& m) {
               .def(
                     "write",
                     [](const Channel::Pointer& self, const py::object& o) {
-                        std::string s;
-                        if (!wrapper::fromPyObjectToString(o, s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
-                        py::gil_scoped_release release;
-                        self->write(s.c_str(), s.size());
+                        if (py::isinstance<Hash>(o)) {
+                            const Hash& msg = o.cast<Hash>();
+                            py::gil_scoped_release release;
+                            self->write(msg);
+                        } else {
+                            std::string s;
+                            if (!wrapper::fromPyObjectToString(o, s)) {
+                                throw KARABO_PYTHON_EXCEPTION("Not supported type");
+                            }
+                            py::gil_scoped_release release;
+                            self->write(s.c_str(), s.size());
+                        }
                     },
                     py::arg("obj"),
                     "This method writes the object given in parameter list synchronously, i.e. blocks until the IO "
