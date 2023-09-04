@@ -252,6 +252,17 @@ namespace karathon {
     }
 
 
+    bp::object OutputChannelWrap::create(const std::string& instanceId, const std::string& channelName,
+                                         const karabo::util::Hash& channelConfig) {
+        using namespace karabo::xms;
+        using namespace karabo::util;
+        OutputChannel::Pointer channel = Configurator<OutputChannel>::create("OutputChannel", channelConfig, 0);
+        channel->setInstanceIdAndName(instanceId, channelName);
+        channel->initialize();
+        return bp::object(channel);
+    }
+
+
     void InputChannelWrap::registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
                                                   const bp::object& handler) {
         self->registerInputHandler(HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "input"));
@@ -378,6 +389,16 @@ namespace karathon {
         } catch (...) {
             KARABO_RETHROW
         }
+    }
+
+
+    bp::object InputChannelWrap::create(const std::string& instanceId, const std::string& channelName,
+                                        const karabo::util::Hash& channelConfig) {
+        using namespace karabo::xms;
+        using namespace karabo::util;
+        InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
+        channel->setInstanceId(instanceId + ":" + channelName);
+        return bp::object(channel);
     }
 } // namespace karathon
 
@@ -613,7 +634,9 @@ void exportPyXmsInputOutputChannel() {
                    "Argument of the handler are two lists of numbers: bytes read from and written to\n"
                    "connected channels, in the same order as in the connection table.")
 
-                    KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::OutputChannel);
+              .def("create", &karathon::OutputChannelWrap::create,
+                   (bp::arg("instanceId"), bp::arg("channelName"), bp::arg("channelConfig")))
+              .staticmethod("create");
     }
 
     {
@@ -679,7 +702,9 @@ void exportPyXmsInputOutputChannel() {
 
               .def("getMetaData", &karathon::InputChannelWrap().getMetaData)
 
-                    KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::InputChannel);
+              .def("create", &karathon::InputChannelWrap::create,
+                   (bp::arg("instanceId"), bp::arg("channelName"), bp::arg("channelConfig")))
+              .staticmethod("create");
     }
 
     {

@@ -20,6 +20,11 @@
 
 #include <pybind11/pybind11.h>
 
+#include <karabo/core/Device.hh>
+#include <karabo/io/BinarySerializer.hh>
+#include <karabo/io/TextSerializer.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/Schema.hh>
 
@@ -107,5 +112,25 @@ void exportPyUtilSchemaTest(py::module_& m) {
         for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
         NDArray nda(someData.begin(), someData.end(), shape);
         return karabind::wrapper::copyNDArrayToPy(nda);
+    });
+    m.def("getTextSerializerHashClass", []() {
+        using namespace karabo::util;
+        std::vector<std::string> v = Configurator<karabo::io::TextSerializer<Hash>>::getRegisteredClasses();
+        return py::cast(v);
+    });
+    m.def("getTextSerializerSchemaClass", []() {
+        using namespace karabo::util;
+        std::vector<std::string> v = Configurator<karabo::io::TextSerializer<Schema>>::getRegisteredClasses();
+        return py::cast(v);
+    });
+    m.def("getBinarySerializerHashClass", []() {
+        using namespace karabo::util;
+        std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Hash>>::getRegisteredClasses();
+        return py::cast(v);
+    });
+    m.def("getBinarySerializerSchemaClass", []() {
+        using namespace karabo::util;
+        std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Schema>>::getRegisteredClasses();
+        return py::cast(v);
     });
 }
