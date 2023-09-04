@@ -61,11 +61,6 @@ class BaseDrawingTool(ABCHasStrictTraits):
     def mouse_up(self, scene, event):
         """Method to call on mouse move on the GraphicsScene."""
 
-    def clear(self):
-        """Deactivate the drawing tool"""
-        self.start_pos = None
-        self.graphics_item = None
-
 
 class LineTool(BaseDrawingTool):
 
