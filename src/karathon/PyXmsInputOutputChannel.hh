@@ -146,6 +146,8 @@ namespace karathon {
     };
 
     struct OutputChannelWrap {
+        static bp::object create(const std::string& instanceId, const std::string& channelName,
+                                 const karabo::util::Hash& channelConfig);
         static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
                                              const bp::object& handler);
         static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data,
@@ -159,6 +161,8 @@ namespace karathon {
     };
 
     struct InputChannelWrap {
+        static bp::object create(const std::string& instanceId, const std::string& channelName,
+                                 const karabo::util::Hash& channelConfig);
         // Special handler wrap to cast in operator()
         class DataHandlerWrap
             : public HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&> {

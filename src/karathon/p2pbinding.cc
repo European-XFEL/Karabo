@@ -15,12 +15,6 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-/*
- * File:   p2pbinding.cc
- * Author: Sergey Esenov <serguei.essenov@xfel.eu>
- *
- * Created on April 4, 2013, 4:04 PM
- */
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/python.hpp>

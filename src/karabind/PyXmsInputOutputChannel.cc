@@ -189,10 +189,18 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     py::arg("handler"),
                     "Register a handler to be regularly called to update written and read bytes.\n"
                     "Argument of the handler are two lists of numbers: bytes read from and written to\n"
-                    "connected channels, in the same order as in the connection table.");
-        // Temporarily comment configurator API binding for OutputChannel since it is not tested
-        // In python the OutputChannel object can be created via SignalSlotable method
-        // KARABO_PYTHON_FACTORY_CONFIGURATOR(OutputChannel);
+                    "connected channels, in the same order as in the connection table.")
+
+              .def_static(
+                    "create",
+                    [](const std::string& instanceId, const std::string& channelName, const Hash& config) {
+                        OutputChannel::Pointer channel =
+                              Configurator<OutputChannel>::create("OutputChannel", config, 0);
+                        channel->setInstanceIdAndName(instanceId, channelName);
+                        channel->initialize();
+                        return py::cast(channel);
+                    },
+                    py::arg("instanceId"), py::arg("channelName"), py::arg("config"));
     }
 
     {
@@ -206,12 +214,20 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
 
               .def("registerDataHandler",
                    [](const InputChannel::Pointer& self, const py::object& handler) {
-                       self->registerDataHandler(InputChannelDataHandler(handler, "data"));
+                       if (!handler.is_none()) {
+                           self->registerDataHandler(InputChannelDataHandler(handler, "data"));
+                       } else {
+                           self->registerDataHandler(InputChannel::DataHandler());
+                       }
                    })
 
               .def("registerInputHandler",
                    [](const InputChannel::Pointer& self, const py::object& handler) {
-                       self->registerInputHandler(HandlerWrap<const InputChannel::Pointer&>(handler, "input"));
+                       if (!handler.is_none()) {
+                           self->registerInputHandler(HandlerWrap<const InputChannel::Pointer&>(handler, "input"));
+                       } else {
+                           self->registerInputHandler(InputChannel::InputHandler());
+                       }
                    })
 
 
@@ -307,22 +323,29 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     },
                     py::arg("outputChannelInfo"))
 
-              .def("getMetaData", [](const InputChannel::Pointer& self) {
-                  auto ret = boost::make_shared<std::vector<karabo::util::Hash>>();
-                  {
-                      py::gil_scoped_release release;
-                      std::vector<karabo::xms::InputChannel::MetaData> md = self->getMetaData();
-                      for (auto it = md.begin(); it != md.end(); ++it) {
-                          // TODO: Properly wrap MetaData object - currently this will be visible in Python
-                          // as hash
-                          ret->push_back(*reinterpret_cast<karabo::util::Hash*>(&*it));
-                      }
-                  }
-                  return py::cast(ret);
-              });
-        // Temporarily comment configurator API binding for InputChannel since it is not tested.
-        // In python the InputChannel object can be created via SignalSlotable method
-        // KARABO_PYTHON_FACTORY_CONFIGURATOR(InputChannel);
+              .def("getMetaData",
+                   [](const InputChannel::Pointer& self) {
+                       auto ret = boost::make_shared<std::vector<karabo::util::Hash>>();
+                       {
+                           py::gil_scoped_release release;
+                           const std::vector<karabo::xms::InputChannel::MetaData>& md = self->getMetaData();
+                           for (auto it = md.begin(); it != md.end(); ++it) {
+                               // TODO: Properly wrap MetaData object - currently this will be visible in Python
+                               // as hash
+                               ret->push_back(*reinterpret_cast<const karabo::util::Hash*>(&*it));
+                           }
+                       }
+                       return py::cast(ret);
+                   })
+
+              .def_static(
+                    "create",
+                    [](const std::string& instanceId, const std::string& channelName, const Hash& config) {
+                        InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", config);
+                        channel->setInstanceId(instanceId + ":" + channelName);
+                        return py::cast(channel);
+                    },
+                    py::arg("instanceId"), py::arg("channelName"), py::arg("config"));
     }
 
     {
@@ -373,3 +396,9 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
         // py::implicitly_convertible<Schema&, InputChannelElement>();
     }
 }
+
+// Register classes (at "static" time) to be able to create instances via factory functions ...
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::xms::OutputChannel)
+// Register also the constructor with an extra int flag:
+KARABO_REGISTER_FOR_CONFIGURATION_ADDON(int, karabo::xms::OutputChannel);
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::xms::InputChannel)
