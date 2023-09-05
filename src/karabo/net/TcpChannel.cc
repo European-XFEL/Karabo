@@ -799,20 +799,22 @@ namespace karabo {
             }
         }
 
-
-        void TcpChannel::write(const karabo::util::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
-            using namespace karabo::io;
-
+        /// @brief  Helper to extend header for writing header and BufferSet pointers
+        ///
+        /// @return extended header
+        static karabo::util::Hash extendHeaderForBufferSets(const karabo::util::Hash& hdr,
+                                                            const std::vector<karabo::io::BufferSet::Pointer>& body) {
             // "byteSizes" and "nData" are kept for pre-karabo 2.2.4 backward compatibility and for middle layer
             if (hdr.has("nData") || hdr.has("byteSizes") || hdr.has("_bufferSetLayout_")) {
-                KARABO_LOG_FRAMEWORK_WARN << "Header contains 'nData', 'byteSizes' or '_bufferSetLayout_', but these "
-                                          << "will be overwritten by protocol!";
+                KARABO_LOG_FRAMEWORK_WARN_C("TcpChannel")
+                      << "Header contains 'nData', 'byteSizes' or '_bufferSetLayout_', but these "
+                      << "will be overwritten by protocol!";
             }
+            Hash header(hdr);
 
-            Hash header = hdr; // copy header
-            // Add the BufferSet layout structure into header just before serialization ...
             std::vector<Hash>& buffersVector = header.bindReference<std::vector<Hash>>("_bufferSetLayout_");
-            for (std::vector<BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end(); ++it) {
+            for (std::vector<karabo::io::BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end();
+                 ++it) {
                 buffersVector.push_back(Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
             }
 
@@ -822,6 +824,12 @@ namespace karabo {
             for (const auto& bufferSet : body) {
                 byteSizes.push_back(bufferSet->totalSize());
             }
+
+            return header;
+        }
+
+        void TcpChannel::write(const karabo::util::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+            const Hash header(extendHeaderForBufferSets(hdr, body));
 
             try {
                 if (m_sizeofLength == 0) {
@@ -1296,6 +1304,48 @@ namespace karabo {
             try {
                 m_writtenBytes += length;
                 EventLoop::getIOService().post(boost::bind(handler, e));
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void TcpChannel::writeAsyncHashVectorBufferSetPointer(const karabo::util::Hash& hdr,
+                                                              const std::vector<karabo::io::BufferSet::Pointer>& body,
+                                                              const WriteCompleteHandler& handler) {
+            if (m_sizeofLength == 0) {
+                throw KARABO_PARAMETER_EXCEPTION(
+                      "With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const "
+                      "size_t& size) instead.");
+            }
+            if (m_textSerializer) {
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION(
+                      "Text serialization is not implemented for vectors of BufferSets");
+            }
+
+            const Hash header(extendHeaderForBufferSets(hdr, body));
+            try {
+                auto headerBuf(boost::make_shared<std::vector<char>>());
+                m_binarySerializer->save(header, *headerBuf);
+                const size_t headerSize = headerBuf->size();
+                _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
+
+                size_t total_size = 0;
+                for (const auto& b : body) total_size += b->totalSize();
+                _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, total_size);
+
+                vector<const_buffer> buf;
+                buf.push_back(buffer(m_outboundHeaderPrefix));
+                buf.push_back(buffer(headerBuf->data(), headerSize));
+                buf.push_back(buffer(m_outboundMessagePrefix));
+                karabo::io::BufferSet::appendTo(buf, body);
+
+                boost::asio::async_write(
+                      m_socket, buf,
+                      // It is documented that the buffers in 'body' must stay alive until 'handler' is called,
+                      // so no need to keep them alive by binding something here as is done for 'headerBuf'.
+                      util::bind_weak(&TcpChannel::asyncWriteHandlerBody, this, boost::asio::placeholders::error,
+                                      boost::asio::placeholders::bytes_transferred(), handler, headerBuf));
             } catch (...) {
                 KARABO_RETHROW
             }
