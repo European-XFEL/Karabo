@@ -297,6 +297,10 @@ namespace karabo {
                                              const boost::shared_ptr<std::vector<char>>& data,
                                              const WriteCompleteHandler& handler);
 
+            void writeAsyncHashVectorBufferSetPointer(const karabo::util::Hash& header,
+                                                      const std::vector<karabo::io::BufferSet::Pointer>& body,
+                                                      const WriteCompleteHandler& handler);
+
             // void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const
             // WriteCompleteHandler& handler);
 
