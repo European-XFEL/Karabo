@@ -1751,11 +1751,10 @@ class PythonDevice(NoFsm):
             return self.validatorIntern.getRollingStatistics(key)
 
     @staticmethod
-    def loadConfiguration(xmlfile):
-        hash = Hash()
-        loadFromFile(hash, xmlfile)
-        os.remove(xmlfile)
-        return hash
+    def loadConfiguration(cfgFile):
+        cfg = loadFromFile(cfgFile)
+        os.remove(cfgFile)
+        return cfg
 
     # the following functions expose parts of SignalSlotable to the public
     # device interface.
@@ -1857,9 +1856,9 @@ def launchPythonDevice():
     from .plugin_loader import DEFAULT_NAMESPACE, PluginLoader
 
     # NOTE: The first argument is '-c'
-    _, modname, classid, xmlfile = tuple(sys.argv)
+    _, modname, classid, cfgFile = tuple(sys.argv)
     namespace = DEFAULT_NAMESPACE
-    config = PythonDevice.loadConfiguration(xmlfile)
+    config = PythonDevice.loadConfiguration(cfgFile)
     if '_connection_' in config:
         # Inject broker connection parameters into PythonDevice class, so
         # all possible instances share the same broker configuration

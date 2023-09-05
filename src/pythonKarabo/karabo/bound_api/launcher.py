@@ -25,7 +25,7 @@ from pkg_resources import working_set
 
 from karabo.bound import (
     OVERWRITE_ELEMENT, BinarySerializerHash, Configurator, EventLoop, Hash,
-    PluginLoader, PythonDevice, TextSerializerHash)
+    PluginLoader, PythonDevice)
 
 
 def main():
@@ -58,8 +58,8 @@ def main():
         sys.stdout.buffer.write(ser.save(h))
     elif command == "run":
         # run a device class. The configuration is read from stdin.
-        config = sys.stdin.read()
-        ser = TextSerializerHash.create("Xml")
+        config = bytes(sys.stdin.read(), encoding="utf8")
+        ser = BinarySerializerHash.create("Bin")
         config = ser.load(config)
         if '_connection_' in config:
             PythonDevice.connectionParams = copy.copy(config['_connection_'])
