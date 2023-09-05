@@ -362,7 +362,7 @@ namespace karabo {
             }
 
             /**
-             * Asynchronously reads data into a hash header and into object represented a vector of BufferSet pointers.
+             * Asynchronously reads data into a hash header and into a vector of BufferSet pointers.
              * All memory management is done by the API.
              * @param handler Call-function of signature:
              * void (const ErrorCode&, const karabo::util::Hash&, const std::vector<karabo::io::BufferSet::Pointer>&)
@@ -559,7 +559,7 @@ namespace karabo {
              * called
              * @param header containing metadata for the data being written
              * @param data vector of chars containing the data to be written
-             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a
+             * @param handler to be called upon write completion. Needs to be a function wrapped into a
              * boost::function which takes const boost::system::error_code& as its only argument.
              */
             virtual void writeAsyncHashVector(const karabo::util::Hash& header, const std::vector<char>& data,
@@ -585,13 +585,32 @@ namespace karabo {
              * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is
              * called
              * @param header containing metadata for the data being written
-             * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
+             * @param body data contained in a Hash with no particular structure, but serializable, i.e. containing no
              *       non-karabo data types or Hash derived types
-             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a
+             * @param handler to be called upon write completion. Needs to be a function wrapped into a
              * boost::function which takes const boost::system::error_code& as its only argument.
              */
             virtual void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data,
                                             const WriteCompleteHandler& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            /**
+             * Write header and vector<BufferSet::Pointer> asynchronously.
+             *
+             * Upon write completion a handler function is called. Data inside the buffers must not be changed or
+             * deleted before this handler is called. Special care is needed if any Hash that had been serialised into
+             * the buffers contained an NDArray: The raw data of the array will be shared between the BufferSet and the
+             * Hash. Deletion of the Hash is safe, though.
+             *
+             * @param header containing metadata for the data being written
+             * @param body data as a vector of BufferSet::Pointer
+             * @param handler to be called upon write completion. Needs to be a function wrapped into a
+             *        boost::function which takes const boost::system::error_code& as its only argument.
+             */
+            virtual void writeAsyncHashVectorBufferSetPointer(const karabo::util::Hash& header,
+                                                              const std::vector<karabo::io::BufferSet::Pointer>& body,
+                                                              const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
