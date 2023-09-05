@@ -68,8 +68,6 @@ class Canvas(QGraphicsScene):
     def mouseMoveEvent(self, event):
         if self._can_draw(event):
             self.drawing_tool.mouse_move(self, event)
-        elif self.drawing_tool is not None:
-            self.set_drawing_tool(None)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
