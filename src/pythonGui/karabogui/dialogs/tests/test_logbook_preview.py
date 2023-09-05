@@ -1,9 +1,10 @@
 import pytest
 from qtpy.QtCore import QPoint, Qt
+from qtpy.QtGui import QColor, QFont
 from qtpy.QtTest import QTest
 from qtpy.QtWidgets import (
     QDialog, QGraphicsLineItem, QGraphicsPixmapItem, QGraphicsRectItem,
-    QGraphicsTextItem)
+    QGraphicsSimpleTextItem)
 
 from karabo.native import Hash, HashList
 from karabogui.binding.api import DeviceClassProxy, build_binding
@@ -170,17 +171,19 @@ def test_drawing_tools(dialog, mocker):
     text_dialog = mocker.patch(
         "karabogui.dialogs.logbook_drawing_tools.TextDialog")
     text_dialog().exec.return_value = QDialog.Accepted
+    text_dialog().text_font = QFont()
+    text_dialog().text_color = QColor("black")
     text_dialog().text = "Hello Karabo"
     canvas.set_drawing_tool(text_tool)
     QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
     assert len(canvas.items()) == 3
     QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier, pos)
     assert len(canvas.items()) == 4
-    assert isinstance(canvas.items()[0], QGraphicsTextItem)
+    assert isinstance(canvas.items()[0], QGraphicsSimpleTextItem)
     assert isinstance(canvas.items()[1], QGraphicsRectItem)
     assert isinstance(canvas.items()[2], QGraphicsLineItem)
     assert isinstance(canvas.items()[3], QGraphicsPixmapItem)
-    assert canvas.items()[0].toPlainText() == "Hello Karabo"
+    assert canvas.items()[0].text() == "Hello Karabo"
 
     # Clear the active drawing tool.
     canvas.set_drawing_tool(None)
