@@ -18,26 +18,66 @@ from abc import abstractmethod
 from collections import namedtuple
 
 from qtpy import uic
-from qtpy.QtCore import QPointF, Qt
-from qtpy.QtGui import QBrush, QColor, QPen, QTransform
-from qtpy.QtWidgets import QDialog, QGraphicsItem, QGraphicsPixmapItem
+from qtpy.QtCore import QPointF, Qt, Slot
+from qtpy.QtGui import QBrush, QColor, QFont, QIcon, QPen, QPixmap, QTransform
+from qtpy.QtWidgets import (
+    QColorDialog, QDialog, QGraphicsItem, QGraphicsPixmapItem)
 from traits.api import ABCHasStrictTraits, Instance
 
 from karabogui import icons
+from karabogui.dialogs.font_dialog import FontDialog
 from karabogui.dialogs.utils import get_dialog_ui
+from karabogui.fonts import get_alias_from_font, get_qfont
 
 PEN = QPen(QBrush(QColor("red")), 2)
+BUTTON_SIZE = 10
 
 
 class TextDialog(QDialog):
-    """Simple Text dialog to allow user to enter a text and select a font"""
+    """Simple Text dialog to allow user to enter the text and also to select
+    the font and color for the text."""
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         uic.loadUi(get_dialog_ui('simple_text_dialog.ui'), self)
+        self.text_font = get_qfont()
+        self.text_color = QColor("black")
+        self.set_text_color_button()
+        self.set_text_font_button()
 
     @property
     def text(self):
         return self.text_line_edit.text()
+
+    @Slot()
+    def on_pbFont_clicked(self):
+        dialog = FontDialog(self.text_font, parent=self)
+        if dialog.exec() == QDialog.Accepted:
+            self.text_font = dialog.qfont
+            self.set_text_font_button()
+
+    @Slot()
+    def on_pbTextColor_clicked(self):
+        color = QColorDialog.getColor(self.text_color)
+        if color.isValid():
+            self.text_color = color
+            self.set_text_color_button()
+
+    def set_text_color_button(self):
+        pixmap = QPixmap(24, 16)
+        pixmap.fill(self.text_color)
+        self.pbTextColor.setIcon(QIcon(pixmap))
+
+    def set_text_font_button(self):
+        """
+        Update the  text and font family of the button. The font size
+        should not be changed in order to keep the button size fixed.
+        """
+        qfont = QFont(self.text_font)
+        qfont.setPointSize(BUTTON_SIZE)
+        self.pbFont.setFont(qfont)
+        family = get_alias_from_font(self.text_font.family())
+        button_text = f"{family}, {self.text_font.pointSize()}pt"
+        self.pbFont.setText(button_text)
 
 
 class BaseDrawingTool(ABCHasStrictTraits):
@@ -114,8 +154,12 @@ class TextTool(BaseDrawingTool):
         text_dialog.setModal(False)
         if text_dialog.exec() == QDialog.Accepted:
             text = text_dialog.text.strip()
+            font = text_dialog.text_font
+            color = text_dialog.text_color
             if text:
-                self.graphics_item = scene.addText(text)
+                self.graphics_item = scene.addSimpleText(text, font)
+                brush = QBrush(color)
+                self.graphics_item.setBrush(brush)
                 self.graphics_item.setPos(event.scenePos())
 
 
