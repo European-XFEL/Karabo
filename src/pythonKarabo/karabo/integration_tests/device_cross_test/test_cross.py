@@ -32,7 +32,7 @@ from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, Configurable, DaqDataType,
     DeviceClientBase, Hash, Image, InputChannel, Int32, KaraboError,
     MetricPrefix, NDArray, Node, OutputChannel, Slot, State, String, UInt32,
-    Unit, VectorDouble, background, call, encodeXML, getDevice, getHistory,
+    Unit, VectorDouble, background, call, encodeBinary, getDevice, getHistory,
     isSet, setWait, shutdown, sleep, unit, updateDevice, waitUntil,
     waitUntilNew)
 from karabo.middlelayer.testing import (
@@ -199,17 +199,12 @@ async def test_cross(deviceTest):
     # Logging set to FATAL to swallow the misleading ERROR that comes
     # if we try (and fail as expected) to set a readOnly property on
     # For debugging you may switch to INFO or DEBUG.
-    process.stdin.write(b"""\
-        <root KRB_Artificial="">
-            <_deviceId_>boundDevice</_deviceId_>
-            <Logger><priority>FATAL</priority></Logger>
-            <middlelayerDevice>middlelayerDevice</middlelayerDevice>
-            <input>
-                <connectedOutputChannels>
-                    middlelayerDevice:output,middlelayerDevice:rawoutput
-                </connectedOutputChannels>
-            </input>
-        </root>""")
+    cfg = Hash("_deviceId_", "boundDevice",
+               "Logger.priority", "FATAL",
+               "middlelayerDevice", "middlelayerDevice",
+               "input.connectedOutputChannels",
+               ["middlelayerDevice:output", "middlelayerDevice:rawoutput"])
+    process.stdin.write(encodeBinary(cfg))
     process.stdin.close()
     # And get a new proxy!
     proxy = await getDevice("boundDevice")
@@ -469,7 +464,7 @@ async def test_cross_image(deviceTest):
         sys.executable, "-m", "karabo.bound_api.launcher",
         "run", "karabo.bound_device_test", "TestDevice",
         stdin=PIPE, stdout=PIPE)
-    process.stdin.write(encodeXML(config).encode('utf8'))
+    process.stdin.write(encodeBinary(config))
     process.stdin.close()
     # it takes typically 2 s for the bound device to start
     bound_proxy = await getDevice("boundDevice2")
