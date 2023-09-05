@@ -897,84 +897,136 @@ void TcpNetworking_Test::testBufferSet() {
     const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
     CPPUNIT_ASSERT(serverPort != 0);
 
-    // Create client, connect to server and validate connection
+    // Create client, connect to server and validate connection from server side
     Connection::Pointer clientConn = Connection::create("Tcp", Hash("type", "client", "port", serverPort));
-    Channel::Pointer clientChannel;
-    std::string failureReasonCli;
-    auto clientConnectHandler = [&clientChannel, &failureReasonCli](const ErrorCode& ec,
-                                                                    const Channel::Pointer& channel) {
-        if (ec) {
-            std::stringstream os;
-            os << "\nClient connection failed: " << ec.value() << " -- " << ec.message();
-            failureReasonCli = os.str();
-            std::clog << failureReasonCli << std::endl;
-        } else {
-            clientChannel = channel;
-        }
-    };
-    clientConn->startAsync(clientConnectHandler);
+    Channel::Pointer clientChannel = clientConn->start();
 
     int timeout = 10000;
     while (timeout >= 0) {
-        if (clientChannel && serverChannel) break;
+        if (serverChannel) break;
         boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
         timeout -= 10;
     }
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
-    CPPUNIT_ASSERT_MESSAGE(failureReasonCli + ", timeout: " + toString(timeout), clientChannel);
+
+    //////////////////////////////////////////////////////////////////////////
+    // Prepare serialiser and data for sending
+    //////////////////////////////////////////////////////////////////////////
 
     // Create Hash with many small NDArray: When it is sent that will create a lot of buffers, but due to an overall
     // rather small message it will likely go through the synchronous code path - and that was buggy
     // (using socket::read_some instead of asio::read) up to Karabo 2.7.0:
-    Hash data;
+    Hash data1;
     const int numNDarray = 500;
     for (int i = 0; i < numNDarray; ++i) {
-        data.set(toString(i), NDArray(Dims(1ull), i));
+        data1.set(toString(i), NDArray(Dims(1ull), i));
     }
     auto serializer = karabo::io::BinarySerializer<Hash>::create("Bin");
-    auto buffers = std::vector<karabo::io::BufferSet::Pointer>(1, boost::make_shared<karabo::io::BufferSet>());
-    serializer->save(data, *(buffers[0])); // save into first BufferSet
+    auto buffers = std::vector<karabo::io::BufferSet::Pointer>( // vector of two BufferSets
+          {boost::make_shared<karabo::io::BufferSet>(), boost::make_shared<karabo::io::BufferSet>()});
+    serializer->save(data1, *(buffers[0])); // save into first BufferSet
+    // Add a second BufferSet with normally big NDArray
+    const Hash data2("vec", std::vector<short>(100, 7), // vector of length 100 shorts
+                     "arr", NDArray(10000ull, 77));     // 1D array of 10k ints
+    serializer->save(data2, *(buffers[1]));             // save into second BufferSet
 
-    bool received = false;
+    //////////////////////////////////////////////////////////////////////////
+    // Prepare the (always asynchronous) reading
+    //////////////////////////////////////////////////////////////////////////
+    auto recvProm = std::make_shared<std::promise<bool>>();
+    auto recvFut = recvProm->get_future();
     std::string failureReason;
+    Hash receivedHeader;
     std::vector<karabo::io::BufferSet::Pointer> receivedBuffers;
-    auto onRead = [&received, &failureReason, &receivedBuffers](
+    auto onRead = [&recvProm, &failureReason, &receivedHeader, &receivedBuffers](
                         const boost::system::error_code& ec, const karabo::util::Hash& h,
                         const std::vector<karabo::io::BufferSet::Pointer>& bufs) {
         if (ec) {
             failureReason = toString(ec.value()) += " -- " + ec.message();
+            recvProm->set_value(false);
         } else {
+            receivedHeader = h;
             receivedBuffers = bufs;
+            recvProm->set_value(true);
         }
-        received = true;
     };
 
-    // Register handler, send data and wait until it arrived
+    // Register handler
     clientChannel->readAsyncHashVectorBufferSetPointer(onRead);
-    serverChannel->write(Hash(), buffers); // synchronously with (empty) header
 
-    timeout = 10000;
-    while (timeout >= 0) {
-        if (received) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-        timeout -= 10;
-    }
+    //////////////////////////////////////////////////////////////////////////
+    // First test synchronous writing of HashVectorBufferSetPointer
+    //////////////////////////////////////////////////////////////////////////
 
-    CPPUNIT_ASSERT_MESSAGE("Failed to receive data, timeout " + toString(timeout), received);
+    const Hash header("my", "header", "data", 42);
+    serverChannel->write(header, buffers); // synchronous writing with header
 
-    // Check that no failure and that content is as expected
-    CPPUNIT_ASSERT_MESSAGE(failureReason, failureReason.empty());
-    CPPUNIT_ASSERT_EQUAL(1ul, receivedBuffers.size());
-    data.clear();
-    serializer->load(data, *(receivedBuffers[0]));
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numNDarray), data.size());
-    for (int i = 0; i < numNDarray; ++i) {
-        const std::string key(toString(i));
-        CPPUNIT_ASSERT_MESSAGE("Miss key " + toString(key), data.has(key));
-        const NDArray& arr = data.get<NDArray>(key);
-        CPPUNIT_ASSERT_EQUAL(1ul, arr.size());
-        CPPUNIT_ASSERT_EQUAL(i, arr.getData<int>()[0]);
-    }
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(std::chrono::seconds(10)));
+    CPPUNIT_ASSERT_MESSAGE("Error Sending data" + failureReason, recvFut.get());
+
+    // Check that content is as expected - in a lambda to do the exact same checks for both sync and async writing
+    auto doAsserts = [&]() {
+        CPPUNIT_ASSERT_EQUAL(2ul, receivedBuffers.size());
+        Hash dataRead;
+        serializer->load(dataRead, *(receivedBuffers[0]));
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numNDarray), dataRead.size());
+        for (int i = 0; i < numNDarray; ++i) {
+            const std::string key(toString(i));
+            CPPUNIT_ASSERT_MESSAGE("Miss key " + toString(key), dataRead.has(key));
+            const NDArray& arr = dataRead.get<NDArray>(key);
+            CPPUNIT_ASSERT_EQUAL(1ul, arr.size());
+            CPPUNIT_ASSERT_EQUAL(i, arr.getData<int>()[0]);
+        }
+        dataRead.clear();
+        serializer->load(dataRead, *(receivedBuffers[1]));
+        CPPUNIT_ASSERT_EQUAL(2ul, dataRead.size());
+        CPPUNIT_ASSERT_MESSAGE("Received data: " + toString(dataRead), dataRead.fullyEquals(data2));
+        // Erase internals from header before comparing - should that already be done internally or should we test these
+        // internals as potentially needed in cross API communication?
+        // For now assert at least on their existence.
+        CPPUNIT_ASSERT(receivedHeader.erase("_bufferSetLayout_"));
+        CPPUNIT_ASSERT(receivedHeader.erase("nData"));
+        CPPUNIT_ASSERT(receivedHeader.erase("byteSizes"));
+        CPPUNIT_ASSERT_MESSAGE("Received header: " + toString(receivedHeader),
+                               receivedHeader.fullyEquals(Hash("my", "header", "data", 42)));
+    };
+    doAsserts();
+
+    //////////////////////////////////////////////////////////////////////////
+    // Re-repare the asynchronous reading
+    //////////////////////////////////////////////////////////////////////////
+    recvProm = std::make_shared<std::promise<bool>>();
+    recvFut = recvProm->get_future();
+    failureReason.clear();
+    receivedHeader.clear();
+    receivedBuffers.clear();
+    clientChannel->readAsyncHashVectorBufferSetPointer(onRead);
+
+    //////////////////////////////////////////////////////////////////////////
+    // Now asynchronous writing of HashVectorBufferSetPointer
+    //////////////////////////////////////////////////////////////////////////
+    auto sendProm = std::make_shared<std::promise<bool>>();
+    auto sendFut = sendProm->get_future();
+    std::string sendFailureReason;
+
+    auto onWriteComplete = [sendProm, &sendFailureReason](const boost::system::error_code& ec) {
+        if (ec) {
+            sendProm->set_value(false);
+            sendFailureReason = toString(ec.value()) += " -- " + ec.message();
+        } else {
+            sendProm->set_value(true);
+        }
+    };
+    serverChannel->writeAsyncHashVectorBufferSetPointer(header, buffers, onWriteComplete);
+
+    // Wait for confirmation that data is written and read
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, sendFut.wait_for(std::chrono::seconds(10)));
+    CPPUNIT_ASSERT_MESSAGE("Error sending data: " + sendFailureReason, sendFut.get());
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, recvFut.wait_for(std::chrono::seconds(10)));
+    CPPUNIT_ASSERT_MESSAGE("Error Sending data" + failureReason, recvFut.get());
+
+    // Now check correctness of asynchronously written data
+    doAsserts();
 
     EventLoop::stop();
     thr.join();
