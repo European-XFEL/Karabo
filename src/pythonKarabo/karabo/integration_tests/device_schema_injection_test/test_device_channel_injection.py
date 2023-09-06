@@ -267,6 +267,13 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         self.assertTrue(ok,
                         "Could not start device '{}' on server '{}': '{}'."
                         .format(self.devClass, self.server_id, msg))
+        # Ensure that input channel is connected before 'slotConnectionChanged'
+        # below tracks further connection changes
+        ok = self.waitUntilTrue(
+            lambda: len(self.dc.get(dev_id, "input.missingConnections")) == 0,
+            max_timeout, 100)
+        self.assertTrue(ok,
+                        str(self.dc.get(dev_id, "input.missingConnections")))
 
         connectionChangesLock = threading.Lock()
         connectionChanges = []
