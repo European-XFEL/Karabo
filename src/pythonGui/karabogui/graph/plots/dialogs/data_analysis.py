@@ -102,8 +102,10 @@ class DataAnalysisDialog(QDialog):
             name="data")
 
         self.fit_options_combobox.addItems(list(FIT_FUNCTION_MAP.keys()))
-        self.auto_update_checkbox.setChecked(False)
+        self.fit_on_update_checkbox.setChecked(False)
 
+        self.auto_update.setChecked(False)
+        self.auto_update.toggled.connect(self._enable_auto_update)
         self.fit_button.clicked.connect(self.fit)
         self.update_data_button.clicked.connect(self.update_data)
 
@@ -253,7 +255,7 @@ class DataAnalysisDialog(QDialog):
         if len(self.x_values) != len(self.y_values):
             return
         self.data_curve.setData(self.x_values, self.y_values)
-        if self.auto_update_checkbox.isChecked():
+        if self.fit_on_update_checkbox.isChecked():
             self.fit()
         else:
             self.fit_curve.setVisible(False)
@@ -331,3 +333,9 @@ class DataAnalysisDialog(QDialog):
             self._plot_widget.plotItem.setLabel("bottom", x_label)
         if y_label is not None:
             self._plot_widget.plotItem.setLabel("left", y_label)
+
+    @Slot(bool)
+    def _enable_auto_update(self, enabled):
+        """Update the data in the plot on the parent plot update."""
+        self.proxy.on_trait_change(self.update_data,
+                                   "binding:config_update", remove=not enabled)
