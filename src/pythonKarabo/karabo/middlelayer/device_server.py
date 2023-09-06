@@ -33,7 +33,7 @@ from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, Int32,
     KaraboError, Node, String, TimeMixin, VectorString, decodeBinary,
-    encodeXML, get_timestamp, isSet)
+    encodeBinary, get_timestamp, isSet)
 
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
@@ -751,7 +751,9 @@ class BoundDeviceServer(DeviceServerBase):
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", self.boundNamespace, classId, deviceId,
             env=env, stdin=PIPE)
-        process.stdin.write(encodeXML(config).encode('utf8'))
+        # Pass as binary as expected by launcher
+        # (XML has trouble with vector_string where str contains comma):
+        process.stdin.write(encodeBinary(config))
         process.stdin.close()
         done, pending, error = await firstCompleted(
             ok=future, error=process.wait())

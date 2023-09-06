@@ -41,7 +41,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
-                   "configuration", Hash())
+                   "configuration", Hash("vectors.stringProperty",
+                                         ["without", "with,comma"]))
         ok, msg = self.dc.instantiate(SERVER_ID, cfg, instTimeout)
         self.assertTrue(ok, msg)
 
@@ -57,7 +58,9 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             # Cannot know the pid - but it is non-zero and different from ours
             self.assertNotEqual(props.get("pid"), 0)
             self.assertNotEqual(props.get("pid"), os.getpid())
-
+            # Verify configuring vector string with string containing comma
+            self.assertEqual(props["vectors.stringProperty"],
+                             ["without", "with,comma"])
         with self.subTest(msg="Test readOnly table"):
             tbl = self.dc.get(deviceId, "tableReadOnly")
             self.assertEqual(len(tbl), 2)  # tableReadOnly has 2 rows.
