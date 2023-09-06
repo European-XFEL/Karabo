@@ -828,28 +828,6 @@ namespace karabo {
             return header;
         }
 
-        void TcpChannel::write(const karabo::util::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
-            const Hash header(extendHeaderForBufferSets(hdr, body));
-
-            try {
-                if (m_sizeofLength == 0) {
-                    throw KARABO_PARAMETER_EXCEPTION(
-                          "With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const "
-                          "size_t& size) instead.");
-                }
-                if (m_textSerializer) {
-                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION(
-                          "Text serialization is not implemented for vectors of BufferSets");
-                } else {
-                    std::vector<char> headerBuf;
-                    m_binarySerializer->save(header, headerBuf);
-                    write(&headerBuf[0], headerBuf.size(), body);
-                }
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
 
         void TcpChannel::write(const karabo::util::Hash& data) {
             try {
@@ -943,7 +921,9 @@ namespace karabo {
         }
 
 
-        void TcpChannel::write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body) {
+        void TcpChannel::write(const karabo::util::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+            const Hash header(extendHeaderForBufferSets(hdr, body));
+
             try {
                 boost::system::error_code error; // in case of error
 
@@ -952,55 +932,20 @@ namespace karabo {
                           "With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const "
                           "size_t& size) instead.");
                 }
-                _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
-                size_t total_size = body.totalSize();
-                _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, total_size);
-                vector<const_buffer> buf;
-                buf.push_back(buffer(m_outboundHeaderPrefix));
-                buf.push_back(buffer(header, headerSize));
-                buf.push_back(buffer(m_outboundMessagePrefix));
-                body.appendTo(buf);
-                boost::mutex::scoped_lock lock(m_socketMutex);
-                m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
-                if (error) {
-                    std::string local_ep_ip;
-                    std::string remote_ep_ip;
-                    try { // m_socket might not be able to provide that info anymore...
-                        local_ep_ip = m_socket.local_endpoint().address().to_string();
-                        remote_ep_ip = m_socket.remote_endpoint().address().to_string();
-                    } catch (...) {
-                    }
-                    try {
-                        m_socket.close();
-                    } catch (...) {
-                    }
-                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() +
-                                                   ". Channel '" + local_ep_ip + "'->'" + remote_ep_ip +
-                                                   "' is closed!");
+                if (m_textSerializer) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION(
+                          "Text serialization is not implemented for vectors of BufferSets");
                 }
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
-
-        void TcpChannel::write(const char* header, const size_t& headerSize,
-                               const std::vector<karabo::io::BufferSet::Pointer>& body) {
-            try {
-                boost::system::error_code error; // in case of error
-
-                if (m_sizeofLength == 0) {
-                    throw KARABO_PARAMETER_EXCEPTION(
-                          "With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const "
-                          "size_t& size) instead.");
-                }
+                std::vector<char> headerBuf;
+                m_binarySerializer->save(header, headerBuf);
+                const size_t headerSize = headerBuf.size();
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
                 size_t total_size = 0;
                 for (const auto& b : body) total_size += b->totalSize();
                 _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, total_size);
                 vector<const_buffer> buf;
                 buf.push_back(buffer(m_outboundHeaderPrefix));
-                buf.push_back(buffer(header, headerSize));
+                buf.push_back(buffer(headerBuf));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 karabo::io::BufferSet::appendTo(buf, body);
                 boost::mutex::scoped_lock lock(m_socketMutex);
@@ -1299,17 +1244,6 @@ namespace karabo {
         }
 
 
-        void TcpChannel::asyncWriteHandler(const ErrorCode& e, const size_t length,
-                                           const Channel::WriteCompleteHandler& handler) {
-            try {
-                m_writtenBytes += length;
-                EventLoop::getIOService().post(boost::bind(handler, e));
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
-
         void TcpChannel::writeAsyncHashVectorBufferSetPointer(const karabo::util::Hash& hdr,
                                                               const std::vector<karabo::io::BufferSet::Pointer>& body,
                                                               const WriteCompleteHandler& handler) {
@@ -1351,16 +1285,21 @@ namespace karabo {
             }
         }
 
+        void TcpChannel::asyncWriteHandler(const ErrorCode& e, const size_t length,
+                                           const Channel::WriteCompleteHandler& handler) {
+            try {
+                m_writtenBytes += length;
+                handler(e);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
 
         void TcpChannel::asyncWriteHandlerBody(const ErrorCode& e, const size_t length,
                                                const Channel::WriteCompleteHandler& handler,
                                                const boost::shared_ptr<std::vector<char>>& body) {
-            try {
-                m_writtenBytes += length;
-                EventLoop::getIOService().post(boost::bind(handler, e));
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            asyncWriteHandler(e, length, handler);
         }
 
 
@@ -1368,12 +1307,7 @@ namespace karabo {
                                                      const Channel::WriteCompleteHandler& handler,
                                                      const boost::shared_ptr<std::vector<char>>& header,
                                                      const boost::shared_ptr<std::vector<char>>& body) {
-            try {
-                m_writtenBytes += length;
-                EventLoop::getIOService().post(boost::bind(handler, e));
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            asyncWriteHandler(e, length, handler);
         }
 
 
