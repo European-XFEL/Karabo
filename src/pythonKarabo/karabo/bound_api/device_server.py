@@ -502,7 +502,9 @@ class DeviceServer:
         modname = self.availableDevices[classid]["module"]
 
         # Create unique filename in /tmp - without '/' from deviceid...
-        fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.xml"
+        # .bin indicates binary format:
+        # XML has trouble with VECTOR_STRING where string contains comma
+        fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.bin"
         filename_data = {'mod': modname, 'cls': classid, 'pid': self.pid,
                          'dev': deviceid.replace(os.path.sep, '_')}
         while True:
@@ -512,7 +514,7 @@ class DeviceServer:
             else:
                 break
 
-        saveToFile(config, filename, Hash("format.Xml.indentation", 2))
+        saveToFile(config, filename)
         params = [modname, classid, filename]
 
         with self.deviceInstanceMapLock:
