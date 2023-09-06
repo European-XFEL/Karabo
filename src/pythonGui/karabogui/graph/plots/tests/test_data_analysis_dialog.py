@@ -51,7 +51,7 @@ def test_fetch_data(gui_app):
     expected = ["Gaussian", "Sech Square", "Step function (CDF)",
                 "Linear function"]
     assert items == expected
-    assert not dialog.auto_update_checkbox.isChecked()
+    assert not dialog.fit_on_update_checkbox.isChecked()
     x, y = dialog.data_curve.getData()
     assert all(y == np.array(value))
     assert dialog.result_label.text() == ""
@@ -218,3 +218,28 @@ def test_sech_sequred(gui_app):
                         7.21354721, 9.10750318, 9.56312261, 8.27814066,
                         6.0563046, 3.91234989])
     np.isclose(expected, fit_y)
+
+
+def test_auto_update(gui_app):
+    schema = Object.getClassSchema()
+    proxy = get_class_property_proxy(schema, "prop")
+    value = [1.0, 2.0, 3.0, 5.0, 7.0, 9.0, 10.0, 8.0, 6.0, 4.0]
+    proxy.value = value
+    dialog = DataAnalysisDialog(proxies=[proxy], config=CONFIG, parent=None)
+    x, y = dialog.data_curve.getData()
+    assert_array_equal(y, value)
+
+    # Plot should not be updated on proxy update.
+    dialog.proxy.binding.config_update = True
+    new_value = np.array([60, 50, 40, 30, 20, 10])
+    proxy.value = new_value
+    x, y = dialog.data_curve.getData()
+    with np.testing.assert_raises(AssertionError):
+        assert_array_equal(y, new_value)
+
+    # With auto_update checked, plot should be updated on proxy update.
+    dialog.auto_update.setChecked(True)
+    dialog.proxy.binding.config_update = True
+    dialog.proxy.value = new_value
+    x, y = dialog.data_curve.getData()
+    assert_array_equal(y, new_value)
