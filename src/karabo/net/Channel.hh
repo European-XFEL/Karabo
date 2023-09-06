@@ -501,20 +501,6 @@ namespace karabo {
             /**
              * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is
              * called
-             * @param a karabo::io::BufferSet containing the data to be written.
-             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a
-             * boost::function which takes const boost::system::error_code& as its only argument.
-             *
-             * Note: it is not guaranteed that the BufferSet manages the data it holds. Care must thus be taken that
-             * data is not altered or deleted before the async. write operation completes.
-             */
-            virtual void writeAsyncBufferSet(const karabo::io::BufferSet& data, const WriteCompleteHandler& handler) {
-                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
-            }
-
-            /**
-             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is
-             * called
              * @param data vector of chars containing the data to be written, passed as a shared pointer
              * @param handler to be called upon write completion handler. Needs to be a function wrapped into a
              * boost::function which takes const boost::system::error_code& as its only argument.
