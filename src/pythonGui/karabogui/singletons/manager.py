@@ -705,6 +705,10 @@ class Manager(QObject):
 
         def show_data():
             if name not in self._big_data:
+                # This should never happen, but keep going
+                get_network().onError(
+                    f"Received big data although not scheduled for {name}.")
+                get_network().onRequestNetwork(name)
                 return
             data_hash, meta_hash = self._big_data.pop(name)
             device_id, prop_path = name.split(":")
