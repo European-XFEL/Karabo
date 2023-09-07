@@ -3111,7 +3111,7 @@ namespace karabo {
 
         Hash getHeartbeatInfo(const Hash& instanceInfo) {
             return Hash("type", instanceInfo.get<std::string>("type"), //
-                        "heartbeatInterval", instanceInfo.get<std::string>("heartbeatInterval"));
+                        "heartbeatInterval", instanceInfo.get<int>("heartbeatInterval"));
         }
 
 
