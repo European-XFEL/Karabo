@@ -56,6 +56,24 @@ def test_vector_scatter_graph_basics(vector_scatter_setup):
     np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
     np.testing.assert_array_almost_equal(y, [1, 2, 3])
 
+    # y is different
+    set_proxy_value(proxy, "x", [2.3, 4.5, 7.9])
+    set_proxy_value(prop_proxy, "y", [1, 2, 3, 4])
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
+    np.testing.assert_array_almost_equal(y, [1, 2, 3])
+
+    # x is different
+    set_proxy_value(proxy, "x", [2.3, 4.5])
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(x, [2.3, 4.5, 7.9])
+    np.testing.assert_array_almost_equal(y, [1, 2, 3])
+    # No replot happened, y provides the update, we have size 2 on x
+    set_proxy_value(prop_proxy, "y", [1, 2, 3, 4])
+    x, y = curve.getData()
+    np.testing.assert_array_almost_equal(x, [2.3, 4.5])
+    np.testing.assert_array_almost_equal(y, [1, 2])
+
 
 def test_vector_scatter_graph_pointsize(vector_scatter_setup, mocker):
     _, proxy, prop_proxy = vector_scatter_setup
