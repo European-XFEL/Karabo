@@ -76,6 +76,11 @@ _CHANGED_COLOR = STATE_COLORS[State.CHANGING] + (128,)
 
 
 class BaseSearchBar(QWidget):
+    """The `BaseSearchBar` for filtering a`QAbstractItemModel`
+
+    Note: By default this class does not apply a `QValidator` for text
+          filtering.
+    """
     ui_file = None
 
     def __init__(self, parent=None):
@@ -85,8 +90,6 @@ class BaseSearchBar(QWidget):
         self.ui_filter.textChanged.connect(self._filter_modified)
         self.ui_search.clicked.connect(self._search_clicked)
         self.ui_clear.clicked.connect(self._clear_clicked)
-        # Test typical instanceId, classId filtering
-        self.ui_filter.setValidator(SearchValidator())
 
         # Set StyleSheets
         self._filter_normal = _QEDIT_STYLE.format((0, 0, 0, 0))
@@ -185,10 +188,15 @@ class BaseSearchBar(QWidget):
 
 
 class BaseSelectionBar(BaseSearchBar):
+    """The `BaseSelectionBar` class that is used in the topology filtering
+
+    This class applies a `QValidator` for instance filtering
+    """
     ui_file = "combo_filter.ui"
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.ui_filter.setValidator(SearchValidator())
         self.setup_combo()
         # Set StyleSheets
         self._combo_normal = _QCOMBOX_STYLE.format((0, 0, 0, 0))
