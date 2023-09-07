@@ -124,6 +124,34 @@ def test_save_button(dialog):
     assert not dialog.ok_button.isEnabled()
 
 
+def test_title(dialog, mocker):
+    default_title = ("<ConfigurationPanel proxy=<DeviceClassProxy "
+                     "classId=Simple serverId=test_server>>")
+    assert default_title == dialog.title_line_edit.placeholderText()
+    network = Network()
+    with singletons(network=network):
+        saveLogBook = mocker.patch.object(network, "onSaveLogBook")
+        dialog.done(1)
+        _, args = saveLogBook.call_args
+        assert (args["title"]) == f"Image: {default_title}"
+
+        custom_title = "Configuration Panel"
+        dialog.title_line_edit.setText(custom_title)
+        dialog.done(1)
+        _, args = saveLogBook.call_args
+        assert (args["title"]) == f"Image: {custom_title}"
+
+        # Table
+        dialog.combo_datatype.setCurrentIndex(1)
+        dialog.done(1)
+        _, args = saveLogBook.call_args
+        assert (args["title"]) == f"Data: {custom_title}"
+        dialog.title_line_edit.clear()
+        dialog.done(1)
+        _, args = saveLogBook.call_args
+        assert (args["title"]) == f"Data: {default_title}"
+
+
 def test_toolbar(dialog):
     toolbar = dialog.drawing_toolbar
     assert not toolbar.isVisibleTo(dialog)
