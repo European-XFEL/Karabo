@@ -151,6 +151,9 @@ class LogBookPreview(QDialog):
         self.draw_button.toggled.connect(self._set_drawing_mode)
         self.drawing_toolbar.setVisible(False)
 
+        title = repr(self.parent())
+        self.title_line_edit.setPlaceholderText(title)
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -297,11 +300,14 @@ class LogBookPreview(QDialog):
         panel = self.parent()
         stack = self.combo_datatype.currentText()
         info = {}
+        title = self.title_line_edit.text().strip()
+        if not title:
+            title = repr(panel)
         if stack == LOGBOOK_DATA:
-            info["title"] = f"Data: {repr(panel)}"
+            info["title"] = f"Data: {title}"
             info.update(self._extract_panel_data())
         elif stack == LOGBOOK_IMAGE:
-            info["title"] = f"Image: {repr(panel)}"
+            info["title"] = f"Image: {title}"
             info.update(self._extract_panel_image())
 
         return info
