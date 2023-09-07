@@ -25,7 +25,7 @@
   <property name="windowTitle">
    <string>Logbook: Preview</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,6,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,6,0">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -84,6 +84,36 @@
      </item>
      <item>
       <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Title:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="title_line_edit"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
