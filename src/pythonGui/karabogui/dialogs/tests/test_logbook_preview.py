@@ -159,8 +159,9 @@ def test_toolbar(dialog):
     dialog.draw_button.setChecked(True)
     assert toolbar.isVisibleTo(dialog)
     actions = toolbar.actions()
-    assert len(actions) == 4
-    expected = ["Line", "Rect", "Text", "Eraser"]
+    assert len(actions) == 5
+    # First item is color button with no text.
+    expected = ["", "Line", "Rect", "Text", "Eraser"]
     assert [action.text() for action in actions] == expected
 
 
