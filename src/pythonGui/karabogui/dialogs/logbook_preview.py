@@ -18,9 +18,9 @@ from functools import partial
 
 from qtpy import uic
 from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Signal, Slot
-from qtpy.QtGui import QPainter, QPixmap
+from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
 from qtpy.QtWidgets import (
-    QAction, QActionGroup, QCheckBox, QDialog, QDialogButtonBox,
+    QAction, QActionGroup, QCheckBox, QColorDialog, QDialog, QDialogButtonBox,
     QGraphicsScene, QLineEdit, QTableWidgetItem)
 
 from karabo.common.scenemodel.api import create_base64image
@@ -89,6 +89,10 @@ class Canvas(QGraphicsScene):
         if tool is None:
             self.resetTool.emit()
 
+    def set_drawing_color(self, color):
+        if self.drawing_tool is not None:
+            self.drawing_tool.set_pen_color(color)
+
 
 class LogBookPreview(QDialog):
     """A Dialog to preview the data to the LogBook"""
@@ -145,6 +149,7 @@ class LogBookPreview(QDialog):
         self.select_all.clicked.connect(self._select_all)
         self.deselect_all.clicked.connect(self._deselect_all)
 
+        self._annotation_color = QColor("red")
         self.draw_button.setIcon(icons.draw)
         self._create_zoom_toolbar()
         self.drawing_toolbar = self._create_drawing_toolbar()
@@ -353,6 +358,15 @@ class LogBookPreview(QDialog):
         """Create a toolbar with annotate tools """
         toolbar = ToolBar(parent=self)
         self.action_group_draw = QActionGroup(self)
+
+        color_action = QAction(parent=self)
+        color_action.setToolTip("Change annotation color")
+        color_action.triggered.connect(self._change_color)
+        toolbar.addAction(color_action)
+        self.action_group_draw.addAction(color_action)
+        self._color_action = color_action
+        self._set_button_color()
+
         for tool_factory in get_tools():
             text = tool_factory.name
             action = QAction(tool_factory.icon, text, self)
@@ -371,9 +385,26 @@ class LogBookPreview(QDialog):
         return toolbar
 
     @Slot()
+    def _change_color(self):
+        """Show a color dialog to choose the annotation color """
+        color = QColorDialog.getColor(
+            initial=self._annotation_color, parent=self)
+        if color.isValid():
+            self._annotation_color = color
+            self._set_button_color()
+            self.canvas.set_drawing_color(color)
+
+    def _set_button_color(self):
+        """Set the color on the color button."""
+        pixmap = QPixmap(16, 16)
+        pixmap.fill(self._annotation_color)
+        self._color_action.setIcon(QIcon(pixmap))
+
+    @Slot()
     def activate_tool(self, tool):
         self.view.setCursor(Qt.CrossCursor)
         self.canvas.set_drawing_tool(tool)
+        self.canvas.set_drawing_color(self._annotation_color)
 
     @Slot()
     def reset_tool(self):
