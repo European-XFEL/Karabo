@@ -15,7 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import threading
-import time
 
 import karabind
 import pytest
@@ -25,6 +24,11 @@ import karathon
 debugFlag = False
 lock = threading.Lock()
 
+# For debugging to get exceptions printed that are caugth by C++ event loop:
+# from karathon import Logger
+# Logger.configure()
+# Logger.useOstream()
+
 
 @pytest.fixture(scope="module")
 def event_loop():
@@ -33,6 +37,9 @@ def event_loop():
     EventLoop = karabind.EventLoop
     loop_thread = threading.Thread(target=EventLoop.work)
     loop_thread.start()
+    # test_asynch_write_read needs an extra thread if readAsyncXxx would be
+    # called before writeAsyncXxx
+    EventLoop.addThread()
 
     yield  # now test is executed
 
@@ -41,36 +48,78 @@ def event_loop():
 
 
 @pytest.mark.parametrize(
-    "Connection, Hash, fullyEqual",
-    [(karabind.Connection, karabind.Hash, karabind.fullyEqual),
-     (karathon.Connection, karathon.Hash, karathon.fullyEqual)
+    "Broker, Schema, Hash, SignalSlotable",
+    [(karabind.Broker, karabind.Schema, karabind.Hash,
+      karabind.SignalSlotable),
+     (karathon.Broker, karathon.Schema, karathon.Hash, karathon.SignalSlotable)
      ])
-def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
+def test_broker(Broker, Schema, Hash, SignalSlotable):
+
+    s = Schema()
+    Broker.expectedParameters(s)
+    assert s.has("brokers")
+
+    brokerType = Broker.brokerTypeFromEnv()
+    assert brokerType in Broker.getRegisteredClasses()
+
+    # Create a Broker via SignalSlotable to test the only (besides from some
+    # macro) non-static member function that is exposed to Python:
+    sigSlot = SignalSlotable("brokerCreator", Hash(), 60, Hash())
+    broker = sigSlot.getConnection()
+    assert type(broker) is Broker
+    brokerProtocol = "tcp" if brokerType == "jms" else brokerType
+    assert broker.getBrokerUrl().startswith(brokerProtocol + "://")
+
+
+# Could become a fixture that requires event_loop fixture, but then I do not
+# know how to pass the classes
+def setup_server_client(Connection, Hash):
+    """
+    Create server and client connected to each other, using Connection and Hash
+    classes as passed by argument.
+    """
     # Alice as server, bob as client. Server cannot be started synchronously
     # since then the port that the client should connect to is not available.
 
     aliceConn = Connection.create("Tcp", Hash("type", "server"))
     alice = None  # to become the Channel
 
+    connectedCond = threading.Condition()
+
     def onConnect(ec, channel):
         nonlocal alice
         alice = channel
+        with connectedCond:
+            connectedCond.notify()
 
     aPort = aliceConn.startAsync(onConnect)
 
     bobCfg = Hash("type", "client", "hostname", "localhost", "port", aPort)
     bobConn = Connection.create("Tcp", bobCfg)
-    bob = bobConn.start()  # bob is the Channel
-
-    # Wait until alice took note of the connection and her channel is available
-    timeout = 2
-    while alice is None and timeout > 0:
-        time.sleep(0.01)
-        timeout -= 0.01
+    with connectedCond:
+        bob = bobConn.start()  # bob is the Channel
+        connectedCond.wait()  # wait until notified
 
     assert alice is not None
+    aliceConn2 = alice.getConnection()
+    assert type(aliceConn) is Connection
+    if Connection is not karathon.Connection:
+        # karathon creates a new Python object here :-(
+        assert aliceConn2 is aliceConn
 
-    # Alice and Bob are prepared, so we start testing write and read methods.
+    # Better return (and thus keep alive) the connections as well:
+    # C++ TcpChannel keeps only weak_ptr to its TcpConnection.
+    return alice, aliceConn, bob, bobConn
+
+
+@pytest.mark.parametrize(
+    "Connection, Hash, fullyEqual",
+    [(karabind.Connection, karabind.Hash, karabind.fullyEqual),
+     (karathon.Connection, karathon.Hash, karathon.fullyEqual)
+     ])
+def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
+
+    alice, aliceConn, bob, bobConn = setup_server_client(Connection, Hash)
 
     alice.write("messageStr")  # str
     readMsg = bob.readStr()
@@ -88,7 +137,7 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
     readMsg = bob.readHash()
     assert fullyEqual(readMsg, Hash("hash", "message"))
 
-    if type(aliceConn) is not karathon.Connection:  # TODO FIXME
+    if type(alice) is not karathon.Channel:
         # With karathon I get
         # TypeError: Python type in parameters is not supported
         # The above exception was the direct cause of the following exception:
@@ -122,7 +171,7 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
     assert fullyEqual(readHeader, Hash("a", "header"))
     assert fullyEqual(readMsg, Hash("hash", "message"))
 
-    if type(aliceConn) is not karathon.Connection:  # TODO FIXME
+    if type(alice) is not karathon.Channel:
         # With karathon I get TypeError etc., as above
         with pytest.raises(RuntimeError) as excinfo:
             alice.write(Hash("a", "header"), 1)  # not supported
@@ -133,6 +182,235 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
             alice.write(1, "message")  # not supported header type
             assert ("TypeError:  write(): incompatible function arguments."
                     in str(excinfo.value))
+
+
+@pytest.mark.parametrize(
+    "Connection, Hash, fullyEqual",
+    [(karabind.Connection, karabind.Hash, karabind.fullyEqual),
+     (karathon.Connection, karathon.Hash, karathon.fullyEqual)
+     ])
+def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
+    # Test asynchronous write and read methods.
+
+    alice, aliceConn, bob, bobConn = setup_server_client(Connection, Hash)
+
+    ###################################################################
+    # Write and read str
+    ###################################################################
+
+    ecWrite = None
+    channelWrite = None
+    conditionWrite = threading.Condition()
+
+    def writeComplete(ec, channel):
+        nonlocal ecWrite, channelWrite
+        ecWrite = ec
+        channelWrite = channel
+        with conditionWrite:
+            conditionWrite.notify()
+
+    alice.writeAsyncStr("messageStr", writeComplete)
+    with conditionWrite:
+        conditionWrite.wait()
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
+
+    ecRead = None
+    channelRead = None
+    msgRead = None
+    conditionRead = threading.Condition()
+
+    def onRead1(ec, channel, msg):
+        nonlocal ecRead, channelRead, msgRead
+        ecRead = ec
+        channelRead = channel
+        msgRead = msg
+        with conditionRead:
+            conditionRead.notify()
+
+    bob.readAsyncStr(onRead1)
+    with conditionRead:
+        conditionRead.wait()
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert msgRead == "messageStr"
+
+    ###################################################################
+    # Write bytes (and read as str)
+    ###################################################################
+
+    # Reset to re-use writeComplete and onRead1
+    ecWrite = channelWrite = None
+    ecRead = channelRead = msgRead = None
+
+    alice.writeAsyncStr(b"messageStr", writeComplete)
+    with conditionWrite:
+        conditionWrite.wait()
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
+
+    bob.readAsyncStr(onRead1)
+    with conditionRead:
+        conditionRead.wait()
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert msgRead == "messageStr"
+
+    ###################################################################
+    # Write bytearray (and read as str)
+    ###################################################################
+    # Reset to re-use writeComplete and onRead1
+    ecWrite = channelWrite = ecRead = None
+    channelRead = msgRead = None
+
+    alice.writeAsyncStr(bytearray("messageStr", encoding="utf8"),
+                        writeComplete)
+    with conditionWrite:
+        conditionWrite.wait()
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
+
+    bob.readAsyncStr(onRead1)
+
+    with conditionRead:
+        conditionRead.wait()
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert msgRead == "messageStr"
+
+    ###################################################################
+    # Write and read Hash
+    ###################################################################
+    # Reset to re-use writeComplete and onRead1
+    ecWrite = channelWrite = None
+    ecRead = channelRead = msgRead = None
+
+    alice.writeAsyncHash(Hash("hash", "message"), writeComplete)
+    with conditionWrite:
+        conditionWrite.wait()
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
+
+    bob.readAsyncHash(onRead1)
+    with conditionRead:
+        conditionRead.wait()
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert fullyEqual(msgRead, Hash("hash", "message"))
+
+    ###################################################################
+    # Write and read Hash, string
+    ###################################################################
+
+    # Reset to re-use writeComplete
+    ecWrite = channelWrite = None
+
+    # Need an onRead2 for header/body messages
+    ecRead = channelRead = headerRead = msgRead = None
+
+    def onRead2(ec, channel, header, msg):
+        nonlocal ecRead, channelRead, headerRead, msgRead
+        ecRead = ec
+        channelRead = channel
+        headerRead = header
+        msgRead = msg
+        with conditionRead:
+            conditionRead.notify()
+
+    if type(alice) is not karathon.Channel:
+        # karathon produces
+        # SystemError: <Boost.Python.function object at 0x556c668fe940> \
+        #    returned a result with an error set
+        alice.writeAsyncHashStr(Hash("header", "message"), "body",
+                                writeComplete)
+        with conditionWrite:
+            conditionWrite.wait()
+        assert ecWrite.value() == 0
+        assert alice is channelWrite
+
+        bob.readAsyncHashStr(onRead2)
+
+        with conditionRead:
+            conditionRead.wait()
+        assert ecRead.value() == 0
+        assert bob is channelRead
+        assert fullyEqual(headerRead, Hash("header", "message"))
+        assert msgRead == "body"
+
+    ###################################################################
+    # Write and read Hash, bytes
+    ###################################################################
+    # Reset to re-use writeComplete and onRead2
+    ecWrite = channelWrite = None
+    ecRead = channelRead = headerRead = msgRead = None
+
+    if type(alice) is not karathon.Channel:
+        # karathon produces an exception "Error in 'onRead2'"
+        alice.writeAsyncHashStr(Hash("header", "message b"), b"bytes",
+                                writeComplete)
+        with conditionWrite:
+            conditionWrite.wait()
+        assert ecWrite.value() == 0
+        assert alice is channelWrite
+
+        bob.readAsyncHashStr(onRead2)
+
+        with conditionRead:
+            conditionRead.wait()
+        assert ecRead.value() == 0
+        assert bob is channelRead
+        assert fullyEqual(headerRead, Hash("header", "message b"))
+        assert msgRead == "bytes"
+
+    ###################################################################
+    # Write and read Hash, bytearray
+    ###################################################################
+    # Reset to re-use writeComplete and onRead2
+    ecWrite = channelWrite = None
+    ecRead = channelRead = headerRead = msgRead = None
+
+    if type(alice) is not karathon.Channel:
+        # karathon produces an exception "Error in 'onRead2'"
+        alice.writeAsyncHashStr(Hash("header", "message b2"),
+                                bytearray("bytearray", encoding="utf8"),
+                                writeComplete)
+        with conditionWrite:
+            conditionWrite.wait()
+        assert ecWrite.value() == 0
+        assert alice is channelWrite
+
+        bob.readAsyncHashStr(onRead2)
+
+        with conditionRead:
+            conditionRead.wait()
+        assert ecRead.value() == 0
+        assert bob is channelRead
+        assert fullyEqual(headerRead, Hash("header", "message b2"))
+        assert msgRead == "bytearray"
+
+    ###################################################################
+    # Write and read Hash, Hash
+    ###################################################################
+    # Reset to re-use writeComplete and onRead2
+    ecWrite = channelWrite = None
+    ecRead = channelRead = headerRead = msgRead = None
+
+    alice.writeAsyncHashHash(Hash("header", "message a"),
+                             Hash("body", "message b"),
+                             writeComplete)
+    with conditionWrite:
+        conditionWrite.wait()
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
+
+    bob.readAsyncHashHash(onRead2)
+
+    with conditionRead:
+        conditionRead.wait()
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert fullyEqual(headerRead, Hash("header", "message a"))
+    assert fullyEqual(msgRead, Hash("body", "message b"))
 
 
 def DEBUG(s):
@@ -216,7 +494,6 @@ def test_tcp_client_server(Connection, EventLoop, Hash):
     def onError(ec, channel):
         channel.close()
         server.stop()
-        # time.sleep(1)
         EventLoop.stop()
 
     def onReadHashHash(ec, channel, header, body):
