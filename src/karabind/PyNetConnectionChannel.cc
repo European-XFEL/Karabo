@@ -47,7 +47,7 @@ void exportPyNetConnectionChannel(py::module_& m) {
 
               .def_static("brokerTypeFromEnv", &Broker::brokerTypeFromEnv)
 
-                    KARABO_PYTHON_FACTORY_CONFIGURATOR(Broker)
+                    KARABO_PYTHON_FACTORY_CONFIGURATOR_NOCREATE(Broker)
 
               .attr("__karabo_cpp_classid__") = "Broker";
     }
@@ -297,16 +297,22 @@ void exportPyNetConnectionChannel(py::module_& m) {
                     "writeAsyncStr",
                     [](const Channel::Pointer& self, const py::object& o, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("Handler is None");
-                        std::string s;
-                        if (!wrapper::fromPyObjectToString(o, s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
+                        // Does not compile with make_unique, complains about some usage of deleted function
+                        auto s = std::make_shared<std::string>();
+                        if (!wrapper::fromPyObjectToString(o, *s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
                         py::gil_scoped_release release;
-                        self->writeAsyncRaw(s.c_str(), s.size(), [handler, self, s{std::move(s)}](const ErrorCode& e) {
+                        const char* strPtr = s->data();
+                        const size_t strSize = s->size();
+                        // bind 's' to keep its memory alive and valid - need variables strXxx instead of directly
+                        // passing s->func() to ensure things are not moved away before passed (argument determination
+                        // order is not defined by standard, IIRC)
+                        self->writeAsyncRaw(strPtr, strSize, [handler, self, s = std::move(s)](const ErrorCode& e) {
                             py::gil_scoped_acquire gil;
                             try {
                                 handler(py::cast(e), py::cast(self));
                             } catch (py::error_already_set& e) {
                                 karabind::detail::treatError_already_set(e, handler,
-                                                                         "writeAsyncHash Completion handler");
+                                                                         "writeAsyncStr Completion handler");
                             } catch (...) {
                                 KARABO_RETHROW
                             }
@@ -340,11 +346,14 @@ void exportPyNetConnectionChannel(py::module_& m) {
                     "writeAsyncHashStr",
                     [](const Channel::Pointer& self, const Hash& h, const py::object& b, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("writeCompletionHandler is None");
-                        std::string s;
-                        if (!wrapper::fromPyObjectToString(b, s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
+                        auto s = std::make_shared<std::string>();
+                        if (!wrapper::fromPyObjectToString(b, *s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
                         py::gil_scoped_release release;
+                        const char* strPtr = s->data();
+                        const size_t strSize = s->size();
+                        // See above in writeAsyncStr about strPtr, strSize and s = make_shared...
                         self->writeAsyncHashRaw(
-                              h, s.c_str(), s.size(), [handler, self, s{std::move(s)}](const ErrorCode& e) {
+                              h, strPtr, strSize, [handler, self, s{std::move(s)}](const ErrorCode& e) {
                                   py::gil_scoped_acquire gil;
                                   try {
                                       handler(py::cast(e), py::cast(self));
