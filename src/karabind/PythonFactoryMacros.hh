@@ -24,18 +24,31 @@
 
 namespace py = pybind11;
 
+#define KARABO_PYTHON_FACTORY_CONFIGURATOR_NOCREATE(baseClass)                                                   \
+    .def("getClassInfo", &baseClass::getClassInfo)                                                               \
+          .def_static("classInfo", &karabo::util::Configurator<baseClass>::classInfo,                            \
+                      "Returns C++ introspection info for \"" #baseClass "\"")                                   \
+          .def_static(                                                                                           \
+                "getRegisteredClasses",                                                                          \
+                []() -> py::list {                                                                               \
+                    std::vector<std::string> v = baseClass::getRegisteredClasses();                              \
+                    return py::cast(v);                                                                          \
+                },                                                                                               \
+                "Get list of classIds of all C++ classes derived from given C++ base class \"" #baseClass "\".") \
+          .def_static("getSchema", &karabo::util::Configurator<baseClass>::getSchema, py::arg("classId"),        \
+                      py::arg("rules") = karabo::util::Schema::AssemblyRules(),                                  \
+                      "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass      \
+                      "\" using assembly \"rules\"")
+
 #define KARABO_PYTHON_FACTORY_CONFIGURATOR(baseClass)                                                                  \
-    .def("getClassInfo", &baseClass::getClassInfo)                                                                     \
-          .def_static("classInfo", &karabo::util::Configurator<baseClass>::classInfo,                                  \
-                      "Returns C++ introspection info for \"" #baseClass "\"")                                         \
-          .def_static("create",                                                                                        \
-                      (boost::shared_ptr<baseClass>(*)(karabo::util::Hash const &, bool const)) &                      \
-                            karabo::util::Configurator<baseClass>::create,                                             \
-                      py::arg("input"), py::arg("validate") = true,                                                    \
-                      "The factory method to create instance of C++ class derived from C++ base class \"" #baseClass   \
-                      "\" using \"input\" configuration. The configuration should have \"classId\" of class to be "    \
-                      "created\nas a root element.  The last argument is a flag to "                                   \
-                      "determine if the input configuration should be validated.")                                     \
+    .def_static("create",                                                                                              \
+                (boost::shared_ptr<baseClass>(*)(karabo::util::Hash const &, bool const)) &                            \
+                      karabo::util::Configurator<baseClass>::create,                                                   \
+                py::arg("input"), py::arg("validate") = true,                                                          \
+                "The factory method to create instance of C++ class derived from C++ base class \"" #baseClass         \
+                "\" using \"input\" configuration. The configuration should have \"classId\" of class to be "          \
+                "created\nas a root element.  The last argument is a flag to "                                         \
+                "determine if the input configuration should be validated.")                                           \
           .def_static(                                                                                                 \
                 "create",                                                                                              \
                 (boost::shared_ptr<baseClass>(*)(std::string const &, karabo::util::Hash const &, bool const)) &       \
@@ -73,16 +86,6 @@ namespace py = pybind11;
                 "\"" #baseClass                                                                                        \
                 "\" using \"input\" configuration.\n"                                                                  \
                 "The last argument is a flag to determine if the input configuration should be validated.")            \
-          .def_static(                                                                                                 \
-                "getRegisteredClasses",                                                                                \
-                []() -> py::list {                                                                                     \
-                    std::vector<std::string> v = baseClass::getRegisteredClasses();                                    \
-                    return py::cast(v);                                                                                \
-                },                                                                                                     \
-                "Get list of classIds of all C++ classes derived from given C++ base class \"" #baseClass "\".")       \
-          .def_static("getSchema", &karabo::util::Configurator<baseClass>::getSchema, py::arg("classId"),              \
-                      py::arg("rules") = karabo::util::Schema::AssemblyRules(),                                        \
-                      "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass            \
-                      "\" using assembly \"rules\"")
+                KARABO_PYTHON_FACTORY_CONFIGURATOR_NOCREATE(baseClass)
 
 #endif /* PYTHONFACTORYMACROS_HH */
