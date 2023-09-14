@@ -158,6 +158,8 @@ namespace karathon {
                                                      const bp::object& handler);
         static void registerShowStatisticsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
                                                     const bp::object& handler);
+        static void registerSharedInputSelectorPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
+                                                  const bp::object& handler);
     };
 
     struct InputChannelWrap {
