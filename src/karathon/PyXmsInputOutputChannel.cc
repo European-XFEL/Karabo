@@ -222,6 +222,15 @@ namespace karathon {
         self->registerShowStatisticsHandler(wrappedHandler);
     }
 
+    void OutputChannelWrap::registerSharedInputSelectorPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
+                                                          const bp::object& handler) {
+        karabo::xms::SharedInputSelector selector;
+        if (!handler.is_none()) {
+            selector = ReturnHandlerWrap<std::string, const std::vector<std::string>&>(handler, "sharedInputSelector");
+        } // else we reset the selection
+        self->registerSharedInputSelector(std::move(selector));
+    }
+
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data,
                                     const bp::object& meta, bool copyAllData) {
         if (!bp::extract<karathon::ChannelMetaData>(meta).check()) {
@@ -634,6 +643,17 @@ void exportPyXmsInputOutputChannel() {
                    "Argument of the handler are two lists of numbers: bytes read from and written to\n"
                    "connected channels, in the same order as in the connection table.")
 
+              .def("registerSharedInputSelector", &karathon::OutputChannelWrap().registerSharedInputSelectorPy,
+                   (bp::arg("selector")),
+                   R"(Register handler that selects which of the connected input channels that have
+dataDistribution = "shared" is to be served.
+
+The handler will be called during update() with the ids of the connected
+"shared" input channels (e.g. "deviceId:input") as argument. The returned
+channel id will receive the data. If an empty string or an unknown id is
+returned, the data will be dropped.
+
+:param selector takes a list of str as argument and shall return str)")
               .def("create", &karathon::OutputChannelWrap::create,
                    (bp::arg("instanceId"), bp::arg("channelName"), bp::arg("channelConfig")))
               .staticmethod("create");

@@ -34,12 +34,60 @@
 namespace py = pybind11;
 
 namespace karabind {
+    template <typename Ret, typename... Args>
+    class ReturnHandlerWrap {
+       public:
+        /**
+         * Construct a wrapper for a Python handler whose return value is of interest.
+         *
+         * The return value of the handler must be castable to 'Ret',
+         * 'Args` are the C++ arguments that the wrapper is expected to be called with.
+         *
+         * @param handler the Python callable to wrap
+         * @param where a C string identifying which handler is wrapped,
+         *              for debugging only, i.e. used if a call to the handler raises an exception
+         */
+        ReturnHandlerWrap(const py::object& handler, char const* const where)
+            : m_handler(std::make_shared<py::object>(handler)), // new object on the heap to control its destruction
+              m_where(where) {}
 
-    template <typename... Args> // if needed, could specify return type of operator() as fixed first template argument
+
+        ~ReturnHandlerWrap() {
+            // Ensure that destructor of Python handler object is called with GIL
+            py::gil_scoped_acquire gil;
+            m_handler.reset();
+        }
+
+
+        Ret operator()(Args... args) const {
+            py::gil_scoped_acquire gil;
+            py::object pyResult;
+            try {
+                if (*m_handler) {
+                    // Just call handler with individually unpacked arguments
+                    pyResult = (*m_handler)(py::cast(std::forward<Args>(args))...);
+                }
+            } catch (py::error_already_set& e) {
+                detail::treatError_already_set(e, *m_handler, m_where);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+            return pyResult.cast<Ret>();
+        }
+
+       private: // may become protected if a derived class needs to overwrite operator()
+        std::shared_ptr<py::object> m_handler;
+        char const* const m_where;
+    };
+
+    template <typename... Args>
     class HandlerWrap {
        public:
         /**
-         * Construct a wrapper for a Python handler
+         * Construct a wrapper for a Python handler whose return value is ignored.
+         *
+         * `Args` are the C++ arguments that the wrapper is expected to be called with.
+         *
          * @param handler the Python callable to wrap
          * @param where a C string identifying which handler is wrapped,
          *              for debugging only, i.e. used if a call to the handler raises an exception
@@ -61,7 +109,7 @@ namespace karabind {
             try {
                 if (*m_handler) {
                     // Just call handler with individually unpacked arguments:
-                    (*m_handler)(py::cast(args)...); // std::forward(args)?
+                    (*m_handler)(py::cast(std::forward<Args>(args))...);
                 }
             } catch (py::error_already_set& e) {
                 detail::treatError_already_set(e, *m_handler, m_where);
