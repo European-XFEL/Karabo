@@ -103,28 +103,36 @@ class DisplayVectorXYGraph(BaseBindingController):
                     # since proxy is used as key for stored curves, before
                     # getting the previous values from the proxy, we have to
                     # check for Undefined
-                    y_val = get_binding_value(p, [])
-                    if len(value) == len(y_val):
-                        rect = get_view_range(c)
-                        x, y = generate_down_sample(y_val, x=value, rect=rect,
-                                                    deviation=False)
-                        c.setData(x, y)
-
-                    else:
-                        c.setData([], [])
+                    y_value = get_binding_value(p, [])
+                    self._plot_data(c, value, y_value)
             else:
-                curve = self._curves.get(proxy, None)
-                if curve is None:
+                c = self._curves.get(proxy, None)
+                if c is None:
                     # Note: This can happen on start up ...
                     return
-                x_val = get_binding_value(self.proxy, [])
-                if len(value) == len(x_val):
-                    rect = get_view_range(curve)
-                    x, y = generate_down_sample(value, x=x_val, rect=rect,
-                                                deviation=False)
-                    curve.setData(x, y)
-                else:
-                    curve.setData([], [])
+
+                x_value = get_binding_value(self.proxy, [])
+                self._plot_data(c, x_value, value)
+
+    def _plot_data(self, curve, x, y):
+        """Plot the data x and y on the `curve`
+
+        Take into account a size missmatch of the data
+        """
+        size_x = len(x)
+        size_y = len(y)
+        size = min(size_x, size_y)
+        if size == 0:
+            curve.setData([], [])
+            return
+
+        if size_x != size_y:
+            x = x[:size]
+            y = y[:size]
+
+        rect = get_view_range(curve)
+        x, y = generate_down_sample(y, x=x, rect=rect, deviation=False)
+        curve.setData(x, y)
 
     # ----------------------------------------------------------------
     # Qt Slots
