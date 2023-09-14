@@ -676,6 +676,49 @@ namespace karathon {
         char const* const m_where;
     };
 
+    template <typename Ret, typename... Args>
+    class ReturnHandlerWrap {
+       public:
+        /**
+         * Construct a wrapper for a Python handler whose return value is of interest.
+         * The return value of the handler must be castable to 'Ret'.
+         * @param handler the Python callable to wrap
+         * @param where a C string identifying which handler is wrapped,
+         *              for debugging only, i.e. used if a call to the handler raises an exception
+         */
+        ReturnHandlerWrap(const bp::object& handler, char const* const where)
+            : m_handler(std::make_shared<bp::object>(handler)), // new object on the heap to control its destruction
+              m_where(where) {}
+
+
+        ~ReturnHandlerWrap() {
+            // Ensure that destructor of Python handler object is called with GIL
+            ScopedGILAcquire gil;
+            m_handler.reset();
+        }
+
+
+        Ret operator()(Args... args) const {
+            ScopedGILAcquire gil;
+            bp::object pyResult;
+            try {
+                if (*m_handler) {
+                    // Just call handler with individually unpacked arguments
+                    pyResult = (*m_handler)(bp::object(args)...); // std::forward(args)?
+                }
+            } catch (bp::error_already_set& e) {
+                detail::treatError_already_set(*m_handler, m_where);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+            return bp::extract<Ret>(pyResult);
+        }
+
+       private: // may become protected if a derived class needs to overwrite operator()
+        std::shared_ptr<bp::object> m_handler;
+        char const* const m_where;
+    };
+
     /**
      * Specialisation of HandlerWrap for one boost::any argument
      *
