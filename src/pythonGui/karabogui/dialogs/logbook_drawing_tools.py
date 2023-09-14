@@ -29,7 +29,6 @@ from karabogui.dialogs.font_dialog import FontDialog
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.fonts import get_alias_from_font, get_qfont
 
-PEN = QPen(QBrush(QColor("red")), 2)
 BUTTON_SIZE = 10
 
 
@@ -89,6 +88,9 @@ class BaseDrawingTool(ABCHasStrictTraits):
     # Starting point for the graphics item.
     start_pos = Instance(QPointF)
 
+    # Annotation Color
+    pen_color = Instance(QColor)
+
     @abstractmethod
     def mouse_down(self, scene, event):
         """Method to call on mouse press on the GraphicsScene"""
@@ -101,14 +103,18 @@ class BaseDrawingTool(ABCHasStrictTraits):
     def mouse_up(self, scene, event):
         """Method to call on mouse move on the GraphicsScene."""
 
+    def set_pen_color(self, color):
+        self.pen_color = color
+
 
 class LineTool(BaseDrawingTool):
 
     def mouse_down(self, scene, event):
         self.start_pos = event.scenePos()
+        pen = QPen(QBrush(QColor(self.pen_color)), 2)
         self.graphics_item = scene.addLine(
             self.start_pos.x(), self.start_pos.y(),
-            self.start_pos.x(), self.start_pos.y(), PEN)
+            self.start_pos.x(), self.start_pos.y(), pen)
 
     def mouse_move(self, scene, event):
         pos = event.scenePos()
@@ -124,9 +130,10 @@ class RectTool(BaseDrawingTool):
 
     def mouse_down(self, scene, event):
         pos = event.scenePos()
+        pen = QPen(QBrush(QColor(self.pen_color)), 2)
         self.start_pos = pos
         self.graphics_item = scene.addRect(
-            pos.x(), pos.y(), 0, 0, PEN, QBrush())
+            pos.x(), pos.y(), 0, 0, pen, QBrush())
 
     def mouse_move(self, scene, event):
         pos = event.scenePos()
