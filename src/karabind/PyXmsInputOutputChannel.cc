@@ -169,8 +169,8 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                         // That one's destruction might acquire the GIL via the destructor of HandlerWrap.
                         // So better release the GIL here (although the deadlock has not been seen without releasing).
                         self->registerShowConnectionsHandler(
-                              std::move(wrappedHandler)); // move for once when handler registration will take rvalue
-                                                          // reference...
+                              std::move(wrappedHandler)); // move for once when handler registration
+                                                          // will take rvalue reference...
                     },
                     py::arg("handler"),
                     "Register a handler to be called when the 'connection' table changes.\n"
@@ -190,6 +190,27 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     "Register a handler to be regularly called to update written and read bytes.\n"
                     "Argument of the handler are two lists of numbers: bytes read from and written to\n"
                     "connected channels, in the same order as in the connection table.")
+
+              .def(
+                    "registerSharedInputSelector",
+                    [](const OutputChannel::Pointer& self, const py::object& handler) {
+                        karabo::xms::SharedInputSelector selector;
+                        if (!handler.is_none()) {
+                            selector = ReturnHandlerWrap<std::string, const std::vector<std::string>&>(
+                                  handler, "sharedInputSelector");
+                        } // else we reset the selection
+                        self->registerSharedInputSelector(std::move(selector));
+                    },
+                    py::arg("selector"),
+                    R"(Register handler that selects which of the connected input channels that have
+dataDistribution = "shared" is to be served.
+
+The handler will be called during update() with the ids of the connected
+"shared" input channels (e.g. "deviceId:input") as argument. The returned
+channel id will receive the data. If an empty string or an unknown id is
+returned, the data will be dropped.
+
+:param selector takes a list of str as argument and shall return str)")
 
               .def_static(
                     "create",

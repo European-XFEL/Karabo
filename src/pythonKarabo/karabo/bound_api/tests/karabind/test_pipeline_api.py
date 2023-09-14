@@ -24,6 +24,11 @@ import pytest
 
 import karathon
 
+# Enable logs for debugging - does not matter which bindings are used:
+# config = karabind.Hash("priority", "DEBUG")
+# karabind.Logger.configure(config)
+# karabind.Logger.useOstream()
+
 
 class Writer:
     def __init__(self, chan, Hash, num, meta):
@@ -55,8 +60,7 @@ def test_pipeline_many_to_one(
 
     n_threads = 6
     EventLoop.addThread(n_threads)
-    # Create SignalSlotable object to use later for OutputChannel creation
-    # by C++ code.
+
     outputInstanceId = "outputChannel" + str(uuid.uuid4())
     oconf = Hash()
     outputs = []
@@ -129,7 +133,7 @@ def test_pipeline_many_to_one(
         outputInfo["outputChannelString"] = oid
         outputInfo["memoryLocation"] = "local" if i % 2 == 0 else "remote"
 
-        inputChannel.connectSync(outputInfo)
+        assert "" == inputChannel.connectSync(outputInfo)
         infos[oid] = outputInfo
 
     # Make sure that OutputChannel objects have registered our input channel
@@ -143,7 +147,7 @@ def test_pipeline_many_to_one(
         while trials > 0:
             trials -= 1
             # Check whether InputChannel is registered to receive all data
-            # from current OutputChannel with "dataDostribution = copy"
+            # from current OutputChannel with "dataDistribution = copy"
             done = out.hasRegisteredCopyInputChannel(inputId)
             if done:
                 break
@@ -269,7 +273,7 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
         assert len(stat) == 1
         assert stat["outputChannel:output"] == ConnectionStatus.DISCONNECTED
         # try to connect synchronously
-        inputChannel.connectSync(outputInfo)
+        assert "" == inputChannel.connectSync(outputInfo)
         # ... but we need to wait for registration (getting 'hello') complete
         trials = 1000
         registered = False
@@ -338,10 +342,138 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
     for info in badOutputInfos:
         # check async connect with handler
         inputChannel.connect(info, handler)
-        time.sleep(0.2)  # give time for handler to be called
+
+    trials = 1000
+    while trials > 0:
+        if calls == count:
+            break
+        trials -= 1
+        time.sleep(0.002)
 
     EventLoop.stop()
     time.sleep(.2)
     t.join()
 
     assert calls == count
+
+
+@pytest.mark.parametrize(
+    "EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData, Timestamp",
+    [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
+      karathon.Hash, karathon.ChannelMetaData, karathon.Timestamp),
+     (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
+      karabind.Hash, karabind.ChannelMetaData, karabind.Timestamp)])
+def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
+                                Hash, ChannelMetaData, Timestamp):
+    # Test "shared selector"
+    prefix = Hash.__module__  # distinguished names for each run
+    t = threading.Thread(target=EventLoop.work)
+    t.start()
+
+    outputCh = OutputChannel.create(prefix + "output", "out",
+                                    Hash("distributionMode", "round-robin",
+                                         "noInputShared", "wait"))
+
+    # Prepare data handlers for both input channels
+    counter1 = 0
+    counter2 = 0
+
+    def dataHandler1(meta, data):
+        nonlocal counter1
+        counter1 += 1
+
+    def dataHandler2(meta, data):
+        nonlocal counter2
+        counter2 += 1
+
+    # Create two inpout channels and register data handlers
+    cfg = Hash("connectedOutputChannels", [prefix + "output:out"],
+               "dataDistribution", "shared")
+    inputCh1 = InputChannel.create(prefix + "input", "in1", cfg)
+    inputCh2 = InputChannel.create(prefix + "input", "in2", cfg)
+    inputCh1.registerDataHandler(dataHandler1)
+    inputCh2.registerDataHandler(dataHandler2)
+
+    outputInfo = outputCh.getInformation()
+    assert outputInfo["port"] > 0
+    outputInfo["outputChannelString"] = prefix + "output:out"
+    outputInfo["memoryLocation"] = "local"
+
+    # Connect both input channels synchronously
+    assert "" == inputCh1.connectSync(outputInfo)
+    assert "" == inputCh2.connectSync(outputInfo)
+    # Before we send data, wait until output channel took note (got 'hello')
+    trials = 1000
+    while trials > 0:
+        trials -= 1
+        id2 = inputCh2.getInstanceId()
+        if (outputCh.hasRegisteredSharedInputChannel(inputCh1.getInstanceId())
+                and outputCh.hasRegisteredSharedInputChannel(id2)):
+            break
+        time.sleep(0.001)
+
+    assert trials > 0
+
+    # Now connected - we prepare and register the shared input selector
+    numOfInput = 1  # which of the two inouts should get the data
+
+    def selector(inputs):
+        return prefix + "input:in" + str(numOfInput)
+
+    outputCh.registerSharedInputSelector(selector)
+
+    # Send first data - to input 1
+    meta = ChannelMetaData(outputInfo["outputChannelString"], Timestamp())
+    outputCh.write(Hash('int', 1), meta)
+    outputCh.update()
+
+    def waitForTotalNumData(total):
+        trials = 1000
+        while trials > 0:
+            if counter1 + counter2 == total:
+                return
+            trials -= 1
+            time.sleep(0.001)
+        assert trials > 0
+
+    waitForTotalNumData(1)
+    assert counter1 + counter2 == 1
+    assert counter1 == 1
+    assert counter2 == 0
+
+    # Another data to input 1
+    outputCh.write(Hash('int', 2), meta)
+    outputCh.update()
+    waitForTotalNumData(2)
+    assert counter1 == 2
+    assert counter2 == 0
+
+    # Another data, now to input 2
+    numOfInput = 2
+    outputCh.write(Hash('int', 3), meta)
+    outputCh.update()
+    waitForTotalNumData(3)
+    assert counter1 == 2
+    assert counter2 == 1
+
+    # Another data to input 2
+    outputCh.write(Hash('int', 4), meta)
+    outputCh.update()
+    waitForTotalNumData(4)
+    assert counter1 == 2
+    assert counter2 == 2
+
+    # A last data to input 1 again
+    numOfInput = 1
+    outputCh.write(Hash('int', 5), meta)
+    outputCh.update()
+    waitForTotalNumData(5)
+    assert counter1 == 3
+    assert counter2 == 2
+
+    # Test that we can reset the selector.
+    # (But we loose control who receives, so can hardly test.)
+    outputCh.registerSharedInputSelector(None)
+
+    EventLoop.stop()
+    t.join()
