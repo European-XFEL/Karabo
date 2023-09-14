@@ -107,7 +107,18 @@ class DisplayVectorScatterGraph(BaseBindingController):
             if value is None:
                 return
             if self._last_x_value is not None and self.widget is not None:
-                self._plot.setData(self._last_x_value, value)
+                size_x = len(self._last_x_value)
+                size_y = len(value)
+                size = min(size_x, size_y)
+                if size == 0:
+                    self._plot.setData([], [])
+                    return
+
+                x = self._last_x_value
+                if size_x != size_y:
+                    x = self._last_x_value[:size]
+                    value = value[:size]
+                self._plot.setData(x, value)
 
     # ----------------------------------------------------------------
     # Qt Slots
