@@ -41,10 +41,11 @@ def event_loop():
     # called before writeAsyncXxx
     EventLoop.addThread()
 
-    yield  # now test is executed
+    yield  # now all (since scope="module") tests are executed
 
     EventLoop.stop()
-    loop_thread.join()
+    loop_thread.join(timeout=10)
+    assert not loop_thread.is_alive()
 
 
 @pytest.mark.parametrize(
@@ -98,7 +99,7 @@ def setup_server_client(Connection, Hash):
     bobConn = Connection.create("Tcp", bobCfg)
     with connectedCond:
         bob = bobConn.start()  # bob is the Channel
-        connectedCond.wait()  # wait until notified
+        connectedCond.wait(timeout=10)  # wait until notified
 
     assert alice is not None
     aliceConn2 = alice.getConnection()
@@ -211,7 +212,7 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
 
     alice.writeAsyncStr("messageStr", writeComplete)
     with conditionWrite:
-        conditionWrite.wait()
+        conditionWrite.wait(timeout=10)
     assert ecWrite.value() == 0
     assert alice is channelWrite
 
@@ -230,7 +231,7 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
 
     bob.readAsyncStr(onRead1)
     with conditionRead:
-        conditionRead.wait()
+        conditionRead.wait(timeout=10)
     assert ecRead.value() == 0
     assert bob is channelRead
     assert msgRead == "messageStr"
@@ -245,13 +246,13 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
 
     alice.writeAsyncStr(b"messageStr", writeComplete)
     with conditionWrite:
-        conditionWrite.wait()
+        conditionWrite.wait(timeout=10)
     assert ecWrite.value() == 0
     assert alice is channelWrite
 
     bob.readAsyncStr(onRead1)
     with conditionRead:
-        conditionRead.wait()
+        conditionRead.wait(timeout=10)
     assert ecRead.value() == 0
     assert bob is channelRead
     assert msgRead == "messageStr"
@@ -266,14 +267,14 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
     alice.writeAsyncStr(bytearray("messageStr", encoding="utf8"),
                         writeComplete)
     with conditionWrite:
-        conditionWrite.wait()
+        conditionWrite.wait(timeout=10)
     assert ecWrite.value() == 0
     assert alice is channelWrite
 
     bob.readAsyncStr(onRead1)
 
     with conditionRead:
-        conditionRead.wait()
+        conditionRead.wait(timeout=10)
     assert ecRead.value() == 0
     assert bob is channelRead
     assert msgRead == "messageStr"
@@ -287,13 +288,13 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
 
     alice.writeAsyncHash(Hash("hash", "message"), writeComplete)
     with conditionWrite:
-        conditionWrite.wait()
+        conditionWrite.wait(timeout=10)
     assert ecWrite.value() == 0
     assert alice is channelWrite
 
     bob.readAsyncHash(onRead1)
     with conditionRead:
-        conditionRead.wait()
+        conditionRead.wait(timeout=10)
     assert ecRead.value() == 0
     assert bob is channelRead
     assert fullyEqual(msgRead, Hash("hash", "message"))
@@ -324,14 +325,14 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
         alice.writeAsyncHashStr(Hash("header", "message"), "body",
                                 writeComplete)
         with conditionWrite:
-            conditionWrite.wait()
+            conditionWrite.wait(timeout=10)
         assert ecWrite.value() == 0
         assert alice is channelWrite
 
         bob.readAsyncHashStr(onRead2)
 
         with conditionRead:
-            conditionRead.wait()
+            conditionRead.wait(timeout=10)
         assert ecRead.value() == 0
         assert bob is channelRead
         assert fullyEqual(headerRead, Hash("header", "message"))
@@ -349,14 +350,14 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
         alice.writeAsyncHashStr(Hash("header", "message b"), b"bytes",
                                 writeComplete)
         with conditionWrite:
-            conditionWrite.wait()
+            conditionWrite.wait(timeout=10)
         assert ecWrite.value() == 0
         assert alice is channelWrite
 
         bob.readAsyncHashStr(onRead2)
 
         with conditionRead:
-            conditionRead.wait()
+            conditionRead.wait(timeout=10)
         assert ecRead.value() == 0
         assert bob is channelRead
         assert fullyEqual(headerRead, Hash("header", "message b"))
@@ -375,14 +376,14 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
                                 bytearray("bytearray", encoding="utf8"),
                                 writeComplete)
         with conditionWrite:
-            conditionWrite.wait()
+            conditionWrite.wait(timeout=10)
         assert ecWrite.value() == 0
         assert alice is channelWrite
 
         bob.readAsyncHashStr(onRead2)
 
         with conditionRead:
-            conditionRead.wait()
+            conditionRead.wait(timeout=10)
         assert ecRead.value() == 0
         assert bob is channelRead
         assert fullyEqual(headerRead, Hash("header", "message b2"))
@@ -399,14 +400,14 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
                              Hash("body", "message b"),
                              writeComplete)
     with conditionWrite:
-        conditionWrite.wait()
+        conditionWrite.wait(timeout=10)
     assert ecWrite.value() == 0
     assert alice is channelWrite
 
     bob.readAsyncHashHash(onRead2)
 
     with conditionRead:
-        conditionRead.wait()
+        conditionRead.wait(timeout=10)
     assert ecRead.value() == 0
     assert bob is channelRead
     assert fullyEqual(headerRead, Hash("header", "message a"))
