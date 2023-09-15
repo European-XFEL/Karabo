@@ -476,4 +476,6 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     outputCh.registerSharedInputSelector(None)
 
     EventLoop.stop()
-    t.join()
+    time.sleep(.2)
+    t.join(timeout=10)
+    assert not t.is_alive()
