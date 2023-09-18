@@ -28,6 +28,7 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/HttpResponse.hh"
+#include "karabo/net/InfluxDbClientUtils.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/StringTools.hh"
@@ -52,38 +53,7 @@ void InfluxDbClient_Test::setUp() {
 
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
 
-    // Instantiates an InfluxDbClient
-    string influxUrlRead;
-    if (getenv("KARABO_INFLUXDB_QUERY_URL")) {
-        influxUrlRead = getenv("KARABO_INFLUXDB_QUERY_URL");
-    } else {
-        influxUrlRead = "tcp://localhost:8086";
-    }
-
-    const char* envDbName = getenv("KARABO_INFLUXDB_DBNAME");
-    string dbName(envDbName ? envDbName : ""); // without environment variable, use empty string
-
-    string dbUser;
-    if (getenv("KARABO_INFLUXDB_QUERY_USER")) {
-        dbUser = getenv("KARABO_INFLUXDB_QUERY_USER");
-    } else {
-        dbUser = "infadm";
-    }
-    string dbPassword;
-    if (getenv("KARABO_INFLUXDB_QUERY_PASSWORD")) {
-        dbPassword = getenv("KARABO_INFLUXDB_QUERY_PASSWORD");
-    } else {
-        dbPassword = "admpasswd";
-    }
-
-    Hash dbClientCfg;
-    dbClientCfg.set("dbname", dbName);
-    dbClientCfg.set("url", influxUrlRead);
-    dbClientCfg.set("durationUnit", "u");
-    dbClientCfg.set("dbUser", dbUser);
-    dbClientCfg.set("dbPassword", dbPassword);
-
-    m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
+    m_influxClient = karabo::net::buildInfluxReadClient();
 }
 
 

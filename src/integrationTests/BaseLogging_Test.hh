@@ -83,7 +83,7 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
           const std::string& loggerType, bool useInvalidInfluxUrl = false, bool useInvalidDbName = false,
           unsigned int maxPerDevicePropLogRate = 5 * 1024, unsigned int propLogRatePeriod = 5,
           unsigned int maxSchemaLogRate = 15 * 1024, unsigned int schemaLogRatePeriod = 5,
-          unsigned int maxStringLength = karabo::util::MAX_INFLUX_VALUE_LENGTH);
+          unsigned int maxStringLength = karabo::util::MAX_INFLUX_VALUE_LENGTH, double safeSchemaRetentionPeriod = 2.0);
 
     /**
      * Checks that slotGetPropertyHistory logging works when a
