@@ -30,6 +30,7 @@
 #include "Epochstamp.hh"
 #include "Hash.hh"
 #include "Schema.hh"
+#include "TimeDuration.hh"
 
 
 namespace karabo {
@@ -138,6 +139,10 @@ namespace karabo {
         void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema,
                          std::vector<std::string>& result, std::string prefix, const char separator,
                          const bool fullPaths);
+
+        std::string toInfluxDurationUnit(const karabo::util::TIME_UNITS& karaboDurationUnit);
+
+        std::string epochAsMicrosecString(const karabo::util::Epochstamp& ep);
 
         /**
          * Utility function to convert a json object.

@@ -37,6 +37,7 @@ class DataLogging_Test : public BaseLogging_Test {
     CPPUNIT_TEST(testInfluxMaxSchemaLogRate);
     CPPUNIT_TEST(testInfluxPropHistoryAveraging);
     CPPUNIT_TEST(testInfluxMaxStringLength);
+    CPPUNIT_TEST(testInfluxSafeSchemaRetentionPeriod);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -92,6 +93,11 @@ class DataLogging_Test : public BaseLogging_Test {
      * all violations are being properly logged.
      */
     void testInfluxMaxStringLength();
+
+    /**
+     * @brief Checks that schemas older than the safeSchemaRetentionPeriod are copied.
+     */
+    void testInfluxSafeSchemaRetentionPeriod();
 
     /**
      * Test that manager goes to ERROR if server list and loggermap.xml are inconsistent

@@ -393,7 +393,7 @@ void BaseLogging_Test::setPropertyTestSchema() {
 std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
       const std::string& loggerType, bool useInvalidInfluxUrl, bool useInvalidDbName,
       unsigned int maxPerDevicePropLogRate, unsigned int propLogRatePeriod, unsigned int maxSchemaLogRate,
-      unsigned int schemaLogRatePeriod, unsigned int maxStringLength) {
+      unsigned int schemaLogRatePeriod, unsigned int maxStringLength, double safeSchemaRetentionPeriod) {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
@@ -444,6 +444,7 @@ std::pair<bool, std::string> BaseLogging_Test::startDataLoggerManager(
         manager_conf.set("logger.InfluxDataLogger.maxSchemaLogRate", maxSchemaLogRate);
         manager_conf.set("logger.InfluxDataLogger.schemaLogRatePeriod", schemaLogRatePeriod);
         manager_conf.set("logger.InfluxDataLogger.maxValueStringSize", maxStringLength);
+        manager_conf.set("logger.InfluxDataLogger.safeSchemaRetentionPeriod", safeSchemaRetentionPeriod);
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
