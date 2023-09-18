@@ -26,13 +26,15 @@
 
 #include <boost/filesystem.hpp>
 #include <cstdlib>
+#include <future>
 #include <karabo/net/EventLoop.hh>
+#include <karabo/net/InfluxDbClientUtils.hh>
+#include <karabo/util/DataLogUtils.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/StringTools.hh>
+#include <nlohmann/json.hpp>
 #include <sstream>
-
-#include "karabo/util/DataLogUtils.hh"
 
 USING_KARABO_NAMESPACES;
 
@@ -684,6 +686,110 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str32Kb.at(0ul),
                                  historySingleStr32kb.at(0ul));
 
+    std::clog << "OK" << std::endl;
+}
+
+void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
+    namespace nl = nlohmann;
+
+    std::clog << "Testing that schemas older than safeSchemaRetentionPeriod are preserved ..." << std::endl;
+
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string propTestDevice = m_deviceId + "__SCHEMA_RETENTION_PERIOD";
+
+    const unsigned int afterFlushWait = 500u;
+    const double oneSecInYears = 1.0 / (365 * 24 * 60 * 60);
+
+    Epochstamp testStartEpoch;
+
+    std::pair<bool, std::string> success = startDataLoggerManager(
+          "InfluxDataLogger", /* useInvalidInfluxUrl */ false, /* useInvalidDbName */ false,
+          /* maxPerDevicePropLogRate */ 5120u, 5u, /* maxSchemaLogRate */ 15'360u, /* schemaLogRatePeriod */ 5u,
+          /* maxStringLength */ 921'600u, /* safeSchemaRetentionPeriod */ oneSecInYears);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated();
+
+    success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Restart the PropertyTest device under test - this will trigger a new attempt to save the device schema with the
+    // same digest, since no change happened to the schema between the two instantiations.
+    success = m_deviceClient->killDevice(propTestDevice, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    // Waits for an interval long enough to guarantee that any other schema saving attempt will happen after the
+    // one saved for the previous PropertyTest device under test has gone outside the safe retention window.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1'000));
+    success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Makes sure all the data has been saved in Influx.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush").timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
+
+    Epochstamp afterWritesEpoch;
+
+    // Checks that since of the start of this test, two schemas with the same digest have been inserted into the Influx
+    // measurement - one for each start of the PropertyTest device under test.
+    const InfluxDbClient::Pointer influxClient = buildInfluxReadClient();
+    std::ostringstream oss;
+    // Note: InfluxQL requires the returning of at least one field in the query results for the query to work.
+    //       To comply with that, the query also asks for the schema_size, given that the digest is a tag, not a field.
+    oss << "SELECT digest, schema_size FROM \"" << propTestDevice << "__SCHEMAS\" "
+        << "WHERE time >= " << epochAsMicrosecString(testStartEpoch) << toInfluxDurationUnit(TIME_UNITS::MICROSEC)
+        << " AND time <= " << epochAsMicrosecString(afterWritesEpoch) << toInfluxDurationUnit(TIME_UNITS::MICROSEC);
+    auto prom = std::make_shared<std::promise<HttpResponse>>();
+    std::future<HttpResponse> fut = prom->get_future();
+    influxClient->queryDb(oss.str(), [prom](const HttpResponse &resp) { prom->set_value(resp); });
+    std::future_status status = fut.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT_MESSAGE("Query for schemas didn't return in time:\n" + oss.str(),
+                           status == std::future_status::ready);
+    HttpResponse resp = fut.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Query for schemas failed: " + oss.str(), 200, resp.code);
+    const std::string &respBody = resp.payload;
+    nl::json respObj;
+    CPPUNIT_ASSERT_NO_THROW_MESSAGE("Invalid JSON object in Influx response body: " + respBody,
+                                    respObj = nl::json::parse(respBody));
+    const auto &schemas = respObj["results"][0]["series"][0]["values"];
+    CPPUNIT_ASSERT_MESSAGE("Influx response JSON object contains no schema data", !schemas.is_null());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of schema entries differs from expected", 2ul, schemas.size());
+    const std::string firstDigest = schemas[0][1].get<std::string>();
+    const std::string secondDigest = schemas[1][1].get<std::string>();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Schemas in Influx response don't have the same digest.", firstDigest, secondDigest);
+    /* -- Sample of response body expected for the query for schemas
+    {
+      "results": [
+        {
+          "statement_id": 0,
+          "series": [
+            {
+              "name": "PropertyTestDevice__SCHEMA_RETENTION_PERIOD__SCHEMAS",
+              "columns": [
+                "time",
+                "digest",
+                "schema_size"
+              ],
+              "values": [
+                [
+                  1694638751807275,
+                  "\"29daf991ab26b3fe99a391397cb2fa1f5db5d99e\"",
+                  68316
+                ],
+                [
+                  1694638755032238,
+                  "\"29daf991ab26b3fe99a391397cb2fa1f5db5d99e\"",
+                  68316
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    --- */
     std::clog << "OK" << std::endl;
 }
 
