@@ -173,6 +173,7 @@ namespace karabo {
             std::deque<LoggingRecord> m_schemaLogRecs;
 
             karabo::util::Timestamp m_loggingStartStamp;
+            karabo::util::TimeDuration m_safeSchemaRetentionDuration;
         };
 
 

@@ -24,6 +24,7 @@
 
 #include <boost/iostreams/stream.hpp>
 
+#include "DateTimeString.hh"
 #include "StringTools.hh"
 
 namespace karabo {
@@ -192,6 +193,51 @@ namespace karabo {
                 // during JSON parsing).
                 return std::string("");
             }
+        }
+
+        std::string toInfluxDurationUnit(const TIME_UNITS &karaboDurationUnit) {
+            std::string influxDU;
+
+            switch (karaboDurationUnit) {
+                case TIME_UNITS::DAY:
+                    influxDU = "d";
+                    break;
+                case TIME_UNITS::HOUR:
+                    influxDU = "h";
+                    break;
+                case TIME_UNITS::MINUTE:
+                    influxDU = "m";
+                    break;
+                case TIME_UNITS::SECOND:
+                    influxDU = "s";
+                    break;
+                case TIME_UNITS::MILLISEC:
+                    influxDU = "ms";
+                    break;
+                case TIME_UNITS::MICROSEC:
+                    influxDU = "u";
+                    break;
+                case TIME_UNITS::NANOSEC:
+                    influxDU = "ns";
+                    break;
+                default:
+                    std::ostringstream errMsg;
+                    errMsg << "There's no InfluxDb duration corresponding to Karabo's TIME_UNITS '"
+                           << karaboDurationUnit << "'.";
+                    throw KARABO_PARAMETER_EXCEPTION(errMsg.str());
+            }
+
+            return influxDU;
+        }
+
+
+        std::string epochAsMicrosecString(const Epochstamp &ep) {
+            std::ostringstream epStr;
+            const std::string fract(
+                  DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC, ep.getFractionalSeconds(), true));
+            // It is safe to use fract because fractionalSecondToString fills the leading positions with zeros.
+            epStr << ep.getSeconds() << fract;
+            return epStr.str();
         }
 
 
