@@ -326,6 +326,19 @@ namespace karabo {
                   .init()
                   .commit();
 
+            DOUBLE_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.safeSchemaRetentionPeriod")
+                  .displayedName("Period for safe schema retention")
+                  .description(
+                        "For how long can a stored schema be safely assumed to be kept? Must be an "
+                        "interval smaller than the database retention policy")
+                  .assignmentOptional()
+                  .defaultValue(2.0)
+                  .minExc(0.0)
+                  .unit(Unit::YEAR)
+                  .init()
+                  .commit();
+
             VECTOR_STRING_ELEMENT(expected)
                   .key("serverList")
                   .displayedName("Server list")

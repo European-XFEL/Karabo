@@ -221,10 +221,6 @@ namespace karabo {
             void onGetBadData(const karabo::net::HttpResponse &response, karabo::xms::SignalSlotable::AsyncReply aReply,
                               const karabo::net::InfluxDbClient::Pointer & /* influxClient */);
 
-            std::string toInfluxDurationUnit(const karabo::util::TIME_UNITS &karaboDurationUnit);
-
-            std::string epochAsMicrosecString(const karabo::util::Epochstamp &ep) const;
-
             void influxResultSetToVectorHash(const karabo::util::InfluxResultSet &influxResult,
                                              std::vector<karabo::util::Hash> &vectHash);
 
