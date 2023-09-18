@@ -850,7 +850,7 @@ void BaseLogging_Test::testDropBadData() {
 
 void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing logger and readers instantiations ... " << std::flush;
-    int timeout = 2 * KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds - instantiate three devices => factor 2
+    int timeout = 3 * KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds - instantiate three devices => factor 3
     const vector<string> devices({karabo::util::DATALOGGER_PREFIX + m_server,
                                   karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server),
                                   karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server)});

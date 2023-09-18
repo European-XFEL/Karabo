@@ -28,7 +28,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
@@ -85,6 +85,8 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
     void init() {
         // This is just testing that binding a const member function compiles - both with a this which is const or not:
+        using boost::placeholders::_1;
+        using boost::placeholders::_2;
         m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction, this, 0, _1));
         m_timer.async_wait(
@@ -150,7 +152,8 @@ struct Test_Device : public virtual Test_SignalSlotable {
 
         m_timer.expires_from_now(boost::posix_time::millisec(500));
 
-        m_timer.async_wait(karabo::util::bind_weak(&Test_Device::executeStepFunction, this, arg + 1, _1));
+        m_timer.async_wait(
+              karabo::util::bind_weak(&Test_Device::executeStepFunction, this, arg + 1, boost::placeholders::_1));
     }
 };
 
@@ -164,7 +167,8 @@ struct Test_DeviceServer {
         m_devices["someTest_Device"]->init();
 
         m_deviceDestructTimer.expires_from_now(boost::posix_time::millisec(1500));
-        m_deviceDestructTimer.async_wait(boost::bind(&Test_DeviceServer::killTest_Device, this, _1, "someTest_Device"));
+        m_deviceDestructTimer.async_wait(
+              boost::bind(&Test_DeviceServer::killTest_Device, this, boost::placeholders::_1, "someTest_Device"));
     }
 
     void killTest_Device(const boost::system::error_code& error, const std::string& deviceName) {

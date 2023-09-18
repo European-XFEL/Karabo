@@ -148,8 +148,6 @@ namespace karabo {
 
 
         Channel::Pointer TcpConnection::start() {
-            m_isAsyncConnect = false;
-
             if (m_connectionType == "server") {
                 try {
                     if (m_acceptor.is_open()) {
@@ -203,7 +201,6 @@ namespace karabo {
 
 
         int TcpConnection::startAsync(const ConnectionHandler& handler) {
-            m_isAsyncConnect = true;
             if (m_connectionType == "server") {
                 if (!m_acceptor.is_open()) {
                     do {
