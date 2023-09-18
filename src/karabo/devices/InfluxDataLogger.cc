@@ -20,6 +20,7 @@
 #include <openssl/sha.h>
 
 #include <chrono>
+#include <cmath>
 // TODO: When the Framework migrates to C++ 17 or later, change this to
 //       "#include <string_view>".
 //       GCC's libstdc++ provides "std::experimental::string_view"
@@ -31,11 +32,13 @@
 
 #include "karabo/net/InfluxDbClient.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/TimeDuration.hh"
 
 // Precision is microseconds
 // for nanoseconds:  DUR is "ns",  PRECISION_FACTOR is 1'000'000'000
 #define DUR "u"
 #define PRECISION_FACTOR 1'000'000
+#define SECONDS_PER_YEAR 365 * 24 * 60 * 60
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger,
@@ -67,7 +70,12 @@ namespace karabo {
               m_propLogRatePeriod(input.get<unsigned int>("propLogRatePeriod")),
               m_maxSchemaLogRateBytesSec(input.get<unsigned int>("maxSchemaLogRateBytesSec")),
               m_schemaLogRatePeriod(input.get<unsigned int>("schemaLogRatePeriod")),
-              m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {}
+              m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull),
+              m_safeSchemaRetentionDuration(
+                    TimeDuration{static_cast<karabo::util::TimeValue>(
+                                       std::round(input.get<double>("safeSchemaRetentionPeriod") * SECONDS_PER_YEAR)),
+                                 0ull}) {}
+
 
         InfluxDeviceData::~InfluxDeviceData() {}
 
@@ -100,8 +108,9 @@ namespace karabo {
                                                       std::size_t currentSize) {
             Epochstamp now;
             if (currentStamp - now > 120.0) { // Epochstamp "-" operator returns the interval length (always positive).
-                // This assumes that the backend can stand some seconds, the maximum interval in the test above, of a
-                // too high rate. If the difference goes beyond that maximum tolerance, the current system time is used.
+                // This assumes that the backend can stand some seconds, the maximum interval in the test above, of
+                // a too high rate. If the difference goes beyond that maximum tolerance, the current system time is
+                // used.
                 currentStamp = now;
             }
 
@@ -163,8 +172,8 @@ namespace karabo {
             // store the local unix timestamp to compare the time difference w.r.t. incoming data.
             Epochstamp nowish;
             std::vector<RejectedData> rejectedPaths; // path and reason
-            // To write log I need schema - but that has arrived before connecting signal[State]Changed to slotChanged
-            // and thus before any data can arrive here in handleChanged.
+            // To write log I need schema - but that has arrived before connecting signal[State]Changed to
+            // slotChanged and thus before any data can arrive here in handleChanged.
             std::vector<std::string> paths;
             getPathsForConfiguration(configuration, m_currentSchema, paths);
             std::stringstream query;
@@ -197,8 +206,8 @@ namespace karabo {
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 if (t.getEpochstamp() < m_loggingStartStamp.getEpochstamp()) {
                     // Stamp is older than logging start time. To avoid confusion, especially for properties with no
-                    // default value i.e. which may not exist at some points in time) we overwrite the stamp with time
-                    // when device logging started. See discussions at
+                    // default value i.e. which may not exist at some points in time) we overwrite the stamp with
+                    // time when device logging started. See discussions at
                     // https://git.xfel.eu/Karabo/config-and-recovery/-/issues/20 and
                     // https://in.xfel.eu/redmine/projects/karabo-library/wiki/InfluxNoDefaultValue
                     t = m_loggingStartStamp;
@@ -208,7 +217,8 @@ namespace karabo {
                     // Since the former is accessing it when not posted on m_strand, need mutex protection:
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     if (t.getEpochstamp() != m_lastDataTimestamp.getEpochstamp()) {
-                        // If mixed timestamps in single message (or arrival in wrong order), always take last received.
+                        // If mixed timestamps in single message (or arrival in wrong order), always take last
+                        // received.
                         m_updatedLastTimestamp = true;
                         m_lastDataTimestamp = t;
                     }
@@ -570,13 +580,15 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Digest for schema of device '" << m_deviceToBeLogged << "': '" << schDigest
                                        << "'";
 
+            // Only consider schemas with the same digest and within the safe retention time window.
+            const Epochstamp safeRetentionLimit{Epochstamp() - m_safeSchemaRetentionDuration};
             std::ostringstream oss;
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << schDigest
-                << "\"'";
+                << "\"' AND time >= " << epochAsMicrosecString(safeRetentionLimit)
+                << toInfluxDurationUnit(TIME_UNITS::MICROSEC);
             m_dbClientRead->queryDb(oss.str(),
                                     bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, schDigest, archive, _1));
         }
-
 
         void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
                                                const boost::shared_ptr<std::vector<char>>& schemaArchive,
@@ -807,6 +819,19 @@ namespace karabo {
                   .unit(Unit::SECOND)
                   .init()
                   .commit();
+
+            DOUBLE_ELEMENT(expected)
+                  .key("safeSchemaRetentionPeriod")
+                  .displayedName("Period for safe schema retention")
+                  .description(
+                        "For how long can a stored schema be safely assumed to be kept? Must be an "
+                        "interval smaller than the database retention policy")
+                  .assignmentOptional()
+                  .defaultValue(2.0)
+                  .minExc(0.0)
+                  .unit(Unit::YEAR)
+                  .init()
+                  .commit();
         }
 
 
@@ -902,6 +927,7 @@ namespace karabo {
             config.set("propLogRatePeriod", get<unsigned int>("propLogRatePeriod"));
             config.set("maxSchemaLogRateBytesSec", get<unsigned int>("maxSchemaLogRate") * 1024);
             config.set("schemaLogRatePeriod", get<unsigned int>("schemaLogRatePeriod"));
+            config.set("safeSchemaRetentionPeriod", get<double>("safeSchemaRetentionPeriod"));
             DeviceData::Pointer deviceData =
                   Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
