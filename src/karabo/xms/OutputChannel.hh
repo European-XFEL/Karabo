@@ -121,7 +121,6 @@ namespace karabo {
             karabo::net::Connection::Pointer m_dataConnection;
 
             std::string m_onNoSharedInputChannelAvailable;
-            std::string m_distributionMode;
 
             boost::mutex m_inputNetChannelsMutex;
             std::set<karabo::net::Channel::Pointer> m_inputNetChannels;
@@ -136,8 +135,6 @@ namespace karabo {
 
             mutable boost::mutex m_registeredCopyInputsMutex;
             InputChannels m_registeredCopyInputs;
-
-            unsigned int m_sharedInputIndex;
 
             // m_shareNext could also be an unordered_set, but the deque allows a more uniform
             // distribution of work in the load-balanced case, even in the presence of a fast
@@ -161,7 +158,7 @@ namespace karabo {
             mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
             ShowStatisticsHandler m_showStatisticsHandler;
-            SharedInputSelector m_roundRobinInputSelector; // protected by m_registeredSharedInputsMutex
+            SharedInputSelector m_sharedInputSelector; // protected by m_registeredSharedInputsMutex
             std::vector<karabo::util::Hash> m_connections;
             boost::asio::deadline_timer m_updateDeadline;
             int m_period;
@@ -452,9 +449,7 @@ namespace karabo {
             void distributeEndOfStream(unsigned int chunkId);
 
             /**
-             * Distribute in round round-robin mode, i.e. one shared input after another
-             *
-             * requires that m_registeredSharedInputs not empty
+             * Distribute according to registered shared input selector
              *
              * @param chunkId which chunk to distribute
              * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
@@ -462,7 +457,7 @@ namespace karabo {
              * @param safeNDArray if true, no need to copy NDArray buffer if chunk is queued or sent locally
              *
              */
-            void distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
+            void distributeSelected(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
 
             /**
              * Distribute in load balanced mode, i.e. pick one of the shared inputs that is ready
@@ -475,20 +470,6 @@ namespace karabo {
              */
             void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
 
-            /**
-             * Get iterator to next one of the shared inputs - round-robin case.
-             *
-             * Requires protection of m_registeredSharedInputsMutex and m_registeredSharedInputs.size() > 0
-             */
-            InputChannels::iterator getNextRoundRobinChannel();
-
-            /**
-             * Undo a previous getNextRoundRobinChannel()
-             *
-             * Requires protection of m_registeredSharedInputsMutex.
-             * Even more, that mutex must not have been unlocked after the getNextSharedInputIdx() it should undo.
-             */
-            void undoGetNextRoundRobinChannel();
 
             /**
              * Serve all 'copy' input channels

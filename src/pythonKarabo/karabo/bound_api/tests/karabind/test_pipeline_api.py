@@ -371,8 +371,7 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     t.start()
 
     outputCh = OutputChannel.create(prefix + "output", "out",
-                                    Hash("distributionMode", "round-robin",
-                                         "noInputShared", "wait"))
+                                    Hash("noInputShared", "wait"))
 
     # Prepare data handlers for both input channels
     counter1 = 0
