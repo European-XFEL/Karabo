@@ -73,17 +73,21 @@ void InputOutputChannel_LongTest::tearDown() {}
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending1() {
-    testDisconnectWhileSending_impl("copy", "wait", "load-balanced", "wait");
+    testDisconnectWhileSending_impl("copy", "wait", "wait");
 }
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending2() {
-    testDisconnectWhileSending_impl("copy", "drop", "load-balanced", "wait");
+    testDisconnectWhileSending_impl("copy", "drop", "wait");
 }
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending3() {
-    testDisconnectWhileSending_impl("copy", "queue", "load-balanced", "wait");
+    testDisconnectWhileSending_impl("copy", "queue", "wait");
+}
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending3a() {
+    testDisconnectWhileSending_impl("copy", "queueDrop", "wait");
 }
 
 
@@ -91,17 +95,21 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending3() {
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending4() {
-    testDisconnectWhileSending_impl("shared", "wait", "load-balanced", "wait");
+    testDisconnectWhileSending_impl("shared", "wait", "wait");
 }
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending5() {
-    testDisconnectWhileSending_impl("shared", "wait", "load-balanced", "drop");
+    testDisconnectWhileSending_impl("shared", "wait", "drop");
 }
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending6() {
-    testDisconnectWhileSending_impl("shared", "wait", "load-balanced", "queue");
+    testDisconnectWhileSending_impl("shared", "wait", "queue");
+}
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending6a() {
+    testDisconnectWhileSending_impl("shared", "wait", "queueDrop");
 }
 
 
@@ -109,41 +117,57 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending6() {
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending7() {
-    testDisconnectWhileSending_impl("shared", "wait", "round-robin", "wait");
+    testDisconnectWhileSending_impl("shared", "wait", "wait", true); // true -> round-robin
 }
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending8() {
-    testDisconnectWhileSending_impl("shared", "wait", "round-robin", "drop");
+    testDisconnectWhileSending_impl("shared", "wait", "drop"); // true -> round-robin
 }
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending9() {
-    testDisconnectWhileSending_impl("shared", "wait", "round-robin", "queue");
+    testDisconnectWhileSending_impl("shared", "wait", "queue"); // true -> round-robin
 }
 
+void InputOutputChannel_LongTest::testDisconnectWhileSending9a() {
+    testDisconnectWhileSending_impl("shared", "wait", "queueDrop"); // true -> round-robin
+}
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
                                                                   const std::string& sender_onSlowness,
-                                                                  const std::string& receiver_distributionMode,
-                                                                  const std::string& receiver_noInputShared) {
+                                                                  const std::string& receiver_noInputShared,
+                                                                  bool registerRoundRobinSelector) {
     std::clog << "\ntestDisconnectWhileSending: sender " << sender_dataDistribution << "/" << sender_onSlowness
-              << ", receiver (for shared sender) " << receiver_distributionMode << "/" << receiver_noInputShared
-              << std::endl;
+              << ", receiver (for shared sender) " << receiver_noInputShared
+              << (registerRoundRobinSelector ? " (round-robin)" : "") << std::endl;
 
-    const unsigned int numData = 100000; // overall number of data items the output channel sends
-    const int processTime = 1;           // ms that receiving input channel will block on data
-    const int writeIntervall = 0;        // ms in between output channel writing data
-    const int reconnectCycle = 4;        // ms between dis- and reconnect trials
-    const int maxDuration = 300;         // s of maximum test duration
+    const unsigned int numData = 100'000; // overall number of data items the output channel sends
+    const int processTime = 1;            // ms that receiving input channel will block on data
+    const int writeIntervall = 0;         // ms in between output channel writing data
+    const int reconnectCycle = 4;         // ms between dis- and reconnect trials
+    const int maxDuration = 300;          // s of maximum test duration
 
     ThreadAdder extraThreads(3); // 3 for sender, receiver's callback, dis-/reconnection
 
     // Setup output channel - configure only for "shared" InputChannel
-    OutputChannel::Pointer output = Configurator<OutputChannel>::create(
-          "OutputChannel", Hash("distributionMode", receiver_distributionMode, "noInputShared", receiver_noInputShared),
-          0);
+    OutputChannel::Pointer output =
+          Configurator<OutputChannel>::create("OutputChannel", Hash("noInputShared", receiver_noInputShared), 0);
     output->setInstanceIdAndName("outputChannel", "output");
+    if (registerRoundRobinSelector) {
+        // Force a round robin selection
+        auto counter = std::make_shared<size_t>(0);
+        auto selector = [counter{std::move(counter)}](const std::vector<std::string>& inputs) mutable {
+            const size_t iSize = inputs.size();
+            if (iSize > 0) {
+                const size_t index = (*counter)++ % iSize;
+                return inputs[index];
+            } else {
+                return std::string();
+            }
+        };
+        output->registerSharedInputSelector(selector);
+    }
     output->initialize(); // required due to additional '0' argument passed to create(..) above
 
     // Setup input channel
