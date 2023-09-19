@@ -44,6 +44,8 @@ namespace karabo {
         virtual ~P2PSenderDevice();
 
        private:
+        void initialize();
+
         void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
 
         std::string selectSharedInput(const std::string& result,
