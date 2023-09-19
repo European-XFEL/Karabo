@@ -627,18 +627,24 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
         for (const std::string& onSlowness : {"wait"s, "queue"s}) {
             // Setup output channel
             Hash cfgOut;
-            std::vector<std::string> distributionModes(1, "load-balanced");
+            std::vector<bool> registerSharedSelectors(1, false);
             if (dataDistribution == "shared") {
                 // shared case: onSlowness on input channel side is ignored, but needed here for output
                 cfgOut.set("noInputShared", onSlowness);
-                // now also distributionMode matters - for copy case we use the irrelevant default "load-balanced"
-                distributionModes.push_back("round-robin");
+                // now also registration of sharedInputSelector matters
+                registerSharedSelectors.push_back(true);
             }
-            for (const std::string& distributionMode : distributionModes) {
-                const std::string test(dataDistribution + " " + onSlowness + " " + distributionMode);
-                cfgOut.set("distributionMode", distributionMode);
+            for (const bool registerSelector : registerSharedSelectors) {
+                const std::string test(dataDistribution + " " + onSlowness + " " +
+                                       std::string(registerSelector ? "sharedSelector" : ""));
                 OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", cfgOut, 0);
                 output->setInstanceIdAndName("outputChannel", "output");
+                if (registerSelector) {
+                    output->registerSharedInputSelector([](const std::vector<std::string>& vec) {
+                        if (vec.empty()) return std::string();
+                        else return vec.front();
+                    });
+                }
                 output->initialize(); // needed due to int == 0 argument above
 
                 // Check both data transport ways: local via shared Memory or remote, i.e. tcp
@@ -648,8 +654,8 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                     const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId),
                                    "dataDistribution", dataDistribution, "onSlowness", onSlowness);
                     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
-                    const std::string inputId("inputChannel"s + dataDistribution + onSlowness + distributionMode +
-                                              memoryLocation);
+                    const std::string inputId("inputChannel"s + dataDistribution + onSlowness +
+                                              (registerSelector ? "sharedSelector" : "") + memoryLocation);
                     input->setInstanceId(inputId);
 
                     // Connect preparations
