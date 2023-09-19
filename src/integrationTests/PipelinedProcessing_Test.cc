@@ -104,16 +104,13 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeTwoPots();
 
-    // After this test, the sender will have "output1" = Hash("noInputShared", "wait", "distributionMode",
-    // "round-robin").
+    // After this test, the sender will have "output1.noInputShared" == "wait".
     testPipeTwoSharedReceiversWait();
 
-    // test assumes  "output1"  = Hash("noInputShared", "wait", "distributionMode","round-robin").
+    // Test assumes "output1.noInputShared" == "wait".
     testSharedReceiversSelector();
 
-
-    // Test does not care about "output1.distributionMode == round-robin",
-    // but after test it will be back to load-balanced and have "output1.noInputShared == drop".
+    // After test it will be back "output1.noInputShared == drop".
     testPipeTwoSharedReceiversDrop();
 
     // test restarts m_sender
@@ -906,9 +903,6 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver1, "input2.dataDistribution"));
     // check that the default value of noInputShared is "drop"
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_sender, "output2.noInputShared"));
-    // check that the default value of distributionMode is "load-balanced"
-    CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"),
-                         m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
 
     testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "drop", "local",
                                        {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
@@ -918,19 +912,15 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     testPipeTwoSharedReceivers(200, 0, 0, false, false);
     testPipeTwoSharedReceivers(100, 100, 0, false, false);
 
-    // restart the sender with "output1.distributionMode == round-robin" and "output1.noInputShared == wait"
-    killDeviceWithAssert(m_sender);
-    instantiateDeviceWithAssert(
-          "P2PSenderDevice",
-          Hash("deviceId", m_sender, "output1", Hash("distributionMode", "round-robin", "noInputShared", "wait")));
-
-    testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "drop", "local",
-                                       {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
-
+    // Now test the shared input selector code, using round-robin
+    m_deviceClient->set(m_sender, "nextSharedInput", "roundRobinSelector");
 
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
     testPipeTwoSharedReceivers(200, 0, 0, false, true);
     testPipeTwoSharedReceivers(100, 100, 0, false, true);
+
+    // Reset shared input selector
+    m_deviceClient->set(m_sender, "nextSharedInput", std::string());
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -966,10 +956,6 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "wait", "local",
                                        {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
 
-    // check that the default value of distributionMode is "load-balanced"
-    CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"),
-                         m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
-
     testPipeTwoSharedReceivers(0, 0, 100, false, false);
     // The following line is commented out because:
     // 1. the result is not deterministic;
@@ -979,17 +965,16 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     testPipeTwoSharedReceivers(100, 40, 0, true, false);  // receivers which have different "speed"
     testPipeTwoSharedReceivers(100, 100, 0, true, false); // receivers which have the same "speed"
 
-    // restart the sender with "output1.noInputShared == drop" and "output1.distributionMode = round-robin"
-    killDeviceWithAssert(m_sender);
-    instantiateDeviceWithAssert(
-          "P2PSenderDevice",
-          Hash("deviceId", m_sender, "output1", Hash("noInputShared", "drop", "distributionMode", "round-robin")));
-    testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "wait", "local",
-                                       {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
+    // Now test the shared input selector code, using round-robin
+    m_deviceClient->set(m_sender, "nextSharedInput", "roundRobinSelector");
 
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
-    testPipeTwoSharedReceivers(100, 40, 0, true, true);  // receivers which have different "speed"
-    testPipeTwoSharedReceivers(100, 100, 0, true, true); // receivers which have the same "speed"
+    // If we expect data loss, we cannot be sure to have round-robin distribution
+    testPipeTwoSharedReceivers(100, 40, 0, true, false);  // receivers which have different "speed"
+    testPipeTwoSharedReceivers(100, 100, 0, true, false); // receivers which have the same "speed"
+
+    // Reset shared input selector
+    m_deviceClient->set(m_sender, "nextSharedInput", std::string());
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -1022,11 +1007,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "drop", "local",
                                        {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
 
-    // check that the default value of distributionMode is "load-balanced"
-    CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"),
-                         m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
-
-    // Set of tests for 'load-balanced' distribution mode.
+    // Set of tests for normal ('load-balanced') distribution mode.
     testPipeTwoSharedReceivers(0, 0, 100, false, false);
     // No data loss is expected for 'queue' distribution mode, despite of differences between receivers
     testPipeTwoSharedReceivers(100, 40, 0, false, false);  // receivers which have different "speed"
@@ -1035,14 +1016,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     testTwoSharedReceiversQueuing(5, 50);
     testTwoSharedReceiversQueuing(50, 5);
 
-    // restart the sender with "output1.noInputShared == queue" and "output1.distributionMode = "round-robin"
-    killDeviceWithAssert(m_sender);
-    instantiateDeviceWithAssert(
-          "P2PSenderDevice",
-          Hash("deviceId", m_sender, "output1", Hash("noInputShared", "queue", "distributionMode", "round-robin")));
-
-    testSenderOutputChannelConnections(2UL, {m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "drop", "local",
-                                       {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "drop", "local");
+    // Now test the shared input selector code, using round-robin
+    m_deviceClient->set(m_sender, "nextSharedInput", "roundRobinSelector");
 
     // Set of tests for 'round-robin' distribution mode.
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
@@ -1052,6 +1027,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
 
     testTwoSharedReceiversQueuing(5, 50);
     testTwoSharedReceiversQueuing(50, 5);
+
+    // Reset shared input selector
+    m_deviceClient->set(m_sender, "nextSharedInput", std::string());
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -1070,8 +1048,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
 void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processingTime1, unsigned int processingTime2,
                                                           unsigned int delayTime, bool dataLoss, bool roundRobin) {
     std::clog << "- processingTime1 = " << processingTime1 << " ms, processingTime2 = " << processingTime2
-              << " ms, delayTime = " << delayTime << " ms -- expect " << (roundRobin ? "round-robin" : "load-balanced")
-              << "\n";
+              << " ms, delayTime = " << delayTime << " ms" << (roundRobin ? " -- expect round-robin" : "") << "\n";
 
     m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
@@ -1321,9 +1298,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& 
     const unsigned int nData = karabo::xms::Memory::MAX_N_CHUNKS + 1000u;
     const unsigned int dataSize = 1000u; // else memory trouble with big queues on small memory machines
 
-    instantiateDeviceWithAssert("P2PSenderDevice",
-                                Hash("deviceId", m_sender, "delay", senderDelay, "nData", nData, "dataSize", dataSize,
-                                     "output1.noInputShared", queueOpt, "output1.distributionMode", distributionMode));
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "delay", senderDelay, "nData", nData,
+                                                        "dataSize", dataSize, "output1.noInputShared", queueOpt,
+                                                        "nextSharedInput", (roundRobin ? "roundRobinSelector" : "")));
 
     m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
@@ -1434,8 +1411,6 @@ void PipelinedProcessing_Test::testSharedReceiversSelector() {
 
     // Check expectations from previous run
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
-    CPPUNIT_ASSERT_EQUAL(std::string("round-robin"),
-                         m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
 
     karabo::util::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
@@ -1529,6 +1504,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
     testQueueClearOnDisconnectCopyQueue();
 
+    // First with useRoundRobin true, last with false - so after test we have no remnant handler
     testQueueClearOnDisconnectSharedQueue(true);
 
     testQueueClearOnDisconnectSharedQueue(false);
@@ -1545,12 +1521,12 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRoundRobin) {
     std::clog << "- input.dataDistribution = 'shared', "
               << "output1.noInputShared = 'queue', "
-              << "output1.distributionMode = " << (useRoundRobin ? "round-robin" : "load-balanced") << std::endl;
+              << "sharedInputSelector: " << (useRoundRobin ? "round-robin" : "load-balanced") << std::endl;
 
     killDeviceWithAssert(m_sender);
-    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1",
-                                                        Hash("noInputShared", "queue", "distributionMode",
-                                                             (useRoundRobin ? "round-robin" : "load-balanced"))));
+    instantiateDeviceWithAssert("P2PSenderDevice",
+                                Hash("deviceId", m_sender, "output1.noInputShared", "queue", "nextSharedInput",
+                                     (useRoundRobin ? "roundRobinSelector" : "")));
 
     // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
     // be able to send all the data before the receiver disconnects.
