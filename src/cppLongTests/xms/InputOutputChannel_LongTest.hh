@@ -32,12 +32,15 @@ class InputOutputChannel_LongTest : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testDisconnectWhileSending1);
     CPPUNIT_TEST(testDisconnectWhileSending2);
     CPPUNIT_TEST(testDisconnectWhileSending3);
+    CPPUNIT_TEST(testDisconnectWhileSending3a);
     CPPUNIT_TEST(testDisconnectWhileSending4);
     CPPUNIT_TEST(testDisconnectWhileSending5);
     CPPUNIT_TEST(testDisconnectWhileSending6);
+    CPPUNIT_TEST(testDisconnectWhileSending6a);
     CPPUNIT_TEST(testDisconnectWhileSending7);
     CPPUNIT_TEST(testDisconnectWhileSending8);
     CPPUNIT_TEST(testDisconnectWhileSending9);
+    CPPUNIT_TEST(testDisconnectWhileSending9a);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -49,17 +52,20 @@ class InputOutputChannel_LongTest : public CPPUNIT_NS::TestFixture {
     void testDisconnectWhileSending1();
     void testDisconnectWhileSending2();
     void testDisconnectWhileSending3();
+    void testDisconnectWhileSending3a();
     void testDisconnectWhileSending4();
     void testDisconnectWhileSending5();
     void testDisconnectWhileSending6();
+    void testDisconnectWhileSending6a();
     void testDisconnectWhileSending7();
     void testDisconnectWhileSending8();
     void testDisconnectWhileSending9();
+    void testDisconnectWhileSending9a();
 
     void testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
                                          const std::string& sender_onSlowness,
-                                         const std::string& receiver_distributionMode,
-                                         const std::string& receiver_noInputShared);
+                                         const std::string& receiver_noInputShared,
+                                         bool registerRoundRobinSelector = false);
 };
 
 #endif /* INPUTOUTPUTCHANNEL_TEST_HH */
