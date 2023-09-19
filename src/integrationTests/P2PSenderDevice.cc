@@ -139,6 +139,8 @@ namespace karabo {
     P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config), m_stopWriting(true) {
         KARABO_SLOT0(write);
         KARABO_SLOT0(stop);
+
+        KARABO_INITIAL_FUNCTION(initialize);
     }
 
 
@@ -146,8 +148,11 @@ namespace karabo {
         if (m_writingThread.joinable()) {
             m_writingThread.join();
         }
+    }
 
-        KARABO_LOG_DEBUG << "As dead as you can be!";
+    void P2PSenderDevice::initialize() {
+        Hash cfgCopy(getCurrentConfiguration());
+        preReconfigure(cfgCopy);
     }
 
     void P2PSenderDevice::preReconfigure(Hash& incomingCfg) {
@@ -158,6 +163,17 @@ namespace karabo {
             if (nextSharedInput == "returnEmptyString") {
                 // test with lambda...
                 selector = [](const std::vector<std::string>&) { return std::string(); };
+            } else if (nextSharedInput == "roundRobinSelector") {
+                auto counter = make_shared<size_t>(0);
+                selector = [counter](const std::vector<std::string>& inputs) mutable {
+                    const size_t iSize = inputs.size();
+                    if (iSize > 0) {
+                        const size_t index = (*counter)++ % iSize;
+                        return inputs[index];
+                    } else {
+                        return std::string();
+                    }
+                };
             } else if (!nextSharedInput.empty()) {
                 // ...and test with bind_weak of member function
                 selector = bind_weak(&P2PSenderDevice::selectSharedInput, this, nextSharedInput, _1);
