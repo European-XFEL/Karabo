@@ -34,9 +34,12 @@ Additionally, several updates for python packages have been done::
     tzlocal==5.0.1, was 1.1.1
     numpy==1.22.4, was 1.21.4
     scipy==1.7.3, was 1.6.3
-    pyzmq==25.1.0, was 22.3.0
 
 Packages that have been **removed**: h5py
+
+Packages that have been **added**:
+
+    pytz==2020.5 (before 2.18.0 was 2013.9; missing in 2.18.0) 
 
 
 Summary – Release highlights
