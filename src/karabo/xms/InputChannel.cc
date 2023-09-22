@@ -86,7 +86,7 @@ namespace karabo {
                   .displayedName("On Slowness")
                   .description(
                         "Policy for what to do if this input is too slow for the fed data rate (only used in copy "
-                        "mode)")
+                        "mode), 'queue' means 'queueDrop'")
                   .options({"drop", "wait", "queue", "queueDrop"})
                   .assignmentOptional()
                   .defaultValue("drop")
@@ -169,7 +169,10 @@ namespace karabo {
             // If allowMissing is false, the lack of a key will throw an exception - that is on purpose!
             if (!allowMissing || config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
             if (!allowMissing || config.has("minData")) config.get("minData", m_minData);
-            if (!allowMissing || config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
+            if (!allowMissing || config.has("onSlowness")) {
+                config.get("onSlowness", m_onSlowness);
+                if (m_onSlowness == "queue") m_onSlowness += "Drop";
+            }
             if (!allowMissing || config.has("respondToEndOfStream"))
                 config.get("respondToEndOfStream", m_respondToEndOfStream);
             if (!allowMissing || config.has("delayOnInput")) config.get("delayOnInput", m_delayOnInput);

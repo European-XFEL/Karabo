@@ -35,7 +35,8 @@
 
 USING_KARABO_NAMESPACES;
 
-namespace chrono = std::chrono; // alias for shortening timing expressions
+using namespace std::string_literals; // For '"abc"s'
+namespace chrono = std::chrono;       // alias for shortening timing expressions
 
 CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
 
@@ -501,19 +502,19 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
 
 
 void PipelinedProcessing_Test::testPipeQueue() {
-    std::clog << "---\ntestPipeQueue (onSlowness = 'queue', dataDistribution = 'copy')\n";
+    std::clog << "---\ntestPipeQueue (onSlowness = 'queueDrop', dataDistribution = 'copy')\n";
 
     const auto testStartTime = chrono::high_resolution_clock::now();
 
     karabo::util::Hash config(m_receiverBaseConfig);
-    config += Hash("deviceId", m_receiver, "input.onSlowness", "queue");
+    config += Hash("deviceId", m_receiver, "input", Hash("onSlowness", "queueDrop", "maxQueueLength", 1000u));
     config += Hash("deviceId", m_receiver, "input.dataDistribution", "copy");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
-    CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("queueDrop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
 
-    testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", "queue", "local", {m_receiver + ":input2"},
-                                       "copy", "drop", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", "queueDrop", "local",
+                                       {m_receiver + ":input2"}, "copy", "drop", "local");
 
     // Higher processing times are used to allow observation that data is sent faster than it is
     // handled by the receiver.
@@ -620,50 +621,44 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit() {
     const unsigned int maxLengthCfg = 100u;
 
     // Receiver processing time much higher than sender delay between data sending:
-    // With "queueDrop" option data will be queued until queue is full and then drop some data
-    testPipeQueueAtLimit(2, 0, "queueDrop", maxLengthCfg, true, true); // true, true ==> expectDataLoss, slowReceiver
-
-    // With the "queue" option, all data is received since the sender waits if queue is full
-    testPipeQueueAtLimit(2, 0, "queue", maxLengthCfg, false, true);
+    // Data will be queued until queue is full and then drop some data
+    testPipeQueueAtLimit(2, 0, maxLengthCfg, true, true); // true, true ==> expectDataLoss, slowReceiver
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
     // (the 'slowReceiver == false' test fails sometimes with delay = 2, so 4 was choosen - but even that failed in
     //  https://git.xfel.eu/Karabo/Framework/-/jobs/238881)
-    testPipeQueueAtLimit(0, 5, "queueDrop", maxLengthCfg, false, false);
+    testPipeQueueAtLimit(0, 5, maxLengthCfg, false, false);
 
     // 2) Test overall limit from Memory, no effective queue length limit (queue can be as big as the whole Memory
     // buffer of the Output Channel).
 
     // Receiver processing time much higher than sender delay between data sending:
-    // With "queueDrop" option data will be queued until queue is full and then drop some data
-    testPipeQueueAtLimit(2, 0, "queueDrop", karabo::xms::Memory::MAX_N_CHUNKS, true,
+    // Data will be queued until queue is full and then drop some data
+    testPipeQueueAtLimit(2, 0, karabo::xms::Memory::MAX_N_CHUNKS, true,
                          true); // true, true ==> expectDataLoss, slowReceiver
-
-    // With the "queue" option, all data is received since the sender waits if queue is full
-    testPipeQueueAtLimit(2, 0, "queue", karabo::xms::Memory::MAX_N_CHUNKS, false, true);
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
     // (the 'slowReceiver == false' test fails sometimes with delay = 2, so choose 4)
-    testPipeQueueAtLimit(0, 4, "queueDrop", karabo::xms::Memory::MAX_N_CHUNKS, false, false);
+    testPipeQueueAtLimit(0, 4, karabo::xms::Memory::MAX_N_CHUNKS, false, false);
 }
 
 
 void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime,
-                                                    const std::string& queueOption, unsigned int activeQueueLimit,
-                                                    bool expectDataLoss, bool slowReceiver) {
-    std::clog << "---\ntestPipeQueueAtLimit (onSlowness = '" << queueOption << "', dataDistribution = 'copy') "
+                                                    unsigned int activeQueueLimit, bool expectDataLoss,
+                                                    bool slowReceiver) {
+    std::clog << "---\ntestPipeQueueAtLimit (onSlowness = 'queueDrop', dataDistribution = 'copy') "
               << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms, "
               << "activeQueueLimit = " << activeQueueLimit << "\n";
 
     karabo::util::Hash config(m_receiverBaseConfig);
-    config.merge(Hash("deviceId", m_receiver, "input.onSlowness", queueOption, "input.dataDistribution", "copy",
+    config.merge(Hash("deviceId", m_receiver, "input.onSlowness", "queueDrop", "input.dataDistribution", "copy",
                       "input.maxQueueLength", activeQueueLimit));
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
-    CPPUNIT_ASSERT_EQUAL(queueOption, m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    CPPUNIT_ASSERT_EQUAL("queueDrop"s, m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL("copy"s, m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
     CPPUNIT_ASSERT_EQUAL(activeQueueLimit, m_deviceClient->get<unsigned int>(m_receiver, "input.maxQueueLength"));
 
-    testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", queueOption, "local",
+    testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", "queueDrop", "local",
                                        {m_receiver + ":input2"}, "copy", "drop", "local");
 
 
@@ -986,14 +981,14 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 
 
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
-    std::clog << "---\ntestPipeTwoSharedReceiversQueue (output.noInputShared = 'queue', input.dataDistribution = "
+    std::clog << "---\ntestPipeTwoSharedReceiversQueue (output.noInputShared = 'queueDrop', input.dataDistribution = "
                  "'shared')\n";
 
     const auto testStartTime = chrono::high_resolution_clock::now();
 
-    // restart the sender with "output1.noInputShared == queue"
+    // restart the sender with "output1.noInputShared == queueDrop"
     killDeviceWithAssert(m_sender);
-    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "queue"));
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "queueDrop"));
 
     karabo::util::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
@@ -1009,7 +1004,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
 
     // Set of tests for normal ('load-balanced') distribution mode.
     testPipeTwoSharedReceivers(0, 0, 100, false, false);
-    // No data loss is expected for 'queue' distribution mode, despite of differences between receivers
+    // No data loss is expected for 'queueDrop' distribution mode, despite of differences between receivers
+    // as long as there is no queue limit on the sender side and data fits into available chunks in OutputChannel
     testPipeTwoSharedReceivers(100, 40, 0, false, false);  // receivers which have different "speed"
     testPipeTwoSharedReceivers(100, 100, 0, false, false); // receivers which have the same "speed"
 
@@ -1021,7 +1017,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
 
     // Set of tests for 'round-robin' distribution mode.
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
-    // No data loss is expected for 'queue' distribution mode, despite of differences between receivers
+    // No data loss is expected for 'queueDrop' distribution mode, despite of differences between receivers
+    // as long as there is no queue limit on the sender side and data fits into available chunks in OutputChannel
     testPipeTwoSharedReceivers(100, 40, 0, false, true);  // receivers which have different "speed"
     testPipeTwoSharedReceivers(100, 100, 0, false, true); // receivers which have the same "speed"
 
@@ -1255,20 +1252,16 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
 
     // 1) load-balanced
     // 1a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 6, 4, 0, true, true); // dataLoss, slowReceivers
-    // 1b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
-    testPipeTwoSharedQueueAtLimit("queue", "load-balanced", 6, 4, 0, false, true); // dataLoss, slowReceivers
-    // 1c) test fast receivers with sender queueDrop: do not drop data, since queue never full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueDropAtLimit("load-balanced", 6, 4, 0, true, true); // dataLoss, slowReceivers
+    // 1b) test fast receivers with sender queueDrop: do not drop data, since queue never full
+    testPipeTwoSharedQueueDropAtLimit("load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
-    // 2) round-robin
+    // 2) round-robin, i.e. testing sharedInputSelector code
     // 2a) test slow receivers with sender queueDrop: drop data if queue gets full
     //     Seen failures with processingTimes 6/4 ...
-    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 8, 4, 0, true, true); // dataLoss, slowReceivers
-    // 2b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
-    testPipeTwoSharedQueueAtLimit("queue", "round-robin", 8, 4, 0, false, true); // dataLoss, slowReceivers
-    // 2c) test fast receivers with sender queueDrop: do not drop data, since queue never full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueDropAtLimit("round-robin", 8, 4, 0, true, true); // dataLoss, slowReceivers
+    // 2b) test fast receivers with sender queueDrop: do not drop data, since queue never full
+    testPipeTwoSharedQueueDropAtLimit("round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -1281,12 +1274,11 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
 }
 
 
-void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& queueOpt,
-                                                             const std::string& distributionMode,
-                                                             unsigned int processingTime1, unsigned int processingTime2,
-                                                             unsigned int senderDelay, bool expectDataLoss,
-                                                             bool slowReceivers) {
-    std::clog << "---\ntestPipeTwoSharedQueueAtLimit: noInputShared = '" << queueOpt << "', distributeQueue = '"
+void PipelinedProcessing_Test::testPipeTwoSharedQueueDropAtLimit(const std::string& distributionMode,
+                                                                 unsigned int processingTime1,
+                                                                 unsigned int processingTime2, unsigned int senderDelay,
+                                                                 bool expectDataLoss, bool slowReceivers) {
+    std::clog << "---\ntestPipeTwoSharedQueueAtLimit: noInputShared = 'queueDrop', distributeQueue = '"
               << distributionMode << "', processing times " << processingTime1 << "/" << processingTime2
               << " ms, sender delay " << senderDelay << " ms\n";
 
@@ -1299,7 +1291,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& 
     const unsigned int dataSize = 1000u; // else memory trouble with big queues on small memory machines
 
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "delay", senderDelay, "nData", nData,
-                                                        "dataSize", dataSize, "output1.noInputShared", queueOpt,
+                                                        "dataSize", dataSize, "output1.noInputShared", "queueDrop",
                                                         "nextSharedInput", (roundRobin ? "roundRobinSelector" : "")));
 
     m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
@@ -1520,12 +1512,12 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
 void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRoundRobin) {
     std::clog << "- input.dataDistribution = 'shared', "
-              << "output1.noInputShared = 'queue', "
+              << "output1.noInputShared = 'queueDrop', "
               << "sharedInputSelector: " << (useRoundRobin ? "round-robin" : "load-balanced") << std::endl;
 
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice",
-                                Hash("deviceId", m_sender, "output1.noInputShared", "queue", "nextSharedInput",
+                                Hash("deviceId", m_sender, "output1.noInputShared", "queueDrop", "nextSharedInput",
                                      (useRoundRobin ? "roundRobinSelector" : "")));
 
     // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
@@ -1597,7 +1589,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
 
 
 void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
-    std::clog << "- input.onSlowness = 'queue', input.dataDistribution = 'copy'\n";
+    std::clog << "- input.onSlowness = 'queueDrop', input.dataDistribution = 'copy'\n";
 
     unsigned int nDataExpected = 0, nDataReceived = 0, nDataFlushed = 0;
 
@@ -1605,11 +1597,11 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     // be able to send all the data before the receiver disconnects.
     karabo::util::Hash config(m_receiverBaseConfig);
     config.set("deviceId", m_receiver);
-    config.set("input.onSlowness", "queue");
+    config.set("input.onSlowness", "queueDrop");
     config.set("input.dataDistribution", "copy");
     config.set("processingTime", 1000);
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
-    CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("queueDrop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
     // check for connection?
 
@@ -1617,9 +1609,9 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
     // Assure that receiver is connected.
     // (Only checking "input.missingConnections" not 100% reliable, see InputChannel::onConnect.)
-    testSenderOutputChannelConnections(1ul,                                                //
-                                       {m_receiver + ":input"}, "copy", "queue", "local",  //
-                                       {m_receiver + ":input2"}, "copy", "drop", "local"); // just defaults
+    testSenderOutputChannelConnections(1ul,                                                   //
+                                       {m_receiver + ":input"}, "copy", "queueDrop", "local", //
+                                       {m_receiver + ":input2"}, "copy", "drop", "local");    // just defaults
     CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
 
     // call sender's slot
@@ -1645,17 +1637,17 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     // Re-instantiates the receiver - this time there's no need to use a high processingTime.
     karabo::util::Hash configAfterDisc(m_receiverBaseConfig);
     configAfterDisc.set("deviceId", m_receiver);
-    configAfterDisc.set("input.onSlowness", "queue");
+    configAfterDisc.set("input.onSlowness", "queueDrop");
     configAfterDisc.set("input.dataDistribution", "copy");
     configAfterDisc.set("processingTime", 5);
     instantiateDeviceWithAssert("PipeReceiverDevice", configAfterDisc);
-    CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("queueDrop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
     // Assure that receiver is connected.
     // (Only checking "input.missingConnections" not 100% reliable, see InputChannel::onConnect.)
-    testSenderOutputChannelConnections(1ul,                                                //
-                                       {m_receiver + ":input"}, "copy", "queue", "local",  //
-                                       {m_receiver + ":input2"}, "copy", "drop", "local"); // just defaults
+    testSenderOutputChannelConnections(1ul,                                                   //
+                                       {m_receiver + ":input"}, "copy", "queueDrop", "local", //
+                                       {m_receiver + ":input2"}, "copy", "drop", "local");    // just defaults
     CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
 
     // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
