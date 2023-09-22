@@ -765,14 +765,14 @@ class Manager(QObject):
     def handle_listDestinations(self, success, request, reply, reason=""):
         """
         Broadcast the available proposals in the Topic, fetched by the
-        KaraboELogger, so that the PreviewDialog can  list them.
+        KaraboLogBook, so that the PreviewDialog can  list them.
         """
         destinations = reply.get("destinations")
         broadcast_event(KaraboEvent.ActiveDestinations, destinations)
 
     def handle_saveLogBook(self, success, request, reply, reason=""):
         """
-        Show messagebox when the KaraboELogger fails to send the message to
+        Show messagebox when the KaraboLogBook fails to send the message to
         the logbook.
         """
         if success:
@@ -782,9 +782,8 @@ class Manager(QObject):
             get_logger().info(message)
         else:
             error, details = get_reason_parts(reason)
-            message = f"Failed to send the screenshot of the scene.\n{error}"
-            messagebox.show_warning(title="Send to eLog Failed",
-                                    text=message, details=details)
+            messagebox.show_warning(title="Send to LogBook Failed",
+                                    text=error, details=details)
 
     # ------------------------------------------------------------------
     # Private methods
