@@ -83,10 +83,6 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending2() {
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending3() {
-    testDisconnectWhileSending_impl("copy", "queue", "wait");
-}
-
-void InputOutputChannel_LongTest::testDisconnectWhileSending3a() {
     testDisconnectWhileSending_impl("copy", "queueDrop", "wait");
 }
 
@@ -105,10 +101,6 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending5() {
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending6() {
-    testDisconnectWhileSending_impl("shared", "wait", "queue");
-}
-
-void InputOutputChannel_LongTest::testDisconnectWhileSending6a() {
     testDisconnectWhileSending_impl("shared", "wait", "queueDrop");
 }
 
@@ -127,12 +119,9 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending8() {
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending9() {
-    testDisconnectWhileSending_impl("shared", "wait", "queue"); // true -> round-robin
-}
-
-void InputOutputChannel_LongTest::testDisconnectWhileSending9a() {
     testDisconnectWhileSending_impl("shared", "wait", "queueDrop"); // true -> round-robin
 }
+
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
                                                                   const std::string& sender_onSlowness,
