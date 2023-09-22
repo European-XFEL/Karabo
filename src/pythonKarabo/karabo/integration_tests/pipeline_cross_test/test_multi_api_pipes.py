@@ -41,9 +41,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
         self._main_test_1to1_wait_fastReceiver()
         self._main_test_1to1_wait_slowReceiver()
 
-        self._main_test_1to1_queue_fastReceiver()
-        self._main_test_1to1_queue_slowReceiver()
-
         self._main_test_1to1_queueDrop_fastReceiver()
         self._main_test_1to1_queueDrop_slowReceiver()
 
@@ -74,41 +71,29 @@ class TestCrossPipelining(BoundDeviceTestCase):
         self._test_1to1_wait_slowReceiver("mdl", "bound")
         self._test_1to1_wait_slowReceiver("mdl", "mdl")
 
-    def _main_test_1to1_queue_fastReceiver(self):
-        self._test_1to1_queueType_fastReceiver("queue")
-
     def _main_test_1to1_queueDrop_fastReceiver(self):
-        self._test_1to1_queueType_fastReceiver("queueDrop")
 
-    def _test_1to1_queueType_fastReceiver(self, queueOpt):
-
-        self._test_1to1_queue_fastReceiver(queueOpt, "cpp", "cpp")
-        self._test_1to1_queue_fastReceiver(queueOpt, "cpp", "bound")
-        self._test_1to1_queue_fastReceiver(queueOpt, "cpp", "mdl")
-        self._test_1to1_queue_fastReceiver(queueOpt, "bound", "bound")
-        self._test_1to1_queue_fastReceiver(queueOpt, "bound", "cpp")
-        self._test_1to1_queue_fastReceiver(queueOpt, "bound", "mdl")
-        self._test_1to1_queue_fastReceiver(queueOpt, "mdl", "cpp")
-        self._test_1to1_queue_fastReceiver(queueOpt, "mdl", "bound")
-        self._test_1to1_queue_fastReceiver(queueOpt, "mdl", "mdl")
-
-    def _main_test_1to1_queue_slowReceiver(self):
-        self._test_1to1_queueType_slowReceiver("queue")
+        self._test_1to1_queueDrop_fastReceiver("cpp", "cpp")
+        self._test_1to1_queueDrop_fastReceiver("cpp", "bound")
+        self._test_1to1_queueDrop_fastReceiver("cpp", "mdl")
+        self._test_1to1_queueDrop_fastReceiver("bound", "bound")
+        self._test_1to1_queueDrop_fastReceiver("bound", "cpp")
+        self._test_1to1_queueDrop_fastReceiver("bound", "mdl")
+        self._test_1to1_queueDrop_fastReceiver("mdl", "cpp")
+        self._test_1to1_queueDrop_fastReceiver("mdl", "bound")
+        self._test_1to1_queueDrop_fastReceiver("mdl", "mdl")
 
     def _main_test_1to1_queueDrop_slowReceiver(self):
-        self._test_1to1_queueType_slowReceiver("queueDrop")
 
-    def _test_1to1_queueType_slowReceiver(self, queueOpt):
-
-        self._test_1to1_queue_slowReceiver(queueOpt, "cpp", "cpp")
-        self._test_1to1_queue_slowReceiver(queueOpt, "cpp", "bound")
-        self._test_1to1_queue_slowReceiver(queueOpt, "cpp", "mdl")
-        self._test_1to1_queue_slowReceiver(queueOpt, "bound", "bound")
-        self._test_1to1_queue_slowReceiver(queueOpt, "bound", "cpp")
-        self._test_1to1_queue_slowReceiver(queueOpt, "bound", "mdl")
-        self._test_1to1_queue_slowReceiver(queueOpt, "mdl", "cpp")
-        self._test_1to1_queue_slowReceiver(queueOpt, "mdl", "bound")
-        self._test_1to1_queue_slowReceiver(queueOpt, "mdl", "mdl")
+        self._test_1to1_queueDrop_slowReceiver("cpp", "cpp")
+        self._test_1to1_queueDrop_slowReceiver("cpp", "bound")
+        self._test_1to1_queueDrop_slowReceiver("cpp", "mdl")
+        self._test_1to1_queueDrop_slowReceiver("bound", "bound")
+        self._test_1to1_queueDrop_slowReceiver("bound", "cpp")
+        self._test_1to1_queueDrop_slowReceiver("bound", "mdl")
+        self._test_1to1_queueDrop_slowReceiver("mdl", "cpp")
+        self._test_1to1_queueDrop_slowReceiver("mdl", "bound")
+        self._test_1to1_queueDrop_slowReceiver("mdl", "mdl")
 
     def _main_test_1to1_drop_fastReceiver(self):
 
@@ -339,21 +324,21 @@ class TestCrossPipelining(BoundDeviceTestCase):
         """
         self._test_1to1_wait(sender_api, self._sender_freq, receiver_api, self._slow_proc_time)
 
-    def _test_1to1_queue_fastReceiver(self, queueOpt, sender_api, receiver_api):
+    def _test_1to1_queueDrop_fastReceiver(self, sender_api, receiver_api):
         """
         Test single sender with single receiver where sender is slower
         than receiver and receiver is configured to make sender queue.
         """
-        self._test_1to1_queue(queueOpt, sender_api, self._sender_freq,
-                              receiver_api, self._fast_proc_time)
+        self._test_1to1_queueDrop(sender_api, self._sender_freq,
+                                  receiver_api, self._fast_proc_time)
 
-    def _test_1to1_queue_slowReceiver(self, queueOpt, sender_api, receiver_api):
+    def _test_1to1_queueDrop_slowReceiver(self, sender_api, receiver_api):
         """
         Test single sender with single receiver where sender is faster
         than receiver and receiver is configured to make sender queue.
         """
-        self._test_1to1_queue(queueOpt, sender_api, self._sender_freq,
-                              receiver_api, self._slow_proc_time)
+        self._test_1to1_queueDrop(sender_api, self._sender_freq,
+                                  receiver_api, self._slow_proc_time)
 
     def _test_1to1_drop_fastReceiver(self, sender_api, receiver_api):
         """
@@ -438,14 +423,13 @@ class TestCrossPipelining(BoundDeviceTestCase):
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
         self.assertTrue(ok, f"Problem killing receiver device: '{msg}'.")
 
-    def _test_1to1_queue(self, queueOpt, sender_api, sender_freq,
-                         receiver_api, processing_time):
+    def _test_1to1_queueDrop(self, sender_api, sender_freq,
+                             receiver_api, processing_time):
         """
         Test single sender with given frequency (Hz) and single receiver with
         given processing time (ms) where receiver is configured to make sender
-        queue, queueOpt defines which queue option is used (queue or queueDrop)
-        which makes no difference here since the configured maximum queue
-        length is longer than all we send.
+        queue (and drop if queue full). But here nothing is dropped since
+        the configured maximum queue length is longer than all we send.
         """
         sender_cfg = Hash("outputFrequency", sender_freq)
         if sender_api == "mdl":
@@ -453,7 +437,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
         receiver_cfg = Hash("input.connectedOutputChannels", ["sender:output"],
-                            "input.onSlowness", queueOpt,
+                            "input.onSlowness", "queueDrop",
                             "input.maxQueueLength", 100,
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)

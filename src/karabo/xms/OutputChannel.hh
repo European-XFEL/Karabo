@@ -129,7 +129,7 @@ namespace karabo {
             InputChannels m_registeredSharedInputs;
             // Used for storing chunks for shared input channels when
             // distribution mode is "load-balanced" and the strategy for
-            // NoSharedInputChannel available is "queue".
+            // NoSharedInputChannel available is "queueDrop".
             // Relies on lock protection using m_registeredSharedInputsMutex.
             std::deque<int> m_sharedLoadBalancedQueuedChunks;
 
