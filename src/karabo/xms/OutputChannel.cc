@@ -39,6 +39,7 @@ namespace bs = boost::system;
 using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
+using namespace std::string_literals; // For '"abc"s'
 using boost::placeholders::_1;
 using boost::placeholders::_2;
 
@@ -73,7 +74,9 @@ namespace karabo {
             STRING_ELEMENT(expected)
                   .key("noInputShared")
                   .displayedName("No Input (Shared)")
-                  .description("What to do if currently none of the share-input channels is available for writing to")
+                  .description(
+                        "What to do if currently none of the share-input channels is available for writing to ('queue' "
+                        "is same as 'queueDrop')")
                   .options({"drop", "queue", "queueDrop", "wait"})
                   .assignmentOptional()
                   .defaultValue("drop")
@@ -131,7 +134,7 @@ namespace karabo {
                   .displayedName("On slowness")
                   .description(
                         "Data handling policy in case of slowness if data Distribution is copy: "
-                        "drop, wait, queue, queueDrop")
+                        "drop, wait, queueDrop")
                   .readOnly()
                   .commit();
 
@@ -221,6 +224,7 @@ namespace karabo {
               m_connections(),
               m_updateDeadline(karabo::net::EventLoop::getIOService()) {
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
+            if (m_onNoSharedInputChannelAvailable == "queue") m_onNoSharedInputChannelAvailable += "Drop";
             config.get("port", m_port);
             config.get("updatePeriod", m_period);
             if (config.get<std::string>("distributionMode") != "load-balanced") {
@@ -446,7 +450,7 @@ namespace karabo {
                  *     instanceId (std::string)
                  *     memoryLocation (std::string) [local/remote]
                  *     dataDistribution (std::string) [shared/copy]
-                 *     onSlowness (std::string) [queue/drop/queueDrop/wait]
+                 *     onSlowness (std::string) [drop/queueDrop/wait]
                  *     maxQueueLength (unsigned int; when onSlowness is queue or queueDrop)
                  */
 
@@ -463,10 +467,14 @@ namespace karabo {
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
                 info.set("tcpChannel", weakChannel);
-                if (onSlowness == "throw") { // old version is connecting...
+                if (onSlowness == "queue") { // pre 2.19.0 version is connecting...
+                    KARABO_LOG_FRAMEWORK_WARN << "For input channel " << instanceId << " overwrite outdated "
+                                              << "'onSlowness' value \"queue\" by \"queueDrop\"";
+                    info.set("onSlowness", "queueDrop"s);
+                } else if (onSlowness == "throw") { // pre 2.19.0 MDL (or any pre 2.10.0) is connecting...
                     KARABO_LOG_FRAMEWORK_WARN << "For input channel " << instanceId << " overwrite outdated "
                                               << "'onSlowness' value \"throw\" by \"drop\"";
-                    info.set("onSlowness", "drop");
+                    info.set("onSlowness", "drop"s);
                 } else {
                     info.set("onSlowness", onSlowness);
                 }
@@ -489,7 +497,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel '" << instanceId << "'";
                         m_registeredSharedInputs[instanceId] = info;
                     } else {
-                        if (boost::algorithm::starts_with(finalSlownessForLog, "queue")) {
+                        if (finalSlownessForLog == "queueDrop") {
                             (finalSlownessForLog += ", max. length ") += info.getAs<std::string>("maxQueueLength");
                         }
                         KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel '" << instanceId << "'";
@@ -798,14 +806,13 @@ namespace karabo {
         void OutputChannel::triggerIOEvent() {
             using namespace karabo::net;
             try {
-                OutputChannel::Pointer self = shared_from_this();
-                if (m_ioEventHandler) m_ioEventHandler(self);
+                if (m_ioEventHandler) {
+                    OutputChannel::Pointer self = shared_from_this();
+                    m_ioEventHandler(self);
+                }
             } catch (karabo::util::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.detailedMsg();
                 KARABO_RETHROW;
-            } catch (const boost::bad_weak_ptr& e) {
-                KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: OutputChannel destroyed already -- "
-                                          << e.what();
             } catch (const std::exception& ex) {
                 KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" exception -- " << ex.what();
                 // throw KARABO_SYSTEM_EXCEPTION(string("\"triggerIOEvent\" exception -- ") + ex.what());
@@ -928,8 +935,6 @@ namespace karabo {
 
         void OutputChannel::ensureValidChunkId() {
             // If still invalid, drop from queueDrop channels until resources freed and valid chunkId available.
-            // If nothing to drop left, check whether anything is waiting due to "queue", block as requested
-            // until valid chunkId available.
             // If nothing is queuing anymore at all, but still no valid chunkId available, throw a logic exception
             // (should never happen!).
 
@@ -937,7 +942,7 @@ namespace karabo {
             //             beyond the first 'break;' in the first while loop. Nevertheless, I'd prefer to keep the
             //             rest of the code as a "last rescue attempt".
 
-            // 1) Loop until dropping from "queueDrop" queues makes a valid chunkId available.
+            // Loop until dropping from "queueDrop" queues makes a valid chunkId available.
             while (m_chunkId == m_invalidChunkId) {
                 if (updateChunkId()) {
                     break;
@@ -1001,57 +1006,6 @@ namespace karabo {
                     break;
                 }
             }
-
-            // 2) Block a while as long there is any "queue(Wait)" queue around, as long as m_chunkid is invalid.
-            while (m_chunkId == m_invalidChunkId) {
-                if (updateChunkId()) {
-                    break;
-                }
-                // If there is any "queue(-Wait)" queue left, block
-                auto anyNonEmptyQueue = [](boost::mutex& mut, InputChannels& channels) {
-                    boost::mutex::scoped_lock lock(mut);
-                    for (auto& idChannelInfo : channels) {
-                        Hash& channelInfo = idChannelInfo.second;
-                        if (channelInfo.get<std::string>("onSlowness") == "queue") { // i.e. queueWait
-                            auto& queuedChunks = channelInfo.get<std::deque<int>>("queuedChunks");
-                            if (!queuedChunks.empty()) {
-                                KARABO_LOG_FRAMEWORK_INFO << "Block queue for 'queue(-Wait)' channel '"
-                                                          << idChannelInfo.first << "', queue's size is "
-                                                          << queuedChunks.size();
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                };
-                // Check the copy queues
-                bool block = false;
-                if (anyNonEmptyQueue(m_registeredCopyInputsMutex, m_registeredCopyInputs)) {
-                    block = true;
-                } else if (m_onNoSharedInputChannelAvailable == "queue") { // i.e. queueWait
-                    // Check the shared queue(s) - it depends on the distribution mode where queues are
-                    if (m_sharedInputSelector) {
-                        if (anyNonEmptyQueue(m_registeredSharedInputsMutex, m_registeredSharedInputs)) {
-                            block = true;
-                        }
-                    } else {
-                        boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-                        if (!m_sharedLoadBalancedQueuedChunks.empty()) {
-                            KARABO_LOG_FRAMEWORK_INFO << "Block for load-balanced queue of size "
-                                                      << m_sharedLoadBalancedQueuedChunks.size();
-                            block = true;
-                        } else if (!updateChunkId()) {
-                            // Should never come here! In principle, local input channels could use chunks of this
-                            // output channel. But while there is space in Memory for > 2000 (Memory::MAX_N_CHUNKS)
-                            // chunks, there are less than 200 (Memory::MAX_N_CHANNELS) Input-/OutputChannels and the
-                            // local input channels cannot use more than two chunks (for their two pots) from here.
-                            throw KARABO_LOGIC_EXCEPTION(
-                                  "No new chunk available, but no queues that could occupy them!");
-                        }
-                    }
-                }
-                if (block) boost::this_thread::sleep(boost::posix_time::milliseconds(2));
-            } // while treatment for queue(-Wait))
         }
 
         void OutputChannel::signalEndOfStream() {
@@ -1188,7 +1142,7 @@ namespace karabo {
                 unregisterWriterFromChunk(chunkId);
                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId "
                                            << chunkId << " since selected input '" << nextInputId
-                                           << "' is not connected";
+                                           << "' is not among shared inputs";
                 return;
             }
             karabo::util::Hash& channelInfo = itIdChannelInfo->second;
@@ -1203,31 +1157,22 @@ namespace karabo {
                 sendOne(chunkId, channelInfo, safeNDArray);
             } else { // Not found
                 bool haveToWait = false;
-                bool haveToWaitForQueue = false;
                 if (m_onNoSharedInputChannelAvailable == "drop") {
                     // Drop data
                     unregisterWriterFromChunk(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                                                << " Dropping (shared) data package with chunkId: " << chunkId;
-
-                } else if (boost::algorithm::starts_with(m_onNoSharedInputChannelAvailable,
-                                                         "queue")) { // i.e. queue(-Wait) or queueDrop
-                    if (m_chunkId != m_invalidChunkId) {             // i.e. all fine with queue length
+                } else if (m_onNoSharedInputChannelAvailable == "queueDrop") {
+                    if (m_chunkId != m_invalidChunkId) { // i.e. all fine with queue length
                         // We queue for exactly this one.
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                                                    << " Queuing (shared) data package with chunkId: " << chunkId;
                         if (!safeNDArray) Memory::assureAllDataIsCopied(m_channelId, chunkId);
                         channelInfo.get<std::deque<int>>("queuedChunks").push_back(chunkId);
-                    } else if (m_onNoSharedInputChannelAvailable == "queueDrop") {
+                    } else { // queue full, so drop
                         unregisterWriterFromChunk(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queue-dropping (shared) data package for "
                                                    << instanceId;
-                    } else { // i.e. make wait
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queue (shared) data package means wait for "
-                                                   << instanceId;
-                        // Blocking actions must not happen under the mutex that is also needed to unblock (in
-                        // onInputAvailable)
-                        haveToWaitForQueue = true;
                     }
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in
@@ -1239,9 +1184,8 @@ namespace karabo {
                                                  m_onNoSharedInputChannelAvailable);
                 }
 
-                if (haveToWait || haveToWaitForQueue) {
-                    // The input channel whose turn it is, is not ready and we
-                    // either have to wait or we have to queue, but queue is full
+                if (haveToWait) {
+                    // The input channel whose turn it is, is not ready and we have to wait
 
                     // Make copy of references which might become dangling when unlocking mutex lock
                     const karabo::util::Hash channelInfoCopy = channelInfo;
@@ -1250,11 +1194,8 @@ namespace karabo {
                                    // hasRegisteredSharedInputChannel)!
                     KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Waiting for available (shared) input channel...";
                     while (true) {
-                        if (haveToWaitForQueue) {
-                            if (m_invalidChunkId != m_chunkId || updateChunkId()) break;
-                        } else { // i.e. wait
-                            if (hasSharedInput(instanceIdCopy)) break;
-                        }
+                        if (hasSharedInput(instanceIdCopy)) break;
+
                         boost::this_thread::sleep(boost::posix_time::millisec(1));
                         if (!hasRegisteredSharedInputChannel(instanceIdCopy)) { // might have disconnected meanwhile...
                             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " input channel (shared) of "
@@ -1265,30 +1206,12 @@ namespace karabo {
                             return;
                         }
                     }
-                    if (haveToWaitForQueue) {
-                        // Can neither use 'channelInfo' (its InputChannel could have disconnected meanwhile)
-                        // nor 'channelInfoCopy' (its queue is a copy of the original one),
-                        lock.lock();
-                        auto it = m_registeredSharedInputs.find(instanceIdCopy);
-                        if (it != m_registeredSharedInputs.end()) {
-                            // XXX: We ignore the case that 'instanceIdCopy' dis- and reconnected. In that case it
-                            //      might not be its turn and it could even be ready to directly receive data...
-                            it->second.get<std::deque<int>>("queuedChunks").push_back(chunkId);
-                            KARABO_LOG_FRAMEWORK_DEBUG
-                                  << this->debugId() << " queuing data package for input channel (shared) "
-                                  << instanceId << " after waiting for full queue, chunk " << chunkId;
-                        } else {
-                            // selected target instance gone, so release chunk
-                            unregisterWriterFromChunk(chunkId);
-                        }
-                    } else if (haveToWait) {
-                        // Note: if 'instanceIdCopy' is now gone, chunkId will not be delivered to anybody else
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                                   << " found (shared) input channel after waiting, distributing now";
-                        eraseSharedInput(instanceIdCopy);
-                        sendOne(chunkId, channelInfoCopy, safeNDArray);
-                    }
-                } // end have to wait or queue
+                    // Note: if 'instanceIdCopy' is now gone, chunkId will not be delivered to anybody else
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                                               << " found (shared) input channel after waiting, distributing now";
+                    eraseSharedInput(instanceIdCopy);
+                    sendOne(chunkId, channelInfoCopy, safeNDArray);
+                } // end have to wait
             }     // end else - not found
         }
 
@@ -1307,28 +1230,22 @@ namespace karabo {
                 sendOne(chunkId, channelInfo, safeNDArray);
             } else { // Not found
                 bool haveToWait = false;
-                bool haveToWaitForQueue = false;
                 if (m_onNoSharedInputChannelAvailable == "drop") {
                     unregisterWriterFromChunk(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                                                << " Dropping (shared) data package with chunkId: " << chunkId;
-                } else if (boost::algorithm::starts_with(m_onNoSharedInputChannelAvailable,
-                                                         "queue")) { // i.e. queue(-Wait) or queueDrop
-                    if (m_chunkId != m_invalidChunkId) {             // i.e. all fine with queue length
+                } else if (m_onNoSharedInputChannelAvailable == "queueDrop") {
+                    if (m_chunkId != m_invalidChunkId) { // i.e. all fine with queue length
                         // For load-balanced mode the chunks should be put on a single queue.
                         KARABO_LOG_FRAMEWORK_DEBUG
                               << this->debugId()
                               << " Placing chunk in single queue (load-balanced distribution mode): " << chunkId;
                         if (!safeNDArray) Memory::assureAllDataIsCopied(m_channelId, chunkId);
                         m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
-                    } else if (m_onNoSharedInputChannelAvailable == "queueDrop") {
+                    } else {
                         unregisterWriterFromChunk(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queue-dropping (shared) data package with "
                                                    << "chunkId " << chunkId << " (single queue full)";
-                    } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                                   << " Queue (shared) data package means wait since single queue full";
-                        haveToWaitForQueue = true;
                     }
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in
@@ -1339,9 +1256,8 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION("Output channel case internally misconfigured: " +
                                                  m_onNoSharedInputChannelAvailable);
                 }
-                if (haveToWait || haveToWaitForQueue) {
-                    // None of the connected inputs is ready for more data and we are configured to wait for them
-                    // or to queue, but queue is full.
+                if (haveToWait) {
+                    // None of the connected inputs is ready for more data and we are configured to wait for them.
 
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Waiting for available (shared) input channel...";
                     // while loop such that the following popShareNext() is called under the same lock.lock() under
@@ -1356,35 +1272,22 @@ namespace karabo {
                             unregisterWriterFromChunk(chunkId);
                             return; // Nothing to distribute anymore: no shared channels left
                         }
-                        if (haveToWait) {
-                            if (!isShareNextEmpty()) break;
-                        } else if (haveToWaitForQueue) {
-                            if (m_invalidChunkId != m_chunkId || updateChunkId()) break;
-                        }
+                        if (!isShareNextEmpty()) break;
                     }
-                    if (haveToWait) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                                   << " found (shared) input channel after waiting, distributing now";
-                        const std::string instanceId = popShareNext();
-                        auto it = m_registeredSharedInputs.find(instanceId);
-                        if (it == m_registeredSharedInputs.end()) { // paranoia check
-                            // Should never come here...
-                            KARABO_LOG_FRAMEWORK_ERROR << "Next load balanced input '" << instanceId
-                                                       << "' does not exist anymore (after wait)!";
-                            return;
-                        }
-                        const karabo::util::Hash& channelInfo = it->second;
-                        sendOne(chunkId, channelInfo, safeNDArray);
-                    } else if (haveToWaitForQueue) {
-                        // XXX: Do not treat the unlikely case that the queue could be suddenly empty now
-                        //      and even one receiver ready to get the data.
-                        //      (E.g. when chunks were exhausted by a too slow copy input that now disconnected...?)
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                                   << " Placing chunk in single queue after wait: " << chunkId;
-                        if (!safeNDArray) Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                        m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                                               << " found (shared) input channel after waiting, distributing now";
+                    const std::string instanceId = popShareNext();
+                    auto it = m_registeredSharedInputs.find(instanceId);
+                    if (it == m_registeredSharedInputs.end()) { // paranoia check
+                        // Should never come here...
+                        KARABO_LOG_FRAMEWORK_ERROR << "Next load balanced input '" << instanceId
+                                                   << "' does not exist anymore (after wait)!";
+                        return;
                     }
-                } // haveToWait or -Queue
+                    const karabo::util::Hash& channelInfo = it->second;
+                    // lock.unlock(); but then pass a copy of channelInfo
+                    sendOne(chunkId, channelInfo, safeNDArray);
+                } // haveToWait
             }     // end else - not found
         }
 
@@ -1414,31 +1317,30 @@ namespace karabo {
                         toSendImmediately.push_back(channelInfo);
                         continue;
                     }
-                    if (Memory::isEndOfStream(m_channelId, chunkId)) {
-                        // EOS must never get lost, but we do not want to block here either (except if queue is full)
-                        onSlowness = "queue";
+                    const bool isEos = Memory::isEndOfStream(m_channelId, chunkId);
+                    if (isEos && onSlowness == "drop") { // EOS must never get lost
+                        onSlowness = "queueDrop";
                     }
+
                     if (onSlowness == "drop") {
                         unregisterWriterFromChunk(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (copied) data package for "
                                                    << instanceId;
-                    } else if (boost::algorithm::starts_with(onSlowness, "queue")) { // i.e. queue(-Wait) or queueDrop
-                        if (m_chunkId != m_invalidChunkId &&
-                            static_cast<unsigned int>(channelInfo.get<std::deque<int>>("queuedChunks").size()) <
-                                  channelInfo.get<unsigned int>("maxQueueLength")) {
-                            // i.e. all fine with queue length
-                            KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for "
-                                                       << instanceId << ", chunk " << chunkId;
+                    } else if (onSlowness == "queueDrop") {
+                        if (isEos || // Really never drop EOS!
+                            (m_chunkId != m_invalidChunkId &&
+                             static_cast<unsigned int>(channelInfo.get<std::deque<int>>("queuedChunks").size()) <
+                                   channelInfo.get<unsigned int>("maxQueueLength"))) {
+                            // i.e. EOS or all fine with queue length
+                            KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) "
+                                                       << (isEos ? "EOS" : "data") << " package for " << instanceId
+                                                       << ", chunk " << chunkId;
                             if (!safeNDArray) Memory::assureAllDataIsCopied(m_channelId, chunkId);
                             channelInfo.get<std::deque<int>>("queuedChunks").push_back(chunkId);
-                        } else if (onSlowness == "queueDrop") {
+                        } else {
                             unregisterWriterFromChunk(chunkId);
                             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                                                        << " Queue-dropping (copied) data package for " << instanceId;
-                        } else { // i.e. make wait
-                            KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                                       << " Queue (copied) data package means wait for " << instanceId;
-                            waitingInstances.insert(idChannelInfo);
                         }
                     } else if (onSlowness == "wait") {
                         // Blocking actions must not happen under the mutex that is also needed to unblock (in
@@ -1453,32 +1355,16 @@ namespace karabo {
                 sendOne(chunkId, channelInfo, safeNDArray);
             }
 
-            // Finally care for those not ready yet, but so eager that we must wait:
-            // onSlowness "wait" and onSlowness "queue" with maximum queue size reached.
+            // Finally care for those not ready yet, but so eager that we must wait
             for (const InputChannels::value_type& idChannelInfo : waitingInstances) {
                 const std::string& instanceId = idChannelInfo.first;
                 const Hash& channelInfo = idChannelInfo.second;
                 const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
-                const bool isQueue = ("wait" != onSlowness);
                 KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Data (copied) is waiting for input channel of "
                                            << instanceId << " (" << onSlowness << ") to be available";
                 bool instanceDisconnected = false;
                 while (true) {
-                    if (isQueue) {
-                        if (m_invalidChunkId != m_chunkId || updateChunkId()) {
-                            // Still need to check queue length - but note that we only have a copy at
-                            // channelInfo.get<std::deque<int> >("queuedChunks") - need mutex lock for the real one:
-                            boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                            auto it = m_registeredCopyInputs.find(instanceId);
-                            if (it != m_registeredCopyInputs.end() && // other, disconnected case treated below
-                                it->second.get<std::deque<int>>("queuedChunks").size() <
-                                      it->second.get<unsigned int>("maxQueueLength")) {
-                                break;
-                            }
-                        }
-                    } else { // !isQueue (i.e. wait)
-                        if (eraseCopyInput(instanceId)) break;
-                    }
+                    if (eraseCopyInput(instanceId)) break;
                     boost::this_thread::sleep(boost::posix_time::millisec(1));
                     if (!hasRegisteredCopyInputChannel(instanceId)) { // might have disconnected meanwhile...
                         instanceDisconnected = true;
@@ -1491,27 +1377,9 @@ namespace karabo {
                     unregisterWriterFromChunk(chunkId);
                     continue;
                 }
-                if (!isQueue) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                               << " found (copied) input channel after waiting, copying now";
-                    const Hash& channelInfo = idChannelInfo.second;
-                    sendOne(chunkId, channelInfo, safeNDArray);
-                } else {
-                    boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                    auto it = m_registeredCopyInputs.find(instanceId);
-                    if (it == m_registeredCopyInputs.end()) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " input channel (copy) of " << instanceId
-                                                   << " disconnected while waiting for it due to full queue";
-                        unregisterWriterFromChunk(chunkId);
-                        continue;
-                    }
-                    Hash& channelInfo = it->second;
-                    std::deque<int>& queue = channelInfo.get<std::deque<int>>("queuedChunks");
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " queuing data package for input channel (copy) "
-                                               << instanceId << " after waiting for full queue, chunk " << chunkId;
-                    if (!safeNDArray) Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                    queue.push_back(chunkId);
-                }
+                KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                                           << " found (copied) input channel after waiting, copying now";
+                sendOne(chunkId, channelInfo, safeNDArray);
             } // loop on waitingInstances
         }
 
