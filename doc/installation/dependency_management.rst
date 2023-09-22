@@ -244,9 +244,9 @@ pyqt                 5.9.2             GPLv3/Commercial                         
 pyqtgraph            0.11.0            MIT                                                         no                    yes
 pytest               6.2.1             MIT                                                         no                    no
 pytest-runner        2.11.1            MIT                                                         no                    no
-pytz                 2013.9            MIT                                                         no                    yes
+pytz                 2020.5            MIT                                                         no                    yes
 PyYAML               3.12              MIT                                                         no                    no
-pyzmq                25.1.0            LGPL+BSD                                                    yes                   yes
+pyzmq                22.3.0            LGPL+BSD                                                    yes                   yes
 qtconsole            4.2.1             BSD                                                         yes                   yes
 qt                   5.9.7             GPLv3/Commercial                                            no                    yes
 qtpy                 1.9               MIT                                                         no                    yes
