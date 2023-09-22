@@ -357,7 +357,7 @@ void DeviceClient_Test::testMonitorChannel() {
     trackerFuture = trackerPromise.get_future();
     CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor(
           "TestedDevice3:output", handlers,
-          Hash("onSlowness", "queue"))); // "queue" excludes data loss (default is "drop")
+          Hash("onSlowness", "wait"))); // "wait" excludes data loss (default is "drop")
 
     // Take care that connection is established before sending data
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
