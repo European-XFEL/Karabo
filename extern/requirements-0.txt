@@ -8,5 +8,5 @@
 # DO NOT ADD COMMENTS AFTER THE PACKAGE NAME==VERSION STRINGS BELOW (breaks build caching)
 numpy==1.22.4
 scipy==1.7.3
-pyzmq==25.1.0
+pyzmq==22.3.0
 Pillow==10.0.0
