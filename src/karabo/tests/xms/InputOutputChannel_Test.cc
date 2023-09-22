@@ -624,7 +624,7 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
     //    karabo::log::Logger::useOstream();
 
     for (const std::string& dataDistribution : {"copy"s, "shared"s}) {
-        for (const std::string& onSlowness : {"wait"s, "queue"s}) {
+        for (const std::string& onSlowness : {"wait"s, "queueDrop"s}) {
             // Setup output channel
             Hash cfgOut;
             std::vector<bool> registerSharedSelectors(1, false);
@@ -652,7 +652,9 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
                     // Setup input channel
                     const std::string outputChannelId(output->getInstanceId() + ":output");
                     const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId),
-                                   "dataDistribution", dataDistribution, "onSlowness", onSlowness);
+                                   "dataDistribution", dataDistribution, "onSlowness", onSlowness,
+                                   // No drop for queueDrop, please (otherwise does not matter):
+                                   "maxQueueLength", 1000u); // InputChannel::DEFAULT_MAX_QUEUE_LENGTH is 2
                     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
                     const std::string inputId("inputChannel"s + dataDistribution + onSlowness +
                                               (registerSelector ? "sharedSelector" : "") + memoryLocation);
