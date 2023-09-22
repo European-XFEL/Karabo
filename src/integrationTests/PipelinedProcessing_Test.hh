@@ -127,8 +127,8 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
      */
     void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
 
-    void testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime, const std::string& queueOption,
-                              unsigned int activeQueueLimit, bool expectDataLoss, bool slowReceiver);
+    void testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime, unsigned int activeQueueLimit,
+                              bool expectDataLoss, bool slowReceiver);
 
     // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
     void testPipeTwoSharedReceivers(unsigned int processingTime1, unsigned int processingTime2, unsigned int delayTime,
@@ -149,7 +149,6 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
     /**
      * Test queuing behaviour for pipes with two 'shared' receivers when the queue runs full.
      *
-     * @param queueOpt 'noInputShared' value for sender's output channel: either "queue" or "queueDrop"
      * @param distributionMode value for sender's output channel: "load-balanced" or "round-robin"
      *                         in the latter case test also for a fair share of data between receivers
      * @param processingTime1 processing time (ms) of first receiver
@@ -158,9 +157,9 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
      * @param expectDataLoss whether to test that data is lost or not
      * @param slowReceivers whether to test that (almost) all data already received when sending done
      */
-    void testPipeTwoSharedQueueAtLimit(const std::string& queueOpt, const std::string& distributionMode,
-                                       unsigned int processingTime1, unsigned int processingTime2,
-                                       unsigned int senderDelay, bool expectDataLoss, bool slowReceivers);
+    void testPipeTwoSharedQueueDropAtLimit(const std::string& distributionMode, unsigned int processingTime1,
+                                           unsigned int processingTime2, unsigned int senderDelay, bool expectDataLoss,
+                                           bool slowReceivers);
 
     /**
      * Testing shared inputs where a selector was registered at the output channel to select which channel should be
