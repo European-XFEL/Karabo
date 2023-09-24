@@ -56,9 +56,11 @@ def ensure_coroutine(coro):
 
     def create_coroutine(func):
         """Create a coroutine wrapper around the sync function `func`"""
+
         @wraps(func)
         async def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
+
         return wrapper
 
     return create_coroutine(coro)
@@ -128,7 +130,7 @@ class KaraboFuture:
     @synchronize
     async def wait(self):
         """Wait for the result to be available, and return the result"""
-        return (await self.future)
+        return await self.future
 
 
 for f in ["cancel", "cancelled", "done", "result", "exception"]:
@@ -164,7 +166,7 @@ class NoEventLoop(AbstractEventLoop):
         """
         self._cancelled = True
         if self.task is not None:
-            self._instance._ss.loop.call_soon_threadsafe(self.task.cancel)
+            self.loop.call_soon_threadsafe(self.task.cancel)
 
     def __await__(self):
         """Awaiting the NoEventLoop cycles and suspend the current task"""
@@ -184,7 +186,8 @@ class NoEventLoop(AbstractEventLoop):
             timeout /= unit.second
         if self._cancelled:
             raise CancelledError
-        loop = self._instance._ss.loop
+
+        loop = self.loop
         if wait:
             done = threading.Lock()
             done.acquire()
@@ -214,19 +217,16 @@ class NoEventLoop(AbstractEventLoop):
                                                  instance=self._instance))
 
     def create_future(self):
-        return Future(loop=self._instance._ss.loop)
+        return Future(loop=self.loop)
+
+    @property
+    def loop(self):
+        return self._instance._ss.loop
 
     def create_task(self, coro, name=None, instance=None):
-        """Create a task on the main eventloop with this instance"""
-        sigslot = self._instance._ss
-        # The loop is closing or about to close. In this case no signal
-        # slotable is available or the loop is not anymore running. This can
-        # happen in CI (CLI) when the eventthread is stopped.
-        if sigslot is None:
-            return
-        loop = sigslot.loop
-        if not loop.is_running():
-            return
+        """Create a task on the main event loop with this instance"""
+
+        loop = self.loop
         hastask = threading.Lock()
         hastask.acquire()
 
@@ -266,7 +266,7 @@ class EventLoop(SelectorEventLoop):
             self.topic = getpass.getuser()
         if self.topic.endswith("_beats"):
             raise RuntimeError(f"Topic ('{self.topic}') must not end with "
-                               f"'_beats'")
+                               "'_beats'")
 
         self.changedFutures = set()  # call if some property changes
         self._default_executor = ThreadPoolExecutor(_NUM_THREADS)
@@ -280,9 +280,7 @@ class EventLoop(SelectorEventLoop):
         try:
             instance = context["future"].instance()
             exception = context["exception"]
-            trace = None
-            if exception is not None:
-                trace = exception.__traceback__
+            trace = exception.__traceback__
             instance._onException(None, exception, trace)
         except BaseException:
             self.default_exception_handler(context)
@@ -305,13 +303,7 @@ class EventLoop(SelectorEventLoop):
         task = super().create_task(coro, name=name)
         try:
             if instance is None:
-                # This try/except is required for MQTT broker support ...
-                # ToDo: get rid of this requirement (MQTT)
-                try:
-                    instance = get_event_loop().instance()
-                except RuntimeError:
-                    # No event loop for current thread:
-                    return task
+                instance = get_event_loop().instance()
             instance._ss.tasks.add(task)
             task.add_done_callback(instance._ss.tasks.remove)
             task.instance = weakref.ref(instance)
@@ -329,7 +321,7 @@ class EventLoop(SelectorEventLoop):
         a future, if it is a coroutine function, it returns the coroutine
         object."""
         if iscoroutinefunction(f):
-            return (await f(*args, **kwargs))
+            return await f(*args, **kwargs)
         else:
             loop = NoEventLoop(self.instance())
             exception = None
@@ -359,7 +351,7 @@ class EventLoop(SelectorEventLoop):
                 # instead, and continue. This "and continue" is the while loop
                 future = Future(loop=self)
                 try:
-                    return (await future)
+                    return await future
                 except CancelledError:
                     # Ignore cancelling from the outside, instead cancel the
                     # thread. Forward any resulting exception from the thread
@@ -407,13 +399,6 @@ class EventLoop(SelectorEventLoop):
 
     def sync(self, coro, timeout, wait):
         return coro
-
-    async def cancel_all_tasks(self):
-        """Cancel all running tasks except the current executing this"""
-        me = asyncio.current_task(loop=self)
-        tasks = [t for t in asyncio.all_tasks(loop=self) if t is not me]
-        for t in tasks:
-            t.cancel()
 
     def close(self):
         for t in asyncio.all_tasks(loop=self):
