@@ -41,6 +41,7 @@ if (NOT DEFINED ENV{KARABO} OR NOT EXISTS $ENV{KARABO})
 endif()
 
 find_package(PkgConfig)
+set(PKG_CONFIG_ARGN "--define-variable=KARABO=$ENV{KARABO}")
 set(ENV{PKG_CONFIG_PATH} "$ENV{KARABO}/lib:$ENV{PKG_CONFIG_PATH}")
 pkg_check_modules(karabo IMPORTED_TARGET karaboDependencies>=1.0)
 
