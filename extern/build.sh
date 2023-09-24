@@ -565,7 +565,7 @@ install_from_deps() {
     # in the process.
     safeRunCommand "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
     cp $INSTALL_PREFIX/conan_out/*.pc $INSTALL_PREFIX/lib/pkgconfig/
-    # now fix occurrences of prefixes such that packages can use the "--define-prefix" option
+    # now fix occurences of prefixes such that packages can use the "--define-prefix" option
     # of pkgconfig
     safeRunCommand "sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
     safeRunCommand "sed -i 's|libdir=.*|libdir=\${prefix}/lib|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
