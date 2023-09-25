@@ -22,7 +22,7 @@ __CLASS_NAME__ = "__PACKAGE_NAME__.__CLASS_NAME__:__CLASS_NAME__"
 dynamic = ["version"]
 name = "__CLASS_NAME__"
 authors = [
-    {name = "__EMAIL__", email = "__EMAIL__"},
+    {name = "__EMAIL__"},
 ]
 description = ""
 readme = "README.md"
