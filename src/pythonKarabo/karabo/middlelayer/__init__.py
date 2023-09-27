@@ -83,8 +83,8 @@ from .pipeline import (
     Channel, InputChannel, NetworkInput, NetworkOutput, OutputChannel,
     OutputProxy, PipelineContext, PipelineMetaData, RingQueue)
 from .proxy import (
-    ProxyBase as Proxy, ProxyNodeBase as ProxyNode, ProxySlotBase as ProxySlot,
-    SubProxyBase as SubProxy)
+    ProxyBase as Proxy, ProxyFactory, ProxyNodeBase as ProxyNode,
+    ProxySlotBase as ProxySlot, SubProxyBase as SubProxy)
 from .signalslot import Signal, SignalSlotable, coslot, slot
 from .synchronization import (
     allCompleted, background, firstCompleted, firstException, gather,
