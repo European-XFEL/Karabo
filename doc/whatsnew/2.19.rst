@@ -47,6 +47,83 @@ Summary – Release highlights
 
 
 
+Migration Guidelines
+++++++++++++++++++++
+
+General remarks:
+
+- A lot of device repositories (python) make use of the *isort* package.
+This package orders the imports. Please activate a karabo installation and type *isort .*
+in the repository folder in case imports are not ordered according to CI failure.
+
+1.
+From 2.19.X onwards the namespace **middlelayer_api** has been removed.
+The only supported namespaces for device developers to import from are: *karabo.middlelayer*, *karabo.bound*
+
+
+.. code-block:: python
+
+    from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+    # Imports moved, please use
+    from karabo.middlelayer.testing import DeviceTest, async_tst
+
+
+2.
+Since March 2021, the `Injectable` class is not required anymore in device code
+and has been deprecated. Finally, from 2.19.X onwards, the class is removed from karabo.
+
+
+.. code-block:: python
+
+    from karabo.middlelayer_api.injectable import Injectable
+
+    class GATTPhysicalUnit(Injectable, Device):
+        ...
+
+    # Injectable is not required anymore and will throw, remove import and use
+
+    class GATTPhysicalUnit(Device):
+        ...
+
+
+3.
+Dependency upgrade: yaml -> use `yaml.safe_load` instead of `yaml.load`
+
+
+.. code-block:: python
+
+    # The following line will throw, yaml.load requires a kwarg `loader`
+    data = yaml.load(file.read())
+
+    # use
+    data = yaml.safe_load(file.read())
+
+
+4.
+C++ Boost placeholders (e.g. ::_1) need to be explicitly declared, otherwise code is not compiling
+To make the code working again, please add on top of the file
+
+.. code-block:: C++
+
+    using boost::placeholders::_1;
+    using boost::placeholders::_2;
+
+5.
+`ImageData` *header* functionality has been **removed** from the Framework for both C++ and Bound.
+Hence, code containing this functionality will throw or prevent compilation.
+
+
+6.
+`DetectorGeometry` has been removed from C++ and Bound due to non-use in operation. An import
+will throw an exception.
+
+7.
+Use the `central CI template` (https://git.xfel.eu/Karabo/gitlabci)
+C++ example: https://git.xfel.eu/karaboDevices/scanlabGalvo/-/merge_requests/37/diffs
+Python example: https://git.xfel.eu/karaboDevices/vacuumSection/-/merge_requests/27/diffs
+
+Please be aware that the central CI template utilizes pytest instead of nosetests. If your test file lacks the prefix 'test_', it will not be able to test the device. To resolve this issue, kindly rename your test files to include 'test_' in the name. For example, you can rename 'TestBeckhoffAssistant.py' to 'test_beckhoff_assistant.py'.
+
 Breaking Changes
 ++++++++++++++++
 
