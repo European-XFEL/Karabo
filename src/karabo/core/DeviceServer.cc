@@ -160,10 +160,8 @@ namespace karabo {
 
             BOOL_ELEMENT(expected)
                   .key("scanPlugins")
-                  .displayedName("Scan plug-ins?")
-                  .description(
-                        "Decides whether the server will scan the content of the plug-in folder and dynamically load "
-                        "found devices")
+                  .displayedName("Unused")
+                  .description("Unused since Karabo 2.19.0, plugins are only scanned once when starting.")
                   .expertAccess()
                   .assignmentOptional()
                   .defaultValue(true)
@@ -210,7 +208,6 @@ namespace karabo {
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config)
             : m_log(0),
-              m_scanPluginsTimer(EventLoop::getIOService()),
               m_timeId(0ull),
               m_timeSec(0ull),
               m_timeFrac(0ull),
@@ -229,9 +226,6 @@ namespace karabo {
 
             // Device configurations for those to automatically start
             if (config.has("autoStart")) config.get("autoStart", m_autoStart);
-
-            // Whether to scan for additional plug-ins at runtime
-            config.get("scanPlugins", m_scanPlugins);
 
             // What visibility this server should have
             config.get("visibility", m_visibility);
@@ -258,9 +252,6 @@ namespace karabo {
             connectionCfg.set("instanceId", m_serverId);
             m_connection = Configurator<Broker>::createChoice("connection", brokerConfig);
             m_connection->connect();
-
-            m_pluginLoader = PluginLoader::create(
-                  "PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"), "pluginsToLoad", "*"));
 
             karabo::util::Hash instanceInfo;
             instanceInfo.set("type", "server");
@@ -323,11 +314,6 @@ namespace karabo {
             m_log = &(karabo::log::Logger::getCategory(m_serverId));
 
             KARABO_LOG_FRAMEWORK_INFO << "Logfiles are written to: " << path;
-        }
-
-
-        void DeviceServer::loadPluginLoader(const Hash& input) {
-            m_pluginLoader = PluginLoader::createNode("PluginLoader", "PluginLoader", input);
         }
 
 
@@ -538,17 +524,8 @@ namespace karabo {
                 newPluginAvailable();
             }
 
-
             for (const Hash& device : m_autoStart) {
                 slotStartDevice(device);
-            }
-
-            // Whether to scan for additional plug-ins at runtime
-            if (m_scanPlugins) {
-                KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory()
-                                << " for Device plugins";
-                EventLoop::getIOService().post(
-                      util::bind_weak(&DeviceServer::scanPlugins, this, boost::system::error_code()));
             }
         }
 
@@ -577,38 +554,9 @@ namespace karabo {
             }
         }
 
-
-        void DeviceServer::scanPlugins(const boost::system::error_code& e) {
-            if (e) return;
-
-            int delay = 10; // If there is a problem, do not try too soon...
-            try {
-                const bool hasNewPlugins = m_pluginLoader->update();
-                if (hasNewPlugins) {
-                    // Update the list of available devices
-                    updateAvailableDevices();
-                    newPluginAvailable();
-                }
-                delay = 3; // usual delay
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
-            } catch (const std::exception& se) {
-                KARABO_LOG_ERROR << "Standard exception raised in scanPlugins: " << se.what();
-            } catch (...) {
-                KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
-            }
-
-            // reload timer
-            m_scanPluginsTimer.expires_from_now(boost::posix_time::seconds(delay));
-            m_scanPluginsTimer.async_wait(
-                  bind_weak(&DeviceServer::scanPlugins, this, boost::asio::placeholders::error));
-        }
-
-
         void DeviceServer::stopDeviceServer() {
             // First stop background work
             m_timeTickerTimer.cancel();
-            m_scanPluginsTimer.cancel();
 
             // Then stop devices
             {
