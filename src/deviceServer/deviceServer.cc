@@ -48,6 +48,9 @@ int main(int argc, const char** argv) {
         const Hash& pluginConfig = (runnerConfig.has("pluginDirectory")
                                           ? Hash("pluginDirectory", runnerConfig.get<std::string>("pluginDirectory"))
                                           : Hash());
+        // Note: if pluginConfig has no "pluginDirectory" key, the PluginLoader specifies the
+        // default path, directory "plugins" of the Karabo installation, as the directory to
+        // be searched for plugins.
         PluginLoader::create("PluginLoader", pluginConfig)->update();
 
         // Instantiate device server

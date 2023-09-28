@@ -65,9 +65,6 @@ namespace karabo {
             krb_log4cpp::Category* m_log;
             karabo::log::Logger::Pointer m_logger;
 
-            karabo::util::PluginLoader::Pointer m_pluginLoader;
-            boost::asio::deadline_timer m_scanPluginsTimer;
-            bool m_scanPlugins;
             bool m_serverIsRunning;
             std::vector<karabo::util::Hash> m_autoStart;
 
@@ -202,8 +199,6 @@ namespace karabo {
 
             void loadLogger(const karabo::util::Hash& input);
 
-            void loadPluginLoader(const karabo::util::Hash& input);
-
             void slotKillServer();
 
             void slotLoggerContent(const karabo::util::Hash& input);
@@ -215,8 +210,6 @@ namespace karabo {
             void registerSlots();
 
             void updateAvailableDevices();
-
-            void scanPlugins(const boost::system::error_code& e);
 
             void slotDeviceGone(const std::string& instanceId);
 
