@@ -289,13 +289,16 @@ class NetworkInput(Configurable):
         options=["shared", "copy"], assignment=Assignment.OPTIONAL,
         defaultValue="copy", accessMode=AccessMode.RECONFIGURABLE)
 
-    onSlowness = String(
+    @String(
         displayedName="On Slowness",
         description="Policy for what to do if this input is too slow for the "
-                    "fed data rate (only used in copy mode)",
-        options=["queue", "queueDrop", "drop", "wait", "throw"],
+                    "fed data rate (only used in copy mode, 'queue' means "
+                    "'queueDrop')",
+        options=["queue", "queueDrop", "drop", "wait"],
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.RECONFIGURABLE)
+    def onSlowness(self, value):
+        self.onSlowness = "queueDrop" if value == "queue" else value
 
     maxQueueLength = UInt32(
         defaultValue=DEFAULT_MAX_QUEUE_LENGTH,
@@ -878,7 +881,7 @@ class ConnectionTable(Configurable):
     onSlowness = String(
         displayedName="On slowness",
         description="Data handling policy in case of slowness if data "
-                    "distribution is copy: drop, wait, queue, throw")
+                    "distribution is copy: drop, wait, queueDrop")
 
     memoryLocation = String(
         displayedName="MemoryLocation",
@@ -912,13 +915,15 @@ class NetworkOutput(Configurable):
         defaultValue=0,
         accessMode=AccessMode.INITONLY)
 
-    noInputShared = String(
+    @String(
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
-                    "available for writing to",
+                    "available for writing to ('queue' means 'queueDrop')",
         options=["queue", "drop", "wait", "queueDrop"],
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.INITONLY)
+    def noInputShared(self, value):
+        self.noInputShared = "queueDrop" if value == "queue" else value
 
     @String(
         displayedName="Hostname",
@@ -975,7 +980,7 @@ class NetworkOutput(Configurable):
         minInc=2,  # 1 would be equivalent to 'drop' policy
         displayedName="Max. Queue Length",
         description="Maximum queue length accepted from 'copy' mode input "
-                    "channels with 'queueDrop' policies",
+                    "channels with 'queueDrop' policy",
         accessMode=AccessMode.INITONLY)
 
     def __init__(self, config):
@@ -986,8 +991,8 @@ class NetworkOutput(Configurable):
         self.active_channels = WeakSet()
         self.has_shared = 0
         self.channelName = ""
-        self.shared_queue = CancelQueue(0 if self.noInputShared in [
-                                        "queue", "queueDrop"] else 1)
+        self.shared_queue = CancelQueue(0 if self.noInputShared == "queueDrop"
+                                        else 1)
         self.server = None
         # By default, an output is considered alive until closed
         self.alive = True
@@ -1035,9 +1040,9 @@ class NetworkOutput(Configurable):
             # The MDL does not have a memory queue ...
             maxQueueLength = min(maxQueueLength,
                                  int(self.maxQueueLength.value))
-            if slowness == "throw":
-                print(f"Throw configuration detected for {channel_name}!")
-                slowness = "drop"
+            if slowness == "queue":  # Pre-Karabo 2.19.0 receiver
+                print(f"Queue configuration detected for {channel_name}!")
+                slowness = "queueDrop"
             local_host, local_port = writer.get_extra_info("sockname")
             remote_host, remote_port = writer.get_extra_info("peername")
             # Set the connection table entry
@@ -1055,9 +1060,7 @@ class NetworkOutput(Configurable):
                     self.copy_futures.append(future)
                     await channel.nextChunk(future)
             else:
-                if slowness == "queue":
-                    queue = CancelQueue()
-                elif slowness == "queueDrop":
+                if slowness == "queueDrop":
                     queue = RingQueue(maxQueueLength)
                 else:
                     queue = CancelQueue(1)
