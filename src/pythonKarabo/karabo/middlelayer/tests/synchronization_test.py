@@ -24,14 +24,14 @@ from karabo.middlelayer import (
     MetricPrefix, QuantityValue, Unit, allCompleted, background,
     firstCompleted, firstException, gather, sleep, synchronous, unit)
 from karabo.middlelayer.synchronization import FutureDict
-from karabo.middlelayer.testing import assertLogs, event_loop, run_test
+from karabo.middlelayer.testing import assertLogs, run_test
 
 global called
 called = False
 
 
 @pytest.fixture(scope="function")
-def loopTest(event_loop: event_loop):
+def loopTest(event_loop):
     global called
     called = False
     deviceId = event_loop.instance().deviceId

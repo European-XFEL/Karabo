@@ -24,7 +24,7 @@ from karabo.middlelayer.device import Device
 from karabo.middlelayer.device_client import (
     call, getClassSchema, getInstanceInfo, instantiateNoWait, waitUntil)
 from karabo.middlelayer.testing import (
-    create_device_server, create_instanceId, event_loop, sleepUntil)
+    create_device_server, create_instanceId, sleepUntil)
 from karabo.native import Hash, KaraboError, Schema, Timestamp
 
 SHUTDOWN_TIME = 1
@@ -43,7 +43,7 @@ class FaultyDevice(Device):
 @pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_no_plugins(event_loop: event_loop):
+async def test_device_server_no_plugins(event_loop):
     serverId = f"testMDLServer-{uuid.uuid4()}"
     configuration = {"timeServerId": "KaraboTimeServer",
                      "scanPlugins": False,
@@ -85,7 +85,7 @@ async def test_device_server_no_plugins(event_loop: event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_instantiate_plugins(event_loop: event_loop):
+async def test_device_server_instantiate_plugins(event_loop):
     serverId = f"testMDLServer-{uuid.uuid4()}"
 
     configuration = {"deviceClasses": ["PropertyTestMDL"],
@@ -147,7 +147,7 @@ async def test_device_server_instantiate_plugins(event_loop: event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_autostart(event_loop: event_loop):
+async def test_device_server_autostart(event_loop):
     deviceId_1 = f"test-prop-{uuid.uuid4()}"
     deviceId_2 = f"test-prop-{uuid.uuid4()}"
     serverId = f"testMDLServer-{uuid.uuid4()}"
@@ -185,7 +185,7 @@ async def test_device_server_autostart(event_loop: event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_start_faulty(event_loop: event_loop):
+async def test_device_server_start_faulty(event_loop):
     try:
         serverId = create_instanceId()
         server = create_device_server(serverId,
@@ -215,7 +215,7 @@ async def test_device_server_start_faulty(event_loop: event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_server_concurrence(event_loop: event_loop):
+async def test_device_server_concurrence(event_loop):
     try:
         serverId = create_instanceId()
         configuration = {"deviceClasses": ["PropertyTestMDL"]}

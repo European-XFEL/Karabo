@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 
 from karabo.common.states import State
-from karabo.middlelayer.testing import assertLogs, event_loop
+from karabo.middlelayer.testing import assertLogs
 from karabo.middlelayer.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
 from karabo.middlelayer.utils import (
@@ -31,7 +31,7 @@ from karabo.native import (
 
 
 @pytest.fixture(scope="module")
-def utilsTest(event_loop: event_loop):
+def utilsTest(event_loop):
 
     class Stamp:
         pass

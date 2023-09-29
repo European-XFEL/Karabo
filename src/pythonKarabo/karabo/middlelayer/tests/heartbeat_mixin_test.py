@@ -17,7 +17,6 @@ import asyncio
 
 import pytest
 
-from karabo.middlelayer.tests.eventloop import event_loop
 from karabo.native import Hash
 
 from ..heartbeat_mixin import HeartBeatMixin
@@ -45,7 +44,7 @@ _DEVICE_INSTANCES = Hash(
 
 
 @pytest.fixture(scope="function")
-def mixin(event_loop: event_loop):
+def mixin(event_loop):
     """The fixture creates a mixin and fills it with servers and devices"""
     mixin = HeartBeatMixin()
     for server, info in _SERVER_INSTANCES.items():

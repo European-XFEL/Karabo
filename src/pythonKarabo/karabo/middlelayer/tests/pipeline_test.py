@@ -27,7 +27,7 @@ from psutil import net_if_addrs
 from karabo.middlelayer import (
     Channel, Hash, Int32, NetworkInput, NetworkOutput, Proxy, RingQueue,
     background, encodeBinary)
-from karabo.middlelayer.testing import event_loop, run_test
+from karabo.middlelayer.testing import run_test
 
 
 class ChecksumTransport(WriteTransport):
@@ -109,7 +109,7 @@ class ChannelContext:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def channelContext(event_loop: event_loop):
+async def channelContext(event_loop):
     reader = StreamReader(loop=event_loop)
     writer = StreamWriter(ChecksumTransport(), None, None, loop=event_loop)
     channel = Channel(reader, writer, "channelname")
