@@ -1,6 +1,22 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
+
+***************************
+What's New in Karabo 2.17.2
+***************************
+
+A patch release for the datalogging in case property retrievals are not successful. Now,
+for every request a new connection to the database is established in the DataLogReader.
+Before, a single connection has been created and reused. A connection closure went unnoticed and
+left the DataLogReader without use.
+
+Detailed Merge-Log
+++++++++++++++++++
+
+- C++: InfluxDbClient instances with per slot lifetimes in InfluxLogReader !7839
+
+
 ***************************
 What's New in Karabo 2.17.1
 ***************************
