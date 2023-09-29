@@ -19,7 +19,7 @@ import pytest_asyncio
 from karabo.middlelayer import (
     DeviceClientBase, VectorString, listCameras, listDeviceInstantiators,
     listMotors, listProcessors, listTriggers)
-from karabo.middlelayer.testing import AsyncDeviceContext, event_loop, run_test
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test
 
 
 class MyDevice(DeviceClientBase):
@@ -28,7 +28,7 @@ class MyDevice(DeviceClientBase):
 
 
 @pytest_asyncio.fixture()
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     myDevice = MyDevice(dict(_deviceId_="MyDevice"))
     event_loop.lead = myDevice
     async with AsyncDeviceContext(myDevice=myDevice) as ctx:

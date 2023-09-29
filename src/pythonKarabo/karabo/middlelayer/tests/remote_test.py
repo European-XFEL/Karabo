@@ -34,14 +34,14 @@ from karabo.middlelayer import (
     setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
 from karabo.middlelayer.logger import CacheLog
 from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
+    AsyncDeviceContext, assertLogs, run_test, sleepUntil)
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     local = Local({"_deviceId_": "local"})
     remote = Remote({"_deviceId_": "remote"})
     event_loop.lead = local

@@ -33,7 +33,7 @@ from karabo.middlelayer.pipeline import OutputChannel, PipelineContext
 from karabo.middlelayer.signalslot import slot
 from karabo.middlelayer.synchronization import background, sleep
 from karabo.middlelayer.testing import (
-    AsyncDeviceContext, assertLogs, event_loop, run_test, sleepUntil)
+    AsyncDeviceContext, assertLogs, run_test, sleepUntil)
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32 as Int, KaraboError, Node, Slot)
 
@@ -282,7 +282,7 @@ class LocalMacroSlot(Macro):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     local = Local(_deviceId_="local", project="test", module="test",
                   may_start_thread=False)
     remote = Remote(dict(_deviceId_="remote"))
