@@ -21,9 +21,8 @@ import pytest_asyncio
 
 from karabo.middlelayer.device import Device
 from karabo.middlelayer.macro import Macro, Monitor, RemoteDevice
-from karabo.middlelayer.testing import assertLogs, run_test
-from karabo.middlelayer.tests.eventloop import (
-    AsyncDeviceContext, event_loop, sleepUntil)
+from karabo.middlelayer.testing import (
+    AsyncDeviceContext, assertLogs, run_test, sleepUntil)
 from karabo.native import Int32 as Int, Slot
 
 
@@ -81,7 +80,7 @@ class Local(Macro):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     local = Local(_deviceId_="local", project="test", module="test",
                   may_start_thread=False)
     remA = Remote(dict(_deviceId_="remA"))
