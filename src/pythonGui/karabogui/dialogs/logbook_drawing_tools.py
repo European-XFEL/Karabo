@@ -35,11 +35,11 @@ BUTTON_SIZE = 10
 class TextDialog(QDialog):
     """Simple Text dialog to allow user to enter the text and also to select
     the font and color for the text."""
-    def __init__(self, parent=None):
+    def __init__(self, font, color, parent=None):
         super().__init__(parent=parent)
         uic.loadUi(get_dialog_ui('simple_text_dialog.ui'), self)
-        self.text_font = get_qfont()
-        self.text_color = QColor("black")
+        self.text_font = font
+        self.text_color = color
         self.set_text_color_button()
         self.set_text_font_button()
 
@@ -150,6 +150,9 @@ class RectTool(BaseDrawingTool):
 class TextTool(BaseDrawingTool):
     """Allow to open a dialog to define the text to the QGraphicsScene"""
 
+    color = Instance(QColor)
+    font = Instance(QFont)
+
     def mouse_down(self, scene, event):
         pass
 
@@ -157,7 +160,12 @@ class TextTool(BaseDrawingTool):
         pass
 
     def mouse_up(self, scene, event):
-        text_dialog = TextDialog(parent=scene.parent())
+        if self.font is None:
+            self.font = get_qfont()
+        if self.color is None:
+            self.color = QColor("black")
+        text_dialog = TextDialog(
+            font=self.font,  color=self.color, parent=scene.parent())
         text_dialog.setModal(False)
         if text_dialog.exec() == QDialog.Accepted:
             text = text_dialog.text.strip()
@@ -168,6 +176,8 @@ class TextTool(BaseDrawingTool):
                 brush = QBrush(color)
                 self.graphics_item.setBrush(brush)
                 self.graphics_item.setPos(event.scenePos())
+            self.color = color
+            self.font = font
 
 
 class EraserTool(BaseDrawingTool):
