@@ -105,9 +105,8 @@ namespace karabo {
               aReply(aReply),
               influxClient(influxClient){};
 
-        const unsigned long InfluxLogReader::kSecConversionFactor = 1000000;
-        const unsigned long InfluxLogReader::kFracConversionFactor = 1000000000000;
-        const int InfluxLogReader::kMaxHistorySize = 10000;
+        const unsigned long InfluxLogReader::kFracConversionFactor = 1'000'000'000'000;
+        const int InfluxLogReader::kMaxHistorySize = 10'000;
         const TimeValue InfluxLogReader::kMaxInfluxDataDelaySecs = 300ull;
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
@@ -194,7 +193,8 @@ namespace karabo {
 
 
         Hash InfluxLogReader::buildInfluxClientConfig(const std::string &dbUrlForSlot) const {
-            Hash dbClientCfg("dbname", m_dbName, "durationUnit", "u", "dbUser", m_dbUser, "dbPassword", m_dbPassword);
+            Hash dbClientCfg("dbname", m_dbName, "durationUnit", INFLUX_DURATION_UNIT, "dbUser", m_dbUser, "dbPassword",
+                             m_dbPassword);
             dbClientCfg.set("url", dbUrlForSlot);
 
             return dbClientCfg;
@@ -473,8 +473,8 @@ namespace karabo {
                 for (const std::vector<boost::optional<std::string>> &valuesRow : influxResult.second) {
                     unsigned long long time =
                           std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
-                    Epochstamp epoch(time / kSecConversionFactor,
-                                     (time % kSecConversionFactor) * kFracConversionFactor);
+                    Epochstamp epoch(time / INFLUX_PRECISION_FACTOR,
+                                     (time % INFLUX_PRECISION_FACTOR) * kFracConversionFactor);
                     Hash hash;
                     for (size_t col = 1; col < influxResult.first.size(); col++) {
                         if (!valuesRow[col]) {
@@ -980,7 +980,8 @@ namespace karabo {
             // Converts each row of values into a Hash.
             for (const std::vector<boost::optional<std::string>> &valuesRow : influxResult.second) {
                 unsigned long long time = std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
-                Epochstamp epoch(time / kSecConversionFactor, (time % kSecConversionFactor) * kFracConversionFactor);
+                Epochstamp epoch(time / INFLUX_PRECISION_FACTOR,
+                                 (time % INFLUX_PRECISION_FACTOR) * kFracConversionFactor);
                 unsigned long long tid = 0;
                 if (tidCol >= 0) {
                     if (valuesRow[tidCol]) {
@@ -1235,8 +1236,8 @@ namespace karabo {
         }
 
         karabo::util::Epochstamp InfluxLogReader::toEpoch(unsigned long long timeFromInflux) const {
-            const unsigned long long timeSec = timeFromInflux / kSecConversionFactor;
-            const unsigned long long timeFrac = (timeFromInflux % kSecConversionFactor) * kFracConversionFactor;
+            const unsigned long long timeSec = timeFromInflux / INFLUX_PRECISION_FACTOR;
+            const unsigned long long timeFrac = (timeFromInflux % INFLUX_PRECISION_FACTOR) * kFracConversionFactor;
             return Epochstamp(timeSec, timeFrac);
         }
 

@@ -282,7 +282,6 @@ namespace karabo {
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
             int m_maxHistorySize;
 
-            static const unsigned long kSecConversionFactor;
             static const unsigned long kFracConversionFactor;
             static const int kMaxHistorySize;
             // Maximum delay, in seconds, assumed for data written to Influx to be available for reading.

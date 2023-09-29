@@ -34,12 +34,7 @@
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/TimeDuration.hh"
 
-// Precision is microseconds
-// for nanoseconds:  DUR is "ns",  PRECISION_FACTOR is 1'000'000'000
-#define DUR "u"
-#define PRECISION_FACTOR 1'000'000
 #define SECONDS_PER_YEAR 365 * 24 * 60 * 60
-
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger,
                                   karabo::devices::InfluxDataLogger)
@@ -93,7 +88,7 @@ namespace karabo {
                 // the device and cannot be screwed up if clocks of logger and device are off from each other.
                 // But we store the local time of the logger as well.
                 boost::mutex::scoped_lock lock(m_lastTimestampMutex);
-                const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
+                const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
                 ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
                    << Epochstamp().toIso8601Ext() << "\" " << ts << "\n";
             }
@@ -361,7 +356,7 @@ namespace karabo {
             // hardware), we can claim that logging is active only from the most recent update we receive here.
             const auto& attrsOfPathWithMostRecentStamp = configuration.getAttributes(sortedPaths.back());
             m_loggingStartStamp = Timestamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
-            const unsigned long long ts = m_loggingStartStamp.toTimestamp() * PRECISION_FACTOR;
+            const unsigned long long ts = m_loggingStartStamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
             std::stringstream ss;
             ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\",logger_time=\""
                << Epochstamp().toIso8601Ext() << "\",format=1i";  // Older data (where timestamps were not ensured to
@@ -371,8 +366,8 @@ namespace karabo {
                 const Epochstamp devStartStamp = Epochstamp::fromHashAttributes(deviceIdNode->getAttributes());
                 // Difference between when device instantiated and when logging starts - precision as defined by
                 // PRECISION_FACTOR
-                const long long diff =
-                      static_cast<double>(m_loggingStartStamp.getEpochstamp() - devStartStamp) * PRECISION_FACTOR;
+                const long long diff = static_cast<double>(m_loggingStartStamp.getEpochstamp() - devStartStamp) *
+                                       INFLUX_PRECISION_FACTOR;
                 ss << ",deviceAge=" << diff << "i";
             } else { // Should never happen!
                 KARABO_LOG_FRAMEWORK_WARN << "Cannot store device age of '" << m_deviceToBeLogged
@@ -487,7 +482,7 @@ namespace karabo {
 
         void InfluxDeviceData::terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp,
                                               std::vector<RejectedData>& rejectedPathReasons) {
-            unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
+            unsigned long long ts = stamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
             if (!query.str().empty()) {
                 // There's data to be output to Influx.
 
@@ -511,7 +506,7 @@ namespace karabo {
 
 
         void InfluxDeviceData::logRejectedDatum(const RejectedData& reject) {
-            unsigned long long ts = karabo::util::Timestamp().toTimestamp() * PRECISION_FACTOR;
+            unsigned long long ts = karabo::util::Timestamp().toTimestamp() * INFLUX_PRECISION_FACTOR;
             const auto rejects = std::vector<RejectedData>({reject});
             logRejectedData(rejects, ts);
         }
@@ -538,7 +533,7 @@ namespace karabo {
             if (ts == 0.) {
                 // Far future data without any "decent" data in same update Hash: setting 'stamp' was skipped and it
                 // stays at the start of unix epoch. The best realistic stamp is in fact 'now':
-                ts = now.toTimestamp() * PRECISION_FACTOR;
+                ts = now.toTimestamp() * INFLUX_PRECISION_FACTOR;
             }
             // Bad data is logged in a device independent measurement to simplify retrieval of all bad data.
             // DeviceId is the field name.
@@ -627,7 +622,7 @@ namespace karabo {
             }
 
             if (schemaInDb) {
-                const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
+                const unsigned long long ts = stamp.toTimestamp() * INFLUX_PRECISION_FACTOR;
                 std::stringstream ss;
                 ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << schDigest << "\" " << ts
                    << "\n";
@@ -878,16 +873,16 @@ namespace karabo {
                 dbPasswordQuery = dbPasswordWrite;
             }
 
-            Hash configWrite("dbname", m_dbName, "url", m_urlWrite, "durationUnit", DUR, "maxPointsInBuffer",
-                             input.get<unsigned int>("maxBatchPoints"));
+            Hash configWrite("dbname", m_dbName, "url", m_urlWrite, "durationUnit", INFLUX_DURATION_UNIT,
+                             "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
 
             configWrite.set<std::string>("dbUser", dbUserWrite);
             configWrite.set<std::string>("dbPassword", dbPasswordWrite);
 
             m_clientWrite = Configurator<InfluxDbClient>::create("InfluxDbClient", configWrite);
 
-            Hash configRead("dbname", m_dbName, "url", m_urlQuery, "durationUnit", DUR, "maxPointsInBuffer",
-                            input.get<unsigned int>("maxBatchPoints"));
+            Hash configRead("dbname", m_dbName, "url", m_urlQuery, "durationUnit", INFLUX_DURATION_UNIT,
+                            "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
 
             configRead.set<std::string>("dbUser", dbUserQuery);
             configRead.set<std::string>("dbPassword", dbPasswordQuery);
