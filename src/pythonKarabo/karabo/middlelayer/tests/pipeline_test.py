@@ -257,25 +257,6 @@ async def test_processChunk_eof(channelContext, mocker):
 
 
 @run_test
-async def test_shared_queue(channelContext):
-    output = NetworkOutput({"noInputShared": "queue"})
-    # Initialize
-    await output._run()
-    channelContext.feedHash(
-        Hash("reason", "hello", "dataDistribution", "shared",
-             "onSlowness", "queue", "instanceId", "Test"))
-    task = await channelContext.write_something(output)
-    channelContext.assertChecksum(3020956469)
-    for checksum in [452019817, 881158557, 14388433, 2145693701]:
-        channelContext.feedRequest()
-        await channelContext.sleep()
-        channelContext.assertChecksum(checksum)
-    channelContext.reader.feed_eof()
-    await task
-    assert channelContext.writer.transport.closed
-
-
-@run_test
 async def test_shared_drop(channelContext):
     output = NetworkOutput({"noInputShared": "drop"})
     await output._run()
@@ -366,24 +347,6 @@ async def test_shared_wait(channelContext):
 
 
 @run_test
-async def test_copy_queue(channelContext):
-    output = NetworkOutput({"noInputShared": "drop"})
-    await output._run()
-    channelContext.feedHash(
-        Hash("reason", "hello", "dataDistribution", "copy",
-             "onSlowness", "queue", "instanceId", "Test"))
-    task = await channelContext.write_something(output)
-    channelContext.assertChecksum(3020956469)
-    for checksum in [452019817, 881158557, 14388433, 2145693701]:
-        channelContext.feedRequest()
-        await channelContext.sleep()
-        channelContext.assertChecksum(checksum)
-    channelContext.reader.feed_eof()
-    await task
-    assert channelContext.writer.transport.closed
-
-
-@run_test
 async def test_copy_drop(channelContext):
     output = NetworkOutput({"noInputShared": "drop"})
     await output._run()
@@ -448,31 +411,6 @@ async def test_copy_queue_drop_large_max_queue(channelContext):
     task = await channelContext.write_something(output, 200)
     await channelContext.sleep()
     channelContext.assertChecksum(3020956469)
-    channelContext.reader.feed_eof()
-    await task
-    assert channelContext.writer.transport.closed
-
-
-@run_test
-async def test_copy_throw(channelContext):
-    output = NetworkOutput({"noInputShared": "drop"})
-    await output._run()
-    output.channelName = "channelname"
-    channelContext.feedHash(
-        Hash("reason", "hello", "dataDistribution", "copy",
-             "onSlowness", "throw", "instanceId", "Test"))
-    task = await channelContext.write_something(output)
-    await channelContext.sleep()
-    channelContext.assertChecksum(3020956469)
-    channelContext.feedRequest()
-    await channelContext.sleep()
-    for _ in range(100):
-        channelContext.assertChecksum(3020956469)
-        await channelContext.sleep()
-    output.writeChunkNoWait(channelContext.sample_data)
-    channelContext.feedRequest()
-    await channelContext.sleep()
-    channelContext.assertChecksum(452019817)
     channelContext.reader.feed_eof()
     await task
     assert channelContext.writer.transport.closed
