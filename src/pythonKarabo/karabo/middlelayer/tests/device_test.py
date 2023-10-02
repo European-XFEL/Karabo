@@ -29,8 +29,7 @@ from karabo.middlelayer.device_client import (
     call, get_instance, getProperties, getSchema)
 from karabo.middlelayer.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer.signalslot import slot
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, event_loop, run_test, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 from karabo.middlelayer.utils import AsyncTimer, get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
@@ -154,7 +153,7 @@ class MyDevice(Device):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     myDevice = MyDevice(dict(_deviceId_="MyDevice"))
     async with AsyncDeviceContext(myDevice=myDevice) as ctx:
         yield ctx
