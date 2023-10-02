@@ -16,9 +16,11 @@
 # flake8: noqa: F401
 
 from karabo.middlelayer.tests.eventloop import (
-    AsyncDeviceContext, DeviceTest, async_tst, create_device_server,
-    create_instanceId, event_loop, setEventLoop, sleepUntil, switch_instance,
-    sync_tst)
+    DeviceTest, async_tst, create_device_server, setEventLoop, sync_tst)
 
+from ..conftest import event_loop
+from .device_context import AsyncDeviceContext
 from .naming import check_device_package_properties
-from .utils import assertLogs, get_ast_objects, run_test
+from .utils import (
+    assertLogs, create_instanceId, get_ast_objects, run_test, sleepUntil,
+    switch_instance)

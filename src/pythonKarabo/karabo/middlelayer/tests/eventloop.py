@@ -14,28 +14,14 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import uuid
-import weakref
 from asyncio import gather, get_event_loop, set_event_loop, sleep, wait_for
 from contextlib import ExitStack, contextmanager
 from functools import partial, wraps
 from unittest import TestCase
 from unittest.mock import Mock
 
-import pytest
-
 from karabo.middlelayer.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer.eventloop import EventLoop, ensure_coroutine
-from karabo.middlelayer.signalslot import SignalSlotable
-from karabo.middlelayer.synchronization import synchronize_notimeout
-
-SHUTDOWN_TIME = 2
-
-
-def create_instanceId(name=None):
-    """Create a unique instanceId with `name` and append a uuid"""
-    if name is None:
-        name = "test-mdl"
-    return f"{name}-{uuid.uuid4()}"
 
 
 def async_tst(f=None, *, timeout=None):
@@ -136,44 +122,6 @@ def setEventLoop():
     return loop
 
 
-@pytest.fixture(scope="module")
-def event_loop():
-    """This is the eventloop fixture for pytest asyncio
-
-    It automatically comes with a broker connection via
-    a signal slotable
-    """
-    loop = setEventLoop()
-    try:
-        lead = SignalSlotable(
-            {"_deviceId_": create_instanceId()})
-        loop.run_until_complete(lead.startInstance())
-        instance_handler = loop.instance
-
-        def instance(loop):
-            """A new instance handler for the loop"""
-            return instance_handler() or lead
-
-        loop.instance = instance.__get__(loop, type(loop))
-        yield loop
-    finally:
-        loop.run_until_complete(lead.slotKillDevice())
-        loop.run_until_complete(sleep(SHUTDOWN_TIME))
-        loop.close()
-
-
-@contextmanager
-def switch_instance(instance):
-    """Switch the owning instance of the loop"""
-    loop = get_event_loop()
-    try:
-        loop_instance = loop.instance
-        loop.instance = weakref.ref(instance)
-        yield
-    finally:
-        loop.instance = loop_instance
-
-
 def create_device_server(serverId, plugins=[], config={}):
     """Create a device server instance with `plugins`
 
@@ -193,84 +141,3 @@ def create_device_server(serverId, plugins=[], config={}):
             server, type(server))
         server.plugins = {klass.__name__: klass for klass in plugins}
     return server
-
-
-class AsyncDeviceContext:
-    """This class is responsible to instantiate and shutdown device classes
-
-    :param timeout: The timeout in seconds to wait for instantiation of an
-                    instance.
-    """
-
-    def __init__(self, timeout=20, **instances):
-        assert "sigslot" not in instances, "sigslot not allowed"
-        self.instances = instances
-        self.timeout = timeout
-
-    async def wait_online(self, instances):
-        # Make sure that we definitely release here with a total
-        # sleep time. All times in seconds
-        sleep_time = 0.1
-        total_time = self.timeout
-        while total_time >= 0:
-            onlines = [d.is_initialized for d in instances.values()]
-            if all(onlines):
-                break
-            total_time -= sleep_time
-            await sleep(sleep_time)
-
-    async def __aenter__(self):
-        if self.instances:
-            await gather(*(d.startInstance() for d in self.instances.values()))
-            await self.wait_online(self.instances)
-
-        return self
-
-    async def __aexit__(self, exc_type, exc, exc_tb):
-        await self.shutdown()
-        # Shutdown time
-        await sleep(SHUTDOWN_TIME)
-
-    async def device_context(self, **instances):
-        """Relay control of device `instances`
-
-        The instances are added to the device dictionary of the class
-        and shutdown in the finish.
-        """
-        devices = {}
-        for k, v in instances.items():
-            assert k not in self.instances
-            devices.update({k: v})
-        self.instances.update(devices)
-        await gather(*(d.startInstance() for d in devices.values()))
-        await self.wait_online(devices)
-
-    async def shutdown(self):
-        devices = [d for d in self.instances.values()
-                   if not isinstance(d, MiddleLayerDeviceServer)]
-        if devices:
-            await gather(*(d.slotKillDevice() for d in devices))
-
-        servers = [s for s in self.instances.values()
-                   if isinstance(s, MiddleLayerDeviceServer)]
-        if servers:
-            await gather(*(s.slotKillDevice() for s in servers))
-        self.instances = {}
-
-    def __getitem__(self, instance):
-        """Convenience method to get an instance from the context"""
-        return self.instances[instance]
-
-
-@synchronize_notimeout
-async def sleepUntil(condition, timeout=None):
-    """Sleep until some condition is valid
-
-    :param timeout: The timeout parameter, defaults to `None`. (no timeout)
-    """
-
-    async def internal_wait():
-        while not condition():
-            await sleep(0.05)
-
-    return await wait_for(internal_wait(), timeout=timeout)
