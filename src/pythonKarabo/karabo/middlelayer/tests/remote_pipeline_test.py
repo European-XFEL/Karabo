@@ -23,8 +23,7 @@ from karabo.middlelayer import (
     InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
     PipelineMetaData, Slot, State, Timestamp, UInt32, background, call,
     getDevice, getSchema, isAlive, setWait, slot, waitUntil)
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, event_loop, run_test, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
@@ -206,7 +205,7 @@ class Receiver(InputSchema, Device):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     alice = Sender({"_deviceId_": "alice"})
     bob = Receiver({"_deviceId_": "bob",
                     "input": {"dataDistribution": "copy",
