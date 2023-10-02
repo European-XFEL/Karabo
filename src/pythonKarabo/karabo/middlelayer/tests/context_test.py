@@ -22,7 +22,7 @@ import pytest_asyncio
 from karabo.middlelayer import (
     Device, Slot, String, connectDevice, getDevice, isSet, lock)
 from karabo.middlelayer.testing import (
-    AsyncDeviceContext, create_device_server, event_loop, run_test)
+    AsyncDeviceContext, create_device_server, run_test)
 
 
 class Figure(Device):
@@ -51,7 +51,7 @@ class JP(Figure):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_device_context(event_loop: event_loop):
+async def test_device_context(event_loop):
     deviceId = f"test-mdl-{uuid.uuid4()}"
     device = WW({"_deviceId_": deviceId})
     ctx_deviceId = f"test-mdl-{uuid.uuid4()}"
@@ -78,7 +78,7 @@ async def test_device_context(event_loop: event_loop):
 
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
-async def test_server_context(event_loop: event_loop):
+async def test_server_context(event_loop):
     serverId = f"testserver-mdl-{uuid.uuid4()}"
     server = create_device_server(serverId, [WW])
     async with AsyncDeviceContext(server=server) as ctx:
