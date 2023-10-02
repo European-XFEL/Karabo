@@ -18,11 +18,15 @@ import collections
 import functools
 import logging
 import os
-from asyncio import get_event_loop
+import uuid
+import weakref
+from asyncio import get_event_loop, sleep, wait_for
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+
+from ..eventloop import synchronize_notimeout
 
 
 def get_ast_objects(package, ignore=[]):
@@ -123,3 +127,36 @@ def assertLogs(logger_name=None, level=None):
             raise AssertionError(
                 "no logs of level {} or higher triggered on {}"
                 .format(logging.getLevelName(level), logger.name))
+
+
+@synchronize_notimeout
+async def sleepUntil(condition, timeout=None):
+    """Sleep until some condition is valid
+
+    :param timeout: The timeout parameter, defaults to `None`. (no timeout)
+    """
+
+    async def internal_wait():
+        while not condition():
+            await sleep(0.05)
+
+    return await wait_for(internal_wait(), timeout=timeout)
+
+
+def create_instanceId(name=None):
+    """Create a unique instanceId with `name` and append a uuid"""
+    if name is None:
+        name = "test-mdl"
+    return f"{name}-{uuid.uuid4()}"
+
+
+@contextmanager
+def switch_instance(instance):
+    """Switch the owning instance of the loop"""
+    loop = get_event_loop()
+    try:
+        loop_instance = loop.instance
+        loop.instance = weakref.ref(instance)
+        yield
+    finally:
+        loop.instance = loop_instance

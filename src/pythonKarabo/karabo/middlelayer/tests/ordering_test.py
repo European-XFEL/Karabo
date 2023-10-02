@@ -19,8 +19,7 @@ import pytest_asyncio
 from karabo.middlelayer import (
     Device, Int32, Overwrite, Slot, State, getDevice, isSet, setNoWait,
     setWait)
-from karabo.middlelayer.testing import (
-    AsyncDeviceContext, event_loop, run_test, sleepUntil)
+from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 
 
 class Remote(Device):
@@ -66,7 +65,7 @@ class Remote(Device):
 
 @pytest_asyncio.fixture(scope="module")
 @pytest.mark.asyncio
-async def deviceTest(event_loop: event_loop):
+async def deviceTest(event_loop):
     remote = Remote({"_deviceId_": "OrderRemote"})
     ctx = AsyncDeviceContext(remote=remote)
     async with ctx:
