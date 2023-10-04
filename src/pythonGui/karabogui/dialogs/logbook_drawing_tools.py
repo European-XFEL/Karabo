@@ -25,6 +25,7 @@ from qtpy.QtWidgets import (
 from traits.api import ABCHasStrictTraits, Instance
 
 from karabogui import icons
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.font_dialog import FontDialog
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.fonts import get_alias_from_font, get_qfont
@@ -42,6 +43,7 @@ class TextDialog(QDialog):
         self.text_color = color
         self.set_text_color_button()
         self.set_text_font_button()
+        self.setModal(False)
 
     @property
     def text(self):
@@ -56,7 +58,7 @@ class TextDialog(QDialog):
 
     @Slot()
     def on_pbTextColor_clicked(self):
-        color = QColorDialog.getColor(self.text_color)
+        color = QColorDialog.getColor(initial=self.text_color, parent=self)
         if color.isValid():
             self.text_color = color
             self.set_text_color_button()
@@ -164,9 +166,9 @@ class TextTool(BaseDrawingTool):
             self.font = get_qfont()
         if self.color is None:
             self.color = QColor("black")
+        parent = scene.parent()
         text_dialog = TextDialog(
-            font=self.font,  color=self.color, parent=scene.parent())
-        text_dialog.setModal(False)
+            font=self.font,  color=self.color, parent=parent)
         if text_dialog.exec() == QDialog.Accepted:
             text = text_dialog.text.strip()
             font = text_dialog.text_font
@@ -178,6 +180,9 @@ class TextTool(BaseDrawingTool):
                 self.graphics_item.setPos(event.scenePos())
             self.color = color
             self.font = font
+        # To avoid LogBookPreview dialog hiding behind the main window
+        if IS_MAC_SYSTEM:
+            parent.raise_()
 
 
 class EraserTool(BaseDrawingTool):
