@@ -26,6 +26,7 @@ from qtpy.QtWidgets import (
 from karabo.common.scenemodel.api import create_base64image
 from karabo.native import Hash
 from karabogui import icons
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.logbook_drawing_tools import BaseDrawingTool, get_tools
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
@@ -389,6 +390,9 @@ class LogBookPreview(QDialog):
         """Show a color dialog to choose the annotation color """
         color = QColorDialog.getColor(
             initial=self._annotation_color, parent=self)
+        # To avoid the dialog hiding behind the main window
+        if IS_MAC_SYSTEM:
+            self.raise_()
         if color.isValid():
             self._annotation_color = color
             self._set_button_color()
