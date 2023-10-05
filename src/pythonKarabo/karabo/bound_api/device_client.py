@@ -23,6 +23,7 @@ class DeviceClient(BoundDeviceClient):
     """ Handle certain device client responsibilities which interact with other
     Python code in Karabo.
     """
+
     def get(self, instanceId, *args, **kw):
         """ Handle conversion of returned State and AlarmCondition objects."""
         value = super().get(instanceId, *args, **kw)

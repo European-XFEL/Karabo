@@ -23,9 +23,9 @@ import karathon
 @pytest.mark.parametrize(
     "Logger, Hash",
     [
-     (karathon.Logger, karathon.Hash),
-     (karabind.Logger, karabind.Hash)
-     ])
+        (karathon.Logger, karathon.Hash),
+        (karabind.Logger, karabind.Hash)
+    ])
 def test_logging_config_rules(Logger, Hash):
     # Python API: 'Logger.logXXX(message, category)
     # We are chatty in this test
@@ -79,9 +79,9 @@ def test_logging_config_rules(Logger, Hash):
 @pytest.mark.parametrize(
     "Logger, Hash",
     [
-     (karathon.Logger, karathon.Hash),
-     (karabind.Logger, karabind.Hash)
-     ])
+        (karathon.Logger, karathon.Hash),
+        (karabind.Logger, karabind.Hash)
+    ])
 def test_logging_config_more(Logger, Hash):
     Logger.reset()
     config = Hash("priority", "INFO")
@@ -99,9 +99,9 @@ def test_logging_config_more(Logger, Hash):
 @pytest.mark.parametrize(
     "Logger, Hash",
     [
-     (karathon.Logger, karathon.Hash),
-     (karabind.Logger, karabind.Hash)
-     ])
+        (karathon.Logger, karathon.Hash),
+        (karabind.Logger, karabind.Hash)
+    ])
 def test_logging_last_message(Logger, Hash):
     # Reset (remove all appenders) and clear the cache
     Logger.reset()

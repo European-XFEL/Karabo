@@ -88,7 +88,7 @@ class BaseFsm(NoFsm):
                 except Exception as e:
                     name = event.__class__.__name__
                     self.exceptionFound(
-                       f"Exception while processing event '{name}': {e}")
+                        f"Exception while processing event '{name}': {e}")
                 finally:
                     state = fsm.get_state()
                     self.updateState(state)
