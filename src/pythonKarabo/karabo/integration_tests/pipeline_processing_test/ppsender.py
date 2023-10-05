@@ -35,126 +35,106 @@ class PPSenderDevice(PythonDevice):
 
         (
             OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State.NORMAL, State.ACTIVE)
-                .setNewDefaultValue(State.NORMAL)
-                .commit()
-            ,
+            .setNewOptions(State.NORMAL, State.ACTIVE)
+            .setNewDefaultValue(State.NORMAL)
+            .commit(),
             SLOT_ELEMENT(expected).key("write")
-                .displayedName("Write")
-                .description("Write some data")
-                .allowedStates(State.NORMAL)
-                .commit()
-            ,
+            .displayedName("Write")
+            .description("Write some data")
+            .allowedStates(State.NORMAL)
+            .commit(),
         )
 
         data = Schema()
 
         (
             INT32_ELEMENT(data).key("dataId")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             STRING_ELEMENT(data).key("sha1")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             STRING_ELEMENT(data).key("flow")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             VECTOR_INT64_ELEMENT(data).key("data")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             NDARRAY_ELEMENT(data).key("array")
-                .dtype(Types.DOUBLE)
-                .shape("100,200,0")
-                .commit()
-            ,
+            .dtype(Types.DOUBLE)
+            .shape("100,200,0")
+            .commit(),
             OUTPUT_CHANNEL(expected).key("output1")
-                .displayedName("Output1")
-                .dataSchema(data)
-                .commit()
-            ,
+            .displayedName("Output1")
+            .dataSchema(data)
+            .commit(),
         )
 
         data2 = Schema()
 
         (
             UINT64_ELEMENT(data2).key("inTime")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             NDARRAY_ELEMENT(data2).key("array")
-                .dtype(Types.DOUBLE)
-                .shape("256,256,512")
-                .commit()
-            ,
+            .dtype(Types.DOUBLE)
+            .shape("256,256,512")
+            .commit(),
             OUTPUT_CHANNEL(expected).key("output2")
-                .displayedName("Output2")
-                .dataSchema(data2)
-                .commit()
-            ,
+            .displayedName("Output2")
+            .dataSchema(data2)
+            .commit(),
             UINT32_ELEMENT(expected).key("nData")
-                .displayedName("Number of data")
-                .description("Number of data")
-                .assignmentOptional().defaultValue(12)
-                .reconfigurable()
-                .commit()
-            ,
+            .displayedName("Number of data")
+            .description("Number of data")
+            .assignmentOptional().defaultValue(12)
+            .reconfigurable()
+            .commit(),
             UINT32_ELEMENT(expected).key("delay")
-                .displayedName("Delay")
-                .description("Delay between writes")
-                .assignmentOptional().defaultValue(0)
-                .unit(Unit.SECOND)
-                .metricPrefix(MetricPrefix.MILLI)
-                .reconfigurable()
-                .commit()
-            ,
+            .displayedName("Delay")
+            .description("Delay between writes")
+            .assignmentOptional().defaultValue(0)
+            .unit(Unit.SECOND)
+            .metricPrefix(MetricPrefix.MILLI)
+            .reconfigurable()
+            .commit(),
             UINT32_ELEMENT(expected).key("currentDataId")
-                .displayedName("Current Data ID")
-                .description("Monitors the currently processed data token")
-                .readOnly()
-                .commit()
-            ,
+            .displayedName("Current Data ID")
+            .description("Monitors the currently processed data token")
+            .readOnly()
+            .commit(),
             STRING_ELEMENT(expected).key("scenario")
-                .options("test,profile,multiSource")
-                .assignmentOptional().defaultValue("test")
-                .reconfigurable()
-                .commit()
-            ,
+            .options("test,profile,multiSource")
+            .assignmentOptional().defaultValue("test")
+            .reconfigurable()
+            .commit(),
             BOOL_ELEMENT(expected).key("copyAllData")
-                .assignmentOptional().defaultValue(True)
-                .reconfigurable()
-                .commit()
-            ,
+            .assignmentOptional().defaultValue(True)
+            .reconfigurable()
+            .commit(),
         )
 
         data3 = Schema()
 
         (
             INT32_ELEMENT(data3).key("dataId")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             STRING_ELEMENT(data3).key("from")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             NDARRAY_ELEMENT(data3).key("array")
-                .dtype(Types.UINT32)
-                .shape("100")
-                .commit()
-            ,
+            .dtype(Types.UINT32)
+            .shape("100")
+            .commit(),
             # Put one under a node
             NODE_ELEMENT(expected).key("node")
-                .commit(),
+            .commit(),
 
             OUTPUT_CHANNEL(expected).key("node.output3")
-                .displayedName("Output3")
-                .dataSchema(data3)
-                .commit()
-            ,
+            .displayedName("Output3")
+            .dataSchema(data3)
+            .commit(),
         )
 
     def __init__(self, config):
@@ -213,7 +193,7 @@ class PPSenderDevice(PythonDevice):
         try:
             nData = self.get("nData")
             delayInMs = self.get("delay")
-            ndarr = np.zeros((256,256,512), np.double)
+            ndarr = np.zeros((256, 256, 512), np.double)
             data = Hash()
             copyAllData = self.get("copyAllData")
             channel = self._ss.getOutputChannel("output2")
@@ -260,7 +240,6 @@ class PPSenderDevice(PythonDevice):
                 channel.update()
                 if delayInMs > 0:
                     sleep(delayInMs/1000)
-
 
         except Exception as e:
             self.log.ERROR(f"Stop writing because: {e}")

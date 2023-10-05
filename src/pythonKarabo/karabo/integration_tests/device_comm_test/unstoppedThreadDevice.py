@@ -19,7 +19,6 @@
 
 import os
 import signal
-import sys
 import threading
 import time
 
@@ -32,18 +31,17 @@ class UnstoppedThreadDevice(PythonDevice):
     @staticmethod
     def expectedParameters(expected):
         (
-        UINT64_ELEMENT(expected).key("updateId")
-                .displayedName("Update ID")
-                .description("Number of readings from NICs")
-                .readOnly().initialValue(0)
-                .commit()
-                ,
+            UINT64_ELEMENT(expected).key("updateId")
+            .displayedName("Update ID")
+            .description("Number of readings from NICs")
+            .readOnly().initialValue(0)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("slotPutToComa")
-        .displayedName("Put to coma")
-        .description("Put device into coma, i.e. linux process alive, but "
-                     "dead Karabo-wise")
-        .commit()
+            SLOT_ELEMENT(expected).key("slotPutToComa")
+            .displayedName("Put to coma")
+            .description("Put device into coma, i.e. linux process alive, but "
+                         "dead Karabo-wise")
+            .commit()
         )
 
     def __init__(self, configuration):
@@ -64,7 +62,7 @@ class UnstoppedThreadDevice(PythonDevice):
     # ill-behaving (by commenting) on purpose to test that the server
     # will kill it anyway after some seconds.
 
-    #def preDestruction(self):
+    # def preDestruction(self):
     #    self.running = False;
 
     def startPolling(self):
