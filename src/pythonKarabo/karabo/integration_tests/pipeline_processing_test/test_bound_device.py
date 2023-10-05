@@ -84,7 +84,8 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         self.assertTrue(len(ctable1) == 1)
         self.assertTrue(ctable1[0]["remoteId"] == "pipeTestReceiver:input")
         self.assertTrue(ctable1[0]["dataDistribution"] == "shared")
-        self.assertTrue(ctable1[0]["onSlowness"] == "drop")  # unused for shared
+        self.assertTrue(ctable1[0]["onSlowness"] ==
+                        "drop")  # unused for shared
         self.assertTrue(ctable1[0]["memoryLocation"] == "remote")
 
         self.assertTrue(len(ctable2) == 1)

@@ -42,8 +42,9 @@ class DeviceWithTableElementParam(PythonDevice):
             .displayedName("Device Table")
             .description("Table with devices types and names.")
             .setNodeSchema(row_schema)
-            .assignmentOptional().defaultValue([Hash("type", "INT", "name", "firstLine"),
-                                                Hash("type", "BOOL", "name", "secondLine")])
+            .assignmentOptional().defaultValue(
+                [Hash("type", "INT", "name", "firstLine"),
+                 Hash("type", "BOOL", "name", "secondLine")])
             .init()
             .commit(),
         )
