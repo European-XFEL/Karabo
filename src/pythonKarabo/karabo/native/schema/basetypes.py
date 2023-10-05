@@ -102,15 +102,15 @@ def wrap_function(func, timestamp=None):
 
 def wrap_methods(cls):
     pattern = re.compile(r"__\w*__|[^_]\w*")
-    blacklist = {"__len__", "__contains__", "__complex__", "__int__",
-                 "__float__", "__index__", "__bool__", "__getattribute__",
-                 "__getattr__", "__init__", "__new__", "__setattr__",
-                 "__array_prepare__", "__hash__", "__str__", "__repr__",
-                 "__array_wrap__", "register", "__array_ufunc__", "__array__",
-                 "m_as"}
+    ignorelist = {"__len__", "__contains__", "__complex__", "__int__",
+                  "__float__", "__index__", "__bool__", "__getattribute__",
+                  "__getattr__", "__init__", "__new__", "__setattr__",
+                  "__array_prepare__", "__hash__", "__str__", "__repr__",
+                  "__array_wrap__", "register", "__array_ufunc__",
+                  "__array__", "m_as"}
 
     attrs = [a for a in dir(cls)
-             if pattern.fullmatch(a) and a not in blacklist]
+             if pattern.fullmatch(a) and a not in ignorelist]
 
     for name in attrs:
         attr = getattr(cls, name)
