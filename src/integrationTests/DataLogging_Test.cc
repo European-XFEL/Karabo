@@ -721,7 +721,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     // Waits for an interval long enough to guarantee that any other schema saving attempt will happen after the
     // one saved for the previous PropertyTest device under test has gone outside the safe retention window.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1'000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1'500));
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
