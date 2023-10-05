@@ -1201,8 +1201,6 @@ class OutputChannel(Node):
             Output = NetworkOutput
         else:
             assert issubclass(cls, Configurable)
-
-            assert cls.displayType is None
             cls.displayType = "OutputSchema"
 
             class Output(NetworkOutput):
