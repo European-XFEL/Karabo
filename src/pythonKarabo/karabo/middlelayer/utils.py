@@ -372,6 +372,7 @@ class suppress:
 
     Note: On exception, a log message to the instance logger is generated
     """
+
     def __init__(self, *exceptions):
         self._exceptions = exceptions
 

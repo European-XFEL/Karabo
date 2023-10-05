@@ -31,7 +31,7 @@ class Serializer_TestCase(unittest.TestCase):
             hash = Hash('a.b.c', 1, 'x.y.z', [1, 2, 3, 4, 5, 6, 7])
             archive = ser.save(hash)
             self.assertEqual(archive,
-                             '<?xml version="1.0"?><root KRB_Artificial="" KRB_Type="HASH"><a KRB_Type="HASH"><b KRB_Type="HASH"><c KRB_Type="INT32">1</c></b></a><x KRB_Type="HASH"><y KRB_Type="HASH"><z KRB_Type="VECTOR_INT32">1,2,3,4,5,6,7</z></y></x></root>') # noqa
+                             '<?xml version="1.0"?><root KRB_Artificial="" KRB_Type="HASH"><a KRB_Type="HASH"><b KRB_Type="HASH"><c KRB_Type="INT32">1</c></b></a><x KRB_Type="HASH"><y KRB_Type="HASH"><z KRB_Type="VECTOR_INT32">1,2,3,4,5,6,7</z></y></x></root>')  # noqa
             hash2 = ser.load(archive)
             self.assertEqual(similar(hash, hash2), True)
 

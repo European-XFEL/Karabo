@@ -662,8 +662,8 @@ async def test_waituntilnew(deviceTest):
         # must be, no await since last line). This asserts that
         # waitUntilNew also works with uninitialized values, which
         # had been a bug before
-        assert d.counter == None # noqa
-        assert d.nested.val == None # noqa
+        assert d.counter == None  # noqa
+        assert d.nested.val == None  # noqa
         await waitUntilNew(d.value, d.counter, d.nested.val)
         task = ensure_future(d.count())
         try:

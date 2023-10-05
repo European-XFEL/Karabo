@@ -254,8 +254,8 @@ stages:
       - schedules
     changes:
       - extern/**/*  # changes in extern are covered by deps_tests
-   
-    
+
+
 
 .cpp_unit_tests: &cpp-unit-tests
   <<: *test
@@ -313,7 +313,7 @@ stages:
       - "extern/**/*" # "deps_tests" also runs unit and integration tests.
                       # Those tests would use the wrong dependencies package
                       # when changes to "extern" happen and are thus surpressed
-                      # in ".cpp_unit_tests", ".python_unit_tests", and 
+                      # in ".cpp_unit_tests", ".python_unit_tests", and
                       # ".integration_tests" if there are  changes at any depth
                       # under "extern".
 .long_tests: &long-tests
