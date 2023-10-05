@@ -113,7 +113,7 @@ class BoundOrderTestDevice(PythonDevice):
                 if not self.connect(other, "signalCount", "", "slotCount"):
                     raise RuntimeError("Failed to connect to 'signalCount' of "
                                        f"'{other}'")
-            except Exception as e: # noqa  # otherwise complains about unused e
+            except Exception as e:  # noqa  # otherwise complains about unused e
                 self.log.ERROR("Failed starting order test: {repr(e)}")
                 self.updateState(State.ERROR)
                 self.set("status", "Failed starting order test")
