@@ -83,7 +83,7 @@ __lint_clang_format() {
 
 # TODO: Remove the --exclude tests from the flake8 CI as soon as tests are clean
 __lint_flake8() {
-    FLAKE8OPTIONS="--exclude=*tests* --tee"
+    FLAKE8OPTIONS="--tee"
     __run_lint_command "flake8 $FLAKE8OPTIONS $CI_PROJECT_DIR/src/pythonKarabo/karabo"
     __run_lint_command "flake8 $FLAKE8OPTIONS $CI_PROJECT_DIR/src/pythonGui/karabogui"
 }

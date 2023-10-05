@@ -35,96 +35,81 @@ class PPReceiverDevice(PythonDevice):
         (
 
             INT32_ELEMENT(data).key("dataId")
-                .readOnly()
-                .commit()
-                ,
+            .readOnly()
+            .commit(),
             INPUT_CHANNEL(expected).key("input")
-                .displayedName("Input")
-                .description("Input channel: client")
-                .dataSchema(data)
-                .commit()
-                ,
+            .displayedName("Input")
+            .description("Input channel: client")
+            .dataSchema(data)
+            .commit(),
             INPUT_CHANNEL(expected).key("input2")
-                .displayedName("Input2")
-                .description("Input channel: client")
-                .commit()
-                ,
+            .displayedName("Input2")
+            .description("Input channel: client")
+            .commit(),
             # One channel under a node
             NODE_ELEMENT(expected).key("node")
-                .commit(),
+            .commit(),
 
             INPUT_CHANNEL(expected).key("node.input3")
-                .displayedName("Input3")
-                .description("Input channel: client")
-                .commit()
-            ,
+            .displayedName("Input3")
+            .description("Input channel: client")
+            .commit(),
             BOOL_ELEMENT(expected).key("onData")
-                .displayedName("Use callback interface onData")
-                .description("If false, use callback per InputChannel, "
-                             "not per Data")
-                .assignmentOptional().defaultValue(False)
-                .commit()
-                ,
+            .displayedName("Use callback interface onData")
+            .description("If false, use callback per InputChannel, "
+                         "not per Data")
+            .assignmentOptional().defaultValue(False)
+            .commit(),
             UINT32_ELEMENT(expected).key("processingTime")
-                .displayedName("Processing Time")
-                .description("Simulated processing time")
-                .assignmentOptional().defaultValue(0)
-                .unit(Unit.SECOND)
-                .metricPrefix(MetricPrefix.MILLI)
-                .reconfigurable()
-                .commit()
-                ,
+            .displayedName("Processing Time")
+            .description("Simulated processing time")
+            .assignmentOptional().defaultValue(0)
+            .unit(Unit.SECOND)
+            .metricPrefix(MetricPrefix.MILLI)
+            .reconfigurable()
+            .commit(),
             UINT32_ELEMENT(expected).key("currentDataId")
-                .displayedName("Current Data ID")
-                .description("Monitors the currently processed data token")
-                .readOnly()
-                .commit()
-                ,
+            .displayedName("Current Data ID")
+            .description("Monitors the currently processed data token")
+            .readOnly()
+            .commit(),
             UINT32_ELEMENT(expected).key("dataItemSize")
-                .displayedName("Data element size")
-                .description("Data element size in bytes.")
-                .readOnly()
-                .commit()
-                ,
+            .displayedName("Data element size")
+            .description("Data element size in bytes.")
+            .readOnly()
+            .commit(),
             UINT32_ELEMENT(expected).key("nTotalData")
-                .displayedName("Total number of data tokens")
-                .description("The total number of data received within "
-                             "one stream")
-                .readOnly()
-                .commit()
-                ,
+            .displayedName("Total number of data tokens")
+            .description("The total number of data received within "
+                         "one stream")
+            .readOnly()
+            .commit(),
             UINT32_ELEMENT(expected).key("nTotalOnEos")
-                .displayedName("Total on Eos ")
-                .description("The total number of data received when "
-                             "End of Stream was received")
-                .readOnly()
-                .commit()
-                ,
+            .displayedName("Total on Eos ")
+            .description("The total number of data received when "
+                         "End of Stream was received")
+            .readOnly()
+            .commit(),
             VECTOR_STRING_ELEMENT(expected).key("dataSources")
-                .displayedName("Data sources on input")
-                .readOnly()
-                .commit()
-                ,
+            .displayedName("Data sources on input")
+            .readOnly()
+            .commit(),
             VECTOR_STRING_ELEMENT(expected).key("dataSourcesFromIndex")
-                .displayedName("Data sources on input from index resolve")
-                .readOnly()
-                .commit()
-                ,
+            .displayedName("Data sources on input from index resolve")
+            .readOnly()
+            .commit(),
             FLOAT_ELEMENT(expected).key("averageTransferTime")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             VECTOR_UINT32_ELEMENT(expected).key("numSources")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             VECTOR_BOOL_ELEMENT(expected).key("sourcesCorrect")
-                .readOnly()
-                .commit()
-            ,
+            .readOnly()
+            .commit(),
             UINT32_ELEMENT(expected).key("numSourceLength")
-                .readOnly()
-                .commit()
+            .readOnly()
+            .commit()
         )
 
     def __init__(self, config):
