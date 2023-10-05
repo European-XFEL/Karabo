@@ -88,7 +88,7 @@ class DeviceNode(String):
         value = meta_proxy.deviceId
         root = instance.get_root()
         proxy = await root._ss.exitStack.enter_async_context(
-                     getDevice(value))
+            getDevice(value))
         proxy.__meta_deviceId = value
         meta_proxy.proxy = proxy
 
