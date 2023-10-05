@@ -20,8 +20,7 @@ import unittest
 from karabo.bound import Hash, fullyEqual
 from karabo.integration_tests.utils import BoundDeviceTestCase
 from karabo.middlelayer_devices.configuration_manager import (
-    KARABO_CONFIG_DB_FOLDER, ConfigurationManager)
-from karabo.native.exceptions import KaraboError
+    KARABO_CONFIG_DB_FOLDER)
 
 
 class TestCrossConfigManager(BoundDeviceTestCase):
