@@ -155,8 +155,9 @@ class MacroController(BaseProjectGroupController):
             with self._qt_model.removal_context(controller):
                 self.children.remove(controller)
             self.child_destroy(controller)
-
-        additions = [self.child_create(model=self.model, parent=self,
+        model = self.model.clone_traits(
+            traits=["instance_id", "project_name", "uuid"], copy="deep")
+        additions = [self.child_create(model=model, parent=self,
                                        _qt_model=self._qt_model,
                                        instance_id=inst_id)
                      for inst_id in added]
