@@ -103,6 +103,7 @@ CMD_LIST_DEVICES_PRIORITY = """
           AND cfg.config_set_id = cfg_set.id
     """
 
+
 def CMD_LIST_DEVS_NO_NAME(num_of_devices):
     return f"""
         SELECT *,
@@ -119,6 +120,7 @@ def CMD_LIST_DEVS_NO_NAME(num_of_devices):
     )
     WHERE num_cfgs = {num_of_devices}
     """
+
 
 CMD_GET_CONFIGURATION = """
         SELECT cfg_set.config_name, cfg.timestamp, cfg.config_data,
@@ -175,6 +177,7 @@ CMD_GET_LAST_CONFIGURATION = """
         LIMIT 1
     """
 
+
 def CMD_CHECK_NAME_USED_READONLY_CONFIG(num_of_devices):
     return f"""
         SELECT COUNT(cfg.id)
@@ -185,6 +188,7 @@ def CMD_CHECK_NAME_USED_READONLY_CONFIG(num_of_devices):
           AND cfg_set.overwritable = 0
     """
 
+
 def CMD_CHECK_DEVICE_LIMIT(num_of_devices):
     return f"""
     SELECT COUNT(device_id) FROM (
@@ -194,6 +198,7 @@ def CMD_CHECK_DEVICE_LIMIT(num_of_devices):
         GROUP BY device_id )
     WHERE num_configs >= ?
 """
+
 
 CMD_CHECK_CONFIG_ALREADY_SAVED = """
         SELECT COUNT(id) FROM DeviceConfig
