@@ -47,6 +47,11 @@ karabo::core::BaseDevice::Pointer KaraboDeviceFixture::instantiateAndGetPointer(
                                                                                 const karabo::util::Hash& devCfg) {
     std::string errorMsg;
     karabo::core::BaseDevice::Pointer devPtr;
+    // karabo::log::Logger is a singleton and we should reset it to make sure it is configured how we like it.
+    karabo::log::Logger::reset();
+    karabo::util::Hash config("priority", LOG_PRIORITY);
+    karabo::log::Logger::configure(config);
+    karabo::log::Logger::useOstream();
 
     try {
         // instantiate the device under test
