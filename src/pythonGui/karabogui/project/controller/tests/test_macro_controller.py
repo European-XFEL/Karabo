@@ -80,6 +80,7 @@ def test_macro_controller(gui_app, mocker):
         macro_controller.system_topology_callback(devices, servers)
         for child in macro_controller.children:
             assert child.ui_data.status is ProxyStatus.OFFLINE
+            assert child.model is not macro_controller.model
 
     # Put here the assertion of the macro code
     with singletons(mediator=Mediator()):
