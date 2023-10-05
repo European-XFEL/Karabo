@@ -13,8 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-from karabo.bound import (
-    KARABO_CLASSINFO, VECTOR_STRING_ELEMENT, PythonDevice, launchPythonDevice)
+from karabo.bound import KARABO_CLASSINFO, VECTOR_STRING_ELEMENT, PythonDevice
 from karabo.common.states import State
 
 
@@ -23,7 +22,7 @@ class InvalidImportDevice(PythonDevice):
 
     def expectedParameters(expected):
 
-        import xyz
+        import xyz  # noqa
 
         (
             VECTOR_STRING_ELEMENT(expected).key("availableScenes")

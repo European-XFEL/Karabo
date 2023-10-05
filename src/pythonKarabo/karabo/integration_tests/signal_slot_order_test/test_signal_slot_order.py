@@ -51,7 +51,7 @@ class TestSignalSlotOrder(BoundDeviceTestCase):
             server_id2 = server_id1
         else:
             self.start_server(api, server_id2, [dev_class],
-                              namespace=namespace)  #, logLevel="INFO")
+                              namespace=namespace)  # , logLevel="INFO")
 
         # Start devices on different servers to avoid inner-process shortcut
         # and test ordering if broker is involved
