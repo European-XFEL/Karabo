@@ -25,9 +25,8 @@ class SceneProvidingDevice(PythonDevice):
 
         (
             VECTOR_STRING_ELEMENT(expected).key("availableScenes")
-                .readOnly().initialValue([])
-                .commit()
-            ,
+            .readOnly().initialValue([])
+            .commit(),
         )
 
     def __init__(self, config):
@@ -36,6 +35,7 @@ class SceneProvidingDevice(PythonDevice):
 
     def initialize(self):
         self.updateState(State.NORMAL)
+
 
 # This entry used by device server
 if __name__ == "__main__":

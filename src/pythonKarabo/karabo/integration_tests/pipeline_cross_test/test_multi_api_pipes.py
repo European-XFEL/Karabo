@@ -178,9 +178,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
             num_of_waits = num_of_waits - 1
             sleep(sleep_wait_interv)
 
-        # If instantiation of any device failed, cleanup by killing the ones that have been instantiated.
-        # This is needed for tests with Bound Python devices - during test development, several processes
-        # corresponding to python devices in failed test runs weren't killed after the test finished.
+        # If instantiation of any device failed, cleanup by killing the
+        # ones that have been instantiated.
+        # This is needed for tests with Bound Python devices - during
+        # test development, several processes
+        # corresponding to python devices in failed test runs weren't
+        # killed after the test finished.
         # Also collect logs of servers on which devices failed (seen in CI)
         missing = ""
         logs = ""
@@ -206,8 +209,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
                         f"'{missing[:-2]}' not instantiated.\nLogs:\n {logs}")
         print("========== all instantiated ===============")
 
-        # Waits for all the chained output channels to be properly connected before sending
-        # data through the pipe.
+        # Waits for all the chained output channels to be properly
+        # connected before sending data through the pipe.
         num_of_waits = max_waits
         outputs_connected = set()
         outputs_not_connected = {st_inf[0] for st_inf in start_info}
@@ -218,7 +221,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
                 try:
                     conns = self.dc.get(devid, 'output.connections')
                 except RuntimeError as re:
-                    print(f"Problem retrieving 'output.connections' from '{devid}': {re}")
+                    print(
+                        f"Problem retrieving 'output.connections' from '{devid}': {re}") # noqa
                 if len(conns) > 0:
                     outputs_connected.add(devid)
             outputs_not_connected = outputs_not_connected - outputs_connected
@@ -243,9 +247,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
                     infoMsg += (f"\n{devId} connections: {tableStr}")
 
         self.assertEqual(len(outputs_not_connected), 0,
-                        f"Failed to connect {outputs_not_connected} of the "
-                        f"{len(start_info)-1} output channels in the chain: "
-                        f"{infoMsg}")
+                         f"Failed to connect {outputs_not_connected} of the "
+                         f"{len(start_info)-1} output channels in the chain: "
+                         f"{infoMsg}")
         print("========== all connected ===============")
 
         self.dc.execute("sender", "writeOutput")
@@ -254,10 +258,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         def checkForwardersProp(propName, propValue, message):
             for i in range(num_of_forwarders):
-                self.assertTrue(self.waitUntilEqual(f"fwd{i+1}", propName,
-                                                    propValue, self._max_timeout),
-                                f"fwd{i+1}.{propName} did not become "
-                                f"{propValue}: {message}.")
+                self.assertTrue(self.waitUntilEqual(
+                    f"fwd{i+1}", propName,
+                    propValue, self._max_timeout),
+                    f"fwd{i+1}.{propName} did not become "
+                    f"{propValue}: {message}.")
 
         def checkReceiverProp(propName, propValue, message):
             self.assertTrue(self.waitUntilEqual("receiver", propName,
@@ -300,9 +305,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
         finish_time = time()
 
         print("\n----------------------")
-        print("Test for pipeline with '{}' devices mixed of apis '{}' succeded "
-              "in {:.2f} secs.".format(len(start_info), set(apis),
-                                       finish_time - start_time))
+        print(
+            "Test for pipeline with '{}' devices mixed of apis '{}' succeded "
+            "in {:.2f} secs.".format(len(start_info), set(apis),
+                                     finish_time - start_time))
         print("----------------------\n")
 
         # A little sleep to get devices down before servers are shutdown
@@ -315,14 +321,16 @@ class TestCrossPipelining(BoundDeviceTestCase):
         Test single sender with single receiver where sender is slower
         than receiver and receiver is configured to make sender wait.
         """
-        self._test_1to1_wait(sender_api, self._sender_freq, receiver_api, self._fast_proc_time)
+        self._test_1to1_wait(sender_api, self._sender_freq,
+                             receiver_api, self._fast_proc_time)
 
     def _test_1to1_wait_slowReceiver(self, sender_api, receiver_api):
         """
         Test single sender with single receiver where sender is faster
         than receiver and receiver is configured to make sender wait.
         """
-        self._test_1to1_wait(sender_api, self._sender_freq, receiver_api, self._slow_proc_time)
+        self._test_1to1_wait(sender_api, self._sender_freq,
+                             receiver_api, self._slow_proc_time)
 
     def _test_1to1_queueDrop_fastReceiver(self, sender_api, receiver_api):
         """
@@ -345,14 +353,16 @@ class TestCrossPipelining(BoundDeviceTestCase):
         Test single sender with single receiver where sender is slower
         than receiver and receiver is configured to make sender drop.
         """
-        self._test_1to1_drop(sender_api, self._sender_freq, receiver_api, self._fast_proc_time)
+        self._test_1to1_drop(sender_api, self._sender_freq,
+                             receiver_api, self._fast_proc_time)
 
     def _test_1to1_drop_slowReceiver(self, sender_api, receiver_api):
         """
         Test single sender with single receiver where sender is faster
         than receiver and receiver is configured to make sender drop.
         """
-        self._test_1to1_drop(sender_api, self._sender_freq, receiver_api, self._slow_proc_time)
+        self._test_1to1_drop(sender_api, self._sender_freq,
+                             receiver_api, self._slow_proc_time)
 
     def _test_1to1_wait(self, sender_api, sender_freq,
                         receiver_api, processing_time):
@@ -392,30 +402,37 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         elapsed_time = stop_time - start_time
 
-        self.assertTrue(self.waitUntilEqual("sender", "state",
-                                            State.NORMAL, self._max_timeout),
-                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
-                        .format(sender_api, self._max_timeout))
-        # Note: Since state has higher priority, its update might have overtaken the last
-        #       'outputCounter' update, so out_count may rarely appear too small by one?
+        self.assertTrue(self.waitUntilEqual(
+            "sender", "state",
+            State.NORMAL, self._max_timeout),
+            "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
+            .format(sender_api, self._max_timeout))
+        # Note: Since state has higher priority, its update might
+        # have overtaken the last
+        #       'outputCounter' update, so out_count may rarely
+        # appear too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +25/-50%:
-        cycle_time = max(1.0/sender_freq, processing_time/1000.0)  # for wait, processing_time "holds" the sender.
+        # for wait, processing_time "holds" the sender.
+        cycle_time = max(1.0/sender_freq, processing_time/1000.0)
         expected_out_count = elapsed_time / cycle_time
         # 0.75 * expected_out_count failed sometimes in CI
         min_expected = 0.5 * expected_out_count
         max_expected = 1.25 * expected_out_count
-        self.assertTrue(min_expected < out_count < max_expected,
-                        "# of output data items, {}, is not in the expected interval, ({:.2f}, {:.2f})."
-                        .format(out_count, min_expected, max_expected))
+        self.assertTrue(
+            min_expected < out_count < max_expected,
+            "# of output data items, {}, is not in "
+            "the expected interval, ({:.2f}, {:.2f})."
+            .format(out_count, min_expected, max_expected))
 
         # Could still take a while until all data is received
-        self.assertTrue(self.waitUntilEqual2("receiver", "inputCounter",
-                                             "sender", "outputCounter", self._max_timeout),
-                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."
-                        .format(receiver_api, self.dc.get("receiver", "inputCounter"),
-                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))
+        self.assertTrue(
+            self.waitUntilEqual2("receiver", "inputCounter",
+                                 "sender", "outputCounter", self._max_timeout),
+                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs." # noqa
+                        .format(receiver_api, self.dc.get("receiver", "inputCounter"), # noqa
+                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout)) # noqa
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
@@ -467,25 +484,29 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         self.assertTrue(self.waitUntilEqual("sender", "state",
                                             State.NORMAL, self._max_timeout),
-                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
+                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop." # noqa
                         .format(sender_api, self._max_timeout))
-        # Note: Since state has higher priority, its update might have overtaken the last
-        #       'outputCounter' update, so out_count may rarely appear too small by one?
+        # Note: Since state has higher priority, its update might have
+        # overtaken the last
+        #       'outputCounter' update, so out_count may rarely appear
+        # too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +/-25%:
         min_expected = 0.75 * sender_freq * elapsed_time
         max_expected = 1.25 * sender_freq * elapsed_time
-        self.assertTrue(min_expected < out_count < max_expected,
-                        "# of output data items, {}, is not in the expected interval, ({:.2f}, {:.2f})."
-                        .format(out_count, min_expected, max_expected))
+        self.assertTrue(
+            min_expected < out_count < max_expected,
+            "# of output data items, {}, is not in the expected "
+            "interval, ({:.2f}, {:.2f})."
+            .format(out_count, min_expected, max_expected))
 
         # Could still take a while until all data is received
         self.assertTrue(self.waitUntilEqual2("receiver", "inputCounter",
-                                             "sender", "outputCounter", self._max_timeout),
-                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."
-                        .format(receiver_api, self.dc.get("receiver", "inputCounter"),
-                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))
+                                             "sender", "outputCounter", self._max_timeout), # noqa
+                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs." # noqa
+                        .format(receiver_api, self.dc.get("receiver", "inputCounter"), # noqa
+                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout)) # noqa
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
@@ -531,19 +552,24 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         elapsed_time = stop_time - start_time
 
-        self.assertTrue(self.waitUntilEqual("sender", "state",
-                                            State.NORMAL, self._max_timeout),
-                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
-                        .format(sender_api, self._max_timeout))
-        # Note: Since state has higher priority, its update might have overtaken the last
-        #       'outputCounter' update, so out_count may rarely appear too small by one?
+        self.assertTrue(
+            self.waitUntilEqual(
+                "sender", "state",
+                State.NORMAL, self._max_timeout),
+            "'{}' Sender didn't reach NORMAL state "
+            "within {} secs. after stop."
+            .format(sender_api, self._max_timeout))
+        # Note: Since state has higher priority, its update
+        # might have overtaken the last
+        #       'outputCounter' update, so out_count may
+        # rarely appear too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +/-25%:
         min_expected = 0.75 * sender_freq * elapsed_time
         max_expected = 1.25 * sender_freq * elapsed_time
         self.assertTrue(min_expected < out_count < max_expected,
-                        "# of output data items, {}, is not in the expected interval ({:.2f}, {:.2f})."
+                        "# of output data items, {}, is not in the expected interval ({:.2f}, {:.2f})." # noqa
                         .format(out_count, min_expected, max_expected))
 
         # Note: We cannot be sure whether pipeline is still active
@@ -565,12 +591,15 @@ class TestCrossPipelining(BoundDeviceTestCase):
                 counter += 1
 
             self.assertTrue(is_in_range,
-                            "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]."
+                            "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]." # noqa
                             .format(inputCounter, 0.95 * out_count, out_count))
         else:
-            # Receiver is not much faster (or is slower) than the sender. Some drop is expected.
+            # Receiver is not much faster (or is slower) than the sender.
+            # Some drop is expected.
             # Assert that at least some data has arrived.
-            self.assertGreater(inputCounter, 0, "At least one data item should have been received.")
+            self.assertGreater(
+                inputCounter, 0,
+                "At least one data item should have been received.")
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
@@ -689,8 +718,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
         res2 = dev_props2.get(propertyName2)
 
         if res == res2:
-            print("waitUntilEqual2: Suffered from DeviceClient caching bug for",
-                  f"{devId}.{propertyName} and {devId2}.{propertyName2}")
+            print(
+                "waitUntilEqual2: Suffered from DeviceClient caching bug for",
+                f"{devId}.{propertyName} and {devId2}.{propertyName2}")
             return True
         else:
             print("waitUntilEqual2: DeviceClient not responsible for",
