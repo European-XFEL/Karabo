@@ -27,6 +27,7 @@ class NonSceneProvidingDevice(PythonDevice):
     def initialize(self):
         self.updateState(State.NORMAL)
 
+
 # This entry used by device server
 if __name__ == "__main__":
     launchPythonDevice()

@@ -23,6 +23,7 @@ from karabo.integration_tests.utils import BoundDeviceTestCase
 n_loops = 200
 sleep_in_loop = 0.01
 
+
 def call_counter(func):
     def inner(*args, **kwargs):
         # Protect _calls and 'func' evaluation if called from different C++
