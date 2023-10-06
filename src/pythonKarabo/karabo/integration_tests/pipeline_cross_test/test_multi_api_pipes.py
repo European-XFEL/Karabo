@@ -222,7 +222,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                     conns = self.dc.get(devid, 'output.connections')
                 except RuntimeError as re:
                     print(
-                        f"Problem retrieving 'output.connections' from '{devid}': {re}") # noqa
+                        f"Problem retrieving 'output.connections' from '{devid}': {re}")  # noqa
                 if len(conns) > 0:
                     outputs_connected.add(devid)
             outputs_not_connected = outputs_not_connected - outputs_connected
@@ -430,9 +430,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
         self.assertTrue(
             self.waitUntilEqual2("receiver", "inputCounter",
                                  "sender", "outputCounter", self._max_timeout),
-                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs." # noqa
-                        .format(receiver_api, self.dc.get("receiver", "inputCounter"), # noqa
-                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout)) # noqa
+                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."  # noqa
+                        .format(receiver_api, self.dc.get("receiver", "inputCounter"),  # noqa
+                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))  # noqa
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
@@ -484,7 +484,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         self.assertTrue(self.waitUntilEqual("sender", "state",
                                             State.NORMAL, self._max_timeout),
-                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop." # noqa
+                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."  # noqa
                         .format(sender_api, self._max_timeout))
         # Note: Since state has higher priority, its update might have
         # overtaken the last
@@ -503,10 +503,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         # Could still take a while until all data is received
         self.assertTrue(self.waitUntilEqual2("receiver", "inputCounter",
-                                             "sender", "outputCounter", self._max_timeout), # noqa
-                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs." # noqa
-                        .format(receiver_api, self.dc.get("receiver", "inputCounter"), # noqa
-                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout)) # noqa
+                                             "sender", "outputCounter", self._max_timeout),  # noqa
+                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."  # noqa
+                        .format(receiver_api, self.dc.get("receiver", "inputCounter"),  # noqa
+                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))  # noqa
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, f"Problem killing sender device: '{msg}'.")
@@ -569,7 +569,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         min_expected = 0.75 * sender_freq * elapsed_time
         max_expected = 1.25 * sender_freq * elapsed_time
         self.assertTrue(min_expected < out_count < max_expected,
-                        "# of output data items, {}, is not in the expected interval ({:.2f}, {:.2f})." # noqa
+                        "# of output data items, {}, is not in the expected interval ({:.2f}, {:.2f})."  # noqa
                         .format(out_count, min_expected, max_expected))
 
         # Note: We cannot be sure whether pipeline is still active
@@ -591,7 +591,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                 counter += 1
 
             self.assertTrue(is_in_range,
-                            "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]." # noqa
+                            "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]."  # noqa
                             .format(inputCounter, 0.95 * out_count, out_count))
         else:
             # Receiver is not much faster (or is slower) than the sender.
