@@ -476,9 +476,9 @@ class Server:
 @pytest.mark.parametrize(
     "Connection, EventLoop, Hash",
     [
-     (karabind.Connection, karabind.EventLoop, karabind.Hash),
-     # (karathon.Connection, karathon.EventLoop, karathon.Hash)
-     ])
+        (karabind.Connection, karabind.EventLoop, karabind.Hash),
+        # (karathon.Connection, karathon.EventLoop, karathon.Hash)
+    ])
 def test_tcp_client_server(Connection, EventLoop, Hash):
     # Pass 'karathon' or 'karabind' versions of Connection, EventLoop and Hash
     server = Server(Connection, Hash)
