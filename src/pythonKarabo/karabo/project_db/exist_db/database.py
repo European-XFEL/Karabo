@@ -64,8 +64,8 @@ class ProjectDatabase(DatabaseBase):
 
         if server is None:
             raise OSError("No environment variable KARABO_PROJECT_DB"
-                                   " found, nor was a server to connect to"
-                                   " given!")
+                          " found, nor was a server to connect to"
+                          " given!")
         if port is None:
             port = os.getenv('KARABO_PROJECT_DB_PORT', 8181)
 
@@ -496,7 +496,6 @@ class ProjectDatabase(DatabaseBase):
                  "instanceid": r.attrib["instanceid"]} for r in
                 res.results[0].getchildren()]
 
-
     def get_configurations_from_device_name_part(self, domain, device_id_part):
         """
         Returns a list of configurations for a given device
@@ -576,7 +575,7 @@ class ProjectDatabase(DatabaseBase):
             queryf = query.format(path=path, instance=server["serverid"])
             res = self.dbhandle.query(queryf)
             projects |= {r.attrib["projectname"] for r in
-                             res.results[0].getchildren()}
+                         res.results[0].getchildren()}
         return projects
 
     def get_projects_data_from_device(self, domain, uuid):

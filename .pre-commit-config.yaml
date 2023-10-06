@@ -57,6 +57,17 @@ repos:
               ^src/pythonGui/
           )
 
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.4
+    hooks:
+    -   id: autopep8
+        args: [ --in-place ]
+        name: autopep8 pythonKarabo
+        files: |
+          (?x)(
+              ^src/pythonKarabo/
+          )
+
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
