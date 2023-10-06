@@ -5,9 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 root = "."
 write_to = "src/__PACKAGE_NAME__/_version.py"
-git_describe_command = "git describe --tags --match '*.*.*' --dirty --long"
-version_scheme = "post-release"
-local_scheme = "node-and-date"
+git_describe_command = "git describe --tags --match "*.*.*" --dirty --long --always"
 
 [tool.setuptools.packages.find]
 where = ["src"]
