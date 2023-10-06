@@ -165,48 +165,21 @@ def svn_version(path, svn_cmd='svn'):
 # Define this where it can be imported.
 jsvn_version = partial(svn_version, svn_cmd='jsvn')
 
+GIT_DESCRIBE = 'git describe --tags --match "*.*.*" --dirty --long --always'
+
 
 class device_scm_version:
-    """Adapt to Karabo Devices' unconventional tags"""
+    """Backward compatible karabo device tags compliant to PEP440"""
 
     def __init__(self, root_path, file_path):
         self.root = root_path
         self.write_to = file_path
 
-    def karabo_device_dirty(self, version):
-        """Print the distance from the last tag
-
-        Device versions are tagged with the convention
-        `device_tag-karabo_tag`.
-        this class prevents a commit ahead of tag 0.0.1-2.9.2
-        to be tagged like 0.0.1-2.9.3.dev1-ghash.
-        Also this implementation allows to be aligned with the output
-        provided by the command
-        `git describe --tags --match "*.*.*" --dirty --always`
-        used in the C++ api (e.g. 0.0.1-2.9.3-1-gsha1).
-        """
-        return f'{version.tag}-{version.distance}-{version.node}'
-
-    def karabo_device_clean(self, version):
-        if version.distance is None:
-            return f'{version.tag}'
-        return self.karabo_device_dirty(version)
-
-    def version_scheme(self, version):
-        if not version.dirty:
-            return self.karabo_device_clean(version)
-        return self.karabo_device_dirty(version)
-
-    def local_scheme(self, version):
-        return '-dirty' if version.dirty else ''
-
     def __call__(self):
         """setuptools_scm allows a callable to be specified
-
         in the setup function"""
         return {
-            'local_scheme': self.local_scheme,
-            'version_scheme': self.version_scheme,
-            'root': self.root,
-            'write_to': self.write_to
+            "root": self.root,
+            "git_describe_command": GIT_DESCRIBE,
+            "write_to": self.write_to
         }
