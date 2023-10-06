@@ -1,9 +1,6 @@
-***********************************
-__CLASS_NAME__ Device (MiddleLayer)
-***********************************
+# __CLASS_NAME__ Device (MiddleLayer)
 
-Testing
-=======
+## Testing
 
 Every Karabo device in Python is shipped as a regular python package.
 In order to make the device visible to any device-server you have to install
@@ -18,8 +15,7 @@ utility script:
 
 ``karabo develop __PACKAGE_NAME__``
 
-Running
-=======
+## Running
 
 If you want to manually start a server using this device, simply type:
 
