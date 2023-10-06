@@ -43,6 +43,7 @@ _CONSUME_QSIZE = 100_000
 
 class KaraboWrapper(TaskWrapper):
     """The purpose of this class is to flag external tasks"""
+
     def __init__(self, task) -> None:
         super().__init__(task)
         task.shielded = True
@@ -219,7 +220,7 @@ class AmqpBroker(Broker):
         p = Hash()
         p["signalFunction"] = signal
         slotInstanceIds = (
-                "|" + "||".join(t for t in targets) + "|")
+            "|" + "||".join(t for t in targets) + "|")
         p["slotInstanceIds"] = slotInstanceIds
         funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
         p["slotFunctions"] = ("|" + "||".join(funcs) + "|")
