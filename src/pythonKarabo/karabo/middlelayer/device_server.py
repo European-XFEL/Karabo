@@ -18,8 +18,8 @@ import os
 import socket
 import sys
 from asyncio import (
-    TimeoutError, all_tasks, create_subprocess_exec, ensure_future, gather,
-    get_event_loop, set_event_loop, sleep, wait_for)
+    TimeoutError, all_tasks, create_subprocess_exec, gather, get_event_loop,
+    set_event_loop, sleep, wait_for)
 from collections import ChainMap
 from enum import Enum
 from json import loads
@@ -95,13 +95,11 @@ class DeviceServerBase(SignalSlotable):
         assignment=Assignment.OPTIONAL, defaultValue=[],
         requiredAccessLevel=AccessLevel.EXPERT)
 
-    scanPluginsTask = None
     _device_initializer = {}
 
     scanPlugins = Bool(
         displayedName="Scan plug-ins?",
-        description="Decides whether the server will scan the content of \n"
-                    "the plug-in folder and dynamically load found devices",
+        description="Unused variable.",
         assignment=Assignment.OPTIONAL, defaultValue=True,
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
@@ -181,19 +179,9 @@ class DeviceServerBase(SignalSlotable):
 
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
-        if self.scanPlugins:
-            self.scanPluginsTask = ensure_future(self.scanPluginsLoop())
 
     def _generateDefaultServerId(self):
         return self.hostName + "_Server_" + str(os.getpid())
-
-    async def scanPluginsLoop(self):
-        """every 3 s, check whether there are new entry points"""
-        while True:
-            await sleep(SCAN_PLUGINS_TIME)
-            await self.pluginLoader.update()
-            if (await self.scanPluginsOnce()):
-                self.updateInstanceInfo(self.deviceClassesHash())
 
     async def scanPluginsOnce(self):
         """load all available entry points, return whether new plugin found
@@ -413,8 +401,6 @@ class DeviceServerBase(SignalSlotable):
         """
         if not self._device_initializer:
             return
-
-        await self.scanPluginsOnce()
 
         for deviceId, initializer in self._device_initializer.items():
             configuration = Hash(initializer)
