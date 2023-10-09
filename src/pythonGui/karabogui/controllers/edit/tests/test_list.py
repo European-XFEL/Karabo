@@ -16,7 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import pytest
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog, QToolButton
 
 from karabo.common.scenemodel.api import (
     EditableListModel, EditableRegexListModel)
@@ -24,7 +24,8 @@ from karabo.native import (
     Configurable, VectorInt8, VectorInt32, VectorRegexString)
 from karabogui.binding.api import apply_default_configuration, get_min_max_size
 from karabogui.dialogs.listedit import ListEditDialog
-from karabogui.testing import get_class_property_proxy, set_proxy_value
+from karabogui.testing import (
+    click_button, get_class_property_proxy, set_proxy_value)
 
 from ..list import EditableList, EditableRegexList
 
@@ -207,3 +208,17 @@ def test_editable_regex_list_edit_empty_value(editable_regex_list_setup):
     controller._internal_widget.setText("")
     value = proxy.edit_value
     assert value == []
+
+
+def test_editable_list_dialog_value(editable_regex_list_setup, mocker):
+    controller, proxy = editable_regex_list_setup
+    controller.last_cursor_position = 0
+    set_proxy_value(proxy, "prop", ["1", "2", "3"])
+    button = controller.widget.findChild(QToolButton)
+    path = "karabogui.controllers.edit.list.ListEditDialog"
+    dialog = mocker.patch(path)
+    dialog().exec.return_value = QDialog.Accepted
+    dialog().values = ["1", "2", "3", "4"]
+    click_button(button)
+    assert controller._internal_widget.text() == "1,2,3,4"
+    assert controller._internal_widget.cursorPosition() == 0
