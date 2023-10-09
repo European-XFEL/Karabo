@@ -133,10 +133,11 @@ class BaseEditableListController(BaseBindingController):
                                    parent=self.widget)
         list_edit.set_list(get_editor_value(self.proxy, []))
         if list_edit.exec() == QDialog.Accepted:
-            edit_value = ','.join(str(v) for v in list_edit.values)
-            self._internal_widget.setText(edit_value)
+            self.proxy.edit_value = list_edit.values
+            with SignalBlocker(self._internal_widget):
+                display = ','.join(str(v) for v in list_edit.values)
+                self._internal_widget.setText(display)
             self._internal_widget.setCursorPosition(self.last_cursor_position)
-
         # Give back the focus!
         self._internal_widget.setFocus(Qt.PopupFocusReason)
 
