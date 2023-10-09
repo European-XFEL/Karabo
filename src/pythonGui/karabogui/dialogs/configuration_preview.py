@@ -28,7 +28,7 @@ from karabo.native import Hash, create_html_hash, has_changes, writeXML
 from karabogui import icons, messagebox
 from karabogui.binding.api import ProjectDeviceProxy, extract_configuration
 from karabogui.singletons.api import get_config
-from karabogui.util import getSaveFileName
+from karabogui.util import SignalBlocker, getSaveFileName
 
 from .utils import get_dialog_ui
 
@@ -104,6 +104,9 @@ class ConfigPreviewDialog(QDialog):
         self.configuration = configuration
         self._show_configuration()
         self._show_configuration_changes()
+        self.ui_synchronize_bars.toggled.connect(
+            self._synchronize_toggled)
+        self._synchronize_toggled(True)
 
     def _show_configuration_changes(self):
         if not len(self.proxy.binding.value):
@@ -131,6 +134,28 @@ class ConfigPreviewDialog(QDialog):
 
     # ---------------------------------------------------------------------
     # Slot Interface
+
+    @Slot(bool)
+    def _synchronize_toggled(self, enabled):
+        """Internal method to synchronize the scrollbars"""
+        existing = self.ui_existing.verticalScrollBar()
+        retrieved = self.ui_retrieved.verticalScrollBar()
+        if enabled:
+            existing.valueChanged.connect(self.existing_bar_moved)
+            retrieved.valueChanged.connect(self.retrieved_bar_moved)
+        else:
+            existing.valueChanged.disconnect(self.existing_bar_moved)
+            retrieved.valueChanged.disconnect(self.retrieved_bar_moved)
+
+    @Slot(int)
+    def existing_bar_moved(self, value):
+        with SignalBlocker(self.ui_retrieved):
+            self.ui_retrieved.verticalScrollBar().setValue(value)
+
+    @Slot(int)
+    def retrieved_bar_moved(self, value):
+        with SignalBlocker(self.ui_existing):
+            self.ui_existing.verticalScrollBar().setValue(value)
 
     @Slot()
     def _swap_view(self):
