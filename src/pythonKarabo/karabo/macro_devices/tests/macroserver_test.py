@@ -104,7 +104,7 @@ class Tests(TestCase):
         h = Hash("classId", "MetaMacro", "configuration", config,
                  "deviceId", f"bla-{uuid_}")
         await server.call(TEST_MACROSERVER, "slotStartDevice", h)
-        proxy = await getDevice(f"bla-{uuid_}-TestMacro")
+        proxy = await getDevice(f"bla-{uuid_}")
         with proxy:
             if not jms:
                 await updateDevice(proxy)
