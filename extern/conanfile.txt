@@ -35,7 +35,7 @@ nss/3.72
 zlib/1.2.13
 sqlite3/3.36.0
 openssl/1.0.2t  # Centos7 cannot handle newer versions
-openblas/0.3.20
+# openblas/0.3.20
 
 [generators]
 deploy
@@ -69,6 +69,8 @@ boost:without_program_options=False
 boost:without_python=False
 # do not build libboost_numpy
 boost:without_numpy=True
+# build lapack support with openblas
+# openblas:build_lapack=True
 
 [imports]
 lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
