@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 # dependencies located in extern/resources/. to manually compile and install
-DEPENDENCIES_BASE=( daemontools lapack log4cpp openmq openmqc  )
+DEPENDENCIES_BASE=( daemontools log4cpp openmq openmqc  )
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
@@ -513,46 +513,13 @@ install_from_deps() {
     # install python requirements
     # we do this in multiple stages, as pip has issues resolving a
     # too complex dependency chain with many pinned versions.
-    # In the best case it will need forever to resolve it, attempting
-    # any version starting with the lates one. In the worst case,
-    # it just fails. Since we know that we need to e.g. compile
-    # something as central as numpy from sources, we simplify
-    # the dependency chain by staging multiple requirement.txt docs.
     element_in "pip-requirements" "${package_status[@]}"
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-        export NPY_BLAS_ORDER="BLAS,OPENBLAS"
-        export NPY_LAPACK_ORDER="LAPACK,OPENBLAS"
-        local install_from_source=""
-        local install_from_cache=""
-
-        # if any package in requirements-0.txt is not in cache, install
-        # requirements-0.txt all from source
-        while read -r line
-        do
-          if [[ $line = \#* || -z $line ]]; then
-            continue
-          fi
-          local in_reqs=`echo $line | sed 's/==/-/g'`
-          local in_cache=`$INSTALL_PREFIX/bin/pip cache list $in_reqs --format=abspath`
-          if [[ -z "$in_cache" ]]; then
-            # compile from source if any package from requirements-0 is missing in cache
-            safeRunCommand "$pip_install_cmd -r requirements-0.txt --no-binary :all:"
-            install_from_source=":all:"
-            break
-          else
-            # append to list of wheels to install from cache
-            install_from_cache="$install_from_cache $in_cache"
-          fi
-        done < requirements-0.txt
-
-        # if all packages in requirements-0.txt are in cache, install from cache
-        if [[ -z $install_from_source ]]; then
-          safeRunCommand "$pip_install_cmd $install_from_cache"
-        fi
-
-        # install everything else, these will also use cache if possible
-        # (automatically determined by pip)
+        # important dependencies that many other packages will need
+        # (ie: numpy) are installed first
+        safeRunCommandQuiet "$pip_install_cmd -r requirements-0.txt"
+        # install everything else
         safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
         echo "pip-requirements" >> $marker_path
     fi
