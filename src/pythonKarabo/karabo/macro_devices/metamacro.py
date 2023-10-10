@@ -70,7 +70,7 @@ class MetaMacro(Device):
         deviceId = self.deviceId.value
         klass = self.klass
         parameters = {
-            "_deviceId_":  f"{deviceId}-{klass.__name__}",
+            "_deviceId_":  f"{deviceId}",
             "_serverId_": self.serverId.value,
             "hostName": self.hostName.value,
             "uuid": self.uuid.value,
