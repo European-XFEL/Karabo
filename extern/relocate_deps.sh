@@ -62,9 +62,7 @@ rewrite_python_shebangs() {
 
 rewrite_rpaths() {
     # These are the specific Python packages which need to be relocated
-    local target_packages=(Cython lxml numpy PIL
-        psutil scipy tornado traits zmq
-    )
+    local target_packages=( )
 
     # Relocate the Python packages
     local count=0
