@@ -104,6 +104,7 @@ class LogBookPreview(QDialog):
         uic.loadUi(get_dialog_ui("logbook.ui"), self)
 
         self.action_group_draw = {}
+        self._topics = {}
 
         self.pixmap = parent.grab()
         self.combo_datatype.addItem(LOGBOOK_IMAGE)
@@ -160,6 +161,8 @@ class LogBookPreview(QDialog):
         title = repr(self.parent())
         self.title_line_edit.setPlaceholderText(title)
 
+        self.combo_name.currentTextChanged.connect(self._update_topics)
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -174,6 +177,7 @@ class LogBookPreview(QDialog):
         for index, proposal in enumerate(data):
             name = proposal.get("name")
             destination = proposal.get("destination")
+            self._topics[name] = proposal.get("topics")
             self.combo_name.addItem(name)
             self.combo_name.setItemData(index, destination)
         self.ok_button.setEnabled(bool(data))
@@ -239,6 +243,12 @@ class LogBookPreview(QDialog):
         self.drawing_toolbar.setVisible(enabled)
         if not enabled:
             self.canvas.set_drawing_tool(None)
+
+    @Slot(str)
+    def _update_topics(self, text):
+        self.combo_topic.clear()
+        topics = self._topics[text]
+        self.combo_topic.addItems(topics)
 
     # -----------------------------------------------------------------------
     # Internal Interface
@@ -336,8 +346,9 @@ class LogBookPreview(QDialog):
     def request_save(self):
         """Request saving a Hash to the KaraboLogBook"""
         logbook = self.combo_name.currentText()
+        topic = self.combo_topic.currentText()
         info = self._create_logbook_data()
-        get_network().onSaveLogBook(name=logbook, **info)
+        get_network().onSaveLogBook(name=logbook, topic=topic, **info)
 
     def _create_zoom_toolbar(self):
         """ Create Toolbar with zooming options"""
