@@ -44,6 +44,8 @@ pkg_config
 [options]
 # We intend to use shared libraries
 *:shared=True
+# Avoid dependency on libsodium version incompatible with CentOS 7
+zeromq:encryption=False
 
 # These options will become relevant, when we install boost using conan
 # I keep them here for documentation already, as this is bound to happen.
