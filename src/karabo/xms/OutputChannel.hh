@@ -156,6 +156,7 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_connections;
             boost::asio::deadline_timer m_updateDeadline;
             int m_period;
+            int m_addedThreads;
 
            public:
             typedef Memory::MetaData MetaData;

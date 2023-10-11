@@ -221,7 +221,8 @@ namespace karabo {
               m_showStatisticsHandler(
                     [](const std::vector<unsigned long long>&, const std::vector<unsigned long long>&) {}),
               m_connections(),
-              m_updateDeadline(karabo::net::EventLoop::getIOService()) {
+              m_updateDeadline(karabo::net::EventLoop::getIOService()),
+              m_addedThreads(0) {
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
             if (m_onNoSharedInputChannelAvailable == "queue") m_onNoSharedInputChannelAvailable += "Drop";
             config.get("port", m_port);
@@ -268,6 +269,7 @@ namespace karabo {
         OutputChannel::~OutputChannel() {
             if (m_dataConnection) m_dataConnection->stop();
             Memory::unregisterChannel(m_channelId);
+            EventLoop::removeThread(m_addedThreads);
         }
 
 
@@ -927,19 +929,29 @@ namespace karabo {
         void OutputChannel::awaitUpdateFuture(std::future<void>& fut, const char* which) {
             int overallSeconds = 0;
 
-            // update(..) runs on any thread, likely in the common event loop, and the 'handler' to unblock it will run
-            // in the same event loop. Now what if all other threads are blocked, waiting for something to unblock them
-            // and all these 'somethings' are supposed to run in the same event loop?
-            // ==> We will stay blocked here. The bug to be fixed is that things get blocked...
+            // The caller of this method runs on any thread, likely in the common event loop, and the 'handler' to
+            // unblock it (by set_value() on the promise that belongs to 'fut') will run in the same event loop. Now
+            // what if all other threads are blocked on some mutex that the code that runs this method has already
+            // acquired?
+            // ==> We will stay blocked here because the unblock handler cannot run.
+            //     As a work around we add a thread here.
             while (fut.wait_for(std::chrono::seconds(1)) != std::future_status::ready) {
-                KARABO_LOG_FRAMEWORK_WARN << getInstanceIdName() << " awaiting future for '" << which
-                                          << "' takes more than " << ++overallSeconds << "seconds.";
-
-                if (overallSeconds >= 10) {
-                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceIdName() << " awaiting future for '" << which
-                                               << "' takes for too long now - no further log messages about that.";
+                std::stringstream sstr;
+                sstr << getInstanceIdName() << " awaiting future for '" << which << "' takes more than "
+                     << ++overallSeconds << " seconds. Likely, the code calling '" << which << "' has locked a mutex "
+                     << "that also all other threads in the EventLoop want to lock, but of course cannot. So the "
+                     << "handler that should resolve the blocking in 'awaitUpdateFuture' cannot run run.\n"
+                     << "Please fix the device code, e.g. by avoding to call '" << which << "' with a mutex locked.";
+                if (m_addedThreads < 10) {
+                    sstr << "\n => Nevertheless, add a thread to unblock as a rescue.";
+                    EventLoop::addThread();
+                    ++m_addedThreads;
+                } else {
+                    sstr << "\n => Do not add more threads since added already " << m_addedThreads << ".";
+                    KARABO_LOG_FRAMEWORK_WARN << sstr.str();
                     break;
                 }
+                KARABO_LOG_FRAMEWORK_WARN << sstr.str();
             }
             fut.get();
         }
@@ -950,7 +962,6 @@ namespace karabo {
             auto handler = [prom]() { prom->set_value(); };
 
             asyncUpdateNoWait([]() {}, handler, safeNDArray);
-
             awaitUpdateFuture(fut, "update");
         }
 
