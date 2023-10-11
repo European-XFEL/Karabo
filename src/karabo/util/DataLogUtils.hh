@@ -36,8 +36,8 @@
 namespace karabo {
     namespace util {
 
-        char const* const INFLUX_DURATION_UNIT = "u";           // Duration unit used for Influx (microsecs)
-        unsigned int const INFLUX_PRECISION_FACTOR = 1'000'000; // Precision factor for time used in Influx
+        char const* const INFLUX_DURATION_UNIT = "u";         // Duration unit used for Influx (microsecs)
+        unsigned int const INFLUX_PRECISION_FACTOR = 1000000; // Precision factor for time used in Influx
 
         char const* const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const* const DATALOGGER_PREFIX = "DataLogger-";
@@ -91,7 +91,7 @@ namespace karabo {
         // metric, a value known to be below that limit is used for saving string metrics.
         // Schemas whose sizes are above the value of MAX_INFLUX_VALUE_LENGTH bytes are split
         // into chunks of MAX_INFLUX_VALUE_LENGTH bytes.
-        const unsigned int MAX_INFLUX_VALUE_LENGTH = 921'600u; // 900 *1024 bytes
+        const unsigned int MAX_INFLUX_VALUE_LENGTH = 921600u; // 900 *1024 bytes
 
         /**
          * A structure defining meta data as used by the data loggers
