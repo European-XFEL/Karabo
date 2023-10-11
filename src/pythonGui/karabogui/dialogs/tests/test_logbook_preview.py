@@ -96,7 +96,8 @@ def test_save_button(dialog):
     assert not dialog.ok_button.isEnabled()
 
     h_list = HashList()
-    h_list.append(Hash())
+    h_list.append(Hash("name", "test_stream",
+                       "topics", ["Logbook", "Summary"]))
     dialog._event_destinations(h_list)
     assert dialog.ok_button.isEnabled()
 
@@ -222,3 +223,20 @@ def test_drawing_tools(dialog, mocker):
     QTest.mouseMove(widget, QPoint(200, 200))
     QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier)
     assert len(canvas.items()) == 4
+
+
+def test_topics(dialog):
+    """Test the topics combobox is updated when the stream selection changes"""
+    h_list = HashList()
+    hed_topics = ["Logbook", "Setup", "Day Shift"]
+    mid_topics = ["Data Analysis", "Detector status"]
+    h_list.append(Hash("name", "HED_12345", "topics", hed_topics))
+    h_list.append(Hash("name", "MID_34567", "topics", mid_topics))
+    dialog._event_destinations(h_list)
+
+    dialog.combo_name.setCurrentText("MID_34567")
+    combo = dialog.combo_topic
+    assert [combo.itemText(i) for i in range(combo.count())] == mid_topics
+
+    dialog.combo_name.setCurrentText("HED_12345")
+    assert [combo.itemText(i) for i in range(combo.count())] == hed_topics
