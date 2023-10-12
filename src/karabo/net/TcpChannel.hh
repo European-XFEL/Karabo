@@ -30,6 +30,7 @@
 #include <atomic>
 #include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/TextSerializer.hh>
+#include <map>
 
 #include "Channel.hh"
 #include "Queues.hh"
@@ -77,6 +78,8 @@ namespace karabo {
             std::vector<char> m_outboundHeaderPrefix;
             boost::shared_ptr<std::vector<char>> m_outboundData;
             boost::shared_ptr<std::vector<char>> m_outboundHeader;
+            boost::mutex m_writeCompleteHandlersMutex;
+            std::map<unsigned int, WriteCompleteHandler> m_writeCompleteHandlers;
 
             // MQ channel supported parameters
             unsigned int m_bodySize;
@@ -520,13 +523,17 @@ namespace karabo {
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
            private:
-            void asyncWriteHandler(const ErrorCode& e, const size_t length,
-                                   const Channel::WriteCompleteHandler& handler);
-            void asyncWriteHandlerBody(const ErrorCode& e, const size_t length,
-                                       const Channel::WriteCompleteHandler& handler,
+            /**
+             * Helper to store async write completion handler
+             *
+             * @param handler write completion handler to be stored
+             * @returns index under which handler is stored in internal map
+             */
+            unsigned int storeCompleteHandler(const WriteCompleteHandler& handler);
+            void asyncWriteHandler(unsigned int handlerIndex, const ErrorCode& e, const size_t length);
+            void asyncWriteHandlerBody(unsigned int handlerIndex, const ErrorCode& e, const size_t length,
                                        const boost::shared_ptr<std::vector<char>>& body);
-            void asyncWriteHandlerHeaderBody(const ErrorCode& e, const size_t length,
-                                             const Channel::WriteCompleteHandler& handler,
+            void asyncWriteHandlerHeaderBody(unsigned int handlerIndex, const ErrorCode& e, const size_t length,
                                              const boost::shared_ptr<std::vector<char>>& header,
                                              const boost::shared_ptr<std::vector<char>>& body);
 
