@@ -87,6 +87,12 @@ class ProjectPanel(BasePanelWidget):
 
         return widget
 
+    def __repr__(self):
+        qt_model = self.tree_view.model()
+        root = qt_model.root_model
+        project_name = root.simple_name if root is not None else None
+        return f"<ProjectPanel project={project_name}>"
+
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
         by this panel.
