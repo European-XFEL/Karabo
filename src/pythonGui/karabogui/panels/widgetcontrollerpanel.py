@@ -109,3 +109,6 @@ class WidgetControllerPanel(BasePanelWidget):
     def onUndock(self):
         super().onUndock()
         self.resize(self.sizeHint())
+
+    def __repr__(self):
+        return f"<WidgetControllerPanel property={self.controller.proxy.key}>"
