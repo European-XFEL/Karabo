@@ -73,3 +73,17 @@ def test_panel_controller_basics(gui_app):
         assert not panel.controller._showing
 
         panel.destroy()
+
+
+def test_repr(gui_app):
+    """Test the basics of the widget controller"""
+    mediator = Mediator()
+    topology = SystemTopology()
+    topology.initialize(system_hash())
+    with singletons(mediator=mediator, topology=topology):
+        proxy = get_property_proxy(Object.getClassSchema(), "prop",
+                                   device_id="divvy")
+        model = get_property_proxy_model(proxy)
+
+        panel = WidgetControllerPanel("TestTitle", model)
+        assert repr(panel) == "<WidgetControllerPanel property=divvy.prop>"
