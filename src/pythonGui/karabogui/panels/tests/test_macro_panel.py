@@ -69,3 +69,9 @@ def test_on_debug_run(gui_app, mocker):
         mock_run.assert_called_once_with(
             model, serverId="devserver", parent=panel)
         assert config['macro_development'] == "devserver"
+
+
+def test_repr(gui_app):
+    model = MacroModel(simple_name="macro_foo")
+    panel = MacroPanel(model=model)
+    assert repr(panel) == "<MacroPanel macro=macro_foo>"
