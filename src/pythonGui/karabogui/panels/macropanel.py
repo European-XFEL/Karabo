@@ -303,3 +303,6 @@ class MacroPanel(BasePanelWidget):
         annotated."""
         has_annotation = self.ui_editor.code_editor.has_annotation
         self.clear_button.setVisible(has_annotation)
+
+    def __repr__(self):
+        return f"<MacroPanel macro={self.model.simple_name}>"
