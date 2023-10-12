@@ -26,6 +26,7 @@ from karabo.common.api import (
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 from karabogui.request import get_scene_from_server
+from karabogui.singletons.api import get_config
 
 from .base import BasePanelWidget
 from .tool_widget import SearchBar
@@ -61,6 +62,10 @@ class TopologyPanel(BasePanelWidget):
         main_layout.addWidget(self.tree_view)
 
         return widget
+
+    def __repr__(self):
+        topic = get_config()["broker_topic"]
+        return f"<TopologyPanel topic={topic}>"
 
     # -----------------------------------------------------------------------
     # Karabo Events
