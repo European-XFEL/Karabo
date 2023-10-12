@@ -21,6 +21,7 @@ from qtpy.QtWidgets import QVBoxLayout, QWidget
 
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.device_view import DeviceTreeView
+from karabogui.singletons.api import get_config
 
 from .base import BasePanelWidget
 from .tool_widget import InterfaceBar
@@ -65,3 +66,7 @@ class DevicePanel(BasePanelWidget):
         widget = self.tree_view.popupWidget
         if widget is not None:
             widget.close()
+
+    def __repr__(self):
+        topic = get_config()["broker_topic"]
+        return f"<DevicePanel topic={topic}>"
