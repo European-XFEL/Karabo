@@ -25,6 +25,7 @@
 
 #include "TcpNetworking_Test.hh"
 
+#include <array>
 #include <boost/bind/bind.hpp>
 #include <boost/thread.hpp>
 #include <cassert>
@@ -42,6 +43,8 @@
 #include "karabo/util/Dims.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/NDArray.hh"
+
+using namespace std::literals::string_literals; // For '"blabla"s'
 
 using boost::placeholders::_1;
 using boost::placeholders::_2;
@@ -1185,4 +1188,103 @@ void TcpNetworking_Test::testWriteAsync() {
               "Failed:\n---------------\n" + testOutcomeMessage + "\n---------------\nat test: " + failingTestCaseName,
               false);
     }
+}
+
+void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
+    using namespace karabo::util;
+    using namespace karabo::net;
+    constexpr int timeoutSec = 10;
+
+    auto thr = boost::thread(&EventLoop::work);
+
+    //
+    // Create server, client and connect them
+    //
+    auto serverCon = Connection::create("Tcp", Hash("type", "server"));
+
+    Channel::Pointer serverChannel;
+    std::string failureReasonServ;
+    auto serverConnectHandler = [&serverChannel, &failureReasonServ](const ErrorCode& ec,
+                                                                     const Channel::Pointer& channel) {
+        if (ec) {
+            failureReasonServ = "Server connection failed: " + toString(ec.value()) += " -- " + ec.message();
+        } else {
+            serverChannel = channel;
+        }
+    };
+    const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
+    CPPUNIT_ASSERT(serverPort != 0);
+
+    Connection::Pointer clientConn = Connection::create("Tcp", Hash("type", "client", "port", serverPort));
+    Channel::Pointer clientChannel = clientConn->start();
+
+    int timeout = 10000;
+    while (timeout >= 0) {
+        if (serverChannel) break;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        timeout -= 10;
+    }
+    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+
+    //
+    // Test that one can asynchronously write without waiting for completion of previous async write
+    //
+    {
+        constexpr int numAsyncWrite = 100;
+        auto writesDone = std::make_shared<std::array<bool, numAsyncWrite>>();
+        writesDone->fill(false);
+        auto writesDoneMutex = std::make_shared<boost::mutex>();
+        auto prom = std::make_shared<std::promise<boost::system::error_code>>();
+        auto fut = prom->get_future();
+        boost::function<void(int, const boost::system::error_code&)> handlerTemplate =
+              [writesDone, writesDoneMutex, prom](int index, const boost::system::error_code& ec) {
+                  if (ec) {
+                      prom->set_value(ec);
+                      return;
+                  }
+
+                  boost::mutex::scoped_lock lock(*writesDoneMutex);
+                  (*writesDone)[index] = true;
+                  for (const bool ready : *writesDone) {
+                      if (!ready) return; // more to come
+                  }
+                  // Now all completed
+                  prom->set_value(ec);
+              };
+        for (int i = 0; i < numAsyncWrite; ++i) {
+            clientChannel->writeAsyncHashHash(Hash("hea"s, "der"s), Hash("count"s, i),
+                                              boost::bind(handlerTemplate, i, boost::asio::placeholders::error));
+        }
+        auto ok = fut.wait_for(std::chrono::seconds(timeoutSec));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
+
+        CPPUNIT_ASSERT_EQUAL(boost::system::error_code(), fut.get());
+
+        // Check that all data arrived - and in order
+        for (int i = 0; i < numAsyncWrite; ++i) {
+            Hash header, data;
+            // For simplicity, check synchronous read here
+            serverChannel->read(header, data);
+            CPPUNIT_ASSERT_EQUAL("der"s, header.get<std::string>("hea"s));
+            CPPUNIT_ASSERT_EQUAL(i, data.get<int>("count"s));
+        }
+    }
+
+    //
+    // Test that handler is called although channel destructed
+    //
+    {
+        auto prom = std::make_shared<std::promise<const boost::system::error_code&>>();
+        auto fut = prom->get_future();
+        auto handler = [prom](const boost::system::error_code& ec) { prom->set_value(ec); };
+        clientChannel->writeAsyncHash(Hash("some", "data"), handler);
+        clientChannel.reset();
+        clientConn.reset();
+
+        auto ok = fut.wait_for(std::chrono::seconds(timeoutSec));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
+    }
+
+    EventLoop::stop();
+    thr.join();
 }
