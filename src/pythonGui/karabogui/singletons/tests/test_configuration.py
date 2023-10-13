@@ -49,7 +49,7 @@ class TestConfiguration(GuiTestCase):
         config['device_domain'] = 'CAS_INTERNAL'
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
-        self.assertEqual(len(config), 21)
+        self.assertEqual(len(config), 23)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['device_domain'], 'CAS_INTERNAL')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
@@ -68,6 +68,8 @@ class TestConfiguration(GuiTestCase):
             'gui_servers',
             'highDPI',
             'log_visible',
+            'logbook_stream',
+            'logbook_topic',
             'macro_development',
             'main_geometry',
             'project_sort_column',
@@ -123,7 +125,7 @@ class TestConfiguration(GuiTestCase):
         groups = config.groups()
         self.assertEqual(len(groups), 6)
         user_group = [item.name for item in groups[USER]]
-        self.assertEqual(len(user_group), 7)
+        self.assertEqual(len(user_group), 9)
         self.assertIn('wizard', user_group)
         self.assertIn('main_geometry', user_group)
         self.assertIn('highDPI', user_group)
