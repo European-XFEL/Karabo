@@ -171,6 +171,7 @@ else:
             'SlowStartDevice=karabo.integration_tests.device_comm_test.slowStartDevice:SlowStartDevice',
             'StuckLoggerDevice=karabo.integration_tests.device_comm_test.stuckLoggerDevice:StuckLoggerDevice',
             'RaiseInitializationDevice=karabo.integration_tests.device_comm_test.raiseInitializationDevice:RaiseInitializationDevice',
+            'RaiseOnDunderInitDevice=karabo.integration_tests.device_comm_test.raiseInitializationDevice:RaiseOnDunderInitDevice',
             'InvalidImportDevice=karabo.integration_tests.device_comm_test.invalidImportDevice:InvalidImportDevice',
             'BoundOrderTestDevice=karabo.integration_tests.signal_slot_order_test.bound_ordertest_device:BoundOrderTestDevice',
         ],
