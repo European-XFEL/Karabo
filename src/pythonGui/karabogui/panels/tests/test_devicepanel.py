@@ -26,7 +26,8 @@ def test_device_topology_panel(gui_app, mocker):
     topology = SystemTopology()
     topology.initialize(system_hash())
     config = Configuration()
-    with singletons(mediator=mediator, topology=topology, config=config):
+    with singletons(mediator=mediator, topology=topology,
+                    configuration=config):
         panel = DevicePanel()
         assert repr(panel) == "<DevicePanel topic=None>"
         get_config()["broker_topic"] = "Test"
