@@ -31,7 +31,7 @@ from karabogui.dialogs.logbook_drawing_tools import BaseDrawingTool, get_tools
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
-from karabogui.singletons.api import get_network
+from karabogui.singletons.api import get_config, get_network
 from karabogui.validators import NumberValidator
 from karabogui.widgets.toolbar import ToolBar
 
@@ -181,6 +181,12 @@ class LogBookPreview(QDialog):
             self.combo_name.addItem(name)
             self.combo_name.setItemData(index, destination)
         self.ok_button.setEnabled(bool(data))
+
+        previous_stream = get_config()["logbook_stream"]
+        self.combo_name.setCurrentText(previous_stream)
+
+        previous_topic = get_config()["logbook_topic"]
+        self.combo_topic.setCurrentText(previous_topic)
 
     # -----------------------------------------------------------------------
     # Qt Slots
@@ -340,6 +346,8 @@ class LogBookPreview(QDialog):
     def done(self, result):
         if result:
             self.request_save()
+            get_config()["logbook_stream"] = self.combo_name.currentText()
+            get_config()["logbook_topic"] = self.combo_topic.currentText()
         unregister_from_broadcasts(self._event_map)
         return super().done(result)
 
