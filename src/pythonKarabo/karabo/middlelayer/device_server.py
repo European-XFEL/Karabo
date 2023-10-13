@@ -723,7 +723,7 @@ class BoundDeviceServer(DeviceServerBase):
 
         config["timeServerId"] = self.timeServerId
 
-        # Would be nice to inject _conncetion_ config here from what the
+        # Would be nice to inject _connection_ config here from what the
         # server uses, i.e. domain, brokers and the broker type.
         # Since that is not easily available (except domain via
         # 'get_event_loop().topic'), we rely on the bound device extracting
@@ -743,7 +743,13 @@ class BoundDeviceServer(DeviceServerBase):
         process.stdin.close()
         done, pending, error = await firstCompleted(
             ok=future, error=process.wait())
-        if "ok" in done:
+        if data := done.get("ok"):
+            success, reason = data
+            msg = deviceId
+            if not success:
+                msg = (f"could not instantiate device {deviceId}."
+                       f" Reason: {reason}")
+                return False, msg
             self.processes[deviceId] = process
             background(self.supervise(deviceId, process, done["ok"]))
             return True, deviceId
@@ -751,10 +757,15 @@ class BoundDeviceServer(DeviceServerBase):
             return False, deviceId
 
     @slot
-    def slotDeviceUp(self, instanceId):
-        """Track devices that are up and running"""
-        self.logger.info(f"Bound device {instanceId} is now up and running")
-        self._process_futures[instanceId] = True
+    def slotDeviceUp(self, instanceId, success, reason):
+        """A Bound device will announce whether it is up and running
+
+        here.
+        success is a boolean and reason is a string"""
+        is_ = "is" if success else "is not"
+        msg = f"Bound device {instanceId} {is_} up : Reason {reason}"
+        self.logger.info(msg)
+        self._process_futures[instanceId] = (success, reason)
 
     async def slotKillServer(self, message=None):
         for device in self.processes:
