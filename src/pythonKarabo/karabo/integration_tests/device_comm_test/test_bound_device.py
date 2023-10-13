@@ -227,7 +227,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def test_in_sequence(self):
         SERVER_ID = "testServer"
         class_ids = ['CommTestDevice', 'UnstoppedThreadDevice',
-                     'RaiseInitializationDevice']
+                     'RaiseInitializationDevice', 'RaiseOnDunderInitDevice']
         self.start_server("bound", SERVER_ID, class_ids,
                           namespace="karabo.bound_device_test"
                           )  # ,logLevel='ERROR')
@@ -554,6 +554,17 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertTrue(cfgUpdates[-1].has("status"), str(cfgUpdates))
             self.assertEqual(status, cfgUpdates[-1].get("status"))
             self.dc.unregisterDeviceMonitor(devId)  # clean up
+
+        with self.subTest(msg="Test exception on __init__"):
+            classConfig = Hash("classId", "RaiseOnDunderInitDevice",
+                               "deviceId", "RaiseOn__init__",
+                               "configuration", Hash())
+            # Device will never appear since it raises in the __init__ method.
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig, instTimeout)
+            self.assertFalse(ok)
+            expected_msg = ("could not instantiate device RaiseOn__init__. "
+                            "Reason: This device raises on __init__")
+            self.assertEqual(msg, expected_msg)
 
         with self.subTest(msg="Test slotGetTime"):
             ret = sigSlotA.request("testComm1", "slotGetTime", Hash()

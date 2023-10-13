@@ -25,7 +25,7 @@ from pkg_resources import working_set
 
 from karabo.bound import (
     OVERWRITE_ELEMENT, BinarySerializerHash, Configurator, EventLoop, Hash,
-    PluginLoader, PythonDevice)
+    PluginLoader, PythonDevice, SignalSlotable)
 
 
 def main():
@@ -58,7 +58,7 @@ def main():
         sys.stdout.buffer.write(ser.save(h))
     elif command == "run":
         # run a device class. The configuration is read from stdin.
-        config = bytes(sys.stdin.read(), encoding="utf8")
+        config = sys.stdin.buffer.read()
         ser = BinarySerializerHash.create("Bin")
         config = ser.load(config)
         if '_connection_' in config:
@@ -85,16 +85,31 @@ def main():
                                      Hash("pluginNamespace", namespace))
         loader.update()
 
+        serverId = "__none__"
+        if "_serverId_" in config:
+            serverId = config["_serverId_"]
+        deviceId = config["_deviceId_"]
+        device = None
         t = threading.Thread(target=EventLoop.work)
         t.start()
         try:
             # Creating device via Configurator runs config validation and thus
             # ensures that defaults are available.
-            device = Configurator(PythonDevice).create(name, config)
+            try:
+                device = Configurator(PythonDevice).create(name, config)
+            except Exception as e:
+                # create a signal slotable to act as a flight data recorder
+                # to inform the server that an exception occurred
+                # during __init__
+                fdr = SignalSlotable(deviceId)
+                fdr.start()
+                fdr.call(
+                    serverId, "slotDeviceUp", deviceId, False, str(e))
+                raise e
             device._finalizeInternalInitialization()
-        except BaseException:
+        except BaseException as e:
             EventLoop.stop()
-            raise
+            raise e
         finally:
             t.join()
 
