@@ -38,6 +38,7 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testState);
     CPPUNIT_TEST(testAlarms);
     CPPUNIT_TEST(testSlots);
+    CPPUNIT_TEST(testOutputChannelSchemaRemoval);
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -115,6 +116,12 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
      * @brief Checks that the Validator::validate can verify for assignment internal leaf elements
      */
     void testLeafAssignmentInternal();
+
+    /**
+     * @brief An output channel should not expose its schema node should for its
+     * configuration.
+     */
+    void testOutputChannelSchemaRemoval();
 };
 
 #endif /* VALIDATOR_TEST_HH */
