@@ -15,7 +15,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from .alarm_model import AlarmModel
 from .const import (
     ACKNOWLEDGE, ACKNOWLEDGEABLE, ACKNOWLEGDABLE_UPDATE_TYPE, ADD_ALARM_TYPES,
     ADD_UPDATE_TYPE, ALARM_COLOR, ALARM_DATA, ALARM_HIGH, ALARM_ID, ALARM_LOW,
@@ -27,6 +26,4 @@ from .const import (
     UPDATE_ALARM_TYPES, UPDATE_UPDATE_TYPE, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
     WARN_LOW, AlarmEntry, get_alarm_icon, get_alarm_key_index,
     get_alarm_pixmap, get_alarm_svg)
-from .filter_model import AlarmFilterModel
-from .info import AlarmInfo
 from .utils import extract_alarms_data

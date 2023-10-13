@@ -70,8 +70,6 @@ def _build_getter(key, modulename, klassname):
 
 
 # This is where all the singletons are defined
-get_alarm_model = _build_getter('alarm_model', '.alarms.api',
-                                'AlarmModel')
 get_db_conn = _build_getter('db_conn', '.singletons.db_connection',
                             'ProjectDatabaseConnection')
 get_manager = _build_getter('manager', '.singletons.manager', 'Manager')

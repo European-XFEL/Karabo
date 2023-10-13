@@ -30,15 +30,13 @@ from qtpy.QtWidgets import QMessageBox
 import karabogui.access as krb_access
 from karabo.native import AccessLevel, AccessMode, Assignment, Hash, Timestamp
 from karabogui import messagebox
-from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import Priority, executeLater
 from karabogui.binding.api import (
     ProxyStatus, apply_fast_data, extract_configuration)
 from karabogui.const import KARABO_CLIENT_ID
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
-from karabogui.singletons.api import (
-    get_alarm_model, get_config, get_network, get_topology)
+from karabogui.singletons.api import get_config, get_network, get_topology
 from karabogui.util import get_reason_parts, move_to_cursor, show_wait_cursor
 
 from .util import realign_topo_hash
@@ -82,7 +80,6 @@ class Manager(QObject):
         self._waiting_properties = WeakKeyDictionary()
         # The system topology singleton
         self._topology = get_topology()
-        self._alarm_model = get_alarm_model()
         # A dict which includes big networkData
         self._big_data = {}
         # Handler callbacks for `handle_requestGeneric`
@@ -424,9 +421,7 @@ class Manager(QObject):
                         {'devices': devices, 'servers': servers})
 
         for instance_id, class_id, _ in devices:
-            if class_id == 'AlarmService':
-                self._request_alarm_info(instance_id)
-            elif class_id == 'DaemonManager':
+            if class_id == 'DaemonManager':
                 broadcast_event(KaraboEvent.ShowDaemonService,
                                 {'instanceId': instance_id})
 
@@ -438,13 +433,8 @@ class Manager(QObject):
         devices, servers = self._topology.topology_update(changes)
 
         gone_instanceIds = []
-        # Did an alarm system leave our topology?
         for instance_id, class_id, _ in devices:
-            if class_id == 'AlarmService':
-                self._alarm_model.reset_alarms(instance_id)
-                broadcast_event(KaraboEvent.RemoveAlarmServices,
-                                {'instanceId': instance_id})
-            elif class_id == 'DaemonManager':
+            if class_id == 'DaemonManager':
                 broadcast_event(KaraboEvent.RemoveDaemonService,
                                 {'instanceId': instance_id})
             gone_instanceIds.append(instance_id)
@@ -455,9 +445,7 @@ class Manager(QObject):
 
         # Tell the GUI about various devices or servers that are alive
         for instance_id, class_id, _ in new_devices:
-            if class_id == 'AlarmService':
-                self._request_alarm_info(instance_id)
-            elif class_id == 'ProjectManager':
+            if class_id == 'ProjectManager':
                 broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
             elif class_id == 'DaemonManager':
@@ -750,17 +738,11 @@ class Manager(QObject):
         """Show initial update for ``AlarmService`` with given ``instanceId``
            and all the information given in the ``Hash`` ``rows``.
         """
-        if not rows.empty():
-            data = extract_alarms_data(instanceId, rows)
-            self._alarm_model.init_alarms_info(data)
 
     def handle_alarmUpdate(self, instanceId, rows):
         """Show update for ``AlarmService`` with given ``instanceId`` and all
            the information given in the ``Hash`` ``rows``.
         """
-        if not rows.empty():
-            data = extract_alarms_data(instanceId, rows)
-            self._alarm_model.update_alarms_info(data)
 
     def handle_listDestinations(self, success, request, reply, reason=""):
         """
@@ -787,10 +769,6 @@ class Manager(QObject):
 
     # ------------------------------------------------------------------
     # Private methods
-
-    def _request_alarm_info(self, instance_id):
-        """Handle the arrival of the `AlarmService` device"""
-        get_network().onRequestAlarms(instance_id)
 
     def _set_server_information(self, info):
         read_only = info.get('readOnly', False)
