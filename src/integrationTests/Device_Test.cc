@@ -66,6 +66,8 @@ using karabo::xms::OUTPUT_CHANNEL;
 using karabo::xms::SignalSlotable;
 using karabo::xms::SLOT_ELEMENT;
 
+static void assertChildNodesEmpty(const Hash& h);
+
 const std::string fakeClassVersion("FakePackage-1.2.3");
 class TestDevice : public karabo::core::Device<> {
    public:
@@ -449,7 +451,8 @@ void Device_Test::appTestRunner() {
     testSet();
     testSetVectorUpdate();
     testSignal();
-    // Last tests needs its own device, so clean-up before
+
+    // testBadInit needs its own device, so clean-up before
     m_deviceClient->killDeviceNoWait("TestDevice");
     testBadInit();
 }
@@ -954,15 +957,6 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
 
-    Hash filteredCfg;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetCurrentConfiguration", "doocs")
-                                  .timeout(requestTimeoutMs)
-                                  .receive(filteredCfg));
-    // Check that contains the "doocs" tagged property from output channel schema, but nothing else
-    std::set<std::string> filteredPaths;
-    filteredCfg.getPaths(filteredPaths);
-    CPPUNIT_ASSERT_EQUAL(1ul, filteredPaths.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("output.schema.data.intensityTD"), *(filteredPaths.begin()));
 
     // Not using m_deviceClient->getDeviceSchema("TestDevice") since its cache might not be up-to-date yet
     // from schema "erasure" at the end of the previous run of this method with another 'updateSlot' value.
@@ -1033,20 +1027,6 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     CPPUNIT_ASSERT_NO_THROW(
           m_deviceServer->request("TestDevice", updateSlot, schema).timeout(requestTimeoutMs).receive());
 
-    filteredCfg.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetCurrentConfiguration", "doocs")
-                                  .timeout(requestTimeoutMs)
-                                  .receive(filteredCfg));
-    // Check that contains also the newly introduced "doocs" tagged properties, but nothing else
-    filteredPaths.clear();
-    filteredCfg.getPaths(filteredPaths);
-    CPPUNIT_ASSERT_EQUAL(3ul, filteredPaths.size());
-    CPPUNIT_ASSERT_MESSAGE(toString(filteredCfg), std::find(filteredPaths.begin(), filteredPaths.end(),
-                                                            "taggedProperty") != filteredPaths.end());
-    CPPUNIT_ASSERT_MESSAGE(toString(filteredCfg), std::find(filteredPaths.begin(), filteredPaths.end(),
-                                                            "output.schema.data.intensityTD") != filteredPaths.end());
-    CPPUNIT_ASSERT_MESSAGE(toString(filteredCfg), std::find(filteredPaths.begin(), filteredPaths.end(),
-                                                            "output.schema.data.intensityTD2") != filteredPaths.end());
     // Check aliases
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetSchema", false)
                                   .timeout(requestTimeoutMs)
@@ -1382,6 +1362,9 @@ void Device_Test::testGetconfigReconfig() {
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(karabo::util::Schema::OBSERVER), cfgHash.get<int>("visibility"));
     CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), cfgHash.get<std::string>("serverId"));
     CPPUNIT_ASSERT_EQUAL(::getpid(), cfgHash.get<int>("pid"));
+
+    // test pipeline channel schema is an empty node or has empty nodes under it.
+    assertChildNodesEmpty(cfgHash.get<Hash>("output.schema"));
 
     // We cannot set visibility
     cfgHash.clear();
@@ -1836,4 +1819,21 @@ bool Device_Test::waitForCondition(boost::function<bool()> checker, unsigned int
         numOfWaits++;
     }
     return (numOfWaits < maxNumOfWaits);
+}
+
+void assertChildNodesEmpty(const Hash& h) {
+    if (h.empty()) {
+        return;
+    }
+    std::vector<std::string> keys;
+    Hash child;
+
+    h.getKeys(keys);
+
+    // We expect only one element (and this has to be a hash)
+    CPPUNIT_ASSERT(keys.size() == 1);
+    CPPUNIT_ASSERT_NO_THROW(child = h.get<Hash>(keys[0]));
+
+    // process child node all the way till we hit an empty child.
+    assertChildNodesEmpty(child);
 }
