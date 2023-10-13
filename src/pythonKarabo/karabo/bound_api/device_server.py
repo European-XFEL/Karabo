@@ -504,11 +504,10 @@ class DeviceServer:
         # Create unique filename in /tmp - without '/' from deviceid...
         # .bin indicates binary format:
         # XML has trouble with VECTOR_STRING where string contains comma
-        fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.bin"
-        filename_data = {'mod': modname, 'cls': classid, 'pid': self.pid,
-                         'dev': deviceid.replace(os.path.sep, '_')}
         while True:
-            filename = fn_tmpl.format(num=self.seqnum, **filename_data)
+            filename = (f"/tmp/{modname}.{classid}."
+                        f"{deviceid.replace(os.path.sep, '_')}"
+                        f".configuration_{self.pid}_{self.seqnum}.bin")
             if os.path.isfile(filename):
                 self.seqnum += 1
             else:
@@ -614,23 +613,26 @@ class DeviceServer:
         finally:
             self.stopDeviceServer()
 
-    def slotDeviceUp(self, instanceId):
-        "Slot for device to tell us that it managed to get alive"
+    def slotDeviceUp(self, instanceId, success, reason):
+        "Slot for device to tell us whether it managed to get alive"
         awaited = None
         with self.deviceInstanceMapLock:
             awaited = self._startingDevices.pop(instanceId, None)
         if awaited:
             asyncReply = awaited[0]
-            asyncReply(True, instanceId)
+            if success:
+                asyncReply(success, instanceId)
+            else:
+                msg = (f"could not instantiate device {instanceId}."
+                       f" Reason: {reason}")
+                asyncReply(success, msg)
         else:
             self.log.WARN(f"Unexpected slotDeviceUp for {instanceId}")
             # No need to inform caller about failure via raising an exception
 
     def slotDeviceGone(self, instanceId):
-        # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of
-        # self.log.DEBUG:
-        self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future"
-                       " death.".format(instanceId, self))
+        self.log.INFO("Device '{0}' notifies '{1.serverid}' about its future"
+                      " death.".format(instanceId, self))
         with self.deviceInstanceMapLock:
             if instanceId in self.deviceInstanceMap:
                 launcher = self.deviceInstanceMap[instanceId]
