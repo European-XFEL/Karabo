@@ -15,7 +15,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from .alarmpanel import AlarmPanel
 from .configurationpanel import ConfigurationPanel
 from .container import PanelContainer
 from .devicepanel import DevicePanel
