@@ -12,6 +12,8 @@ from karabogui.dialogs.logbook_drawing_tools import (
     LineTool, RectTool, TextTool)
 from karabogui.dialogs.logbook_preview import LogBookPreview
 from karabogui.panels.api import ConfigurationPanel
+from karabogui.singletons.api import get_config
+from karabogui.singletons.configuration import Configuration
 from karabogui.singletons.mediator import Mediator
 from karabogui.singletons.network import Network
 from karabogui.testing import get_simple_schema, singletons
@@ -23,7 +25,8 @@ title = ("{}: <ConfigurationPanel proxy=<DeviceClassProxy classId=Simple "
 @pytest.fixture
 def dialog(gui_app):
     mediator = Mediator()
-    with singletons(mediator=mediator):
+    config = Configuration()
+    with singletons(mediator=mediator, configuration=config):
         panel = ConfigurationPanel()
 
         schema = get_simple_schema()
@@ -228,15 +231,50 @@ def test_drawing_tools(dialog, mocker):
 def test_topics(dialog):
     """Test the topics combobox is updated when the stream selection changes"""
     h_list = HashList()
-    hed_topics = ["Logbook", "Setup", "Day Shift"]
-    mid_topics = ["Data Analysis", "Detector status"]
-    h_list.append(Hash("name", "HED_12345", "topics", hed_topics))
-    h_list.append(Hash("name", "MID_34567", "topics", mid_topics))
+    stream1 = "12345"
+    topics1 = ["Logbook", "Setup", "Day Shift"]
+
+    stream2 = "34567"
+    topics2 = ["Data Analysis", "Detector status"]
+
+    h_list.append(Hash("name", stream1, "topics", topics1))
+    h_list.append(Hash("name", stream2, "topics", topics2))
     dialog._event_destinations(h_list)
 
-    dialog.combo_name.setCurrentText("MID_34567")
+    dialog.combo_name.setCurrentText(stream2)
     combo = dialog.combo_topic
-    assert [combo.itemText(i) for i in range(combo.count())] == mid_topics
+    assert [combo.itemText(i) for i in range(combo.count())] == topics2
 
-    dialog.combo_name.setCurrentText("HED_12345")
-    assert [combo.itemText(i) for i in range(combo.count())] == hed_topics
+    dialog.combo_name.setCurrentText(stream1)
+    assert [combo.itemText(i) for i in range(combo.count())] == topics1
+
+
+def test_restore_stream_topic(dialog):
+    h_list = HashList()
+    stream1 = "12345"
+    topics1 = ["Logbook", "Setup", "Day Shift"]
+
+    stream2 = "34567"
+    topics2 = ["Data Analysis", "Summary", "Detector status",
+               "Sample status", "Beam Status"]
+
+    stream3 = "98765"
+    topics3 = ["Logbook", "RunSummary", "ShiftSummary"]
+
+    h_list.append(Hash("name", stream1, "topics", topics1))
+    h_list.append(Hash("name", stream2, "topics", topics2))
+    h_list.append(Hash("name", stream3, "topics", topics3))
+
+    default_stream = "34567"
+    default_topic = "Summary"
+    get_config()["logbook_stream"] = default_stream
+    get_config()["logbook_topic"] = default_topic
+
+    dialog._event_destinations(h_list)
+    assert dialog.combo_name.currentText() == default_stream
+    assert dialog.combo_topic.currentText() == default_topic
+
+    # When the stored topic doesn't exist select the first topic
+    get_config()["logbook_topic"] = "Non Existing"
+    dialog._event_destinations(h_list)
+    assert dialog.combo_topic.currentText() == topics2[0]
