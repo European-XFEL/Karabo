@@ -30,3 +30,15 @@ class RaiseInitializationDevice(PythonDevice):
         # itself to allow detection of the device in the topology
         sleep(1)
         raise RuntimeError("Stupidly failed in initialise")
+
+
+@KARABO_CLASSINFO("RaiseOnDunderInitDevice", "2.0")
+class RaiseOnDunderInitDevice(PythonDevice):
+
+    def __init__(self, configuration):
+        super().__init__(configuration)
+        self.registerInitialFunction(self.initialise)
+        raise RuntimeError("This device raises on __init__")
+
+    def initialise(self):
+        """nothing happens here"""
