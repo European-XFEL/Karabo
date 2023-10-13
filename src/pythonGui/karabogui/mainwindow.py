@@ -44,7 +44,7 @@ from karabogui.events import (
 from karabogui.indicators import get_processing_color
 from karabogui.logger import StatusLogWidget, get_logger
 from karabogui.panels.api import (
-    AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
+    ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
     ScriptingPanel, TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
 from karabogui.singletons.api import (
@@ -55,7 +55,6 @@ from karabogui.wizards import TipsTricksWizard
 SERVER_INFO_WIDTH = 250
 
 CONSOLE_TITLE = 'Console'
-AlARM_TITLE = 'Alarms'
 
 CONFIGURATOR_TITLE = 'Configuration Editor'
 SYSTEM_TOPOLOGY_TITLE = 'System Topology'
@@ -64,7 +63,6 @@ PROJECT_TITLE = 'Projects'
 
 _PANEL_TITLE_CONFIG = {
     CONSOLE_TITLE: 'console_visible',
-    AlARM_TITLE: 'alarm_visible'
 }
 
 MENU_HEIGHT = 40
@@ -154,7 +152,6 @@ def set_panel_visible(name, visible):
 _CLOSABLE_PANELS = {
     # Title: (class, position, icon)
     CONSOLE_TITLE: (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
-    AlARM_TITLE: (AlarmPanel, PanelAreaEnum.Middle, icons.alarmWarning)
 }
 
 _PANELS = {
