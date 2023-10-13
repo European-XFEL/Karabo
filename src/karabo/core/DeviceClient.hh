@@ -1446,7 +1446,12 @@ namespace karabo {
 
             void cacheAvailableInstances();
 
-            karabo::util::Hash prepareTopologyEntry(const std::string& instanceId,
+            /**
+             * Prepare a topology entry for the runtime system description
+             * @param path   the path created with <i>prepareTopologyPath</i> using instanceId and instanceInfo
+             * @param instanceInfo   The instanceInfo Hash received from the broadcast
+             */
+            karabo::util::Hash prepareTopologyEntry(const std::string& path,
                                                     const karabo::util::Hash& instanceInfo) const;
 
             std::string prepareTopologyPath(const std::string& instanceId,
