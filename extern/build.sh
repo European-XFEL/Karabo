@@ -204,7 +204,9 @@ download_latest_deps() {
     # Unpack
     tar -zxf $deps_file
     rm $deps_file
-    mv $deps_base_name $INSTALL_PREFIX
+    mkdir -p $INSTALL_PREFIX
+    mv -f $deps_base_name/* $INSTALL_PREFIX
+    rm -rf $deps_base_name
 
     # Adjust for the local environment
     echo "### Updating dependencies for the local environment... (this takes a while) ###"
