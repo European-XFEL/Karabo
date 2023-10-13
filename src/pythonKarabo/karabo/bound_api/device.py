@@ -461,7 +461,8 @@ class PythonDevice(NoFsm):
                       "on server '{0.serverid}', pid '{1}'.".format(self, pid))
 
         # Inform server that we are up - fire-and-forget is sufficient.
-        self._ss.call(self.serverid, "slotDeviceUp", self.deviceid)
+        self._ss.call(
+            self.serverid, "slotDeviceUp", self.deviceid, True, "success")
 
         # Trigger connection of input channels
         self._ss.connectInputChannels()
@@ -1857,7 +1858,7 @@ def launchPythonDevice():
 
     # NOTE: The first argument is '-c'
     _, modname, classid, cfgFile = tuple(sys.argv)
-    namespace = DEFAULT_NAMESPACE
+
     config = PythonDevice.loadConfiguration(cfgFile)
     if '_connection_' in config:
         # Inject broker connection parameters into PythonDevice class, so
@@ -1873,7 +1874,7 @@ def launchPythonDevice():
         # Also most logger settings are taken from server and not configurable:
         PythonDevice._loggerCfg = copy.copy(config['_logger_'])
         config.erase('_logger_')
-
+    namespace = DEFAULT_NAMESPACE
     if '_pluginNamespace_' in config:
         # get the namespace from the server if present
         namespace = str(config['_pluginNamespace_'])
@@ -1888,14 +1889,26 @@ def launchPythonDevice():
     deviceClass = entrypoint.load()
     assert deviceClass.__classid__ == classid
 
-    # Create device and prepare its initialisation
-    device = Configurator(PythonDevice).create(classid, config)
-
+    device = None
     exception = None
+    serverId = config["_serverId_"]
+    deviceId = config["_deviceId_"]
 
     def initialize():
-        nonlocal exception
+        nonlocal device, exception
         try:
+            # Create device and prepare its initialisation
+            try:
+                device = Configurator(PythonDevice).create(classid, config)
+            except Exception as e:
+                # create a signal slotable to act as a flight data recorder
+                # to inform the server that an exception occurred
+                # during __init__
+                fdr = SignalSlotable(deviceId)
+                fdr.start()
+                fdr.call(
+                    serverId, "slotDeviceUp", deviceId, False, str(e))
+                raise e
             device._finalizeInternalInitialization()
         except Exception as e:
             EventLoop.stop()
