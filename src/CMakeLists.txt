@@ -154,7 +154,11 @@ configure_file(
 )
 
 if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
-    enable_testing()
+
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+        enable_testing()
+    endif()
+
     if (GEN_CODE_COVERAGE)
         set(TEST_COVERAGE_TARGET "test_coverage_report")
         setup_target_for_coverage_lcov(
