@@ -168,6 +168,7 @@ namespace karabo {
             int m_delayOnInput;
 
             std::vector<MetaData> m_metaDataList;
+            std::vector<karabo::util::Hash::Pointer> m_dataList;
             std::multimap<std::string, unsigned int> m_sourceMap;
             std::multimap<unsigned long long, unsigned int> m_trainIdMap;
             std::map<unsigned int, MetaData> m_reverseMetaDataMap;
@@ -279,18 +280,39 @@ namespace karabo {
             /**
              * Read data from the InputChannel - to be called inside an InputHandler callback
              *
+             * Kept for backward compatibility only since internally the data is copied!
+             * Use one of the other read methods instead.
+             *
              * @param data reference that will hold the data
              * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request
-             * number of available tokens
+             *            number of available tokens
              * @return meta data associated to the data token. Lifetime of the object corresponds to live time of the
-             * InputHandler callback.
+             *         InputHandler callback.
              */
             const MetaData& read(karabo::util::Hash& data, size_t idx = 0);
 
+            /**
+             * Read data from the InputChannel - to be called inside an InputHandler callback
+             *
+             * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request
+             *            number of available tokens
+             * @return the data as a pointer
+             */
             karabo::util::Hash::Pointer read(size_t idx = 0);
 
+            /**
+             * Read data and meta data from the InputChannel - to be called inside an InputHandler callback
+             *
+             * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request
+             *            number of available tokens
+             * @param source reference that will hold the meta data
+             * @return the data as a pointer
+             */
             karabo::util::Hash::Pointer read(size_t idx, MetaData& source);
 
+            /**
+             * Number of data tokens - to be called inside an InputHandler callback
+             */
             size_t size();
 
             unsigned int getMinimumNumberOfData() const;
@@ -416,7 +438,7 @@ namespace karabo {
 
             void disconnectAll();
 
-            void prepareMetaData();
+            void prepareData();
         };
 
         class InputChannelElement {
