@@ -287,18 +287,22 @@ class JmsBroker(Broker):
                 callSlots.extend(
                     [(self.slots[s], s)
                      for s in slots.get("*", []) if s in self.slots])
-        except KeyError:
-
-            self.logger.exception("Slot does not exist")
+        except KeyError as e:
+            text = f"Slot does not exist: {e}"
+            self.logger.error(text)
+            exc = KaraboError(text).with_traceback(e.__traceback__)
+            self.replyException(message, exc)
             return
         try:
             for slot, name in callSlots:
                 slot.slot(slot, device, name, message, params)
-        except BaseException:
+        except BaseException as e:
             # the slot.slot wrapper should already catch all exceptions
             # all exceptions raised additionally are a bug in Karabo
-            self.logger.exception(
-                "Internal error while executing slot")
+            text = f"Internal error while executing slot: {e}"
+            self.logger.error(text)
+            exc = KaraboError(text).with_traceback(e.__traceback__)
+            self.replyException(message, exc)
 
     async def _stop_heartbeat(self):
         if self.heartbeat_task is not None:
