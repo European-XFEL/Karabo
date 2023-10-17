@@ -274,7 +274,7 @@ def test_restore_stream_topic(dialog):
     assert dialog.combo_name.currentText() == default_stream
     assert dialog.combo_topic.currentText() == default_topic
 
-    # When the stored topic doesn't exist select the first topic
+    # When the stored topic doesn't exist simply set the topic
     get_config()["logbook_topic"] = "Non Existing"
     dialog._event_destinations(h_list)
-    assert dialog.combo_topic.currentText() == topics2[0]
+    assert dialog.combo_topic.currentText() == "Non Existing"
