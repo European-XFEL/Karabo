@@ -125,6 +125,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # NOTE: Total number of cpp must not exceed 64 which is maximum number
         # of PropertyTest devices in one C++ process due to the size of the
         # static buffer on the Memory class
+        print("test_chain_receivers")
         apis = ["cpp", "cpp", "bound", "bound", "mdl", "mdl",
                 "cpp", "mdl", "bound"] * 14
         logLevel = 'FATAL'
@@ -371,6 +372,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
         given processing time (ms) where receiver is configured to make sender
         wait.
         """
+        print(f"1to1 wait: {sender_api} ({sender_freq} Hz) ==> "
+              f"{receiver_api} ({processing_time} ms processing).")
         sender_cfg = Hash("outputFrequency", sender_freq)
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
@@ -448,6 +451,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
         queue (and drop if queue full). But here nothing is dropped since
         the configured maximum queue length is longer than all we send.
         """
+        print(f"1to1 queueDrop: {sender_api} ({sender_freq} Hz) ==> "
+              f"{receiver_api} ({processing_time} ms processing).")
         sender_cfg = Hash("outputFrequency", sender_freq)
         if sender_api == "mdl":
             sender_cfg["output.maxQueueLength"] = 100
@@ -521,6 +526,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
         given processing time (ms) where receiver is configured to make sender
         drop.
         """
+        print(f"1to1 drop: {sender_api} ({sender_freq} Hz) ==> "
+              f"{receiver_api} ({processing_time} ms processing).")
         sender_cfg = Hash("outputFrequency", sender_freq)
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
