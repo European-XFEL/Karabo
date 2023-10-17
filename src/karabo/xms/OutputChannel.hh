@@ -97,7 +97,7 @@ namespace karabo {
              *
              *     instanceId (std::string)
              *     memoryLocation (std::string) [local/remote]
-             *     tcpChannel (karabo::net::Channel::Pointer)
+             *     tcpChannel (karabo::net::Channel::WeakPointer)
              *     onSlowness (std::string) [queue/drop/wait/throw]
              *     queuedChunks (std::deque<int>)
              *
@@ -125,15 +125,16 @@ namespace karabo {
             boost::mutex m_inputNetChannelsMutex;
             std::set<karabo::net::Channel::Pointer> m_inputNetChannels;
 
-            mutable boost::mutex m_registeredSharedInputsMutex;
+            mutable boost::mutex m_registeredInputsMutex;
             InputChannels m_registeredSharedInputs;
             // Used for storing chunks for shared input channels when
             // distribution mode is "load-balanced" and the strategy for
             // NoSharedInputChannel available is "queueDrop".
-            // Relies on lock protection using m_registeredSharedInputsMutex.
+            // Relies on lock protection using m_registeredInputsMutex.
             std::deque<int> m_sharedLoadBalancedQueuedChunks;
+            boost::function<void(const InputChannelInfo&)> m_doneBlockSharedHandler;
+            std::map<std::string, boost::function<void(const InputChannelInfo&)>> m_doneBlockHandlers;
 
-            mutable boost::mutex m_registeredCopyInputsMutex;
             InputChannels m_registeredCopyInputs;
 
             // m_shareNext could also be an unordered_set, but the deque allows a more uniform
@@ -142,11 +143,6 @@ namespace karabo {
             std::deque<std::string> m_shareNext;
 
             std::unordered_set<std::string> m_copyNext;
-
-            // The following two variables are only used in update() and methods called from that, i.e.
-            // registerWritersOnChunk(..), copy(.. ), and distribute(..), so they do not need any mutex protection.
-            bool m_toUnregisterSharedInput;
-            std::unordered_set<std::string> m_toUnregisterCopyInputs;
 
             mutable boost::mutex m_nextInputMutex;
 
@@ -158,7 +154,7 @@ namespace karabo {
             mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
             ShowStatisticsHandler m_showStatisticsHandler;
-            SharedInputSelector m_sharedInputSelector; // protected by m_registeredSharedInputsMutex
+            SharedInputSelector m_sharedInputSelector; // protected by m_registeredInputsMutex
             std::vector<karabo::util::Hash> m_connections;
             boost::asio::deadline_timer m_updateDeadline;
             int m_period;
@@ -273,11 +269,13 @@ namespace karabo {
              * @param data input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
              *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
-             *       See also the documentation of the safeNDArray flag of the update() method.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() or the callback of
+             *       asyncUpdate(cb) has been called. See also the documentation of the safeNDArray flag of the
+             *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
             void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool /*unused*/ = false);
 
@@ -289,11 +287,13 @@ namespace karabo {
              *
              * @param data input Hash object
              *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
-             *       See also the documentation of the safeNDArray flag of the update() method.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() or the callback of
+             *       asyncUpdate(cb) has been called. See also the documentation of the safeNDArray flag of the
+             *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
             void write(const karabo::util::Hash& data, bool /*unused*/ = false);
 
@@ -303,11 +303,13 @@ namespace karabo {
              * @param data shared pointer to input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
              *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
-             *       See also the documentation of the safeNDArray flag of the update() method.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() or the callback of
+             *       asyncUpdate(cb) has been called. See also the documentation of the safeNDArray flag of the
+             *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
 
@@ -317,11 +319,13 @@ namespace karabo {
              * name are used as data source.
              * @param data shared pointer to input Hash object
              *
-             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() has been called.
-             *       See also the documentation of the safeNDArray flag of the update() method.
+             * Note: Any NDArray/ImageData inside data must stay untouched at least until update() or the callback of
+             *       asyncUpdate(cb) has been called. See also the documentation of the safeNDArray flag of the
+             *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
@@ -335,30 +339,61 @@ namespace karabo {
              *                    data is queued or sent locally.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
             void update(bool safeNDArray = false);
+
+            /**
+             * Asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
+             * previously written by calling write(...).
+             *
+             * @param readyHandler callback when data (that is not queued) has been sent and thus even NDArray data
+             *                     inside it can be touched again (if safeNDArray is false, any data queued is copied)
+             * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
+             *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
+             *                    finished. Default is 'false', 'true' can avoid safety copies of NDArray content when
+             *                    data is queued or sent locally.
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             */
+            void asyncUpdate(boost::function<void()>&& readyHandler, bool safeNDArray = false);
 
             /**
              * Send end-of-stream (EOS) notification to all connected input channels to indicate a logical break
              * in the data stream.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called concurrently.
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
              */
             void signalEndOfStream();
+
+            /**
+             * Asynchonously send end-of-stream (EOS) notification to all connected input channels to indicate a logical
+             * break in the data stream.
+             *
+             * @param readyHandler callback when nootification has been sent or queued
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
+             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             */
+            void asyncSignalEndOfStream(boost::function<void()>&& readyHandler);
 
             void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
 
             void registerShowStatisticsHandler(const ShowStatisticsHandler& handler);
 
             /**
-             * Register handler that selects which of the connected input channels that have dataDistribution = "shared"
-             * is to be served.
+             * Register handler that selects which of the connected input channels that have dataDistribution =
+             * "shared" is to be served.
              *
-             * The handler will be called during update() with the ids of the connected "shared" input channels (e.g.
-             * "deviceId:input") as argument. The returned channel id will receive the data. If an empty string or an
-             * unknown id is returned, the data will be dropped.
+             * The handler will be called during update() with the ids of the connected "shared" input channels
+             * (e.g. "deviceId:input") as argument. The returned channel id will receive the data. If an empty
+             * string or an unknown id is returned, the data will be dropped.
              *
              * @param: selector takes vector<string> as argument and returns string
              */
@@ -381,8 +416,8 @@ namespace karabo {
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& channel,
                                   const karabo::util::Hash& message);
 
-            /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do not
-            /// close
+            /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do
+            /// not close
             void eraseOldChannel(InputChannels& channelContainer, const std::string& instanceId,
                                  const karabo::net::Channel::Pointer& newChannel) const;
 
@@ -395,15 +430,6 @@ namespace karabo {
             void triggerIOEvent();
 
             void onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error);
-
-            /**
-             * Send data to channel from queue
-             * @param channelInfo is all information about channel to sent data to
-             * @param chunkIds id queue to operate on (take from front)
-             * @param lock will be unlocked after operating on chunkIds, but before using sendOne(chunkId, channelInfo)
-             */
-            void sendFromQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds,
-                               boost::mutex::scoped_lock& lock);
 
             void pushShareNext(const std::string& instanceId);
 
@@ -435,61 +461,71 @@ namespace karabo {
              */
             void ensureValidChunkId();
 
-            void registerWritersOnChunk(unsigned int chunkId);
-
             void unregisterWriterFromChunk(int chunkId);
 
-            void distribute(unsigned int chunkId, bool safeNDArray);
-
             /**
-             * Distribute endOfStream notification to all shared inputs
+             * Figure out how to treat copy inputs, return via appending to reference arguments
              *
-             * Requires that m_registeredSharedInputsMutex is locked.
+             * Requires m_registeredInputsMutex to be locked
              */
-            void distributeEndOfStream(unsigned int chunkId);
-
+            void asyncPrepareCopy(unsigned int chunkId, std::vector<karabo::util::Hash*>& toSendImmediately,
+                                  std::vector<karabo::util::Hash*>& toQueue, std::vector<karabo::util::Hash*>& toBlock);
             /**
-             * Distribute according to registered shared input selector
+             * Figure out how to treat shared inputs, return via (appending to) reference arguments
              *
-             * @param chunkId which chunk to distribute
-             * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
-             *             and might get unlocked within function call (or not)
-             * @param safeNDArray if true, no need to copy NDArray buffer if chunk is queued or sent locally
+             * Requires m_registeredInputsMutex to be locked
              *
              */
-            void distributeSelected(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
+            void asyncPrepareDistribute(unsigned int chunkId, std::vector<karabo::util::Hash*>& toSendImmediately,
+                                        std::vector<karabo::util::Hash*>& toQueue,
+                                        std::vector<karabo::util::Hash*>& toBlock, bool& queue, bool& block);
+            /**
+             * Figure out how to send EndOfStream for shared outputs, return via reference arguments
+             *
+             * Requires m_registeredInputsMutex to be locked
+             *
+             * @returns whether to queue for shared queue
+             */
+            bool asyncPrepareDistributeEos(unsigned int chunkId, std::vector<karabo::util::Hash*>& toSendImmediately,
+                                           std::vector<karabo::util::Hash*>& toQueue,
+                                           std::vector<karabo::util::Hash*>& toBlock);
 
             /**
-             * Distribute in load balanced mode, i.e. pick one of the shared inputs that is ready
+             * Figure out how to treat shared inputs if sharedInputSelector is registered
              *
-             * @param chunkId which chunk to distribute
-             * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
-             *             and might get unlocked within function call (or not)
-             * @param safeNDArray if true, no need to copy NDArray buffer if chunk is queued or sent locally
+             * Requires m_registeredInputsMutex to be locked
              *
              */
-            void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock, bool safeNDArray);
-
+            void asyncPrepareDistributeSelected(unsigned int chunkId,
+                                                std::vector<karabo::util::Hash*>& toSendImmediately,
+                                                std::vector<karabo::util::Hash*>& toQueue,
+                                                std::vector<karabo::util::Hash*>& toBlock);
+            /**
+             * Figure out how to treat shared inputs when load-balancing
+             *
+             * Requires m_registeredInputsMutex to be locked
+             *
+             */
+            void asyncPrepareDistributeLoadBal(unsigned int chunkId,
+                                               std::vector<karabo::util::Hash*>& toSendImmediately,
+                                               std::vector<karabo::util::Hash*>& toQueue,
+                                               std::vector<karabo::util::Hash*>& toBlock, bool& queue, bool& block);
+            /**
+             * Helper to asyncronously send chunk data to channel in given channelInfo
+             *
+             * @param chunkId The chunk to send
+             * @param channelInfo Container with info about channel to send to
+             * @param doneHandler Callback when sending done or failed
+             */
+            void asyncSendOne(unsigned int chunkId, const InputChannelInfo& channelInfo,
+                              boost::function<void()>&& doneHandler);
 
             /**
-             * Serve all 'copy' input channels
+             * Helper for waiting for future that in case of long delay adds a thread to unblock
              *
-             * @param chunkId which chunk to send to them
-             * @param safeNDArray see documentation of update(bool safeNDArray)
+             * Throws TimeoutException if not unblocked after two minutes.
              */
-            void copy(unsigned int chunkId, bool safeNDArray);
-
-            /**
-             * Helper to send chunkId to input channel identified by channelInfo
-             *
-             * Either uses sendLocal or sendRemote
-             */
-            void sendOne(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool safeNDArray);
-
-            void sendLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos,
-                           bool safeNDArray);
-
-            void sendRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos);
+            void awaitUpdateFuture(std::future<void>& fut, const char* which);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
             std::string debugId() const;
