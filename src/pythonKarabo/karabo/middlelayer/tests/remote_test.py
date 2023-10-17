@@ -206,6 +206,11 @@ class Remote(Device):
         await sleep(0.05)
         self.incrementNumber += 1
 
+    @slot
+    def slotRemote(self, a, b, c):
+        """A slot that takes three arguments"""
+        return True
+
 
 class Local(Device):
 
@@ -253,6 +258,27 @@ class Local(Device):
         'setWait' as example from device_client interface
         """
         await setWait("remote", "string", stringValue)
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_call_remote(deviceTest):
+    success = await call("remote", "slotRemote", 1, 2, 3)
+    assert success
+    # Too many arguments
+    with pytest.raises(KaraboError) as exc:
+        await call("remote", "slotRemote", 1, 2, 3, 4)
+    text = "slotRemote() takes 4 positional arguments but 5 were given"
+    assert text in str(exc)
+    # not enough argument
+    with pytest.raises(KaraboError) as exc:
+        await call("remote", "slotRemote", 1, 2)
+    text = "slotRemote() missing 1 required positional argument"
+    assert text in str(exc)
+    # not available slot
+    with pytest.raises(KaraboError) as exc:
+        await call("remote", "slotRemoteNotThere", 1, 2)
+    assert "Slot does not exist" in str(exc)
 
 
 @pytest.mark.timeout(30)
