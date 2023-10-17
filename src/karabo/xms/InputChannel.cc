@@ -270,28 +270,24 @@ namespace karabo {
 
 
         const InputChannel::MetaData& InputChannel::read(karabo::util::Hash& data, size_t idx) {
-            Memory::read(data, idx, m_channelId, m_activeChunk);
+            data = *(m_dataList[idx]); // This is a copy (except for NDArray bulk data)!
             return m_metaDataList[idx];
         }
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx) {
-            karabo::util::Hash::Pointer hash(new karabo::util::Hash());
-            Memory::read(*hash, idx, m_channelId, m_activeChunk);
-            return hash;
+            return m_dataList[idx];
         }
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx, InputChannel::MetaData& metaData) {
-            auto hash = boost::make_shared<karabo::util::Hash>();
-            Memory::read(*hash, idx, m_channelId, m_activeChunk);
             metaData = m_metaDataList[idx];
-            return hash;
+            return m_dataList[idx];
         }
 
 
         size_t InputChannel::size() {
-            return Memory::size(m_channelId, m_activeChunk);
+            return m_dataList.size();
         }
 
 
@@ -626,7 +622,7 @@ namespace karabo {
                 // of the last output that sets treatEndOfStream = true overtakes  one of the earlier endOfStream calls.
                 // Then the overtaken one will set Memory::setEndOfStream(.., false) again and the endOfStream handler
                 // is not called. Unfortunately, that means we lock sometimes both, m_twoPotsMutex and
-                // m_outputChannelsMutex, but that fortunately does not harm. Instead of the the m_twoPotsMutex, one
+                // m_outputChannelsMutex, but that fortunately does not harm. Instead of the m_twoPotsMutex, one
                 // might consider to post onTcpChannelRead on the same strand as triggerIOEvent - anyway almost all of
                 // these functions is protected by that mutex...
                 boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
@@ -704,19 +700,23 @@ namespace karabo {
 
 
         /**
-         * Prepares metadata for the active chunk.
+         * Prepares data and metadata from the active chunk.
          *
-         * @details prepareMetaData assumes that it has exclusive access to the m_activeChunk member variable when it's
+         * @details prepareData assumes that it has exclusive access to the m_activeChunk member variable when it's
          * called. Is up to the caller to guarantee that assumption.
          */
-        void InputChannel::prepareMetaData() {
+        void InputChannel::prepareData() {
             m_metaDataList = Memory::getMetaData(m_channelId, m_activeChunk);
+            m_dataList.resize(m_metaDataList.size());
 
             m_sourceMap.clear();
             m_trainIdMap.clear();
             m_reverseMetaDataMap.clear();
             unsigned int i = 0;
             for (auto it = m_metaDataList.cbegin(); it != m_metaDataList.cend(); ++it) {
+                m_dataList[i] = boost::make_shared<Hash>();
+                // Memory::read will clear first argument before filling it again
+                Memory::read(*(m_dataList[i]), i, m_channelId, m_activeChunk);
                 m_sourceMap.emplace(it->getSource(), i);
                 m_trainIdMap.emplace(it->getTimestamp().getTrainId(), i);
                 m_reverseMetaDataMap.emplace(i, *it);
@@ -766,74 +766,64 @@ namespace karabo {
 
         void InputChannel::triggerIOEvent() {
             bool treatEndOfStream = false;
+            bool notifyForNextRead = false;
             {
                 boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
-                const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) +
-                                          ": triggerIOEvent) ");
 
                 // Cache need for endOfStream handling since cleared in clearChunkData
                 treatEndOfStream = Memory::isEndOfStream(m_channelId, m_activeChunk);
-                try {
-                    KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will prepare Metadata";
 
-                    prepareMetaData();
-                    if (m_dataHandler) {
-                        Hash data;
-                        for (size_t i = 0; i < this->size(); ++i) {
-                            read(data, i); // clears data internally before filling TODO: doc that all read(..) need
-                                           // 'active' mutex)
-                            // Note: Optimisation in GuiServerDevice::onNetworkData will cast const away from its 'data'
-                            // argument, apply std::move and (move-)assign it to another Hash to avoid copies of big
-                            // vectors (the data of an NDArray is anyway not copied, but shared...).
-                            // That is safe as long as this loop does nothing with 'data' after calling the data
-                            // handler.
-                            m_dataHandler(data, m_metaDataList[i]);
-                        }
-                    }
-                    if (m_inputHandler && size() > 0) { // size could be zero if only endOfStream
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Calling inputHandler";
-                        m_inputHandler(shared_from_this());
-                    }
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Exception in 'triggerIOEvent' for instance '" << m_instanceId
-                                               << "': " << e.what();
-                }
+                // Prepare data and meta data structures from data in the active chunk
+                prepareData();
 
-                // Whatever handlers (even none or one that throws): we are done with the data.
-                try {
-                    // Clear active chunk
-                    Memory::clearChunkData(m_channelId, m_activeChunk);
+                // Data is prepared, so prepare chunks for next round
+                Memory::clearChunkData(m_channelId, m_activeChunk);
 
-                    // Swap buffers
-                    KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will call swapBuffers after processing input";
-                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                    if (nInactiveData < this->getMinimumNumberOfData() &&
-                        !Memory::isEndOfStream(m_channelId, m_inactiveChunk)) {
-                        // Too early to process inactive Pot: has to reach minData
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId
-                                                   << "Too early to process inactive Pot: has to reach minData.";
-                    } else {
-                        std::swap(m_activeChunk, m_inactiveChunk);
-
-                        // After swapping the pots, the new active one is ready...
-                        m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
-                        // ...and the other one can be filled
-                        twoPotsLock.unlock(); // before synchronous write to Tcp
-                        notifyOutputChannelsForPossibleRead();
-                    }
-                } catch (const std::exception& ex) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "InputChannel::update exception -- " << ex.what();
+                // Swap buffers if so far inactive chunk is ready
+                KARABO_LOG_FRAMEWORK_TRACE << getInstanceId() << " Will call swapBuffers after processing input";
+                size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                if (nInactiveData < this->getMinimumNumberOfData() &&
+                    !Memory::isEndOfStream(m_channelId, m_inactiveChunk)) {
+                    // Too early to process inactive Pot: has to reach minData
+                    KARABO_LOG_FRAMEWORK_TRACE << getInstanceId()
+                                               << " Too early to process inactive Pot: has to reach minData.";
+                } else {
+                    std::swap(m_activeChunk, m_inactiveChunk);
+                    notifyForNextRead = true;
                 }
             }
 
-            // endOfStream handling if required - but after requesting more data and releasing m_twoPotsMutex
-            if (treatEndOfStream && m_endOfStreamHandler && m_respondToEndOfStream) {
-                try {
-                    m_endOfStreamHandler(shared_from_this());
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Exception from endOfStream handler for instance '" << m_instanceId
-                                               << "': " << e.what();
+            // Run handlers outside lock of m_twoPotsMutex, but be prepared for exceptions from external code
+            try {
+                if (m_inputHandler && m_dataList.size() > 0) { // size could be zero if only endOfStream
+                    KARABO_LOG_FRAMEWORK_TRACE << getInstanceId() << " Calling inputHandler";
+                    m_inputHandler(shared_from_this());
                 }
+                if (m_dataHandler) {
+                    KARABO_LOG_FRAMEWORK_TRACE << getInstanceId() << " Calling dataHandler: " << m_dataList.size()
+                                               << " items";
+                    for (size_t i = 0; i < m_dataList.size(); ++i) {
+                        // Note: Optimisation in GuiServerDevice::onNetworkData will cast const away from its 'data'
+                        // argument, apply std::move and (move-)assign it to another Hash to avoid copies of big
+                        // vectors (the data of an NDArray is anyway not copied, but shared...).
+                        // That is safe as long as after this loop nothing is done anymore with m_dataList.
+                        m_dataHandler(*(m_dataList[i]), m_metaDataList[i]);
+                    }
+                }
+                // endOfStream handling if required
+                if (treatEndOfStream && m_endOfStreamHandler && m_respondToEndOfStream) {
+                    m_endOfStreamHandler(shared_from_this());
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception from input/data/endOfStream handler for instance '"
+                                           << m_instanceId << "': " << e.what();
+            }
+
+            if (notifyForNextRead) {
+                // After swapping the pots, the new active one is ready...
+                m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                // ...and the other one can be filled
+                notifyOutputChannelsForPossibleRead();
             }
         }
 
