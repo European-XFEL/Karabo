@@ -30,6 +30,8 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+project(karabo-core)
+
 # Returns a list with all the paths in the input list modified so
 # the current value of CMAKE_PREFIX_PATH in the input path is replaced
 # with the string "${CMAKE_PREFIX_PATH}".
@@ -319,3 +321,10 @@ install(FILES "${CMAKE_BINARY_DIR}/karaboDependencies.pc"
 
 file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_VERSION})
 install(FILES "${CMAKE_BINARY_DIR}/VERSION" DESTINATION .)
+
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME) AND BUILD_UNIT_TESTING)
+    # Code path hit when compiling this subproject independently.
+    # Makes sure ctest is callable from CMAKE_BINARY_DIRECTORY in this case
+    enable_testing()
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests ${CMAKE_BINARY_DIR}/karabo/tests)
+endif()

@@ -31,11 +31,13 @@ project(
     LANGUAGES C CXX
 )
 
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    enable_testing()
+endif()
+
 include("../../cmake/cxx-options.cmake")
 include("../../cmake/karabo-lib-target-name.cmake")
 include("../../cmake/resolve-karabo-lib-target.cmake")
-
-enable_testing()
 
 find_library(CPPUNIT cppunit)
 
