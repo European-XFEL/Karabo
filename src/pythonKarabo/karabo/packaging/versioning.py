@@ -165,8 +165,6 @@ def svn_version(path, svn_cmd='svn'):
 # Define this where it can be imported.
 jsvn_version = partial(svn_version, svn_cmd='jsvn')
 
-GIT_DESCRIBE = 'git describe --tags --match "*.*.*" --dirty --long --always'
-
 
 class device_scm_version:
     """Backward compatible karabo device tags compliant to PEP440"""
@@ -180,6 +178,5 @@ class device_scm_version:
         in the setup function"""
         return {
             "root": self.root,
-            "git_describe_command": GIT_DESCRIBE,
-            "write_to": self.write_to
+            "write_to": self.write_to,
         }
