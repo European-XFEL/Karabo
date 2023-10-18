@@ -35,7 +35,9 @@ include("../cmake/cxx-options.cmake")
 include("../cmake/karabo-lib-target-name.cmake")
 include("../cmake/resolve-karabo-lib-target.cmake")
 
-enable_testing()
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    enable_testing()
+endif()
 
 find_library(CPPUNIT cppunit)
 
