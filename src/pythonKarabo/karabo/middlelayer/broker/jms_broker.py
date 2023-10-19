@@ -386,6 +386,7 @@ class JmsBroker(Broker):
             p["MQAckTimeout"] = 0
             try:
                 connection = openmq.Connection(p, "guest", "guest")
+                connection.url = hp
                 connection.start()
                 return connection
             except BaseException:
