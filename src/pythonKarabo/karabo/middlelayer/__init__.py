@@ -63,11 +63,12 @@ from .device_client import (
     findServers, getClasses, getClassSchema, getClients, getConfiguration,
     getConfigurationFromName, getConfigurationFromPast, getDescriptors,
     getDevice, getDevices, getHistory, getInstanceInfo, getLastConfiguration,
-    getProperties, getSchema, getSchemaFromPast, getServers, getTimeInfo,
-    getTopology, instantiate, instantiateFromName, instantiateNoWait, isAlive,
-    listConfigurationFromName, listDevicesWithConfiguration, lock,
-    saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
-    updateDevice, waitUntil, waitUntilNew, waitWhile)
+    getProperties, getSchema, getSchemaFromPast, getServers, getSystemInfo,
+    getTimeInfo, getTopology, instantiate, instantiateFromName,
+    instantiateNoWait, isAlive, listConfigurationFromName,
+    listDevicesWithConfiguration, lock, saveConfigurationFromName, setNoWait,
+    setWait, shutdown, shutdownNoWait, updateDevice, waitUntil, waitUntilNew,
+    waitWhile)
 from .device_interface import (
     listCameras, listDeviceInstantiators, listMotors, listMultiAxisMotors,
     listProcessors, listTriggers)
