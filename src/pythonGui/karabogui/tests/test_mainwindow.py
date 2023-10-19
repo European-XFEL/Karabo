@@ -61,3 +61,29 @@ def test_mainwindow(gui_app, mocker, subtests):
         mw._event_server_notification(data)
         assert mw.notification_banner.toPlainText() == ""
         assert mw.notification_banner.frameStyle() == QFrame.NoFrame
+
+
+def test_menu(gui_app):
+    from karabogui.mainwindow import MainWindow
+    main_window = MainWindow()
+    menu_bar = main_window.menuBar()
+
+    main_menus = [act.text() for act in menu_bar.actions()]
+    assert len(main_menus) == 6
+    assert main_menus == ["&File", "&Panels", "&Settings", "&Links",
+                          "&View", "&Help"]
+
+
+def test_help_menu(gui_app):
+    from karabogui.mainwindow import MainWindow
+    main_window = MainWindow()
+    menu_bar = main_window.menuBar()
+    help_menu = [action.menu() for action in menu_bar.actions() if
+                 action.text() == "&Help"][0]
+    assert help_menu
+    help_actions = help_menu.actions()
+    assert len(help_actions) == 6
+    expected = ["About", "About Qt", "Tips'N'Tricks", "Check for Updates",
+                "Check for Project Duplicates",
+                "Convert Numpy file to CSV file"]
+    assert expected == [action.text() for action in help_actions]
