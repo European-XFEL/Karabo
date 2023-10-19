@@ -186,6 +186,8 @@ class Properties(MutableMapping):
 
 
 class Connection:
+    url = None
+
     def __init__(self, properties, username, password, clientID=None):
         self.dll = _get_openmqc()
         self.handle = c_int()

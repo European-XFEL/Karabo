@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import getpass
 import os
 import socket
 from asyncio import sleep
@@ -273,6 +274,15 @@ class Device(InjectMixin, SignalSlotable):
         """
         return get_property_hash(self, info["paths"])
 
+    def __get_time_info(self):
+        """Internal method to get the time information"""
+        h = Hash("timeServerId", self.__timeServerId)
+        timestamp = get_timestamp().toDict()
+        reference = TimeMixin.toDict()
+        h.setElement("time", True, timestamp)
+        h.setElement("reference", True, reference)
+        return h
+
     @slot
     def slotGetTime(self, info=None):
         """Return the actual time information of this device
@@ -285,12 +295,15 @@ class Device(InjectMixin, SignalSlotable):
 
         This method has an empty input argument to allow a generic protocol.
         """
-        h = Hash("time", True)
-        h["time", ...] = get_timestamp().toDict()
-        h["timeServerId"] = self.__timeServerId
-        h["reference"] = True
-        h["reference", ...] = TimeMixin.toDict()
+        return self.__get_time_info()
 
+    @slot
+    def slotGetSystemInfo(self, info=None):
+        """Return the actual system information of this device"""
+        info = self.__get_time_info()
+        h = Hash("timeInfo", info)
+        h["broker"] = str(self._ss.connection.url)
+        h["user"] = getpass.getuser()
         return h
 
     def _checkLocked(self, message):
