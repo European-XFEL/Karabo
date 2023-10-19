@@ -21,14 +21,17 @@ import re
 import webbrowser
 from contextlib import contextmanager
 from datetime import datetime
+from pathlib import Path
 from tempfile import mkstemp
 from uuid import uuid4
 
+import numpy as np
 from dateutil.tz import tzlocal, tzutc
 from qtpy import QtCore
 from qtpy.QtCore import QEvent, QEventLoop, QObject, QSize, Qt
 from qtpy.QtGui import QCursor, QMovie, QValidator
-from qtpy.QtWidgets import QApplication, QDialog, QFileDialog, QLabel
+from qtpy.QtWidgets import (
+    QApplication, QDialog, QFileDialog, QLabel, QMessageBox)
 
 from karabo.native import Hash, decodeXML, writeXML
 from karabogui import const, icons, messagebox
@@ -431,3 +434,37 @@ def get_reason_parts(failure_reason):
             return msg, None
         else:
             return msg, failure_reason
+
+
+def convert_npy_to_csv(file_name, parent=None):
+    """
+    Convert the given file to csv.
+    param : file_name: File name as string. It has to be *.npy or *.npz
+    """
+    file_path = Path(file_name)
+    data = np.load(file_name)
+    csv_file_name = file_path.with_suffix(".csv")
+
+    if csv_file_name.exists():
+        text = (f"The file {csv_file_name} already exists. Do you want to "
+                f"overwrite the content?")
+        reply = QMessageBox(QMessageBox.Question, "File exists", text,
+                            QMessageBox.Yes | QMessageBox.Cancel,
+                            parent=parent).exec()
+        if reply != QMessageBox.Accepted:
+            return
+        csv_file_name.unlink()
+
+    if isinstance(data, np.ndarray):
+        np.savetxt(csv_file_name, data, fmt="%f", delimiter=",")
+    elif isinstance(data, np.lib.npyio.NpzFile):
+        with open(csv_file_name, "a") as csv_file:
+            for key, array in data.items():
+                csv_file.write(f"#{key}\n")
+                np.savetxt(csv_file, array, delimiter=",", fmt="%f")
+    else:
+        message = f"Incorrect numpy file: {file_name}"
+        messagebox.show_error(text=message, parent=parent)
+        return
+
+    return csv_file_name
