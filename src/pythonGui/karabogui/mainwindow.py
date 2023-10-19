@@ -22,6 +22,7 @@ import os.path
 import webbrowser
 from enum import Enum
 from functools import partial
+from pathlib import Path
 
 from qtpy.QtCore import QPoint, QSize, Qt, Slot
 from qtpy.QtGui import QColor
@@ -49,7 +50,8 @@ from karabogui.panels.api import (
 from karabogui.programs.register_protocol import register_protocol
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
-from karabogui.util import generateObjectName, process_qt_events
+from karabogui.util import (
+    convert_npy_to_csv, generateObjectName, getOpenFileName, process_qt_events)
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -511,6 +513,9 @@ class MainWindow(QMainWindow):
         self.acGrafana.triggered.connect(self.onGrafana)
         self.acGrafana.setCheckable(False)
 
+        self.acNpy2CSV = QAction("Convert Numpy file to CSV file", self)
+        self.acNpy2CSV.triggered.connect(self.onNumpyFileToCSV)
+
         self.acGuiDocumentation = QAction(
             icons.weblink, "GUI Documentation", self)
         self.acGuiDocumentation.triggered.connect(self.onGuiDocumentation)
@@ -589,6 +594,7 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
         mHelpMenu.addAction(self.acCheckProject)
+        mHelpMenu.addAction(self.acNpy2CSV)
 
     def _setupToolBar(self):
 
@@ -946,3 +952,20 @@ class MainWindow(QMainWindow):
         checked_action = self.access_level_actions.get(global_access_level)
         if checked_action is not None:
             checked_action.setChecked(True)
+
+    @Slot()
+    def onNumpyFileToCSV(self):
+        """Open a file dialog to select the numpy file and convert it to a csv
+        """
+        path = get_config()["data_dir"] or ""
+        directory = str(path) if Path(path).is_dir() else ""
+        file_name = getOpenFileName(
+            parent=self, caption="Select Numpy file", directory=directory,
+            filter="Plot Data  (*.npy *.npz)")
+        if file_name:
+            output_file = convert_npy_to_csv(file_name=file_name, parent=self)
+            if output_file is not None:
+                text = f"Converted to {output_file}"
+                messagebox.show_information(text=text, parent=self)
+
+            get_config()["data_dir"] = str(Path(file_name).parent)
