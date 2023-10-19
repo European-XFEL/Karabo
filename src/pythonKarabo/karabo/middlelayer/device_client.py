@@ -1167,6 +1167,19 @@ async def getTimeInfo(device):
     return ret
 
 
+@synchronize
+async def getSystemInfo(device):
+    """Retrieve the system information of a device `device`
+
+    :param device: deviceId or proxy
+    :returns: Hash with system information
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    ret = await get_instance().call(device, "slotGetSystemInfo", Hash())
+    return ret
+
+
 def isAlive(proxy):
     """Check whether a device represented by a proxy is still running"""
     assert isinstance(proxy, ProxyBase)
