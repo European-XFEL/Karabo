@@ -30,8 +30,9 @@ from karabo.middlelayer import (
     KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
     Timestamp, Unit, VectorFloat, VectorInt16, VectorString, background, call,
     connectDevice, disconnectDevice, execute, filterByTags, getDevice,
-    getInstanceInfo, getSchema, getTimeInfo, isAlive, isSet, lock, setNoWait,
-    setWait, slot, unit, updateDevice, waitUntil, waitUntilNew)
+    getInstanceInfo, getSchema, getSystemInfo, getTimeInfo, isAlive, isSet,
+    lock, setNoWait, setWait, slot, unit, updateDevice, waitUntil,
+    waitUntilNew)
 from karabo.middlelayer.logger import CacheLog
 from karabo.middlelayer.testing import (
     AsyncDeviceContext, assertLogs, run_test, sleepUntil)
@@ -1380,9 +1381,18 @@ async def test_archive_fails(deviceTest):
 @run_test
 async def test_timeinfo_device(deviceTest):
     info = await getTimeInfo("remote")
-    assert info["time"] is not None
     assert info["latency"] > 0
-    assert info["reference"] is not None
+    assert isinstance(Timestamp(info["time"]), Timestamp)
+    assert isinstance(Timestamp(info["reference"]), Timestamp)
+    assert info["timeServerId"] is not None
+
+    sys_info = await getSystemInfo("remote")
+    assert sys_info["broker"] is not None
+    assert sys_info["user"] is not None
+    timeinfo = sys_info["timeInfo"]
+    assert isinstance(Timestamp(timeinfo["time"]), Timestamp)
+    assert isinstance(Timestamp(timeinfo["reference"]), Timestamp)
+    assert timeinfo["timeServerId"] is not None
 
 
 @pytest.mark.timeout(30)
