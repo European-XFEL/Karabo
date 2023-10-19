@@ -36,6 +36,7 @@ if __name__ == '__main__':
         'license': "GPLv3+",
         'packages': find_packages(),
         'package_data': {
+            "karabogui.tests": ["data/*.npy", "data/*.npz"],
             "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabogui.configurator.dialog": ["*.ui"],
             "karabogui.controllers": ["*.ui", "display/ui/*.ui"],

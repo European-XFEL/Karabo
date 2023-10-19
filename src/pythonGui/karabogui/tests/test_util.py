@@ -14,14 +14,16 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+from pathlib import Path
 from unittest import main
 
+import numpy as np
 from qtpy.QtWidgets import QSlider, QSpinBox
 
 from karabogui.testing import GuiTestCase
 from karabogui.util import (
-    SignalBlocker, _get_invalid_chars, create_list_string, create_table_string,
-    qtversion_compatible, version_compatible)
+    SignalBlocker, _get_invalid_chars, convert_npy_to_csv, create_list_string,
+    create_table_string, qtversion_compatible, version_compatible)
 
 
 class TestUtilsGUI(GuiTestCase):
@@ -116,6 +118,45 @@ class TestUtilsGUI(GuiTestCase):
                        "<tr><td><b>1</b>:   </td><td>a</td></tr>" \
                        "<tr><td><b>2</b>:   </td><td>3</td></tr>" \
                        "</table>"
+
+
+TEST_DATA_DIR = Path(__file__).resolve().parent / "data"
+
+
+def test_npy2csv():
+    """Test conversion of numpy files - npy and npz- to csv file."""
+    # npy file.
+    input_file = TEST_DATA_DIR / "single_array.npy"
+    assert input_file.exists()
+    convert_npy_to_csv(input_file)
+    output_file = TEST_DATA_DIR / "single_array.csv"
+
+    x = np.arange(6.0000, dtype=float)
+    y = np.arange(1.0, 12.0, step=2.0, dtype=float)
+    expected = np.vstack((x, y))
+
+    data_from_csv = np.genfromtxt(output_file, delimiter=',')
+    np.testing.assert_array_equal(data_from_csv, expected)
+    Path(output_file).unlink()
+
+    # npz file.
+    input_file = TEST_DATA_DIR / "multiple_arrays.npz"
+    assert input_file.exists()
+    convert_npy_to_csv(input_file)
+    output_file = TEST_DATA_DIR / "multiple_arrays.csv"
+    data_from_csv = np.genfromtxt(output_file, delimiter=',')
+
+    x = np.arange(15.0, dtype=float)
+    y1 = np.arange(10.0, 151.0, step=10.0, dtype=float)
+    y2 = np.full(15, 10.0)
+    y3 = np.arange(15.0, dtype=float)
+    plot1 = np.vstack((x, y1))
+    plot2 = np.vstack((x, y2))
+    plot3 = np.vstack((x, y3))
+    expected = np.row_stack((plot1, plot2, plot3))
+
+    np.testing.assert_array_equal(data_from_csv, expected)
+    Path(output_file).unlink()
 
 
 if __name__ == "__main__":
