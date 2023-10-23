@@ -127,7 +127,7 @@ Please be aware that the central CI template utilizes pytest instead of nosetest
 Breaking Changes
 ++++++++++++++++
 
-- C++/Bound: The default value of the safeNDArray flag of the methods
+- Bound/C++: The default value of the safeNDArray flag of the methods
   Device.writeChannel and OutputChannel.update have been switched back to true
   for safety.
   On the other hand the copyAllData flag of OutputChannel.write is ignored now
@@ -141,14 +141,241 @@ Detailed Merge-Log
 MDL/Native core
 ===============
 
+- MDL: Timer can reference to an instance !7648
+- MDL: Increase timeout in pipeline test !7687
+- MDL: Take care of race condition when destructing device twice via signal slotable (garbage collector) !7697
+- MDL: Make project manager test more robust !7709
+- MDL: remove DeviceNode warning !7700
+- MDL: increase timeout in ipython_test !7705
+- MDL: Test inject options for strings with no defaultvalue !7711
+- MDL: Macros always have instance info status ok !7775
+- MDL: Describe output channel schema with displayType !7729
+- MDL: Delete macro_api namespace !7728
+- MDL: Remove Injectable from public namespace. !7736
+- MDL: Remove weakref example for localdevice !7738
+- MDL: Don't send instanceInfo via heartbeats !7708
+- MDL: Create instance task wrapper !7741
+- MDL: Remove DeviceClient project !7786
+- MDL: Make middlelayer a real package !7716
+- MDL: Provide slotGetSystemInfo. Closes #271 !7897
+- MDL: Fix slot reply for non existent slots or wrong parameters settings !7877
+- MDL: Macros don't append the class name to the deviceId !7876
+- MDL: Removal of scanning plugins for MDL. Closes #616 !7868
+- MDL: Use ignorelist instead of blacklist !7870
+- MDL: Provide conftest with event_loop fixture !7861
+- MDL: Remove pipeline "queue" option, silently converted to "queueDrop" !7841
+- MDL: Include ProxyFactory in namespace !7854
+- MDL: Template: remove email from toml !7847
+- MDL: Remove assert display type on pipeline schema !7864
+- MDL: Remove legacy alarm implementation !7790
+- MDL: Remove MQTT Broker implementation !7789
+- MDL: Increase timeout in device_server_test.py !7803
+- MDL: ConfigurationManager does not use runtime attributes anymore !7800
+- MDL: Remove flakyness for test_count for monitors !7806
+- MDL: Remove attr fast deepcopy and extract attribute modifications !7805
+- MDL: Cleanup eventloop implementations !7846
+- Common: Rename base64 image functions !7712
 
 Bound/cpp core
 ==============
 
 
+- Py11:  Completing Hash, Schema, time classes, etc. !7647
+- Py11: Binding for SignalSlotable... without IO channelsCloses #346 !7616
+- Py11: Binding for EventLoop !7623
+- Py11: Add SLOT_ELEMENT and unit tests for SignalSlotable !7621
+- Py11: Optimize castPySequenceToStdVector !7677
+- Py11 xms: pipeline schema elements"Closes #351 !7644
+- Py11: BYTEARRAY_ELEMENTCloses #421 !7680
+- Py11: Use call_once in FromNumpy singletonCloses #373 !7681
+- Py11: Check that all commented `allowedActions` are uncommented and correctly working."Closes #377 !7685
+- Py11: ndarray binding missing 'deepcopy'"Closes #372 !7686
+- Py11: karabo/io+net binding !7750
+- Py11: Test bindings of synchronous TCP read and write !7813
+- Py11: Logger binding !7767
+- Py11: Add tests (and fix) for async Tcp read/write and Broker bindingsCloses #557 !7829
+- Py11: Try to fix hanging test !7836
+- Py11: Add test for NDArray created on C++ side. Closes #376 !7688
+- C++: Little code cleaning !7723
+- C++: AmqpClient always uses configurable timeout !7720
+- C++ int. test: Try few times to get updates from influx !7725
+- C++ Data logging: Log everything received to stabilize  tests !7722
+- C++ int. tests: Longer timeout to instantiate logger/logreader devices !7734
+- C++ tests: Fix flakiness of xms tests !7739
+- C++: Move "activateKarabo.in". Distinct  "activate" for build tree. !7737
+- C++ tests: unify timeout !7643
+- C++: Shared pipeline with user defined distribution !7655
+- C++: Update doc of bind_weakAlso use `bind_weak` in pipeline selector test and clean `MetaTools_Test::testWeakBind`. !7656
+- C++/Influx: Fix reading of new schema if old schema was written pre-2.17.0 !7657
+- C++: Increase DeviceClient timeout !7695
+- C++ integration tests: Use AMQP brokerCloses #436 !7679
+- C++: Treat corner case of coincident reply arrival and timeout !7704
+- C++: Remove unused handler copy from AmqpBroker !7703
+- C++ test: Robuster SignalSlotable::testAutoConnectSlot !7670
+- C++: Do not run Karabo [un]subscribe handlers on AMQP event loopCloses #456 !7718
+- C++ template: set RPATH to be relative and include extern/lib64 directory !7678
+- C++: Update cmake external dependency from 3.17.5 to 3.27.1 !7755
+- C++: Use boost::beast directly for http(s) client (no Belle library) !7742
+- C++: Add "certify" header-only library dependency. !7771
+- C++: Async TCP writing of BufferSets !7810
+- C++: (Tcp)Channel cleaning* remove methods not in inherited interface !7821
+- C++ signalHeartbeat heartbeatInfo reduced to type, heartbeatInterval !7730
+- C++: heartbeatInterval type in heartbeatInfo corrected to to int !7828
+- C++: Minor cleaning, test timeout increase !7838
+- C++ Influx: Preserve schemas older than the database safe retention time. !7832
+- C++: Remove 'disributionMode' from OutputChannel behaviour for shared connections !7837
+- C++: Remove pipeline "queue" option, use "queueDrop" !7840
+- C++: Unit tests for HttpClient !7791
+- C++: Silent log message, only once ask for topology in gui server !7801
+- C++: InfluxDbClient instances with per slot lifetimes in InfluxLogReader. !7758
+- C++ Integration Test: Tweak Influx safe schema retention test timing. !7866
+- C++: Remove periodic scan of plugins by the DeviceServer. !7852
+- C++: Define common Influx constants in a single place. !7856
+- C++ Remove digit separator from numerical constants in header file(requires C++14). !7881
+- C++: Ensure that WriteCompleteHandler is called even if TcpChannel destructed !7857
+- C++: Protect from false instanceUpdate receival --- be verbose on faulty messages !7772
+- C++: Take care that InputChannel data handler are called without mutex lock !7894
+- C++: Asynchronous tcp when OutputChannel sends data !7858
+- C++/test: allow logs in C++ device integration tests !7867
+- C++/test: Add debug info to pipeline chain test !7689
+- C++: Remove Motor and Camera interface !7787
+- C++: Amqp with less copies of Hash for message header and body !7726
+- Bound: flake8 failure on modern flake8: del is not a function !7675
+- Bound: Longer timeout before restarting device with same id !7676
+- Bound: updateState with extra argumentsCloses #502 !7701
+- Bound: Pass cfg to device as binary - fixes vector string with comma in string !7817
+- Bound: Robust test of injected channels !7818
+- Bound: Bindings for OutputChannel.registerSharedInputSelector. Closes #583 !7834
+- Bound: use a toml instead of setup.py !7848
+- Bound: python server replies on errors on deviceinstantiation if it happens on the `__init__` stage. !7879
+- Bound/C++ tests: Need more wait to ensure pipeline connection !7641
+- Bound/C++: Describe output channel schema with displayType !7735
+- Bound/C++: Remove legacy alarm implementation !7774
+- Bound/C++: OutputChannel default safeNDArray flag back to false, ignore copyAllData !7661
+- Bound/C++: Remove InputChannel schema !7746
+- Bound/C++: Remove MQTT implementation and Redis !7788
+- Bound/C++: Remove DetectorGeometry !7785
+
+
 Graphical User Interface
 ========================
 
+- GUI: Fix levels dialog for floats !7607
+- GUI: Fix pyinstaller script including pyflakes !7665
+- GUI: Align single bit unit label and formatting !7663
+- GUI: Remove logging panel and subscribe logs !7673
+- GUI: Data Analysis Dialog from VectorXY Graph/Scatter.Closes #134 !7645
+- GUI: Remove attribute injection on project configuration !7672
+- GUI: Protect fitting in Data Analysis Dialog from no data !7692
+- GUI: Data Analysis Dialog: Implement Sech Square fitting optionCloses #453 !7698
+- GUI: Validate the order of the alarm conditionsCloses #505 !7706
+- GUI: KaraboLogBook preview !7684
+- GUI: Abstract more the logbook interface !7714
+- GUI: Remove comparison warning for base label with higher numpy version !7707
+- GUI: Provide karabo logbook icon !7715
+- GUI: Fix simple validator from corner case input 000X !7710
+- GUI: LogBook image preview !7717
+- GUI: Fit image to the LogbookView on opening the dialogCloses #518!7721
+- GUI: More abstraction on logbook panel info !7724
+- GUI: Disable logbook save button if no destinations available !7743
+- GUI: bugfix enable/disable save button correctly !7744
+- GUI: Initial parameters for fitting functions in Data Analysis Dialog. !7751
+- GUI: User friendly zooming on axis. Closes #35 !7777
+- GUI: Remove attributes from configurator !7778
+- GUI: KaraboLogBook - Table Preview. Closes #467 !7740
+- GUI: Upgrade pyqtgraph to latest version"Closes #361 !7792
+- GUI: Logbook Preview- annotate image !7763
+- GUI: Update Qt to 5.15.9 !7776
+- GUI: Attr fast deepcopy has no runtime attrs !7804
+- GUI: Do not allow set log values on X-axis in Bar Graph.Closes #572 !7809
+- GUI: Highlight filter search with changing color !7784
+- GUI: LogBook: grab pixmap from GraphicsScene. !7815
+- GUI: Option to change font for Text annotation in Logbook image preview. Closes #551 !7816
+- GUI: Logbook annotation: Don't loose drawing tool. !7819
+- GUI: Configurator Panel Search does not have validation !7824
+- GUI: Provide error message on missing scheduled big data request !7823
+- GUI: LogBook option to edit the titleCloses #578 !7827
+- GUI: Data Analysis Dialog should auto-update the plot. Closes #454 !7822
+- GUI: Vector XY Scatter Graph aligns to different sizes !7826
+- GUI: Option to change Pen color for Logbook image annotations. Closes #550 !7831
+- GUI: Account different vector sizes in vector xy graph !7825
+- GUI: Logbook - remove reference to eLog !7844
+- GUI: Synchronize scrollbars in configuration preview dialog. Closes #621 !7865
+- GUI: Preserve type for list edit dialog in comma separation !7814
+- GUI: Option to select topic from the stream in the Logbook dialog !7878
+- GUI: Preserve latest configuration for text edit in logbook dialog. Closes #579 !7851
+- GUI: Editing/Saving Macro throws traceback. Closes #164 !7835
+- GUI: Add string attribute icon !7794
+- GUI: ui changes in Logbook dialog !7885
+- GUI: Provide a repr for the ProjectPanel !7886
+- GUI: Provide a nice repr for the TopologyPanel !7887
+- GUI: Representation string for WidgetControllerPanel !7888
+- GUI: Repr for MacroPanel !7889
+- GUI: Representation for DeviceToplogy Panel !7890
+- GUI: remove alarm panel. Closes #574 !7882
+- GUI: Avoid test failure. !7891
+- GUI: Logbook dialog store the selected Stream name. !7883
+- GUI: Editable topics for logbook dialog !7896
+- GUI: npy, npz to csv converter tool. Closes #635 !7899
+- GUI: Color dialog hides the logbook dialog behind the main window. !7850
 
 Core Devices
 ============
+
+- Alarms: Remove AlarmService device !7691
+- Influx/C++: Avoid unneeded map look-ups in the log reader (review suggestion for MR 7657). !7659
+
+Dependencies, Documentation and Tools
+=====================================
+
+- DEPS: pkgconfig file patching should also include files that we build from sources, and not via conan. !7664
+- DEPS: Use pyexistdb instead of hand-patched eulexistdb !7667
+- DEPS: Upgrade to boost-1.82.0 !7666
+- DEPS: Update packages !7671
+- DEPS: Evaluate QScintilla update 2.14.0 Closes #434 !7699
+- DEPS: Upgrade pillow to 10.0 and pip to 22.3.1 !7702
+- DEPS: remove hdf5 as build dependency, cleanup resources directory !7768
+- DEPS: Fix for karaboPackageDependencies.pc !7795
+- DEPS: Remove h5py !7781
+- DEPS: move pillow into the --no-binary list of dependencies !7731
+- DEPS: copy certify headers when boost pkg is exported !7783
+- DEPS: remove manual patchelf build !7780
+- DEPS: simply use pre-built numpy/scipy !7872
+- DEPS: Do not build libzmq with CentOS-7 incompatible version of libsodium. !7875
+- DEPS: Pin jedi for autocompletion bug in ikarabo/ipythonCloses #630 !7880
+- DEPS: Remove MQTT and Redis dependencies !7799
+- DEPS: Remove certify dependency. !7808
+- DEPS: Add pytz dependency and rollback pyzmq to 22.3.0.. !7843
+- DEPS: Set KARABO variable for pkg-config in CMake template !7747
+- DOC: Document 2.18.0 !7650
+- DOC: Document: Removal of items move in 2.18 !7651
+- DOC: Emphasize removal of dependencies !7802
+- DOC: Document latest dependency updates !7693
+- DOC: Update build from sources document !7757
+- DOC: Unlink outdated text file data logging doc. Add content to current data logging doc. !7760
+- DOC: Document 2.17.1 !7782
+- DOC: Update versions of pytz and pyzmq dependencies in the documentation. !7845
+- DOC: Install miniconda using script. !7833
+- DOC: Document migration guidelines !7853
+- DOC: Add 2.19 to index !7855
+- DOC: Document 2.17.2 hotfix !7859
+- TOOLS: fix import check for . imports !7646
+- TOOLS: replace setup.py with pyproject.toml in MDL template !7694
+- TOOLS: bootstrap python using conan !7759
+- TOOLS: bootstrap cmake using conan !7764
+- TOOLS: move boost build into conanfile.txt !7766
+- TOOLS: Enter clang-precommit -i and karabind to the files !7773
+- TOOLS: move nss build to conanfile-bootstrap !7765
+- TOOLS: run pip install when pyproject.toml files present !7732
+- TOOLS: add pre-commit examples to device templates !7719
+- TOOLS: Fix for invalid zip when generating Karabo package. !7796
+- TOOLS: Improve Pybind11 requirement specification and update the CMake project. !7748
+- TOOLS: Cmake karaboPackageDependencies.pc now brings in patch level version as wellPut full version of karabo into its pkgconfig file !7830
+- TOOLS: Lint IntegrationTests Python !7862
+- TOOLS: Provide AutoPep8 in precommit !7863
+- TOOLS: Align device_scm_version with pep440 !7869
+- TOOLS: Align docs to markdown and remove os script !7871
+- TOOLS: Use default git describe command for versioning !7895
+- TOOLS: Remove alarm server from jms default eservicesCloses #580 !7884
+- TOOLS: CMake - `Framework/src/karabo` may be compiled in isolation !7893
+
