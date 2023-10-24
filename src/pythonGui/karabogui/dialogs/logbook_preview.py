@@ -312,7 +312,7 @@ class LogBookPreview(QDialog):
                                mode=Qt.KeepAspectRatio)
         pixmap.save(io_buffer, image_format)
         return {"data": create_base64image(image_format, image_byte),
-                "dataType": "image",
+                "dataType": "text_image",
                 "caption": self.caption_edit.toPlainText()}
 
     def _extract_panel_data(self):
