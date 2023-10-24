@@ -163,6 +163,8 @@ class LogBookPreview(QDialog):
 
         self.combo_name.currentTextChanged.connect(self._update_topics)
 
+        self.combo_title_style.currentTextChanged.connect(self._show_title)
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -256,6 +258,11 @@ class LogBookPreview(QDialog):
         topics = self._topics[text]
         self.combo_topic.addItems(topics)
 
+    @Slot(str)
+    def _show_title(self, text):
+        """Do not show the title widget when 'No title' option is selected """
+        index = 0 if text == "No title" else 1
+        self.title_stackedWidget.setCurrentIndex(index)
     # -----------------------------------------------------------------------
     # Internal Interface
 
@@ -322,15 +329,23 @@ class LogBookPreview(QDialog):
         panel = self.parent()
         stack = self.combo_datatype.currentText()
         info = {}
+        header_type = "none"
+
         title = self.title_line_edit.text().strip()
         if not title:
             title = repr(panel)
+
+        if self.combo_title_style.currentText() != "No title":
+            header_type = self.combo_title_style.currentText().lower()
+
         if stack == LOGBOOK_DATA:
             info["title"] = f"Data: {title}"
             info.update(self._extract_panel_data())
         elif stack == LOGBOOK_IMAGE:
             info["title"] = f"Image: {title}"
             info.update(self._extract_panel_image())
+
+        info["headerType"] = header_type
 
         return info
 
