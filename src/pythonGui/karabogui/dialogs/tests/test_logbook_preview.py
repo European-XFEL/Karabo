@@ -54,7 +54,7 @@ def test_image_preview(dialog, mocker):
         dialog.done(1)
         assert saveLogBook.call_count == 1
         _, args = saveLogBook.call_args
-        assert args["dataType"] == "image"
+        assert args["dataType"] == "text_image"
         assert args["title"] == TITLE.format("Image")
         assert args["data"].startswith("data:image/png;base64,")
         assert not args["caption"]
