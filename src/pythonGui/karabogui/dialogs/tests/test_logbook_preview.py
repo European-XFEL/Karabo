@@ -18,7 +18,7 @@ from karabogui.singletons.mediator import Mediator
 from karabogui.singletons.network import Network
 from karabogui.testing import get_simple_schema, singletons
 
-title = ("{}: <ConfigurationPanel proxy=<DeviceClassProxy classId=Simple "
+TITLE = ("{}: <ConfigurationPanel proxy=<DeviceClassProxy classId=Simple "
          "serverId=test_server>>")
 
 
@@ -50,11 +50,12 @@ def test_image_preview(dialog, mocker):
     network = Network()
     with singletons(network=network):
         saveLogBook = mocker.patch.object(network, "onSaveLogBook")
+        dialog.combo_title_style.setCurrentIndex(1)
         dialog.done(1)
         assert saveLogBook.call_count == 1
         _, args = saveLogBook.call_args
         assert args["dataType"] == "image"
-        assert args["title"] == title.format("Image")
+        assert args["title"] == TITLE.format("Image")
         assert args["data"].startswith("data:image/png;base64,")
         assert not args["caption"]
 
@@ -69,6 +70,8 @@ def test_logbook_table_preview(dialog, mocker):
     dialog._select_all()
     assert all([checkbox.isChecked() for checkbox in dialog.checkboxes])
 
+    dialog.combo_title_style.setCurrentIndex(1)
+
     network = Network()
     with singletons(network=network):
         saveLogBook = mocker.patch.object(network, "onSaveLogBook")
@@ -76,7 +79,7 @@ def test_logbook_table_preview(dialog, mocker):
         assert saveLogBook.call_count == 1
         _, args = saveLogBook.call_args
         assert args["dataType"] == "hash"
-        assert args["title"] == title.format("Data")
+        assert args["title"] == TITLE.format("Data")
         for item in ("foo", "bar", "charlie"):
             assert item in args["data"]
 
@@ -135,25 +138,34 @@ def test_title(dialog, mocker):
     network = Network()
     with singletons(network=network):
         saveLogBook = mocker.patch.object(network, "onSaveLogBook")
+        dialog.combo_title_style.setCurrentIndex(1)
         dialog.done(1)
         _, args = saveLogBook.call_args
-        assert (args["title"]) == f"Image: {default_title}"
+        assert args["title"] == TITLE.format("Image")
+        assert args["headerType"] == "bold"
 
         custom_title = "Configuration Panel"
         dialog.title_line_edit.setText(custom_title)
         dialog.done(1)
         _, args = saveLogBook.call_args
-        assert (args["title"]) == f"Image: {custom_title}"
+        assert args["title"] == f"Image: {custom_title}"
 
         # Table
         dialog.combo_datatype.setCurrentIndex(1)
+        dialog.combo_title_style.setCurrentIndex(2)
         dialog.done(1)
         _, args = saveLogBook.call_args
-        assert (args["title"]) == f"Data: {custom_title}"
+        assert args["title"] == f"Data: {custom_title}"
+        assert args["headerType"] == "expandable"
+
         dialog.title_line_edit.clear()
         dialog.done(1)
         _, args = saveLogBook.call_args
-        assert (args["title"]) == f"Data: {default_title}"
+        assert args["title"] == TITLE.format("Data")
+        dialog.combo_title_style.setCurrentIndex(0)
+        dialog.done(1)
+        _, args = saveLogBook.call_args
+        assert args["title"] == TITLE.format("Data")
 
 
 def test_toolbar(dialog):
