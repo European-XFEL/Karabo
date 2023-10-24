@@ -283,7 +283,7 @@ class SystemTreeView(QTreeView):
             actual = Timestamp.fromHashAttributes(reply["time", ...])
             attrs = {"instanceId": instanceId,
                      "Actual Timestamp": actual,
-                     "Actual Train Id": actual.tid}
+                     "Actual Timing Id": actual.tid}
 
             # Note: New protocol additions since 2.11
             if "timeServerId" in reply:
@@ -292,7 +292,7 @@ class SystemTreeView(QTreeView):
                 reference = Timestamp.fromHashAttributes(
                     reply["reference", ...])
                 attrs.update({"Last Tick Timestamp": reference,
-                              "Last Tick Train Id": reference.tid})
+                              "Last Tick Timing Id": reference.tid})
 
             self.popupWidget.setInfo(attrs)
             self.popupWidget.adjustSize()
