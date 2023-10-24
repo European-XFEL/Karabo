@@ -95,7 +95,6 @@ def test_logbook_table_preview(dialog, mocker):
 
 def test_save_button(dialog):
     """Test the enabled state of the Save button"""
-
     assert dialog.ok_button.text() == "Save"
     assert dialog.combo_datatype.currentText() == "Image"
     # Disabled when no proposals.
@@ -128,6 +127,10 @@ def test_save_button(dialog):
 
     # Disabled when no property is selected.
     dialog.checkboxes[0].setChecked(False)
+    assert not dialog.ok_button.isEnabled()
+
+    # Disabled when no topic is set
+    dialog.combo_topic.setCurrentText("")
     assert not dialog.ok_button.isEnabled()
 
 

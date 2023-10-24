@@ -164,6 +164,7 @@ class LogBookPreview(QDialog):
         self.combo_name.currentTextChanged.connect(self._update_topics)
 
         self.combo_title_style.currentTextChanged.connect(self._show_title)
+        self.combo_topic.currentTextChanged.connect(self._update_save_button)
 
     # -----------------------------------------------------------------------
     # Karabo Events
@@ -176,19 +177,23 @@ class LogBookPreview(QDialog):
                 "name" : Logbook identifier
                 "destination": Url or folder of the logbook.
         """
+        streams = []
         for index, proposal in enumerate(data):
             name = proposal.get("name")
+            streams.append(name)
             destination = proposal.get("destination")
             self._topics[name] = proposal.get("topics")
             self.combo_name.addItem(name)
             self.combo_name.setItemData(index, destination)
-        self.ok_button.setEnabled(bool(data))
 
+        # Only select the previous stream if available
         previous_stream = get_config()["logbook_stream"]
-        self.combo_name.setCurrentText(previous_stream)
+        if previous_stream in streams:
+            self.combo_name.setCurrentText(previous_stream)
 
-        previous_topic = get_config()["logbook_topic"]
+        previous_topic = get_config()["logbook_topic"] or "Logbook"
         self.combo_topic.setCurrentText(previous_topic)
+        self._update_save_button()
 
     # -----------------------------------------------------------------------
     # Qt Slots
@@ -223,13 +228,13 @@ class LogBookPreview(QDialog):
     def _select_all(self):
         for checkbox in self.checkboxes:
             checkbox.setChecked(True)
-        self.ok_button.setEnabled(bool(self.checkboxes))
+        self._update_save_button()
 
     @Slot()
     def _deselect_all(self):
         for checkbox in self.checkboxes:
             checkbox.setChecked(False)
-        self.ok_button.setEnabled(False)
+        self._update_save_button()
 
     @Slot(int)
     def _on_datatype_changed(self, index):
@@ -238,9 +243,16 @@ class LogBookPreview(QDialog):
 
     @Slot()
     def _update_save_button(self):
-        """Enable the Save button when at least one of the property is
-        selected and disable, otherwise.
-        For image preview , it is always enabled."""
+        """Enable the Save button. The button is disabled if
+
+        - no topic is provided
+        - dataType is hash and not at least one property is selected
+        """
+        topic = self.combo_topic.currentText()
+        if not topic:
+            self.ok_button.setEnabled(False)
+            return
+
         enabled = self.stackedWidget.currentWidget() == self.image_page
         if not enabled:
             enabled = any(checkbox.isChecked() for checkbox in self.checkboxes)
