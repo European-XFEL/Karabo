@@ -1,3 +1,4 @@
+import natsort
 from qtpy.QtCore import QModelIndex
 from traits.api import Undefined
 
@@ -54,6 +55,8 @@ def create_scene_info(panel):
     scene_view = panel.scene_view
     proxies = [proxy for proxy in scene_view.cached_proxies()
                if not isinstance(proxy.binding, NodeBinding)]
-    data = Hash({proxy.key: _friendly_repr(proxy.binding, proxy.value)
-                 for proxy in proxies})
+    data = Hash(natsort.natsorted(
+        {proxy.key: _friendly_repr(proxy.binding, proxy.value)
+         for proxy in proxies}.items()))
+
     return data
