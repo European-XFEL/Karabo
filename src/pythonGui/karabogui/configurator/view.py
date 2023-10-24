@@ -244,7 +244,7 @@ class ConfigurationTreeView(QTreeView):
             info['Tags'] = ", ".join(attributes.get(KARABO_SCHEMA_TAGS))
         if binding.timestamp is not None:
             info['Timestamp'] = binding.timestamp.toLocal()
-            info['Train Id'] = binding.timestamp.tid
+            info['Timing Id'] = binding.timestamp.tid
         display_type = binding.display_type
         if display_type and display_type.startswith('bin|'):
             info['Bits'] = display_type[4:]
