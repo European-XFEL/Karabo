@@ -54,7 +54,8 @@ def create_scene_info(panel):
     """Create the logbook info for the scene panel"""
     scene_view = panel.scene_view
     proxies = [proxy for proxy in scene_view.cached_proxies()
-               if not isinstance(proxy.binding, NodeBinding)]
+               if not isinstance(proxy.binding,
+                                 (NodeBinding, _RECURSIVE_BINDINGS))]
     data = Hash(natsort.natsorted(
         {proxy.key: _friendly_repr(proxy.binding, proxy.value)
          for proxy in proxies}.items()))
