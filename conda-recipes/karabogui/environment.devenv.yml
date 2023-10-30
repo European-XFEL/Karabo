@@ -59,6 +59,7 @@ dependencies:
   - python-dateutil=2.8.1
   - jupyter_client=6.0.0
   - conda
+  - pyyaml=6.0.1
   - pint=0.17
 
 environment:
