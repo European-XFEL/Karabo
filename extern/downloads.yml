@@ -2,7 +2,3 @@ daemontools:
     source: https://github.com/tecki/daemontools-encore/archive/refs/heads/master.zip
     source_format: zip
     target: daemontools-encore-1.11-karabo3.tar
-log4cpp:
-    source: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/log4cpp/1.1.3-3/log4cpp_1.1.3.orig.tar.gz
-    source_format: tar.gz
-    target: log4cpp-1.1.3.tar
