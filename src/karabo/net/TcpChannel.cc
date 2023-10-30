@@ -1171,7 +1171,7 @@ namespace karabo {
 
         void TcpChannel::writeAsyncHash(const Hash& hash, const Channel::WriteCompleteHandler& handler) {
             try {
-                boost::shared_ptr<std::vector<char>> dataPtr(new std::vector<char>());
+                auto dataPtr(boost::make_shared<std::vector<char>>());
                 this->prepareDataFromHash(hash, dataPtr);
                 this->writeAsyncVectorPointer(dataPtr, handler);
             } catch (...) {
@@ -1236,7 +1236,7 @@ namespace karabo {
                                                      const Channel::WriteCompleteHandler& handler) {
             try {
                 if (!data) throw KARABO_PARAMETER_EXCEPTION("Input parameter dataPtr is uninitialized shared pointer.");
-                boost::shared_ptr<std::vector<char>> headerPtr(new std::vector<char>());
+                auto headerPtr(boost::make_shared<std::vector<char>>());
                 this->prepareDataFromHash(header, headerPtr);
                 writeAsyncHeaderBodyImpl(headerPtr, data, handler);
             } catch (...) {
@@ -1248,7 +1248,7 @@ namespace karabo {
         void TcpChannel::writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& hash,
                                             const WriteCompleteHandler& handler) {
             try {
-                boost::shared_ptr<std::vector<char>> dataPtr(new std::vector<char>());
+                auto dataPtr(boost::make_shared<std::vector<char>>());
                 this->prepareDataFromHash(hash, dataPtr);
                 this->writeAsyncHashVectorPointer(header, dataPtr, handler);
             } catch (...) {
