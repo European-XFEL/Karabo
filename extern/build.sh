@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 # dependencies located in extern/resources/. to manually compile and install
-DEPENDENCIES_BASE=( daemontools log4cpp openmq openmqc  )
+DEPENDENCIES_BASE=( daemontools openmq openmqc  )
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
@@ -36,6 +36,7 @@ PYTHON_VERSION=3.8.16
 PYTHON_PATH_VERSION=3.8
 CONAN_RECIPE_CHANNEL=py38
 BOOST_VERSION=1.82.0
+LOG4CPP_VERSION=1.1.3
 CPP_STD_LIB_VERSION=c++11
 CPP_STD=14
 
@@ -486,8 +487,11 @@ install_from_deps() {
         # create default build profile
         safeRunCommandQuiet "conan profile new default --detect --force"
 
-        # boost package opts
-        local package_opts="./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+        # export local log4cpp recipe
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py log4cpp/$LOG4CPP_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+        # export local boost recipe
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
@@ -496,8 +500,6 @@ install_from_deps() {
         # apply custom profile on top of default profile
         local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
 
-        # copy conan recipe from extern/resources/boost to local conan cache
-        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export $package_opts"
         # install packages listed in the extern/conanfile.txt
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
 
