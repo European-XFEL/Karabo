@@ -140,11 +140,9 @@ namespace karabo {
             // m_shareNext could also be an unordered_set, but the deque allows a more uniform
             // distribution of work in the load-balanced case, even in the presence of a fast
             // enough input channel that could, potentially, handle all the load by itself.
+            // Both need protection of m_registeredInputsMutex.
             std::deque<std::string> m_shareNext;
-
             std::unordered_set<std::string> m_copyNext;
-
-            mutable boost::mutex m_nextInputMutex;
 
             unsigned int m_channelId;
             unsigned int m_chunkId;
@@ -431,20 +429,53 @@ namespace karabo {
 
             void onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error);
 
+            /**
+             * Helper to indicate that given shared input is ready to receive more data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             */
             void pushShareNext(const std::string& instanceId);
 
+            /**
+             * Helper to provide id of shared input that is ready to receive more data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             */
             std::string popShareNext();
 
+            /**
+             * Helper to tell whether none of the shared inputs is ready to receive more data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             */
             bool isShareNextEmpty() const;
 
+            /**
+             * Helper to query whether given shared input is ready to receive more data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             */
             bool hasSharedInput(const std::string& instanceId);
 
+            /**
+             * Helper to indicate that given shared input is currently not ready to receive more data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             */
             void eraseSharedInput(const std::string& instanceId);
 
-            void pushCopyNext(const std::string& info);
+            /**
+             * Helper to indicate that given copy input is ready to receive more data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             */
+            void pushCopyNext(const std::string& instanceId);
 
             /**
              * Erase instance from container of copy channels that are ready to receive data
+             *
+             * Requires m_registeredInputsMutex to be locked
+             *
              * @param instanceId
              * @return whether instanceId could be removed (i.e. was actually ready to receive)
              */
