@@ -34,9 +34,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
     def test_1to1(self):
         # Start all servers you need in the end:
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        self.start_server_num("mdl", 1)
+        logLevel = 'FATAL'
+        self.start_server_num("cpp", 1, logLevel=logLevel)
+        self.start_server_num("bound", 1, logLevel=logLevel)
+        self.start_server_num("mdl", 1, logLevel=logLevel)
 
         self._main_test_1to1_wait_fastReceiver()
         self._main_test_1to1_wait_slowReceiver()
