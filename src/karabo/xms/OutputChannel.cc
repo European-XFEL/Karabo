@@ -688,8 +688,8 @@ namespace karabo {
                     m_sharedLoadBalancedQueuedChunks.pop_front();
                     return;
                 }
-                lock.unlock();
                 pushShareNext(instanceId);
+                lock.unlock(); // before calling registered handler in triggerIOEvent
                 KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " New (shared) input on instance " << instanceId
                                            << " available for writing ";
                 this->triggerIOEvent(); // now could also come for EOS...
@@ -717,10 +717,8 @@ namespace karabo {
                     queue.pop_front();
                     return;
                 }
-                // Be safe and unlock before pushCopyNext locks another mutex.
-                // One also never knows what handlers are registered for io event...
-                lock.unlock();
                 pushCopyNext(instanceId);
+                lock.unlock(); // One never knows what handlers are registered for io event...
                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " New (copied) input on instance " << instanceId
                                            << " available for writing ";
                 this->triggerIOEvent();
@@ -860,7 +858,6 @@ namespace karabo {
 
 
         void OutputChannel::pushShareNext(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
             if (std::find(m_shareNext.begin(), m_shareNext.end(), instanceId) == m_shareNext.end()) {
                 m_shareNext.push_back(instanceId);
             }
@@ -868,41 +865,35 @@ namespace karabo {
 
 
         std::string OutputChannel::popShareNext() {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
             if (m_shareNext.empty()) {
                 throw KARABO_LOGIC_EXCEPTION("No shared input ready to pop its id.");
             }
-            std::string info = m_shareNext.front();
+            std::string info = std::move(m_shareNext.front());
             m_shareNext.pop_front();
             return info;
         }
 
         bool OutputChannel::isShareNextEmpty() const {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
             return m_shareNext.empty();
         }
 
         bool OutputChannel::hasSharedInput(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
             return (std::find(m_shareNext.begin(), m_shareNext.end(), instanceId) != m_shareNext.end());
         }
 
 
         void OutputChannel::eraseSharedInput(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
             auto it = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
             if (it != m_shareNext.end()) m_shareNext.erase(it);
         }
 
 
-        void OutputChannel::pushCopyNext(const std::string& info) {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
-            m_copyNext.insert(info);
+        void OutputChannel::pushCopyNext(const std::string& instanceId) {
+            m_copyNext.insert(instanceId);
         }
 
 
         bool OutputChannel::eraseCopyInput(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
             return (m_copyNext.erase(instanceId) > 0);
         }
 
