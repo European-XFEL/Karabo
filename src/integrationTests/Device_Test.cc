@@ -430,7 +430,7 @@ void Device_Test::appTestRunner() {
 
     // Now all possible individual tests.
     testInstanceInfoServer();
-    testGetTimestamp();
+    testGetTimestampSystemInfo();
     testSchemaInjection();
     testSchemaWithAttrUpdate();
     testSchemaWithAttrAppend();
@@ -483,7 +483,10 @@ void Device_Test::testInstanceInfoServer() {
     std::clog << "OK." << std::endl;
 }
 
-void Device_Test::testGetTimestamp() {
+
+void Device_Test::testGetTimestampSystemInfo() {
+    std::clog << "Testing timeInfo and systemInfo for device: " << std::flush;
+
     // This tests the extrapolations done in Device::getTimestamp(Epochstamp& epoch)
     // and Device::slotGetTime().
 
@@ -537,6 +540,17 @@ void Device_Test::testGetTimestamp() {
     CPPUNIT_ASSERT_EQUAL(startId, refStamp.getTrainId());
     CPPUNIT_ASSERT_EQUAL(seconds, refStamp.getSeconds());
     CPPUNIT_ASSERT_EQUAL(fracAttoSecs, refStamp.getFractionalSeconds());
+
+    Hash systemHash;
+    CPPUNIT_ASSERT_NO_THROW(
+          sigSlotA->request("TestDevice", "slotGetSystemInfo", Hash()).timeout(timeOutInMs).receive(systemHash));
+    CPPUNIT_ASSERT_EQUAL(systemHash.has("timeInfo"), true);
+    timeHash = systemHash.get<Hash>("timeInfo");
+    CPPUNIT_ASSERT_EQUAL(systemHash.has("user"), true);
+    CPPUNIT_ASSERT_EQUAL(systemHash.has("broker"), true);
+    CPPUNIT_ASSERT_EQUAL(timeHash.has("reference"), true);
+    CPPUNIT_ASSERT_EQUAL(timeHash.has("time"), true);
+    CPPUNIT_ASSERT_EQUAL(timeHash.has("timeServerId"), true);
 
     // ...and test real calculations of id
     // 1) exact match
@@ -599,6 +613,8 @@ void Device_Test::testGetTimestamp() {
                                   .timeout(timeOutInMs)
                                   .receive(id));
     CPPUNIT_ASSERT_EQUAL(0ull, id);
+
+    std::clog << "OK." << std::endl;
 }
 
 
