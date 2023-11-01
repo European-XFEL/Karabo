@@ -30,6 +30,7 @@
 #include "AlarmConditions.hh"
 #include "Epochstamp.hh"
 #include "FromLiteral.hh"
+#include "Hash.hh"
 #include "NDArray.hh"
 #include "Schema.hh"
 #include "State.hh"
@@ -42,8 +43,12 @@ using std::set;
 using std::string;
 using std::vector;
 
+
 namespace karabo {
     namespace util {
+
+        static bool isOutputChannelSchema(const karabo::util::Hash::Node& n);
+        static bool onlyContainsEmptyHashLeafs(const karabo::util::Hash::Node& n);
 
         Validator::Validator()
             : m_injectDefaults(true),
@@ -207,6 +212,27 @@ namespace karabo {
                         this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
+                    // This block of code is here to sneak in the rule that we
+                    // do not want the pipeline channel to have the schema field
+                    // included in its validated configuration.
+                    if (isOutputChannelSchema(*it)) {
+                        working.set(key, Hash());
+                        // Having an output.schema/output.schema.A.B...X entry in user's configuration
+                        // hash is allright as long as the leaf node ends in an empty Hash.
+                        //
+                        // FIXME: This exception is a workaround for issue mentioned in:
+                        // https://git.xfel.eu/Karabo/Framework/-/merge_requests/7892#note_403479
+                        bool userHashHasOutputSchemaEntries =
+                              (userHasNode && !onlyContainsEmptyHashLeafs(user.getNode(key)));
+
+                        if (userHashHasOutputSchemaEntries) {
+                            report << "Configuring output channel schema is not allowed: '" << currentScope << "'"
+                                   << std::endl;
+                        }
+                        return; // exit because we do not want to process/care about
+                                // children of output channel's schema node.
+                    }
+
                     if (hasClassAttribute && it->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID) == "Slot") {
                         // Slot nodes should not appear in the validated output nor in the input.
                         // Tolerate empty node input for backward compatibility, though.
@@ -761,5 +787,32 @@ namespace karabo {
             return stats->second;
         };
 
+
+        // The schema field of a output pipeline channel is identified with the OutputSchema tag.
+        bool isOutputChannelSchema(const karabo::util::Hash::Node& n) {
+            if (n.hasAttribute(KARABO_SCHEMA_DISPLAY_TYPE)) {
+                const auto& displayType = n.getAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE);
+                if (displayType == "OutputSchema") {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Recursively checks if the given node strictly contains Hash nodes
+         * which ultimately ends in an empty Hash leaf.
+         */
+        bool onlyContainsEmptyHashLeafs(const karabo::util::Hash::Node& node) {
+            if (!node.is<Hash>()) {
+                return false;
+            }
+            for (auto& it : node.getValue<Hash>()) {
+                if (!onlyContainsEmptyHashLeafs(it)) {
+                    return false;
+                }
+            }
+            return true;
+        }
     } // namespace util
 } // namespace karabo
