@@ -30,6 +30,7 @@
 
 #include "karabo/util/AlarmConditionElement.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/NodeElement.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StateElement.hh"
@@ -37,6 +38,7 @@
 #include "karabo/util/TableElement.hh"
 #include "karabo/util/Validator.hh"
 #include "karabo/util/VectorElement.hh"
+#include "karabo/xms/OutputChannel.hh"
 #include "karabo/xms/SlotElement.hh"
 
 using namespace karabo;
@@ -470,4 +472,91 @@ void Validator_Test::testLeafAssignmentInternal() {
     CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
     CPPUNIT_ASSERT(validated.has("boolProperty"));
     CPPUNIT_ASSERT(validated.get<bool>("boolProperty"));
+}
+
+
+void Validator_Test::testOutputChannelSchemaRemoval() {
+    util::Schema schema;
+    util::Schema channelSchema;
+
+    util::BOOL_ELEMENT(channelSchema)
+          .key("boolProperty")
+          .displayedName("Bool property")
+          .description("A bool property")
+          .init()
+          .assignmentInternal()
+          .defaultValue(false)
+          .commit();
+
+    util::NODE_ELEMENT(channelSchema).key("node").commit();
+
+    util::BOOL_ELEMENT(channelSchema)
+          .key("node.boolProperty")
+          .displayedName("Bool property")
+          .description("A bool property")
+          .init()
+          .assignmentInternal()
+          .defaultValue(false)
+          .commit();
+
+    util::NODE_ELEMENT(channelSchema).key("emptyNode").commit();
+
+    xms::OUTPUT_CHANNEL(schema)
+          .key("outputChannel")
+          .displayedName("tcp pipe")
+          .description("a test output channel")
+          .dataSchema(channelSchema)
+          .commit();
+
+    util::Validator validator;
+    util::Hash validated;
+
+    auto res = validator.validate(schema, util::Hash(), validated);
+
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
+    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+
+    // Test to set a parameter with assignment internal
+    validated.clear();
+    res = validator.validate(schema, util::Hash("outputChannel.schema.boolProperty", true), validated);
+
+    CPPUNIT_ASSERT_MESSAGE(res.second, !res.first); // fails because configuring schema of
+                                                    // outputChannel is not allowed
+
+    validated.clear();
+    res = validator.validate(schema, util::Hash("outputChannel.schema.node.boolProperty", true), validated);
+
+    CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+
+    // This accomodates case where user configuration has an empty
+    // hash for outputChannel.schema
+    validated.clear();
+    res = validator.validate(schema, util::Hash("outputChannel.schema", util::Hash()), validated);
+
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
+    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+
+    // This accomodates special case: presence of outputChannel.schema.A.B.C in
+    // configuration schema. FIXME: we should not have to support this case once
+    // this behavior is corrected in code later on.
+    validated.clear();
+    res = validator.validate(
+          schema,
+          util::Hash("outputChannel.schema.node", util::Hash(), "outputChannel.schema.nonexistent", util::Hash()),
+          validated);
+
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first); // "special" case exception
+    CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
+    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+
+    validated.clear();
+    res = validator.validate(
+          schema, util::Hash("outputChannel.schema.node", util::Hash(), "outputChannel.schema.boolProperty", true),
+          validated);
+
+    CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
+    CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
+    CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
 }
