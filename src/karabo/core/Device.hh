@@ -1840,6 +1840,8 @@ namespace karabo {
                 KARABO_SLOT(slotClearLock);
 
                 KARABO_SLOT(slotGetTime, karabo::util::Hash /* UNUSED */);
+
+                KARABO_SLOT(slotGetSystemInfo, karabo::util::Hash /* UNUSED */);
             }
 
             /**
@@ -2209,6 +2211,30 @@ namespace karabo {
             }
 
             /**
+             * Internal method to retrieve time information of this device.
+             */
+            karabo::util::Hash getTimeInfo() {
+                using namespace karabo::util;
+                Hash result;
+
+                Hash::Node& node = result.set("time", true);
+                const Timestamp stamp(getActualTimestamp());
+                stamp.toHashAttributes(node.getAttributes());
+
+                result.set("timeServerId", m_timeServerId.empty() ? "None" : m_timeServerId);
+
+                Hash::Node& refNode = result.set("reference", true);
+                auto& attrs = refNode.getAttributes();
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    const Epochstamp epoch(m_timeSec, m_timeFrac);
+                    const Trainstamp train(m_timeId);
+                    const Timestamp stamp(epoch, train);
+                    stamp.toHashAttributes(attrs);
+                }
+                return result;
+            }
+            /**
              * Returns the actual time information of this device.
              *
              * @param info an unused (at least for now) Hash parameter that
@@ -2225,26 +2251,28 @@ namespace karabo {
              *     timestamp information received from the timeserver.
              */
             void slotGetTime(const karabo::util::Hash& /* unused */) {
+                const karabo::util::Hash result(this->getTimeInfo());
+                reply(result);
+            }
+            /**
+             * Returns the actual system information of this device.
+             *
+             * @param info an unused (at least for now) Hash parameter that
+             *        has been added to fit the generic slot call
+             *        (Hash in, Hash out) of the GUI server/client protocol.
+             *
+             * This slot reply is a Hash with the following keys:
+             *   - ``user`` the actual user running this device
+             *   - ``broker`` the current connected broker node
+             *
+             * and all keys provided by ``slotGetTime``.
+             */
+            void slotGetSystemInfo(const karabo::util::Hash& /* unused */) {
                 using namespace karabo::util;
-
-                karabo::util::Hash result;
-
-                karabo::util::Hash::Node& node = result.set("time", true);
-                const karabo::util::Timestamp stamp(getActualTimestamp());
-                stamp.toHashAttributes(node.getAttributes());
-
-                result.set("timeServerId", m_timeServerId.empty() ? "None" : m_timeServerId);
-
-                Hash::Node& refNode = result.set("reference", true);
-                auto& attrs = refNode.getAttributes();
-                {
-                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
-                    const Epochstamp epoch(m_timeSec, m_timeFrac);
-                    const Trainstamp train(m_timeId);
-                    const Timestamp stamp(epoch, train);
-                    stamp.toHashAttributes(attrs);
-                }
-
+                Hash result("timeInfo", this->getTimeInfo());
+                result.set("broker", m_connection->getBrokerUrl());
+                auto user = getlogin(); // Little caveat: getlogin() is a Linux function
+                result.set("user", (user ? user : "none"));
                 reply(result);
             }
         };
