@@ -14,6 +14,7 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import inspect
 from unittest import main, mock
 
 from karabo.common.project.api import MacroModel, ProjectModel, write_macro
@@ -184,7 +185,7 @@ class TestRequestModule(GuiTestCase):
                 scene = SceneModel(simple_name="NewScene")
                 payload = Hash("success", True, "data", write_scene(scene))
                 reply = Hash("payload", payload)
-                request = Hash("token", token)
+                request = Hash("token", token, "args", Hash())
 
                 path = "karabogui.request.broadcast_event"
                 with mock.patch(path) as broadcast:
@@ -229,6 +230,45 @@ class TestRequestModule(GuiTestCase):
 
                 # No further scene added
                 self.assertEqual(len(project.scenes), 1)
+
+                # 4. success case, with position
+                self.assertEqual(len(project.scenes), 1)
+                token = get_scene_from_server("scene_device",
+                                              "extra_scene", project=None,
+                                              position=[0, 120])
+
+                network.onExecuteGeneric.assert_called_with(
+                    "scene_device", "requestScene", Hash("name", "extra_scene",
+                                                         "position", [0, 120]),
+                    token=token)
+
+                scene = SceneModel(simple_name="NewScene")
+                payload = Hash("success", True, "data", write_scene(scene))
+                reply = Hash("payload", payload)
+                request = Hash("token", token,
+                               "args", Hash("position", [0, 120]))
+
+                path = "karabogui.request.broadcast_event"
+                with mock.patch(path) as broadcast:
+                    manager.handle_requestGeneric(True, request, reply=reply)
+                    broadcast.assert_called_with(
+                        KaraboEvent.ShowUnattachedSceneView,
+                        {"model": mock.ANY,
+                         "target_window": SceneTargetWindow.Dialog,
+                         "position": [0, 120]})
+                # A new scene has not been added
+                self.assertEqual(len(project.scenes), 1)
+
+    def test_signature_scene_from_server(self):
+        """If this tests fails, we need to check the db connection db scene"""
+        sig = inspect.signature(get_scene_from_server)
+        params = sig.parameters
+        assert "slot_name" in params
+        assert "project" in params
+        assert "slot_name" in params
+        assert "target_window" in params
+        assert "scene_name" in params
+        self.assertEqual(len(params), 6)
 
 
 if __name__ == "__main__":
