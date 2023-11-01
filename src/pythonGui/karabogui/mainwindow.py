@@ -48,10 +48,13 @@ from karabogui.panels.api import (
     ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
     ScriptingPanel, TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
+from karabogui.programs.utils import save_concert_file
+from karabogui.project.restore import get_restore_data
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import (
-    convert_npy_to_csv, generateObjectName, getOpenFileName, process_qt_events)
+    convert_npy_to_csv, generateObjectName, getOpenFileName, getSaveFileName,
+    process_qt_events)
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -516,6 +519,8 @@ class MainWindow(QMainWindow):
         self.acNpy2CSV = QAction("Convert Numpy file to CSV file", self)
         self.acNpy2CSV.triggered.connect(self.onNumpyFileToCSV)
 
+        self.acConcertWriter = QAction("Create Karabo Concert File", self)
+        self.acConcertWriter.triggered.connect(self.onCreateConcertFile)
         self.acGuiDocumentation = QAction(
             icons.weblink, "GUI Documentation", self)
         self.acGuiDocumentation.triggered.connect(self.onGuiDocumentation)
@@ -595,6 +600,7 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acCheckUpdates)
         mHelpMenu.addAction(self.acCheckProject)
         mHelpMenu.addAction(self.acNpy2CSV)
+        mHelpMenu.addAction(self.acConcertWriter)
 
     def _setupToolBar(self):
 
@@ -969,3 +975,20 @@ class MainWindow(QMainWindow):
                 messagebox.show_information(text=text, parent=self)
 
             get_config()["data_dir"] = str(Path(file_name).parent)
+
+    @Slot()
+    def onCreateConcertFile(self):
+        """Write the yaml for the concert. It should have uuid and position
+        of the all opened scene panels."""
+        scene_data = get_restore_data()
+        if not scene_data:
+            messagebox.show_information(text="No Project Scenes are open",
+                                        parent=self)
+            return
+        path = get_config()["data_dir"]
+        directory = str(path) if Path(path).is_dir() else ""
+        file_name = getSaveFileName(
+            caption="Save Concert file", filter="Yaml file(*.yaml *.yml)",
+            directory=directory, parent=self)
+        if file_name:
+            save_concert_file(file_name, scene_data)
