@@ -17,8 +17,10 @@
 import re
 from pathlib import Path
 
+import yaml
 from qtpy.QtWidgets import QApplication
 
+from karabogui.singletons.api import get_config, get_network
 from karabogui.util import process_qt_events
 
 LINUX_DESKTOP_FILE_TEMPLATE = """\
@@ -68,3 +70,24 @@ def close_app():
     if app is not None:
         process_qt_events(app, timeout=1000)
         app.quit()
+
+
+def save_concert_file(file_name, scene_data):
+    """ Write the scene information to a yaml file, for karabo-concert.
+    """
+    domain = get_config()["domain"]
+    network = get_network()
+    user = network.access_level
+    hostname = network.hostname
+    port = network.port
+
+    scenes = []
+    for uuid, properties in scene_data.items():
+        x = properties["x"]
+        y = properties["y"]
+        scenes.append({"uuid": uuid, "x": x, "y": y})
+
+    concert = {"domain": domain, "username": user, "host": hostname,
+               "port": port, "scenes": scenes}
+    with open(file_name, "w") as yaml_file:
+        yaml.dump(concert, yaml_file)
