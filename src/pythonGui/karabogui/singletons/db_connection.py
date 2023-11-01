@@ -225,20 +225,27 @@ class ProjectDatabaseConnection(QObject):
     def is_processing(self):
         return self.is_reading() or self.is_writing()
 
-    def get_database_scene(self, name, uuid, target_window):
+    def get_database_scene(self, name, uuid, target_window, position=None):
         """Directly ask for a scene from the project database
 
         This method returns the token for the request.
+
+        Optional keyword arguments:
+
+        - position: The coordinates (List) of the scene
         """
         config = get_config()
-        device_id = self.project_manager
-        domain = config['domain']
-        db_token = config['db_token']
+        data = {
+            "scene_name": name,
+            "slot_name": "slotGetScene",
+            "target_window": target_window,
+            "uuid": uuid,
+            "domain": config['domain'],
+            "db_token": config['db_token']}
+        if position is not None:
+            data["position"] = position
 
-        return get_scene_from_server(
-            device_id, scene_name=name, slot_name='slotGetScene',
-            target_window=target_window, uuid=uuid, domain=domain,
-            db_token=db_token)
+        return get_scene_from_server(self.project_manager, **data)
 
     # -------------------------------------------------------------------
     # Broadcast event handlers

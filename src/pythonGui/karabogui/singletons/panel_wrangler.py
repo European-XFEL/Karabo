@@ -155,17 +155,19 @@ class PanelWrangler(QObject):
 
     def _event_unattached_scene(self, data):
         target_window = data.get('target_window',
-                                 SceneTargetWindow.MainWindow)
+                                 SceneTargetWindow.Dialog)
         model = data['model']
 
         # Unattached scenes are closed if they are duplicated by simple name!
         existing = [panel for scene, panel in
                     self._unattached_scene_panels.items()
                     if scene.simple_name == model.simple_name]
-
-        self._open_scene(model, target_window, attached=False)
+        scene_panel = self._open_scene(model, target_window, attached=False)
         for panel in existing:
             self._close_panel(panel)
+        position = data.get("position")
+        if position is not None and target_window == SceneTargetWindow.Dialog:
+            scene_panel.move(*position)
 
     def _event_scene_link(self, data):
         name = data.get('name', '')
@@ -176,7 +178,9 @@ class PanelWrangler(QObject):
             # We found the scene in our project!
             self._open_scene(model, target_window)
         else:
-            get_db_conn().get_database_scene(name, uuid, target_window)
+            position = data.get("position")
+            get_db_conn().get_database_scene(
+                name, uuid, target_window, position=position)
 
     def _event_remove_model_view(self, data):
         self._close_project_item_panels(data['models'])
@@ -368,7 +372,7 @@ class PanelWrangler(QObject):
         self._show_project_item_panel(model, panel, attached)
 
         if self.main_window is None:
-            return
+            return panel
 
         if target_window is SceneTargetWindow.MainWindow:
             panel.onDock()
