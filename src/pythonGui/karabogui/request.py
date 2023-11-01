@@ -167,8 +167,10 @@ def get_scene_from_server(device_id, scene_name, project=None,
     :param slot_name: The slot to be called to retrieve the scene
     """
 
-    def scene_handler(dev_id, name, project, target_window, success, reply):
+    def scene_handler(dev_id, name, project, target_window, success, reply,
+                      request):
         """Callback handler for a request to a device"""
+
         if not success:
             reason, details = get_reason_parts(reply)
             msg = (f"Scene '{name}' from device '{dev_id}' was not retrieved."
@@ -210,8 +212,13 @@ def get_scene_from_server(device_id, scene_name, project=None,
         def visitor(model):
             substitute_font(model)
 
+        event_data = {'model': scene, 'target_window': window}
+        position = request["args"].get("position")
+        if position is not None:
+            event_data["position"] = position
+
         walk_traits_object(scene, visitor_func=visitor)
-        broadcast_event(event_type, {'model': scene, 'target_window': window})
+        broadcast_event(event_type, event_data)
 
     handler = partial(scene_handler, device_id, scene_name, project,
                       target_window)
