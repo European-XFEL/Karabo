@@ -1,0 +1,11 @@
+domain: CAS_INTERNAL
+scenes:
+  - uuid: '9d26d07b-d79e-4f71-99f1-469344da89ed'
+    x: 1458
+    y: 93
+  - uuid: '9b73efec-4523-4a47-b88f-90edc2e9ed89'
+    x: 2332
+    y: 361
+host: exflqr46957
+port: 44444
+username: admin
