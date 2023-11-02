@@ -49,7 +49,8 @@ namespace karabo {
             /**
              * Save an object to a binary archive
              * @param object to save
-             * @param archive to save to - some implementations clear() it before appending, some do not
+             * @param archive to save to - some implementations clear() it before appending (e.g. in
+             *                HashBinarySerializer), some do not (e.g. in SchemaBinarySerializer)
              */
             virtual void save(const T& object, std::vector<char>& archive) = 0;
 
