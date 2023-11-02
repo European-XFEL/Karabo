@@ -72,6 +72,10 @@ def download_list(definition_file, overwrite_tmp):
     with open(definition_file, "r") as f:
         defs = yaml.safe_load(f.read())
 
+    # if downloads.yml is empty, then quit gracefully
+    if defs is None:
+        return
+
     resources_path = f"{op.abspath(op.dirname(__file__))}/resources"
     for package, item in defs.items():
         if check_exists(resources_path, package, item["target"]):
