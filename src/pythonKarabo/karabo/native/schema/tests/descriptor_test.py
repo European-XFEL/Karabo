@@ -17,6 +17,7 @@ from enum import Enum
 from unittest import TestCase, main
 
 import numpy as np
+import pytest
 from pint import DimensionalityError
 
 from karabo.common.alarm_conditions import AlarmCondition
@@ -566,6 +567,12 @@ class Tests(TestCase):
         self.check_general(d, v)
         self.assertEqual(v, "bla")
         self.assertEqual(repr(v), "'bla'")
+
+        for v in ([], 1, {}, Schema(), 2.3, True, False):
+            exc = None
+            with pytest.raises(ValueError) as exc:
+                d = String(defaultValue=v)
+            assert "A string is required for Attribute" in str(exc)
 
     def test_vector_regex(self):
         d = VectorRegexString(regex=r"[a-z]+")
