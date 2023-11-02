@@ -15,7 +15,7 @@ class KaraboDaemonToolsConan(ConanFile):
 
     def source(self):
         zip_name = "daemontools-encore-%s.zip" % self.version
-        url = "https://github.com/tecki/daemontools-encore/archive/refs/heads/karabo.zip"
+        url = f"https://github.com/tecki/daemontools-encore/archive/refs/tags/{self.version}.zip"
         download(url, zip_name)
         unzip(zip_name, strip_root=True)
         os.unlink(zip_name)
