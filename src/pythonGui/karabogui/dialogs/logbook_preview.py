@@ -353,6 +353,7 @@ class LogBookPreview(QDialog):
         if stack == LOGBOOK_DATA:
             info["title"] = f"Data: {title}"
             info.update(self._extract_panel_data())
+            info["uploadFile"] = self.upload_file.isChecked()
         elif stack == LOGBOOK_IMAGE:
             info["title"] = f"Image: {title}"
             info.update(self._extract_panel_image())
