@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 # dependencies located in extern/resources/. to manually compile and install
-DEPENDENCIES_BASE=( daemontools openmq openmqc  )
+DEPENDENCIES_BASE=( openmq openmqc  )
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
@@ -37,6 +37,7 @@ PYTHON_PATH_VERSION=3.8
 CONAN_RECIPE_CHANNEL=py38
 BOOST_VERSION=1.82.0
 LOG4CPP_VERSION=1.1.3
+DAEMONTOOLS_VERSION=1.11-karabo3
 CPP_STD_LIB_VERSION=c++11
 CPP_STD=14
 
@@ -487,6 +488,8 @@ install_from_deps() {
         # create default build profile
         safeRunCommandQuiet "conan profile new default --detect --force"
 
+        # export local daemontools recipe
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py daemontools-encore/$DAEMONTOOLS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         # export local log4cpp recipe
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py log4cpp/$LOG4CPP_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         # export local boost recipe
