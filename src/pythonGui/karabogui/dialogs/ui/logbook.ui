@@ -396,6 +396,13 @@
          </attribute>
         </widget>
        </item>
+       <item>
+        <widget class="QCheckBox" name="upload_file">
+         <property name="text">
+          <string>Upload File</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>
