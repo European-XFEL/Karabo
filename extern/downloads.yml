@@ -1,4 +1,0 @@
-daemontools:
-    source: https://github.com/tecki/daemontools-encore/archive/refs/heads/master.zip
-    source_format: zip
-    target: daemontools-encore-1.11-karabo3.tar
