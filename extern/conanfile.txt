@@ -7,6 +7,7 @@
 # exact
 amqp-cpp/4.3.16
 bzip2/1.0.8
+daemontools-encore/1.11-karabo3@karabo/py38
 gtest/1.11.0
 libxml2/2.9.10
 log4cpp/1.1.3@karabo/py38
