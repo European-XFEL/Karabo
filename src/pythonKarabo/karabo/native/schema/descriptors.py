@@ -112,7 +112,10 @@ class Attribute:
                                  f"validated with Enum {self.dtype}")
             return value
         elif self.dtype is str:
-            return self.dtype(value)
+            if not isinstance(value, str):
+                raise ValueError("A string is required for Attribute "
+                                 f"{self.name}, but got {type(value)} instead")
+            return value
         elif self.dtype is bool:
             if type(value) is not bool:
                 raise ValueError(f"A boolean is required for Attribute "
@@ -1083,6 +1086,7 @@ class String(Enumable, Type):
     everything except binary data."""
     number = 28
     numpy = np.object_  # strings better be stored as objects in numpy tables
+    defaultValue = Attribute(dtype=str)
 
     def cast(self, other):
         if self.enum is not None:
