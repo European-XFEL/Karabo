@@ -481,6 +481,7 @@ namespace karabo {
                 info.set("queuedChunks", std::deque<int>());
                 info.set("bytesRead", 0ull);
                 info.set("bytesWritten", 0ull);
+                info.set("sendOngoing", false);
 
                 std::string finalSlownessForLog = info.get<std::string>("onSlowness");
                 {
@@ -643,16 +644,21 @@ namespace karabo {
             auto itIdChannelInfo = m_registeredSharedInputs.find(instanceId);
             if (itIdChannelInfo != m_registeredSharedInputs.end()) {
                 Hash& channelInfo = itIdChannelInfo->second;
+                if (channelInfo.get<bool>("sendOngoing")) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Early onInputAvailable for (shared) input " << instanceId
+                                               << ": Still sending => postpone.";
+                    EventLoop::post(bind_weak(&OutputChannel::onInputAvailable, this, instanceId));
+                    return;
+                }
                 // First check whether instanceId unblocks something
                 if (m_doneBlockSharedHandler) {
-                    m_doneBlockSharedHandler(channelInfo);
+                    m_doneBlockSharedHandler(&channelInfo);
                     m_doneBlockSharedHandler.clear();
                     return;
                 }
                 auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
                 if (itBlockHandler != m_doneBlockHandlers.end()) {
-                    // assure copy if local?
-                    itBlockHandler->second(channelInfo);
+                    itBlockHandler->second(&channelInfo);
                     m_doneBlockHandlers.erase(itBlockHandler);
                     return;
                 }
@@ -699,11 +705,17 @@ namespace karabo {
             itIdChannelInfo = m_registeredCopyInputs.find(instanceId);
             if (itIdChannelInfo != m_registeredCopyInputs.end()) {
                 Hash& channelInfo = itIdChannelInfo->second;
+                if (channelInfo.get<bool>("sendOngoing")) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Early onInputAvailable for (copy) input " << instanceId
+                                               << ": Still sending => postpone.";
+                    EventLoop::post(bind_weak(&OutputChannel::onInputAvailable, this, instanceId));
+                    return;
+                }
 
                 // Check whether instanceId unblocks a waiting copy input
                 auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
                 if (itBlockHandler != m_doneBlockHandlers.end()) {
-                    itBlockHandler->second(channelInfo);
+                    itBlockHandler->second(&channelInfo);
                     m_doneBlockHandlers.erase(itBlockHandler);
                     return;
                 }
@@ -744,7 +756,7 @@ namespace karabo {
                 // SHARED Inputs
                 for (InputChannels::iterator it = m_registeredSharedInputs.begin();
                      it != m_registeredSharedInputs.end();) {
-                    const Hash& channelInfo = it->second;
+                    Hash& channelInfo = it->second;
                     auto tcpChannel = channelInfo.get<Channel::WeakPointer>("tcpChannel").lock();
 
                     // Cleaning expired for specific channels only
@@ -760,7 +772,7 @@ namespace karabo {
                         if (itBlockHandler != m_doneBlockHandlers.end()) {
                             // Call handler although that will try to send (and fail).
                             // That does not harm, but it unblocks and decrements chunk usage
-                            itBlockHandler->second(channelInfo);
+                            itBlockHandler->second(&channelInfo);
                             m_doneBlockHandlers.erase(itBlockHandler);
                         }
 
@@ -777,7 +789,7 @@ namespace karabo {
                             }
                             m_sharedLoadBalancedQueuedChunks.clear();
                             if (m_doneBlockSharedHandler) {
-                                m_doneBlockSharedHandler(channelInfo); // tries to send (and fails), but no harm
+                                m_doneBlockSharedHandler(&channelInfo); // tries to send (and fails), but no harm
                                 m_doneBlockSharedHandler.clear();
                             }
                         }
@@ -794,7 +806,7 @@ namespace karabo {
 
                 // COPY Inputs
                 for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end();) {
-                    const Hash& channelInfo = it->second;
+                    Hash& channelInfo = it->second;
                     auto tcpChannel = channelInfo.get<Channel::WeakPointer>("tcpChannel").lock();
                     if (!tcpChannel || tcpChannel == channel) {
                         const std::string& instanceId = it->first;
@@ -806,7 +818,7 @@ namespace karabo {
                         // If the instanceId blocks something, release that
                         auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
                         if (itBlockHandler != m_doneBlockHandlers.end()) { // See comment above in SHARED part
-                            itBlockHandler->second(channelInfo);
+                            itBlockHandler->second(&channelInfo);
                             m_doneBlockHandlers.erase(itBlockHandler);
                         }
 
@@ -1008,19 +1020,22 @@ namespace karabo {
                       };
                 // Now send data to those that are ready immediately
                 size_t counter = 0;
-                for (const Hash* channelInfo : toSendImmediately) {
+                for (Hash* channelInfo : toSendImmediately) {
                     Memory::incrementChunkUsage(m_channelId, chunkId);
                     asyncSendOne(chunkId, *channelInfo, boost::bind(allDone, counter++)); // post-fix increment!
                 }
 
                 // Finally register handlers for blocking receivers
-                boost::function<void(const Hash&, size_t, bool)> blockingDoneHandler =
-                      [this, chunkId, allDone](const Hash& channelInfo, size_t doneArgument, bool copyIfLocal) {
+                // Technical comment: I failed to compile it with 'Hash&', maybe (!) related to
+                // https://www.boost.org/doc/libs/1_82_0/libs/bind/doc/html/bind.html#bind.limitations
+                // Works with 'const Hash&' and casting away the const downstream where needed...
+                boost::function<void(Hash*, size_t, bool)> blockingDoneHandler =
+                      [this, chunkId, allDone](Hash* channelInfo, size_t doneArgument, bool copyIfLocal) {
                           // Capturing 'this' OK: lambda will be directly called (not posted) by a valid 'this'
-                          if (copyIfLocal && channelInfo.get<std::string>("memoryLocation") == "local") {
+                          if (copyIfLocal && channelInfo->get<std::string>("memoryLocation") == "local") {
                               Memory::assureAllDataIsCopied(m_channelId, chunkId);
                           }
-                          this->asyncSendOne(chunkId, channelInfo, boost::bind(allDone, doneArgument));
+                          this->asyncSendOne(chunkId, *channelInfo, boost::bind(allDone, doneArgument));
                       };
                 if (blockForShared) {
                     Memory::incrementChunkUsage(m_channelId, chunkId);
@@ -1329,8 +1344,20 @@ namespace karabo {
                                        << " uses left for [" << m_channelId << "][" << chunkId << "]";
         }
 
+        void OutputChannel::resetSendOngoing(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            auto it = m_registeredCopyInputs.find(instanceId);
+            if (it != m_registeredCopyInputs.end()) {
+                it->second.set("sendOngoing", false);
+            } else {
+                it = m_registeredSharedInputs.find(instanceId);
+                if (it != m_registeredSharedInputs.end()) {
+                    it->second.set("sendOngoing", false);
+                } // else: has disconnected!
+            }
+        }
 
-        void OutputChannel::asyncSendOne(unsigned int chunkId, const InputChannelInfo& channelInfo,
+        void OutputChannel::asyncSendOne(unsigned int chunkId, InputChannelInfo& channelInfo,
                                          boost::function<void()>&& doneHandler) {
             const bool local = (channelInfo.get<std::string>("memoryLocation") == "local"); // else 'remote'
             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << "Async send chunk "
@@ -1351,14 +1378,21 @@ namespace karabo {
                 }
                 std::vector<karabo::io::BufferSet::Pointer> data;
                 if (!isEos && !local) {
-                    Memory::readIntoBuffers(data, header, m_channelId, chunkId);
+                    Memory::readIntoBuffers(data, header, m_channelId, chunkId); // Note: clears 'header'
                 }
-                Channel::WriteCompleteHandler handler = [channelId{m_channelId}, chunkId, local,
+                Channel::WriteCompleteHandler handler = [weakThis{weak_from_this()},
+                                                         instanceId{channelInfo.get<std::string>("instanceId")},
+                                                         channelId{m_channelId}, chunkId, local,
                                                          doneHandler{std::move(doneHandler)}](
                                                               const boost::system::error_code& ec) {
+                    auto self = weakThis.lock();
+                    if (self) {
+                        self->resetSendOngoing(instanceId);
+                        self.reset();
+                    }
                     if (!local || ec) {
                         // local InputChannel will take over responsibility of chunk
-                        // CAVEAT: If the other end disconnects after receiveing, but before processing our message,
+                        // CAVEAT: If the other end disconnects after receiving, but before processing our message,
                         //         the chunk is leaked!
                         //         But it is an unlikely scenario that a local receiver disconnects often - usually
                         //         the full process including the sender (i.e. we here) is shutdown.
@@ -1366,6 +1400,12 @@ namespace karabo {
                     }
                     doneHandler();
                 };
+                channelInfo.set("sendOngoing", true);
+                // 1) The memory behind 'data' is kept alive until 'handler' is called by keeping chunkId available and
+                //    only decrement its usage in the 'handler'.
+                // 2) Marking an input as available for more data is postponed in onInputAvailable for the case that
+                //    "sendOngoing" is still true. That ensures that writeAsyncHashVectorBufferSetPointer is not called
+                //    before a previous call for the same tcpChannel has completed.
                 tcpChannel->writeAsyncHashVectorBufferSetPointer(header, data, handler);
             } else {
                 Memory::decrementChunkUsage(m_channelId, chunkId); // i.e. unregisterWriterFromChunk(chunkId);
