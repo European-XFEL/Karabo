@@ -74,7 +74,6 @@ namespace karabo {
               m_readBytes(0),
               m_writtenBytes(0),
               m_writeInProgress(false),
-              m_quit(false),
               m_syncCounter(0),
               m_asyncCounter(0) {
             m_queue[4] = Queue::Pointer(new LosslessQueue);
@@ -444,7 +443,7 @@ namespace karabo {
             karabo::io::BufferSet::appendTo(boostBuffers, buffers);
 
             size_t totalSize = m_inboundMessagePrefix.size();
-            for (auto p : buffers) totalSize += p->totalSize();
+            for (const auto& p : buffers) totalSize += p->totalSize();
             boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= totalSize) {
                 ++m_syncCounter;
@@ -602,7 +601,7 @@ namespace karabo {
                     m_readHeaderFirst = false;
                     m_inboundData.swap(m_inboundHeader);
                     if (m_activeHandler == HASH_VECTOR_BUFFERSET_POINTER) {
-                        m_inHashHeader = boost::shared_ptr<Hash>(new Hash());
+                        m_inHashHeader = boost::make_shared<Hash>();
                         this->prepareHashFromHeader(*m_inHashHeader);
                         if (m_inHashHeader->has("_bufferSetLayout_")) {
                             // This protocol for karabo 2.2.4 and later : c++ and bound python
@@ -680,7 +679,7 @@ namespace karabo {
                     break;
                 }
                 case VECTOR_POINTER: {
-                    boost::shared_ptr<std::vector<char>> vec(new std::vector<char>());
+                    auto vec(boost::make_shared<std::vector<char>>());
                     if (!e) vec.swap(m_inboundData);
                     boost::any_cast<ReadVectorPointerHandler>(readHandler)(e, vec);
                     break;
@@ -702,7 +701,7 @@ namespace karabo {
                     break;
                 }
                 case HASH_POINTER: {
-                    Hash::Pointer h(new Hash);
+                    auto h(boost::make_shared<Hash>());
                     if (!e) this->prepareHashFromData(*h);
                     boost::any_cast<ReadHashPointerHandler>(readHandler)(e, h);
                     break;
@@ -721,7 +720,7 @@ namespace karabo {
                 }
                 case HASH_VECTOR_POINTER: {
                     Hash header;
-                    boost::shared_ptr<std::vector<char>> inData(new std::vector<char>());
+                    auto inData(boost::make_shared<std::vector<char>>());
                     if (!e) {
                         this->prepareHashFromHeader(header);
                         inData.swap(m_inboundData);
@@ -753,8 +752,8 @@ namespace karabo {
                 }
 
                 case HASH_POINTER_HASH_POINTER: {
-                    Hash::Pointer header(new Hash);
-                    Hash::Pointer body(new Hash);
+                    auto header(boost::make_shared<Hash>());
+                    auto body(boost::make_shared<Hash>());
                     if (!e) {
                         this->prepareHashFromHeader(*header);
                         this->prepareHashFromData(*body);

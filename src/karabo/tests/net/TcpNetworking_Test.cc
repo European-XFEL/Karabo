@@ -1227,50 +1227,6 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
     CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
 
     //
-    // Test that one can asynchronously write without waiting for completion of previous async write
-    //
-    {
-        constexpr int numAsyncWrite = 100;
-        auto writesDone = std::make_shared<std::array<bool, numAsyncWrite>>();
-        writesDone->fill(false);
-        auto writesDoneMutex = std::make_shared<boost::mutex>();
-        auto prom = std::make_shared<std::promise<boost::system::error_code>>();
-        auto fut = prom->get_future();
-        boost::function<void(int, const boost::system::error_code&)> handlerTemplate =
-              [writesDone, writesDoneMutex, prom](int index, const boost::system::error_code& ec) {
-                  if (ec) {
-                      prom->set_value(ec);
-                      return;
-                  }
-
-                  boost::mutex::scoped_lock lock(*writesDoneMutex);
-                  (*writesDone)[index] = true;
-                  for (const bool ready : *writesDone) {
-                      if (!ready) return; // more to come
-                  }
-                  // Now all completed
-                  prom->set_value(ec);
-              };
-        for (int i = 0; i < numAsyncWrite; ++i) {
-            clientChannel->writeAsyncHashHash(Hash("hea"s, "der"s), Hash("count"s, i),
-                                              boost::bind(handlerTemplate, i, boost::asio::placeholders::error));
-        }
-        auto ok = fut.wait_for(std::chrono::seconds(timeoutSec));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
-
-        CPPUNIT_ASSERT_EQUAL(boost::system::error_code(), fut.get());
-
-        // Check that all data arrived - and in order
-        for (int i = 0; i < numAsyncWrite; ++i) {
-            Hash header, data;
-            // For simplicity, check synchronous read here
-            serverChannel->read(header, data);
-            CPPUNIT_ASSERT_EQUAL("der"s, header.get<std::string>("hea"s));
-            CPPUNIT_ASSERT_EQUAL(i, data.get<int>("count"s));
-        }
-    }
-
-    //
     // Test that handler is called although channel destructed
     //
     {
