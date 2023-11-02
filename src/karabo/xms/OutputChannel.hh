@@ -132,8 +132,8 @@ namespace karabo {
             // NoSharedInputChannel available is "queueDrop".
             // Relies on lock protection using m_registeredInputsMutex.
             std::deque<int> m_sharedLoadBalancedQueuedChunks;
-            boost::function<void(const InputChannelInfo&)> m_doneBlockSharedHandler;
-            std::map<std::string, boost::function<void(const InputChannelInfo&)>> m_doneBlockHandlers;
+            boost::function<void(InputChannelInfo*)> m_doneBlockSharedHandler;
+            std::map<std::string, boost::function<void(InputChannelInfo*)>> m_doneBlockHandlers;
 
             InputChannels m_registeredCopyInputs;
 
@@ -541,6 +541,13 @@ namespace karabo {
                                                std::vector<karabo::util::Hash*>& toSendImmediately,
                                                std::vector<karabo::util::Hash*>& toQueue,
                                                std::vector<karabo::util::Hash*>& toBlock, bool& queue, bool& block);
+
+            /**
+             * Helper that sets the sendOngoing flag to false for given instanceId
+             */
+            void resetSendOngoing(const std::string& instanceId);
+
+
             /**
              * Helper to asyncronously send chunk data to channel in given channelInfo
              *
@@ -548,7 +555,7 @@ namespace karabo {
              * @param channelInfo Container with info about channel to send to
              * @param doneHandler Callback when sending done or failed
              */
-            void asyncSendOne(unsigned int chunkId, const InputChannelInfo& channelInfo,
+            void asyncSendOne(unsigned int chunkId, InputChannelInfo& channelInfo,
                               boost::function<void()>&& doneHandler);
 
             /**
