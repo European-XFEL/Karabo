@@ -90,7 +90,6 @@ namespace karabo {
             size_t m_readBytes;
             size_t m_writtenBytes;
             std::atomic<bool> m_writeInProgress;
-            bool m_quit;
             unsigned long long m_syncCounter;
             unsigned long long m_asyncCounter;
 

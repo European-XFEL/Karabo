@@ -28,11 +28,12 @@
 #include <boost/asio/buffer.hpp>       //boost::asio::const_buffer
 #include <boost/core/null_deleter.hpp> //boost::null_delter
 #include <boost/shared_ptr.hpp>        //boost::shared_ptr<T>
-#include <karabo/util/ClassInfo.hh>    //BufferSet::Pointer
-#include <karabo/util/Exception.hh>    //KARABO_LOGIC_EXCEPTION
-#include <karabo/util/Types.hh>        //karabo::util::ByteArray
 #include <ostream>                     //std::ostream
 #include <vector>                      //std::vector
+
+#include "karabo/util/ClassInfo.hh" //BufferSet::Pointer
+#include "karabo/util/Exception.hh" //KARABO_LOGIC_EXCEPTION
+#include "karabo/util/Types.hh"     //karabo::util::ByteArray
 
 /**
  * The main European XFEL namespace
