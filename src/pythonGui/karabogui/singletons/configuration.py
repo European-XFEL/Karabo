@@ -157,6 +157,7 @@ class Configuration(QObject):
     project_sort_order = Item(default=0, q_set=True, group=USER, dtype=int)
     logbook_stream = Item(q_set=True, group=USER)
     logbook_topic = Item(q_set=True, group=USER)
+    logbook_header_style = Item(q_set=True, group=USER)
 
     # ----------------------------------------------
     # Project db interface
