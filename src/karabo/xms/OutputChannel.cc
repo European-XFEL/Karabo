@@ -924,16 +924,6 @@ namespace karabo {
         }
 
 
-        void OutputChannel::update(bool safeNDArray) {
-            auto prom = std::make_shared<std::promise<void>>();
-            auto fut = prom->get_future();
-            auto handler = [prom]() { prom->set_value(); };
-
-            asyncUpdate(handler, safeNDArray);
-
-            awaitUpdateFuture(fut, "update");
-        }
-
         void OutputChannel::awaitUpdateFuture(std::future<void>& fut, const char* which) {
             int overallSeconds = 0;
 
@@ -954,10 +944,31 @@ namespace karabo {
             fut.get();
         }
 
-        void OutputChannel::asyncUpdate(boost::function<void()>&& readyForNextHandler, bool safeNDArray) {
+        void OutputChannel::update(bool safeNDArray) {
+            auto prom = std::make_shared<std::promise<void>>();
+            auto fut = prom->get_future();
+            auto handler = [prom]() { prom->set_value(); };
+
+            asyncUpdateNoWait([]() {}, handler, safeNDArray);
+
+            awaitUpdateFuture(fut, "update");
+        }
+
+        void OutputChannel::asyncUpdate(bool safeNDArray, boost::function<void()>&& writeDoneHandler) {
+            auto prom = std::make_shared<std::promise<void>>();
+            auto fut = prom->get_future();
+            auto readyForNextHandler = [prom]() { prom->set_value(); };
+
+            asyncUpdateNoWait(readyForNextHandler, std::move(writeDoneHandler), safeNDArray);
+            awaitUpdateFuture(fut, "asyncUpdate");
+        }
+
+        void OutputChannel::asyncUpdateNoWait(boost::function<void()>&& readyForNextHandler,
+                                              boost::function<void()>&& writeDoneHandler, bool safeNDArray) {
             // If no data was written and not endOfStream: nothing to do
             if (Memory::size(m_channelId, m_chunkId) == 0 && !Memory::isEndOfStream(m_channelId, m_chunkId)) {
                 karabo::net::EventLoop::post(std::move(readyForNextHandler));
+                karabo::net::EventLoop::post(std::move(writeDoneHandler));
                 return;
             }
 
@@ -998,60 +1009,84 @@ namespace karabo {
             }
             // If all connected want to drop (except those that want to queue): nothing to do
             if (toSendImmediately.empty() && toBlock.empty() && !blockForShared) {
-                ensureValidChunkId(); // ...except prepare valid chunkId for next round
-                karabo::net::EventLoop::post(std::move(readyForNextHandler)); // ...and posting handler!
+                karabo::net::EventLoop::post(std::move(readyForNextHandler));
+                karabo::net::EventLoop::post(std::move(writeDoneHandler));
             } else {
                 // Prepare handler
-                const size_t numToWrite = toSendImmediately.size() + toBlock.size() + blockForShared;
+                const size_t numBlock = toBlock.size() + blockForShared;
+                const size_t numToWrite = toSendImmediately.size() + numBlock;
                 auto doneFlags = boost::make_shared<std::vector<bool>>(numToWrite, false);
                 auto doneFlagMutex = boost::make_shared<boost::mutex>();
-                boost::function<void(size_t)> allDone =
-                      [weakThis{weak_from_this()}, doneFlags, doneFlagMutex,
-                       readyForNext{std::move(readyForNextHandler)}](size_t n) mutable {
+                boost::function<void(size_t)> singleWriteDone =
+                      [doneFlags, doneFlagMutex, allWriteDone{std::move(writeDoneHandler)}](size_t n) mutable {
                           boost::mutex::scoped_lock lock(*doneFlagMutex);
                           (*doneFlags)[n] = true;
                           for (const bool ready : *doneFlags) {
                               if (!ready) return;
                           }
                           // lock.unlock(); irrelevant since it is anyway the last time this mutex is used
-                          auto self(weakThis.lock());
-                          if (self) self->ensureValidChunkId();
-                          readyForNext(); // Always (even 'if (!self)') call handler!
+                          allWriteDone();
                       };
                 // Now send data to those that are ready immediately
                 size_t counter = 0;
                 for (Hash* channelInfo : toSendImmediately) {
                     Memory::incrementChunkUsage(m_channelId, chunkId);
-                    asyncSendOne(chunkId, *channelInfo, boost::bind(allDone, counter++)); // post-fix increment!
+                    asyncSendOne(chunkId, *channelInfo, boost::bind(singleWriteDone, counter++)); // post-fix increment!
                 }
 
-                // Finally register handlers for blocking receivers
-                // Technical comment: I failed to compile it with 'Hash&', maybe (!) related to
-                // https://www.boost.org/doc/libs/1_82_0/libs/bind/doc/html/bind.html#bind.limitations
-                // Works with 'const Hash&' and casting away the const downstream where needed...
-                boost::function<void(Hash*, size_t, bool)> blockingDoneHandler =
-                      [this, chunkId, allDone](Hash* channelInfo, size_t doneArgument, bool copyIfLocal) {
-                          // Capturing 'this' OK: lambda will be directly called (not posted) by a valid 'this'
-                          if (copyIfLocal && channelInfo->get<std::string>("memoryLocation") == "local") {
-                              Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                          }
-                          this->asyncSendOne(chunkId, *channelInfo, boost::bind(allDone, doneArgument));
-                      };
-                if (blockForShared) {
-                    Memory::incrementChunkUsage(m_channelId, chunkId);
-                    // If NDArray not safe, need to request copy if input channel will be local
-                    m_doneBlockSharedHandler = boost::bind(blockingDoneHandler, _1, counter++, !safeNDArray);
-                }
+                if (numBlock) {
+                    // Finally register handlers for blocking receivers
+                    auto doneBlockFlags = boost::make_shared<std::vector<bool>>(numBlock, false);
+                    auto doneBlockFlagMutex = boost::make_shared<boost::mutex>();
+                    boost::function<void(size_t, size_t)> singleBlockDone =
+                          [doneBlockFlags, doneBlockFlagMutex, readyForNext{std::move(readyForNextHandler)},
+                           singleWriteDone](size_t blockCounter, size_t allCounter) mutable {
+                              // Writing done for this overall counter
+                              singleWriteDone(allCounter);
+                              // Check whether all blockings are resolved and in case call handler that waits for that
+                              boost::mutex::scoped_lock lock(*doneBlockFlagMutex);
+                              (*doneBlockFlags)[blockCounter] = true;
+                              for (const bool ready : *doneBlockFlags) {
+                                  if (!ready) return;
+                              }
+                              readyForNext(); // Last blocking done
+                          };
+                    // Technical comment: I failed to compile it with 'Hash&', maybe (!) related to
+                    // https://www.boost.org/doc/libs/1_82_0/libs/bind/doc/html/bind.html#bind.limitations
+                    // Works with 'const Hash&' and casting away the const downstream where needed...
+                    boost::function<void(Hash*, size_t, size_t, bool)> singleUnblockTrigger =
+                          [this, chunkId, singleBlockDone{std::move(singleBlockDone)}](
+                                Hash* channelInfo, size_t blockCounter, size_t allCounter, bool copyIfLocal) {
+                              // Capturing 'this' OK: lambda will be directly called (not posted) by a valid 'this'
+                              if (copyIfLocal && channelInfo->get<std::string>("memoryLocation") == "local") {
+                                  Memory::assureAllDataIsCopied(m_channelId, chunkId);
+                              }
+                              this->asyncSendOne(chunkId, *channelInfo,
+                                                 boost::bind(singleBlockDone, blockCounter, allCounter));
+                          };
+                    size_t blockCounter = 0;
+                    if (blockForShared) {
+                        Memory::incrementChunkUsage(m_channelId, chunkId);
+                        // If NDArray not safe, need to request copy if input channel will be local
+                        m_doneBlockSharedHandler =
+                              boost::bind(singleUnblockTrigger, _1, blockCounter++, counter++, !safeNDArray);
+                    }
 
-                for (const Hash* channelInfo : toBlock) {
-                    Memory::incrementChunkUsage(m_channelId, chunkId);
-                    const std::string& instanceId = channelInfo->get<std::string>("instanceId");
-                    // Last argument false since any needed copy was done already before
-                    m_doneBlockHandlers[instanceId] = boost::bind(blockingDoneHandler, _1, counter++, false);
+                    for (const Hash* channelInfo : toBlock) {
+                        Memory::incrementChunkUsage(m_channelId, chunkId);
+                        const std::string& instanceId = channelInfo->get<std::string>("instanceId");
+                        // Last argument false since any needed copy was done already before
+                        m_doneBlockHandlers[instanceId] =
+                              boost::bind(singleUnblockTrigger, _1, blockCounter++, counter++, false);
+                    }
+                } else {
+                    // no blocking, so ready immediately
+                    EventLoop::post(std::move(readyForNextHandler));
                 }
             }
-            // Finally unregister ourselves
+            // Finally unregister ourselves and ensure for next round
             unregisterWriterFromChunk(chunkId);
+            ensureValidChunkId(lock);
         }
 
         void OutputChannel::asyncPrepareCopy(unsigned int chunkId, std::vector<Hash*>& toSendImmediately,
@@ -1133,7 +1168,7 @@ namespace karabo {
                 } else {
                     // We queue the EOS so it is sent immediately when the input is ready to receive data.
                     //
-                    // No need to care about full queue - ensureValidChunkId() add the end of update() will care.
+                    // No need to care about full queue - ensureValidChunkId() at the end of update() will care.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing endOfStream for shared input "
                                                << instanceId;
                     if (m_onNoSharedInputChannelAvailable == "wait") {
@@ -1233,7 +1268,7 @@ namespace karabo {
             } // end else - not found
         }
 
-        void OutputChannel::ensureValidChunkId() {
+        void OutputChannel::ensureValidChunkId(boost::mutex::scoped_lock& lockOfRegisteredInputsMutex) {
             // If still invalid, drop from queueDrop channels until resources freed and valid chunkId available.
 
             // Loop until dropping from "queueDrop" queues makes a valid chunkId available.
@@ -1276,6 +1311,11 @@ namespace karabo {
                     }
                 }
                 if (dropped) continue; // while
+
+                // Give queues a chance to shrink via onInputAvailable
+                lockOfRegisteredInputsMutex.unlock();
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                lockOfRegisteredInputsMutex.lock();
             }
         }
 
@@ -1294,21 +1334,21 @@ namespace karabo {
             // If there is still some data in the pipe, put it out
             if (Memory::size(m_channelId, m_chunkId) > 0) {
                 // Lambda for what to do when data is out
-                auto finalSignal = [this, weakThis{weak_from_this()},
+                auto finalSignal = [weakThis{weak_from_this()},
                                     doneHandler = std::move(readyForNextHandler)]() mutable {
                     auto self(weakThis.lock());
                     if (self) {
                         // Mark next chunk as EOS and send it out
-                        Memory::setEndOfStream(this->m_channelId, this->m_chunkId);
-                        this->asyncUpdate(std::move(doneHandler)); // move requires the above mutable
+                        Memory::setEndOfStream(self->m_channelId, self->m_chunkId);
+                        self->asyncUpdate(true, std::move(doneHandler)); // move requires the above mutable
                     } else {
                         doneHandler();
                     }
                 };
-                asyncUpdate(std::move(finalSignal));
+                asyncUpdate(false, std::move(finalSignal)); // safeNDArray false since we do not know what is in
             } else {
                 Memory::setEndOfStream(m_channelId, m_chunkId);
-                asyncUpdate(std::move(readyForNextHandler));
+                asyncUpdate(true, std::move(readyForNextHandler)); // safeNDArray true - there is only EOS
             }
         }
 
