@@ -165,6 +165,8 @@ class LogBookPreview(QDialog):
 
         self.combo_title_style.currentTextChanged.connect(self._show_title)
         self.combo_topic.currentTextChanged.connect(self._update_save_button)
+        style = get_config()["logbook_header_style"] or "No title"
+        self.combo_title_style.setCurrentText(style)
 
     # -----------------------------------------------------------------------
     # Karabo Events
@@ -376,6 +378,9 @@ class LogBookPreview(QDialog):
             self.request_save()
             get_config()["logbook_stream"] = self.combo_name.currentText()
             get_config()["logbook_topic"] = self.combo_topic.currentText()
+            style = self.combo_title_style.currentText()
+            get_config()["logbook_header_style"] = style
+
         unregister_from_broadcasts(self._event_map)
         return super().done(result)
 
