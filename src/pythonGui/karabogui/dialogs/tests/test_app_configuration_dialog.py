@@ -56,7 +56,7 @@ class TestAppConfDialog(GuiTestCase):
             # Check a boolean
             group_index = model.index(5, 0)
             self.assertEqual(group_index.data(), "user")
-            index = model.index(8, 0, group_index)
+            index = model.index(9, 0, group_index)
             self.assertEqual(index.data(), "wizard")
             index_value = model.index(8, 1, group_index)
             flag = model.flags(index_value)
