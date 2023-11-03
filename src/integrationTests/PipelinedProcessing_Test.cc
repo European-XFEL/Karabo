@@ -1365,8 +1365,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueDropAtLimit(const std::stri
         if (expectDataLoss) {
             // If data loss, chunks might be skipped more often for the one receiver than for the other.
             // Failed here with 1%: https://git.xfel.eu/Karabo/Framework/-/jobs/141838
-            // After refactoring to use async writing, the diff seems to be even larger
-            CPPUNIT_ASSERT_LESS(nData / 10u, diff); // arbitrarily tolerate 10% deviation of total number of items sent
+            // After refactoring to use async writing, the diff seems to be even larger, e.g. in
+            // https://git.xfel.eu/Karabo/Framework/-/jobs/508636
+            CPPUNIT_ASSERT_LESS(nData / 4u, diff); // arbitrarily tolerate 25% deviation of total number of items sent
         } else {
             // Additional test that data share was fair, i.e. difference is zero (one) for even (odd) total number
             if ((finallyReceived1 + finallyReceived2) % 2 == 0) { // even

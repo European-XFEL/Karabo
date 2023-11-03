@@ -37,6 +37,19 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testOutputPreparation);
     CPPUNIT_TEST(testConnectHandler);
     CPPUNIT_TEST(testWriteUpdateFlags);
+    CPPUNIT_TEST(testAsyncUpdate1a);
+    CPPUNIT_TEST(testAsyncUpdate1b);
+    CPPUNIT_TEST(testAsyncUpdate2a);
+    CPPUNIT_TEST(testAsyncUpdate2b);
+    CPPUNIT_TEST(testAsyncUpdate3a);
+    CPPUNIT_TEST(testAsyncUpdate3b);
+    CPPUNIT_TEST(testAsyncUpdate4a);
+    CPPUNIT_TEST(testAsyncUpdate4b);
+    CPPUNIT_TEST(testAsyncUpdate5a);
+    CPPUNIT_TEST(testAsyncUpdate5b);
+    CPPUNIT_TEST(testAsyncUpdate6a);
+    CPPUNIT_TEST(testAsyncUpdate6b);
+
     CPPUNIT_TEST_SUITE_END();
 
    public:
@@ -52,6 +65,21 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     void testOutputPreparation();
     void testConnectHandler();
     void testWriteUpdateFlags();
+    void testAsyncUpdate1a();
+    void testAsyncUpdate1b();
+    void testAsyncUpdate2a();
+    void testAsyncUpdate2b();
+    void testAsyncUpdate3a();
+    void testAsyncUpdate3b();
+    void testAsyncUpdate4a();
+    void testAsyncUpdate4b();
+    void testAsyncUpdate5a();
+    void testAsyncUpdate5b();
+    void testAsyncUpdate6a();
+    void testAsyncUpdate6b();
+
+    void testAsyncUpdate(const std::string& onSlowness, const std::string& dataDistribution,
+                         const std::string& memoryLocation);
 };
 
 #endif /* INPUTOUTPUTCHANNEL_TEST_HH */
