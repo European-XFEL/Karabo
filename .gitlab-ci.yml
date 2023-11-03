@@ -245,6 +245,7 @@ stages:
       - "src/karabo/core/**/*"
       - "src/karabo/devices/**/*"
       - "src/integrationTests/**/*"
+      - "src/tools/dataLoggerIndex/**/*" # for data logger integration tests
       - "src/pythonKarabo/karabo/integration_tests/**/*"
       - "src/pythonKarabo/karabo/bound_devices/**/*"
       - "src/pythonKarabo/karabo/middlelayer_devices/**/*"
@@ -264,6 +265,9 @@ stages:
       - merge_requests
     changes:
       - "src/karabo/**/*"
+      - "src/deviceServer/**/*"
+      - "src/brokerMessageLogger/**/*"
+      - "src/tools/brokerRates/**/*"
   <<: *except-main
   except:
     changes:
@@ -275,7 +279,8 @@ stages:
     refs:
       - merge_requests
     changes:
-      - "src/karathon/**/*" # bound api depends on the c++ build
+      - "src/karathon/**/*" # bound api old binding code
+      - "src/karabind/**/*" # bound api new binding code
       - "src/karabo/**/*" # bound api depends on the c++ build
       - "src/pythonKarabo/**/*"
   <<: *except-main
