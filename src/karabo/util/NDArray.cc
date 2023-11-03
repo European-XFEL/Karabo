@@ -77,7 +77,7 @@ namespace karabo {
             const size_t byteSize = numElems * itemSize;
             if (copy) {
                 // Allocate space for the new DataPointer and copy
-                auto newptr = DataPointer(new char[byteSize]);
+                auto newptr = DataPointer(new char[byteSize], &NDArray::deallocator);
                 std::copy(ptr.get(), ptr.get() + byteSize, newptr.get());
                 set("data", std::make_pair(newptr, byteSize));
             } else {
