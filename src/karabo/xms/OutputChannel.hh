@@ -272,8 +272,8 @@ namespace karabo {
              *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
             void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool /*unused*/ = false);
 
@@ -290,8 +290,8 @@ namespace karabo {
              *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
             void write(const karabo::util::Hash& data, bool /*unused*/ = false);
 
@@ -306,8 +306,8 @@ namespace karabo {
              *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
 
@@ -322,14 +322,15 @@ namespace karabo {
              *       update()/asyncUpdate() methods.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
             /**
              * Update the output channel, i.e. send all data over the wire that was previously written
              * by calling write(...).
+             * This is a synchronous method, i.e. blocks until all data is actually sent (or dropped or queued).
              *
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
              *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
@@ -337,43 +338,69 @@ namespace karabo {
              *                    data is queued or sent locally.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
             void update(bool safeNDArray = false);
 
             /**
-             * Asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
-             * previously written by calling write(...).
+             * Semi-asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
+             * previously written by calling write(...), but block as long as any of the connected InputChannels
+             * requires if "wait" is configured.
              *
-             * @param readyHandler callback when data (that is not queued) has been sent and thus even NDArray data
-             *                     inside it can be touched again (if safeNDArray is false, any data queued is copied)
              * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
              *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
              *                    finished. Default is 'false', 'true' can avoid safety copies of NDArray content when
              *                    data is queued or sent locally.
+             * @param readyHandler callback when data (that is not queued) has been sent and thus even NDArray data
+             *                     inside it can be re-used again (except if safeNDArray was set to 'true' in which
+             *                     case its memory may still be used in a queue).
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
-            void asyncUpdate(boost::function<void()>&& readyHandler, bool safeNDArray = false);
+            void asyncUpdate(
+                  bool safeNDArray = false, boost::function<void()>&& readyHandler = []() {});
 
             /**
-             * Send end-of-stream (EOS) notification to all connected input channels to indicate a logical break
-             * in the data stream.
+             * Expert method
+             *
+             * Asynchronously update the output channel, i.e. asynchronously send all data over the wire that was
+             * previously written by calling write(...) without any blocking.
+             * This method must not be called again before 'readyForNextHandler' has been called which happens when all
+             * connected InputChannels configured to "wait" have received their data.
+             *
+             * @param readyForNextHandler callback when asyncUpdateNoWait maye be called again
+             * @param writeDoneHandler callback when sending is finished, i.e. now all NDArray inside the Hash passed to
+             *                         write(..) before can be re-used again (except if safeNDArray was set to 'true' in
+             *                         which case its memory may still be used in a queue)
+             * @param safeNDArray boolean to indicate whether all NDArrays inside the Hash passed to write(..) before
+             *                    are 'safe', i.e. their memory will not be referred to elsewhere after update is
+             *                    finished.
              *
              * Thread safety:
-             * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
-             * 'signalEndOfStream()'/'asyncSignalEndOfStream(cb)' must not be called concurrently.
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
+             */
+            void asyncUpdateNoWait(boost::function<void()>&& readyForNextHandler,
+                                   boost::function<void()>&& writeDoneHandler, bool safeNDArray);
+
+            /**
+             * Synchronously send end-of-stream (EOS) notification to all connected input channels to indicate a logical
+             * break in the data stream.
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, '[async]Update[NoWait](..)' and '[async]SignalEndOfStream(..)' must not be
+             * called concurrently.
              */
             void signalEndOfStream();
 
             /**
-             * Asynchonously send end-of-stream (EOS) notification to all connected input channels to indicate a logical
-             * break in the data stream.
+             * Asynchonously send end-of-stream (EOS) notification to all connected input channels to indicate a
+             * logical break in the data stream.
              *
-             * @param readyHandler callback when nootification has been sent or queued
+             * @param readyHandler callback when notification has been sent or queued
              *
              * Thread safety:
              * All the 'write(..)' methods, 'update()'/'asyncUpdate(cb)' and
@@ -488,9 +515,12 @@ namespace karabo {
             bool updateChunkId();
 
             /**
-             * helper for update() to ensure that at the end m_chunkId is valid - may block a while
+             * helper for asyncUpdate() to ensure that at the end m_chunkId is valid - may block a while
+             *
+             * @param lockOfRegisteredInputsMutex a scoped_lock locking m_registeredInputsMutex
+             *                                    (may be unlocked and locked again during execution)
              */
-            void ensureValidChunkId();
+            void ensureValidChunkId(boost::mutex::scoped_lock& lockOfRegisteredInputsMutex);
 
             void unregisterWriterFromChunk(int chunkId);
 
@@ -549,7 +579,7 @@ namespace karabo {
 
 
             /**
-             * Helper to asyncronously send chunk data to channel in given channelInfo
+             * Helper to asynchronously send chunk data to channel in given channelInfo
              *
              * @param chunkId The chunk to send
              * @param channelInfo Container with info about channel to send to

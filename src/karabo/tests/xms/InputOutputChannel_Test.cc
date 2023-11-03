@@ -751,3 +751,163 @@ void InputOutputChannel_Test::testWriteUpdateFlags() {
         }
     }
 }
+
+void InputOutputChannel_Test::testAsyncUpdate1a() {
+    testAsyncUpdate("drop", "copy", "local");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate1b() {
+    testAsyncUpdate("drop", "copy", "remote");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate2a() {
+    testAsyncUpdate("queueDrop", "copy", "local");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate2b() {
+    testAsyncUpdate("queueDrop", "copy", "remote");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate3a() {
+    testAsyncUpdate("wait", "copy", "local");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate3b() {
+    testAsyncUpdate("wait", "copy", "remote");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate4a() {
+    testAsyncUpdate("drop", "shared", "local");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate4b() {
+    testAsyncUpdate("drop", "shared", "remote");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate5a() {
+    testAsyncUpdate("queueDrop", "shared", "local");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate5b() {
+    testAsyncUpdate("queueDrop", "shared", "remote");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate6a() {
+    testAsyncUpdate("wait", "shared", "local");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate6b() {
+    testAsyncUpdate("wait", "shared", "remote");
+}
+
+void InputOutputChannel_Test::testAsyncUpdate(const std::string& onSlowness, const std::string& dataDistribution,
+                                              const std::string& memoryLocation) {
+    std::clog << ": onSlowness '" << onSlowness << "', dataDistribution '" << dataDistribution << "', memoryLocation '"
+              << memoryLocation << "'" << std::flush;
+
+    constexpr size_t numToSend = 500;
+
+    ThreadAdder threads(2);
+    // Setup output channel
+    // "noInputShared" does not matter if "dataDistribution" of InputChannel is "copy"
+    const Hash outputCfg("noInputShared", onSlowness);
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", outputCfg, 0);
+    output->setInstanceIdAndName("outputChannel", "output");
+    output->initialize(); // required due to additional '0' argument passed to create(..) above
+    Hash outputInfo = output->getInformation();
+    CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
+
+    // Setup input channel
+    const std::string outputChannelId(output->getInstanceId() + ":output");
+    const Hash inputCfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId), //
+                        "dataDistribution", dataDistribution,                                    //
+                        "onSlowness", onSlowness, // onSlowness does not matter if dataDistribution is "shared"
+                        // Max. queue length larger than default (2), but small enough so that something is dropped.
+                        // But only relevant if onSlowness is "copy"
+                        "maxQueueLength", static_cast<unsigned int>(numToSend / 5));
+
+    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", inputCfg);
+    input->setInstanceId("inputChannel");
+    std::vector<Hash> receivedData;
+    input->registerDataHandler(
+          [&receivedData](const Hash& data, const InputChannel::MetaData& meta) { receivedData.push_back(data); });
+    std::promise<void> eosReadPromise;
+    auto eosReadFuture = eosReadPromise.get_future();
+    input->registerEndOfStreamEventHandler(
+          [&eosReadPromise](const InputChannel::Pointer&) { eosReadPromise.set_value(); });
+
+    //
+    // Connect
+    //
+    outputInfo.set("outputChannelString", outputChannelId);
+    outputInfo.set("memoryLocation", memoryLocation);
+    // Setup connection handler
+    std::promise<karabo::net::ErrorCode> connectErrorCode;
+    auto connectFuture = connectErrorCode.get_future();
+    auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
+    // initiate connect and block until done (fail test if timeout)
+    karabo::net::ErrorCode ec;
+    input->connect(outputInfo, connectHandler); // this is async!
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
+    ec = connectFuture.get();                                                 // Can get() only once...
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
+
+    // Currently (2.19.0rc3), the fact that the input channel is connected (as checked above) only
+    // means that tcp is established. But the output channel needs to receive and process the
+    // "hello" message to register the channel. Only then it will send data to the input channel.
+    int timeout = 1000;
+    while (timeout > 0) {
+        if (dataDistribution == "shared") {
+            if (output->hasRegisteredSharedInputChannel(input->getInstanceId())) break;
+        } else { // i.e. if (dataDistribution == "copy") {
+            if (output->hasRegisteredCopyInputChannel(input->getInstanceId())) break;
+        }
+        timeout -= 1;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+    CPPUNIT_ASSERT_GREATEREQUAL(0, timeout);
+
+    // Send data many times using asyncUpdate
+    receivedData.reserve(numToSend);
+    for (size_t iSend = 0; iSend < numToSend; ++iSend) {
+        output->write(Hash("str", karabo::util::toString(iSend), "vec", std::vector<long long>(300, iSend), "arr",
+                           karabo::util::NDArray(1000, static_cast<unsigned long long>(iSend))));
+        // NDArray is safe here (no re-use), but let's take the more demanding code path that may do safety copies
+        const bool safeNDArray = false;
+        output->asyncUpdate(safeNDArray); // We do not care about handler when writing is done
+    }
+
+    // Signal end of stream
+    std::promise<void> eosSentPromise;
+    auto eosSentFuture = eosSentPromise.get_future();
+    output->asyncSignalEndOfStream([&eosSentPromise]() { eosSentPromise.set_value(); });
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, eosSentFuture.wait_for(std::chrono::milliseconds(5000)));
+    CPPUNIT_ASSERT_NO_THROW(eosSentFuture.get());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          (receivedData.empty() ? std::string("nothing received") : karabo::util::toString(receivedData.back())),
+          std::future_status::ready, eosReadFuture.wait_for(std::chrono::milliseconds(5000)));
+    CPPUNIT_ASSERT_NO_THROW(eosReadFuture.get());
+
+    // Now investigate data received
+    std::clog << ": Received " << receivedData.size() << " items.";
+    CPPUNIT_ASSERT(!receivedData.empty());
+    const bool noLoss = (onSlowness == "wait");
+    if (noLoss) {
+        std::string msg("str's received: ");
+        if (numToSend != receivedData.size()) { // assemble debug info
+            for (const Hash& h : receivedData) {
+                (msg += h.get<std::string>("str")) += ",";
+            }
+        }
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, numToSend, receivedData.size());
+    }
+    for (size_t iSend = 1ul; iSend < receivedData.size(); ++iSend) {
+        const auto previous = receivedData[iSend - 1ul].get<std::vector<long long>>("vec").front();
+        const auto current = receivedData[iSend].get<std::vector<long long>>("vec").front();
+        if (noLoss) {
+            CPPUNIT_ASSERT_EQUAL(previous + 1, current);
+        } else {
+            CPPUNIT_ASSERT_GREATER(previous, current);
+        }
+    }
+}

@@ -209,10 +209,15 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 (exceptionText += "output->write(..): ") += e.what();
                 break;
             }
+            const bool async = (num % 2 == 1);
             try {
-                output->update();
+                if (async) {
+                    output->asyncUpdate();
+                } else {
+                    output->update();
+                }
             } catch (const std::exception& e) {
-                (exceptionText += "output->update(): ") += e.what();
+                (exceptionText += (async ? "output->asyncUpdate(): " : "output->update(): ")) += e.what();
                 break;
             }
             boost::this_thread::sleep(boost::posix_time::milliseconds(writeIntervall));
