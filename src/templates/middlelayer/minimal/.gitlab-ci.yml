@@ -7,6 +7,7 @@
 
 variables:
   USE_ISORT: "true"
+  USE_FLAKE: "true"
 
 include:
   - project: karabo/gitlabci
