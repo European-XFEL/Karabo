@@ -289,7 +289,20 @@ def test_restore_stream_topic(dialog):
     assert dialog.combo_name.currentText() == default_stream
     assert dialog.combo_topic.currentText() == default_topic
 
-    # When the stored topic doesn't exist simply set the topic
-    get_config()["logbook_topic"] = "Non Existing"
-    dialog._event_destinations(h_list)
-    assert dialog.combo_topic.currentText() == "Non Existing"
+
+def test_create_new_topic(dialog):
+    """
+    Test new topic creation. Verify that create_topic button
+    enables/disables the edit mode on topic combobox.
+    """
+    dialog.create_topic.setChecked(True)
+    assert dialog.combo_topic.isEditable()
+
+    line_edit = dialog.combo_topic.lineEdit()
+    line_edit.setText("NewTopic")
+    dialog.combo_topic.lineEdit().editingFinished.emit()
+    assert dialog.combo_topic.findText("NewTopic") != -1
+    assert dialog.combo_topic.currentText() == "NewTopic"
+
+    dialog.create_topic.setChecked(False)
+    assert not dialog.combo_topic.isEditable()
