@@ -140,11 +140,10 @@ void logAmqp(const std::vector<std::string>& brokerUrls, const std::string& doma
     if (selector.empty()) {
         // Bind to all possible messages ...
         const std::vector<std::array<std::string, 2> >& defaultTable = {
-              {"karaboGuiDebug", ""},         // always empty routing key
-              {domain + ".signals", "*.*"},   // any INSTANCE, any SIGNAL
-              {domain + ".slots", "#"},       // any INSTANCE ID ('*' may work as well)
-              {domain + ".global_slots", ""}, // always empty routing key
-              {domain + ".log", ""}           // always empty routing key
+              {domain + ".karaboGuiDebug", ""}, // always empty routing key
+              {domain + ".signals", "*.*"},     // any INSTANCE, any SIGNAL
+              {domain + ".slots", "#"},         // any INSTANCE ID ('*' may work as well)
+              {domain + ".global_slots", ""}    // always empty routing key
         };
 
         boost::system::error_code ec;
