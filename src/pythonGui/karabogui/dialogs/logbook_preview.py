@@ -168,6 +168,9 @@ class LogBookPreview(QDialog):
         style = get_config()["logbook_header_style"] or "No title"
         self.combo_title_style.setCurrentText(style)
 
+        self.create_topic.setIcon(icons.add)
+        self.create_topic.toggled.connect(self.allow_topic_creation)
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -277,6 +280,24 @@ class LogBookPreview(QDialog):
         """Do not show the title widget when 'No title' option is selected """
         index = 0 if text == "No title" else 1
         self.title_stackedWidget.setCurrentIndex(index)
+
+    @Slot(bool)
+    def allow_topic_creation(self, toggled):
+        """Enable/disable editing the Topic combobox."""
+        self.combo_topic.setEditable(toggled)
+        if toggled:
+            self.combo_topic.lineEdit().selectAll()
+            self.combo_topic.setFocus(True)
+            self.combo_topic.lineEdit().editingFinished.connect(
+                self.add_new_topic)
+
+    @Slot()
+    def add_new_topic(self):
+        """Add a new item to the Topic combobox"""
+        new_topic = self.combo_topic.lineEdit().text()
+        if self.combo_topic.findText(new_topic) == -1:
+            self.combo_topic.addItem(new_topic)
+        self.combo_topic.setCurrentText(new_topic)
     # -----------------------------------------------------------------------
     # Internal Interface
 
