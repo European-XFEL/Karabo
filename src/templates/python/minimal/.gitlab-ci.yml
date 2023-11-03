@@ -6,7 +6,8 @@
 # Karabo itself is licensed under the terms of the MPL 2.0 license.
 
 variables:
-  USE_ISORT: "false"
+  USE_ISORT: "true"
+  USE_FLAKE: "true"
 
 include:
   - project: karabo/gitlabci
