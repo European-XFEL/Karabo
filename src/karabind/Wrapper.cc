@@ -1038,9 +1038,7 @@ namespace karabind {
     namespace detail {
         void treatError_already_set(py::error_already_set& e, const py::object& handler, const char* where) {
             std::string errStr, errDetails;
-            if (PyErr_Occurred()) {
-                std::tie(errStr, errDetails) = getPythonExceptionStrings(e);
-            }
+            std::tie(errStr, errDetails) = getPythonExceptionStrings(e);
             const std::string funcName(py::hasattr(handler, "__name__")
                                              ? std::string(handler.attr("__name__").cast<std::string>())
                                              : std::string()); // e.g. 'partial' does not provide __name__
