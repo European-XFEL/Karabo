@@ -255,6 +255,8 @@ class ComboBoxDelegate(QStyledItemDelegate):
             with SignalBlocker(editor):
                 editor.setCurrentIndex(selection_index)
         else:
+            with SignalBlocker(editor):
+                editor.setCurrentIndex(-1)
             get_logger().error(
                 f"The value {selection} is not in the following "
                 f"options: {self._options}")
