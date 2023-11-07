@@ -71,7 +71,7 @@ class DestinationWidget(QWidget):
         self.combo_topic.setSizeAdjustPolicy(QComboBox.AdjustToContents)
 
         self.create_topic = QToolButton()
-        self.create_topic.setIcon(icons.add)
+        self.create_topic.setIcon(icons.edit)
         self.create_topic.setCheckable(True)
 
         self.combo_stream.currentTextChanged.connect(self._update_topics)
@@ -259,6 +259,8 @@ class LogBookPreview(QDialog):
 
         self.add_stream.clicked.connect(self.add_destination)
         self.remove_stream.clicked.connect(self.remove_destination)
+        self.add_stream.setIcon(icons.plus)
+        self.remove_stream.setIcon(icons.minus)
 
         self.add_destination()
 
