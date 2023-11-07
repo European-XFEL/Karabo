@@ -22,7 +22,7 @@ TITLE = ("{}: <ConfigurationPanel proxy=<DeviceClassProxy classId=Simple "
          "serverId=test_server>>")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def dialog(gui_app):
     mediator = Mediator()
     config = Configuration()
