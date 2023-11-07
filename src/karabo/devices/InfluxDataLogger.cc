@@ -54,7 +54,7 @@ namespace karabo {
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input),
-              m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
+              m_dbClientReadConfig(input.get<karabo::util::Hash>("dbClientReadConfig")),
               m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
               m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
@@ -581,13 +581,17 @@ namespace karabo {
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << schDigest
                 << "\"' AND time >= " << epochAsMicrosecString(safeRetentionLimit)
                 << toInfluxDurationUnit(TIME_UNITS::MICROSEC);
-            m_dbClientRead->queryDb(oss.str(),
-                                    bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, schDigest, archive, _1));
+            // Note: The dbClientRead will be alive until the response of the query for schemas is received. The
+            // destruction of dbClientRead will also close the connection to Influx.
+            auto dbClientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", m_dbClientReadConfig);
+            dbClientRead->queryDb(oss.str(), bind_weak(&InfluxDeviceData::onCheckSchemaInDb, this, stamp, schDigest,
+                                                       archive, dbClientRead, _1));
         }
 
-        void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
-                                               const boost::shared_ptr<std::vector<char>>& schemaArchive,
-                                               const HttpResponse& o) {
+        void InfluxDeviceData::onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
+                                                 const boost::shared_ptr<std::vector<char>>& schemaArchive,
+                                                 const karabo::net::InfluxDbClient::Pointer& dbClientRead,
+                                                 const HttpResponse& o) {
             // Not running in Strand anymore - take care not to access any potentially changing data members!
 
             bool schemaInDb = false;
@@ -609,7 +613,12 @@ namespace karabo {
                                                << "' is already saved for device '" << m_deviceToBeLogged << "': '"
                                                << je.what() << "'.";
                 }
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << "Error checking if schema with digest '" << schDigest
+                                           << "' is already saved for device '" << m_deviceToBeLogged << "': '" << o
+                                           << "'.";
             }
+
             if (!schemaInDb) {
                 // Schema not in db, or query request failed or query results could not be parsed.
                 // In any of those cases, try to log the schema in the database.
@@ -618,7 +627,12 @@ namespace karabo {
                 // unparseable response, requesting to save it again won't cause any harm appart from taking some
                 // extra space. Not saving when in doubt would be the really harmful outcome, as that would lead to
                 // failures in retrieving past device configurations.
-                schemaInDb = logNewSchema(schDigest, *schemaArchive);
+                try {
+                    schemaInDb = logNewSchema(schDigest, *schemaArchive);
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Error writing schema with digest '" << schDigest << "' for device '"
+                                               << m_deviceToBeLogged << "': '" << e.what() << "'";
+                }
             }
 
             if (schemaInDb) {
@@ -887,7 +901,7 @@ namespace karabo {
             configRead.set<std::string>("dbUser", dbUserQuery);
             configRead.set<std::string>("dbPassword", dbPasswordQuery);
 
-            m_clientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", configRead);
+            m_clientReadConfig = configRead;
         }
 
 
@@ -913,7 +927,7 @@ namespace karabo {
 
         DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
             Hash config = cfg;
-            config.set("dbClientReadPointer", m_clientRead);
+            config.set("dbClientReadConfig", m_clientReadConfig);
             config.set("dbClientWritePointer", m_clientWrite);
             config.set("maxTimeAdvance", get<int>("maxTimeAdvance"));
             config.set("maxVectorSize", get<unsigned int>("maxVectorSize"));
@@ -934,10 +948,47 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::showDatabases(const InfluxResponseHandler& action) {
+        void InfluxDataLogger::asyncCreateDbIfNeededAndStart() {
             std::string statement = "SHOW DATABASES";
-            m_clientRead->queryDb(statement, action);
+            // Note: The dbClientRead will be alive until the response of the SHOW DATABASES query is received. The
+            // destruction of dbClientRead will also close the connection to Influx.
+            auto dbClientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", m_clientReadConfig);
+            dbClientRead->queryDb(statement, bind_weak(&InfluxDataLogger::onShowDatabases, this, _1, dbClientRead));
             KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
+        }
+
+
+        void InfluxDataLogger::onShowDatabases(const HttpResponse& o, const InfluxDbClient::Pointer& dbClientRead) {
+            if (o.code >= 300) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to view list of databases available: " << o.toString();
+                updateState(State::ERROR,
+                            Hash("status", "Failed to list databases. Response from Influx: " + o.toString()));
+                return;
+            }
+
+            try {
+                nl::json j = nl::json::parse(o.payload);
+                auto values = j["results"][0]["series"][0]["values"];
+                if (values.is_array()) {
+                    // There's at least one database that is acessible to the user.
+                    // See if the database to be used is available and then proceed with its use
+                    for (nl::json::iterator it = values.begin(); it != values.end(); ++it) {
+                        if ((*it)[0].get<std::string>() == m_dbName) {
+                            KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
+                            startConnection();
+                            return;
+                        }
+                    }
+                }
+            } catch (const nl::json::parse_error& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to parse list of databases from '" << o.payload << "' ("
+                                           << e.what() << ").";
+                updateState(State::ERROR, Hash("status", "Failed to unpack list of databases."));
+                return;
+            }
+
+            KARABO_LOG_FRAMEWORK_INFO << "Database '" << m_dbName << "' not available. Will try to create it.";
+            createDatabase(bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
         }
 
 
@@ -969,40 +1020,6 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::onShowDatabases(const HttpResponse& o) {
-            if (o.code >= 300) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Failed to view list of databases available: " << o.toString();
-                updateState(State::ERROR,
-                            Hash("status", "Failed to list databases. Response from Influx: " + o.toString()));
-                return;
-            }
-
-            try {
-                nl::json j = nl::json::parse(o.payload);
-                auto values = j["results"][0]["series"][0]["values"];
-                if (values.is_array()) {
-                    // There's at least one database that is acessible to the user.
-                    // See if the database to be used is available and then proceed with its use
-                    for (nl::json::iterator it = values.begin(); it != values.end(); ++it) {
-                        if ((*it)[0].get<std::string>() == m_dbName) {
-                            KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
-                            startConnection();
-                            return;
-                        }
-                    }
-                }
-            } catch (const nl::json::parse_error& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Failed to parse list of databases from '" << o.payload << "' ("
-                                           << e.what() << ").";
-                updateState(State::ERROR, Hash("status", "Failed unpack list of databases."));
-                return;
-            }
-
-            KARABO_LOG_FRAMEWORK_INFO << "Database '" << m_dbName << "' not available. Will try to create it.";
-            createDatabase(bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
-        }
-
-
         void InfluxDataLogger::onPingDb(const HttpResponse& o) {
             if (o.code >= 300) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Failed to ping Influx DB: " << o.toString();
@@ -1011,7 +1028,7 @@ namespace karabo {
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "X-Influxdb-Build: " << o.build << ", X-Influxdb-Version: " << o.version;
-            showDatabases(bind_weak(&karabo::devices::InfluxDataLogger::onShowDatabases, this, _1));
+            asyncCreateDbIfNeededAndStart();
         }
 
 
