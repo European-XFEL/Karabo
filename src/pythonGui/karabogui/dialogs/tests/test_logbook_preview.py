@@ -174,9 +174,6 @@ def test_title(dialog, mocker):
 
 def test_toolbar(dialog):
     toolbar = dialog.drawing_toolbar
-    assert not toolbar.isVisibleTo(dialog)
-
-    dialog.draw_button.setChecked(True)
     assert toolbar.isVisibleTo(dialog)
     actions = toolbar.actions()
     assert len(actions) == 5
@@ -196,7 +193,6 @@ def test_drawing_tools(dialog, mocker):
 
     pos = QPoint(100, 100)
     widget = dialog.view.viewport()
-    dialog.draw_button.setChecked(True)
     line_tool = LineTool()
     canvas.set_drawing_tool(line_tool)
     QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier)
