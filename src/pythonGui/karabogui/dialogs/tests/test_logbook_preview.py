@@ -130,7 +130,8 @@ def test_save_button(dialog):
     assert not dialog.ok_button.isEnabled()
 
     # Disabled when no topic is set
-    dialog.combo_topic.setCurrentText("")
+    destination_widget = dialog._destinations[0]
+    destination_widget.combo_topic.setCurrentText("")
     assert not dialog.ok_button.isEnabled()
 
 
@@ -255,12 +256,12 @@ def test_topics(dialog):
     h_list.append(Hash("name", stream1, "topics", topics1))
     h_list.append(Hash("name", stream2, "topics", topics2))
     dialog._event_destinations(h_list)
-
-    dialog.combo_name.setCurrentText(stream2)
-    combo = dialog.combo_topic
+    destination_widget = dialog._destinations[0]
+    destination_widget.combo_stream.setCurrentText(stream2)
+    combo = destination_widget.combo_topic
     assert [combo.itemText(i) for i in range(combo.count())] == topics2
 
-    dialog.combo_name.setCurrentText(stream1)
+    destination_widget.combo_stream.setCurrentText(stream1)
     assert [combo.itemText(i) for i in range(combo.count())] == topics1
 
 
@@ -286,8 +287,10 @@ def test_restore_stream_topic(dialog):
     get_config()["logbook_topic"] = default_topic
 
     dialog._event_destinations(h_list)
-    assert dialog.combo_name.currentText() == default_stream
-    assert dialog.combo_topic.currentText() == default_topic
+
+    destination_widget = dialog._destinations[0]
+    assert destination_widget.combo_stream.currentText() == default_stream
+    assert destination_widget.combo_topic.currentText() == default_topic
 
 
 def test_create_new_topic(dialog):
@@ -295,14 +298,15 @@ def test_create_new_topic(dialog):
     Test new topic creation. Verify that create_topic button
     enables/disables the edit mode on topic combobox.
     """
-    dialog.create_topic.setChecked(True)
-    assert dialog.combo_topic.isEditable()
+    destination_widget = dialog._destinations[0]
+    destination_widget.create_topic.setChecked(True)
+    assert destination_widget.combo_topic.isEditable()
 
-    line_edit = dialog.combo_topic.lineEdit()
+    line_edit = destination_widget.combo_topic.lineEdit()
     line_edit.setText("NewTopic")
-    dialog.combo_topic.lineEdit().editingFinished.emit()
-    assert dialog.combo_topic.findText("NewTopic") != -1
-    assert dialog.combo_topic.currentText() == "NewTopic"
+    destination_widget.combo_topic.lineEdit().editingFinished.emit()
+    assert destination_widget.combo_topic.findText("NewTopic") != -1
+    assert destination_widget.combo_topic.currentText() == "NewTopic"
 
-    dialog.create_topic.setChecked(False)
-    assert not dialog.combo_topic.isEditable()
+    destination_widget.create_topic.setChecked(False)
+    assert not destination_widget.combo_topic.isEditable()
