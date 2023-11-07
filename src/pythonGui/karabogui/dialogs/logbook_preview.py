@@ -67,8 +67,6 @@ class DestinationWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.combo_stream = QComboBox()
         self.combo_topic = QComboBox()
-        self.combo_stream.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.combo_topic.setSizeAdjustPolicy(QComboBox.AdjustToContents)
 
         self.create_topic = QToolButton()
         self.create_topic.setIcon(icons.edit)
@@ -86,7 +84,6 @@ class DestinationWidget(QWidget):
         layout.addWidget(topic_label, 1, 0)
         layout.addWidget(self.combo_topic, 1, 1)
         layout.addWidget(self.create_topic, 1, 2)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 
     def update_destinations(self, data):
         """
