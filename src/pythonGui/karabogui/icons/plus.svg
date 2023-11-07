@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48" height="48">
+  <defs>
+    <linearGradient id="c">
+      <stop offset="0"/>
+      <stop offset="1" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".34020618"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#729fcf"/>
+      <stop offset="1" stop-color="#5187d6"/>
+    </linearGradient>
+    <linearGradient xlink:href="#a" id="e" x1="34.892849" x2="45.918697" y1="36.422989" y2="48.547989" gradientTransform="translate(-18.01785 -13.57119)" gradientUnits="userSpaceOnUse"/>
+    <linearGradient xlink:href="#b" id="f" x1="16.874998" x2="27.900846" y1="22.851799" y2="34.976799" gradientUnits="userSpaceOnUse"/>
+    <radialGradient xlink:href="#c" id="d" cx="23.070683" cy="35.127438" r="10.31934" fx="23.070683" fy="35.127438" gradientTransform="matrix(.91481 .01265 -.00822 .21356 2.253914 27.18889)" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path fill="url(#d)" d="M33.278212 34.94062a10.31934 2.320194 0 1 1-20.63868 0 10.31934 2.320194 0 1 1 20.63868 0z" opacity=".10824742" transform="matrix(1.55049 0 0 1.97871 -12.4813 -32.49103)"/>
+  <path fill="#75a1d0" stroke="#3465a4" stroke-width="1.0000004" d="M27.514356 37.542682v-9.02696l9.978464-.040179v-6.995324h-9.969535l-.008929-9.96017-7.016274.011161.004464 9.931152-9.989626.07366-.035714 6.968539 10.034269-.029018.006696 9.040353 6.996185.026786z" font-family="Bitstream Vera Sans" font-size="59.901077" font-weight="700" style="text-align:start;line-height:125%"/>
+  <path fill="url(#e)" stroke="url(#f)" stroke-width="1.0000006" d="M26.498702 36.53392v-9.034182h10.002602l-.006697-5.024429H26.50763v-9.994974l-4.994834.017858.008929 9.977116-10.026189.017857-.026786 4.97309 10.064393.008929-.013393 9.027485 4.978952.03125z" font-family="Bitstream Vera Sans" font-size="59.901077" font-weight="700" opacity=".40860215" style="text-align:start;line-height:125%"/>
+  <path fill="#fff" fill-rule="evenodd" d="M11 25c0 1.9375 25.984375-.96875 25.984375-.03125v-3L27 22v-9.965228h-6V22H11v3z" opacity=".31182796"/>
+</svg>
