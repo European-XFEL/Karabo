@@ -247,11 +247,8 @@ class LogBookPreview(QDialog):
         self.deselect_all.clicked.connect(self._deselect_all)
 
         self._annotation_color = QColor("red")
-        self.draw_button.setIcon(icons.draw)
         self._create_zoom_toolbar()
         self.drawing_toolbar = self._create_drawing_toolbar()
-        self.draw_button.toggled.connect(self._set_drawing_mode)
-        self.drawing_toolbar.setVisible(False)
 
         title = repr(self.parent())
         self.title_line_edit.setPlaceholderText(title)
@@ -576,7 +573,7 @@ class LogBookPreview(QDialog):
             self.action_group_draw.addAction(action)
 
         self.action_group_draw.setExclusive(True)
-        self.toolbar_layout.insertWidget(1, toolbar)
+        self.toolbar_layout.addWidget(toolbar)
         return toolbar
 
     @Slot()
