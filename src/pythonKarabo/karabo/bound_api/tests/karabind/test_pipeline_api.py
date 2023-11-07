@@ -414,7 +414,7 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     assert trials > 0
 
     # Now connected - we prepare and register the shared input selector
-    numOfInput = 1  # which of the two inouts should get the data
+    numOfInput = 1  # which of the two inputs should get the data
 
     def selector(inputs):
         return prefix + "input:in" + str(numOfInput)
@@ -447,20 +447,36 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     assert counter1 == 2
     assert counter2 == 0
 
-    # Another data, now to input 2
+    # Another data, now to input 2 via asyncUpdate() with defaults
     numOfInput = 2
     outputCh.write(Hash('int', 3), meta)
-    outputCh.update()
+    outputCh.asyncUpdate()
     waitForTotalNumData(3)
     assert counter1 == 2
     assert counter2 == 1
 
-    # Another data to input 2
+    # Another data to input 2 via asyncUpdate(..) with arguments
+    asyncUpdateDone = False
+
+    def updateDoneHandler():
+        nonlocal asyncUpdateDone
+        asyncUpdateDone = True
+
     outputCh.write(Hash('int', 4), meta)
-    outputCh.update()
+    outputCh.asyncUpdate(False, updateDoneHandler)
     waitForTotalNumData(4)
     assert counter1 == 2
     assert counter2 == 2
+    # Also check that handler is called
+    trials = 1000
+    while trials > 0:
+        if asyncUpdateDone:
+            break
+        trials -= 1
+        time.sleep(0.001)
+
+    assert trials > 0
+    assert asyncUpdateDone
 
     # A last data to input 1 again
     numOfInput = 1
