@@ -153,6 +153,8 @@ namespace karathon {
         static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data,
                             const bp::object& meta, bool copyAllData);
         static void updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, bool safeNDArray);
+        static void asyncUpdatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, bool safeNDArray,
+                                  const bp::object& readyHandler);
         static void signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
                                                      const bp::object& handler);

@@ -254,6 +254,18 @@ namespace karathon {
         self->update(safeNDArray);
     }
 
+    void OutputChannelWrap::asyncUpdatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, bool safeNDArray,
+                                          const bp::object& readyHandler) {
+        boost::function<void()> handler;
+        if (readyHandler.is_none()) {
+            handler = []() {};
+        } else {
+            handler = HandlerWrap<>(readyHandler, "asyncUpdate");
+        }
+        ScopedGILRelease nogil; // This asyncUpdate is only partially async and can block, so release GIL
+        self->asyncUpdate(safeNDArray, std::move(handler));
+    }
+
 
     void OutputChannelWrap::signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self) {
         ScopedGILRelease nogil;
@@ -624,6 +636,25 @@ void exportPyXmsInputOutputChannel() {
                    "              content when data is queued or sent locally.\n"
                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must\n"
                    "      not be called concurrently")
+
+              .def("asyncUpdate", &karathon::OutputChannelWrap().asyncUpdatePy,
+                   (bp::arg("safeNDArray") = false, bp::arg("readyHandler") = bp::object()),
+                   "Semi-asynchronously update the output channel, i.e. asynchronously send all\n"
+                   "data over the wire that was previously written by calling write(...), but\n"
+                   "block as long as any of the connected InputChannels requires if wait is\n"
+                   "configured.\n"
+                   "safeNDArray - boolean to indicate whether all NDArrays inside the Hash\n"
+                   "              passed to write(..) before are 'safe', i.e. their memory will\n"
+                   "              not be referred to elsewhere after update is finished.\n"
+                   "              Default is 'false', 'true' can avoid safety copies of NDArray\n"
+                   "              content when data is queued or sent locally.\n"
+                   "readyHandler - callback when data (that is not queued) has been sent and\n"
+                   "               thus even NDArray data inside it can be re-used again\n"
+                   "               (except if safeNDArray was set to 'true' in which case its\n"
+                   "               memory may still be used in a queue).\n\n"
+                   "Thread safety:\n"
+                   "All the 'write(..)' methods, '[async]Update(..)' and\n"
+                   "'[async]SignalEndOfStream(..)' must not be called concurrently.")
 
               .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy,
                    "Send end-of-stream (EOS) notification to all connected input channels to\n"
