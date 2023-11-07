@@ -20,11 +20,12 @@ from qtpy import uic
 from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
 from qtpy.QtWidgets import (
-    QAction, QActionGroup, QCheckBox, QColorDialog, QDialog, QDialogButtonBox,
-    QGraphicsScene, QLineEdit, QTableWidgetItem)
+    QAction, QActionGroup, QCheckBox, QColorDialog, QComboBox, QDialog,
+    QDialogButtonBox, QGraphicsScene, QGridLayout, QLabel, QLineEdit,
+    QSizePolicy, QTableWidgetItem, QToolButton, QWidget)
 
 from karabo.common.scenemodel.api import create_base64image
-from karabo.native import Hash
+from karabo.native import Hash, HashList
 from karabogui import icons
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.logbook_drawing_tools import BaseDrawingTool, get_tools
@@ -39,6 +40,8 @@ MIN_ZOOM_FACTOR = 25
 MAX_ZOOM_FACTOR = 250
 ZOOM_INCREMENT = 1.1
 
+MAX_ALLOWED_LOGBOOK = 3
+
 CHECKBOX_STYLE = """
 QCheckBox {
     text-align: center;
@@ -49,6 +52,95 @@ QCheckBox {
 
 LOGBOOK_IMAGE = "Image"
 LOGBOOK_DATA = "Data"
+
+
+class DestinationWidget(QWidget):
+    """A container  with widgets to select the Stream and Topic of the
+    logbook """
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        self._topics = {}
+        layout = QGridLayout(self)
+        layout.setSpacing(1)
+        layout.setVerticalSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.combo_stream = QComboBox()
+        self.combo_topic = QComboBox()
+        self.combo_stream.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.combo_topic.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+
+        self.create_topic = QToolButton()
+        self.create_topic.setIcon(icons.add)
+        self.create_topic.setCheckable(True)
+
+        self.combo_stream.currentTextChanged.connect(self._update_topics)
+        self.create_topic.toggled.connect(self.allow_topic_creation)
+
+        stream_label = QLabel("Stream")
+        stream_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        topic_label = QLabel("Topic")
+        topic_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        layout.addWidget(stream_label, 0, 0)
+        layout.addWidget(self.combo_stream, 0, 1)
+        layout.addWidget(topic_label, 1, 0)
+        layout.addWidget(self.combo_topic, 1, 1)
+        layout.addWidget(self.create_topic, 1, 2)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+
+    def update_destinations(self, data):
+        """
+        Update the comboboxes with the available destinations - stream/topic.
+
+        :param data: A HashList with available LogBooks: Hash with the
+            following fields:
+                "name" : Logbook identifier
+                "destination": Url or folder of the logbook.
+                "topics": List of topics in the stream.
+        """
+        for index, proposal in enumerate(data):
+            name = proposal.get("name")
+            destination = proposal.get("destination")
+            self._topics[name] = proposal.get("topics")
+            self.combo_stream.addItem(name)
+            self.combo_stream.setItemData(index, destination)
+
+    def select_destination(self, stream: str, topic: str):
+        self.combo_stream.setCurrentText(stream)
+        self.combo_topic.setCurrentText(topic)
+
+    @Slot(str)
+    def _update_topics(self, text):
+        """Update the combobox with available topics when the stream
+        selection change"""
+        self.combo_topic.clear()
+        topics = self._topics[text]
+        self.combo_topic.addItems(topics)
+
+    def allow_topic_creation(self, toggled):
+        """Make the combobox editable to allow creation of new topic"""
+        self.combo_topic.setEditable(toggled)
+        if toggled:
+            self.combo_topic.lineEdit().selectAll()
+            self.combo_topic.setFocus(True)
+            self.combo_topic.lineEdit().editingFinished.connect(
+                self.add_new_topic)
+
+    @Slot()
+    def add_new_topic(self):
+        """Add a new item to the Topic combobox"""
+        new_topic = self.combo_topic.lineEdit().text()
+        if self.combo_topic.findText(new_topic) == -1:
+            self.combo_topic.addItem(new_topic)
+        self.combo_topic.setCurrentText(new_topic)
+
+    @property
+    def topic(self):
+        return self.combo_topic.currentText()
+
+    @property
+    def stream(self):
+        return self.combo_stream.currentText()
 
 
 class Canvas(QGraphicsScene):
@@ -132,6 +224,9 @@ class LogBookPreview(QDialog):
 
         self._fit_in_view()
 
+        self.data = None
+        self._destinations = []
+
         # Show the current zoom factor of the image.
         transform = self.view.transform()
         width_scale = transform.m11()
@@ -161,17 +256,16 @@ class LogBookPreview(QDialog):
         title = repr(self.parent())
         self.title_line_edit.setPlaceholderText(title)
 
-        self.combo_name.currentTextChanged.connect(self._update_topics)
-
         self.combo_title_style.currentTextChanged.connect(self._show_title)
-        self.combo_topic.currentTextChanged.connect(self._update_save_button)
         style = get_config()["logbook_header_style"] or "No title"
         self.combo_title_style.setCurrentText(style)
 
-        self.create_topic.setIcon(icons.add)
-        self.create_topic.toggled.connect(self.allow_topic_creation)
+        self.add_stream.clicked.connect(self.add_destination)
+        self.remove_stream.clicked.connect(self.remove_destination)
 
-    # -----------------------------------------------------------------------
+        self.add_destination()
+
+    # -------------------------------------------------------------
     # Karabo Events
 
     def _event_destinations(self, data):
@@ -182,22 +276,16 @@ class LogBookPreview(QDialog):
                 "name" : Logbook identifier
                 "destination": Url or folder of the logbook.
         """
-        streams = []
-        for index, proposal in enumerate(data):
-            name = proposal.get("name")
-            streams.append(name)
-            destination = proposal.get("destination")
-            self._topics[name] = proposal.get("topics")
-            self.combo_name.addItem(name)
-            self.combo_name.setItemData(index, destination)
+        self.data = data
 
-        # Only select the previous stream if available
         previous_stream = get_config()["logbook_stream"]
-        if previous_stream in streams:
-            self.combo_name.setCurrentText(previous_stream)
-
         previous_topic = get_config()["logbook_topic"] or "Logbook"
-        self.combo_topic.setCurrentText(previous_topic)
+
+        for widget in self._destinations:
+            widget.update_destinations(data)
+            widget.combo_stream.setCurrentText(previous_stream)
+            widget.combo_topic.setCurrentText(previous_topic)
+
         self._update_save_button()
 
     # -----------------------------------------------------------------------
@@ -253,7 +341,11 @@ class LogBookPreview(QDialog):
         - no topic is provided
         - dataType is hash and not at least one property is selected
         """
-        topic = self.combo_topic.currentText()
+
+        if not self._destinations:
+            self.ok_button.setEnabled(False)
+            return
+        topic = self._destinations[0].topic
         if not topic:
             self.ok_button.setEnabled(False)
             return
@@ -270,34 +362,35 @@ class LogBookPreview(QDialog):
             self.canvas.set_drawing_tool(None)
 
     @Slot(str)
-    def _update_topics(self, text):
-        self.combo_topic.clear()
-        topics = self._topics[text]
-        self.combo_topic.addItems(topics)
-
-    @Slot(str)
     def _show_title(self, text):
         """Do not show the title widget when 'No title' option is selected """
         index = 0 if text == "No title" else 1
         self.title_stackedWidget.setCurrentIndex(index)
 
-    @Slot(bool)
-    def allow_topic_creation(self, toggled):
-        """Enable/disable editing the Topic combobox."""
-        self.combo_topic.setEditable(toggled)
-        if toggled:
-            self.combo_topic.lineEdit().selectAll()
-            self.combo_topic.setFocus(True)
-            self.combo_topic.lineEdit().editingFinished.connect(
-                self.add_new_topic)
+    @Slot()
+    def add_destination(self):
+        """Add a new logbook destination"""
+        widget = self._create_destination_widget()
+        if self.data is not None:
+            widget.update_destinations(self.data)
+
+        # Select the same stream/topic as in the default destination widget.
+        destination = self._destinations[0]
+        widget.select_destination(destination.stream, destination.topic)
+
+        self.stream_widget.adjustSize()
+        self._enable_destination_buttons()
 
     @Slot()
-    def add_new_topic(self):
-        """Add a new item to the Topic combobox"""
-        new_topic = self.combo_topic.lineEdit().text()
-        if self.combo_topic.findText(new_topic) == -1:
-            self.combo_topic.addItem(new_topic)
-        self.combo_topic.setCurrentText(new_topic)
+    def remove_destination(self):
+        """Remove the last logbook destination"""
+        widget = self._destinations[-1]
+        self.destinations_layout.removeWidget(widget)
+        widget.deleteLater()
+        self.stream_widget.adjustSize()
+        self._destinations.remove(widget)
+        self._enable_destination_buttons()
+
     # -----------------------------------------------------------------------
     # Internal Interface
 
@@ -391,26 +484,54 @@ class LogBookPreview(QDialog):
         scene_rect = self.view.sceneRect()
         self.view.fitInView(scene_rect, Qt.KeepAspectRatio)
 
+    def _create_destination_widget(self):
+        destination_widget = DestinationWidget(parent=self.stream_widget)
+        self.destinations_layout.addWidget(destination_widget)
+        self._destinations.append(destination_widget)
+        return destination_widget
+
+    def _enable_destination_buttons(self):
+        """Enable/Disable the Add/Remove Destination buttons- to allow min 1
+        and max 3 destinations. """
+        size = len(self._destinations)
+        add_enabled = size < MAX_ALLOWED_LOGBOOK
+        remove_enabled = size > 1
+        self.add_stream.setEnabled(add_enabled)
+        self.remove_stream.setEnabled(remove_enabled)
+
     # -----------------------------------------------------------------------
     # Public interface
 
     def done(self, result):
         if result:
             self.request_save()
-            get_config()["logbook_stream"] = self.combo_name.currentText()
-            get_config()["logbook_topic"] = self.combo_topic.currentText()
-            style = self.combo_title_style.currentText()
-            get_config()["logbook_header_style"] = style
-
+            self._save_configs()
         unregister_from_broadcasts(self._event_map)
         return super().done(result)
 
     def request_save(self):
         """Request saving a Hash to the KaraboLogBook"""
-        logbook = self.combo_name.currentText()
-        topic = self.combo_topic.currentText()
+
         info = self._create_logbook_data()
-        get_network().onSaveLogBook(name=logbook, topic=topic, **info)
+        info["destinations"] = self._get_destinations()
+        get_network().onSaveLogBook(**info)
+
+    def _get_destinations(self):
+        """Create a HashList from the selected Logbook stream and topic
+        names in the GUI"""
+        destinations = HashList()
+        for widget in self._destinations:
+            h = Hash("stream", widget.stream, "topic", widget.topic)
+            destinations.append(h)
+        return destinations
+
+    def _save_configs(self):
+        """Save the singleton configurations."""
+        widget = self._destinations[0]
+        get_config()["logbook_stream"] = widget.stream
+        get_config()["logbook_topic"] = widget.topic
+        style = self.combo_title_style.currentText()
+        get_config()["logbook_header_style"] = style
 
     def _create_zoom_toolbar(self):
         """ Create Toolbar with zooming options"""
