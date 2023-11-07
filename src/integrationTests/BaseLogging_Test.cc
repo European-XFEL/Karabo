@@ -2059,9 +2059,8 @@ void BaseLogging_Test::testSchemaEvolution() {
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", schemaVecStr)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive());
-    Hash strVecValueCfg;
-    std::vector<std::string>& strVector = strVecValueCfg.bindReference<std::vector<std::string>>("reconfigurableValue");
-    strVector = std::vector<std::string>{"a", "", "b", "c"};
+    const std::vector<std::string> strVector{"a", "", "b", "c"};
+    Hash strVecValueCfg{"reconfigurableValue", strVector};
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", strVecValueCfg)
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive());
@@ -2083,12 +2082,10 @@ void BaseLogging_Test::testSchemaEvolution() {
                                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                   .receive());
 
-
     // Makes sure all the writes are done before retrieval.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                                   .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
                                   .receive());
-
     // The sleep interval below had to be added because of the Telegraf environment - the time required to save is
     // higher. If toTimePoint captured after the sleep instruction refers to a time point that comes before the time
     // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the test
@@ -2139,7 +2136,7 @@ void BaseLogging_Test::testSchemaEvolution() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
           "History size different than expected after " + toString(numChecks) + " checks:\n\tdeviceId: " + deviceId +
                 "\n\tproperty: \"value\"" + "\n\tparam.from: " + fromTimePoint.toIso8601() +
-                "\n\tparam.to: " + toTimePoint.toIso8601() + "\n\tparam.maxNumData: 10" + toString(maxNumData) +
+                "\n\tparam.to: " + toTimePoint.toIso8601() + "\n\tparam.maxNumData: " + toString(maxNumData) +
                 "\n\thistory.size(): " + toString(history.size()) + "\n\tNumber of Exceptions: " +
                 toString(numExceptions) + "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
           6, static_cast<int>(history.size()));

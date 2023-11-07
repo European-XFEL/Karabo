@@ -178,6 +178,7 @@ namespace karabo {
 
 
         void InfluxDbClient::disconnect() noexcept {
+            m_active = false;
             if (m_dbChannel) {
                 m_dbChannel.reset();
             }
@@ -589,6 +590,7 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                 m_dbChannel.reset();
+                m_active = false;
                 m_connectionRequested = false;
             }
             InfluxResponseHandler handler;
@@ -608,6 +610,8 @@ namespace karabo {
                 o.connection = "close";
                 handler(o);
             }
+            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            tryNextRequest(lock);
         }
 
 
