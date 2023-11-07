@@ -295,7 +295,7 @@ def test_create_new_topic(dialog):
     enables/disables the edit mode on topic combobox.
     """
     destination_widget = dialog._destinations[0]
-    destination_widget.create_topic.setChecked(True)
+    destination_widget.create_topic.clicked.emit(True)
     assert destination_widget.combo_topic.isEditable()
 
     line_edit = destination_widget.combo_topic.lineEdit()

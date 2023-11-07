@@ -73,7 +73,7 @@ class DestinationWidget(QWidget):
         self.create_topic.setCheckable(True)
 
         self.combo_stream.currentTextChanged.connect(self._update_topics)
-        self.create_topic.toggled.connect(self.allow_topic_creation)
+        self.create_topic.clicked.connect(self.allow_topic_creation)
 
         stream_label = QLabel("Stream")
         stream_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -114,22 +114,31 @@ class DestinationWidget(QWidget):
         topics = self._topics[text]
         self.combo_topic.addItems(topics)
 
+    @Slot(bool)
     def allow_topic_creation(self, toggled):
         """Make the combobox editable to allow creation of new topic"""
-        self.combo_topic.setEditable(toggled)
         if toggled:
+            self.combo_topic.setEditable(True)
             self.combo_topic.lineEdit().selectAll()
             self.combo_topic.setFocus(True)
             self.combo_topic.lineEdit().editingFinished.connect(
                 self.add_new_topic)
+        else:
+            new_topic = self.combo_topic.lineEdit().text()
+            self._add_topic(new_topic)
 
     @Slot()
     def add_new_topic(self):
         """Add a new item to the Topic combobox"""
         new_topic = self.combo_topic.lineEdit().text()
+        self._add_topic(new_topic)
+
+    def _add_topic(self, new_topic):
         if self.combo_topic.findText(new_topic) == -1:
             self.combo_topic.addItem(new_topic)
+        self.combo_topic.setEditable(False)
         self.combo_topic.setCurrentText(new_topic)
+        self.create_topic.setChecked(False)
 
     @property
     def topic(self):
