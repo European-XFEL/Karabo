@@ -273,6 +273,19 @@ namespace karathon {
     }
 
 
+    void OutputChannelWrap::asyncSignalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self,
+                                                     const bp::object& readyHandler) {
+        boost::function<void()> handler;
+        if (readyHandler.is_none()) {
+            handler = []() {};
+        } else {
+            handler = HandlerWrap<>(readyHandler, "asyncSignalEndOfStream");
+        }
+        ScopedGILRelease nogil;
+        self->asyncSignalEndOfStream(std::move(handler));
+    }
+
+
     bp::object OutputChannelWrap::create(const std::string& instanceId, const std::string& channelName,
                                          const karabo::util::Hash& channelConfig) {
         using namespace karabo::xms;
@@ -661,6 +674,15 @@ void exportPyXmsInputOutputChannel() {
                    "indicate a logical break in the data stream.\n"
                    "Note: The methods 'write(..)', 'update()' and 'signalEndOfStream()' must not\n"
                    "      be called concurrently")
+
+              .def("asyncSignalEndOfStream", &karathon::OutputChannelWrap().asyncSignalEndOfStreamPy,
+                   (bp::arg("readyHandler") = bp::object()),
+                   "Asynchonously send end-of-stream (EOS) notification to all connected input\n"
+                   "channels to indicate a logical break in the data stream.\n\n"
+                   "readyHandler - callback when notification has been sent or queued\n\n"
+                   "Thread safety:\n"
+                   "All the 'write(..)' methods, '[async]Update(..)' and\n"
+                   "'[async]SignalEndOfStream(..)' must not be called concurrently.")
 
               .def("registerShowConnectionsHandler", &karathon::OutputChannelWrap().registerShowConnectionsHandlerPy,
                    (bp::arg("handler")),
