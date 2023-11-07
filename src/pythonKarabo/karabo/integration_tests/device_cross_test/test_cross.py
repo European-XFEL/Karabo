@@ -209,6 +209,7 @@ async def test_cross(deviceTest):
     # And get a new proxy!
     proxy = await getDevice("boundDevice")
 
+    assert proxy.lockedBy.descriptor.displayType == "lockedBy"
     msg = "didn't receive inital value from bound device"
     assert proxy.a == 22.5 * unit.milliampere, msg
     msg = "didn't receive initial value from bound device"
@@ -217,6 +218,7 @@ async def test_cross(deviceTest):
     # Basic Interfaces Check AFTER bound device is up
     # -----------------------------------------------
     mdl_proxy = await getDevice("middlelayerDevice")
+    assert mdl_proxy.lockedBy.descriptor.displayType == "lockedBy"
 
     with mdl_proxy:
         await setWait(mdl_proxy, boundDevice="boundDevice")

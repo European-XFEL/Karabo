@@ -362,6 +362,7 @@ namespace karabo {
                       .assignmentOptional()
                       .defaultValue("")
                       .expertAccess()
+                      .setSpecialDisplayType("lockedBy")
                       .commit();
 
                 SLOT_ELEMENT(expected).key("slotClearLock").displayedName("Clear Lock").expertAccess().commit();
