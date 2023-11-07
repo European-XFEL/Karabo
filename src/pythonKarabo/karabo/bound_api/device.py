@@ -176,6 +176,7 @@ class PythonDevice(NoFsm):
             .reconfigurable()
             .assignmentOptional().defaultValue("")
             .expertAccess()
+            .setSpecialDisplayType("lockedBy")
             .commit(),
 
             SLOT_ELEMENT(expected).key("slotClearLock")
