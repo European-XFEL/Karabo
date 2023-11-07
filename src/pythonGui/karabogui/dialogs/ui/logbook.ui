@@ -303,19 +303,6 @@
            <property name="sizeConstraint">
             <enum>QLayout::SetMinimumSize</enum>
            </property>
-           <item>
-            <widget class="QToolButton" name="draw_button">
-             <property name="toolTip">
-              <string>Annotate image</string>
-             </property>
-             <property name="text">
-              <string>draw</string>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
           </layout>
          </item>
         </layout>
