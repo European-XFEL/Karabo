@@ -191,6 +191,26 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     "      be called concurrently")
 
               .def(
+                    "asyncSignalEndOfStream",
+                    [](const OutputChannel::Pointer& self, const py::object& readyHandler) {
+                        boost::function<void()> handler;
+                        if (readyHandler.is_none()) {
+                            handler = []() {};
+                        } else {
+                            handler = HandlerWrap<>(readyHandler, "asyncSignalEndOfStream");
+                        }
+                        py::gil_scoped_release release;
+                        self->asyncSignalEndOfStream(std::move(handler));
+                    },
+                    py::arg("readyHandler") = py::none(),
+                    "Asynchonously send end-of-stream (EOS) notification to all connected input\n"
+                    "channels to indicate a logical break in the data stream.\n\n"
+                    "readyHandler - callback when notification has been sent or queued\n\n"
+                    "Thread safety:\n"
+                    "All the 'write(..)' methods, '[async]Update(..)' and\n"
+                    "'[async]SignalEndOfStream(..)' must not be called concurrently.")
+
+              .def(
                     "registerShowConnectionsHandler",
                     [](const OutputChannel::Pointer& self, const py::object& handler) {
                         HandlerWrap<const std::vector<Hash>&> wrappedHandler(handler, "show connections");
