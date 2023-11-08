@@ -335,7 +335,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     // Makes sure that data has been received by logger and written to Influx.
     boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1200));
     Epochstamp afterSecondBurst;
 
     // Checks that one of the schema updates failed.
@@ -721,7 +721,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     // Waits for an interval long enough to guarantee that any other schema saving attempt will happen after the
     // one saved for the previous PropertyTest device under test has gone outside the safe retention window.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1'500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1'600));
     success =
           m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", propTestDevice), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
