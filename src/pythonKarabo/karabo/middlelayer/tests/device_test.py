@@ -201,6 +201,13 @@ def test_displayType_input(deviceTest):
 
 @pytest.mark.timeout(30)
 @run_test
+def test_displayType_lockedBy(deviceTest):
+    myDevice = deviceTest["myDevice"]
+    assert myDevice.lockedBy.descriptor.displayType == "lockedBy"
+
+
+@pytest.mark.timeout(30)
+@run_test
 def test_classId_output(deviceTest):
     myDevice = deviceTest["myDevice"]
     assert myDevice.output.classId == "OutputChannel"
