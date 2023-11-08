@@ -666,6 +666,7 @@ void Device_Test::testSchemaInjection() {
     Schema devFullSchema;
     devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
     CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 1);
+    CPPUNIT_ASSERT(devFullSchema.getDisplayType("lockedBy") == "lockedBy");
 
     // Checks that doing updateSchema keeps previously set value and preserves the property
     // of type TABLE_ELEMENT in the device's static schema.
