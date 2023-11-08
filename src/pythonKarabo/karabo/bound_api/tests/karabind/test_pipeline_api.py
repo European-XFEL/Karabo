@@ -385,6 +385,14 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
         nonlocal counter2
         counter2 += 1
 
+    def eosHandler1(inputCh):
+        nonlocal counter1
+        counter1 = 0
+
+    def eosHandler2(inputCh):
+        nonlocal counter2
+        counter2 = 0
+
     # Create two inpout channels and register data handlers
     cfg = Hash("connectedOutputChannels", [prefix + "output:out"],
                "dataDistribution", "shared")
@@ -392,6 +400,8 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     inputCh2 = InputChannel.create(prefix + "input", "in2", cfg)
     inputCh1.registerDataHandler(dataHandler1)
     inputCh2.registerDataHandler(dataHandler2)
+    inputCh1.registerEndOfStreamEventHandler(eosHandler1)
+    inputCh2.registerEndOfStreamEventHandler(eosHandler2)
 
     outputInfo = outputCh.getInformation()
     assert outputInfo["port"] > 0
@@ -478,17 +488,61 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     assert trials > 0
     assert asyncUpdateDone
 
-    # A last data to input 1 again
+    # Now test signalEndOfStream which travels to all inputs and resets counter
+    outputCh.signalEndOfStream()
+    waitForTotalNumData(0)
+    assert counter1 == 0
+    assert counter2 == 0
+
+    # Send again to input 1 & 2 to clear it below with asyncSignalEndOfStream
     numOfInput = 1
     outputCh.write(Hash('int', 5), meta)
     outputCh.update()
-    waitForTotalNumData(5)
-    assert counter1 == 3
-    assert counter2 == 2
+    numOfInput = 2
+    outputCh.write(Hash('int', 6), meta)
+    outputCh.update()
+    waitForTotalNumData(2)
+    assert counter1 == 1
+    assert counter2 == 1
+
+    # Now test asyncSignalEndOfStream with default argument
+    outputCh.asyncSignalEndOfStream()
+    waitForTotalNumData(0)
+    assert counter1 == 0
+    assert counter2 == 0
 
     # Test that we can reset the selector.
     # (But we loose control who receives, so can hardly test.)
     outputCh.registerSharedInputSelector(None)
+
+    outputCh.write(Hash('int', 7), meta)
+    outputCh.update()
+    outputCh.write(Hash('int', 8), meta)
+    outputCh.update()
+    waitForTotalNumData(2)
+    assert counter1 + counter2 == 2
+
+    # Finally test asyncSignalEndOfStream with handler argument
+    asyncEosDone = False
+
+    def eosSent():
+        nonlocal asyncEosDone
+        asyncEosDone = True
+
+    outputCh.asyncSignalEndOfStream(eosSent)
+    waitForTotalNumData(0)
+    assert counter1 == 0
+    assert counter2 == 0
+    # Also check that handler is called
+    trials = 1000
+    while trials > 0:
+        if asyncEosDone:
+            break
+        trials -= 1
+        time.sleep(0.001)
+
+    assert trials > 0
+    assert asyncEosDone
 
     EventLoop.stop()
     time.sleep(.2)
