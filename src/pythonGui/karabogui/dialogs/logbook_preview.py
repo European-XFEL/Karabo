@@ -33,6 +33,7 @@ from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_network
+from karabogui.util import SignalBlocker
 from karabogui.validators import NumberValidator
 from karabogui.widgets.toolbar import ToolBar
 
@@ -95,6 +96,10 @@ class DestinationWidget(QWidget):
                 "destination": Url or folder of the logbook.
                 "topics": List of topics in the stream.
         """
+        with SignalBlocker(self.combo_stream):
+            self.combo_stream.clear()
+        self._topics.clear()
+
         for index, proposal in enumerate(data):
             name = proposal.get("name")
             destination = proposal.get("destination")
