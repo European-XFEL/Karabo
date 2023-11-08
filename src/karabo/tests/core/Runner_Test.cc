@@ -113,3 +113,67 @@ void Runner_Test::testRunnerFailure4() {
     Hash configuration;
     CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }
+
+void Runner_Test::testRunnerWithInitJsonField() {
+    const char *initString = R"(
+init={
+    "deviceId1": {
+        "classId": "TheClassName",
+        "stringProperty": "Value1",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value1"
+        }
+    },
+    "deviceId2": {
+        "classId": "TheClassName",
+        "stringProperty": "Value2",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value2"
+        }
+    }
+}
+    )";
+
+    char const *argv[] = {"SomeExecutable", "serverId=foo", initString};
+    int argc = 3;
+    karabo::util::Hash configuration;
+    CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
+
+    CPPUNIT_ASSERT(configuration.get<std::string>("serverId") == "foo");
+
+    CPPUNIT_ASSERT(configuration.get<std::string>("autoStart[0].TheClassName.deviceId") == "deviceId1");
+    CPPUNIT_ASSERT(configuration.get<std::string>("autoStart[0].TheClassName.node.stringProperty") == "Value1");
+
+    CPPUNIT_ASSERT(configuration.get<std::string>("autoStart[1].TheClassName.deviceId") == "deviceId2");
+    CPPUNIT_ASSERT(configuration.get<std::string>("autoStart[1].TheClassName.node.stringProperty") == "Value2");
+}
+
+void Runner_Test::testRunnerFailureWithInitAndAutostart() {
+    const char *initString = R"(
+init={
+    "deviceId1": {
+        "classId": "TheClassName",
+        "stringProperty": "Value",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value"
+        }
+    },
+    "deviceId2": {
+        "classId": "TheClassName",
+        "stringProperty": "Value",
+        "floatProperty": 42,
+        "node": {
+            "stringProperty": "Value"
+        }
+    }
+}
+    )";
+    char const *argv[] = {"SomeExecutable", "serverId=foo",
+                          "autostart[0]={DataLoggerManager.serverList=dls1,dls2,dls3,dls4", initString};
+    int argc = 4;
+    karabo::util::Hash configuration;
+    CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), karabo::util::ParameterException);
+}
