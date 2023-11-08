@@ -34,6 +34,13 @@ class AlarmObject(Configurable):
         defaultValue="alarm",
         displayType="AlarmCondition")
 
+    noAlarmCondition = String(
+        defaultValue="alarm")
+
+    anotherAlarmCondition = String(
+        defaultValue="alarm",
+        displayType="AlarmCondition")
+
 
 schema = AlarmObject.getClassSchema()
 new_schema = AlarmObject.getClassSchema()
@@ -72,6 +79,15 @@ def test_alarm_controller(gui_app, mocker):
     set_proxy_value(proxy, "alarmCondition", "alarm")
     alarm_svg = get_alarm_svg("alarm")
     assert controller.widget.loaded_data == alarm_svg
+
+    no_alarm_proxy = get_class_property_proxy(new_schema, "noAlarmCondition")
+    assert no_alarm_proxy.binding is not None
+    assert not controller.visualize_additional_property(no_alarm_proxy)
+
+    another_alarm_proxy = get_class_property_proxy(
+        new_schema, "anotherAlarmCondition")
+    assert another_alarm_proxy.binding is not None
+    assert controller.visualize_additional_property(another_alarm_proxy)
 
     controller.destroy()
     assert controller.widget is None
