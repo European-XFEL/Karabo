@@ -306,3 +306,19 @@ def test_create_new_topic(dialog):
 
     destination_widget.create_topic.setChecked(False)
     assert not destination_widget.combo_topic.isEditable()
+
+
+def test_concurrency(dialog):
+    """
+    The KaraboEvent.ActiveDestinations should not duplicate the streams
+    in the combobox. This happens when multiple dialogs are opened.
+    """
+    h_list = HashList()
+    h_list.append(Hash("name", "test_stream",
+                       "topics", ["Logbook", "Summary"]))
+    dialog._event_destinations(h_list)
+    destination_widget = dialog._destinations[0]
+    assert destination_widget.combo_stream.count() == 1
+
+    dialog._event_destinations(h_list)
+    assert destination_widget.combo_stream.count() == 1
