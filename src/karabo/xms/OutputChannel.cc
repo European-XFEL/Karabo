@@ -653,15 +653,15 @@ namespace karabo {
                     return;
                 }
                 // First check whether instanceId unblocks something
-                if (m_doneBlockSharedHandler) {
-                    m_doneBlockSharedHandler(&channelInfo);
-                    m_doneBlockSharedHandler.clear();
+                if (m_unblockSharedHandler) {
+                    m_unblockSharedHandler(&channelInfo);
+                    m_unblockSharedHandler.clear();
                     return;
                 }
-                auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
-                if (itBlockHandler != m_doneBlockHandlers.end()) {
-                    itBlockHandler->second(&channelInfo);
-                    m_doneBlockHandlers.erase(itBlockHandler);
+                auto itUnblockHandler = m_unblockHandlers.find(instanceId);
+                if (itUnblockHandler != m_unblockHandlers.end()) {
+                    itUnblockHandler->second(&channelInfo);
+                    m_unblockHandlers.erase(itUnblockHandler);
                     return;
                 }
 
@@ -715,10 +715,10 @@ namespace karabo {
                 }
 
                 // Check whether instanceId unblocks a waiting copy input
-                auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
-                if (itBlockHandler != m_doneBlockHandlers.end()) {
-                    itBlockHandler->second(&channelInfo);
-                    m_doneBlockHandlers.erase(itBlockHandler);
+                auto itunblockHandler = m_unblockHandlers.find(instanceId);
+                if (itunblockHandler != m_unblockHandlers.end()) {
+                    itunblockHandler->second(&channelInfo);
+                    m_unblockHandlers.erase(itunblockHandler);
                     return;
                 }
 
@@ -770,12 +770,12 @@ namespace karabo {
                                                   << error.value() << ").";
 
                         // If the instanceId blocks something, release that
-                        auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
-                        if (itBlockHandler != m_doneBlockHandlers.end()) {
+                        auto itBlockHandler = m_unblockHandlers.find(instanceId);
+                        if (itBlockHandler != m_unblockHandlers.end()) {
                             // Call handler although that will try to send (and fail).
                             // That does not harm, but it unblocks and decrements chunk usage
                             itBlockHandler->second(&channelInfo);
-                            m_doneBlockHandlers.erase(itBlockHandler);
+                            m_unblockHandlers.erase(itBlockHandler);
                         }
 
                         // Release queued chunks
@@ -790,9 +790,9 @@ namespace karabo {
                                 unregisterWriterFromChunk(chunkId);
                             }
                             m_sharedLoadBalancedQueuedChunks.clear();
-                            if (m_doneBlockSharedHandler) {
-                                m_doneBlockSharedHandler(&channelInfo); // tries to send (and fails), but no harm
-                                m_doneBlockSharedHandler.clear();
+                            if (m_unblockSharedHandler) {
+                                m_unblockSharedHandler(&channelInfo); // tries to send (and fails), but no harm
+                                m_unblockSharedHandler.clear();
                             }
                         }
 
@@ -818,10 +818,10 @@ namespace karabo {
                                                   << ") disconnected since '" << error.message() << "' (#"
                                                   << error.value() << ").";
                         // If the instanceId blocks something, release that
-                        auto itBlockHandler = m_doneBlockHandlers.find(instanceId);
-                        if (itBlockHandler != m_doneBlockHandlers.end()) { // See comment above in SHARED part
+                        auto itBlockHandler = m_unblockHandlers.find(instanceId);
+                        if (itBlockHandler != m_unblockHandlers.end()) { // See comment above in SHARED part
                             itBlockHandler->second(&channelInfo);
-                            m_doneBlockHandlers.erase(itBlockHandler);
+                            m_unblockHandlers.erase(itBlockHandler);
                         }
 
                         // Release any queued chunks:
@@ -940,10 +940,10 @@ namespace karabo {
                 sstr << getInstanceIdName() << " awaiting future for '" << which << "' takes more than "
                      << ++overallSeconds << " seconds. Likely, the code calling '" << which << "' has locked a mutex "
                      << "that also all other threads in the EventLoop want to lock, but of course cannot. So the "
-                     << "handler that should resolve the blocking in 'awaitUpdateFuture' cannot run run.\n"
+                     << "handler that should resolve the blocking in 'awaitUpdateFuture' cannot run.\n"
                      << "Please fix the device code, e.g. by avoding to call '" << which << "' with a mutex locked.";
                 if (m_addedThreads < 10) {
-                    sstr << "\n => Nevertheless, add a thread to unblock as a rescue.";
+                    sstr << "\n => As a rescue here, a thread is added to unblock.";
                     EventLoop::addThread();
                     ++m_addedThreads;
                 } else {
@@ -1079,7 +1079,7 @@ namespace karabo {
                     if (blockForShared) {
                         Memory::incrementChunkUsage(m_channelId, chunkId);
                         // If NDArray not safe, need to request copy if input channel will be local
-                        m_doneBlockSharedHandler =
+                        m_unblockSharedHandler =
                               boost::bind(singleUnblockTrigger, _1, blockCounter++, counter++, !safeNDArray);
                     }
 
@@ -1087,7 +1087,7 @@ namespace karabo {
                         Memory::incrementChunkUsage(m_channelId, chunkId);
                         const std::string& instanceId = channelInfo->get<std::string>("instanceId");
                         // Last argument false since any needed copy was done already before
-                        m_doneBlockHandlers[instanceId] =
+                        m_unblockHandlers[instanceId] =
                               boost::bind(singleUnblockTrigger, _1, blockCounter++, counter++, false);
                     }
                 } else {
