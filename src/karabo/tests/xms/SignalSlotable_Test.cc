@@ -43,7 +43,7 @@ using boost::placeholders::_1;
 
 const int numWaitIterations = 1000;
 const int sleepPerWaitIterationMs = 5;
-const int slotCallTimeout = 2000;
+const int slotCallTimeout = 5000;
 
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
     const std::string m_othersId;
