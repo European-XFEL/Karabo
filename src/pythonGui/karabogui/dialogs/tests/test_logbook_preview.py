@@ -34,7 +34,8 @@ def dialog(gui_app):
         proxy = DeviceClassProxy(server_id="test_server", binding=binding)
         panel._show_configuration(proxy)
         dialog = LogBookPreview(parent=panel)
-    return dialog
+        yield dialog
+        dialog._event_network({"status": False})
 
 
 def test_logbook_preview(dialog):
