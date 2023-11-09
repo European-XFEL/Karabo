@@ -58,6 +58,7 @@ LOGBOOK_DATA = "Data"
 class DestinationWidget(QWidget):
     """A container  with widgets to select the Stream and Topic of the
     logbook """
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
@@ -248,7 +249,9 @@ class LogBookPreview(QDialog):
         self.zoom_factor_edit.editingFinished.connect(self.change_zoom_factor)
 
         self._event_map = {
-            KaraboEvent.ActiveDestinations: self._event_destinations}
+            KaraboEvent.ActiveDestinations: self._event_destinations,
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
         register_for_broadcasts(self._event_map)
         get_network().listDestinations()
 
@@ -297,6 +300,10 @@ class LogBookPreview(QDialog):
             widget.combo_topic.setCurrentText(previous_topic)
 
         self._update_save_button()
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
 
     # -----------------------------------------------------------------------
     # Qt Slots
