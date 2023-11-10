@@ -46,7 +46,6 @@ void exportPyUtilSchemaListElement(py::module_ &);      // PyUtilSchemaListEleme
 void exportPyUtilSchemaOverwriteElement(py::module_ &); // PyUtilSchemaOverwriteElement.cc
 void exportPyUtilSchemaTableElement(py::module_ &);     // PyUtilSchemaTableElement.cc
 void exportPyUtilSchemaValidator(py::module_ &);        // PyUtilSchemaValidator.cc
-void exportPyUtilSchemaTest(py::module_ &);             // ConfigurationTestClasses.[cc,hh]
 
 // io
 void exportPyIoFileToolsAll(py::module_ &);
@@ -58,6 +57,8 @@ void exportPyXmsSlotElement(py::module_ &);        // PyXmsSlotElement.cc
 void exportPyXmsInputOutputChannel(py::module_ &); // PyXmsInputOutputChannel.cc
 
 // core
+void exportPyCoreDeviceClient(py::module_ &); // PyCoreDeviceClient.cc
+void exportPyCoreLock(py::module_ &);         // PyCoreLockWrap.cc
 
 // log
 void exportPyLogLogger(py::module_ &); // PyLogLogger.cc
@@ -65,6 +66,9 @@ void exportPyLogLogger(py::module_ &); // PyLogLogger.cc
 // net
 void exportPyNetEventLoop(py::module_ &);         // PyNetEventLoop.cc
 void exportPyNetConnectionChannel(py::module_ &); // PyNetConnectionChannel.cc
+
+// utilities
+void exportPyKarabindTestUtilities(py::module_ &); // ConfigurationTestClasses.[cc,hh]
 
 // Build one big module, 'karabind.so', similar to how we build 'karathon' module
 
@@ -93,7 +97,6 @@ PYBIND11_MODULE(karabind, m) {
     exportPyUtilSchemaOverwriteElement(m);
     exportPyUtilSchemaTableElement(m);
     exportPyUtilSchemaValidator(m);
-    exportPyUtilSchemaTest(m);
 
     // io
     exportPyIoFileToolsAll(m);
@@ -105,6 +108,8 @@ PYBIND11_MODULE(karabind, m) {
     exportPyXmsInputOutputChannel(m);
 
     // core
+    exportPyCoreDeviceClient(m);
+    exportPyCoreLock(m);
 
     // log
     exportPyLogLogger(m);
@@ -112,4 +117,7 @@ PYBIND11_MODULE(karabind, m) {
     // net
     exportPyNetEventLoop(m);
     exportPyNetConnectionChannel(m);
+
+    // exportPyKarabindTestUtilities
+    exportPyKarabindTestUtilities(m);
 }
