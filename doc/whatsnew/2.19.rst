@@ -5,7 +5,7 @@
 What's New in Karabo 2.19.0
 ***************************
 
-Release date will be on November 10 2023.
+Release date will be on November 13 2023.
 
 This release contains a major boost update to **1.82** (was 1.68).
 Additionally, several updates for python packages have been done::
@@ -179,23 +179,34 @@ MDL/Native core
 Bound/cpp core
 ==============
 
-
+- Py11: Fix exception printing Closes #576 !7916
 - Py11:  Completing Hash, Schema, time classes, etc. !7647
-- Py11: Binding for SignalSlotable... without IO channelsCloses #346 !7616
+- Py11: Binding for SignalSlotable... without IO channels Closes #346 !7616
 - Py11: Binding for EventLoop !7623
 - Py11: Add SLOT_ELEMENT and unit tests for SignalSlotable !7621
 - Py11: Optimize castPySequenceToStdVector !7677
-- Py11 xms: pipeline schema elements"Closes #351 !7644
-- Py11: BYTEARRAY_ELEMENTCloses #421 !7680
-- Py11: Use call_once in FromNumpy singletonCloses #373 !7681
-- Py11: Check that all commented `allowedActions` are uncommented and correctly working."Closes #377 !7685
-- Py11: ndarray binding missing 'deepcopy'"Closes #372 !7686
+- Py11 xms: pipeline schema elements" Closes #351 !7644
+- Py11: BYTEARRAY_ELEMENT Closes #421 !7680
+- Py11: Use call_once in FromNumpy singleton Closes #373 !7681
+- Py11: Check that all commented `allowedActions` are uncommented and correctly working. Closes #377 !7685
+- Py11: ndarray binding missing 'deepcopy' Closes #372 !7686
 - Py11: karabo/io+net binding !7750
 - Py11: Test bindings of synchronous TCP read and write !7813
 - Py11: Logger binding !7767
-- Py11: Add tests (and fix) for async Tcp read/write and Broker bindingsCloses #557 !7829
+- Py11: Add tests (and fix) for async Tcp read/write and Broker bindings Closes #557 !7829
 - Py11: Try to fix hanging test !7836
 - Py11: Add test for NDArray created on C++ side. Closes #376 !7688
+- C++: karabo-cppserver can use the init keyword for autostart. !7904
+- C++ Integration Tests: Tweak some timings to avoid failures on a loaded CI. !7943
+- C++: Add rescue thread in OutputChannel if event loop blocked !7947
+- C++: Get rid of one mutex in OutputChannel and minor cleaning !7913
+- C++: Provide slotGetSystemInfo !7898
+- C++: remove output channel schema from slotGetConfiguration. !7892
+- C++: OutputChannel cleaning and properly test asyncUpdate !7917
+- C++: Small fix for message logger for AMQP !7926
+- C++: Proper array de-allocator in NDArray corner case !7927
+- C++: semi-async OutputChannel::asyncUpdate for simple use Closes #660 !7924
+- C++ tests: Increase timeout in xms test !7951
 - C++: Little code cleaning !7723
 - C++: AmqpClient always uses configurable timeout !7720
 - C++ int. test: Try few times to get updates from influx !7725
@@ -208,11 +219,11 @@ Bound/cpp core
 - C++: Update doc of bind_weakAlso use `bind_weak` in pipeline selector test and clean `MetaTools_Test::testWeakBind`. !7656
 - C++/Influx: Fix reading of new schema if old schema was written pre-2.17.0 !7657
 - C++: Increase DeviceClient timeout !7695
-- C++ integration tests: Use AMQP brokerCloses #436 !7679
+- C++ integration tests: Use AMQP broker Closes #436 !7679
 - C++: Treat corner case of coincident reply arrival and timeout !7704
 - C++: Remove unused handler copy from AmqpBroker !7703
 - C++ test: Robuster SignalSlotable::testAutoConnectSlot !7670
-- C++: Do not run Karabo [un]subscribe handlers on AMQP event loopCloses #456 !7718
+- C++: Do not run Karabo [un]subscribe handlers on AMQP event loop Closes #456 !7718
 - C++ template: set RPATH to be relative and include extern/lib64 directory !7678
 - C++: Update cmake external dependency from 3.17.5 to 3.27.1 !7755
 - C++: Use boost::beast directly for http(s) client (no Belle library) !7742
@@ -241,8 +252,10 @@ Bound/cpp core
 - C++: Remove Motor and Camera interface !7787
 - C++: Amqp with less copies of Hash for message header and body !7726
 - Bound: flake8 failure on modern flake8: del is not a function !7675
+- Bound: Semi-async OutputChannel::asyncUpdate !7937
+- Bound: Add async sending of EOS !7938
 - Bound: Longer timeout before restarting device with same id !7676
-- Bound: updateState with extra argumentsCloses #502 !7701
+- Bound: updateState with extra arguments Closes #502 !7701
 - Bound: Pass cfg to device as binary - fixes vector string with comma in string !7817
 - Bound: Robust test of injected channels !7818
 - Bound: Bindings for OutputChannel.registerSharedInputSelector. Closes #583 !7834
@@ -255,27 +268,50 @@ Bound/cpp core
 - Bound/C++: Remove InputChannel schema !7746
 - Bound/C++: Remove MQTT implementation and Redis !7788
 - Bound/C++: Remove DetectorGeometry !7785
+- All API: Provide displayType for lockedBy property !7936
 
 
 Graphical User Interface
 ========================
 
+- GUI: Sort scene data for logbook Closes #652 !7903
+- GUI: post styles in the Logbook Closes #648 !7902
+- GUI: Fix button state in logbook preview dialog Closes #647 !7907
+- GUI: Rename dataType in logbook from image to text_image !7905
+- GUI: Prevent catching ListOfNodes or ChoiceOfNodes for scene panel data !7906
+- GUI: Use timingId instead of trainId !7909
+- GUI: karabo-concert Closes #11 !7908
+- GUI: Add logbook icon !7919
+- GUI: Add pyyaml to the dependencies !7914
+- GUI: Option to write yaml for karabo-concert Closes #654 !7910
+- GUI: Logbook - option to upload table (csv). Closes #650 !7920
+- GUI: Singleton configuration for logbook title style. Closes #655 !7925
+- GUI: Create a new topic from logbook dialog Closes #656 !7930
+- GUI: Set invalid index on combo delegate in table !7931
+- GUI: Logbook - option to copy entry to other proposal of different karabo topic. Closes #651 !7934
+- GUI: Find segfault in logbook drawing tests !7933
+- GUI: Remove toggle of logbook toolbar Closes #665 !7935
+- GUI: Close logbook dialog on connection closure !7950
+- GUI: Icons for add/remove destinations in logbook !7939
+- GUI: Adjust logbook dialog size and policies !7940
+- GUI: Fix create topic behaviour: !7941
+- GUI: Concurrency in stream combobox of multiple opened logbook dialogs Closes #679 !7942
 - GUI: Fix levels dialog for floats !7607
 - GUI: Fix pyinstaller script including pyflakes !7665
 - GUI: Align single bit unit label and formatting !7663
 - GUI: Remove logging panel and subscribe logs !7673
-- GUI: Data Analysis Dialog from VectorXY Graph/Scatter.Closes #134 !7645
+- GUI: Data Analysis Dialog from VectorXY Graph/Scatter. Closes #134 !7645
 - GUI: Remove attribute injection on project configuration !7672
 - GUI: Protect fitting in Data Analysis Dialog from no data !7692
-- GUI: Data Analysis Dialog: Implement Sech Square fitting optionCloses #453 !7698
-- GUI: Validate the order of the alarm conditionsCloses #505 !7706
+- GUI: Data Analysis Dialog: Implement Sech Square fitting option Closes #453 !7698
+- GUI: Validate the order of the alarm conditions Closes #505 !7706
 - GUI: KaraboLogBook preview !7684
 - GUI: Abstract more the logbook interface !7714
 - GUI: Remove comparison warning for base label with higher numpy version !7707
 - GUI: Provide karabo logbook icon !7715
 - GUI: Fix simple validator from corner case input 000X !7710
 - GUI: LogBook image preview !7717
-- GUI: Fit image to the LogbookView on opening the dialogCloses #518!7721
+- GUI: Fit image to the LogbookView on opening the dialog Closes #518!7721
 - GUI: More abstraction on logbook panel info !7724
 - GUI: Disable logbook save button if no destinations available !7743
 - GUI: bugfix enable/disable save button correctly !7744
@@ -283,18 +319,18 @@ Graphical User Interface
 - GUI: User friendly zooming on axis. Closes #35 !7777
 - GUI: Remove attributes from configurator !7778
 - GUI: KaraboLogBook - Table Preview. Closes #467 !7740
-- GUI: Upgrade pyqtgraph to latest version"Closes #361 !7792
+- GUI: Upgrade pyqtgraph to latest version Closes #361 !7792
 - GUI: Logbook Preview- annotate image !7763
 - GUI: Update Qt to 5.15.9 !7776
 - GUI: Attr fast deepcopy has no runtime attrs !7804
-- GUI: Do not allow set log values on X-axis in Bar Graph.Closes #572 !7809
+- GUI: Do not allow set log values on X-axis in Bar Graph. Closes #572 !7809
 - GUI: Highlight filter search with changing color !7784
 - GUI: LogBook: grab pixmap from GraphicsScene. !7815
 - GUI: Option to change font for Text annotation in Logbook image preview. Closes #551 !7816
 - GUI: Logbook annotation: Don't loose drawing tool. !7819
 - GUI: Configurator Panel Search does not have validation !7824
 - GUI: Provide error message on missing scheduled big data request !7823
-- GUI: LogBook option to edit the titleCloses #578 !7827
+- GUI: LogBook option to edit the title Closes #578 !7827
 - GUI: Data Analysis Dialog should auto-update the plot. Closes #454 !7822
 - GUI: Vector XY Scatter Graph aligns to different sizes !7826
 - GUI: Option to change Pen color for Logbook image annotations. Closes #550 !7831
@@ -324,10 +360,16 @@ Core Devices
 
 - Alarms: Remove AlarmService device !7691
 - Influx/C++: Avoid unneeded map look-ups in the log reader (review suggestion for MR 7657). !7659
+- Influx/C++: Avoid potential silent failure during schema writing !7918
 
 Dependencies, Documentation and Tools
 =====================================
 
+- CI: Fix some holes about tests to run !7929
+- DEPS: use conan to build log4cpp !7911
+- DEPS: use conan to build daemontools !7915
+- DEPS: Use fixed tag from tecki daemontools !7921
+- DEPS: Upgrade jedi to 0.17.2 !7949
 - DEPS: pkgconfig file patching should also include files that we build from sources, and not via conan. !7664
 - DEPS: Use pyexistdb instead of hand-patched eulexistdb !7667
 - DEPS: Upgrade to boost-1.82.0 !7666
@@ -342,11 +384,13 @@ Dependencies, Documentation and Tools
 - DEPS: remove manual patchelf build !7780
 - DEPS: simply use pre-built numpy/scipy !7872
 - DEPS: Do not build libzmq with CentOS-7 incompatible version of libsodium. !7875
-- DEPS: Pin jedi for autocompletion bug in ikarabo/ipythonCloses #630 !7880
+- DEPS: Pin jedi for autocompletion bug in ikarabo/ipython Closes #630 !7880
 - DEPS: Remove MQTT and Redis dependencies !7799
 - DEPS: Remove certify dependency. !7808
 - DEPS: Add pytz dependency and rollback pyzmq to 22.3.0.. !7843
 - DEPS: Set KARABO variable for pkg-config in CMake template !7747
+- DOC: Document release date !7952
+- DOC: Add mergelog until 2.19.0rc3 !7901
 - DOC: Document 2.18.0 !7650
 - DOC: Document: Removal of items move in 2.18 !7651
 - DOC: Emphasize removal of dependencies !7802
@@ -376,6 +420,6 @@ Dependencies, Documentation and Tools
 - TOOLS: Align device_scm_version with pep440 !7869
 - TOOLS: Align docs to markdown and remove os script !7871
 - TOOLS: Use default git describe command for versioning !7895
-- TOOLS: Remove alarm server from jms default eservicesCloses #580 !7884
+- TOOLS: Remove alarm server from jms default eservices Closes #580 !7884
 - TOOLS: CMake - `Framework/src/karabo` may be compiled in isolation !7893
-
+- TOOLS: Provide explicit options, by default linting is active !7928
