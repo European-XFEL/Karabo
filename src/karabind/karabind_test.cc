@@ -21,6 +21,7 @@
 #include <pybind11/pybind11.h>
 
 #include <karabo/core/Device.hh>
+#include <karabo/core/DeviceServer.hh>
 #include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/util/Configurator.hh>
@@ -58,7 +59,9 @@ namespace py = pybind11;
 using namespace karabo::util;
 using namespace configurationTest;
 
-void exportPyUtilSchemaTest(py::module_& m) {
+static std::map<std::string, boost::shared_ptr<karabo::core::DeviceServer>> testServersRegistry;
+
+void exportPyKarabindTestUtilities(py::module_& m) {
     m.def("cppShapeSchemaCircle", []() {
         auto schema = Configurator<Shape>::getSchema("Circle");
         return py::cast(schema);
@@ -133,4 +136,21 @@ void exportPyUtilSchemaTest(py::module_& m) {
         std::vector<std::string> v = Configurator<karabo::io::BinarySerializer<Schema>>::getRegisteredClasses();
         return py::cast(v);
     });
+    m.def("startDeviceServer", [](karabo::util::Hash& config) {
+        using namespace karabo::core;
+        if (!config.has("serverId")) config.set("serverId", "testDeviceServer");
+        if (!config.has("Logger.priority")) config.set("Logger.priority", "FATAL");
+        if (!config.has("scanPlugins")) config.set("scanPlugins", false);
+        auto deviceServer = DeviceServer::create("DeviceServer", config);
+        deviceServer->finalizeInternalInitialization();
+        testServersRegistry[config.get<std::string>("serverId")] = deviceServer;
+    });
+    m.def("stopDeviceServer", [](const std::string& serverId) {
+        using namespace karabo::core;
+        auto it = testServersRegistry.find(serverId);
+        if (it == testServersRegistry.end()) return;
+        testServersRegistry.erase(it);
+    });
 }
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::DeviceServer)
