@@ -45,84 +45,22 @@ Packages that have been **added**:
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
-
-
-Migration Guidelines
-++++++++++++++++++++
-
-General remarks:
-
-- A lot of device repositories (python) make use of the *isort* package.
-This package orders the imports. Please activate a karabo installation and type *isort .*
-in the repository folder in case imports are not ordered according to CI failure.
-
-1.
-From 2.19.X onwards the namespace **middlelayer_api** has been removed.
-The only supported namespaces for device developers to import from are: *karabo.middlelayer*, *karabo.bound*
-
-
-.. code-block:: python
-
-    from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-    # Imports moved, please use
-    from karabo.middlelayer.testing import DeviceTest, async_tst
-
-
-2.
-Since March 2021, the `Injectable` class is not required anymore in device code
-and has been deprecated. Finally, from 2.19.X onwards, the class is removed from karabo.
-
-
-.. code-block:: python
-
-    from karabo.middlelayer_api.injectable import Injectable
-
-    class GATTPhysicalUnit(Injectable, Device):
-        ...
-
-    # Injectable is not required anymore and will throw, remove import and use
-
-    class GATTPhysicalUnit(Device):
-        ...
-
-
-3.
-Dependency upgrade: yaml -> use `yaml.safe_load` instead of `yaml.load`
-
-
-.. code-block:: python
-
-    # The following line will throw, yaml.load requires a kwarg `loader`
-    data = yaml.load(file.read())
-
-    # use
-    data = yaml.safe_load(file.read())
-
-
-4.
-C++ Boost placeholders (e.g. ::_1) need to be explicitly declared, otherwise code is not compiling
-To make the code working again, please add on top of the file
-
-.. code-block:: C++
-
-    using boost::placeholders::_1;
-    using boost::placeholders::_2;
-
-5.
-`ImageData` *header* functionality has been **removed** from the Framework for both C++ and Bound.
-Hence, code containing this functionality will throw or prevent compilation.
-
-
-6.
-`DetectorGeometry` has been removed from C++ and Bound due to non-use in operation. An import
-will throw an exception.
-
-7.
-Use the `central CI template` (https://git.xfel.eu/Karabo/gitlabci)
-C++ example: https://git.xfel.eu/karaboDevices/scanlabGalvo/-/merge_requests/37/diffs
-Python example: https://git.xfel.eu/karaboDevices/vacuumSection/-/merge_requests/27/diffs
-
-Please be aware that the central CI template utilizes pytest instead of nosetests. If your test file lacks the prefix 'test_', it will not be able to test the device. To resolve this issue, kindly rename your test files to include 'test_' in the name. For example, you can rename 'TestBeckhoffAssistant.py' to 'test_beckhoff_assistant.py'.
+- GUI: **LogBook support!** Scenes, configs, etc. with annotation can be send to
+  an electronic log book backend. Device was developed for Zulip ELOG at EuXFEL.
+- GUI: A new application mode is provided, the **karabo-concert**.
+  From a running GUI, a yaml file can be created that stores information about
+  open scenes and their position on the screen.
+  If this yaml file is passed to karabo-concert, scenes are positioned accordingly.
+- GUI: XY Plots now gracefully accept vectors of different length
+- All API: First official production release of the Rabbit MQ (AMQP) interface.
+- C++: Device servers support now an `init` configuration (json) similar to existing MDL for autostarting devices.
+- Bound: updateState can be called now with extra arguments for a single update
+- Python API: All device templates are now provided with a toml structure.
+  The framework supports and is now aligned to PEP0621 (https://peps.python.org/pep-0621/)
+  All device tags must follow PEP440 (https://peps.python.org/pep-0440/)
+- C++/Bound: The pipelining interface was enhanced and is now asynchronous under the hood.
+- All API: slotGetSystemInfo implementation for devices to provide information about their broker connection,
+  time information and user.
 
 Breaking Changes
 ++++++++++++++++
@@ -132,6 +70,28 @@ Breaking Changes
   for safety.
   On the other hand the copyAllData flag of OutputChannel.write is ignored now
   and the method behaves as if previously the flag was false.
+- Macro: Before 2.19.0, the class name was appended to the original deviceId, resulting in DeviceID-ClassName.
+  From 2.19.0 onwards, this has been removed and all gui scenes referring to macros need to be adjusted.
+- C++ ImageData header has been removed, see migration guidelines.
+- C++/Bound: DetectorGeometry has been removed, see migration guidelines.
+- C++: Removal of the Motor and Camera interface class.
+- C++: Remove 'disributionMode' from OutputChannel behaviour for shared connections. The default behaviour is unchanged (load-balanced).
+- C++/Bound: As a more powerful feature, a device can register a method to its output channel that decides which of the shared input channels should receive data.
+- MDL: The `Injectable` class, being an empty class placeholder for quite a while, has been removed, see migration guidelines.
+- MDL: The middlelayer_api namespace is not anymore availabe, see migration guidelines.
+- AlarmService: The alarm service has been removed from the framework. A new alarm device implementation will be provided outside of the frameowrk.
+
+Change of behaviour
++++++++++++++++++++
+
+- Macro: instanceInfo status is always `ok`
+- All API: device servers don't regularly scan plugins anymore. This feature has been removed from C++ and MDL.
+  The device plugins are only scanned once on startup.
+- All API: The pipeline option `queue` has been deprecated and treated as `queueDrop` if configured.
+- GUI: All runtime attribute configurations are not available anymore. This fades out the alarm attribute configuration from the Configurator.
+- C++: Output channel schema default values are not included anymore in the device configuration. This is visible when calling
+  slotGetConfiguration.
+- All API: The heartbeat information does not include anymore the full instance info, only the instance type and interval.
 
 
 Detailed Merge-Log
@@ -180,7 +140,7 @@ Bound/cpp core
 ==============
 
 - Py11: Fix exception printing Closes #576 !7916
-- Py11:  Completing Hash, Schema, time classes, etc. !7647
+- Py11: Completing Hash, Schema, time classes, etc. !7647
 - Py11: Binding for SignalSlotable... without IO channels Closes #346 !7616
 - Py11: Binding for EventLoop !7623
 - Py11: Add SLOT_ELEMENT and unit tests for SignalSlotable !7621
@@ -210,13 +170,13 @@ Bound/cpp core
 - C++: Little code cleaning !7723
 - C++: AmqpClient always uses configurable timeout !7720
 - C++ int. test: Try few times to get updates from influx !7725
-- C++ Data logging: Log everything received to stabilize  tests !7722
+- C++ Data logging: Log everything received to stabilize tests !7722
 - C++ int. tests: Longer timeout to instantiate logger/logreader devices !7734
 - C++ tests: Fix flakiness of xms tests !7739
 - C++: Move "activateKarabo.in". Distinct  "activate" for build tree. !7737
 - C++ tests: unify timeout !7643
 - C++: Shared pipeline with user defined distribution !7655
-- C++: Update doc of bind_weakAlso use `bind_weak` in pipeline selector test and clean `MetaTools_Test::testWeakBind`. !7656
+- C++: Update doc of bind_weak. Also use `bind_weak` in pipeline selector test and clean `MetaTools_Test::testWeakBind`. !7656
 - C++/Influx: Fix reading of new schema if old schema was written pre-2.17.0 !7657
 - C++: Increase DeviceClient timeout !7695
 - C++ integration tests: Use AMQP broker Closes #436 !7679
@@ -423,3 +383,82 @@ Dependencies, Documentation and Tools
 - TOOLS: Remove alarm server from jms default eservices Closes #580 !7884
 - TOOLS: CMake - `Framework/src/karabo` may be compiled in isolation !7893
 - TOOLS: Provide explicit options, by default linting is active !7928
+
+
+
+Migration Guidelines
+++++++++++++++++++++
+
+General remarks:
+
+- A lot of device repositories (python) make use of the *isort* package.
+This package orders the imports. Please activate a karabo installation and type *isort .*
+in the repository folder in case imports are not ordered according to CI failure.
+
+1.
+From 2.19.X onwards the namespace **middlelayer_api** has been removed.
+The only supported namespaces for device developers to import from are: *karabo.middlelayer*, *karabo.bound*
+
+
+.. code-block:: python
+
+    from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+    # Imports moved, please use
+    from karabo.middlelayer.testing import DeviceTest, async_tst
+
+
+2.
+Since March 2021, the `Injectable` class is not required anymore in device code
+and has been deprecated. Finally, from 2.19.X onwards, the class is removed from karabo.
+
+
+.. code-block:: python
+
+    from karabo.middlelayer_api.injectable import Injectable
+
+    class GATTPhysicalUnit(Injectable, Device):
+        ...
+
+    # Injectable is not required anymore and will throw, remove import and use
+
+    class GATTPhysicalUnit(Device):
+        ...
+
+
+3.
+Dependency upgrade: yaml -> use `yaml.safe_load` instead of `yaml.load`
+
+
+.. code-block:: python
+
+    # The following line will throw, yaml.load requires a kwarg `loader`
+    data = yaml.load(file.read())
+
+    # use
+    data = yaml.safe_load(file.read())
+
+
+4.
+C++ Boost placeholders (e.g. ::_1) need to be explicitly declared, otherwise code is not compiling
+To make the code working again, please add on top of the file
+
+.. code-block:: C++
+
+    using boost::placeholders::_1;
+    using boost::placeholders::_2;
+
+5.
+`ImageData` *header* functionality has been **removed** from the Framework for both C++ and Bound.
+Hence, code containing this functionality will throw or prevent compilation.
+
+
+6.
+`DetectorGeometry` has been removed from C++ and Bound due to non-use in operation. An import
+will throw an exception.
+
+7.
+Use the `central CI template` (https://git.xfel.eu/Karabo/gitlabci)
+C++ example: https://git.xfel.eu/karaboDevices/scanlabGalvo/-/merge_requests/37/diffs
+Python example: https://git.xfel.eu/karaboDevices/vacuumSection/-/merge_requests/27/diffs
+
+Please be aware that the central CI template utilizes pytest instead of nosetests. If your test file lacks the prefix 'test_', it will not be able to test the device. To resolve this issue, kindly rename your test files to include 'test_' in the name. For example, you can rename 'TestBeckhoffAssistant.py' to 'test_beckhoff_assistant.py'.
