@@ -78,6 +78,9 @@ void exportPyLogLogger();
 // net
 void exportp2p();
 
+// utilities
+void exportPyKarathonTestUtilities();
+
 
 void *convert_to_cstring(PyObject *obj) {
     const void *ret = PyUnicode_AsUTF8(obj);
@@ -162,6 +165,9 @@ BOOST_PYTHON_MODULE(karathon) {
 
     // net
     exportp2p();
+
+    // utilities
+    exportPyKarathonTestUtilities();
 
     boost::python::converter::registry::insert(convert_to_cstring, boost::python::type_id<char>(),
                                                &boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
