@@ -30,9 +30,9 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
 
-@register_binding_controller(ui_name='Alarm Widget',
-                             klassname='DisplayAlarm',
-                             is_compatible=with_display_type('AlarmCondition'),
+@register_binding_controller(ui_name="Alarm Widget",
+                             klassname="DisplayAlarm",
+                             is_compatible=with_display_type("AlarmCondition"),
                              priority=90,
                              binding_type=StringBinding)
 class DisplayAlarm(BaseBindingController):
@@ -45,6 +45,11 @@ class DisplayAlarm(BaseBindingController):
 
     def add_proxy(self, proxy):
         """Add an alarm condition proxy to the widget"""
+        if proxy.binding is None:
+            return True
+        if not proxy.binding.display_type == "AlarmCondition":
+            return False
+
         self._update_alarm_widget(proxy)
         return True
 
