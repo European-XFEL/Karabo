@@ -5,7 +5,79 @@
 What's New in Karabo 2.19.0
 ***************************
 
-Release date will be on November 13 2023.
+Release date was November 13, 2023.
+
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+GUI Logbook, AMQP broker production ready, C++/Bound pipeline enhancements,
+dependency updates, and more:
+
+- GUI: **LogBook support!** Scenes, configs, etc. can be send with annotation to
+  an electronic log book backend. Device was developed for Zulip ELOG at EuXFEL.
+- GUI: A new application mode besides *karabo-cinema* and *karabo-theatre* is
+  provided, the **karabo-concert**.
+  From a running GUI, a yaml file can be created that stores information about
+  open scenes and their position on the screen.
+  If this yaml file is passed to *karabo-concert*, scenes are positioned
+  accordingly.
+- GUI: XY Plots now gracefully accept vectors of different length.
+- All API: First official production release supporting the Rabbit MQ (AMQP)
+  broker.
+- C++: To auto start devices, device servers now support an `init` configuration
+  option with the same (json) syntax as MDL (`autoStart` still supported).
+- Bound: As in C++, *updateState* now supports to update further properties in
+  one go with the state.
+- C++/Bound: Under the hood, output channels now send data asynchronously.
+  *Device.writeChannel* and *OutputChannel.update* stay synchronous for
+  backward compatibility, but *OutputChannel.asyncUpdate[NoWait]* offers the
+  full benefit of being asynchronous.
+- C++/Bound: To control which of the input channels connected with "shared"
+  data distribution, device code can now register a *SharedInputSelector* at an
+  output channel.
+- All API: A new *slotGetSystemInfo* for devices provides information about
+  their broker connection, timing information and user.
+- Python API: All device templates are now provided with a toml structure.
+  The framework supports and is now aligned to PEP621 (https://peps.python.org/pep-0621/).
+  All device tags must follow PEP440 (https://peps.python.org/pep-0440/).
+- Various dependency updates (`boost`, `numpy`,...) as outlined below.
+
+Breaking Changes
+++++++++++++++++
+
+- Macro: Before 2.19.0, the class name was appended to the original deviceId, resulting in DeviceID-ClassName.
+  From 2.19.0 onwards, this has been removed and all gui scenes referring to macros need to be adjusted.
+- C++/Bound ImageData header has been removed, see migration guidelines.
+- C++/Bound: DetectorGeometry has been removed, see migration guidelines.
+- C++: Removal of the Motor and Camera interface class.
+- Bound/C++: The default value of the *safeNDArray* flag of the methods
+  *Device.writeChannel* and *OutputChannel.update* have been switched back to
+  true (as was the case before 2.18.0) for safety.
+  On the other hand the *copyAllData* flag of *OutputChannel.write* is ignored
+  now and the method behaves as if previously the flag was false.
+- C++: The 'disributionMode' configuration for shared connections of an
+  OutputChannel is now ignored. The behaviour matches the old default
+  (load-balanced) except if the new *SharedInputSelector* feature is used.
+- MDL: The `Injectable` class, being an empty class placeholder for quite a while, has been removed. See migration guidelines.
+- MDL: The middlelayer_api namespace is not anymore availabe, see migration guidelines.
+- AlarmService: The alarm service has been removed from the framework. A new alarm device implementation will be provided outside of the framework.
+
+Change of behaviour
++++++++++++++++++++
+
+- Macro: instanceInfo status is always `ok`
+- All API: device servers don't regularly scan plugins anymore. This feature has been removed from C++ and MDL.
+  The device plugins are only scanned once on startup.
+- All API: The pipeline option `queue` has been deprecated and is treated as `queueDrop` if configured.
+- GUI: All runtime attribute configurations are not available anymore. This fades out the alarm attribute configuration from the Configurator.
+- C++/Bound: Output channel schema default values are not included anymore in the device configuration. This is visible when calling
+  *slotGetConfiguration*.
+- All API: The heartbeat information does not include anymore the full instance info, only the instance type and interval.
+
+
+Dependency Updates
+++++++++++++++++++
 
 This release contains a major boost update to **1.82** (was 1.68).
 Additionally, several updates for python packages have been done::
@@ -41,57 +113,6 @@ Packages that have been **added**:
 
     pytz==2020.5 (before 2.18.0 was 2013.9; missing in 2.18.0) 
 
-
-Summary – Release highlights
-++++++++++++++++++++++++++++
-
-- GUI: **LogBook support!** Scenes, configs, etc. with annotation can be send to
-  an electronic log book backend. Device was developed for Zulip ELOG at EuXFEL.
-- GUI: A new application mode is provided, the **karabo-concert**.
-  From a running GUI, a yaml file can be created that stores information about
-  open scenes and their position on the screen.
-  If this yaml file is passed to karabo-concert, scenes are positioned accordingly.
-- GUI: XY Plots now gracefully accept vectors of different length
-- All API: First official production release of the Rabbit MQ (AMQP) interface.
-- C++: Device servers support now an `init` configuration (json) similar to existing MDL for autostarting devices.
-- Bound: updateState can be called now with extra arguments for a single update
-- Python API: All device templates are now provided with a toml structure.
-  The framework supports and is now aligned to PEP0621 (https://peps.python.org/pep-0621/)
-  All device tags must follow PEP440 (https://peps.python.org/pep-0440/)
-- C++/Bound: The pipelining interface was enhanced and is now asynchronous under the hood.
-- All API: slotGetSystemInfo implementation for devices to provide information about their broker connection,
-  time information and user.
-
-Breaking Changes
-++++++++++++++++
-
-- Bound/C++: The default value of the safeNDArray flag of the methods
-  Device.writeChannel and OutputChannel.update have been switched back to true
-  for safety.
-  On the other hand the copyAllData flag of OutputChannel.write is ignored now
-  and the method behaves as if previously the flag was false.
-- Macro: Before 2.19.0, the class name was appended to the original deviceId, resulting in DeviceID-ClassName.
-  From 2.19.0 onwards, this has been removed and all gui scenes referring to macros need to be adjusted.
-- C++ ImageData header has been removed, see migration guidelines.
-- C++/Bound: DetectorGeometry has been removed, see migration guidelines.
-- C++: Removal of the Motor and Camera interface class.
-- C++: Remove 'disributionMode' from OutputChannel behaviour for shared connections. The default behaviour is unchanged (load-balanced).
-- C++/Bound: As a more powerful feature, a device can register a method to its output channel that decides which of the shared input channels should receive data.
-- MDL: The `Injectable` class, being an empty class placeholder for quite a while, has been removed, see migration guidelines.
-- MDL: The middlelayer_api namespace is not anymore availabe, see migration guidelines.
-- AlarmService: The alarm service has been removed from the framework. A new alarm device implementation will be provided outside of the frameowrk.
-
-Change of behaviour
-+++++++++++++++++++
-
-- Macro: instanceInfo status is always `ok`
-- All API: device servers don't regularly scan plugins anymore. This feature has been removed from C++ and MDL.
-  The device plugins are only scanned once on startup.
-- All API: The pipeline option `queue` has been deprecated and treated as `queueDrop` if configured.
-- GUI: All runtime attribute configurations are not available anymore. This fades out the alarm attribute configuration from the Configurator.
-- C++: Output channel schema default values are not included anymore in the device configuration. This is visible when calling
-  slotGetConfiguration.
-- All API: The heartbeat information does not include anymore the full instance info, only the instance type and interval.
 
 
 Detailed Merge-Log
@@ -177,7 +198,6 @@ Bound/cpp core
 - C++ tests: unify timeout !7643
 - C++: Shared pipeline with user defined distribution !7655
 - C++: Update doc of bind_weak. Also use `bind_weak` in pipeline selector test and clean `MetaTools_Test::testWeakBind`. !7656
-- C++/Influx: Fix reading of new schema if old schema was written pre-2.17.0 !7657
 - C++: Increase DeviceClient timeout !7695
 - C++ integration tests: Use AMQP broker Closes #436 !7679
 - C++: Treat corner case of coincident reply arrival and timeout !7704
@@ -193,12 +213,10 @@ Bound/cpp core
 - C++ signalHeartbeat heartbeatInfo reduced to type, heartbeatInterval !7730
 - C++: heartbeatInterval type in heartbeatInfo corrected to to int !7828
 - C++: Minor cleaning, test timeout increase !7838
-- C++ Influx: Preserve schemas older than the database safe retention time. !7832
 - C++: Remove 'disributionMode' from OutputChannel behaviour for shared connections !7837
 - C++: Remove pipeline "queue" option, use "queueDrop" !7840
 - C++: Unit tests for HttpClient !7791
 - C++: Silent log message, only once ask for topology in gui server !7801
-- C++: InfluxDbClient instances with per slot lifetimes in InfluxLogReader. !7758
 - C++ Integration Test: Tweak Influx safe schema retention test timing. !7866
 - C++: Remove periodic scan of plugins by the DeviceServer. !7852
 - C++: Define common Influx constants in a single place. !7856
@@ -321,6 +339,9 @@ Core Devices
 - Alarms: Remove AlarmService device !7691
 - Influx/C++: Avoid unneeded map look-ups in the log reader (review suggestion for MR 7657). !7659
 - Influx/C++: Avoid potential silent failure during schema writing !7918
+- Influx/C++: Preserve schemas older than the database safe retention time. !7832
+- Influx/C++: InfluxDbClient instances with per slot lifetimes in InfluxLogReader. !7758
+- Influx/C++: Fix reading of new schema if old schema was written pre-2.17.0 !7657
 
 Dependencies, Documentation and Tools
 =====================================
