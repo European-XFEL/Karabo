@@ -5,6 +5,7 @@ from typing import Dict
 import yaml
 from qtpy.QtCore import Slot
 
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.messagebox import show_error
 from karabogui.programs.base import create_gui_app, init_gui
@@ -27,7 +28,8 @@ def create_concert(data: Dict):
             position = [int(scene["x"]), int(scene["y"])]
             db_scene = {"name": f"{domain}-{uuid}",
                         "target": uuid,
-                        "position": position
+                        "position": position,
+                        "target_window": SceneTargetWindow.Dialog
                         }
             broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
 
