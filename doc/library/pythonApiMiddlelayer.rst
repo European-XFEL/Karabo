@@ -194,7 +194,6 @@ Writing a device
 
 .. autoexception:: karabo.middlelayer.KaraboError
 
-
 Synchronization
 ---------------
 
@@ -214,6 +213,14 @@ Synchronization
    :members:
 
 .. autoclass:: karabo.middlelayer.lock
+
+
+Synchronization primitives
+--------------------------
+
+.. autofunction:: karabo.middlelayer.waitUntil
+
+.. autofunction:: karabo.middlelayer.waitUntilNew
 
 
 Karabo descriptors
