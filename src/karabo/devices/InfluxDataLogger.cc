@@ -954,7 +954,6 @@ namespace karabo {
             // destruction of dbClientRead will also close the connection to Influx.
             auto dbClientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", m_clientReadConfig);
             dbClientRead->queryDb(statement, bind_weak(&InfluxDataLogger::onShowDatabases, this, _1, dbClientRead));
-            KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
         }
 
 
@@ -1050,7 +1049,9 @@ namespace karabo {
         void InfluxDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
             karabo::net::InfluxResponseHandler handler;
             if (aReplyPtr) {
-                handler = [aReplyPtr](const HttpResponse& resp) {
+                handler = [weakThis{weak_from_this()}, aReplyPtr](const HttpResponse& resp) {
+                    auto guard(weakThis.lock());
+                    if (!guard) return; // Do not use AsyncReply anymore if device gone or being destructed
                     if (resp.code >= 300) {
                         std::ostringstream errMsg;
                         errMsg << "Flush request failed - InfluxDb response code/message: " << resp.code << " '"
