@@ -29,7 +29,7 @@ namespace karabo {
                 m_node = node.get_ptr();
                 if (node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
                     m_restrictions.assignFromAttrVector(
-                          node->getAttribute<std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                          node->getAttribute<std::vector<bool>>(KARABO_OVERWRITE_RESTRICTIONS));
                 }
             } else {
                 // Could be, the parameter is assembled under different rules, we should silently ignore this then.
@@ -281,7 +281,7 @@ namespace karabo {
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
                     OverwriteElement::Restrictions existing;
                     existing.assignFromAttrVector(
-                          m_node->getAttribute<std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                          m_node->getAttribute<std::vector<bool>>(KARABO_OVERWRITE_RESTRICTIONS));
                     // now merge
                     restrictions.merge(existing);
                 }
@@ -290,9 +290,43 @@ namespace karabo {
             return *this;
         }
 
+#define CASE_CHECK_DEFAULT_IN_OPTIONS(RefType, CppType)                                                        \
+    case RefType: {                                                                                            \
+        const std::vector<CppType>& options = m_schema->getOptions<CppType>(m_path);                           \
+        const auto it = std::find(options.begin(), options.end(), m_schema->getDefaultValue<CppType>(m_path)); \
+        if (it == options.end()) {                                                                             \
+            std::string defAsStr(m_schema->getDefaultValueAs<std::string>(m_path));                            \
+            throw KARABO_LOGIC_EXCEPTION("Default value " + defAsStr +=                                        \
+                                         " not in options: " + karabo::util::toString(options));               \
+        }                                                                                                      \
+        break;                                                                                                 \
+    }
+
+
         void OverwriteElement::commit() {
-            // Does nothing, changes happened on existing node
+            // Checks consistency of default value and options (caveat: not only for things changed...)
+            if (m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
+                switch (m_schema->getValueType(m_path)) {
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::BOOL, bool);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::CHAR, char);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT8, signed char);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT16, short);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT32, int);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::INT64, long long);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT8, unsigned char);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT16, unsigned short);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT32, unsigned int);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::UINT64, unsigned long long);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::FLOAT, float);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::DOUBLE, double);
+                    CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::STRING,
+                                                  std::string); // Covers also StateElement
+                    default:
+                        break; // no options for other types like vectors, etc.
+                }
+            }
         }
+#undef CASE_CHECK_DEFAULT_IN_OPTIONS
 
 
         void OverwriteElement::checkIfRestrictionApplies(const Restrictions::Restriction& restriction) const {
