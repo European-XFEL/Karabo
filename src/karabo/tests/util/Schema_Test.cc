@@ -834,10 +834,106 @@ void Schema_Test::testHelpFunction() {
 
 
 void Schema_Test::testOverwriteElement() {
-    Schema schema = Configurator<TestStruct1>::getSchema("TestStruct2");
+    {
+        Schema schema = Configurator<TestStruct1>::getSchema("TestStruct2");
 
-    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
-    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
+        CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
+        CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
+    }
+
+    // Check that overwrite element checks that (new) default and options do not contradict
+    {
+        Schema schema;
+        UINT16_ELEMENT(schema)
+              .key("uint16")
+              .assignmentOptional()
+              .defaultValue(5u)
+              .options(std::vector<unsigned short>{1u, 5u})
+              .commit();
+        INT32_ELEMENT(schema)
+              .key("int32")
+              .assignmentOptional()
+              .defaultValue(-5)
+              .options(std::vector<int>{3, -5})
+              .commit();
+        DOUBLE_ELEMENT(schema)
+              .key("double")
+              .assignmentOptional()
+              .defaultValue(0.)
+              .options(std::vector<double>{2.2, -3.3, 0.})
+              .commit();
+        STRING_ELEMENT(schema)
+              .key("string")
+              .assignmentOptional()
+              .defaultValue("default")
+              .options(std::vector<std::string>{"default", "other"})
+              .commit();
+        STATE_ELEMENT(schema)
+              .key("state")
+              .initialValue(State::INIT)
+              .options(State::INIT, State::ON, State::CHANGING)
+              .commit();
+
+        Schema workSchema(schema);
+        // unit16
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                                   .key("uint16")
+                                   .setNewDefaultValue(static_cast<unsigned short>(2u))
+                                   .commit(), // options are 1 and 5
+                             karabo::util::LogicException);
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("uint16").setNewOptions("1, 2").commit(),
+                             karabo::util::LogicException); // default is 5
+
+        // int32
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                                   .key("int32")
+                                   .setNewDefaultValue(2) // options are 3 and -5
+                                   .commit(),
+                             karabo::util::LogicException);
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("int32").setNewOptions("1, 2").commit(),
+                             karabo::util::LogicException); // default is -5
+
+        // double
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                                   .key("double")
+                                   .setNewDefaultValue(2.1)
+                                   .commit(), // options are 2.2, -3.3 and 0.
+                             karabo::util::LogicException);
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("double").setNewOptions("1.1, 2.2").commit(),
+                             karabo::util::LogicException); // default is 0.
+
+        // string
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                                   .key("string")
+                                   .setNewDefaultValue("further")
+                                   .commit(), // options are "default" and "other"
+                             karabo::util::LogicException);
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema).key("string").setNewOptions("one, another").commit(),
+                             karabo::util::LogicException); // default is "default"
+
+        // State
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                                   .key("state")
+                                   .setNewDefaultValue(State::UNKNOWN)
+                                   .commit(), // options are INIT, ON, CHANGING
+                             karabo::util::LogicException);
+        workSchema = schema; // start clean
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(workSchema)
+                                   .key("state")
+                                   .setNewOptions(std::vector<State>{State::ON, State::ACQUIRING})
+                                   .commit(),
+                             karabo::util::LogicException); // default is INIT
+
+        // We skip explicit testing of BOOL, CHAR, [U]INT8, INT16, UINT32, [U]INT64, FLOAT
+    }
 }
 
 
