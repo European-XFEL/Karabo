@@ -473,7 +473,7 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_influxVersionMutex);
                         m_influxVersion = m_response.version;
                         KARABO_LOG_FRAMEWORK_INFO << "Influx instance " << m_url << " has version '" << m_influxVersion
-                                                  << "'.\n";
+                                                  << "'.";
                     }
                     m_response.payloadArrived = true;
                     if (m_response.transferEncoding == "chunked") {
