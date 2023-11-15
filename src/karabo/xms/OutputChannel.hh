@@ -417,9 +417,9 @@ namespace karabo {
              * Register handler that selects which of the connected input channels that have dataDistribution =
              * "shared" is to be served.
              *
-             * The handler will be called during update() with the ids of the connected "shared" input channels
-             * (e.g. "deviceId:input") as argument. The returned channel id will receive the data. If an empty
-             * string or an unknown id is returned, the data will be dropped.
+             * The handler will be called during update(..)/asyncUpdate[NoWait](..) with the ids of the connected
+             * "shared" input channels (e.g. "deviceId:input") as argument. The returned channel id will receive the
+             * data. If an empty string or an unknown id is returned, the data will be dropped.
              *
              * @param: selector takes vector<string> as argument and returns string
              */
