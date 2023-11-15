@@ -50,6 +50,54 @@ using boost::placeholders::_1;
 using boost::placeholders::_2;
 using boost::placeholders::_3;
 
+using karabo::net::Channel;
+using karabo::net::Connection;
+using karabo::net::EventLoop;
+using karabo::util::Hash;
+using karabo::util::toString;
+
+/**
+ * Create client and server that are conencted
+ *
+ * @returns pair (client/server) of pairs (connection, channel)
+ */
+std::pair<std::pair<Connection::Pointer, Channel::Pointer>, std::pair<Connection::Pointer, Channel::Pointer>>
+createClientServer(Hash clientCfg, Hash serverCfg) {
+    CPPUNIT_ASSERT_MESSAGE("Must not specify type for server", !serverCfg.erase("type"));
+    CPPUNIT_ASSERT_MESSAGE("Must not specify type for client", !clientCfg.erase("type"));
+    CPPUNIT_ASSERT_MESSAGE("Must not specify port for client", !clientCfg.erase("port"));
+
+    serverCfg.merge(Hash("type", "server"));
+    auto serverConn = Connection::create("Tcp", serverCfg);
+
+    Channel::Pointer serverChannel;
+    std::string failureReasonServ;
+    auto serverConnectHandler = [&serverChannel, &failureReasonServ](const karabo::net::ErrorCode& ec,
+                                                                     const Channel::Pointer& channel) {
+        if (ec) {
+            failureReasonServ = "Server connection failed: " + toString(ec.value()) += " -- " + ec.message();
+        } else {
+            serverChannel = channel;
+        }
+    };
+    const unsigned int serverPort = serverConn->startAsync(serverConnectHandler);
+    CPPUNIT_ASSERT(serverPort != 0);
+
+    clientCfg.merge(Hash("type", "client", "port", serverPort));
+    Connection::Pointer clientConn = Connection::create("Tcp", clientCfg);
+    Channel::Pointer clientChannel = clientConn->start();
+
+    int timeout = 10000;
+    while (timeout >= 0) {
+        if (serverChannel) break;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        timeout -= 10;
+    }
+    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+    return std::make_pair(std::make_pair(serverConn, serverChannel), std::make_pair(clientConn, clientChannel));
+}
+
+
 CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
 
 
@@ -1191,8 +1239,6 @@ void TcpNetworking_Test::testWriteAsync() {
 }
 
 void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
-    using namespace karabo::util;
-    using namespace karabo::net;
     constexpr int timeoutSec = 10;
 
     auto thr = boost::thread(&EventLoop::work);
@@ -1200,31 +1246,9 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
     //
     // Create server, client and connect them
     //
-    auto serverCon = Connection::create("Tcp", Hash("type", "server"));
-
-    Channel::Pointer serverChannel;
-    std::string failureReasonServ;
-    auto serverConnectHandler = [&serverChannel, &failureReasonServ](const ErrorCode& ec,
-                                                                     const Channel::Pointer& channel) {
-        if (ec) {
-            failureReasonServ = "Server connection failed: " + toString(ec.value()) += " -- " + ec.message();
-        } else {
-            serverChannel = channel;
-        }
-    };
-    const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
-    CPPUNIT_ASSERT(serverPort != 0);
-
-    Connection::Pointer clientConn = Connection::create("Tcp", Hash("type", "client", "port", serverPort));
-    Channel::Pointer clientChannel = clientConn->start();
-
-    int timeout = 10000;
-    while (timeout >= 0) {
-        if (serverChannel) break;
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-        timeout -= 10;
-    }
-    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+    auto clientServerPair = createClientServer(Hash(), Hash());
+    Connection::Pointer& clientConn = clientServerPair.first.first;
+    Channel::Pointer& clientChannel = clientServerPair.first.second;
 
     //
     // Test that handler is called although channel destructed
@@ -1243,4 +1267,103 @@ void TcpNetworking_Test::testAsyncWriteCompleteHandler() {
 
     EventLoop::stop();
     thr.join();
+}
+
+
+void TcpNetworking_Test::testConnCloseChannelStop() {
+    auto thr = boost::thread(&EventLoop::work);
+
+    Connection::Pointer emptyConnPtr;
+    {
+        // server reads, but client channel closes
+        auto clientServerPair = createClientServer(Hash(), Hash());
+        Channel::Pointer& clientChannel = clientServerPair.first.second;
+        Channel::Pointer& serverChannel = clientServerPair.second.second;
+        // Test
+        testConnCloseChannelStop(serverChannel, clientChannel, emptyConnPtr);
+        std::clog << " Done server reads and client closes." << std::flush;
+    }
+
+    {
+        // server reads, but client connection stops
+        auto clientServerPair = createClientServer(Hash(), Hash());
+        Channel::Pointer& clientChannel = clientServerPair.first.second;
+        Connection::Pointer& clientConn = clientServerPair.first.first;
+        Channel::Pointer& serverChannel = clientServerPair.second.second;
+        // Test
+        testConnCloseChannelStop(serverChannel, clientChannel, clientConn);
+        std::clog << " Done server reads and client connection stops." << std::flush;
+    }
+
+    {
+        // client reads, but server channel closes
+        auto clientServerPair = createClientServer(Hash(), Hash());
+        Channel::Pointer& clientChannel = clientServerPair.first.second;
+        Channel::Pointer& serverChannel = clientServerPair.second.second;
+        // Test
+        testConnCloseChannelStop(clientChannel, serverChannel, emptyConnPtr);
+        std::clog << " Done client reads and server closes." << std::flush;
+    }
+
+    {
+        // client reads, but server connection stops
+        auto clientServerPair = createClientServer(Hash(), Hash());
+        Channel::Pointer& clientChannel = clientServerPair.first.second;
+        Channel::Pointer& serverChannel = clientServerPair.second.second;
+        Connection::Pointer& serverConn = clientServerPair.second.first;
+        // Test
+        testConnCloseChannelStop(clientChannel, serverChannel, serverConn);
+        std::clog << " Done client reads and server connection stops." << std::flush;
+    }
+
+    EventLoop::stop();
+    thr.join();
+}
+
+void TcpNetworking_Test::testConnCloseChannelStop(Channel::Pointer& alice, Channel::Pointer& bob,
+                                                  Connection::Pointer& bobConn) {
+    constexpr int timeoutSec = 10;
+
+    // Register handlers and asynchronously write and read from bob to alice
+    auto readProm = std::make_shared<std::promise<boost::system::error_code>>();
+    auto readFut = readProm->get_future();
+    Channel::ReadHashHandler readHandler = [readProm](const boost::system::error_code& ec, Hash&) {
+        readProm->set_value(ec);
+    };
+    alice->readAsyncHash(readHandler);
+    bob->writeAsyncHash(Hash("a", 1), [](const boost::system::error_code& ec) {});
+    auto ok = readFut.wait_for(std::chrono::seconds(timeoutSec));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
+    boost::system::error_code ec = readFut.get();
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
+
+    // Register another async read handler at alice, but after bob has "touched" its TCP classes:
+    // - either close bob's channel: alice's read handler will be called with failure
+    // - or stop bob's connection: all stays fine, bob can still write and so alice will receive OK
+    readProm = std::make_shared<std::promise<boost::system::error_code>>();
+    readFut = readProm->get_future();
+    readHandler = [readProm](const boost::system::error_code& ec, Hash& h) { readProm->set_value(ec); };
+    bool stoppedConn = false;
+    if (bobConn) {
+        bobConn->stop();
+        stoppedConn = true;
+    } else {
+        bob->close();
+    }
+    CPPUNIT_ASSERT(alice->isOpen());
+    alice->readAsyncHash(readHandler);
+    // This will fail if channel closed, but we do not care
+    bob->writeAsyncHash(Hash("a", 2), [](const boost::system::error_code& ec) {});
+
+    ok = readFut.wait_for(std::chrono::seconds(timeoutSec));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, ok);
+
+    ec = readFut.get();
+    if (stoppedConn) {
+        // Connection stop has no influence, reading succeeded
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 0, ec.value());
+    } else {
+        // Channel closed, so other end read failed (2 means 'End of file')
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), 2, ec.value());
+    }
 }
