@@ -267,7 +267,7 @@ namespace karabo {
 
 
         OutputChannel::~OutputChannel() {
-            if (m_dataConnection) m_dataConnection->stop();
+            disable(); // explicitely close channels and stop connection
             Memory::unregisterChannel(m_channelId);
             EventLoop::removeThread(m_addedThreads);
         }
