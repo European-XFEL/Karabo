@@ -132,8 +132,9 @@ namespace karabo {
             // NoSharedInputChannel available is "queueDrop".
             // Relies on lock protection using m_registeredInputsMutex.
             std::deque<int> m_sharedLoadBalancedQueuedChunks;
-            boost::function<void(InputChannelInfo*)> m_doneBlockSharedHandler;
-            std::map<std::string, boost::function<void(InputChannelInfo*)>> m_doneBlockHandlers;
+            // Handlers to unblock synchronous update actions - one for shared and map of individual ones
+            boost::function<void(InputChannelInfo*)> m_unblockSharedHandler;
+            std::map<std::string, boost::function<void(InputChannelInfo*)>> m_unblockHandlers;
 
             InputChannels m_registeredCopyInputs;
 
