@@ -185,6 +185,18 @@ class Hash(OrderedDict):
             sub_hash, path = self._path(key, True)
             OrderedDict.__setitem__(sub_hash, path, element)
 
+    __marker = object()
+
+    def pop(self, item, default=__marker):
+        """Pop an item from the Hash. This method only returns the value."""
+        if item in self:
+            ret = self[item]
+            del self[item]
+            return ret
+        if default is self.__marker:
+            raise KeyError(item)
+        return default
+
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
             key, attr = item
