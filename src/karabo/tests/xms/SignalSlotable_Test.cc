@@ -373,7 +373,7 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
           .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::timeout, caughtType);
     // Wait furher (timeout + sleep > 100 ms that slotAnswer sleeps) to check that successHandler is
-    // not called when delayed reply finnaly comes:
+    // not called when delayed reply finally comes:
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType));
@@ -682,8 +682,12 @@ void SignalSlotable_Test::_testConnectAsync() {
     connectFailedMsg = "";
     signaler->asyncConnect("NOT_A_signalInstance", "signal", "slotInstance", "slot", dummyHandler, connectFailedHandler,
                            50); // Timeout allows 25 ms per message travel
-    // The first request will succeed, the second (to "NOT_A_sig...") not - so wait 4 * 25 ms plus margin to be sure
-    boost::this_thread::sleep(boost::posix_time::milliseconds(105));
+    // The first request will succeed, the second (to "NOT_A_sig...") not.
+    // But in a busy system even the timeout handle may be stuck, so wait.
+    for (int i = 0; i < numWaitIterations; ++i) {
+        if (connectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+    };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
     CPPUNIT_ASSERT_MESSAGE("Message: " + connectFailedMsg, connectFailedMsg.empty());
@@ -695,8 +699,12 @@ void SignalSlotable_Test::_testConnectAsync() {
     connectFailedMsg = "";
     signaler->asyncConnect("signalInstance", "signal", "NOT_A_slotInstance", "slot", dummyHandler, connectFailedHandler,
                            50); // Timeout allows 25 ms per message travel
-    // The first request (to "NOT_A_slot...") will fail, so allow for 2 * 25 ms plus margin to be sure
-    boost::this_thread::sleep(boost::posix_time::milliseconds(55));
+    // The first request (to "NOT_A_slot...") will fail.
+    // But in a busy system even the timeout handle may be stuck, so wait.
+    for (int i = 0; i < numWaitIterations; ++i) {
+        if (connectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+    };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(connectTimeout);
     CPPUNIT_ASSERT_MESSAGE("Message: " + connectFailedMsg, connectFailedMsg.empty());
@@ -881,8 +889,11 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     badConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "NOT_A_slotInstance", "slotA");
     // Timeout of 50 allows 25 ms per message travel
     signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler, 50);
-    // The first request (to "NOT_A_slot...") will fail, so allow for 2 * 25 ms plus margin to be sure
-    boost::this_thread::sleep(boost::posix_time::milliseconds(55));
+    // The first request (to "NOT_A_slot...") will fail, but one nevers knows how the timeout handler is stuck
+    for (int i = 0; i < numWaitIterations; ++i) {
+        if (connectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
+    };
 
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
