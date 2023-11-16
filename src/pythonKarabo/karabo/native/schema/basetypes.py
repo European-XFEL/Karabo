@@ -21,6 +21,7 @@ import inspect
 import numbers
 import operator
 import re
+import sys
 from enum import Enum
 from functools import wraps
 from itertools import chain
@@ -342,6 +343,8 @@ class VectorCharValue(StringlikeValue, bytes):
 
     @property
     def value(self):
+        if sys.version_info >= (3, 11):
+            return super().__bytes__()
         return bytes(self)
 
 
