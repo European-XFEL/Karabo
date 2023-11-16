@@ -91,5 +91,4 @@ from .synchronization import (
     allCompleted, background, firstCompleted, firstException, gather,
     processEvents, sleep, synchronous)
 from .unitutil import StateSignifier, maximum, minimum, removeQuantity
-from .utils import (
-    AsyncTimer, build_karabo_value, get_property, profiler, set_property)
+from .utils import AsyncTimer, get_property, profiler, set_property
