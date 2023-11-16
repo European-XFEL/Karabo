@@ -16,18 +16,14 @@
 import asyncio
 import time
 
-import numpy as np
 import pytest
 
 from karabo.common.states import State
 from karabo.middlelayer.testing import assertLogs
 from karabo.middlelayer.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
-from karabo.middlelayer.utils import (
-    AsyncTimer, build_karabo_value, countdown, profiler, suppress)
-from karabo.native import (
-    Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
-    String, StringValue, Timestamp, Unit, VectorDouble, unit_registry as unit)
+from karabo.middlelayer.utils import AsyncTimer, countdown, profiler, suppress
+from karabo.native import Float, QuantityValue, String
 
 
 @pytest.fixture(scope="module")
@@ -241,74 +237,6 @@ async def test_no_quantity(event_loop):
     assert ident
     ident = await async_identity(True, True)
     assert ident
-
-
-@pytest.mark.timeout(30)
-@pytest.mark.asyncio
-async def test_build_karabo_value(utilsTest):
-    class A(Configurable):
-        boolProperty = Bool(
-            defaultValue=False)
-
-        floatProperty = Float(
-            defaultValue=2.0,
-            unitSymbol=Unit.METER,
-            metricPrefixSymbol=MetricPrefix.MILLI)
-
-        stringProperty = String(
-            unitSymbol=Unit.AMPERE,
-            defaultValue="XFEL")
-
-        integerProperty = Int32(
-            defaultValue=-1.0,
-            unitSymbol=Unit.SECOND)
-
-        vectorProperty = VectorDouble(
-            defaultValue=[2.0, 3.2],
-            unitSymbol=Unit.METER,
-            metricPrefixSymbol=MetricPrefix.MILLI)
-
-    a = A()
-    ts = Timestamp()
-    value = build_karabo_value(a, 'floatProperty', 7.6, ts)
-    assert type(value) == QuantityValue
-    # Values are casted properly
-    assert value.value == np.float32(7.6)
-    assert value.value.dtype == np.float32
-    assert value.timestamp == ts
-    assert value.units == unit.millimeter
-
-    value = build_karabo_value(a, 'stringProperty', "New", ts)
-    assert type(value) == StringValue
-    assert value.value == "New"
-    assert value.timestamp == ts
-
-    value = build_karabo_value(a, 'boolProperty', True, ts)
-    assert type(value) == BoolValue
-    assert value.value is True
-    assert value.timestamp == ts
-
-    vector = np.array([4.5, 3.3], dtype=np.float64)
-    value = build_karabo_value(a, 'vectorProperty', vector, ts)
-    assert type(value) == QuantityValue
-    np.testing.assert_array_equal(value.value, vector)
-    assert value.timestamp == ts
-    assert value.units == unit.millimeter
-
-    # Check wrong dtype of vector value
-    vector = np.array([4.5, 3.3], dtype=np.int32)
-    value = build_karabo_value(a, 'vectorProperty', vector, ts)
-    assert type(value) == QuantityValue
-    np.testing.assert_array_equal(value.value, vector)
-    assert value.value.dtype == np.float64
-    assert value.timestamp == ts
-    assert value.units == unit.millimeter
-
-    value = build_karabo_value(a, 'integerProperty', 12, ts)
-    assert type(value) == QuantityValue
-    assert value.value == 12
-    assert value.timestamp == ts
-    assert value.units == unit.second
 
 
 @pytest.mark.timeout(30)
