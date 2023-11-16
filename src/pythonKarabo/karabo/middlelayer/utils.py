@@ -22,10 +22,9 @@ from time import perf_counter
 from types import MethodType
 from weakref import WeakMethod, ref
 
-import numpy as np
 from async_timeout import timeout
 
-from karabo.native import Hash, MetricPrefix, NumpyVector, QuantityValue, Unit
+from karabo.native import Hash
 
 from .eventloop import ensure_coroutine
 
@@ -104,53 +103,6 @@ def set_property(device, path, value):
     if not hasattr(obj, paths[-1]):
         raise AttributeError(f"Property {path} is not available on device.")
     setattr(obj, paths[-1], value)
-
-
-def build_karabo_value(device, path, value, timestamp):
-    """Build a karabo value for property value from a proxy or device
-
-    In case of `QuantityValues` the units are automatically used to prevent
-    casting.
-
-    This function is similar to python's builtin ``getattr`` and used with::
-
-        prop = build_karabo_value(
-            proxy, 'node.subnode.property', 20.1, Timestamp())
-
-    :param device: The device instance or proxy object
-    :param path: The full path of the property as string
-    :param value: The value to be set
-    :param timestamp: The timestamp to be applied
-    """
-    import warnings
-    warnings.warn("This function is deprecated, please set a `Hash` via the "
-                  "``Configurable.set(h: Hash)`` in the future.",
-                  stacklevel=2)
-
-    prop = reduce(lambda obj, key: getattr(obj, key),
-                  path.split('.'), device)
-
-    desc = prop.descriptor
-    ktype = type(prop)
-    if issubclass(ktype, QuantityValue):
-        # Note: For vectors we make sure to cast before if we have to!
-        if isinstance(desc, NumpyVector):
-            value = np.array(value, dtype=desc.basetype.numpy)
-        # In case of a QuantityValue, we can build the value with the units
-        # to prevent any unhappy unit casting
-        else:
-            ntype = getattr(desc, 'numpy', None)
-            if ntype is not None:
-                value = ntype(value)
-
-        unitSymbol = Unit(desc.unitSymbol)
-        metricPrefixSymbol = MetricPrefix(desc.metricPrefixSymbol)
-        ret = ktype(value, unit=unitSymbol, metricPrefix=metricPrefixSymbol,
-                    timestamp=timestamp)
-    else:
-        ret = ktype(value, timestamp=timestamp)
-
-    return ret
 
 
 class profiler:
