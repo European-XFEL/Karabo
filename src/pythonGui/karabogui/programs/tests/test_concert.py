@@ -1,6 +1,7 @@
 from collections import namedtuple
 from pathlib import Path
 
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent
 from karabogui.programs.concert import create_concert, run_concert
 from karabogui.singletons.network import Network
@@ -10,12 +11,12 @@ from karabogui.topology.api import SystemTopology
 namespace = namedtuple("namespace", "yaml_file")
 
 DATA = {
-        "domain": "CAS_INTERNAL",
-        "scenes": [{"uuid": "9d26d07b-d79e-4f71-99f1-469344da89ed",
-                    "x": 1458, "y": 93},
-                   {"uuid": "9b73efec-4523-4a47-b88f-90edc2e9ed89",
-                    "x": 2332, "y": 361}],
-        "host": "exflqr46957", "port": 44444, "username": "admin"}
+    "domain": "CAS_INTERNAL",
+    "scenes": [{"uuid": "9d26d07b-d79e-4f71-99f1-469344da89ed",
+                "x": 1458, "y": 93},
+               {"uuid": "9b73efec-4523-4a47-b88f-90edc2e9ed89",
+                "x": 2332, "y": 361}],
+    "host": "exflqr46957", "port": 44444, "username": "admin"}
 
 
 def test_run_concert(gui_app, mocker):
@@ -51,11 +52,13 @@ def test_concert(gui_app, mocker):
         expected_args1 = {
             "name": "CAS_INTERNAL-9d26d07b-d79e-4f71-99f1-469344da89ed",
             "target": "9d26d07b-d79e-4f71-99f1-469344da89ed",
-            "position": [1458, 93]}
+            "position": [1458, 93],
+            "target_window": SceneTargetWindow.Dialog}
         expected_args2 = {
             "name": "CAS_INTERNAL-9b73efec-4523-4a47-b88f-90edc2e9ed89",
             "target": "9b73efec-4523-4a47-b88f-90edc2e9ed89",
-            "position": [2332, 361]}
+            "position": [2332, 361],
+            "target_window": SceneTargetWindow.Dialog}
 
         assert broadcast.call_count == 2
         args1, args2 = broadcast.call_args_list
