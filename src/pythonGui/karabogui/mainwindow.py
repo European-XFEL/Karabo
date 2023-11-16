@@ -963,8 +963,8 @@ class MainWindow(QMainWindow):
     def onNumpyFileToCSV(self):
         """Open a file dialog to select the numpy file and convert it to a csv
         """
-        path = get_config()["data_dir"] or ""
-        directory = str(path) if Path(path).is_dir() else ""
+        path = get_config()["data_dir"]
+        directory = path if path and Path(path).is_dir() else ""
         file_name = getOpenFileName(
             parent=self, caption="Select Numpy file", directory=directory,
             filter="Plot Data  (*.npy *.npz)")
@@ -985,10 +985,10 @@ class MainWindow(QMainWindow):
             messagebox.show_information(text="No Project Scenes are open",
                                         parent=self)
             return
-        path = get_config()["data_dir"]
-        directory = str(path) if Path(path).is_dir() else ""
+        directory = get_config()["data_dir"]
         file_name = getSaveFileName(
             caption="Save Concert file", filter="Yaml file(*.yaml *.yml)",
             directory=directory, parent=self)
         if file_name:
             save_concert_file(file_name, scene_data)
+            get_config()["data_dir"] = str(Path(file_name).parent)
