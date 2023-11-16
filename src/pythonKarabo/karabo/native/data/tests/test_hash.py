@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
 
 from karabo.native import (
@@ -505,6 +506,28 @@ def test_merge():
     a.merge(b, attribute_policy="overwrite")
 
     assert a["foo", ...] == b["foo", ...]
+
+
+def test_pop():
+    a = Hash()
+    a["foo"] = 42
+    b = a.pop("foo")
+    assert b == 42
+    assert isinstance(b, int)
+    assert a.empty()
+
+    a = Hash()
+    a["subelement.node.subnode"] = 4
+    b = a.pop("subelement.node.subnode")
+    assert isinstance(b, int)
+    assert b == 4
+    assert not a.empty()
+    assert "subelement" in a
+    assert "subelement.node" in a
+    assert "subelement.node.subnode" not in a
+
+    with pytest.raises(KeyError):
+        a.pop("notthere")
 
 
 def test_paths_and_keys():
