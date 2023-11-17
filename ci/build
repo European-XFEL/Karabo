@@ -94,8 +94,8 @@ __release_build() {
             python --version
             echo "python3 ..."
             python3 --version
-            echo "python3.8 ..."
-            python3.8 --version
+            # echo "python3.8 ..."
+            # python3.8 --version
             sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $KARABO_UPLOAD_HOST "mkdir -p $KARABO_UPLOAD_DIR/$FRAMEWORK_DEST_DIR"
             sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
             ;;

@@ -94,7 +94,7 @@ rewrite_rpaths() {
     # apply to shared libraries that this binary loads.". We theed the first behaviour."
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python"
     safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3"
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.8"
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.11"
 }
 
 run_rpath_fixer() {
