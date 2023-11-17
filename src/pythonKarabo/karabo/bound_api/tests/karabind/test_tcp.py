@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
+import sys
 import threading
 
 import karabind
@@ -473,6 +474,9 @@ class Server:
         self.conn.stop()
 
 
+@pytest.mark.skipif(
+    sys.version_info > (3, 8),
+    reason="framework issue 701, test segfaults with python 3.11")
 @pytest.mark.parametrize(
     "Connection, EventLoop, Hash",
     [

@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import os
 import os.path as op
+import sys
 import unittest
 
 from karabo.bound import Hash, fullyEqual
@@ -46,6 +47,9 @@ class TestCrossConfigManager(BoundDeviceTestCase):
     PROP_TEST_DEVICE_ID = 'PropertyTestDevice'
     PROP_TEST_CLASS_ID = 'PropertyTest'
 
+    @unittest.skipIf(
+        sys.version_info > (3, 8),
+        "framework issue 704, test always segfaults on python 3.11")
     def test_sync_operations(self):
         self._setup_devices()
         self._test_save_get_config()
