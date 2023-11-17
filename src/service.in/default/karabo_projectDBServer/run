@@ -19,7 +19,7 @@ cd $KARABO/var/data
 
 # an existDB backend for the project manager can be chosen by using the lines below:
 PROJECT_DB_SERVER=exflst105
-exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' 'log.level=INFO'\
+exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' 'log.level=INFO' \
 init='{"KaraboProjectDB":{"classId":"ProjectManager", "projectDB":{"protocol": "exist_db", "exist_db":{"host": "'$PROJECT_DB_SERVER'", "port": 8080}}}}' 'visibility=4' 2>&1
 
 # a file-based backend for the project manager can be chosen by using the lines below:
