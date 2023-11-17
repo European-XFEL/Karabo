@@ -1,25 +1,47 @@
 patches:
+  3.11.6:
+    - patch_file: "patches/3.x-0001-relocatable-python-config.patch"
+      base_path: "source_subfolder"
+    - patch_file: "patches/3.11.6-0004-setup.py-pass-CFLAGS-CPPFLAGS.patch"
+      base_path: "source_subfolder"
+  3.10.0:
+    - patch_file: "patches/3.10.0-0001-msvc.patch"
+      base_path: "source_subfolder"
+    - patch_file: "patches/3.10.0-0003-_ctypes-ffi.patch"
+      base_path: "source_subfolder"
+    - patch_file: "patches/3.10.0-0004-setup.py-pass-CFLAGS-CPPFLAGS.patch"
+      base_path: "source_subfolder"
+    - patch_file: "patches/3.10.0-0005-disable-macos-tcltk.patch"
+      base_path: "source_subfolder"
+    - patch_file: "patches/3.x-0001-relocatable-python-config.patch"
+      base_path: "source_subfolder"
   3.8.12:
-  - base_path: source_subfolder
-    patch_file: patches/3.8.12-0001-msvc.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.8.12-0002-_ctypes-ffi.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.8.12-0003-setup.py-pass-CFLAGS-CPPFLAGS.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.8.12-0004-disable-macos-tcltk.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.x-0001-relocatable-python-config.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.12-0001-msvc.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.12-0002-_ctypes-ffi.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.12-0003-setup.py-pass-CFLAGS-CPPFLAGS.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.12-0004-disable-macos-tcltk.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.x-0001-relocatable-python-config.patch
   3.8.16:
-  - base_path: source_subfolder
-    patch_file: patches/3.8.12-0002-_ctypes-ffi.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.8.12-0003-setup.py-pass-CFLAGS-CPPFLAGS.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.8.16-0004-disable-macos-tcltk.patch
-  - base_path: source_subfolder
-    patch_file: patches/3.x-0001-relocatable-python-config.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.12-0002-_ctypes-ffi.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.12-0003-setup.py-pass-CFLAGS-CPPFLAGS.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.8.16-0004-disable-macos-tcltk.patch
+    - base_path: source_subfolder
+      patch_file: patches/3.x-0001-relocatable-python-config.patch
 sources:
+  3.11.6:
+    url: "https://www.python.org/ftp/python/3.11.6/Python-3.11.6.tgz"
+    sha256: "c049bf317e877cbf9fce8c3af902436774ecef5249a29d10984ca3a37f7f4736"
+  3.10.0:
+    url: "https://www.python.org/ftp/python/3.10.0/Python-3.10.0.tgz"
+    sha256: "c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758"
   3.8.12:
     sha256: 316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a
     url: https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz
