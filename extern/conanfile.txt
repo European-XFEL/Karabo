@@ -7,10 +7,10 @@
 # exact
 amqp-cpp/4.3.16
 bzip2/1.0.8
-daemontools-encore/1.11-karabo3@karabo/py38
+daemontools-encore/1.11-karabo3@karabo/py311
 gtest/1.11.0
 libxml2/2.9.10
-log4cpp/1.1.3@karabo/py38
+log4cpp/1.1.3@karabo/py311
 nlohmann_json/3.2.0
 zeromq/4.3.2
 
@@ -22,7 +22,7 @@ patchelf/0.13
 pugixml/1.10
 
 # minor-any
-boost/1.82.0@karabo/py38
+boost/1.82.0@karabo/py311
 cppunit/1.15.1
 libjpeg/9c
 libtiff/4.0.8
@@ -36,7 +36,7 @@ nss/3.72
 # forced - these are pinned to allow conan to resolve dependency conflicts
 zlib/1.2.13
 sqlite3/3.36.0
-openssl/1.0.2t  # Centos7 cannot handle newer versions
+openssl/1.0.2t   # Centos7 can only handle newer versions if compiled from source (like patchelf/b2 in build.sh)
 # openblas/0.3.20
 
 [generators]
