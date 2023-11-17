@@ -15,8 +15,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
 import os
-import os.path as op
-import sys
 
 from setuptools import find_packages, setup
 
@@ -105,7 +103,6 @@ else:
         'karabo.middlelayer.tests': ['*.xml'],
         'karabo.project_db': ['config_stubs/*.*'],
         'karabo.interactive': [
-            'jupyter_spec/kernel.json',
             'static/*.css',
             'static/*.js',
             'static/*.html',
@@ -154,7 +151,6 @@ else:
             'MdlOrderTestDevice=karabo.integration_tests.signal_slot_order_test.mdl_ordertest_device:MdlOrderTestDevice',
         ],
         'karabo.macro_device': [
-            'IPythonKernel=karabo.macro_devices.ipython:IPythonKernel',
             'MetaMacro=karabo.macro_devices.metamacro:MetaMacro'
         ],
         'karabo.bound_device_test': [
@@ -187,32 +183,6 @@ else:
         install_args['entry_points']['karabo.project_db'].append(
             'exist_db=karabo.project_db.exist_db.node:DbConnectionNode'
         )
-    except ImportError:
-        pass
-
-    try:
-        from jupyter_client.kernelspec import install_kernel_spec
-        from setuptools.command.develop import develop
-        from setuptools.command.install import install
-
-        class WithJupyter():
-            def run(self):
-                super().run()
-                install_kernel_spec(
-                    op.join(op.dirname(__file__), "karabo",
-                            "interactive", "jupyter_spec"),
-                    kernel_name="Karabo", prefix=sys.prefix)
-
-        class InstallWithJupyter(WithJupyter, install):
-            pass
-
-        class DevelopWithJupyter(WithJupyter, develop):
-            pass
-
-        install_args['cmdclass'] = {
-            'install': InstallWithJupyter,
-            'develop': DevelopWithJupyter
-        }
     except ImportError:
         pass
 
