@@ -32,7 +32,7 @@ set(KARATHON_LIB_TARGET_NAME "karathon")
 # system with wrong NumPy version or no NumPy package at all.
 set(Python3_ROOT_DIR ${CMAKE_PREFIX_PATH})
 find_package(
-    Python3 3.8 EXACT REQUIRED
+    Python3 3.11 EXACT REQUIRED
     COMPONENTS Interpreter Development NumPy
 )
 
@@ -51,7 +51,7 @@ message(STATUS "NumPy include dirs = '${Python3_NumPy_INCLUDE_DIRS}'")
 # For this project, we always want to find the Boost installation in the
 # CMAKE_PREFIX_PATH tree.
 set(Boost_NO_BOOST_CMAKE 1)
-find_package(Boost 1.82 EXACT REQUIRED COMPONENTS python38)
+find_package(Boost 1.82 EXACT REQUIRED COMPONENTS python311)
 
 file(GLOB_RECURSE KARATHON_SRCS CONFIGURE_DEPENDS "*.cc")
 
@@ -61,7 +61,7 @@ add_library(
 )
 
 # The last two RPATH entries are for when libkarathon.so is packaged as
-# karathon.so inside INSTALL_PACKAGE_ROOT/extern/lib/python3.8/site-packages.
+# karathon.so inside INSTALL_PACKAGE_ROOT/extern/lib/python3.11/site-packages.
 set_target_properties(
         ${KARATHON_LIB_TARGET_NAME} PROPERTIES
         INSTALL_RPATH "$ORIGIN/../extern/lib;$ORIGIN;$ORIGIN/../../../../lib;$ORIGIN/../.."
@@ -96,7 +96,7 @@ target_include_directories(
 target_link_libraries(
     ${KARATHON_LIB_TARGET_NAME}
     ${KARABO_LIB_TARGET_NAME}
-    Boost::python38
+    Boost::python311
     ${PYTHON_LIBRARIES}
 )
 

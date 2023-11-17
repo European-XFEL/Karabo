@@ -175,7 +175,7 @@ class CPythonConan(ConanFile):
     def requirements(self):
         self.requires("zlib/1.2.13")
         if self._supports_modules:
-            #self.requires("openssl/1.1.1l")
+            self.requires("openssl/1.1.1l")
             #self.requires("expat/2.4.1")
             if self._with_libffi:
                 self.requires("libffi/3.2.1")
@@ -230,7 +230,7 @@ class CPythonConan(ConanFile):
         if self._is_py3:
             conf_args.extend([
                 "--with-system-libmpdec",
-                #"--with-openssl={}".format(self.deps_cpp_info["openssl"].rootpath),
+                "--with-openssl={}".format(self.deps_cpp_info["openssl"].rootpath),
                 "--enable-loadable-sqlite-extensions={}".format(yes_no(not self.options["sqlite3"].omit_load_extension)),
             ])
         if self.settings.compiler == "intel":
@@ -259,7 +259,11 @@ class CPythonConan(ConanFile):
         if tools.cross_building(self) and not tools.cross_building(self, skip_x64_x86=True):
             # Building from x86_64 to x86 is not a "real" cross build, so set build == host
             build = tools.get_gnu_triplet(str(self.settings.os), str(self.settings.arch), str(self.settings.compiler))
-        self._autotools.configure(args=conf_args, configure_dir=self._source_subfolder, build=build)
+        env_build_vars = self._autotools.vars
+        env_build_vars['LIBSQLITE3_CFLAGS'] = ' '
+        env_build_vars['LIBSQLITE3_LIBS'] = '-lsqlite3 -lm'
+        env_build_vars['LIBS'] = '-lm -lssl -lcrypto -ldl -pthread'
+        self._autotools.configure(args=conf_args, configure_dir=self._source_subfolder, build=build, vars=env_build_vars)
         return self._autotools
 
     def _patch_sources(self):
@@ -674,7 +678,7 @@ class CPythonConan(ConanFile):
             # hidden components: the C extensions of python are built as dynamically loaded shared libraries.
             # C extensions or applications with an embedded Python should not need to link to them..
             self.cpp_info.components["_hidden"].requires = [
-                #"openssl::openssl",
+                "openssl::openssl",
                 #"expat::expat",
                 "mpdecimal::mpdecimal",
             ]
