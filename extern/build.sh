@@ -32,9 +32,9 @@ DEPS_BASE_NAME_MAP['AlmaLinux8']='AlmaLinux-8'
 DEPS_BASE_NAME_MAP['AlmaLinux9']='AlmaLinux-9'
 DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
 
-PYTHON_VERSION=3.8.16
-PYTHON_PATH_VERSION=3.8
-CONAN_RECIPE_CHANNEL=py38
+PYTHON_VERSION=3.11.6
+PYTHON_PATH_VERSION=3.11
+CONAN_RECIPE_CHANNEL=py311
 BOOST_VERSION=1.82.0
 LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
@@ -401,7 +401,7 @@ download_sources() {
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         pushd $scriptDir
-        safeRunCommand "$INSTALL_PREFIX/bin/python3 -m pip install pyyaml"
+        safeRunCommand "$INSTALL_PREFIX/bin/python3 -m pip install pyyaml==6.0"
         safeRunCommand "$INSTALL_PREFIX/bin/python3 download_helper.py downloads.yml"
         popd
     fi
@@ -486,7 +486,7 @@ install_from_deps() {
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
 
         # create default build profile
-        safeRunCommandQuiet "conan profile new default --detect --force"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
 
         # export local daemontools recipe
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/daemontools/conanfile.py daemontools-encore/$DAEMONTOOLS_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
