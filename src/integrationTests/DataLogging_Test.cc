@@ -248,6 +248,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     std::clog << "Testing enforcing of max schema logging rate limit for Influx ..." << std::endl;
 
     const unsigned int rateWinSecs = 1u;
+    const unsigned int afterFlushWait = 1'000u;
 
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
@@ -291,10 +292,10 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Starts the logger and readers with a lower max schema rate threshold - 20 kb/s - over a rateWinSecs seconds
+    // Starts the logger and readers with a lower max schema rate threshold - 18 kb/s - over a rateWinSecs seconds
     // rating window. The base64 encoded schema of the DataLogTestDevice is 12,516 bytes (before schema update),
     // so with rateWinSecs == 1, a single schema can be logged in that period, but two cannot.
-    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 20, rateWinSecs);
+    success = startDataLoggerManager("InfluxDataLogger", false, false, 32, rateWinSecs, 18, rateWinSecs);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
@@ -310,7 +311,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     // Makes sure that data has been received by logger and written to Influx.
     boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
     Epochstamp afterFirstBurst;
 
     // Checks that the schema update has not been flagged as bad data.
@@ -335,16 +336,26 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     // Makes sure that data has been received by logger and written to Influx.
     boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1200));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
     Epochstamp afterSecondBurst;
 
     // Checks that one of the schema updates failed.
     badDataAllDevices.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot
-                                  ->request(dlreader0, "slotGetBadData", beforeSecondBurst.toIso8601Ext(),
-                                            afterSecondBurst.toIso8601Ext())
-                                  .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                                  .receive(badDataAllDevices));
+    waitForCondition(
+          [this, &badDataAllDevices, &dlreader0, &beforeSecondBurst, &afterSecondBurst]() {
+              try {
+                  m_sigSlot
+                        ->request(dlreader0, "slotGetBadData", beforeSecondBurst.toIso8601Ext(),
+                                  afterSecondBurst.toIso8601Ext())
+                        .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                        .receive(badDataAllDevices);
+                  return badDataAllDevices.size() == 1ul;
+              } catch (const std::exception &e) {
+                  std::clog << "ERROR trying to retrieve BadData for all devices: " << e.what() << std::flush;
+                  return false;
+              }
+          },
+          KRB_TEST_MAX_TIMEOUT * 1'000u, 200u);
     CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size());
     CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
     const auto &badDataEntries = badDataAllDevices.get<std::vector<Hash>>(deviceId);
@@ -365,7 +376,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
     // Makes sure that data has been received by logger and written to Influx.
     boost::this_thread::sleep(boost::posix_time::milliseconds(500));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
     Epochstamp afterThirdBurst;
     // Checks that the schema update succeeded.
     badDataAllDevices.clear();
@@ -530,6 +541,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     const std::string str8Kb(8192ul, 'B');
 
     const TimeValue millisecInAtto = 1'000'000'000'000'000ull; // Resolution of fractional seconds is AttoSec (10^-18).
+    const unsigned int afterFlushWait = 1'500u;
 
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
           m_server, "DataLogTestDevice", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
@@ -559,7 +571,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp after32KbWrite(before32KbWrite + TimeDuration(0, 5 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
 
     // Checks that the 32Kb strings have not been flagged as bad data.
     Hash badDataAllDevices;
@@ -605,7 +617,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp after64KbWrite(before64KbWrite + TimeDuration(0, 9 * rateWinSecs * millisecInAtto));
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
 
     // Checks that the half of the stringProperty updates has exceeded the max log rate and has been rated as bad data.
     badDataAllDevices.clear();
@@ -666,7 +678,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     Epochstamp afterSingle32KbWrite(beforeSingle32KbWrite + TimeDuration(0, 8 * millisecInAtto));
     // Make sure that data has been written to Influx.
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(loggerId, "flush", FLUSH_REQUEST_TIMEOUT_MILLIS / 1000));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(afterFlushWait));
 
     // Checks that the 32 Kb string has been successfully set as property values.
     history.clear();
@@ -699,14 +711,14 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     const std::string propTestDevice = m_deviceId + "__SCHEMA_RETENTION_PERIOD";
 
     const unsigned int afterFlushWait = 500u;
-    const double oneSecInYears = 1.0 / (365 * 24 * 60 * 60);
+    const double halfSecInYears = 0.5 / (365 * 24 * 60 * 60);
 
     Epochstamp testStartEpoch;
 
     std::pair<bool, std::string> success = startDataLoggerManager(
           "InfluxDataLogger", /* useInvalidInfluxUrl */ false, /* useInvalidDbName */ false,
           /* maxPerDevicePropLogRate */ 5120u, 5u, /* maxSchemaLogRate */ 15'360u, /* schemaLogRatePeriod */ 5u,
-          /* maxStringLength */ 921'600u, /* safeSchemaRetentionPeriod */ oneSecInYears);
+          /* maxStringLength */ 921'600u, /* safeSchemaRetentionPeriod */ halfSecInYears);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
@@ -735,30 +747,56 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
     // Checks that since of the start of this test, two schemas with the same digest have been inserted into the Influx
     // measurement - one for each start of the PropertyTest device under test.
     const InfluxDbClient::Pointer influxClient = buildInfluxReadClient();
+    std::string firstDigest;
+    std::string secondDigest;
     std::ostringstream oss;
     // Note: InfluxQL requires the returning of at least one field in the query results for the query to work.
     //       To comply with that, the query also asks for the schema_size, given that the digest is a tag, not a field.
     oss << "SELECT digest, schema_size FROM \"" << propTestDevice << "__SCHEMAS\" "
         << "WHERE time >= " << epochAsMicrosecString(testStartEpoch) << toInfluxDurationUnit(TIME_UNITS::MICROSEC)
         << " AND time <= " << epochAsMicrosecString(afterWritesEpoch) << toInfluxDurationUnit(TIME_UNITS::MICROSEC);
-    auto prom = std::make_shared<std::promise<HttpResponse>>();
-    std::future<HttpResponse> fut = prom->get_future();
-    influxClient->queryDb(oss.str(), [prom](const HttpResponse &resp) { prom->set_value(resp); });
-    std::future_status status = fut.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT));
-    CPPUNIT_ASSERT_MESSAGE("Query for schemas didn't return in time:\n" + oss.str(),
-                           status == std::future_status::ready);
-    HttpResponse resp = fut.get();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Query for schemas failed: " + oss.str(), 200, resp.code);
-    const std::string &respBody = resp.payload;
-    nl::json respObj;
-    CPPUNIT_ASSERT_NO_THROW_MESSAGE("Invalid JSON object in Influx response body: " + respBody,
-                                    respObj = nl::json::parse(respBody));
-    const auto &schemas = respObj["results"][0]["series"][0]["values"];
-    CPPUNIT_ASSERT_MESSAGE("Influx response JSON object contains no schema data", !schemas.is_null());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Number of schema entries differs from expected", 2ul, schemas.size());
-    const std::string firstDigest = schemas[0][1].get<std::string>();
-    const std::string secondDigest = schemas[1][1].get<std::string>();
+    waitForCondition(
+          [&influxClient, &oss, &firstDigest, &secondDigest]() {
+              auto prom = std::make_shared<std::promise<HttpResponse>>();
+              std::future<HttpResponse> fut = prom->get_future();
+
+              influxClient->queryDb(oss.str(), [prom](const HttpResponse &resp) { prom->set_value(resp); });
+              std::future_status status = fut.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT));
+              if (status != std::future_status::ready) {
+                  return false;
+              }
+              HttpResponse resp = fut.get();
+              if (resp.code != 200) {
+                  std::clog << "ERROR querying for schemas:\nquery: " << oss.str() << "\nresponse: " << resp
+                            << std::flush;
+                  return false;
+              }
+              const std::string &respBody = resp.payload;
+              nl::json respObj;
+              try {
+                  respObj = nl::json::parse(respBody);
+              } catch (const std::exception &e) {
+                  std::clog << "ERROR: Invalid JSON object in Influx response body:\n"
+                            << respBody << "\n"
+                            << std::flush;
+                  return false;
+              }
+              const auto &schemas = respObj["results"][0]["series"][0]["values"];
+              if (schemas.is_null()) {
+                  return false;
+              }
+              if (schemas.size() == 2ul) {
+                  firstDigest = schemas[0][1].get<std::string>();
+                  secondDigest = schemas[1][1].get<std::string>();
+                  return true;
+              }
+              return false;
+          },
+          4'000u, 500u);
+
+    CPPUNIT_ASSERT_MESSAGE("Didn't find the two expected schemas.", !firstDigest.empty() && !secondDigest.empty());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Schemas in Influx response don't have the same digest.", firstDigest, secondDigest);
+
     /* -- Sample of response body expected for the query for schemas
     {
       "results": [
@@ -808,19 +846,17 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     testAllInstantiated(false);
 
     // The DataLogger should be in ERROR state.
-    int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
     karabo::util::State loggerState = karabo::util::State::UNKNOWN;
     std::string loggerStatus;
     const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    while (timeout > 0) {
-        loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
-        loggerStatus = m_deviceClient->get<std::string>(dataLoggerId, "status");
-        if (loggerState == karabo::util::State::ERROR) {
-            break;
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
-        timeout -= 50;
-    }
+    waitForCondition(
+          [this, &loggerState, &loggerStatus, &dataLoggerId]() {
+              loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
+              loggerStatus = m_deviceClient->get<std::string>(dataLoggerId, "status");
+              return (loggerState == karabo::util::State::ERROR);
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
+
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ERROR state.",
                            loggerState == karabo::util::State::ERROR);
 
@@ -943,16 +979,12 @@ void DataLogging_Test::testFailingManager() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     karabo::util::State loggerState = karabo::util::State::UNKNOWN;
-    const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
-    int timeout = KRB_TEST_MAX_TIMEOUT * 1000;
-    while (timeout > 0) {
-        loggerState = m_deviceClient->get<karabo::util::State>(dataLogManagerId, "state");
-        if (loggerState == karabo::util::State::ERROR) {
-            break;
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(25));
-        timeout -= 25;
-    }
+    waitForCondition(
+          [this, &loggerState, &dataLogManagerId]() {
+              loggerState = m_deviceClient->get<karabo::util::State>(dataLogManagerId, "state");
+              return loggerState == karabo::util::State::ERROR;
+          },
+          KRB_TEST_MAX_TIMEOUT * 1000);
 
     const std::string status = m_deviceClient->get<std::string>(dataLogManagerId, "status");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status, karabo::util::State::ERROR, loggerState);
