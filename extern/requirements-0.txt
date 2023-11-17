@@ -5,8 +5,7 @@
 # numpy is limited by the below scipy version to < 1.23
 # scipy 1.7.3 is the limit for CentOS7, as newer versions require GCC 5+ compiler
 
-# DO NOT ADD COMMENTS AFTER THE PACKAGE NAME==VERSION STRINGS BELOW (breaks build caching)
-numpy==1.22.4
-scipy==1.7.3
-pyzmq==22.3.0
+numpy==1.24.4
+scipy==1.9.3
+pyzmq==25.1.1
 Pillow==10.0.0

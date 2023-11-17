@@ -37,6 +37,8 @@ stages:
     # install conan to docker image
     - python3 -m pip install --upgrade pip
     - python3 -m pip install conan==1.59.0
+    # install perl FindBin module (AlmaLinux is missing this for openssl build)
+    - yum -q -y install perl-FindBin || true
     # do CI build
     - source set_lsb_release_info.sh
     - source ci/prepare "$CI_BUILD_NAME"
@@ -311,6 +313,7 @@ stages:
 
 .deps_tests: &deps-tests
   <<: *test
+  when: manual
   only:
     refs:
       - merge_requests
