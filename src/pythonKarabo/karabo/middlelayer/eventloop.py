@@ -216,6 +216,15 @@ class NoEventLoop(AbstractEventLoop):
             return KaraboFuture(loop.create_task(future,
                                                  instance=self._instance))
 
+    def run_until_complete(self, coro):
+        """Reimplemented function of AbstractEventLoop
+
+        Inject `coro` to the main eventloop and run. This is needed
+        for `ipython`.
+        """
+        assert global_sync(), "Run until complete used outside `ikarabo`"
+        return self.sync(coro, -1, True)
+
     def create_future(self):
         return Future(loop=self.loop)
 
