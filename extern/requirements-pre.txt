@@ -4,3 +4,4 @@
 wheel
 conan==1.59.0
 pip==22.0.4  # newer versions do not have --install-option. We can upgrade here once numpy runs on openblas
+pyyaml==6.0
