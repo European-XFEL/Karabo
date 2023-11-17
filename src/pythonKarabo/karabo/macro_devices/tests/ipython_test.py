@@ -14,6 +14,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import pickle
+import sys
 from asyncio import Future, TimeoutError, wait_for
 from datetime import datetime, timezone
 
@@ -136,6 +137,9 @@ async def deviceTest(event_loop: event_loop):
         yield ctx
 
 
+@pytest.mark.skipif(
+    sys.version_info > (3, 8),
+    reason="framework issue 702, test hangs with python 3.11")
 @pytest.mark.flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio

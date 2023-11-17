@@ -48,18 +48,6 @@ class TestMacro(Macro):
         self.s = "async"
 """
 
-CORO_CODE = """from asyncio import coroutine
-from karabo.middlelayer import *
-
-class TestMacro(Macro):
-    s = String()
-
-    @Slot()
-    @coroutine
-    def do(self):
-        self.s = "coro"
-"""
-
 
 class Tests(TestCase):
 
@@ -123,10 +111,6 @@ class Tests(TestCase):
 
         task = loop.create_task(
             self.init_macro(ASYNC_CODE, "async", server), server)
-        loop.run_until_complete(task)
-
-        task = loop.create_task(
-            self.init_macro(CORO_CODE, "coro", server), server)
         loop.run_until_complete(task)
 
 
