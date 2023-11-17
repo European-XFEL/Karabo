@@ -19,7 +19,8 @@ import os
 import re
 import socket
 import weakref
-from asyncio import set_event_loop
+from asyncio import (
+    DefaultEventLoopPolicy, set_event_loop, set_event_loop_policy)
 from contextlib import suppress
 
 import IPython
@@ -32,6 +33,21 @@ from .eventloop import NoEventLoop, set_global_sync
 from .logger import build_logger_node
 from .macro import EventThread, TopologyMacro
 from .signalslot import slot
+
+
+class NoEventLoopPolicy(DefaultEventLoopPolicy):
+
+    def __init__(self, *args, instance=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.instance = instance
+
+    def get_event_loop(self):
+        """Get the event loop.
+
+        This return an instance of `NoEventLoop`.
+        """
+        loop = NoEventLoop(self.instance)
+        return loop
 
 
 class DeviceClient(TopologyMacro):
@@ -133,6 +149,9 @@ def start_ikarabo():
     """.format(version))
 
     start_device_client()
+    # Newer ipython versions run_until_complete, hence, we set
+    # a policy for the eventloop
+    set_event_loop_policy(NoEventLoopPolicy(instance=devices))
 
     ip = IPython.get_ipython()
     ip.set_hook("complete_command", device_completer,
