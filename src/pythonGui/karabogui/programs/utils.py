@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 import yaml
+from qtpy.QtCore import QProcess
 from qtpy.QtWidgets import QApplication
 
 from karabogui.singletons.api import get_config, get_network
@@ -91,3 +92,8 @@ def save_concert_file(file_name, scene_data):
                "port": port, "scenes": scenes}
     with open(file_name, "w") as yaml_file:
         yaml.dump(concert, yaml_file)
+
+
+def run_concert(file_name):
+    """Start karabo-concert as a separate process"""
+    QProcess.startDetached(f"karabo-concert {file_name}")
