@@ -82,8 +82,9 @@ def test_help_menu(gui_app):
                  action.text() == "&Help"][0]
     assert help_menu
     help_actions = help_menu.actions()
-    assert len(help_actions) == 7
-    expected = ["About", "About Qt", "Tips'N'Tricks", "Check for Updates",
-                "Check for Project Duplicates",
-                "Convert Numpy file to CSV file", "Create Karabo Concert File"]
+    assert len(help_actions) == 9
+    expected = [
+        "About", "About Qt", "Tips'N'Tricks", "Check for Updates",
+        "Check for Project Duplicates", "Convert Numpy file to CSV file", "",
+        "Create Karabo Concert File", "Run Karabo Concert File"]
     assert expected == [action.text() for action in help_actions]
