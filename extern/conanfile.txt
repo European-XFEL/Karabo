@@ -12,6 +12,7 @@ gtest/1.11.0
 libxml2/2.9.10
 log4cpp/1.1.3@karabo/py311
 nlohmann_json/3.2.0
+openmq/5.1.3@karabo/py311
 zeromq/4.3.2
 
 # patch-any
@@ -77,11 +78,13 @@ boost:without_numpy=True
 # openblas:build_lapack=True
 
 [imports]
-lib, * -> ../lib  # the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh.
+# the ".."s are because conan install uses $INSTALL_PREFIX/conan_out in build.sh
+lib, * -> ../lib
 lib64, * -> ../lib64
 bin, * -> ../bin
 include, * -> ../include
 res, * -> ../res
 share, * -> ../share
 local, * -> ../local
-include/libxml2, * -> ../include  # otherwise pip installs have issues
+include/libxml2, * -> ../include    # otherwise pip installs have issues
+MessageQueue, * -> ../MessageQueue  # for openmq package
