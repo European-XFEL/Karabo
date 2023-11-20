@@ -41,7 +41,6 @@ class KaraboOpenMQConan(ConanFile):
         self.copy("*", "etc", "etc")
         self.copy("*", "bin", "bin")
         self.run(f"mkdir {self.package_folder}/MessageQueue")
-        self.run(f"mkdir -p {self.package_folder}/MessageQueue/etc/mq")
         self.run(f"mv {self.package_folder}/etc/* {self.package_folder}/mq/etc")
         self.run(f"mv {self.package_folder}/mq {self.package_folder}/MessageQueue")
         self.run(f"rmdir {self.package_folder}/etc")
