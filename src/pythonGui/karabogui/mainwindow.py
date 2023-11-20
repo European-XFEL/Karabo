@@ -48,7 +48,7 @@ from karabogui.panels.api import (
     ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
     ScriptingPanel, TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
-from karabogui.programs.utils import save_concert_file
+from karabogui.programs.utils import run_concert, save_concert_file
 from karabogui.project.restore import get_restore_data
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
@@ -521,6 +521,10 @@ class MainWindow(QMainWindow):
 
         self.acConcertWriter = QAction("Create Karabo Concert File", self)
         self.acConcertWriter.triggered.connect(self.onCreateConcertFile)
+
+        self.acConcertReader = QAction("Run Karabo Concert File", self)
+        self.acConcertReader.triggered.connect(self.onReadConcertFile)
+
         self.acGuiDocumentation = QAction(
             icons.weblink, "GUI Documentation", self)
         self.acGuiDocumentation.triggered.connect(self.onGuiDocumentation)
@@ -600,7 +604,9 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acCheckUpdates)
         mHelpMenu.addAction(self.acCheckProject)
         mHelpMenu.addAction(self.acNpy2CSV)
+        mHelpMenu.addSeparator()
         mHelpMenu.addAction(self.acConcertWriter)
+        mHelpMenu.addAction(self.acConcertReader)
 
     def _setupToolBar(self):
 
@@ -991,4 +997,15 @@ class MainWindow(QMainWindow):
             directory=directory, parent=self)
         if file_name:
             save_concert_file(file_name, scene_data)
+            get_config()["data_dir"] = str(Path(file_name).parent)
+
+    @Slot()
+    def onReadConcertFile(self):
+        path = get_config()["data_dir"]
+        directory = path if path and Path(path).is_dir() else ""
+        file_name = getOpenFileName(
+            caption="Run Concert File", filter="Yaml file(*.yaml *.yml)",
+            directory=directory, parent=self)
+        if file_name:
+            run_concert(file_name=file_name)
             get_config()["data_dir"] = str(Path(file_name).parent)
