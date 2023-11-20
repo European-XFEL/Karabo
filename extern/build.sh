@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 # dependencies located in extern/resources/. to manually compile and install
-DEPENDENCIES_BASE=( openmqc  )
+DEPENDENCIES_BASE=(  )
 
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
@@ -39,6 +39,7 @@ BOOST_VERSION=1.82.0
 LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 OPENMQ_VERSION=5.1.3
+OPENMQC_VERSION=5.1.4.1
 CPP_STD_LIB_VERSION=c++11
 CPP_STD=14
 
@@ -495,8 +496,9 @@ install_from_deps() {
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/log4cpp/conanfile.py log4cpp/$LOG4CPP_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
         # export local boost recipe
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/boost/conanfile.py boost/$BOOST_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        # export local openmq recipe
+        # export local openmq/openmqc recipe
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmq/conanfile.py openmq/$OPENMQ_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+        safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py openmqc/$OPENMQC_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
 
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
