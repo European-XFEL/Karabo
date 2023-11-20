@@ -1,7 +1,0 @@
---- MessageQueue5.1.3/mq/lib/props/broker/install.properties
-+++ MessageQueue5.1.3/mq/lib/props/broker/install.properties
-@@ -28,0 +28,4 @@
-+imq.autocreate.destination.maxTotalMsgBytes=-1
-+imq.autocreate.destination.maxNumMsgs=-1
-+imq.autocreate.destination.maxNumProducers=-1
-+imq.autocreate.destination.maxBytesPerMsg=-1
