@@ -118,9 +118,45 @@ namespace karabind {
             }
         }
 
-       protected: // not private - needed by HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
+       protected: // not private - needed by HandlerWrapExtra, HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
         std::shared_ptr<py::object> m_handler;
         char const* const m_where;
+    };
+
+    /**
+     * Specialisation of HandlerWrap that stores an extra C++ object and
+     * passes it as second argument to the Python handler
+     *
+     * The arguments are converted to pybind11::object before passed to the Python handler.
+     */
+    template <typename FirstArg, typename ExtraArg, typename... Args>
+    class HandlerWrapExtra : public HandlerWrap<FirstArg, Args...> {
+       public:
+        HandlerWrapExtra(const py::object& handler, char const* const where, const ExtraArg& extra)
+            : HandlerWrap<FirstArg, Args...>(handler, where), m_extraArg(extra) {}
+
+        void operator()(FirstArg first, Args... args) const {
+            py::gil_scoped_acquire gil;
+            try {
+                if (*m_handler) {
+                    // Call handler with individually unpacked arguments, but put the extra one as second:
+                    (*m_handler)(py::cast(std::move(first)), py::cast(m_extraArg),
+                                 py::cast(std::forward<Args>(args))...);
+                }
+            } catch (py::error_already_set& e) {
+                detail::treatError_already_set(e, *m_handler, m_where);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+       private:
+        ExtraArg m_extraArg;
+        // Make (non-private) base class members available. Needed since 'C++ doesn’t consider superclass templates for
+        // name resolution' (see
+        // https://stackoverflow.com/questions/4010281/accessing-protected-members-of-superclass-in-c-with-templates):
+        using HandlerWrap<FirstArg, Args...>::m_handler;
+        using HandlerWrap<FirstArg, Args...>::m_where;
     };
 
     /**
