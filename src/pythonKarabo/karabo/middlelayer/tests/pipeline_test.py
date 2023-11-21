@@ -42,6 +42,9 @@ class ChecksumTransport(WriteTransport):
     def close(self):
         self.closed = True
 
+    def is_closing(self):
+        return self.closed
+
 
 class FakeTimestamp:
     """as the order of a dictionary is not defined in Python 3.4, we cannot
