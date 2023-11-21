@@ -33,6 +33,7 @@
 #include "TcpChannel.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/util/NodeElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "utils.hh"
 
@@ -116,11 +117,55 @@ namespace karabo {
                   .init()
                   .expertAccess()
                   .commit();
+
+            NODE_ELEMENT(expected).key("keepalive").displayedName("Tcp Keep Alive").expertAccess().commit();
+
+            BOOL_ELEMENT(expected)
+                  .key("keepalive.enabled")
+                  .displayedName("Enabled")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
+
+            INT32_ELEMENT(expected)
+                  .key("keepalive.toleratedSilence")
+                  .displayedName("Tolerated Silence")
+                  .description(
+                        "Idle time after which keep-alive mechanism start checking the connection (TCP_KEEPIDLE)")
+                  .unit(karabo::util::Unit::SECOND)
+                  .assignmentOptional()
+                  .defaultValue(30) // Linux default is 7200
+                  .minInc(5)
+                  .commit();
+
+            INT32_ELEMENT(expected)
+                  .key("keepalive.interval")
+                  .displayedName("Interval")
+                  .description("Interval between probes keep-alive probes (TCP_KEEPINTVL)")
+                  .unit(karabo::util::Unit::SECOND)
+                  .assignmentOptional()
+                  .defaultValue(5) // Linux default is 75
+                  .minInc(1)
+                  .commit();
+
+            INT32_ELEMENT(expected)
+                  .key("keepalive.numProbes")
+                  .displayedName("Number of Probes")
+                  .description(
+                        "Number of ot acknowledged probes after that the connection is considered dead (TCP_KEEPCNT)")
+                  .unit(karabo::util::Unit::COUNT)
+                  .assignmentOptional()
+                  .defaultValue(5) // Linux default is 9
+                  .minInc(2)
+                  .commit();
         }
 
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
-            : Connection(input), m_resolver(EventLoop::getIOService()), m_acceptor(EventLoop::getIOService()) {
+            : Connection(input),
+              m_resolver(EventLoop::getIOService()),
+              m_acceptor(EventLoop::getIOService()),
+              m_keepAliveSettings(input.get<karabo::util::Hash>("keepalive")) {
             string url;
             input.get("url", url);
             if (url.empty()) {
