@@ -28,13 +28,14 @@
 // #include <boost/enable_shared_from_this.hpp>
 
 #include <atomic>
-#include <karabo/io/BinarySerializer.hh>
-#include <karabo/io/TextSerializer.hh>
 #include <map>
 
 #include "Channel.hh"
 #include "Queues.hh"
 #include "TcpConnection.hh"
+#include "karabo/io/BinarySerializer.hh"
+#include "karabo/io/TextSerializer.hh"
+#include "karabo/util/Hash.hh"
 
 namespace karabo {
     namespace net {
@@ -61,6 +62,7 @@ namespace karabo {
             const size_t m_sizeofLength;
             const bool m_lengthIsText;
             const bool m_manageAsyncData;
+            karabo::util::Hash m_keepAliveSettings;
             mutable boost::mutex m_socketMutex;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
@@ -548,6 +550,13 @@ namespace karabo {
             void doWriteHandler(Message::Pointer& msg, boost::system::error_code, const size_t length,
                                 const int queueIndex);
 
+            /**
+             * Helper to apply the TCP keep-alive settings to the socket if configured to do so.
+             *
+             * Requires that m_socketMutex is locked.
+             */
+            void applySocketKeepAlive();
+
             //
             // Finally some methods for exclusive use in TcpConnection,
             // we grant friendship exclusively to the methods that need it:
@@ -565,16 +574,40 @@ namespace karabo {
 
             template <typename Handler>
             void asyncAcceptSocket(boost::asio::ip::tcp::acceptor& acceptor, Handler&& handler) {
+                // part of async start of connection for server
+                auto wrapper = [weakThis{weak_from_this()},
+                                handler{std::move(handler)}](const boost::system::error_code& ec) {
+                    if (!ec) {
+                        TcpChannel::Pointer self(boost::static_pointer_cast<TcpChannel>(weakThis.lock()));
+                        if (self) {
+                            boost::mutex::scoped_lock lock(self->m_socketMutex);
+                            self->applySocketKeepAlive();
+                        }
+                    }
+                    handler(ec);
+                };
                 boost::mutex::scoped_lock lock(m_socketMutex);
-                acceptor.async_accept(m_socket, handler);
+                acceptor.async_accept(m_socket, std::move(wrapper));
             }
 
             void socketConnect(const boost::asio::ip::tcp::endpoint& endpoint);
 
             template <typename Handler>
             void asyncSocketConnect(const boost::asio::ip::tcp::endpoint& endpoint, Handler&& handler) {
+                // part of async start of connection for client
+                auto wrapper = [weakThis{weak_from_this()},
+                                handler{std::move(handler)}](const boost::system::error_code& ec) {
+                    if (!ec) {
+                        TcpChannel::Pointer self(boost::static_pointer_cast<TcpChannel>(weakThis.lock()));
+                        if (self) {
+                            boost::mutex::scoped_lock lock(self->m_socketMutex);
+                            self->applySocketKeepAlive();
+                        }
+                    }
+                    handler(ec);
+                };
                 boost::mutex::scoped_lock lock(m_socketMutex);
-                m_socket.async_connect(endpoint, handler);
+                m_socket.async_connect(endpoint, std::move(wrapper));
             }
         };
     } // namespace net
