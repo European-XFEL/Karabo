@@ -57,7 +57,7 @@ using karabo::util::Hash;
 using karabo::util::toString;
 
 /**
- * Create client and server that are conencted
+ * Create client and server that are connected
  *
  * @returns pair (client/server) of pairs (connection, channel)
  */
