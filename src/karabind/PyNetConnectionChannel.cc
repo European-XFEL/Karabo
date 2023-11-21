@@ -75,37 +75,30 @@ void exportPyNetConnectionChannel(py::module_& m) {
                     "with remote peer is established.  It returns a handle a.k.a channel used in all IO operations.")
               .def(
                     "startAsync",
-                    [](const Connection::Pointer& self, py::object handler) -> py::int_ {
+                    [](const Connection::Pointer& self, const py::object& handler) -> py::int_ {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("startAsync handler is None");
+
+                        HandlerWrap<const ErrorCode&, const Channel::Pointer&> wrappedHandler(handler, "startAsync");
                         int port = 0;
                         {
                             py::gil_scoped_release release;
-                            port = self->startAsync([handler](const ErrorCode& e, const Channel::Pointer& channel) {
-                                py::gil_scoped_acquire gil;
-                                try {
-                                    handler(py::cast(e), py::cast(channel));
-                                } catch (py::error_already_set& e) {
-                                    karabind::detail::treatError_already_set(e, handler, "startAsync handler");
-                                } catch (...) {
-                                    KARABO_RETHROW
-                                }
-                            });
+                            port = self->startAsync(wrappedHandler);
                         }
                         return port;
                     },
-                    py::arg("handler") = py::none(),
-                    "Starts the connection asynchronously, i.e. it never blocks"
-                    ", but if the connection is established, the provided handler will be called with the channel as "
-                    "the argument to the handler.\nRegister "
-                    "new handlers in this handler using given channel if you want to handle further events in the "
-                    "connection's lifetime.")
+                    py::arg("handler"),
+                    "Starts the connection asynchronously, i.e. it never blocks.\n"
+                    "If the connection is established, the provided handler will be called\n"
+                    "with an ErrorCode and the channel as arguments to the handler.\n"
+                    "If connection is a server, call again with new handlers to handle\n"
+                    "further clients.")
               .def(
                     "stop",
                     [](const Connection::Pointer& self) {
                         py::gil_scoped_release release;
                         self->stop();
                     },
-                    "Stops IO service operation.")
+                    "Stop connection - previously created channels may continue working.")
 
                     KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
 
@@ -172,39 +165,30 @@ void exportPyNetConnectionChannel(py::module_& m) {
                     "readAsyncStr",
                     [](const Channel::Pointer& self, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("readStr handler is None");
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer, const std::string&>;
+                        Wrap handlerWrap(handler, "readAsyncStr", self);
+
                         py::gil_scoped_release release;
-                        self->readAsyncString([handler, self](const ErrorCode& e, const std::string& s) {
-                            py::gil_scoped_acquire gil;
-                            try {
-                                handler(py::cast(e), py::cast(self), py::cast(s));
-                            } catch (py::error_already_set& e) {
-                                karabind::detail::treatError_already_set(e, handler, "readAsyncStr handler");
-                            } catch (...) {
-                                KARABO_RETHROW
-                            }
-                        });
+                        self->readAsyncString(std::move(handlerWrap));
                     },
-                    py::arg("handler") = py::none(),
-                    "Register handler that will be called when the message is arrived.  Never blocks. The message will "
-                    "be represented as python string.")
+                    py::arg("handler"),
+                    "Register handler that will be called when the message has arrived.\n"
+                    "Never blocks, but requires a running EventLoop.\n"
+                    "Handler will be called with three arguments:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called readAsyncStr\n"
+                    "  - the sent data deserialized to a Hash")
 
               .def(
                     "readAsyncHash",
                     [](const Channel::Pointer& self, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("readHash handler is None");
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer, const Hash&>;
+                        Wrap handlerWrap(handler, "readAsyncHash", self);
                         py::gil_scoped_release release;
-                        self->readAsyncHash([handler, self](const ErrorCode& e, const Hash& h) {
-                            py::gil_scoped_acquire gil;
-                            try {
-                                handler(py::cast(e), py::cast(self), py::cast(h));
-                            } catch (py::error_already_set& e) {
-                                karabind::detail::treatError_already_set(e, handler, "readAsyncHash handler");
-                            } catch (...) {
-                                KARABO_RETHROW
-                            }
-                        });
+                        self->readAsyncHash(std::move(handlerWrap));
                     },
-                    py::arg("handler") = py::none(),
+                    py::arg("handler"),
                     "Register handler that will be called when the next message arrives.\n"
                     "Never blocks, but requires a running EventLoop.\n"
                     "Handler will be called with three arguments:\n"
@@ -216,43 +200,39 @@ void exportPyNetConnectionChannel(py::module_& m) {
                     "readAsyncHashStr",
                     [](const Channel::Pointer& self, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("readHashStr handler is None");
+                        using Wrap =
+                              HandlerWrapExtra<const ErrorCode&, Channel::Pointer, const Hash&, const std::string&>;
+                        Wrap handlerWrap(handler, "readAsyncHashStr", self);
+
                         py::gil_scoped_release release;
-                        self->readAsyncHashVector(
-                              [handler, self](const ErrorCode& e, const Hash& h, const std::vector<char>& v) {
-                                  py::gil_scoped_acquire gil;
-                                  std::string s(v.begin(), v.end());
-                                  try {
-                                      handler(py::cast(e), py::cast(self), py::cast(h), py::cast(s));
-                                  } catch (py::error_already_set& e) {
-                                      karabind::detail::treatError_already_set(e, handler, "readAsyncHashStr handler");
-                                  } catch (...) {
-                                      KARABO_RETHROW
-                                  }
-                              });
+                        self->readAsyncHashString(std::move(handlerWrap));
                     },
-                    py::arg("handler") = py::none(),
-                    "Register handler that will be called when the message is arrived.  Never blocks. The message will "
-                    "have a header as Hash and a body as python string.")
+                    py::arg("handler"),
+                    "Register handler that will be called when the message has arrived.\n"
+                    "Never blocks, but requires a running EventLoop.\n"
+                    "Handler will be called with four arguments:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called readAsyncHashStr\n"
+                    "  - the header of the data sent, deserialized to a Hash\n"
+                    "  - the body of the data sent, serialized to a Python string")
 
               .def(
                     "readAsyncHashHash",
                     [](const Channel::Pointer& self, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("readHashHash handler is None");
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer, const Hash&, const Hash&>;
+                        Wrap handlerWrap(handler, "readAsyncHashHash", self);
                         py::gil_scoped_release release;
-                        self->readAsyncHashHash([handler, self](const ErrorCode& e, const Hash& h, const Hash& b) {
-                            py::gil_scoped_acquire gil;
-                            try {
-                                handler(py::cast(e), py::cast(self), py::cast(h), py::cast(b));
-                            } catch (py::error_already_set& e) {
-                                karabind::detail::treatError_already_set(e, handler, "readHashHash handler");
-                            } catch (...) {
-                                KARABO_RETHROW
-                            }
-                        });
+                        self->readAsyncHashHash(std::move(handlerWrap));
                     },
-                    py::arg("handler") = py::none(),
-                    "Register handler that will be called when the message is arrived.  Never blocks. The message will "
-                    "have a header and a body as two Hashes.")
+                    py::arg("handler"),
+                    "Register handler that will be called when the message has arrived.\n"
+                    "Never blocks, but requires a running EventLoop.\n"
+                    "Handler will be called with four arguments:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called readAsyncHashHash\n"
+                    "  - the header of the data sent, deserialized to a Hash\n"
+                    "  - the body of the data sent, serialized to a Hash")
 
               .def(
                     "write",
@@ -300,47 +280,40 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         // Does not compile with make_unique, complains about some usage of deleted function
                         auto s = std::make_shared<std::string>();
                         if (!wrapper::fromPyObjectToString(o, *s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
+
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer>;
+                        Wrap handlerWrap(handler, "writeAsyncStr", self);
+
                         py::gil_scoped_release release;
                         const char* strPtr = s->data();
                         const size_t strSize = s->size();
                         // bind 's' to keep its memory alive and valid - need variables strXxx instead of directly
                         // passing s->func() to ensure things are not moved away before passed (argument determination
                         // order is not defined by standard, IIRC)
-                        self->writeAsyncRaw(strPtr, strSize, [handler, self, s = std::move(s)](const ErrorCode& e) {
-                            py::gil_scoped_acquire gil;
-                            try {
-                                handler(py::cast(e), py::cast(self));
-                            } catch (py::error_already_set& e) {
-                                karabind::detail::treatError_already_set(e, handler,
-                                                                         "writeAsyncStr Completion handler");
-                            } catch (...) {
-                                KARABO_RETHROW
-                            }
-                        });
+                        self->writeAsyncRaw(
+                              strPtr, strSize,
+                              [handler = std::move(handlerWrap), s = std::move(s)](const ErrorCode& e) { handler(e); });
                     },
-                    py::arg("data"), py::arg("handler") = py::none(),
-                    "Register handler for write a string (bytes, bytearray) message.  Never blocks. The handler "
-                    "will be called if write operation is completed.")
+                    py::arg("data"), py::arg("handler"),
+                    "Register handler for write a string (bytes, bytearray) message. Never blocks.\n"
+                    "The handler will be called with two arguments when write operation is completed:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called writeAsyncStr\n")
 
               .def(
                     "writeAsyncHash",
                     [](const Channel::Pointer& self, const Hash& data, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("writeCompletionHandler is None");
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer>;
+                        Wrap handlerWrap(handler, "writeAsyncHash", self);
                         py::gil_scoped_release release;
-                        self->writeAsyncHash(data, [handler, self](const ErrorCode& e) {
-                            py::gil_scoped_acquire gil;
-                            try {
-                                handler(py::cast(e), py::cast(self));
-                            } catch (py::error_already_set& e) {
-                                karabind::detail::treatError_already_set(e, handler, "writeCompletion");
-                            } catch (...) {
-                                KARABO_RETHROW
-                            }
-                        });
+                        self->writeAsyncHash(data, std::move(handlerWrap));
                     },
-                    py::arg("data"), py::arg("handler") = py::none(),
-                    "Register handler for write a Hash message.  Never blocks. The handler will be called if write "
-                    "operation is completed.")
+                    py::arg("data"), py::arg("handler"),
+                    "Register handler for write a Hash message. Never blocks.\n"
+                    "The handler will be called with two arguments when write operation is completed:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called writeAsyncHash\n")
 
               .def(
                     "writeAsyncHashStr",
@@ -348,48 +321,36 @@ void exportPyNetConnectionChannel(py::module_& m) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("writeCompletionHandler is None");
                         auto s = std::make_shared<std::string>();
                         if (!wrapper::fromPyObjectToString(b, *s)) throw KARABO_PYTHON_EXCEPTION("Not supported type");
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer>;
+                        Wrap handlerWrap(handler, "writeAsyncHashStr", self);
                         py::gil_scoped_release release;
                         const char* strPtr = s->data();
                         const size_t strSize = s->size();
                         // See above in writeAsyncStr about strPtr, strSize and s = make_shared...
                         self->writeAsyncHashRaw(
-                              h, strPtr, strSize, [handler, self, s{std::move(s)}](const ErrorCode& e) {
-                                  py::gil_scoped_acquire gil;
-                                  try {
-                                      handler(py::cast(e), py::cast(self));
-                                  } catch (py::error_already_set& e) {
-                                      karabind::detail::treatError_already_set(e, handler, "writeCompletion");
-                                  } catch (...) {
-                                      KARABO_RETHROW
-                                  }
-                              });
+                              h, strPtr, strSize,
+                              [handler = std::move(handlerWrap), s = std::move(s)](const ErrorCode& e) { handler(e); });
                     },
                     py::arg("hdr"), py::arg("data"), py::arg("handler"),
-                    "Helper method. Register handler for write a Hash header and 'string' ('bytes', 'bytearray') body."
-                    " Never blocks.  The handler will be called if write operations of all message parts are "
-                    "completed.")
+                    "Register handler for write a Hash header and 'string' ('bytes', 'bytearray') body.\n"
+                    "The handler will be called with two arguments when write operation is completed:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called writeAsyncHashStr\n")
 
               .def(
                     "writeAsyncHashHash",
                     [](const Channel::Pointer& self, const Hash& h, const Hash& b, const py::object& handler) {
                         if (handler.is_none()) throw KARABO_PYTHON_EXCEPTION("writeCompletionHandler is None");
+                        using Wrap = HandlerWrapExtra<const ErrorCode&, Channel::Pointer>;
+                        Wrap handlerWrap(handler, "writeAsyncHashHash", self);
                         py::gil_scoped_release release;
-                        self->writeAsyncHashHash(h, b, [handler, self](const ErrorCode& e) {
-                            py::gil_scoped_acquire gil;
-                            try {
-                                handler(py::cast(e), py::cast(self));
-                            } catch (py::error_already_set& e) {
-                                karabind::detail::treatError_already_set(e, handler, "writeCompletion");
-                            } catch (...) {
-                                KARABO_RETHROW
-                            }
-                        });
+                        self->writeAsyncHashHash(h, b, std::move(handlerWrap));
                     },
-                    py::arg("hdr"), py::arg("data"), py::arg("handler") = py::none(),
-                    "Helper method. Register handler for write a Hash header and Hash body.  Never blocks.  The "
-                    "handler "
-                    "will be called "
-                    "if write operations of all message parts are completed.")
+                    py::arg("hdr"), py::arg("data"), py::arg("handler"),
+                    "Register handler for write a Hash header and Hash body. Never blocks.\n"
+                    "The handler will be called with two arguments when write operation is completed:\n"
+                    "  - an ErrorCode object\n"
+                    "  - the channel that called writeAsyncHashHash\n")
 
               .def("close", &Channel::close, "Close channel session.")
 
