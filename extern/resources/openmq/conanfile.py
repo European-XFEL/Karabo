@@ -1,5 +1,4 @@
 import os
-import shutil
 
 from conans import ConanFile
 from conans.tools import download, unzip, patch
