@@ -33,6 +33,7 @@
 #include <string>
 
 #include "Connection.hh"
+#include "karabo/util/Hash.hh"
 
 /**
  * The main European XFEL namespace
@@ -118,6 +119,7 @@ namespace karabo {
             unsigned int m_sizeofLength;
             bool m_lengthIsTextFlag;
             bool m_manageAsyncData;
+            const karabo::util::Hash m_keepAliveSettings;
         };
     } // namespace net
 } // namespace karabo
