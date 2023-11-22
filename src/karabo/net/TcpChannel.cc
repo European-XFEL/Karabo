@@ -18,6 +18,7 @@
 #include "TcpChannel.hh"
 
 #include <assert.h>
+#include <sys/socket.h> // Linux...
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
@@ -61,6 +62,7 @@ namespace karabo {
               m_sizeofLength(connection->getSizeofLength()),
               m_lengthIsText(connection->lengthIsText()),
               m_manageAsyncData(connection->m_manageAsyncData),
+              m_keepAliveSettings(connection->m_keepAliveSettings),
               m_socket(EventLoop::getIOService()),
               m_activeHandler(TcpChannel::NONE),
               m_readHeaderFirst(false),
@@ -1656,16 +1658,43 @@ namespace karabo {
             dispatchWriteAsync(mp, prio);
         }
 
+        void TcpChannel::applySocketKeepAlive() {
+            // See TcpConnection::expectedParameters(..) for the keys in m_keepAliveSettings
+            if (m_keepAliveSettings.get<bool>("enabled")) {
+                // Taken from
+                // https://stackoverflow.com/questions/16568672/boost-asio-how-can-a-server-know-if-a-client-is-still-connected
+                const boost::asio::socket_base::keep_alive option(true);
+                m_socket.set_option(option);
+                // The following is linux (or rather POSIX) only...
+                const int socketId = m_socket.native_handle();
+                int flag = m_keepAliveSettings.get<int>("toleratedSilence");
+                if (setsockopt(socketId, SOL_TCP, TCP_KEEPIDLE, &flag, sizeof(flag))) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to apply Tcp keep-alive 'toleratedSilence'";
+                }
+                flag = m_keepAliveSettings.get<int>("interval");
+                if (setsockopt(socketId, SOL_TCP, TCP_KEEPINTVL, &flag, sizeof(flag))) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to apply Tcp keep-alive 'interval'";
+                }
+                flag = m_keepAliveSettings.get<int>("numProbes");
+                if (setsockopt(socketId, SOL_TCP, TCP_KEEPCNT, &flag, sizeof(flag))) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to apply Tcp keep-alive 'numProbes'";
+                }
+            }
+        }
 
         void TcpChannel::socketConnect(const boost::asio::ip::tcp::endpoint& endpoint) {
+            // part of sync start of connection for client
             boost::mutex::scoped_lock lock(m_socketMutex);
             m_socket.connect(endpoint);
+            applySocketKeepAlive();
         }
 
 
         void TcpChannel::acceptSocket(boost::asio::ip::tcp::acceptor& acceptor) {
+            // part of sync start of connection for server
             boost::mutex::scoped_lock lock(m_socketMutex);
             acceptor.accept(m_socket);
+            applySocketKeepAlive();
         }
 
 
