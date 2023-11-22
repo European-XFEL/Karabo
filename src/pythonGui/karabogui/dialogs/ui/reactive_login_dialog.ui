@@ -129,6 +129,12 @@
      </property>
      <widget class="QWidget" name="page_prompt">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="group_prompt">
          <property name="minimumSize">
@@ -172,6 +178,12 @@
      </widget>
      <widget class="QWidget" name="page_auth">
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="group_auth">
          <property name="minimumSize">
@@ -250,6 +262,12 @@
      </widget>
      <widget class="QWidget" name="page_classic">
       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="group_login_level">
          <property name="minimumSize">
@@ -325,6 +343,12 @@
      </widget>
      <widget class="QWidget" name="page_ro">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QGroupBox" name="group_login_readonly">
          <property name="minimumSize">
