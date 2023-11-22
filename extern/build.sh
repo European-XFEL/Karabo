@@ -77,31 +77,13 @@ build_dependencies() {
     popd
 }
 
-check_for_curl() {
-    which curl &> /dev/null
+check_for() {
+    which $1 &> /dev/null
     if [ $? -ne 0 ]; then
         echo
         echo
-        echo "!!! 'curl' command not found!"
-        echo "Please install 'curl' so that dependencies can be downloaded!"
-        echo
-        echo
-        # Give the user time to see the message
-        sleep 2
-        return 1
-    fi
-
-    # Installed and ready!
-    return 0
-}
-
-check_for_conan() {
-    which conan &> /dev/null
-    if [ $? -ne 0 ]; then
-        echo
-        echo
-        echo "!!! 'conan 1.x' command not found!"
-        echo "Please install latest 'conan 1.x' so that dependencies can be downloaded!"
+        echo "!!! '$1' command not found!"
+        echo "Please install '$1' so that dependencies can be downloaded!"
         echo
         echo
         # Give the user time to see the message
@@ -184,12 +166,12 @@ download_latest_deps() {
     echo
 
     # Make sure curl is available
-    check_for_curl
+    check_for curl
     if [ $? -ne 0 ]; then
         return 1
     fi
     # Make sure conan is available
-    check_for_conan
+    check_for conan
     if [ $? -ne 0 ]; then
         return 1
     fi
@@ -391,21 +373,6 @@ install_python() {
 
         popd
         echo "python-install" >> $marker_path
-    fi
-}
-
-download_sources() {
-    local package_status=$(get_package_manager_status)
-    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
-    # check for the final step in the package manager based installation
-    # if that succeeded we are also done here.
-    element_in "pip-requirements" "${package_status[@]}"
-    local vin=$?
-    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-        pushd $scriptDir
-        safeRunCommand "$INSTALL_PREFIX/bin/python3 -m pip install pyyaml==6.0"
-        safeRunCommand "$INSTALL_PREFIX/bin/python3 download_helper.py downloads.yml"
-        popd
     fi
 }
 
@@ -631,9 +598,6 @@ fi
 
 # python download and install to allow full bootstrap
 install_python
-
-# download any sources we build ourselfs
-download_sources
 
 # install via conan and pip next
 install_from_deps
