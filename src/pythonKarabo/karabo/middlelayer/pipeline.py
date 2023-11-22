@@ -1026,6 +1026,8 @@ class NetworkOutput(Configurable):
     async def serve(self, reader, writer):
         channel = Channel(reader, writer, self.channelName)
         distribution = "unknown"
+        remote_host = "unknown"
+        remote_port = 0
         try:
             message = await channel.readHash()
             assert message["reason"] == "hello"
