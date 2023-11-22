@@ -453,7 +453,8 @@ namespace karabo {
               const karabo::util::Hash& outputChannelInfo) const {
             const std::string& hostname = outputChannelInfo.get<std::string>("hostname");
             const unsigned int& port = outputChannelInfo.get<unsigned int>("port");
-            karabo::util::Hash h("Tcp.type", "client", "Tcp.hostname", hostname, "Tcp.port", port);
+            karabo::util::Hash h("Tcp",
+                                 Hash("type", "client", "hostname", hostname, "port", port, "keepalive.enabled", true));
             return h;
         }
 
