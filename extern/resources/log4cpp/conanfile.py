@@ -1,8 +1,8 @@
 import os
-import shutil
 
 from conans import ConanFile, AutoToolsBuildEnvironment
-from conans.tools import download, untargz, patch
+from conans.tools import download, untargz, patch, rmdir
+from conan.tools.files import copy
 
 
 class Log4cppConan(ConanFile):
@@ -22,8 +22,8 @@ class Log4cppConan(ConanFile):
         url = "https://sourceforge.net/projects/log4cpp/files/latest/download"
         download(url, zip_name)
         untargz(zip_name, strip_root=True)
-        shutil.copytree("log4cpp", ".", dirs_exist_ok=True)
-        shutil.rmtree("log4cpp")
+        copy(self, "*", "log4cpp", ".")
+        rmdir("log4cpp")
         os.unlink(zip_name)
 
     def build(self):
