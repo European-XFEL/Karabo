@@ -14,7 +14,6 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 import json
-import sys
 import uuid
 from asyncio import gather, sleep, wait_for
 
@@ -146,9 +145,6 @@ async def test_device_server_instantiate_plugins(event_loop):
         await finalize_server(server)
 
 
-@pytest.mark.skipif(
-    sys.version_info > (3, 8),
-    reason="framework issue 703, test hangs with python 3.11")
 @pytest.mark.timeout(30)
 @pytest.mark.asyncio
 async def test_device_server_autostart(event_loop):
