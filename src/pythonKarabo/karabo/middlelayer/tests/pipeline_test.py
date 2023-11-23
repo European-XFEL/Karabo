@@ -32,6 +32,7 @@ from karabo.middlelayer.testing import run_test
 
 class ChecksumTransport(WriteTransport):
     def __init__(self):
+        self.closed = False
         self.checksum = adler32(b"")
         self._extra = {'sockname': ("Local", 8080),
                        'peername': ("Remote", 8080)}
