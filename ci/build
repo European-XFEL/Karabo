@@ -135,7 +135,10 @@ echo "Start building job: {$1}"
 
 JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
 JOB_TYPE=$(echo $1 | cut -f2 -d' ')
+JOB_TYPE=${JOB_TYPE//:}
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
+TARGET_OS=${TARGET_OS//[}
+TARGET_OS=${TARGET_OS//]}
 
 case "$JOB_SCOPE" in
     release) __release_build $TARGET_OS $JOB_SCOPE ;;
@@ -143,5 +146,5 @@ case "$JOB_SCOPE" in
     nightly) __release_build $TARGET_OS $JOB_SCOPE ;;
     deps) __deps_build $JOB_TYPE ;;
     tests) __tests_build $JOB_TYPE ;;
-    *) echo "unknow job scope: $JOB_SCOPE" ;;
+    *) echo "unknown job scope: $JOB_SCOPE" ;;
 esac
