@@ -48,7 +48,10 @@ echo "Start to testing job: {$1}"
 
 JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
 JOB_TYPE=$(echo $1 | cut -f2 -d' ')
+JOB_TYPE=${JOB_TYPE//:}
 TARGET_OS=$(echo $1 | cut -f3 -d' ')
+TARGET_OS=${TARGET_OS//[}
+TARGET_OS=${TARGET_OS//]}
 
 export KARABO_CI_TEST_PLATFORM=$TARGET_OS
 export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
