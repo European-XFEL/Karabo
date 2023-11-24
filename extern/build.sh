@@ -3,9 +3,6 @@
 ##############################################################################
 # Packages that we know how to build
 
-# dependencies located in extern/resources/. to manually compile and install
-DEPENDENCIES_BASE=(  )
-
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 source "$scriptDir/../set_lsb_release_info.sh"
 
@@ -45,37 +42,6 @@ CPP_STD=14
 
 ##############################################################################
 # Define a bunch of functions to be called later
-
-build_dependencies() {
-    local built_deps=$(get_built_dependencies)
-    local marker_path=$INSTALL_PREFIX/$BUILD_MARKER_NAME
-
-    # Run the build from inside the extern directory
-    pushd $EXTERN_DIR
-
-    # Install packages one by one.
-    for i in "${DEPENDENCIES[@]}"
-    do
-        :
-        element_in "$i" "${built_deps[@]}"
-        local vin=$?
-        if [ $vin -eq 0 -a "$FORCE" = "n" ]; then
-            continue
-        fi
-        ./build_resource.sh $QUIET $i $INSTALL_PREFIX
-        local rv=$?
-        if [ $rv -ne 0 ]; then
-            echo
-            echo "### PROBLEMS building $i, exiting... ###"
-            echo
-            exit $rv
-        fi
-        echo $i >> $marker_path
-    done
-
-    # Leave the extern directory
-    popd
-}
 
 check_for() {
     which $1 &> /dev/null
@@ -125,22 +91,7 @@ check_if_download_needed() {
     return 0
 }
 
-determine_build_packages() {
-    case "$WHAT" in
-        CI|ALL)
-            # Build everything
-            DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} )
-            ;;
-        *)
-            # FORCE building of whatever the user specified.
-            DEPENDENCIES=( $WHAT )
-            FORCE="y"
-            ;;
-    esac
-}
-
 download_latest_deps() {
-
     local deps_base_name=${DEPS_BASE_NAME_MAP[$DEPS_OS_IDENTIFIER]}
 
     if [ -z $deps_base_name ]; then
@@ -230,24 +181,6 @@ get_abs_path() {
     esac
     cd - >/dev/null
     echo "$abs_path"
-}
-
-get_built_dependencies() {
-    mkdir -p $INSTALL_PREFIX
-    local marker_path=$INSTALL_PREFIX/$BUILD_MARKER_NAME
-
-    # Check if $marker_path exists or not => if it does then read contents.
-    # Otherwise create the file and input names of packages one by one as they are installed.
-    if [ ! -f $marker_path ]; then
-        touch $marker_path
-    fi
-
-    # Read the marker file into a variable as a list
-    local built_deps=""
-    IFS=$'\r\n' built_deps=$(cat $marker_path)
-    unset IFS
-
-    echo $built_deps
 }
 
 get_last_deps_tag() {
@@ -397,45 +330,11 @@ get_package_manager_status() {
 install_from_deps() {
     pushd $scriptDir
     # we use markers to not repeat steps in the build stage.
-    # TODO: could create hash digests of the main requirement files
-    # and force a rebuild if they changed.
     local package_status=$(get_package_manager_status)
     local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
 
-    # make sure we have paths set to where conan will place artifacts
-    OLD_PATH=$PATH
-    OLD_PYTHONPATH=$PYTHONPATH
-    OLD_CPATH=$CPATH
-    OLD_LD_RUN_PATH=$LD_RUN_PATH
-    export PATH=$INSTALL_PREFIX/bin:$PATH
-    export PYTHONPATH=$INSTALL_PREFIX/lib/python$PYTHON_PATH_VERSION
-    if [ -n "$CPATH" ] ; then
-        export CPATH=$INSTALL_PREFIX/include
-    else
-        export CPATH=$INSTALL_PREFIX/include:$CPATH
-    fi
-    export LD_RUN_PATH=$INSTALL_PREFIX/lib
-
-    # for the lib paths we need to give the version explicitely
-    local python_version=python$PYTHON_PATH_VERSION
-
-    # global pip config
-    # we will run pip as a module throughout to avoid errors where a pip import
-    # is not found when using the pip3 command directly.
-    # These sometimes occur if pip does large changes, as part of dependency
-    # chains affecting its own requirements.
-    local pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
-    local pip_target="--target $INSTALL_PREFIX/lib/$python_version"
-
-    # force a reinstall of pip first, such that it works properly
-    element_in "pip-upgrade" "${package_status[@]}"
-    local vin=$?
-    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-        safeRunCommand "curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py"
-        safeRunCommand "$INSTALL_PREFIX/bin/python get-pip.py --force-reinstall"
-        safeRunCommand "rm get-pip.py"
-        echo "pip-upgrade" >> $marker_path
-    fi
+    # use pip in INSTALL_PREFIX by calling python3 -m pip <args>
+    local pip_install_cmd="$INSTALL_PREFIX/bin/python3 -m pip install"
 
     # install requirements that should be installed before everything else,
     # such as pip, conan, and other tools to build/install packages
@@ -481,17 +380,13 @@ install_from_deps() {
         echo "conan" >> $marker_path
     fi
 
-    # with conan installed, now build shipped dependencies
-    # this way python can already pick them up.
-    # What have we been asked to build? - this builds the rest
-    determine_build_packages
-
-    # Build the dependencies
-    build_dependencies
-
     # install python requirements
     # we do this in multiple stages, as pip has issues resolving a
     # too complex dependency chain with many pinned versions.
+
+    # switch to calling pip executable within INSTALL_PREFIX to test it
+    pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
+
     element_in "pip-requirements" "${package_status[@]}"
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
@@ -519,40 +414,15 @@ install_from_deps() {
     safeRunCommand "sed -i 's|exec_prefix=.*|exec_prefix=\${prefix}|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
 
     popd
-
-    # reset the environment
-    if [ -n "$OLD_PATH" ] ; then
-        export PATH=$OLD_PATH
-    fi
-
-    if [ -n "$OLD_PYTHONPATH" ] ; then
-        export PYTHONPATH=$OLD_PYTHONPATH
-    else
-        unset PYTHON_PATH
-    fi
-
-    if [ -n "$OLD_CPATH" ] ; then
-        export CPATH=$OLD_CPATH
-    else
-        unset CPATH
-    fi
-
-    if [ -n "$OLD_LD_RUN_PATH" ] ; then
-        export LD_RUN_PATH=$OLD_LD_RUN_PATH
-    else
-        unset LD_RUN_PATH
-    fi
-
 }
 
 usage() {
     echo
     echo "Build the Karabo Dependencies"
     echo
-    echo "Usage: $0 [args] INSTALL_DIRECTORY CI|ALL|PYTHON|DB|<list>"
+    echo "Usage: $0 [args] INSTALL_DIRECTORY CI|ALL"
     echo "  INSTALL_DIRECTORY : The directory where build artifacts are installed"
-    echo "  CI|ALL|PYTHON|DB|<list> : The type of build to perform, OR"
-    echo "                                      <list> is a list of packages to build"
+    echo "  CI|ALL : The type of build to perform"
     echo "Arguments:"
     echo "  --package | -p : After building, make a tarball of the install directory"
     echo "  --quiet | -q : Suppress output of build commands"
