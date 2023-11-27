@@ -580,12 +580,9 @@ class LogBookPreview(QDialog):
         self._set_button_color()
 
         for tool_factory in get_tools():
-            text = tool_factory.name
-            action = QAction(tool_factory.icon, text, self)
-            tooltip = f"Add {text} to the Image"
-            if text == "Eraser":
-                tooltip = "Delete item"
-            action.setToolTip(tooltip)
+            action = QAction(parent=self)
+            action.setIcon(tool_factory.icon)
+            action.setToolTip(tool_factory.tooltip)
             action.setCheckable(True)
             tool = tool_factory.drawing_tool()
             action.triggered.connect(partial(self.activate_tool, tool))
