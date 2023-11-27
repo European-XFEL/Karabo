@@ -1133,7 +1133,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
                                       .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
                                       .receive());
 
-        // If output channel schema changed, we expect that the channel was recreated and and thus the
+        // If output channel schema changed, we expect that the channel was recreated and thus the
         // InputChannel of the receiver was disconnected and reconnected. Both should trigger a change of the
         // input channel's missingConnections property which should trigger a call to our "injected" slot
         // that is connected to 'signalChanged'.
@@ -1164,7 +1164,7 @@ void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlo
                       boost::mutex::scoped_lock lock(connectionChangesMutex);
                       return connectionChanges.size() >= 4ul; // two more than before
                   },
-                  KRB_TEST_MAX_TIMEOUT * 1000);
+                  KRB_TEST_MAX_TIMEOUT * 2000); // Factor two: reconnection cycle is included!
             boost::mutex::scoped_lock lock(connectionChangesMutex);
             CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(connectionChanges), changed);
             CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 4ul, connectionChanges.size());
