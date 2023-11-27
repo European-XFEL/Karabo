@@ -200,14 +200,17 @@ class EraserTool(BaseDrawingTool):
         pass
 
 
-TOOLS_FACTORY = namedtuple("TOOL_FACTORY", ["name", "icon", "drawing_tool"])
+TOOLS_FACTORY = namedtuple("TOOL_FACTORY", ["tooltip", "icon", "drawing_tool"])
 
 
 def get_tools():
     return [
-        TOOLS_FACTORY(name="Line", icon=icons.line, drawing_tool=LineTool),
-        TOOLS_FACTORY(name="Rect", icon=icons.rect, drawing_tool=RectTool),
-        TOOLS_FACTORY(name="Text", icon=icons.text, drawing_tool=TextTool),
+        TOOLS_FACTORY(tooltip="Draw Line", icon=icons.line,
+                      drawing_tool=LineTool),
+        TOOLS_FACTORY(tooltip="Draw Rectangle", icon=icons.rect,
+                      drawing_tool=RectTool),
+        TOOLS_FACTORY(tooltip="Add Text to the Image", icon=icons.text,
+                      drawing_tool=TextTool),
         TOOLS_FACTORY(
-            name="Eraser", icon=icons.eraser, drawing_tool=EraserTool)
+            tooltip="Delete item", icon=icons.eraser, drawing_tool=EraserTool)
              ]

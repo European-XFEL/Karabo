@@ -178,9 +178,9 @@ def test_toolbar(dialog):
     assert toolbar.isVisibleTo(dialog)
     actions = toolbar.actions()
     assert len(actions) == 5
-    # First item is color button with no text.
-    expected = ["", "Line", "Rect", "Text", "Eraser"]
-    assert [action.text() for action in actions] == expected
+    expected = ["Change annotation color", "Draw Line", "Draw Rectangle",
+                "Add Text to the Image", "Delete item"]
+    assert [action.toolTip() for action in actions] == expected
 
 
 def test_drawing_tools(dialog, mocker):
