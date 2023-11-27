@@ -601,7 +601,7 @@ namespace karabo {
                  * @param signalSlotable pointer to the SignalSlotable whose slot is currently executed (usually: this)
                  */
                 explicit AsyncReply(SignalSlotable* signalSlotable)
-                    : m_signalSlotable(signalSlotable), m_replyId(m_signalSlotable->registerAsyncReply()) {}
+                    : m_signalSlotable(signalSlotable), m_slotInfo(m_signalSlotable->registerAsyncReply()) {}
                 // ~AsyncReply(); // not needed, nor has to be virtual
 
                 /**
@@ -624,7 +624,7 @@ namespace karabo {
 
                private:
                 SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
-                const std::string m_replyId;
+                const std::tuple<karabo::util::Hash::Pointer, std::string, bool> m_slotInfo;
             };
 
             static std::string generateUUID();
@@ -754,12 +754,6 @@ namespace karabo {
             std::map<boost::thread::id, std::pair<std::string, bool>>
                   m_currentSlots; // unordered? needs std::hash<boost::thread::id>...
             mutable boost::mutex m_currentSlotsMutex;
-
-            // A map providing header, slotName and whether slot was called globally for asyncReply ids
-            typedef std::unordered_map<std::string, std::tuple<karabo::util::Hash::Pointer, std::string, bool>>
-                  AsyncReplyInfos;
-            AsyncReplyInfos m_asyncReplyInfos;
-            mutable boost::mutex m_asyncReplyInfosMutex;
 
             // which one succeeded, successHandler, errorHandler
             typedef std::tuple<std::vector<bool>, boost::function<void()>, boost::function<void()>>
@@ -912,17 +906,10 @@ namespace karabo {
             void sendPotentialReply(const karabo::util::Hash& header, const std::string& slotFunction, bool global);
 
             /**
-             * Internal method to provide async reply id to AsyncReply object
-             * @return id for AsyncReply
+             * Internal method to provide info for AsyncReply object
+             * @return tuple of slot header, slot name and whether it is a global slot call
              */
-            std::string registerAsyncReply();
-
-            /// Template less part of asyncReply(id, args...)
-            void asyncReplyImpl(const std::string& id);
-
-            /// Helper for asyncReplyImpl:
-            /// If info is found for id, it is returned and removed from map.
-            std::tuple<util::Hash::Pointer, std::string, bool> extractAsyncReplyInfo(const std::string& id);
+            std::tuple<karabo::util::Hash::Pointer, std::string, bool> registerAsyncReply();
 
             void emitHeartbeat(const boost::system::error_code& e);
 
@@ -1271,12 +1258,13 @@ namespace karabo {
 
         template <typename... Args>
         void SignalSlotable::AsyncReply::operator()(const Args&... args) const {
-            // See SignalSlotable::registerAsyncReply() about empty id
-            if (m_replyId.empty()) return;
+            // See SignalSlotable::registerAsyncReply() about non-existing header pointer
+            const util::Hash::Pointer& headerPtr = std::get<0>(m_slotInfo);
+            if (!headerPtr) return;
 
-            // Place reply and treat it in non-templated code with SignalSlotable internals
+            // Place reply and send it
             m_signalSlotable->reply(args...);
-            m_signalSlotable->asyncReplyImpl(m_replyId);
+            m_signalSlotable->sendPotentialReply(*headerPtr, std::get<1>(m_slotInfo), std::get<2>(m_slotInfo));
         }
 
         /**** SignalSlotable Template Function Implementations ****/
