@@ -41,6 +41,9 @@ TICK_AXES = ["bottom", "left"]
 ROI_CANVAS_MAP = {
     ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
 
+# Do not allow to set log values on X-axis.
+ACTIONS = [action for action in ACTION_ITEMS if action != "x_log"]
+
 
 class _PlotItem(PlotItem):
 
@@ -101,7 +104,7 @@ class KaraboPlotView(QWidget):
 
         self.configuration = {}
         self.qactions = {}
-        actions = actions or ACTION_ITEMS
+        actions = actions or ACTIONS
         self.setup_qactions(actions)
 
         # Our tooling instances
