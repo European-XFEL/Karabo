@@ -150,8 +150,8 @@ class TestLevelsDialog(GuiTestCase):
         self.assertFalse(dialog.max_spinbox.isEnabled())
 
         # Check dialog widget values
-        assert_allclose(dialog.min_spinbox.value(), image_levels[0], rtol=1e-2)
-        assert_allclose(dialog.max_spinbox.value(), image_levels[1], rtol=1e-2)
+        assert_allclose(dialog.min_spinbox.value(), image_levels[0], atol=0.1)
+        assert_allclose(dialog.max_spinbox.value(), image_levels[1], atol=0.1)
 
         # Check slider range
         self.assertFalse(dialog.slider.isEnabled())
@@ -271,8 +271,12 @@ class TestLevelsDialog(GuiTestCase):
 
 
 def test_get_decimals():
-    assert get_decimals([-10.0, 1.0]) == 2
+    assert get_decimals([-10.0, 1.0]) == 1
     assert get_decimals([-10.0, 10.0]) == 1
     assert get_decimals([1e-4, 1e-5]) == 7
-    assert get_decimals([1e4, 1e-5]) == 7
+    assert get_decimals([1e4, 1e-5]) == 1
+    assert get_decimals([0.021, 0.01]) == 4
+    assert get_decimals([0.0, 0.01]) == 1
     assert get_decimals([1e4, 1e5]) == 1
+    assert get_decimals([0, 10.0]) == 1
+    assert get_decimals([-10.0, 0.0]) == 1
