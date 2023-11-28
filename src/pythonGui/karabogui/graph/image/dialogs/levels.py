@@ -31,8 +31,12 @@ def get_decimals(array, offset=2, default=1):
     e.g., 0.01 -> 0.0100
           10.0 -> 10.0
     """
-    decimals = max(-1 * np.floor(np.log10(np.abs(array))))
-    return int(decimals + offset if decimals >= 0 else default)
+    array = np.abs(array)
+    if not np.all((array > 0) & (array < 1)):
+        return default
+
+    decimals = max(-1 * np.floor(np.log10(array)))
+    return int(decimals + offset)
 
 
 class LevelsDialog(QDialog):
