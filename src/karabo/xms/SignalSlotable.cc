@@ -811,7 +811,7 @@ namespace karabo {
         }
 
 
-        std::string SignalSlotable::registerAsyncReply() {
+        std::tuple<karabo::util::Hash::Pointer, std::string, bool> SignalSlotable::registerAsyncReply() {
             // Get name of current slot (sometimes referred to as 'slotFunction'):
             std::pair<std::string, bool> slotName_calledGlobally;
             {
@@ -822,70 +822,24 @@ namespace karabo {
                 }
                 // else { // slot is not called via processEvent and thus any reply does not matter!}
             }
-
-            std::string id;
+            std::tuple<karabo::util::Hash::Pointer, std::string, bool> result;
             const std::string& slotName = slotName_calledGlobally.first;
-            // If no slotName placed, reply does not matter (see above) - we mark this as empty id.
+            // If no slotName placed, reply does not matter (see above) - we mark this with non-existing header pointer.
             if (!slotName.empty()) {
-                // Prepare asyncReplyId and prepare relevant information
-                ((id += getInstanceId()) += slotName) += generateUUID(); // instanceId/slot for debugging
-                {
-                    boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
-                    m_asyncReplyInfos[id] = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
-                                                            slotName_calledGlobally.second);
-                }
+                result = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
+                                         slotName_calledGlobally.second);
 
-                // Place an invalid reply to avoid a default reply to be send (see sendPotentialReply):
-                // This will do the third mutex lock in this short method... :-(
+                // Place an invalid reply to avoid a default reply to be sent (see sendPotentialReply):
                 registerReply(karabo::util::Hash::Pointer());
             }
 
-            return id;
-        }
-
-
-        void SignalSlotable::asyncReplyImpl(const std::string& id) {
-            // reply has just been placed...
-            try {
-                const std::tuple<Hash::Pointer, std::string, bool> headerSlotnameGlobalflag(extractAsyncReplyInfo(id));
-
-                sendPotentialReply(*std::get<0>(headerSlotnameGlobalflag), std::get<1>(headerSlotnameGlobalflag),
-                                   std::get<2>(headerSlotnameGlobalflag));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception in asyncReply for id " << id
-                                           << "': " << e.what();
-                // Would like to do "replyException(...);" but I miss the header for that...
-            }
-        }
-
-
-        std::tuple<util::Hash::Pointer, std::string, bool> SignalSlotable::extractAsyncReplyInfo(
-              const std::string& id) {
-            std::tuple<util::Hash::Pointer, std::string, bool> headerSlotnameGlobalflag;
-            boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
-            auto replyIt = m_asyncReplyInfos.find(id);
-            if (replyIt == m_asyncReplyInfos.end()) {
-                throw KARABO_SIGNALSLOT_EXCEPTION("No asyncReply registered for " + id);
-            } else {
-                headerSlotnameGlobalflag.swap(replyIt->second);
-                m_asyncReplyInfos.erase(replyIt);
-            }
-            return headerSlotnameGlobalflag;
+            return result;
         }
 
 
         void SignalSlotable::AsyncReply::error(const std::string& message, const std::string& details) const {
-            // See SignalSlotable::registerAsyncReply() about empty id
-            if (m_replyId.empty()) return;
-            util::Hash::Pointer header;
-            try {
-                header = std::get<0>(m_signalSlotable->extractAsyncReplyInfo(m_replyId));
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR_C("SignalSlotable::AsyncReply")
-                      << m_signalSlotable->getInstanceId()
-                      << " AsyncReply::replyError failed to extract header when replying '" << message
-                      << "' :" << e.what();
-            }
+            // See SignalSlotable::registerAsyncReply() about non-existing header
+            const util::Hash::Pointer& header = std::get<0>(m_slotInfo);
             if (header) {
                 m_signalSlotable->replyException(*header, message, details);
             }
