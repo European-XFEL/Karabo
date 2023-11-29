@@ -195,7 +195,7 @@ namespace karabo {
 
 
         void InfluxDbClient::tryNextRequest(boost::mutex::scoped_lock& requestQueueLock) {
-            if (!m_active) { // activate processing
+            if (!m_active && !m_requestQueue.empty()) { // activate processing
                 m_active = true;
                 boost::function<void()> nextRequest;
                 nextRequest.swap(m_requestQueue.front());
