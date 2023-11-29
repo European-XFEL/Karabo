@@ -166,7 +166,8 @@ class BaseSeriesGraph(BaseBindingController):
         if proxy in self._curves:
             return
 
-        curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens))
+        curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens),
+                                          connect="all")
         curve.sigPlotChanged.connect(self._update_x_range)
 
         self._curves[proxy] = Curve(proxy=proxy, curve=curve,
