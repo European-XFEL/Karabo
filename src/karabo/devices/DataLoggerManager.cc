@@ -503,13 +503,15 @@ namespace karabo {
               m_loggerMapFile(input.get<string>("loggermap")),
               m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
               m_topologyCheckTimer(karabo::net::EventLoop::getIOService()),
-              m_logger("Unsupported"),
+              m_loggerClassId("Unsupported"),
               m_blocked(input.get<Hash>("blocklist")),
               m_blockListFile(input.get<string>("blocklistfile")) {
             if (input.has("logger.FileDataLogger")) {
-                m_logger = "FileDataLogger";
+                m_loggerClassId = "FileDataLogger";
+                m_readerClassId = "FileLogReader";
             } else if (input.has("logger.InfluxDataLogger")) {
-                m_logger = "InfluxDataLogger";
+                m_loggerClassId = "InfluxDataLogger";
+                m_readerClassId = "InfluxLogReader";
             }
 
             m_loggerMap.clear();
@@ -640,7 +642,8 @@ namespace karabo {
                     m_loggerData.set(server, data);
                 }
 
-                if (m_logger == "InfluxDataLogger" && get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
+                if (m_loggerClassId == "InfluxDataLogger" &&
+                    get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
                     // Initialise DB name from broker topic
                     const std::string dbName(getTopic());
                     KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
@@ -1069,15 +1072,15 @@ namespace karabo {
             // But that is only since clients running in releases before 2.17.0 assume their existence.
             // Once no pre-2.17.0 clients are supported anymore, switch to a single reader per server.
             for (unsigned int i = 0; i < DATALOGREADERS_PER_SERVER; ++i) {
-                const std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
+                const std::string readerId = serverIdToReaderId(serverId, i);
                 if (!remote().exists(readerId).first) {
                     Hash hash;
                     Hash config;
-                    if (m_logger == "FileDataLogger") {
+                    if (m_loggerClassId == "FileDataLogger") {
                         hash.set("classId", "FileLogReader");
                         hash.set("deviceId", readerId);
                         config.set("directory", get<string>("logger.FileDataLogger.directory"));
-                    } else if (m_logger == "InfluxDataLogger") {
+                    } else if (m_loggerClassId == "InfluxDataLogger") {
                         hash.set("classId", "InfluxLogReader");
                         hash.set("deviceId", readerId);
                         config.set("urlConfigSchema", get<string>("logger.InfluxDataLogger.urlRead"));
@@ -1153,7 +1156,7 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_INFO << "Logging of instance '" << instanceId << "' blocked.";
                 }
-                if (classId == m_logger) {
+                if (classId == m_loggerClassId) {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -1304,15 +1307,15 @@ namespace karabo {
 
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
-            Hash config(get<Hash>("logger." + m_logger));
+            Hash config(get<Hash>("logger." + m_loggerClassId));
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
             config.erase("urlReadPropHistory"); // logger needs read address only for schema
 
             const std::string loggerId(serverIdToLoggerId(serverId));
-            const Hash hash("classId", m_logger, "deviceId", loggerId, "configuration", config);
+            const Hash hash("classId", m_loggerClassId, "deviceId", loggerId, "configuration", config);
 
-            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_logger
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_loggerClassId
                                       << "' on server '" << serverId << "'";
             remote().instantiateNoWait(serverId, hash);
         }
@@ -1343,8 +1346,10 @@ namespace karabo {
                 const std::string& classId = (instanceInfo.has("classId") && instanceInfo.is<std::string>("classId")
                                                     ? instanceInfo.get<string>("classId")
                                                     : std::string(""));
-                if (classId == m_logger) {
+                if (classId == m_loggerClassId) {
                     goneLogger(instanceId);
+                } else if (classId == m_readerClassId) {
+                    goneReader(instanceId);
                 }
                 if (!classId.empty()) m_knownClasses[classId].erase(instanceId);
             } else if (type == "server") {
@@ -1430,6 +1435,14 @@ namespace karabo {
         }
 
 
+        void DataLoggerManager::goneReader(const std::string& readerId) {
+            const std::string serverId = readerIdToServerId(readerId);
+            // instantiateReaders is smart enough to handle already instantiated readers (currently there's more than
+            // one LogReader instance per device server).
+            instantiateReaders(serverId);
+        }
+
+
         void DataLoggerManager::goneLoggerServer(const std::string& serverId) {
             Hash& data = m_loggerData.get<Hash>(serverId);
 
@@ -1442,14 +1455,14 @@ namespace karabo {
                 case LoggerState::INSTANTIATING:
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
                     // Nothing to do.
-                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating " << m_logger
-                                              << ".";
+                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating "
+                                              << m_loggerClassId << ".";
                     break;
                 case LoggerState::RUNNING:
                     // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
                     // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
                     // the one of the DataLogger.
-                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while " << m_logger
+                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while " << m_loggerClassId
                                               << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;
