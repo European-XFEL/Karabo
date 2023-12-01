@@ -173,6 +173,8 @@ namespace karabo {
 
             void goneLogger(const std::string& loggerId);
 
+            void goneReader(const std::string& readerId);
+
             void goneLoggerServer(const std::string& serverId);
 
             /**
@@ -209,6 +211,22 @@ namespace karabo {
                 const size_t posPrefix = loggerId.find(karabo::util::DATALOGGER_PREFIX);
                 if (posPrefix == 0ul) {
                     return loggerId.substr(strlen(karabo::util::DATALOGGER_PREFIX));
+                } else {
+                    // wrong or even no prefix
+                    return std::string();
+                }
+            }
+
+            inline std::string serverIdToReaderId(const std::string& serverId, unsigned int readerNum = 0u) const {
+                return karabo::util::DATALOGREADER_PREFIX + karabo::util::toString(readerNum) + "-" + serverId;
+            }
+
+            inline std::string readerIdToServerId(const std::string& readerId) const {
+                const size_t posPrefix = readerId.find(karabo::util::DATALOGREADER_PREFIX);
+                const size_t posLastHifen = readerId.rfind("-");
+                if (posPrefix == 0ul && posLastHifen != std::string::npos && posLastHifen < readerId.size() - 1) {
+                    // We have a properly formatted readerId.
+                    return readerId.substr(posLastHifen + 1);
                 } else {
                     // wrong or even no prefix
                     return std::string();
@@ -266,7 +284,8 @@ namespace karabo {
             karabo::net::Strand::Pointer m_strand;
 
             boost::asio::deadline_timer m_topologyCheckTimer;
-            std::string m_logger;
+            std::string m_loggerClassId;
+            std::string m_readerClassId;
 
             boost::mutex m_blockedMutex;
             karabo::util::Hash m_blocked;      /// Hash with 'deviceIds' and 'classIds' entries
