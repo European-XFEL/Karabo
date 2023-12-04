@@ -49,7 +49,7 @@ from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
 from karabogui.request import (
     get_macro_from_server, get_scene_from_server, retrieve_default_scene)
-from karabogui.singletons.api import get_manager, get_topology
+from karabogui.singletons.api import get_config, get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor, open_documentation_link
 
@@ -419,19 +419,23 @@ class DeviceInstanceController(BaseProjectGroupController):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
-        ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
-               'Continue action?'.format(device.instance_id))
-        msg_box = QMessageBox(QMessageBox.Question, 'Delete device',
-                              ask, QMessageBox.Yes | QMessageBox.No,
-                              parent=parent)
-        msg_box.setModal(False)
-        msg_box.setDefaultButton(QMessageBox.No)
-        move_to_cursor(msg_box)
-        if msg_box.exec() == QMessageBox.Yes:
-            server_model = find_parent_object(device, project_controller.model,
-                                              DeviceServerModel)
-            if device in server_model.devices:
-                server_model.devices.remove(device)
+        development = get_config()["development"]
+        if not development:
+            ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
+                   'Continue action?'.format(device.instance_id))
+            msg_box = QMessageBox(QMessageBox.Question, 'Delete device',
+                                  ask, QMessageBox.Yes | QMessageBox.No,
+                                  parent=parent)
+            msg_box.setModal(False)
+            msg_box.setDefaultButton(QMessageBox.No)
+            move_to_cursor(msg_box)
+            if msg_box.exec() != QMessageBox.Yes:
+                return
+
+        server_model = find_parent_object(device, project_controller.model,
+                                          DeviceServerModel)
+        if device in server_model.devices:
+            server_model.devices.remove(device)
 
     def _edit_device(self, project_controller, parent=None):
         # Watch for incomplete model initialization
