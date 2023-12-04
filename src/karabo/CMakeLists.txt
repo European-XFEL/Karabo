@@ -53,6 +53,16 @@ endfunction()
 include("../cmake/cxx-options.cmake")
 include("../cmake/karabo-lib-target-name.cmake")
 
+# Checks that the target system is UNIX - true for Linux, macOS and Cygwin
+# This is needed because some parts of the Framework - e.g. src/karabo/net/TcpChannel.cc - 
+# are not compatible with non UNIX systems.
+if(NOT UNIX)
+    message(
+        FATAL_ERROR 
+        "The Karabo Framework requires a UNIX compatible target system"
+    )
+endif()
+
 # Extracts KARABO_VERSION from the appropriate Git tag, writes to
 # a file to be used by the Karabo Framework at build time.
 message(STATUS "Resolving Karabo Version from Git repository")
