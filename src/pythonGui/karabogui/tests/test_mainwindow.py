@@ -16,6 +16,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy.QtWidgets import QFrame
 
+from karabogui.const import IS_LINUX_SYSTEM
 from karabogui.testing import singletons
 
 
@@ -82,9 +83,13 @@ def test_help_menu(gui_app):
                  action.text() == "&Help"][0]
     assert help_menu
     help_actions = help_menu.actions()
-    assert len(help_actions) == 9
+    help_menu_size = 10 if IS_LINUX_SYSTEM else 9
+    assert len(help_actions) == help_menu_size
     expected = [
         "About", "About Qt", "Tips'N'Tricks", "Check for Updates",
         "Check for Project Duplicates", "Convert Numpy file to CSV file", "",
         "Create Karabo Concert File", "Run Karabo Concert File"]
+    concert_shortcut = "Create Karabo Concert Desktop Shortcut"
+    if IS_LINUX_SYSTEM:
+        expected.insert(8, concert_shortcut)
     assert expected == [action.text() for action in help_actions]
