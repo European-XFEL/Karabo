@@ -85,6 +85,16 @@ namespace karabo {
                   .defaultValue("")
                   .commit();
 
+            BOOL_ELEMENT(expected)
+                  .key("disconnectOnIdle")
+                  .displayedName("Disconnect on Idle")
+                  .description(
+                        "Disconnect from InfluxDB if at the time the response for a request has been "
+                        "handled, there's no further request to submit to Influx.")
+                  .assignmentOptional()
+                  .defaultValue(false)
+                  .commit();
+
             STRING_ELEMENT(expected)
                   .key("durationUnit")
                   .displayedName("Duration unit")
@@ -124,7 +134,8 @@ namespace karabo {
               m_buffer(),
               m_nPoints(0),
               m_dbUser(input.get<std::string>("dbUser")),
-              m_dbPassword(input.get<std::string>("dbPassword")) {
+              m_dbPassword(input.get<std::string>("dbPassword")),
+              m_disconnectOnIdle(input.get<bool>("disconnectOnIdle")) {
             if (!m_url.empty()) {
                 const boost::tuple<std::string, std::string, std::string, std::string, std::string> partsWrite =
                       karabo::net::parseUrl(m_url);
@@ -219,6 +230,24 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
             if (m_requestQueue.empty()) {
                 m_active = false;
+                if (m_disconnectOnIdle) {
+                    // Note: the lock to the requestQueueMutex cannot be released before
+                    // acquiring the lock to the connectionRequestedMutex because its release
+                    // would make it possible for the request enqueueing to interleave with the
+                    // disconnection process - a request could be queued and the code below would
+                    // close the connection without the original pre-condition of the queue being
+                    // empty.
+                    boost::mutex::scoped_lock lockConnect(m_connectionRequestedMutex);
+                    if (!m_connectionRequested) {
+                        // There's no ongoing connection attempt.
+                        KARABO_LOG_FRAMEWORK_INFO << "onResponse: disconnecting from InfluxDB (no more requests in the "
+                                                     "queue and 'disconnectOnIdle' active).";
+                        m_active = false;
+                        if (m_dbChannel) {
+                            m_dbChannel.reset();
+                        }
+                    }
+                }
             } else {
                 boost::function<void()> nextRequest;
                 nextRequest.swap(m_requestQueue.front());
@@ -611,6 +640,7 @@ namespace karabo {
                 handler(o);
             }
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            // Channel closed above. Need to trigger to continue on any pending requests.
             tryNextRequest(lock);
         }
 
