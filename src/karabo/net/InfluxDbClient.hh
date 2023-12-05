@@ -313,6 +313,7 @@ namespace karabo {
             std::uint32_t m_nPoints;
             std::string m_dbUser;
             std::string m_dbPassword;
+            bool m_disconnectOnIdle;
         };
 
     } // namespace net
