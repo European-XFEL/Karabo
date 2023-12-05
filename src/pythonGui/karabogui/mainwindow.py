@@ -19,6 +19,7 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 import os.path
+import shutil
 import webbrowser
 from enum import Enum
 from functools import partial
@@ -48,7 +49,8 @@ from karabogui.panels.api import (
     ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
     ScriptingPanel, TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
-from karabogui.programs.utils import run_concert, save_concert_file
+from karabogui.programs.utils import (
+    create_linux_desktop_file, run_concert, save_concert_file)
 from karabogui.project.restore import get_restore_data
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
@@ -522,6 +524,10 @@ class MainWindow(QMainWindow):
         self.acConcertWriter = QAction("Create Karabo Concert File", self)
         self.acConcertWriter.triggered.connect(self.onCreateConcertFile)
 
+        self.acConcertShortcut = QAction("Create Karabo Concert Desktop "
+                                         "Shortcut", self)
+        self.acConcertShortcut.triggered.connect(self.onCreateConcertShortcut)
+
         self.acConcertReader = QAction("Run Karabo Concert File", self)
         self.acConcertReader.triggered.connect(self.onReadConcertFile)
 
@@ -606,6 +612,8 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acNpy2CSV)
         mHelpMenu.addSeparator()
         mHelpMenu.addAction(self.acConcertWriter)
+        if const.IS_LINUX_SYSTEM:
+            mHelpMenu.addAction(self.acConcertShortcut)
         mHelpMenu.addAction(self.acConcertReader)
 
     def _setupToolBar(self):
@@ -998,6 +1006,24 @@ class MainWindow(QMainWindow):
         if file_name:
             save_concert_file(file_name, scene_data)
             get_config()["data_dir"] = str(Path(file_name).parent)
+            return file_name
+
+    @Slot()
+    def onCreateConcertShortcut(self):
+        file_name = self.onCreateConcertFile()
+        if file_name is None:
+            return
+        file_name = Path(file_name)
+        name = f"karabo-concert-{file_name.stem}"
+        command = f'{shutil.which("conda")} ' \
+                  f'run {shutil.which("karabo-concert")} {file_name}'
+        icon = Path(icons.__file__).parent / "app_logo.png"
+        source_path = create_linux_desktop_file(
+            name=name, icon=icon, command=command, scheme="karabo")
+        desktop_file = Path.home() / "Desktop" / f"{name}.desktop"
+        source_path.rename(desktop_file)
+        mode = 0o755  # "u=rwx,g=rx,o=rx"
+        desktop_file.chmod(mode)
 
     @Slot()
     def onReadConcertFile(self):
