@@ -77,7 +77,7 @@ exposed as part of the Device interface.
 If an exception occurs during execution of a slot on the remote device,
 an exception will be thrown in case of synchronous operations. In the
 asynchronous case, one can specify a failure handler in addition to the normal
-handler (not yet implemented in the bound Python API).
+handler.
 
 In the simplest case a device method is called (possibly from another device) and any
 return value is not expected. This is the *call* pattern.
@@ -231,8 +231,8 @@ Device Properties
 +++++++++++++++++
 
 .. note::
-
-	Property access is simplified in *middle-layer* devices.
+   The below writing addresses the C++ and Bound APIs,
+   property access is simplified in *middle-layer* devices.
 
 Device properties are the equivalent to public members in C++ or properties in Python,
 i.e. they are class member variables which you would like to expose to the outside world,
@@ -365,11 +365,10 @@ on events common to all devices. They are as follows:
 - *onTimeUpdate(trainId, sec, frac, period)*: is executed when the device receives an
   update from the timing system.
 
-Additionally, devices without a full state machine, i.e. such using simple state machines
-provide the `registerInitialFunction(func)*` method, which can be used to register a
-function to be called at the end of device initialization, i.e. after the device
-properties' initial values have been set and are available through the *get* and *set*
-methods. Usually, this function should bring the device into an initial known state.
+  - The `registerInitialFunction(func)` method can be used to register a
+    function to be called at the end of device initialization, i.e. after the device
+    properties' initial values have been set and are available through the *get* and *set*
+    methods. Usually, this function should bring the device into an initial known state.
 
 Events vs. Polling on bound devices
 ====================================

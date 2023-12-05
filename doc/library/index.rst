@@ -20,7 +20,6 @@ bindings, the native Python package and the pyQt-based GUI.
    testing
    concept_data_logging
    guiServer
-   alarmService
    gui_widget_development
    gui_api
    gui_scene_development
