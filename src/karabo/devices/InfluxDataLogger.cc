@@ -54,7 +54,7 @@ namespace karabo {
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input),
-              m_dbClientReadConfig(input.get<karabo::util::Hash>("dbClientReadConfig")),
+              m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
               m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
               m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
               m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
@@ -581,16 +581,12 @@ namespace karabo {
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << schDigest
                 << "\"' AND time >= " << epochAsMicrosecString(safeRetentionLimit)
                 << toInfluxDurationUnit(TIME_UNITS::MICROSEC);
-            // Note: The dbClientRead will be alive until the response of the query for schemas is received. The
-            // destruction of dbClientRead will also close the connection to Influx.
-            auto dbClientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", m_dbClientReadConfig);
-            dbClientRead->queryDb(oss.str(), bind_weak(&InfluxDeviceData::onCheckSchemaInDb, this, stamp, schDigest,
-                                                       archive, dbClientRead, _1));
+            m_dbClientRead->queryDb(
+                  oss.str(), bind_weak(&InfluxDeviceData::onCheckSchemaInDb, this, stamp, schDigest, archive, _1));
         }
 
         void InfluxDeviceData::onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
                                                  const boost::shared_ptr<std::vector<char>>& schemaArchive,
-                                                 const karabo::net::InfluxDbClient::Pointer& dbClientRead,
                                                  const HttpResponse& o) {
             // Not running in Strand anymore - take care not to access any potentially changing data members!
 
@@ -890,18 +886,19 @@ namespace karabo {
             Hash configWrite("dbname", m_dbName, "url", m_urlWrite, "durationUnit", INFLUX_DURATION_UNIT,
                              "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
 
-            configWrite.set<std::string>("dbUser", dbUserWrite);
-            configWrite.set<std::string>("dbPassword", dbPasswordWrite);
+            configWrite.set("dbUser", dbUserWrite);
+            configWrite.set("dbPassword", dbPasswordWrite);
 
             m_clientWrite = Configurator<InfluxDbClient>::create("InfluxDbClient", configWrite);
 
             Hash configRead("dbname", m_dbName, "url", m_urlQuery, "durationUnit", INFLUX_DURATION_UNIT,
                             "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
 
-            configRead.set<std::string>("dbUser", dbUserQuery);
-            configRead.set<std::string>("dbPassword", dbPasswordQuery);
+            configRead.set("dbUser", dbUserQuery);
+            configRead.set("dbPassword", dbPasswordQuery);
+            configRead.set("disconnectOnIdle", true);
 
-            m_clientReadConfig = configRead;
+            m_clientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", configRead);
         }
 
 
@@ -927,7 +924,7 @@ namespace karabo {
 
         DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
             Hash config = cfg;
-            config.set("dbClientReadConfig", m_clientReadConfig);
+            config.set("dbClientReadPointer", m_clientRead);
             config.set("dbClientWritePointer", m_clientWrite);
             config.set("maxTimeAdvance", get<int>("maxTimeAdvance"));
             config.set("maxVectorSize", get<unsigned int>("maxVectorSize"));
@@ -950,14 +947,11 @@ namespace karabo {
 
         void InfluxDataLogger::asyncCreateDbIfNeededAndStart() {
             std::string statement = "SHOW DATABASES";
-            // Note: The dbClientRead will be alive until the response of the SHOW DATABASES query is received. The
-            // destruction of dbClientRead will also close the connection to Influx.
-            auto dbClientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", m_clientReadConfig);
-            dbClientRead->queryDb(statement, bind_weak(&InfluxDataLogger::onShowDatabases, this, _1, dbClientRead));
+            m_clientRead->queryDb(statement, bind_weak(&InfluxDataLogger::onShowDatabases, this, _1));
         }
 
 
-        void InfluxDataLogger::onShowDatabases(const HttpResponse& o, const InfluxDbClient::Pointer& dbClientRead) {
+        void InfluxDataLogger::onShowDatabases(const HttpResponse& o) {
             if (o.code >= 300) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Failed to view list of databases available: " << o.toString();
                 updateState(State::ERROR,

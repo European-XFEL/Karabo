@@ -565,7 +565,7 @@ void BaseLogging_Test::testMaxNumDataHistory() {
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
-            return history.size() != static_cast<std::size_t>(maxNumDataFull);
+            return history.size() == static_cast<std::size_t>(maxNumDataFull);
         } catch (const karabo::util::TimeoutException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
@@ -601,7 +601,7 @@ void BaseLogging_Test::testMaxNumDataHistory() {
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
                   .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                   .receive(replyDevice, replyProperty, history);
-            return history.size() < (maxNumDataSampled / 2ul);
+            return history.size() >= (maxNumDataSampled / 2ul);
         } catch (const karabo::util::TimeoutException& e) {
             // Just consume the exception as it is expected while data is not
             // ready.
@@ -613,10 +613,10 @@ void BaseLogging_Test::testMaxNumDataHistory() {
         }
     };
 
-    bool succeeded = waitForCondition(sampleHistoryChecker, 90'000u, 1'000u);
+    bool succeeded = waitForCondition(sampleHistoryChecker, 96'000u, 1'000u);
 
     size_t historySize = history.size();
-    CPPUNIT_ASSERT_MESSAGE("Timeout on requesting history", !succeeded);
+    CPPUNIT_ASSERT_MESSAGE("Timeout on requesting history", succeeded);
     CPPUNIT_ASSERT_MESSAGE("Size of the down-sampled history larger than request sample",
                            historySize <= static_cast<size_t>(maxNumDataSampled));
     CPPUNIT_ASSERT_MESSAGE(
@@ -1101,7 +1101,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Increase "variable" value and store after increasing it
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(6)); // ensure timestamp is after setting
+        boost::this_thread::sleep(boost::posix_time::milliseconds(8)); // ensure timestamp is after setting
         stampsAfter.push_back(Epochstamp());
 
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of

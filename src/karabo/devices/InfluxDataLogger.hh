@@ -88,7 +88,6 @@ namespace karabo {
 
             void onCheckSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
                                    const boost::shared_ptr<std::vector<char>>& schemaArchive,
-                                   const karabo::net::InfluxDbClient::Pointer& dbClientRead,
                                    const karabo::net::HttpResponse& o);
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
@@ -153,7 +152,7 @@ namespace karabo {
              */
             void logRejectedDatum(const RejectedData& rejects);
 
-            karabo::util::Hash m_dbClientReadConfig;
+            karabo::net::InfluxDbClient::Pointer m_dbClientRead;
             karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
@@ -206,15 +205,14 @@ namespace karabo {
 
             void asyncCreateDbIfNeededAndStart();
 
-            void onShowDatabases(const karabo::net::HttpResponse& o,
-                                 const karabo::net::InfluxDbClient::Pointer& dbClientRead);
+            void onShowDatabases(const karabo::net::HttpResponse& o);
 
             void createDatabase(const InfluxResponseHandler& action);
 
             void onCreateDatabase(const karabo::net::HttpResponse& o);
 
            private:
-            karabo::util::Hash m_clientReadConfig;
+            karabo::net::InfluxDbClient::Pointer m_clientRead;
             karabo::net::InfluxDbClient::Pointer m_clientWrite;
             const std::string m_dbName;
             std::string m_urlWrite;
