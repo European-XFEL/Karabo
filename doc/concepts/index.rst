@@ -7,7 +7,7 @@
    contain the root `toctree` directive.
 
 
-Outdated Concepts
+Karabo Concepts
 =================
 
 Contents:
