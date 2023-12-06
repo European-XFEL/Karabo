@@ -27,8 +27,10 @@
 
 #include <boost/bind/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/type_traits/integral_constant.hpp>
 #include <boost/type_traits/is_virtual_base_of.hpp>
 #include <iostream>
+#include <type_traits>
 #include <utility>
 namespace karabo {
     namespace util {
@@ -89,12 +91,14 @@ namespace karabo {
             static const boost::shared_ptr<T> cast(const boost::shared_ptr<T>& v) {
                 // if the compiler ever reaches this point compilation is to fail on purpose, as
                 // we only support explicit setting of Hash::Pointer to the Hash
-                inserting_derived_hash_classes_as_pointers_is_not_supported();
+
+                // is_hash_base: will always be boost::true_type when dealing
+                // with types derived from Hash, i.e in the context of this
+                // template method evaluation.
+                static_assert(std::is_same<is_hash_base, boost::false_type>::value, // this evaluates false
+                              "Inserting derived hash classes as pointers is not supported");
                 return v;
             }
-
-
-            void inserting_derived_hash_classes_as_pointers_is_not_supported();
         };
 
 
