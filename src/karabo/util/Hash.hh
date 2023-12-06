@@ -846,7 +846,7 @@ namespace karabo {
         }
 
         template <>
-        inline Hash::Node& Hash::set(const std::string& path, const Hash& value, const char separator) {
+        inline Hash::Node& Hash::set<Hash>(const std::string& path, const Hash& value, const char separator) {
             return setHash<const Hash&>(path, value, separator);
         }
 
