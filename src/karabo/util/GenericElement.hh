@@ -228,7 +228,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& setSpecialDisplayType(const std::string& displaytype) {
-                this->m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, displaytype);
+                this->m_node->template setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, displaytype);
                 return *(static_cast<Derived*>(this));
             }
 
