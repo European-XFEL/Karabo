@@ -34,15 +34,21 @@ namespace karabind {
        public:
         typedef boost::shared_ptr<DeviceClientWrap> Pointer;
 
-        DeviceClientWrap(const std::string& instanceId = std::string()) : karabo::core::DeviceClient(instanceId) {}
+        DeviceClientWrap(const std::string& instanceId = std::string()) : karabo::core::DeviceClient(instanceId) {
+            boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
+            if (!p) {
+                throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
+            }
+            p->updateInstanceInfo(karabo::util::Hash("lang", "bound"));
+        }
 
         DeviceClientWrap(boost::shared_ptr<karabo::xms::SignalSlotable>& o) : karabo::core::DeviceClient(o) {}
 
         ~DeviceClientWrap() {}
 
-        bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const py::object& handler,
-                                     const py::object& userData) {
-            karabo::util::Schema schema;
+        bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const py::object& handler) {
+            using namespace karabo::util;
+            Schema schema;
             {
                 py::gil_scoped_release release;
                 schema = getDeviceSchema(instanceId);
@@ -52,21 +58,61 @@ namespace karabind {
                 py::gil_scoped_release release;
                 cacheAndGetConfiguration(instanceId);
             }
-            {
-                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-                if (py::hasattr(handler, "__self__")) {
-                    const py::object& oself = handler.attr("__self__");
-                    std::string funcName = handler.attr("__name__").cast<std::string>();
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", funcName);
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._selfObject", oself.ptr());
-                } else {
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", handler.ptr());
-                }
-                if (!userData.is_none()) {
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
-                }
+            karabo::util::Types::ReferenceType valueType = schema.getValueType(key);
+            switch (valueType) {
+#define KARABO_REGISTER_PROPERTY_MONITOR(KaraboType, CppType)                                  \
+    case Types::KaraboType:                                                                    \
+        return DeviceClient::registerPropertyMonitor<CppType>(                                 \
+              instanceId, key,                                                                 \
+              HandlerWrap<std::string, std::string, CppType, karabo::util::Timestamp>(handler, \
+                                                                                      "property_" #KaraboType))
+
+                KARABO_REGISTER_PROPERTY_MONITOR(BOOL, bool);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_BOOL, std::vector<bool>);
+                KARABO_REGISTER_PROPERTY_MONITOR(CHAR, char);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_CHAR, std::vector<char>);
+                KARABO_REGISTER_PROPERTY_MONITOR(INT8, signed char);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_INT8, std::vector<signed char>);
+                KARABO_REGISTER_PROPERTY_MONITOR(UINT8, unsigned char);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_UINT8, std::vector<unsigned char>);
+                KARABO_REGISTER_PROPERTY_MONITOR(INT16, short);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_INT16, std::vector<short>);
+                KARABO_REGISTER_PROPERTY_MONITOR(UINT16, unsigned short);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_UINT16, std::vector<unsigned short>);
+                KARABO_REGISTER_PROPERTY_MONITOR(INT32, int);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_INT32, std::vector<int>);
+                KARABO_REGISTER_PROPERTY_MONITOR(UINT32, unsigned int);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_UINT32, std::vector<unsigned int>);
+                KARABO_REGISTER_PROPERTY_MONITOR(INT64, long long);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_INT64, std::vector<long long>);
+                KARABO_REGISTER_PROPERTY_MONITOR(UINT64, unsigned long long);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_UINT64, std::vector<unsigned long long>);
+                KARABO_REGISTER_PROPERTY_MONITOR(FLOAT, float);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_FLOAT, std::vector<float>);
+                KARABO_REGISTER_PROPERTY_MONITOR(DOUBLE, double);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_DOUBLE, std::vector<double>);
+                KARABO_REGISTER_PROPERTY_MONITOR(COMPLEX_FLOAT, std::complex<float>);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_COMPLEX_FLOAT, std::vector<std::complex<float>>);
+                KARABO_REGISTER_PROPERTY_MONITOR(COMPLEX_DOUBLE, std::complex<double>);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_COMPLEX_DOUBLE, std::vector<std::complex<double>>);
+                KARABO_REGISTER_PROPERTY_MONITOR(STRING, std::string);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_STRING, std::vector<std::string>);
+                KARABO_REGISTER_PROPERTY_MONITOR(HASH, Hash);
+                KARABO_REGISTER_PROPERTY_MONITOR(VECTOR_HASH, std::vector<Hash>);
+
+#undef KARABO_REGISTER_PROPERTY_MONITOR
+
+                // case Types::BYTE_ARRAY:
+                //     return DeviceClient::registerPropertyMonitor<std::pair<boost::shared_ptr<char>, size_t>>(
+                //           instanceId, key,
+                //           HandlerWrap<std::string, std::string, std::pair<boost::shared_ptr<char>, size_t>,
+                //                       karabo::util::Timestamp>(handler, "property_BYTE_ARRAY"));
+                default:
+                    KARABO_LOG_FRAMEWORK_WARN << "Unsupported property \"" << key << "\" of type  \""
+                                              << Types::to<ToLiteral>(valueType) << "\".  Skip it ...";
+                    // KARABO_PARAMETER_EXCEPTION("Unsupported property type : " + toString(type));
+                    return false;
             }
-            immortalize(instanceId);
             return true;
         }
 
@@ -140,6 +186,8 @@ void exportPyCoreDeviceClient(py::module_& m) {
     // py::class_<DeviceClient>("DeviceClientBase").def(bp::init<const string&>());
 
     py::class_<DeviceClientWrap, boost::shared_ptr<DeviceClientWrap>>(m, "DeviceClient")
+
+          .def(py::init<>())
 
           .def(py::init<const string&>())
 
@@ -377,7 +425,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                     std::pair<bool, std::string> p;
                     {
                         py::gil_scoped_release release;
-                        self->killDevice(deviceId, timeoutInSecs);
+                        p = self->killDevice(deviceId, timeoutInSecs);
                     }
                     return py::make_tuple(p.first, p.second);
                 },
@@ -566,7 +614,7 @@ void exportPyCoreDeviceClient(py::module_& m) {
                 "same instance of DeviceClient that has been used to register the schema\nupdate monitor.\n\n")
 
           .def("registerPropertyMonitor", &DeviceClientWrap::registerPropertyMonitor, py::arg("instanceId"),
-               py::arg("key"), py::arg("callbackFunction"), py::arg("userData") = py::none())
+               py::arg("key"), py::arg("callbackFunction"))
 
           .def(
                 "registerDeviceMonitor",
@@ -617,7 +665,6 @@ void exportPyCoreDeviceClient(py::module_& m) {
                               HandlerWrap<karabo::net::ConnectionStatus>(statusTracker, "channelStatusTracker");
                     }
                     py::gil_scoped_release release;
-
                     return self->registerChannelMonitor(channelName, handlers, inputChannelConfig);
                 },
                 py::arg("channelName"), py::arg("dataHandler") = py::none(), py::arg("inputChannelCfg") = Hash(),
@@ -641,8 +688,8 @@ void exportPyCoreDeviceClient(py::module_& m) {
 
           .def(
                 "unregisterChannelMonitor",
-                [](const DeviceClientWrap::Pointer& self, const std::string& channelName) {
-                    self->unregisterChannelMonitor(channelName);
+                [](const DeviceClientWrap::Pointer& self, const std::string& channelName) -> py::bool_ {
+                    return self->unregisterChannelMonitor(channelName);
                 },
                 py::arg("channelName"))
 

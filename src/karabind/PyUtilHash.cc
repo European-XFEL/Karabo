@@ -36,6 +36,7 @@
 #include "PyTypes.hh"
 #include "Wrapper.hh"
 
+
 namespace py = pybind11;
 
 namespace karabo {
@@ -941,14 +942,26 @@ void exportPyUtilHash(py::module_& m) {
     // The following statements require #include <pybind11/stl_bind.h> & PYBIND11_MAKE_OPAQUE
     auto vh = py::bind_vector<std::vector<Hash>>(m, "VectorHash");
 
-    vh.def(py::pickle(
-          [](const std::vector<Hash>& v) { // __getstate__
-              return py::tuple(py::cast(v));
-          },
-          [](py::tuple t) { // __setstate__
-              return t.cast<std::vector<Hash>>();
-          }));
+    vh.def("__copy__", [](const std::vector<Hash>& self) {
+        std::vector<Hash> vhc;
+        for (const Hash& h : self) vhc.push_back(h);
+        return py::cast(std::move(vhc));
+    });
+
+    // Pickling does not work ... first needs to implement pickling for Hash
+    // vh.def(py::pickle(
+    //       [](const std::vector<Hash>& v) { // __getstate__
+    //           return py::tuple(py::cast(v));
+    //       },
+    //       [](py::tuple t) { // __setstate__
+    //           return t.cast<std::vector<Hash>>();
+    //       }));
 
     //     py::class_<CppArrayRefHandler, boost::shared_ptr<CppArrayRefHandler>>(m, "_CppArrayRefHandler_")
     //         .def(py::init<CppArrayRefHandler>());
+
+    auto vhp = py::bind_vector<std::vector<Hash::Pointer>>(m, "VectorHashPointer");
+
+    // vhp.def(py::pickle([](const std::vector<Hash::Pointer>& v) { return py::tuple(py::cast(v)); },
+    //                    [](py::tuple t) { return t.cast<std::vector<Hash::Pointer>>(); }));
 }

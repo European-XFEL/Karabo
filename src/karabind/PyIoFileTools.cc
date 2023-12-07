@@ -45,6 +45,30 @@ namespace py = pybind11;
 namespace karabind {
 
     template <class T>
+    struct OutputWrap {
+        static void update(const boost::shared_ptr<karabo::io::Output<T>>& self) {
+            py::gil_scoped_release release;
+            self->update();
+        }
+    };
+
+
+    template <class T>
+    struct InputWrap {
+        static void registerIOEventHandler(const boost::shared_ptr<karabo::io::Input<T>>& self,
+                                           const py::object& handler) {
+            self->registerIOEventHandler(handler);
+        }
+
+
+        static void registerEndOfStreamEventHandler(const boost::shared_ptr<karabo::io::Input<T>>& self,
+                                                    const py::object& handler) {
+            self->registerEndOfStreamEventHandler(handler);
+        }
+    };
+
+
+    template <class T>
     struct loadFromFileWrap {
         static py::object loadWrap(const std::string& fileName, const karabo::util::Hash& config) {
             T t = T();
@@ -122,6 +146,9 @@ namespace karabind {
 } // namespace karabind
 
 
+using namespace karabind;
+
+
 template <class T>
 void exportPyIoFileTools(py::module_& m) {
     std::string saveFuncName = std::string("save") + T::classInfo().getClassName() + "ToFile";
@@ -133,6 +160,24 @@ void exportPyIoFileTools(py::module_& m) {
 
     m.def(loadFileName.c_str(), &karabind::loadFromFileWrap<T>::loadWrap, py::arg("filename"),
           py::arg("config") = karabo::util::Hash());
+}
+
+
+void exportPyIoFileTools1(py::module_& m) {
+    m.def("saveToFile", (void (*)(Schema const&, string const&, Hash const&))(&karabo::io::saveToFile),
+          py::arg("object"), py::arg("filename"), py::arg("config") = karabo::util::Hash());
+
+    m.def("saveToFile", (void (*)(Hash const&, string const&, Hash const&))(&karabo::io::saveToFile), py::arg("object"),
+          py::arg("filename"), py::arg("config") = karabo::util::Hash());
+
+    m.def("loadFromFile", &karabind::loadFromFileWrap<Hash>::loadWrap, py::arg("filename"),
+          py::arg("config") = karabo::util::Hash());
+
+    m.def("loadFromFile", (void (*)(Hash&, string const&, Hash const&))(&karabo::io::loadFromFile), py::arg("object"),
+          py::arg("filename"), py::arg("config") = karabo::util::Hash());
+
+    m.def("loadFromFile", (void (*)(Schema&, string const&, Hash const&))(&karabo::io::loadFromFile), py::arg("object"),
+          py::arg("filename"), py::arg("config") = karabo::util::Hash());
 }
 
 
@@ -183,7 +228,36 @@ void exportPyIoBinarySerializer(py::module_& m) {
 }
 
 
+template <class T>
+void exportPyIoInputOutput(py::module_& m) {
+    { // exposing karabo::io::Output<karabo::util::Hash>
+        typedef karabo::io::Output<T> SpecificOutput;
+        py::class_<SpecificOutput, boost::shared_ptr<SpecificOutput>>(
+              m, string("Output" + T::classInfo().getClassName()).c_str())
+              .def("write", (void(SpecificOutput::*)(T const&))(&SpecificOutput::write), py::arg("data"))
+              .def("update", &OutputWrap<T>::update) KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput);
+    }
+    { // exposing karabo::io::Input<karabo::util::Hash>
+        typedef karabo::io::Input<T> SpecificInput;
+        py::class_<SpecificInput, boost::shared_ptr<SpecificInput>>(
+              m, string("Input" + T::classInfo().getClassName()).c_str())
+              .def("read", (void(SpecificInput::*)(T&, size_t))(&SpecificInput::read), py::arg("data"),
+                   py::arg("idx") = 0)
+              .def("size", (size_t(SpecificInput::*)() const)(&SpecificInput::size))
+              .def("update", (void(SpecificInput::*)())(&SpecificInput::update))
+              .def("registerReadHandler", &InputWrap<T>::registerIOEventHandler, py::arg("handler") = py::none())
+              .def("registerEndOfStreamHandler", &InputWrap<T>::registerEndOfStreamEventHandler,
+                   py::arg("eosHandler") = py::none())
+
+                    KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput);
+    }
+}
+
+
 void exportPyIoFileToolsAll(py::module_& m) {
+    exportPyIoFileTools1(m);
+    exportPyIoInputOutput<karabo::util::Hash>(m);
+    exportPyIoInputOutput<karabo::util::Schema>(m);
     exportPyIoFileTools<karabo::util::Hash>(m);
     exportPyIoFileTools<karabo::util::Schema>(m);
     exportPyIoBinarySerializer<karabo::util::Hash>(m);

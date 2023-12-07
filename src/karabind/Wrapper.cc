@@ -765,25 +765,33 @@ namespace karabind {
             // Does input array have a 'base' where reference to array data stored?
             const auto& base = arr.base();
             if (base && !base.is_none()) {
-                // Check if it is our special storage
+                // The 'arr' array is not the owner of the data (base is not None)
+                // Check if it is our special storage and get DataPtr incrementing
+                // C++ ref.count (shared_ptr use_count!)
                 if (py::isinstance<ArrayDataPtrBase>(base)) {
                     const auto& arrRef = base.cast<ArrayDataPtrBase>();
-                    dataPtr = arrRef.getDataPtr(); // here we increase shared_ptr use count
+                    dataPtr = arrRef.getDataPtr(); // here we increase C++ shared_ptr use count
                 }
             }
             if (!dataPtr) {
                 // Python is an owner of array data (base is None)
-                // Create a copy for Python array (by 'PyArray_FromAny')
+                // Create another Python array that will be not an owner (base is not None)
+                // Use 'py::array::ensure' which calls 'PyArray_FromAny' ...
+                // namely, PyArray_FromAny(arr, NULL, 0, 0, NPY_ENSUREARRAY, NULL)
                 py::array newarr = py::array::ensure(arr); // steal reference
                 if (newarr) {
+                    // Increment Python array ref counter again to compensate decrementing
+                    // because of 'newarr' destruction
+                    Py_INCREF(newarr.ptr());
                     // get mutable data as char* to build dataPtr
-                    char* data = static_cast<char*>(arr.mutable_data());
-                    // Use PyArrayDeleter class as a Deleter class to manage Python reference counter
-                    // for "stolen" (copy.refcount == orig.refcount) copy
+                    char* data = static_cast<char*>(newarr.mutable_data());
+                    // Store array via PyArrayDeleter constructor
                     auto pydeleter = PyArrayDeleter(newarr.ptr());
                     // Construct dataPtr with deleter which decrements Python refcount
                     dataPtr = NDArray::DataPointer(data, pydeleter);
                 }
+                // Here 'newarr' goes out of scope, destructor is called (py::object) which
+                // decrements ref. count for 'arr'
             }
             if (!dataPtr) {
                 throw KARABO_PYTHON_EXCEPTION("Failed conversion of Python ndarray to C++ NDArray.");
@@ -1045,7 +1053,7 @@ namespace karabind {
             std::ostringstream oss;
             oss << "Error in ";
             if (funcName.empty()) {
-                oss << " python handler for '" << (where ? where : "undefined") << "'";
+                oss << "python handler for '" << (where ? where : "undefined") << "'";
             } else {
                 oss << "'" << funcName << "'";
             }
