@@ -1546,6 +1546,14 @@ namespace schemawrap {
         // Accept any Python iterable that provides strings
         self.setAllowedActions(path, karathon::Wrapper::fromPyIterableToCppContainer<std::string>(actions));
     }
+
+
+    bp::str assemblyRulesToStr(const Schema::AssemblyRules& self) {
+        std::ostringstream oss;
+        oss << "AssemblyRules(mode: " << self.m_accessMode << ", level: " << self.m_accessLevel << ", state: '"
+            << self.m_state << "')";
+        return bp::str(oss.str());
+    }
 } // namespace schemawrap
 
 
@@ -1717,7 +1725,8 @@ void exportPyUtilSchema() {
                                                  bp::arg("accessLevel") = -1)))
               .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
               .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
-              .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
+              .def_readwrite("m_state", &Schema::AssemblyRules::m_state)
+              .def("__str__", &schemawrap::assemblyRulesToStr);
 
         s.def(bp::self_ns::str(bp::self));
 

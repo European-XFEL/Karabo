@@ -94,7 +94,13 @@ void exportPyUtilSchemaOverwriteElement(py::module_& m) {
                         return self.setNewDefaultValue(karabo::util::AlarmCondition::fromString(condition));
                     } else {
                         boost::any any;
-                        wrapper::castPyToAny(value, any);
+                        if (className == "AccessLevel") {
+                            // Special treatment for Enum: convert to int first, like int(value)
+                            // TODO: should we implement Enum conversion to 'int' in `castPyToAny'?
+                            wrapper::castPyToAny(value.cast<py::int_>(), any);
+                        } else {
+                            wrapper::castPyToAny(value, any);
+                        }
                         return self.setNewDefaultValue(any);
                     }
                 },

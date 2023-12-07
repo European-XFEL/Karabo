@@ -19,6 +19,7 @@
 import karabind
 
 import karathon
+from karabo.bound_tool import AssemblyRules
 
 
 class Configurator:
@@ -79,7 +80,7 @@ class Configurator:
         self.baseRegistry[derived.__classid__] = derived
         return self
 
-    def getSchema(self, classid, rules=None):
+    def getSchema(self, classid, rules=AssemblyRules()):
         """
         Get schema for class with "classid" derived from base class given to
         constructor using assembly "rules".
@@ -87,7 +88,7 @@ class Configurator:
                 schema = Configurator(Shape).getSchema("Rectangle")
         """
         if rules is None:
-            rules = karathon.AssemblyRules()
+            rules = AssemblyRules()
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
