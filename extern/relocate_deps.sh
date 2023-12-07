@@ -35,20 +35,23 @@ rewrite_python_shebangs() {
     local new_shebang_line="#!/usr/bin/env python3"
     local sed_program='1 s%^.*$%'$new_shebang_line'%g'
 
-    local entry_points=(2to3 2to3-3.8 cygdb cython
-	easy_install easy_install-3.8 f2py3 flake8 get_objgraph.py
-    idle3 idle3.8 ipcluster ipcluster3 ipcluster_watcher
+    local entry_points=(bottle.py chardetect conan conan_build_info conan_server
+        coverage coverage3 coverage-3.11 cygdb cython cythonize distro docutils
+        flit fonttools f2py f2py3 f2py3.11 flake8 jsonschema
+        get_objgraph ipcluster ipcluster3 ipcluster_watcher
 	ipcontroller ipcontroller3 ipengine ipengine3 iptest iptest3 ipython
-	ipython3 jupyter jupyter-kernelspec jupyter-migrate
-	jupyter-nbextension jupyter-notebook jupyter-qtconsole
-	jupyter-serverextension jupyter-trust nosetests nosetests-3.8 pip pip3
-	pip3.8 pnuke prsync pscp pslurp pydoc3 pydoc3.8
-	pygmentize pyvenv pyvenv-3.8 pyflakes py.test py.test-3.8 pybabel
-	pycodestyle rpath-fixer rpath-missing rpath-show rst2html.py
-	rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py
-	rst2pseudoxml.py rst2s5.py rst2xetex.py rst2xml.py rstpep2html.py sift
-	sphinx-apidoc sphinx-autogen sphinx-build sphinx-quickstart
-	unpickle.py wheel
+	ipython3 isort isort-identify-imports jupyter jupyter-dejavu jupyter-execute
+	jupyter-kernel jupyter-kernelspec jupyter-migrate jupyter-nbconvert
+	jupyter-nbextension jupyter-notebook jupyter-qtconsole jupyter-run
+	jupyter-serverextension jupyter-trust jupyter-troubleshoot nosetests
+	nosetests-3.4 normalizer pint-convert pip pip3 pip3.10 pip3.11
+	pybind11-config pyftmerge pyftsubset pygmentize pnuke prsync pscp pslurp
+	pyvenv pyflakes py.test pytest pybabel pycodestyle pwiz.py
+	readelf.py rpath-fixer rpath-missing rpath-show rst2html.py rst2html4.py
+	rst2html5.py rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py
+	rst2pseudoxml.py rst2s5.py rst2xetex.py rst2xml.py rstpep2html.py
+	sift sphinx-apidoc sphinx-autogen sphinx-build sphinx-quickstart
+	tabulate tqdm ttx undill unpickle.py wheel
     )
 
     local count=0
@@ -61,44 +64,14 @@ rewrite_python_shebangs() {
 }
 
 rewrite_rpaths() {
-    # These are the specific Python packages which need to be relocated
-    local target_packages=( )
+    # Relocate libexslt.so
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/lib/libxslt.so"
+    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/lib/libexslt.so"
 
-    # Relocate the Python packages
-    local count=0
-    while [ "x${target_packages[count]}" != "x" ]
-    do
-        local package=${target_packages[count]}
-        local package_dir=$(LD_LIBRARY_PATH=$INSTALL_PREFIX/lib $INSTALL_PREFIX/bin/python3 -c "import os,$package as pkg;print(os.path.dirname(pkg.__file__))")
-        run_rpath_fixer "-f -g '*.so' -l $INSTALL_PREFIX/lib -d $package_dir"
-        count=$(($count + 1))
-    done
-
-    # These are specific libs which need to be relocated
-    local target_libs=(libtiffxx.so libfreetype.so libxslt.so libexslt.so libxml2mod.so libzmq.so)
-
-    # Relocate the libraries
-    count=0
-    while [ "x${target_libs[count]}" != "x" ]
-    do
-        local library=${target_libs[count]}
-        run_rpath_fixer "-f -g '$library' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/lib"
-        count=$(($count + 1))
-    done
-
-    # Relocate the executables
-    # can't fix python if python is running the fixer script
-    run_rpath_fixer "-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
-    # now fix python forcing to RPATH: https://stackoverflow.com/questions/43616505/setting-rpath-for-python-not-working
-    # "RPATH affects the binary and all shared libraries, but RUNPATH affects only the binary, and does not recursively
-    # apply to shared libraries that this binary loads.". We theed the first behaviour."
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python"
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3"
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/bin/python3.11"
-}
-
-run_rpath_fixer() {
-    safeRunCommand "PATH=$INSTALL_PREFIX/bin $INSTALL_PREFIX/bin/python3 -m rpathology.fixer $*"
+    # Relocate the libraries/executables
+    # skip installed python libs/exes (they are already relocated)
+    local fixer_opts="-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
+    safeRunCommand "PATH=$INSTALL_PREFIX/bin $INSTALL_PREFIX/bin/python3 -m rpathology.fixer $fixer_opts"
 }
 
 safeRunCommand() {
