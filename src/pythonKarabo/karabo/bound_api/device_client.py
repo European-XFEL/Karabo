@@ -14,9 +14,9 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
+from karabo.bound_tool import BoundDeviceClient, Hash, LeafType
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-from karathon import DeviceClient as BoundDeviceClient, Hash, LeafType
 
 
 class DeviceClient(BoundDeviceClient):

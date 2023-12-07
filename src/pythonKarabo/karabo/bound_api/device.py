@@ -23,10 +23,7 @@ import threading
 import time
 
 from karabo import __version__ as karaboVersion
-from karabo.common.api import (
-    KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
-    State, karabo_deprecated)
-from karathon import (
+from karabo.bound_tool import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
     NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
     STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessLevel, AccessType,
@@ -34,6 +31,9 @@ from karathon import (
     EventLoop, Hash, HashFilter, HashMergePolicy, LeafType, Logger,
     MetricPrefix, Schema, SignalSlotable, Timestamp, Trainstamp, Unit,
     Validator, ValidatorValidationRules, VectorHash, loadFromFile)
+from karabo.common.api import (
+    KARABO_LOGGER_CONTENT_DEFAULT, AlarmCondition, Capabilities, Interfaces,
+    State, karabo_deprecated)
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS

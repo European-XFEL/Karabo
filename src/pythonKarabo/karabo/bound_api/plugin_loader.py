@@ -17,7 +17,7 @@ import warnings
 
 from pkg_resources import WorkingSet
 
-from karathon import STRING_ELEMENT
+from karabo.bound_tool import STRING_ELEMENT
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 

@@ -20,7 +20,7 @@ __date__ = "$May 24, 2013 11:36:55 AM$"
 import os
 import re
 
-from karathon import Hash, loadFromFile
+from karabo.bound_tool import Hash, loadFromFile
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 

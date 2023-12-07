@@ -17,8 +17,8 @@ __author__ = "andrea.parenti@xfel.eu"
 __date__ = "August  7, 2013"
 
 import karabo.bound_api.base_fsm as base
+from karabo.bound_tool import SLOT_ELEMENT, VECTOR_STRING_ELEMENT
 from karabo.common.states import State
-from karathon import SLOT_ELEMENT, VECTOR_STRING_ELEMENT
 
 from .decorators import KARABO_CLASSINFO
 from .fsm import (

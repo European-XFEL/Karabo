@@ -48,6 +48,22 @@ using namespace std;
 using namespace karabind;
 
 
+struct ConvertOptions {
+    inline ConvertOptions(const string& path, const Schema& schema) : m_path(path), m_schema(schema) {}
+
+    template <class T>
+    inline void operator()(T*) {
+        const Hash& h = m_schema.getParameterHash();
+        result = wrapper::castAnyToPy(h.getAttributeAsAny(m_path, KARABO_SCHEMA_OPTIONS));
+        // result = karathon::Wrapper::fromStdVectorToPyArray<T>(m_schema.getOptions<T>(m_path));
+    }
+
+    const string& m_path;
+    const Schema& m_schema;
+    py::object result;
+};
+
+
 void exportPyUtilSchema(py::module_& m) {
     py::enum_<AccessType>(m, "AccessType")
           .value("INIT", AccessType::INIT)
@@ -144,11 +160,17 @@ void exportPyUtilSchema(py::module_& m) {
     { // exposing ::Schema
 
         py::class_<Schema::AssemblyRules>(m, "AssemblyRules")
-              .def(py::init<AccessType const&, std::string const&, const int>(), py::arg("accessMode") = INIT | WRITE,
-                   py::arg("state") = "", py::arg("accessLevel") = -1)
+              .def(py::init<AccessType const&, std::string const&, const int>(),
+                   py::arg("accessMode") = INIT | WRITE | READ, py::arg("state") = "", py::arg("accessLevel") = -1)
               .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
               .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
-              .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
+              .def_readwrite("m_state", &Schema::AssemblyRules::m_state)
+              .def("__str__", [](const Schema::AssemblyRules& self) -> py::str {
+                  std::ostringstream oss;
+                  oss << "AssemblyRules(mode: " << self.m_accessMode << ", level: " << self.m_accessLevel
+                      << ", state: '" << self.m_state << "')";
+                  return oss.str();
+              });
 
         py::class_<Schema, boost::shared_ptr<Schema>> s(m, "Schema");
 
@@ -412,8 +434,9 @@ void exportPyUtilSchema(py::module_& m) {
         s.def(
               "getOptions",
               [](const Schema& self, const std::string& path) -> py::list {
-                  const Hash& h = self.getParameterHash();
-                  return wrapper::castAnyToPy(h.getAttributeAsAny(path, KARABO_SCHEMA_OPTIONS));
+                  ConvertOptions convertOptions(path, self);
+                  templatize(self.getValueType(path), convertOptions);
+                  return convertOptions.result;
               },
               py::arg("path"));
 
@@ -1144,5 +1167,26 @@ void exportPyUtilSchema(py::module_& m) {
               )pbdoc");
 
     } // end Schema
+
+
+    py::class_<HashFilter>(m, "HashFilter")
+
+          .def_static(
+                "byTag",
+                [](const Schema& schema, const Hash& config, const std::string& tags, const std::string& sep = ",") {
+                    boost::shared_ptr<Hash> result(new Hash);
+                    HashFilter::byTag(schema, config, *result, tags, sep);
+                    return result;
+                },
+                py::arg("schema"), py::arg("config"), py::arg("tags"), py::arg("sep") = ",")
+
+          .def_static(
+                "byAccessMode",
+                [](const Schema& schema, const Hash& config, const AccessType& value) {
+                    boost::shared_ptr<Hash> result(new Hash);
+                    HashFilter::byAccessMode(schema, config, *result, value);
+                    return result;
+                },
+                py::arg("schema"), py::arg("config"), py::arg("accessMode"));
 
 } // end  exportPyUtilSchema
