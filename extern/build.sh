@@ -149,10 +149,6 @@ download_latest_deps() {
     echo "### Updating dependencies for the local environment... (this takes a while) ###"
     echo
 
-    pushd $EXTERN_DIR
-    safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
-    popd
-
     # Leave a marker for later
     echo $deps_tag > $INSTALL_PREFIX/$DEPS_MARKER_NAME
     return 0
@@ -471,6 +467,11 @@ install_python
 
 # install via conan and pip next
 install_from_deps
+
+# fix rpaths
+pushd $EXTERN_DIR
+safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
+popd
 
 # Package everything up, if requested
 if [ "$BUILD_PACKAGE" = "y" ]; then
