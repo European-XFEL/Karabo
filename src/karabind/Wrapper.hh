@@ -38,6 +38,7 @@ namespace py = pybind11;
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::shared_ptr<T>);
 
 PYBIND11_MAKE_OPAQUE(std::vector<karabo::util::Hash>);
+PYBIND11_MAKE_OPAQUE(std::vector<karabo::util::Hash::Pointer>);
 
 
 namespace karabind {
@@ -69,14 +70,15 @@ namespace karabind {
         // Store Python object
         explicit PyArrayDeleter(PyObject* obj) : m_arrayRef(obj) {}
 
-        // C++ Deleter should decrement refcount of stored Python object
+        // C++ Deleter should ignore input argument and decrement refcount for stored Python array
         void operator()(const char*) {
+            py::gil_scoped_acquire gil;
             Py_DECREF(m_arrayRef);
         }
 
         // helper method for debugging Python reference counter
-        int refcount() {
-            return m_arrayRef->ob_refcnt;
+        Py_ssize_t refcount() {
+            return Py_REFCNT(m_arrayRef);
         }
     };
 

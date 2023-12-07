@@ -51,6 +51,28 @@ namespace karabind {
             PYBIND11_OVERRIDE(karabo::util::ClassInfo, karabo::xms::InputChannel, getClassInfo);
         }
     };
+
+    class ChannelMetaData : public karabo::xms::Memory::MetaData {
+       public:
+        ChannelMetaData(const py::object& src, const py::object& ts)
+            : karabo::xms::Memory::MetaData(src.cast<std::string>(), ts.cast<karabo::util::Timestamp>()) {}
+
+        void setSource(const py::object& src) {
+            karabo::xms::Memory::MetaData::setSource(src.cast<std::string>());
+        }
+
+        py::object getSource() {
+            return py::cast(karabo::xms::Memory::MetaData::getSource());
+        }
+
+        void setTimestamp(const py::object& ts) {
+            karabo::xms::Memory::MetaData::setTimestamp(ts.cast<karabo::util::Timestamp>());
+        }
+
+        py::object getTimestamp() {
+            return py::cast(karabo::xms::Memory::MetaData::getTimestamp());
+        }
+    };
 } // namespace karabind
 
 using namespace karabo::util;
@@ -69,20 +91,40 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
               .value("DISCONNECTING", ConnectionStatus::DISCONNECTING);
     }
 
-    py::class_<Memory::MetaData>(m, "ChannelMetaData")
+    py::class_<ChannelMetaData>(m, "ChannelMetaData")
 
-          .def(py::init([](const py::object& src, const py::object& ts) {
-                   return Memory::MetaData(src.cast<std::string>(), ts.cast<Timestamp>());
-               }),
+          .def(py::init([](const py::object& src, const py::object& ts) { return ChannelMetaData(src, ts); }),
                py::arg("src"), py::arg("timestamp"))
 
-          .def("setSource", &Memory::MetaData::setSource, py::arg("src"))
+          .def("setSource", &ChannelMetaData::setSource, py::arg("source"))
 
-          .def("getSource", &Memory::MetaData::getSource)
+          .def("getSource", &ChannelMetaData::getSource)
 
-          .def("setTimestamp", &Memory::MetaData::setTimestamp, py::arg("timestamp"))
+          .def("setTimestamp", &ChannelMetaData::setTimestamp, py::arg("timestamp"))
 
-          .def("getTimestamp", &Memory::MetaData::getTimestamp);
+          .def("getTimestamp", &ChannelMetaData::getTimestamp)
+
+          .def(
+                "__getitem__",
+                [](ChannelMetaData& self, const std::string& key) {
+                    if (key == "source") return self.getSource();
+                    else if (key == "timestamp") return self.getTimestamp();
+                    else throw KARABO_PARAMETER_EXCEPTION("Unknown key");
+                },
+                py::arg("key"))
+
+          .def(
+                "__setitem__",
+                [](ChannelMetaData& self, const std::string& key, py::object value) {
+                    if (key == "source") {
+                        self.setSource(value);
+                    } else if (key == "timestamp") {
+                        self.setTimestamp(value);
+                    } else {
+                        throw KARABO_PARAMETER_EXCEPTION("Unknown key");
+                    }
+                },
+                py::arg("key"), py::arg("value"));
 
     {
         py::class_<OutputChannel, PyOutputChannel, boost::shared_ptr<OutputChannel>>(m, "OutputChannel")
@@ -108,7 +150,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                     "write",
                     [](const OutputChannel::Pointer& self, const py::object& data, const py::object& meta,
                        bool copyAll) {
-                        if (!py::isinstance<Memory::MetaData>(meta)) {
+                        if (!py::isinstance<ChannelMetaData>(meta)) {
                             throw KARABO_PYTHON_EXCEPTION(
                                   "Unsupported parameter type for parameter 'meta'. Needs to be ChannelMetaData");
                         }
@@ -118,7 +160,7 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
                         }
                         // we need to copy here before the GIL release, otherwise data might be altered during writing.
                         const Hash dataHash = data.cast<Hash>();
-                        const Memory::MetaData metaData = meta.cast<Memory::MetaData>();
+                        const Memory::MetaData& metaData = static_cast<Memory::MetaData>(meta.cast<ChannelMetaData>());
                         py::gil_scoped_release release;
                         self->write(dataHash, metaData, copyAll);
                     },
@@ -396,14 +438,14 @@ returned, the data will be dropped.
 
               .def("getMetaData",
                    [](const InputChannel::Pointer& self) {
-                       auto ret = boost::make_shared<std::vector<karabo::util::Hash>>();
+                       auto ret = std::vector<karabo::util::Hash>();
                        {
                            py::gil_scoped_release release;
                            const std::vector<karabo::xms::InputChannel::MetaData>& md = self->getMetaData();
                            for (auto it = md.begin(); it != md.end(); ++it) {
                                // TODO: Properly wrap MetaData object - currently this will be visible in Python
                                // as hash
-                               ret->push_back(*reinterpret_cast<const karabo::util::Hash*>(&*it));
+                               ret.push_back(*reinterpret_cast<const karabo::util::Hash*>(&*it));
                            }
                        }
                        return py::cast(ret);

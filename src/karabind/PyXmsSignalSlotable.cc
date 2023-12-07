@@ -18,6 +18,7 @@
 
 #include <pybind11/pybind11.h>
 
+#include <karabo/xms/InputChannel.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/xms/Slot.hh>
 
@@ -583,23 +584,30 @@ namespace karabind {
                                                                 const py::object& onInputHandler = py::none(),
                                                                 const py::object& onEndOfStreamHandler = py::none(),
                                                                 const py::object& connectionTracker = py::none()) {
+            using namespace karabo::xms;
             // Basically just call createInputChannel from C++, but take care that data and input handlers
             // stay empty if their input is empty, although the proxies are able
             // to deal with 'None' Python handlers (as we make use of for the end of stream handler).
             DataHandler dataHandler = DataHandler();
             InputHandler inputHandler = InputHandler();
+            InputHandler eosHandler = InputHandler();
+            InputChannel::ConnectionTracker tracker = InputChannel::ConnectionTracker();
+
             if (onDataHandler != py::none()) { // or: if (onDataHandler.ptr() != Py_None) {
                 dataHandler = InputChannelDataHandler(onDataHandler, "data");
             }
             if (onInputHandler != py::none()) {
                 inputHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onInputHandler, "input");
             }
+            if (onEndOfStreamHandler != py::none()) {
+                eosHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS");
+            }
+            if (connectionTracker != py::none()) {
+                tracker = HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker,
+                                                                                         "channelStatusTracker");
+            }
 
-            return this->createInputChannel(
-                  channelName, config, dataHandler, inputHandler,
-                  HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"),
-                  HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker,
-                                                                                 "channelStatusTracker"));
+            return this->createInputChannel(channelName, config, dataHandler, inputHandler, eosHandler, tracker);
         }
     };
 
@@ -614,9 +622,8 @@ using namespace std;
 
 
 void exportPyXmsSignalSlotable(py::module_& m) {
-    //     py::class_<Slot>(m, "Slot")
-    //           .def("getInstanceIdOfSender", &Slot::getInstanceIdOfSender,
-    //           py::return_value_policy::reference_internal);
+    py::class_<SlotWrap, boost::shared_ptr<SlotWrap>>(m, "Slot").def(
+          "getInstanceIdOfSender", &SlotWrap::getInstanceIdOfSender, py::return_value_policy::reference_internal);
 
     py::class_<SignalSlotableWrap::RequestorWrap>(m, "Requestor")
           .def("waitForReply", &SignalSlotableWrap::RequestorWrap::waitForReply, py::arg("milliseconds"))
@@ -815,8 +822,11 @@ void exportPyXmsSignalSlotable(py::module_& m) {
                 "createOutputChannel",
                 [](SignalSlotable& self, const std::string& channelName, const Hash& config,
                    const py::object& onOutput) {
-                    using Wrap = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>;
-                    return self.createOutputChannel(channelName, config, Wrap(onOutput, "IOEvent"));
+                    SignalSlotable::OutputHandler out = SignalSlotable::OutputHandler();
+                    if (onOutput != py::none()) {
+                        out = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>(onOutput, "IOEvent");
+                    }
+                    return self.createOutputChannel(channelName, config, out);
                 },
                 py::arg("channelName"), py::arg("configuration"), py::arg("handler") = py::none())
           .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy, py::arg("channelName"),
@@ -843,20 +853,31 @@ void exportPyXmsSignalSlotable(py::module_& m) {
           .def(
                 "registerDataHandler",
                 [](SignalSlotable& self, const std::string& channelName, const py::object& handler) {
-                    self.registerDataHandler(channelName, InputChannelDataHandler(handler, "data"));
+                    SignalSlotable::DataHandler dataHandler = SignalSlotable::DataHandler();
+                    if (handler != py::none()) {
+                        dataHandler = InputChannelDataHandler(handler, "data");
+                    }
+                    self.registerDataHandler(channelName, dataHandler);
                 },
                 py::arg("channelName"), py::arg("handlerPerData") = py::none())
           .def(
                 "registerInputHandler",
                 [](SignalSlotable& self, const std::string& channelName, const py::object& handler) {
-                    self.registerInputHandler(channelName, HandlerWrap<const InputChannel::Pointer&>(handler, "input"));
+                    SignalSlotable::InputHandler inputHandler = SignalSlotable::InputHandler();
+                    if (handler != py::none()) {
+                        inputHandler = HandlerWrap<const InputChannel::Pointer&>(handler, "input");
+                    }
+                    self.registerInputHandler(channelName, inputHandler);
                 },
                 py::arg("channelName"), py::arg("handlerPerInput") = py::none())
           .def(
                 "registerEndOfStreamHandler",
                 [](SignalSlotable& self, const std::string& channelName, const py::object& handler) {
-                    self.registerEndOfStreamHandler(channelName,
-                                                    HandlerWrap<const InputChannel::Pointer&>(handler, "EOS"));
+                    SignalSlotable::InputHandler eos = SignalSlotable::InputHandler();
+                    if (handler != py::none()) {
+                        eos = HandlerWrap<const InputChannel::Pointer&>(handler, "EOS");
+                    }
+                    self.registerEndOfStreamHandler(channelName, eos);
                 },
                 py::arg("channelName"), py::arg("handler") = py::none())
           .def(
