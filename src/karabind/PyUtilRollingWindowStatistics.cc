@@ -1,4 +1,8 @@
 /*
+ * $Id$
+ *
+ * Author: <steffen.hauf@xfel.eu>
+ *
  * This file is part of Karabo.
  *
  * http://www.karabo.eu
@@ -15,37 +19,24 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
-#include "PyCoreLockWrap.hh"
 
 #include <pybind11/pybind11.h>
 
-#include "Wrapper.hh"
+#include <karabo/util/RollingWindowStatistics.hh>
 
 
-using namespace karabo::core;
 namespace py = pybind11;
+using namespace karabo::util;
 
 
-namespace karabind {
-    void LockWrap::lock(bool recursive) {
-        m_lock->lock(recursive);
-    }
+void exportPyUtilRollingWindowStatistics(py::module& m) {
+    py::class_<RollingWindowStatistics>(m, "RollingWindowStatistics")
 
+          .def(py::init<const unsigned int>())
 
-    void LockWrap::unlock() {
-        m_lock->unlock();
-    }
+          .def("update", &RollingWindowStatistics::update, py::arg("value"))
 
+          .def("getRollingWindowVariance", &RollingWindowStatistics::getRollingWindowVariance)
 
-    bool LockWrap::valid() {
-        return m_lock->valid();
-    }
-} // namespace karabind
-
-
-void exportPyCoreLock(py::module_& m) {
-    py::class_<karabind::LockWrap, boost::shared_ptr<karabind::LockWrap>>(m, "Lock")
-          .def("lock", &karabind::LockWrap::lock, py::arg("recursive") = false)
-          .def("unlock", &karabind::LockWrap::unlock)
-          .def("valid", &karabind::LockWrap::valid);
+          .def("getRollingWindowMean", &RollingWindowStatistics::getRollingWindowMean);
 }

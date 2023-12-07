@@ -89,13 +89,7 @@ def test_pipeline_many_to_one(
 
     # DataHandler
     def iData(data, meta):
-        # TODO:
-        # karathon calls meta as Hash
-        # karabind calls meta as ChannelMetaData
-        if isinstance(meta, Hash):
-            sourceName = meta['source']
-        else:
-            sourceName = meta.getSource()
+        sourceName = meta['source']
         value = receivedData[sourceName]
         if value is None:
             value = [data['uint']]
@@ -197,12 +191,13 @@ def test_pipeline_many_to_one(
 @pytest.mark.parametrize(
     "EventLoop, SignalSlotable, ConnectionStatus, ChannelMetaData, Timestamp,\
      Hash, Types",
-    [(karabind.EventLoop, karabind.SignalSlotable, karabind.ConnectionStatus,
-      karabind.ChannelMetaData, karabind.Timestamp, karabind.Hash,
-      karabind.Types),
+    [
      (karathon.EventLoop, karathon.SignalSlotable, karathon.ConnectionStatus,
       karathon.ChannelMetaData, karathon.Timestamp, karathon.Hash,
-      karathon.Types)
+      karathon.Types),
+     (karabind.EventLoop, karabind.SignalSlotable, karabind.ConnectionStatus,
+      karabind.ChannelMetaData, karabind.Timestamp, karabind.Hash,
+      karabind.Types)
      ])
 def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
                                      ConnectionStatus, ChannelMetaData,
@@ -253,6 +248,10 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
 
     # Write first data - nobody connected yet.
     meta = ChannelMetaData("outputChannel:output", Timestamp())
+    if ChannelMetaData is karabind.ChannelMetaData:
+        assert meta.getSource() == meta['source']
+        assert meta.getTimestamp() == meta['timestamp']
+
     out.write(Hash("key", 42), meta)
     out.update()
 
