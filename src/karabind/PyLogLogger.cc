@@ -109,6 +109,6 @@ void exportPyLogLogger(py::module_& m) {
               .def_static("setPriority", &Logger::setPriority, py::arg("priority"), py::arg("category") = "")
               .def_static("getPriority", &Logger::getPriority, py::arg("category") = "")
               .def_static("getCategory", (krb_log4cpp::Category & (*)(const string&)) & Logger::getCategory,
-                          py::arg("logCategorie") = "", py::return_value_policy::reference_internal);
+                          py::arg("logCategorie") = "", py::return_value_policy::reference);
     }
 }
