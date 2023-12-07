@@ -30,12 +30,12 @@ import traceback
 from itertools import chain
 from subprocess import Popen, TimeoutExpired
 
-from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags, State
-from karathon import (
+from karabo.bound_tool import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
     Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,
     saveToFile)
+from karabo.common.api import KARABO_LOGGER_CONTENT_DEFAULT, ServerFlags, State
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
