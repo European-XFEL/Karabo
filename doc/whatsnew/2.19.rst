@@ -2,6 +2,25 @@
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
 ***************************
+What's New in Karabo 2.19.1
+***************************
+
+This patch release brings a few **concert** fixes and improvements and aligns *nan* value
+behavior in the trendline widget to 2.18.X.
+
+- GUI: Add target window to concert open scene (2.19.1 hotfix) !7969
+- GUI: Add karabo concert directory (2.19.1 hotfix) !7973
+- GUI: karabo-concert from GUI (2.19.1 hotfix) !7985
+- GUI: Fix levels dialog accounting zero values (Cherry-pick hotfix 2.19) !8000
+- GUI: Trendlines always draw connect array dots (Cherry-pick hotfix) !8005
+- C++: Explicitly disable connections in OutputChannel destructor (Backport to 2.19) !7986
+- C++: Enable TCP keep alive via configuration options (Backport to 2.19) !7987
+- C++: Input channel uses TCP keep-alive (Backport to 2.19) !7988
+- MDL: Declare default socket variables for pipeline channel table (2.19.X hotfix) !7990
+- Influx: Avoid access to the front of an empty queue (UB) (2.19.X-hotfix) !8007
+
+
+***************************
 What's New in Karabo 2.19.0
 ***************************
 
