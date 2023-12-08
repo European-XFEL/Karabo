@@ -419,10 +419,14 @@ namespace karathon {
 
         bp::tuple saveConfigurationFromNamePy(const std::string& name, const bp::object& deviceIds,
                                               const std::string& description, int priority, const std::string& user) {
-            ScopedGILRelease nogil;
-
-            return Wrapper::fromStdPairToPyTuple(this->DeviceClient::saveConfigurationFromName(
-                  name, karathon::Wrapper::fromPyListToStdVector<std::string>(deviceIds), description, priority, user));
+            std::pair<bool, std::string> p;
+            const std::vector<std::string> vDeviceIds =
+                  karathon::Wrapper::fromPyListToStdVector<std::string>(deviceIds);
+            {
+                ScopedGILRelease nogil;
+                p = this->DeviceClient::saveConfigurationFromName(name, vDeviceIds, description, priority, user);
+            }
+            return Wrapper::fromStdPairToPyTuple(p);
         }
 
         bp::object getConfigurationFromPastPy(const std::string& deviceId, const std::string& timePoint) {
