@@ -1,3 +1,5 @@
+import weakref
+
 import karabind
 import numpy as np
 import pytest
@@ -27,3 +29,26 @@ def test_ndarray_io(BinarySerializerHash, Hash, fullyEqual):
 
     for i in range(100):
         func(i)
+
+
+@pytest.mark.parametrize(
+    "Hash, ImageData",
+    [
+     (karathon.Hash, karathon.ImageData),
+     (karabind.Hash, karabind.ImageData)
+     ])
+def test_ndarray_refcount(Hash, ImageData):
+    arr = np.arange(20000, dtype=np.int16).reshape(100, 200)
+    arr_weak = weakref.ref(arr)
+    h = Hash('a', arr)
+    g = h['a']
+    img = ImageData(arr)
+    assert arr_weak() is not None
+    del arr
+    assert arr_weak() is not None
+    del h
+    assert arr_weak() is not None
+    del g
+    assert arr_weak() is not None
+    del img
+    assert arr_weak() is None
