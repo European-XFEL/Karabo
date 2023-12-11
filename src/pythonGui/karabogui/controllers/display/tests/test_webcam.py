@@ -53,6 +53,11 @@ def test_webcam_graph_basics(gui_app):
         assert not axis_item.isVisible()
     assert not all(plotItem.vb.mouseEnabled())
 
+    assert controller._plot.imageItem.image.shape == (30, 40)
+    # Erase widget, a default with size 50, 50 is set
+    controller.clear_widget()
+    assert controller._plot.imageItem.image.shape == (50, 50)
+
     # teardown
     controller.destroy()
     assert controller.widget is None
