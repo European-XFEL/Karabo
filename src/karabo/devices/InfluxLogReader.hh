@@ -50,10 +50,10 @@ namespace karabo {
 
         // Context of an ongoing slotGetPropertyHistory process.
         struct PropertyHistoryContext {
-            PropertyHistoryContext(const std::string &deviceId, const std::string &property,
-                                   const karabo::util::Epochstamp &from, const karabo::util::Epochstamp &to,
-                                   int maxDataPoints, const karabo::xms::SignalSlotable::AsyncReply &aReply,
-                                   const karabo::net::InfluxDbClient::Pointer &influxClient);
+            PropertyHistoryContext(const std::string& deviceId, const std::string& property,
+                                   const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to,
+                                   int maxDataPoints, const karabo::xms::SignalSlotable::AsyncReply& aReply,
+                                   const karabo::net::InfluxDbClient::Pointer& influxClient);
 
             std::string deviceId;
             std::string property;
@@ -69,7 +69,7 @@ namespace karabo {
 
 
         struct PropFromPastInfo {
-            PropFromPastInfo(const std::string &name, const karabo::util::Types::ReferenceType type,
+            PropFromPastInfo(const std::string& name, const karabo::util::Types::ReferenceType type,
                              bool infiniteOrNan);
 
             std::string name;
@@ -80,9 +80,9 @@ namespace karabo {
 
         // Context of an ongoing slotGetConfigurationFromPast process.
         struct ConfigFromPastContext {
-            ConfigFromPastContext(const std::string &deviceId, const karabo::util::Epochstamp &atTime,
-                                  const karabo::xms::SignalSlotable::AsyncReply &aReply,
-                                  const karabo::net::InfluxDbClient::Pointer &influxClient);
+            ConfigFromPastContext(const std::string& deviceId, const karabo::util::Epochstamp& atTime,
+                                  const karabo::xms::SignalSlotable::AsyncReply& aReply,
+                                  const karabo::net::InfluxDbClient::Pointer& influxClient);
 
             std::string deviceId;
             karabo::util::Epochstamp atTime;
@@ -109,18 +109,18 @@ namespace karabo {
            public:
             KARABO_CLASSINFO(InfluxLogReader, "InfluxLogReader", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema &expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            InfluxLogReader(const karabo::util::Hash &cfg);
+            InfluxLogReader(const karabo::util::Hash& cfg);
 
             virtual ~InfluxLogReader();
 
            protected:
-            virtual void slotGetPropertyHistoryImpl(const std::string &deviceId, const std::string &property,
-                                                    const karabo::util::Hash &params) override;
+            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
+                                                    const karabo::util::Hash& params) override;
 
-            virtual void slotGetConfigurationFromPastImpl(const std::string &deviceId,
-                                                          const std::string &timepoint) override;
+            virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
+                                                          const std::string& timepoint) override;
 
            private:
             /**
@@ -129,7 +129,7 @@ namespace karabo {
              *
              * @param context
              */
-            void asyncDataCountForProperty(const boost::shared_ptr<PropertyHistoryContext> &context);
+            void asyncDataCountForProperty(const boost::shared_ptr<PropertyHistoryContext>& context);
 
             /**
              * Handles the retrieval of the number of data points for an ongoing GetPropertyHistory
@@ -139,15 +139,15 @@ namespace karabo {
              * @param dataCountResponse
              * @param context
              */
-            void onDataCountForProperty(const karabo::net::HttpResponse &dataCountResp,
-                                        const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            void onDataCountForProperty(const karabo::net::HttpResponse& dataCountResp,
+                                        const boost::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Triggers the retrieval of the property values in an ongoing GetPropertyHistory process.
              *
              * @param context
              */
-            void asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            void asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Triggers the retrieval of the property values mean in an ongoing GetPropertyHistory process.
@@ -158,7 +158,7 @@ namespace karabo {
              *
              * @param context
              */
-            void asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            void asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Triggers the retrieval of the property values samples in an ongoing GetPropertyHistory process.
@@ -167,7 +167,7 @@ namespace karabo {
              *
              * @param context
              */
-            void asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            void asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext>& ctxt);
 
             /**
              * Handles the retrieval of the values of a property in an ongoing GetPropertyHistory
@@ -179,8 +179,8 @@ namespace karabo {
              * @param columnPrefixToRemove
              * @param context
              */
-            void onPropertyValues(const karabo::net::HttpResponse &valuesResp, const std::string &columnPrefixToRemove,
-                                  const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            void onPropertyValues(const karabo::net::HttpResponse& valuesResp, const std::string& columnPrefixToRemove,
+                                  const boost::shared_ptr<PropertyHistoryContext>& ctxt);
             /**
              * Handles the retrieval of the values of a property in an ongoing GetPropertyHistory
              * process. Responsible for transforming the json formatted values received from
@@ -193,40 +193,40 @@ namespace karabo {
              * @param valuesResp
              * @param context
              */
-            void onMeanPropertyValues(const karabo::net::HttpResponse &valuesResp,
-                                      const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            void onMeanPropertyValues(const karabo::net::HttpResponse& valuesResp,
+                                      const boost::shared_ptr<PropertyHistoryContext>& ctxt);
 
-            void asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void onLastLogoutBeforeTime(const karabo::net::HttpResponse& valueResp,
+                                        const boost::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onLastLoginFormatBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                             const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void onLastLoginFormatBeforeTime(const karabo::net::HttpResponse& valueResp,
+                                             const boost::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                              const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse& valueResp,
+                                              const boost::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void asyncSchemaForDigest(const std::string &digest, const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
-                                   const boost::shared_ptr<ConfigFromPastContext> &ctxt, const std::string &digest);
+            void asyncSchemaForDigest(const std::string& digest, const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void onSchemaForDigest(const karabo::net::HttpResponse& schemaResp,
+                                   const boost::shared_ptr<ConfigFromPastContext>& ctxt, const std::string& digest);
 
 
-            void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onPropValueBeforeTime(const PropFromPastInfo &propInfo, const karabo::net::HttpResponse &propValueResp,
-                                       const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
+            void onPropValueBeforeTime(const PropFromPastInfo& propInfo, const karabo::net::HttpResponse& propValueResp,
+                                       const boost::shared_ptr<ConfigFromPastContext>& ctxt);
 
-            void slotGetBadData(const std::string &fromStr, const std::string &toStr);
-            void onGetBadData(const karabo::net::HttpResponse &response, karabo::xms::SignalSlotable::AsyncReply aReply,
-                              const karabo::net::InfluxDbClient::Pointer & /* influxClient */);
+            void slotGetBadData(const std::string& fromStr, const std::string& toStr);
+            void onGetBadData(const karabo::net::HttpResponse& response, karabo::xms::SignalSlotable::AsyncReply aReply,
+                              const karabo::net::InfluxDbClient::Pointer& /* influxClient */);
 
-            void influxResultSetToVectorHash(const karabo::util::InfluxResultSet &influxResult,
-                                             std::vector<karabo::util::Hash> &vectHash);
+            void influxResultSetToVectorHash(const karabo::util::InfluxResultSet& influxResult,
+                                             std::vector<karabo::util::Hash>& vectHash);
 
-            void addNodeToHash(karabo::util::Hash &hash, const std::string &path,
-                               const karabo::util::Types::ReferenceType &type, unsigned long long trainId,
-                               const karabo::util::Epochstamp &epoch, const std::string &valueAsString);
+            void addNodeToHash(karabo::util::Hash& hash, const std::string& path,
+                               const karabo::util::Types::ReferenceType& type, unsigned long long trainId,
+                               const karabo::util::Epochstamp& epoch, const std::string& valueAsString);
 
             /**
              * Unescapes a logged string. A logged string has its new lines mangled, then its double slashes
@@ -235,7 +235,7 @@ namespace karabo {
              * @param loggedStr The string as it has been escaped by the Influx Logger.
              * @return The unescaped original string.
              */
-            std::string unescapeLoggedString(const std::string &loggedStr);
+            std::string unescapeLoggedString(const std::string& loggedStr);
 
             /**
              * Handles a given Http response whenever it indicates an error.
@@ -253,8 +253,8 @@ namespace karabo {
              * @return true if the httpResponse indicated an error that has been handled. false if
              *              the httpResponse didn't indicate an error.
              */
-            bool handleHttpResponseError(const karabo::net::HttpResponse &httpResponse,
-                                         const karabo::xms::SignalSlotable::AsyncReply &asyncReply);
+            bool handleHttpResponseError(const karabo::net::HttpResponse& httpResponse,
+                                         const karabo::xms::SignalSlotable::AsyncReply& asyncReply);
 
             /**
              * Convert a time point from influx to karabo Epochstamp
@@ -270,7 +270,7 @@ namespace karabo {
              *
              * @returns the configuration Hash for the InfluxDbClient.
              */
-            karabo::util::Hash buildInfluxClientConfig(const std::string &dbUrlForSlot) const;
+            karabo::util::Hash buildInfluxClientConfig(const std::string& dbUrlForSlot) const;
 
             std::string m_dbName;
             std::string m_dbUser;

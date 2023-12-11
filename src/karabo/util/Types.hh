@@ -53,7 +53,7 @@ namespace karabo {
 
         typedef std::pair<boost::shared_ptr<char>, size_t> ByteArray;
 
-        inline void byteArrayDeleter(const char *dataPtr) {
+        inline void byteArrayDeleter(const char* dataPtr) {
             delete[] dataPtr;
         }
 
@@ -166,7 +166,7 @@ namespace karabo {
              * @return
              */
             template <class From, class To>
-            static typename To::ReturnType convert(const typename From::ArgumentType &type) {
+            static typename To::ReturnType convert(const typename From::ArgumentType& type) {
                 return ToType<To>::to(FromType<From>::from(type));
             }
 
@@ -181,7 +181,7 @@ namespace karabo {
              * @return
              */
             template <class From>
-            static ReferenceType from(const typename From::ArgumentType &type) {
+            static ReferenceType from(const typename From::ArgumentType& type) {
                 return FromType<From>::from(type);
             }
 
@@ -198,7 +198,7 @@ namespace karabo {
             }
 
             template <typename T>
-            static ReferenceType from(const T &var = T()) {
+            static ReferenceType from(const T& var = T()) {
                 // This function does not compile by purpose. There are template specializations for each allowed data
                 // type
                 return this_type_is_not_supported_by_purpose(var);
@@ -409,97 +409,97 @@ namespace karabo {
          * templatization possible. It is always 0.
          */
         template <class Processor>
-        inline bool templatize(Types::ReferenceType type, Processor &processor) {
+        inline bool templatize(Types::ReferenceType type, Processor& processor) {
             switch (type) {
                 case Types::BOOL:
-                    processor(static_cast<bool *>(0));
+                    processor(static_cast<bool*>(0));
                     break;
                 case Types::CHAR:
-                    processor(static_cast<char *>(0));
+                    processor(static_cast<char*>(0));
                     break;
                 case Types::INT8:
-                    processor(static_cast<signed char *>(0));
+                    processor(static_cast<signed char*>(0));
                     break;
                 case Types::UINT8:
-                    processor(static_cast<unsigned char *>(0));
+                    processor(static_cast<unsigned char*>(0));
                     break;
                 case Types::INT16:
-                    processor(static_cast<short *>(0));
+                    processor(static_cast<short*>(0));
                     break;
                 case Types::UINT16:
-                    processor(static_cast<unsigned short *>(0));
+                    processor(static_cast<unsigned short*>(0));
                     break;
                 case Types::INT32:
-                    processor(static_cast<int *>(0));
+                    processor(static_cast<int*>(0));
                     break;
                 case Types::UINT32:
-                    processor(static_cast<unsigned int *>(0));
+                    processor(static_cast<unsigned int*>(0));
                     break;
                 case Types::INT64:
-                    processor(static_cast<long long *>(0));
+                    processor(static_cast<long long*>(0));
                     break;
                 case Types::UINT64:
-                    processor(static_cast<unsigned long long *>(0));
+                    processor(static_cast<unsigned long long*>(0));
                     break;
                 case Types::FLOAT:
-                    processor(static_cast<float *>(0));
+                    processor(static_cast<float*>(0));
                     break;
                 case Types::DOUBLE:
-                    processor(static_cast<double *>(0));
+                    processor(static_cast<double*>(0));
                     break;
                 case Types::COMPLEX_FLOAT:
-                    processor(static_cast<std::complex<float> *>(0));
+                    processor(static_cast<std::complex<float>*>(0));
                     break;
                 case Types::COMPLEX_DOUBLE:
-                    processor(static_cast<std::complex<double> *>(0));
+                    processor(static_cast<std::complex<double>*>(0));
                     break;
                 case Types::STRING:
-                    processor(static_cast<std::string *>(0));
+                    processor(static_cast<std::string*>(0));
                     break;
                 case Types::VECTOR_BOOL:
-                    processor(static_cast<std::vector<bool> *>(0));
+                    processor(static_cast<std::vector<bool>*>(0));
                     break;
                 case Types::VECTOR_CHAR:
-                    processor(static_cast<std::vector<char> *>(0));
+                    processor(static_cast<std::vector<char>*>(0));
                     break;
                 case Types::VECTOR_INT8:
-                    processor(static_cast<std::vector<signed char> *>(0));
+                    processor(static_cast<std::vector<signed char>*>(0));
                     break;
                 case Types::VECTOR_UINT8:
-                    processor(static_cast<std::vector<unsigned char> *>(0));
+                    processor(static_cast<std::vector<unsigned char>*>(0));
                     break;
                 case Types::VECTOR_INT16:
-                    processor(static_cast<std::vector<short> *>(0));
+                    processor(static_cast<std::vector<short>*>(0));
                     break;
                 case Types::VECTOR_UINT16:
-                    processor(static_cast<std::vector<unsigned short> *>(0));
+                    processor(static_cast<std::vector<unsigned short>*>(0));
                     break;
                 case Types::VECTOR_INT32:
-                    processor(static_cast<std::vector<int> *>(0));
+                    processor(static_cast<std::vector<int>*>(0));
                     break;
                 case Types::VECTOR_UINT32:
-                    processor(static_cast<std::vector<unsigned int> *>(0));
+                    processor(static_cast<std::vector<unsigned int>*>(0));
                     break;
                 case Types::VECTOR_INT64:
-                    processor(static_cast<std::vector<long long> *>(0));
+                    processor(static_cast<std::vector<long long>*>(0));
                     break;
                 case Types::VECTOR_UINT64:
-                    processor(static_cast<std::vector<unsigned long long> *>(0));
+                    processor(static_cast<std::vector<unsigned long long>*>(0));
                     break;
                 case Types::VECTOR_FLOAT:
-                    processor(static_cast<std::vector<float> *>(0));
+                    processor(static_cast<std::vector<float>*>(0));
                     break;
                 case Types::VECTOR_DOUBLE:
-                    processor(static_cast<std::vector<double> *>(0));
+                    processor(static_cast<std::vector<double>*>(0));
                     break;
                 case Types::VECTOR_COMPLEX_FLOAT:
-                    processor(static_cast<std::vector<std::complex<float> > *>(0));
+                    processor(static_cast<std::vector<std::complex<float> >*>(0));
                     break;
                 case Types::VECTOR_COMPLEX_DOUBLE:
-                    processor(static_cast<std::vector<std::complex<double> > *>(0));
+                    processor(static_cast<std::vector<std::complex<double> >*>(0));
                     break;
                 case Types::VECTOR_STRING:
-                    processor(static_cast<std::vector<std::string> *>(0));
+                    processor(static_cast<std::vector<std::string>*>(0));
                     break;
                 default:
                     return false;
@@ -508,14 +508,14 @@ namespace karabo {
         }
 
 
-#define _KARABO_HELPER_MACRO(RefType, CppType)                                                     \
-    template <>                                                                                    \
-    inline Types::ReferenceType Types::from<CppType>(const CppType &) {                            \
-        return Types::RefType;                                                                     \
-    }                                                                                              \
-    template <>                                                                                    \
-    inline Types::ReferenceType Types::from<std::vector<CppType> >(const std::vector<CppType> &) { \
-        return Types::VECTOR_##RefType;                                                            \
+#define _KARABO_HELPER_MACRO(RefType, CppType)                                                    \
+    template <>                                                                                   \
+    inline Types::ReferenceType Types::from<CppType>(const CppType&) {                            \
+        return Types::RefType;                                                                    \
+    }                                                                                             \
+    template <>                                                                                   \
+    inline Types::ReferenceType Types::from<std::vector<CppType> >(const std::vector<CppType>&) { \
+        return Types::VECTOR_##RefType;                                                           \
     }
 
         _KARABO_HELPER_MACRO(BOOL, bool)
@@ -537,10 +537,10 @@ namespace karabo {
 
 #undef _KARABO_HELPER_MACRO
 
-#define _KARABO_HELPER_MACRO(RefType, CppType)                             \
-    template <>                                                            \
-    inline Types::ReferenceType Types::from<CppType *>(CppType *const &) { \
-        return Types::RefType;                                             \
+#define _KARABO_HELPER_MACRO(RefType, CppType)                           \
+    template <>                                                          \
+    inline Types::ReferenceType Types::from<CppType*>(CppType* const&) { \
+        return Types::RefType;                                           \
     }
 
         _KARABO_HELPER_MACRO(PTR_BOOL, bool)
@@ -562,7 +562,7 @@ namespace karabo {
 #undef _KARABO_HELPER_MACRO
 
         template <>
-        inline Types::ReferenceType Types::from<ByteArray>(const ByteArray &) {
+        inline Types::ReferenceType Types::from<ByteArray>(const ByteArray&) {
             return Types::BYTE_ARRAY;
         }
     } // namespace util

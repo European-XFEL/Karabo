@@ -35,7 +35,7 @@ using namespace std;
 
 class StateElementWrap {
    public:
-    static StateElement &initialValuePy(StateElement &self, const bp::object &value) {
+    static StateElement& initialValuePy(StateElement& self, const bp::object& value) {
         const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
         if (className == "State") {
             const std::string state = bp::extract<std::string>(value.attr("name"));
@@ -46,7 +46,7 @@ class StateElementWrap {
     }
 
     static bp::object optionsPy(bp::tuple args, bp::dict kwargs) {
-        StateElement &self = bp::extract<StateElement &>(args[0]);
+        StateElement& self = bp::extract<StateElement&>(args[0]);
         std::vector<karabo::util::State> states;
         for (unsigned int i = 1; i < bp::len(args); ++i) {
             const std::string className = bp::extract<std::string>(args[i].attr("__class__").attr("__name__"));
@@ -64,19 +64,18 @@ class StateElementWrap {
 
 
 void exportPyUtilStateElement() {
-    bp::implicitly_convertible<Schema &, StateElement>();
-    bp::class_<StateElement>("STATE_ELEMENT", bp::init<Schema &>((bp::arg("expected"))))
+    bp::implicitly_convertible<Schema&, StateElement>();
+    bp::class_<StateElement>("STATE_ELEMENT", bp::init<Schema&>((bp::arg("expected"))))
           .def("alias", &AliasAttributeWrap<StateElement>::aliasPy, bp::return_internal_reference<>())
           .def("commit", &StateElement::commit, bp::return_internal_reference<>())
-          .def("commit", (StateElement & (StateElement::*)(karabo::util::Schema &))(&StateElement::commit),
+          .def("commit", (StateElement & (StateElement::*)(karabo::util::Schema&))(&StateElement::commit),
                bp::arg("expected"), bp::return_internal_reference<>())
           .def("description", &StateElement::description, bp::return_internal_reference<>())
           .def("displayedName", &StateElement::displayedName, bp::return_internal_reference<>())
           .def("key", &StateElement::key, bp::return_internal_reference<>())
-          .def("tags",
-               (StateElement & (StateElement::*)(std::string const &, std::string const &))(&StateElement::tags),
+          .def("tags", (StateElement & (StateElement::*)(std::string const&, std::string const&))(&StateElement::tags),
                (bp::arg("tags"), bp::arg("sep") = " ,;"), bp::return_internal_reference<>())
-          .def("tags", (StateElement & (StateElement::*)(std::vector<std::string> const &))(&StateElement::tags),
+          .def("tags", (StateElement & (StateElement::*)(std::vector<std::string> const&))(&StateElement::tags),
                (bp::arg("tags")), bp::return_internal_reference<>())
           .def("options", bp::raw_function(&StateElementWrap::optionsPy, 2))
           .def("daqPolicy", &StateElement::daqPolicy, bp::return_internal_reference<>())
