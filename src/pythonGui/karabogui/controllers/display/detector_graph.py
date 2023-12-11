@@ -27,7 +27,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import AuxPlots, Axes
 from karabogui.graph.image.api import (
-    KaraboImageNode, KaraboImagePlot, KaraboImageView)
+    KaraboImageNode, KaraboImagePlot, KaraboImageView, karabo_default_image)
 from karabogui.util import SignalBlocker
 
 from .util import get_ui_file
@@ -144,6 +144,9 @@ class DisplayDetectorGraph(BaseBindingController):
         self._frame_slider.set_cell(self._cell)
 
         return widget
+
+    def clear_widget(self):
+        self._plot.setData(karabo_default_image())
 
     # -----------------------------------------------------------------------
     # Qt Slots

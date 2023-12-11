@@ -24,7 +24,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.graph.image.api import (
-    KaraboImageNode, KaraboImagePlot, KaraboImageView)
+    KaraboImageNode, KaraboImagePlot, KaraboImageView, karabo_default_image)
 
 
 @register_binding_controller(ui_name='WebCam Graph',
@@ -63,6 +63,9 @@ class DisplayWebCamGraph(BaseBindingController):
         widget.restore({"colormap": self.model.colormap})
 
         return widget
+
+    def clear_widget(self):
+        self._plot.setData(karabo_default_image())
 
     # -----------------------------------------------------------------------
     # Qt Slots
