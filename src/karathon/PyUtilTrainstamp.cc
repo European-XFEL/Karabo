@@ -32,7 +32,7 @@ void exportPyUtilTrainstamp() {
     t.def(bp::init<>());
     t.def(bp::init<const unsigned long long>(bp::arg("trainId")));
 
-    t.def("getTrainId", (unsigned long long const &(Trainstamp::*)() const)(&Trainstamp::getTrainId),
+    t.def("getTrainId", (unsigned long long const& (Trainstamp::*)() const)(&Trainstamp::getTrainId),
           bp::return_value_policy<bp::copy_const_reference>());
 
     t.def("hashAttributesContainTimeInformation", &Trainstamp::hashAttributesContainTimeInformation,
@@ -43,6 +43,6 @@ void exportPyUtilTrainstamp() {
           bp::arg("attributes"));
     t.staticmethod("fromHashAttributes");
 
-    t.def("toHashAttributes", (void(Trainstamp::*)(Hash::Attributes &) const)(&Trainstamp::toHashAttributes),
+    t.def("toHashAttributes", (void(Trainstamp::*)(Hash::Attributes&) const)(&Trainstamp::toHashAttributes),
           bp::arg("attributes"));
 }
