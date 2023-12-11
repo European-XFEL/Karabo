@@ -61,14 +61,14 @@ using namespace karabind;
 using namespace std;
 
 
-void exportPyXmsSlotElement(py::module_ &m) {
+void exportPyXmsSlotElement(py::module_& m) {
     py::class_<SlotElementBase<SLOT_ELEMENT>, PySlotElementBase> sl(m, "SlotElementBase");
 
-    sl.def(py::init<Schema &>(), py::arg("expected"));
+    sl.def(py::init<Schema&>(), py::arg("expected"));
 
     sl.def("allowedStates", [](py::args args) {
         std::vector<karabo::util::State> states;
-        SLOT_ELEMENT &self = args[0].cast<SLOT_ELEMENT &>();
+        SLOT_ELEMENT& self = args[0].cast<SLOT_ELEMENT&>();
         for (unsigned int i = 1; i < py::len(args); ++i) {
             const std::string state = args[i].attr("name").cast<std::string>();
             states.push_back(karabo::util::State::fromString(state));
@@ -104,15 +104,15 @@ void exportPyXmsSlotElement(py::module_ &m) {
     { // karabo::xms::SLOT_ELEMENT
         py::class_<SLOT_ELEMENT, SlotElementBase<SLOT_ELEMENT>> elem(m, "SLOT_ELEMENT");
 
-        elem.def(py::init<karabo::util::Schema &>(), py::arg("expected"));
+        elem.def(py::init<karabo::util::Schema&>(), py::arg("expected"));
 
         elem.def("commit", &SLOT_ELEMENT::commit);
 
         elem.def(
               "tags",
-              [](SLOT_ELEMENT &self, const py::object &o, const std::string &sep) {
+              [](SLOT_ELEMENT& self, const py::object& o, const std::string& sep) {
                   if (py::isinstance<py::str>(o)) {
-                      const std::string &stags = o.cast<std::string>();
+                      const std::string& stags = o.cast<std::string>();
                       self.tags(fromString<std::string, std::vector>(stags, sep));
                   } else if (py::isinstance<py::sequence>(o)) {
                       std::vector<std::string> vtags;

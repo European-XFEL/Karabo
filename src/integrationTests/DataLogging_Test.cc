@@ -135,7 +135,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
 
     boost::filesystem::path p(migrationResultsPath + "/processed/" + m_deviceId + "/");
     if (boost::filesystem::is_directory(p)) {
-        for (auto &entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
+        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
             std::ostringstream msg;
             msg << "Check if " << entry << " was migrated OK: " << boost::filesystem::extension(entry);
             std::clog << msg.str() << std::endl;
@@ -146,7 +146,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     unsigned int errorCount = 0;
     boost::filesystem::path perr(migrationResultsPath + "/part_processed/" + m_deviceId + "/");
     if (boost::filesystem::is_directory(perr)) {
-        for (auto &entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
+        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
             // print out the error
             std::ostringstream cmd;
             cmd << "cat " << entry;
@@ -350,7 +350,7 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
                         .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                         .receive(badDataAllDevices);
                   return badDataAllDevices.size() == 1ul;
-              } catch (const std::exception &e) {
+              } catch (const std::exception& e) {
                   std::clog << "ERROR trying to retrieve BadData for all devices: " << e.what() << std::flush;
                   return false;
               }
@@ -358,9 +358,9 @@ void DataLogging_Test::testInfluxMaxSchemaLogRate() {
           KRB_TEST_MAX_TIMEOUT * 1'000u, 200u);
     CPPUNIT_ASSERT_EQUAL(1ul, badDataAllDevices.size());
     CPPUNIT_ASSERT(badDataAllDevices.has(deviceId));
-    const auto &badDataEntries = badDataAllDevices.get<std::vector<Hash>>(deviceId);
+    const auto& badDataEntries = badDataAllDevices.get<std::vector<Hash>>(deviceId);
     CPPUNIT_ASSERT_EQUAL(1ul, badDataEntries.size());
-    const std::string &badDataInfo = badDataEntries[0].get<std::string>("info");
+    const std::string& badDataInfo = badDataEntries[0].get<std::string>("info");
     CPPUNIT_ASSERT_MESSAGE(
           "Expected pattern, '" + deviceId + "::schema', not found in bad data description:\n'" + badDataInfo + "'",
           badDataInfo.find(deviceId + "::schema") != std::string::npos);
@@ -593,7 +593,7 @@ void DataLogging_Test::testInfluxMaxPerDevicePropLogRate() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty history size different from expected.", 4ul * rateWinSecs,
                                  history.size());
     for (unsigned int i = 0; i < 4 * rateWinSecs; i++) {
-        std::string &historyStr8Kb = history[i].get<std::string>("v");
+        std::string& historyStr8Kb = history[i].get<std::string>("v");
         CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected size.", 8192ul, historyStr8Kb.size());
         CPPUNIT_ASSERT_EQUAL_MESSAGE("stringProperty value doesn't have expected characters.", str8Kb.at(0ul),
                                      historyStr8Kb.at(0ul));
@@ -760,7 +760,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
               auto prom = std::make_shared<std::promise<HttpResponse>>();
               std::future<HttpResponse> fut = prom->get_future();
 
-              influxClient->queryDb(oss.str(), [prom](const HttpResponse &resp) { prom->set_value(resp); });
+              influxClient->queryDb(oss.str(), [prom](const HttpResponse& resp) { prom->set_value(resp); });
               std::future_status status = fut.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT));
               if (status != std::future_status::ready) {
                   return false;
@@ -771,17 +771,17 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
                             << std::flush;
                   return false;
               }
-              const std::string &respBody = resp.payload;
+              const std::string& respBody = resp.payload;
               nl::json respObj;
               try {
                   respObj = nl::json::parse(respBody);
-              } catch (const std::exception &e) {
+              } catch (const std::exception& e) {
                   std::clog << "ERROR: Invalid JSON object in Influx response body:\n"
                             << respBody << "\n"
                             << std::flush;
                   return false;
               }
-              const auto &schemas = respObj["results"][0]["series"][0]["values"];
+              const auto& schemas = respObj["results"][0]["series"][0]["values"];
               if (schemas.is_null()) {
                   return false;
               }
@@ -848,7 +848,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // The DataLogger should be in ERROR state.
     karabo::util::State loggerState = karabo::util::State::UNKNOWN;
     std::string loggerStatus;
-    const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const std::string& dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     waitForCondition(
           [this, &loggerState, &loggerStatus, &dataLoggerId]() {
               loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
@@ -878,7 +878,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
         m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, withNoServer.toIso8601())
               .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
               .receive(conf, schema, cfgAtTime, cfgTime);
-    } catch (const karabo::util::RemoteException &exc) {
+    } catch (const karabo::util::RemoteException& exc) {
         bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos) ||
                          (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos) ||
                          (exc.detailedMsg().find("Connection reset by peer"));

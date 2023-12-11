@@ -32,14 +32,14 @@ namespace karabo {
         namespace nl = nlohmann;
 
 
-        util::Epochstamp stringDoubleToEpochstamp(const std::string &timestampAsDouble) {
+        util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
             std::vector<std::string> tparts;
             boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
             const unsigned long long seconds = util::fromString<unsigned long long>(tparts[0]);
             unsigned long long fractions = 0ULL;
             // If by chance we hit a full second without fractions, we have no ".":
             if (tparts.size() >= 2) {
-                std::string &fracString = tparts[1];
+                std::string& fracString = tparts[1];
                 // We read in all after the dot. If coming from the raw data logger files, we should have exactly
                 // 6 digits (e.g. ms), even with trailing zeros, but one never knows.
                 unsigned long long factorToAtto = 1000000000000ULL;
@@ -66,14 +66,14 @@ namespace karabo {
         }
 
 
-        void getLeaves(const util::Hash &configuration, const util::Schema &schema, std::vector<std::string> &result,
+        void getLeaves(const util::Hash& configuration, const util::Schema& schema, std::vector<std::string>& result,
                        const char separator) {
             if (configuration.empty() || schema.empty()) return;
             getLeaves_r(configuration, schema, result, "", separator, false);
         }
 
 
-        void getLeaves_r(const util::Hash &hash, const util::Schema &schema, std::vector<std::string> &result,
+        void getLeaves_r(const util::Hash& hash, const util::Schema& schema, std::vector<std::string>& result,
                          std::string prefix, const char separator, const bool fullPaths) {
             if (hash.empty()) {
                 return;
@@ -109,18 +109,18 @@ namespace karabo {
 
 
         // helper function for `jsonResultsToInfluxResultSet`
-        void parseSingleJsonResult(const nl::json &respObj, InfluxResultSet &influxResult,
-                                   const std::string &columnPrefixToRemove) {
-            const auto &result0 = respObj["results"][0];
+        void parseSingleJsonResult(const nl::json& respObj, InfluxResultSet& influxResult,
+                                   const std::string& columnPrefixToRemove) {
+            const auto& result0 = respObj["results"][0];
             if (result0.find("series") == result0.end()) {
                 // No data in requested period - can happen with jsonResultsToInfluxResultSet
                 // in InfluxLogReader::onGetBadData
                 influxResult.first.clear();
                 return;
             }
-            const auto &columns = result0["series"][0]["columns"];
+            const auto& columns = result0["series"][0]["columns"];
             std::vector<std::string> columnTitles;
-            for (const auto &column : columns) {
+            for (const auto& column : columns) {
                 const std::string columnStr = column.get<std::string>();
                 const size_t prefixPos = columnStr.find(columnPrefixToRemove);
                 if (columnPrefixToRemove.empty() || prefixPos != 0u) {
@@ -138,19 +138,19 @@ namespace karabo {
                 }
             }
 
-            const auto &rows = result0["series"][0]["values"];
-            for (const auto &row : rows) {
+            const auto& rows = result0["series"][0]["values"];
+            for (const auto& row : rows) {
                 std::vector<boost::optional<std::string>> rowValues;
                 rowValues.reserve(row.size());
-                for (const auto &value : row) {
+                for (const auto& value : row) {
                     rowValues.push_back(jsonValueAsString(value));
                 }
                 influxResult.second.push_back(std::move(rowValues));
             }
         }
 
-        void jsonResultsToInfluxResultSet(const std::string &jsonResult, InfluxResultSet &influxResult,
-                                          const std::string &columnPrefixToRemove) {
+        void jsonResultsToInfluxResultSet(const std::string& jsonResult, InfluxResultSet& influxResult,
+                                          const std::string& columnPrefixToRemove) {
             nl::json respObj;
             // use boost::iostreams::stream for copy-less stream access of the jsonResult string
             boost::iostreams::stream<boost::iostreams::array_source> inputStream(jsonResult.c_str(), jsonResult.size());
@@ -160,10 +160,10 @@ namespace karabo {
                 // InfluxDB might return multiple JSON concatenated (sic) objects when the
                 // number of points exceeds a given limit
                 // https://docs.influxdata.com/influxdb/v1.8/tools/api#query-string-parameters
-                const auto &result0 = respObj["results"][0];
+                const auto& result0 = respObj["results"][0];
                 auto it = result0.find("partial");
                 if (it != result0.end()) {
-                    const auto &partial = *it;
+                    const auto& partial = *it;
                     // continue only if partial == true, break otherwise
                     if (partial.is_boolean() && partial == true) continue;
                 }
@@ -195,7 +195,7 @@ namespace karabo {
             }
         }
 
-        std::string toInfluxDurationUnit(const TIME_UNITS &karaboDurationUnit) {
+        std::string toInfluxDurationUnit(const TIME_UNITS& karaboDurationUnit) {
             std::string influxDU;
 
             switch (karaboDurationUnit) {
@@ -231,7 +231,7 @@ namespace karabo {
         }
 
 
-        std::string epochAsMicrosecString(const Epochstamp &ep) {
+        std::string epochAsMicrosecString(const Epochstamp& ep) {
             std::ostringstream epStr;
             const std::string fract(
                   DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC, ep.getFractionalSeconds(), true));

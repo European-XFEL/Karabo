@@ -30,14 +30,14 @@ using namespace std;
 using namespace karabind;
 
 
-void exportPyUtilStateElement(py::module_ &m) {
+void exportPyUtilStateElement(py::module_& m) {
     py::class_<StateElement> se(m, "STATE_ELEMENT");
 
-    se.def(py::init<Schema &>(), py::arg("expected"));
+    se.def(py::init<Schema&>(), py::arg("expected"));
 
     se.def(
           "alias",
-          [](StateElement &self, const py::object &alias) {
+          [](StateElement& self, const py::object& alias) {
               return wrapper::AliasAttributePy<StateElement>::setAlias(self, alias);
           },
           py::arg("alias"), py::return_value_policy::reference_internal);
@@ -50,15 +50,15 @@ void exportPyUtilStateElement(py::module_ &m) {
 
     se.def("key", &StateElement::key, py::return_value_policy::reference_internal);
 
-    se.def("tags", (StateElement & (StateElement::*)(std::string const &, std::string const &)) & StateElement::tags,
+    se.def("tags", (StateElement & (StateElement::*)(std::string const&, std::string const&)) & StateElement::tags,
            py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal);
 
-    se.def("tags", (StateElement & (StateElement::*)(std::vector<std::string> const &)) & StateElement::tags,
+    se.def("tags", (StateElement & (StateElement::*)(std::vector<std::string> const&)) & StateElement::tags,
            py::arg("tags"), py::return_value_policy::reference_internal);
 
     se.def(
           "options",
-          [](StateElement &self, py::args args) {
+          [](StateElement& self, py::args args) {
               std::vector<State> states;
               for (unsigned int i = 1; i < py::len(args); ++i) {
                   const auto state = args[i].attr("name").cast<std::string>();
@@ -71,7 +71,7 @@ void exportPyUtilStateElement(py::module_ &m) {
 
     se.def("daqPolicy", &StateElement::daqPolicy, py::return_value_policy::reference_internal);
 
-    auto initialValue = [](StateElement &self, const py::object &value) {
+    auto initialValue = [](StateElement& self, const py::object& value) {
         const std::string className = value.attr("__class__").attr("__name__").cast<std::string>();
         if (className != "State") throw KARABO_PYTHON_EXCEPTION("defaultValue expects parameter of type State.");
         const std::string state = value.attr("name").cast<std::string>();
