@@ -28,13 +28,13 @@ using namespace std;
 namespace py = pybind11;
 
 
-void exportPyUtilClassInfo(py::module_ &m) {
+void exportPyUtilClassInfo(py::module_& m) {
     py::class_<ClassInfo>(m, "ClassInfo")
-          .def(py::init<string const &, string const &, string const &>(), py::arg("classId"), py::arg("signature"),
+          .def(py::init<string const&, string const&, string const&>(), py::arg("classId"), py::arg("signature"),
                py::arg("classVersion"))
-          .def("getClassId", (string const &(ClassInfo::*)() const) & ClassInfo::getClassId)
-          .def("getClassName", (string const &(ClassInfo::*)() const) & ClassInfo::getClassName)
-          .def("getVersion", (string const &(ClassInfo::*)() const) & ClassInfo::getVersion)
-          .def("getLogCategory", (string const &(ClassInfo::*)() const) & ClassInfo::getLogCategory)
-          .def("getNamespace", (string const &(ClassInfo::*)() const) & ClassInfo::getNamespace);
+          .def("getClassId", (string const& (ClassInfo::*)() const) & ClassInfo::getClassId)
+          .def("getClassName", (string const& (ClassInfo::*)() const) & ClassInfo::getClassName)
+          .def("getVersion", (string const& (ClassInfo::*)() const) & ClassInfo::getVersion)
+          .def("getLogCategory", (string const& (ClassInfo::*)() const) & ClassInfo::getLogCategory)
+          .def("getNamespace", (string const& (ClassInfo::*)() const) & ClassInfo::getNamespace);
 }

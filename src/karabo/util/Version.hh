@@ -54,11 +54,11 @@ namespace karabo {
 
             int m_dev;
 
-            static Version &getInstance();
+            static Version& getInstance();
 
             static std::string getPathToVersionFile();
 
-            void processString(const std::string &version);
+            void processString(const std::string& version);
 
             Version();
 
@@ -68,7 +68,7 @@ namespace karabo {
              *
              * @return Version object
              */
-            static const Version &getKaraboVersion();
+            static const Version& getKaraboVersion();
 
             /**
              * Creates an Version object from a string.
@@ -79,7 +79,7 @@ namespace karabo {
              *
              * @param version
              */
-            Version(const std::string &version);
+            Version(const std::string& version);
 
             virtual ~Version(){};
 
@@ -100,7 +100,7 @@ namespace karabo {
 
             int getPatch() const;
 
-            const std::string &getString() const;
+            const std::string& getString() const;
 
             bool isDevRelease() const;
 
@@ -112,12 +112,12 @@ namespace karabo {
             // PEP440 https://www.python.org/dev/peps/pep-0440/
             // When in doubt, the implementation of `distutils.version.LooseVersion`
             // was followed.
-            friend bool operator==(const Version &v1, const Version &v2);
-            friend bool operator!=(const Version &v1, const Version &v2);
-            friend bool operator>(const Version &v1, const Version &v2);
-            friend bool operator<=(const Version &v1, const Version &v2);
-            friend bool operator<(const Version &v1, const Version &v2);
-            friend bool operator>=(const Version &v1, const Version &v2);
+            friend bool operator==(const Version& v1, const Version& v2);
+            friend bool operator!=(const Version& v1, const Version& v2);
+            friend bool operator>(const Version& v1, const Version& v2);
+            friend bool operator<=(const Version& v1, const Version& v2);
+            friend bool operator<(const Version& v1, const Version& v2);
+            friend bool operator>=(const Version& v1, const Version& v2);
         };
     } // namespace util
 } // namespace karabo

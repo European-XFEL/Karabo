@@ -30,3 +30,5 @@ IndentWidth: 4
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: All
 SpacesBeforeTrailingComments: 1
+DerivePointerAlignment: false
+ReferenceAlignment: Left

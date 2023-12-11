@@ -30,16 +30,16 @@ using namespace std;
 using namespace karabind;
 
 
-void exportPyUtilAlarmConditionElement(py::module_ &m) {
+void exportPyUtilAlarmConditionElement(py::module_& m) {
     // py::implicitly_convertible<Schema &, AlarmConditionElement>();
 
     py::class_<AlarmConditionElement> a(m, "ALARM_ELEMENT");
 
-    a.def(py::init<Schema &>(), py::arg("expected"));
+    a.def(py::init<Schema&>(), py::arg("expected"));
 
     a.def(
           "alias",
-          [](AlarmConditionElement &self, const py::object &alias) {
+          [](AlarmConditionElement& self, const py::object& alias) {
               return wrapper::AliasAttributePy<AlarmConditionElement>::setAlias(self, alias);
           },
           py::arg("alias"), py::return_value_policy::reference_internal);
@@ -53,18 +53,18 @@ void exportPyUtilAlarmConditionElement(py::module_ &m) {
     a.def("key", &AlarmConditionElement::key, py::return_value_policy::reference_internal);
 
     a.def("tags",
-          (AlarmConditionElement & (AlarmConditionElement::*)(std::string const &, std::string const &)) &
+          (AlarmConditionElement & (AlarmConditionElement::*)(std::string const&, std::string const&)) &
                 AlarmConditionElement::tags,
           py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal);
 
     a.def("tags",
-          (AlarmConditionElement & (AlarmConditionElement::*)(std::vector<std::string> const &)) &
+          (AlarmConditionElement & (AlarmConditionElement::*)(std::vector<std::string> const&)) &
                 AlarmConditionElement::tags,
           py::arg("tags"), py::return_value_policy::reference_internal);
 
     a.def(
           "defaultValue",
-          [](AlarmConditionElement &self, const py::object &value) {
+          [](AlarmConditionElement& self, const py::object& value) {
               const std::string className = value.attr("__class__").attr("__name__").cast<std::string>();
               if (className != "AlarmCondition") {
                   throw KARABO_PYTHON_EXCEPTION("initialValue() expects parameter of type AlarmCondition.");
@@ -76,7 +76,7 @@ void exportPyUtilAlarmConditionElement(py::module_ &m) {
 
     a.def(
           "initialValue",
-          [](AlarmConditionElement &self, const py::object &value) {
+          [](AlarmConditionElement& self, const py::object& value) {
               const std::string className = value.attr("__class__").attr("__name__").cast<std::string>();
               if (className != "AlarmCondition") {
                   throw KARABO_PYTHON_EXCEPTION("initialValue() expects parameter of type AlarmCondition.");
