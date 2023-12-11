@@ -82,30 +82,30 @@ void exportp2p();
 void exportPyKarathonTestUtilities();
 
 
-void *convert_to_cstring(PyObject *obj) {
-    const void *ret = PyUnicode_AsUTF8(obj);
+void* convert_to_cstring(PyObject* obj) {
+    const void* ret = PyUnicode_AsUTF8(obj);
     if (!ret) PyErr_Clear();
 
-    return const_cast<void *>(ret);
+    return const_cast<void*>(ret);
 }
 
 
-void *convertible_string(PyObject *obj) {
-    if (PyUnicode_Check(obj)) return const_cast<char *>("");
+void* convertible_string(PyObject* obj) {
+    if (PyUnicode_Check(obj)) return const_cast<char*>("");
     else return 0;
 }
 
 
-void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data) {
-    void *storage = ((boost::python::converter::rvalue_from_python_storage<std::string> *)data)->storage.bytes;
+void construct_string(PyObject* obj, boost::python::converter::rvalue_from_python_stage1_data* data) {
+    void* storage = ((boost::python::converter::rvalue_from_python_storage<std::string>*)data)->storage.bytes;
     Py_ssize_t size;
-    const char *str = PyUnicode_AsUTF8AndSize(obj, &size);
+    const char* str = PyUnicode_AsUTF8AndSize(obj, &size);
     new (storage) std::string(str, size);
     data->convertible = storage;
 }
 
 
-void *import_numpy() {
+void* import_numpy() {
     // init Array C-API
     import_array();
     return 0;

@@ -25,14 +25,14 @@ using namespace karabo::util;
 using namespace std;
 
 
-void exportPyUtilTimeDuration(py::module_ &m) {
+void exportPyUtilTimeDuration(py::module_& m) {
     py::class_<TimeDuration> t(m, "TimeDuration");
 
     t.def(py::init<>());
 
-    t.def(py::init<Hash const &>(), py::arg("hash"));
+    t.def(py::init<Hash const&>(), py::arg("hash"));
 
-    py::implicitly_convertible<Hash const &, TimeDuration>();
+    py::implicitly_convertible<Hash const&, TimeDuration>();
 
     t.def(py::init<long long unsigned int, long long unsigned int>(), py::arg("seconds"), py::arg("fractions"));
 
@@ -40,7 +40,7 @@ void exportPyUtilTimeDuration(py::module_ &m) {
           py::arg("minutes"), py::arg("seconds"), py::arg("fractions"));
 
     // t.def(py::self_ns::str(py::self));
-    t.def("__str__", [](const TimeDuration &self) {
+    t.def("__str__", [](const TimeDuration& self) {
         std::ostringstream oss;
         oss << self;
         return oss.str();

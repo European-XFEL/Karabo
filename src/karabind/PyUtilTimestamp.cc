@@ -25,12 +25,12 @@ using namespace karabo::util;
 using namespace std;
 
 
-void exportPyUtilTimestamp(py::module_ &m) {
+void exportPyUtilTimestamp(py::module_& m) {
     py::class_<Timestamp> ts(m, "Timestamp");
 
     ts.def(py::init<>());
 
-    ts.def(py::init<Epochstamp const &, Trainstamp const &>(), py::arg("e"), py::arg("t"));
+    ts.def(py::init<Epochstamp const&, Trainstamp const&>(), py::arg("e"), py::arg("t"));
 
     ts.def("getSeconds", &Timestamp::getSeconds);
 

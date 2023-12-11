@@ -32,7 +32,7 @@ namespace bp = boost::python;
          "Returns C++ introspection info for \"" #baseClass "\"")                                                     \
           .staticmethod("classInfo")                                                                                  \
           .def("create",                                                                                              \
-               (boost::shared_ptr<baseClass>(*)(karabo::util::Hash const &, bool const))(                             \
+               (boost::shared_ptr<baseClass>(*)(karabo::util::Hash const&, bool const))(                              \
                      &karabo::util::Configurator<baseClass>::create),                                                 \
                (bp::arg("input"), bp::arg("validate") = (bool const)(true)),                                          \
                "The factory method to create instance of C++ class derived from C++ base class \"" #baseClass         \
@@ -40,7 +40,7 @@ namespace bp = boost::python;
                "created\nas a root element.  The last argument is a flag to "                                         \
                "determine if the input configuration should be validated.")                                           \
           .def("create",                                                                                              \
-               (boost::shared_ptr<baseClass>(*)(std::string const &, karabo::util::Hash const &, bool const))(        \
+               (boost::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const))(          \
                      &karabo::util::Configurator<baseClass>::create),                                                 \
                (bp::arg("classId"), bp::arg("input") = karabo::util::Hash(),                                          \
                 bp::arg("validate") = (bool const)(true)),                                                            \
@@ -50,7 +50,7 @@ namespace bp = boost::python;
                "The last argument is a flag to determine if the input configuration should be validated.")            \
           .staticmethod("create")                                                                                     \
           .def("createNode",                                                                                          \
-               (boost::shared_ptr<baseClass>(*)(const std::string &, std::string const &, karabo::util::Hash const &, \
+               (boost::shared_ptr<baseClass>(*)(const std::string&, std::string const&, karabo::util::Hash const&,    \
                                                 bool const))(&karabo::util::Configurator<baseClass>::createNode),     \
                (bp::arg("nodeName"), bp::arg("classId"), bp::arg("input") = karabo::util::Hash(),                     \
                 bp::arg("validate") = (bool const)(true)),                                                            \
@@ -60,7 +60,7 @@ namespace bp = boost::python;
                "The last argument is a flag to determine if the input configuration should be validated.")            \
           .staticmethod("createNode")                                                                                 \
           .def("createChoice",                                                                                        \
-               (boost::shared_ptr<baseClass>(*)(std::string const &, karabo::util::Hash const &, bool const))(        \
+               (boost::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const))(          \
                      &karabo::util::Configurator<baseClass>::createChoice),                                           \
                (bp::arg("choiceName"), bp::arg("input") = karabo::util::Hash(),                                       \
                 bp::arg("validate") = (bool const)(true)),                                                            \
@@ -70,7 +70,7 @@ namespace bp = boost::python;
                "The last argument is a flag to determine if the input configuration should be validated.")            \
           .staticmethod("createChoice")                                                                               \
           .def("createList",                                                                                          \
-               (boost::shared_ptr<baseClass>(*)(std::string const &, karabo::util::Hash const &, bool const))(        \
+               (boost::shared_ptr<baseClass>(*)(std::string const&, karabo::util::Hash const&, bool const))(          \
                      &karabo::util::Configurator<baseClass>::createList),                                             \
                (bp::arg("listName"), bp::arg("input") = karabo::util::Hash(),                                         \
                 bp::arg("validate") = (bool const)(true)),                                                            \
@@ -86,7 +86,7 @@ namespace bp = boost::python;
                "Get list of classIds of all C++ classes derived from given C++ base class \"" #baseClass "\".")       \
           .staticmethod("getRegisteredClasses")                                                                       \
           .def("getSchema",                                                                                           \
-               (karabo::util::Schema(*)(std::string const &, karabo::util::Schema::AssemblyRules const &))(           \
+               (karabo::util::Schema(*)(std::string const&, karabo::util::Schema::AssemblyRules const&))(             \
                      &karabo::util::Configurator<baseClass>::getSchema),                                              \
                (bp::arg("classId"), bp::arg("rules") = karabo::util::Schema::AssemblyRules()),                        \
                "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass                  \

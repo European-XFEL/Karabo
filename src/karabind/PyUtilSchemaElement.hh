@@ -52,7 +52,7 @@ namespace py = pybind11;
 
 template <typename T>
 struct AliasAttributeWrap {
-    static T &aliasPy(T &self, const py::object &obj) {
+    static T& aliasPy(T& self, const py::object& obj) {
         if (py::isinstance<py::int_>(obj)) {
             int param = obj.cast<int>();
             return self.alias(param);
@@ -106,9 +106,9 @@ struct DefaultValueVectorWrap {
     typedef karabo::util::VectorElement<T> U;
     typedef karabo::util::DefaultValue<U, VType> DefValueVec;
 
-    static U &defaultValue(DefValueVec &self, const py::object &obj) {
+    static U& defaultValue(DefValueVec& self, const py::object& obj) {
         if (py::isinstance<py::sequence>(obj)) {
-            const auto &seq = obj.cast<py::sequence>();
+            const auto& seq = obj.cast<py::sequence>();
             return self.defaultValue(karabind::wrapper::castPySequenceToStdVector<T>(seq));
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
@@ -123,7 +123,7 @@ struct ReadOnlySpecificVectorWrap {
     typedef karabo::util::ReadOnlySpecific<U, VType> ReadOnlySpecVec;
     typedef karabo::util::AlarmSpecific<U, VType, ReadOnlySpecVec> AlarmSpecVec;
 
-    static ReadOnlySpecVec &initialValue(ReadOnlySpecVec &self, const py::object &obj) {
+    static ReadOnlySpecVec& initialValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
             py::list lst = obj.cast<py::list>();
             VType v = lst.cast<std::vector<T>>();
@@ -133,7 +133,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec warnLowValue(ReadOnlySpecVec &self, const py::object &obj) {
+    static AlarmSpecVec warnLowValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
             VType v = obj.cast<VType>();
             return self.warnLow(v);
@@ -142,7 +142,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec warnHighValue(ReadOnlySpecVec &self, const py::object &obj) {
+    static AlarmSpecVec warnHighValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
             VType v = obj.cast<VType>();
             return self.warnHigh(v);
@@ -151,7 +151,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec alarmLowValue(ReadOnlySpecVec &self, const py::object &obj) {
+    static AlarmSpecVec alarmLowValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
             VType v = obj.cast<VType>();
             return self.alarmLow(v);
@@ -160,7 +160,7 @@ struct ReadOnlySpecificVectorWrap {
         }
     }
 
-    static AlarmSpecVec alarmHighValue(ReadOnlySpecVec &self, const py::object &obj) {
+    static AlarmSpecVec alarmHighValue(ReadOnlySpecVec& self, const py::object& obj) {
         if (py::isinstance<py::list>(obj)) {
             VType v = obj.cast<VType>();
             return self.alarmHigh(v);
@@ -280,7 +280,7 @@ template <typename T>
 class CommonWrap {
    public:
     static py::object allowedStatesPy(py::args args, const py::kwargs kwargs) {
-        T &self = args[0].cast<T &>();
+        T& self = args[0].cast<T&>();
         std::vector<karabo::util::State> states;
         for (unsigned int i = 1; i < py::len(args); ++i) {
             const std::string state = args[i].attr("name").cast<std::string>();
@@ -304,50 +304,50 @@ class CommonWrap {
 // Temporary comment and remove from macro
 // py::implicitly_convertible<Schema &, T>();
 
-#define KARABO_PYTHON_SIMPLE(t, e)                                                                             \
-    {                                                                                                          \
-        typedef t EType;                                                                                       \
-        typedef SimpleElement<EType> T;                                                                        \
-        py::class_<T>(m, #e "_ELEMENT")                                                                        \
-              .def(py::init<Schema &>()) KARABO_PYTHON_COMMON_ATTRIBUTES(T) KARABO_PYTHON_OPTIONS_NONVECTOR(T) \
-                    KARABO_PYTHON_NUMERIC_ATTRIBUTES(T);                                                       \
+#define KARABO_PYTHON_SIMPLE(t, e)                                                                            \
+    {                                                                                                         \
+        typedef t EType;                                                                                      \
+        typedef SimpleElement<EType> T;                                                                       \
+        py::class_<T>(m, #e "_ELEMENT")                                                                       \
+              .def(py::init<Schema&>()) KARABO_PYTHON_COMMON_ATTRIBUTES(T) KARABO_PYTHON_OPTIONS_NONVECTOR(T) \
+                    KARABO_PYTHON_NUMERIC_ATTRIBUTES(T);                                                      \
     }
 
-#define KARABO_PYTHON_COMMON_ATTRIBUTES(T)                                                                        \
-    .def("observerAccess", &T::observerAccess, py::return_value_policy::reference_internal)                       \
-          .def("userAccess", &T::userAccess, py::return_value_policy::reference_internal)                         \
-          .def("operatorAccess", &T::operatorAccess, py::return_value_policy::reference_internal)                 \
-          .def("expertAccess", &T::expertAccess, py::return_value_policy::reference_internal)                     \
-          .def("adminAccess", &T::adminAccess, py::return_value_policy::reference_internal)                       \
-          .def("allowedStates", &CommonWrap<T>::allowedStatesPy, py::return_value_policy::reference_internal)     \
-          .def("assignmentInternal", &T::assignmentInternal, py::return_value_policy::reference_internal)         \
-          .def("assignmentMandatory", &T::assignmentMandatory, py::return_value_policy::reference_internal)       \
-          .def("assignmentOptional", &T::assignmentOptional, py::return_value_policy::reference_internal)         \
-          .def("alias", &AliasAttributeWrap<T>::aliasPy, py::return_value_policy::reference_internal)             \
-          .def("commit", &T::commit, py::return_value_policy::reference_internal)                                 \
-          .def("commit", (T & (T::*)(karabo::util::Schema &))(&T::commit), py::arg("expected"),                   \
-               py::return_value_policy::reference_internal)                                                       \
-          .def("description", &T::description, py::return_value_policy::reference_internal)                       \
-          .def("displayedName", &T::displayedName, py::return_value_policy::reference_internal)                   \
-          .def("unit", &T::unit, py::return_value_policy::reference_internal)                                     \
-          .def("metricPrefix", &T::metricPrefix, py::return_value_policy::reference_internal)                     \
-          .def("init", &T::init, py::return_value_policy::reference_internal)                                     \
-          .def("key", &T::key, py::return_value_policy::reference_internal)                                       \
-          .def("setSpecialDisplayType", (T & (T::*)(std::string const &))(&T::setSpecialDisplayType),             \
-               py::arg("displayType"), py::return_value_policy::reference_internal)                               \
-          .def("readOnly", &T::readOnly, py::return_value_policy::reference_internal)                             \
-          .def("reconfigurable", &T::reconfigurable, py::return_value_policy::reference_internal)                 \
-          .def("tags", (T & (T::*)(std::string const &, std::string const &))(&T::tags), py::arg("tags"),         \
-               py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                               \
-          .def("tags", (T & (T::*)(std::vector<std::string> const &))(&T::tags), py::arg("tags"),                 \
-               py::return_value_policy::reference_internal)                                                       \
-          .def("daqPolicy", (T & (T::*)(karabo::util::DAQPolicy const &))(&T::daqPolicy), (py::arg("daqPolicy")), \
+#define KARABO_PYTHON_COMMON_ATTRIBUTES(T)                                                                       \
+    .def("observerAccess", &T::observerAccess, py::return_value_policy::reference_internal)                      \
+          .def("userAccess", &T::userAccess, py::return_value_policy::reference_internal)                        \
+          .def("operatorAccess", &T::operatorAccess, py::return_value_policy::reference_internal)                \
+          .def("expertAccess", &T::expertAccess, py::return_value_policy::reference_internal)                    \
+          .def("adminAccess", &T::adminAccess, py::return_value_policy::reference_internal)                      \
+          .def("allowedStates", &CommonWrap<T>::allowedStatesPy, py::return_value_policy::reference_internal)    \
+          .def("assignmentInternal", &T::assignmentInternal, py::return_value_policy::reference_internal)        \
+          .def("assignmentMandatory", &T::assignmentMandatory, py::return_value_policy::reference_internal)      \
+          .def("assignmentOptional", &T::assignmentOptional, py::return_value_policy::reference_internal)        \
+          .def("alias", &AliasAttributeWrap<T>::aliasPy, py::return_value_policy::reference_internal)            \
+          .def("commit", &T::commit, py::return_value_policy::reference_internal)                                \
+          .def("commit", (T & (T::*)(karabo::util::Schema&))(&T::commit), py::arg("expected"),                   \
+               py::return_value_policy::reference_internal)                                                      \
+          .def("description", &T::description, py::return_value_policy::reference_internal)                      \
+          .def("displayedName", &T::displayedName, py::return_value_policy::reference_internal)                  \
+          .def("unit", &T::unit, py::return_value_policy::reference_internal)                                    \
+          .def("metricPrefix", &T::metricPrefix, py::return_value_policy::reference_internal)                    \
+          .def("init", &T::init, py::return_value_policy::reference_internal)                                    \
+          .def("key", &T::key, py::return_value_policy::reference_internal)                                      \
+          .def("setSpecialDisplayType", (T & (T::*)(std::string const&))(&T::setSpecialDisplayType),             \
+               py::arg("displayType"), py::return_value_policy::reference_internal)                              \
+          .def("readOnly", &T::readOnly, py::return_value_policy::reference_internal)                            \
+          .def("reconfigurable", &T::reconfigurable, py::return_value_policy::reference_internal)                \
+          .def("tags", (T & (T::*)(std::string const&, std::string const&))(&T::tags), py::arg("tags"),          \
+               py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                              \
+          .def("tags", (T & (T::*)(std::vector<std::string> const&))(&T::tags), py::arg("tags"),                 \
+               py::return_value_policy::reference_internal)                                                      \
+          .def("daqPolicy", (T & (T::*)(karabo::util::DAQPolicy const&))(&T::daqPolicy), (py::arg("daqPolicy")), \
                py::return_value_policy::reference_internal)
 
-#define KARABO_PYTHON_OPTIONS_NONVECTOR(T)                                                                \
-    .def("options", (T & (T::*)(std::string const &, std::string const &))(&T::options), py::arg("opts"), \
-         py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                             \
-          .def("options", (T & (T::*)(std::vector<EType> const &))(&T::options), py::arg("opts"),         \
+#define KARABO_PYTHON_OPTIONS_NONVECTOR(T)                                                              \
+    .def("options", (T & (T::*)(std::string const&, std::string const&))(&T::options), py::arg("opts"), \
+         py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                           \
+          .def("options", (T & (T::*)(std::vector<EType> const&))(&T::options), py::arg("opts"),        \
                py::return_value_policy::reference_internal)
 
 
@@ -355,7 +355,7 @@ class CommonWrap {
     .def("hex", &T::hex, py::return_value_policy::reference_internal)                       \
           .def("oct", &T::oct, py::return_value_policy::reference_internal)                 \
           .def("bin", (T & (T::*)()) & T::bin, py::return_value_policy::reference_internal) \
-          .def("bin", (T & (T::*)(const std::string &)) & T::bin, py::arg("meaning"),       \
+          .def("bin", (T & (T::*)(const std::string&)) & T::bin, py::arg("meaning"),        \
                py::return_value_policy::reference_internal)                                 \
           .def("maxExc", &T::maxExc, py::return_value_policy::reference_internal)           \
           .def("maxInc", &T::maxInc, py::return_value_policy::reference_internal)           \
@@ -376,14 +376,14 @@ class CommonWrap {
 // py::implicitly_convertible<Schema &, T>();
 
 
-#define KARABO_PYTHON_VECTOR(t, e)                                                                                  \
-    {                                                                                                               \
-        typedef t EType;                                                                                            \
-        typedef VectorElement<EType, std::vector> T;                                                                \
-        py::class_<T>(m, "VECTOR_" #e "_ELEMENT")                                                                   \
-              .def(py::init<karabo::util::Schema &>()) KARABO_PYTHON_COMMON_ATTRIBUTES(T)                           \
-              .def("maxSize", (T & (T::*)(int const &))(&T::maxSize), py::return_value_policy::reference_internal)  \
-              .def("minSize", (T & (T::*)(int const &))(&T::minSize), py::return_value_policy::reference_internal); \
+#define KARABO_PYTHON_VECTOR(t, e)                                                                                 \
+    {                                                                                                              \
+        typedef t EType;                                                                                           \
+        typedef VectorElement<EType, std::vector> T;                                                               \
+        py::class_<T>(m, "VECTOR_" #e "_ELEMENT")                                                                  \
+              .def(py::init<karabo::util::Schema&>()) KARABO_PYTHON_COMMON_ATTRIBUTES(T)                           \
+              .def("maxSize", (T & (T::*)(int const&))(&T::maxSize), py::return_value_policy::reference_internal)  \
+              .def("minSize", (T & (T::*)(int const&))(&T::minSize), py::return_value_policy::reference_internal); \
     }
 
 ///
@@ -394,20 +394,20 @@ class CommonWrap {
 ///
 /// In Python: NODE_ELEMENT, CHOICE_ELEMENT, LIST_ELEMENT
 ///
-#define KARABO_PYTHON_NODE_CHOICE_LIST(NameElem)                                                                       \
-    .def("observerAccess", &NameElem::observerAccess, py::return_value_policy::reference_internal)                     \
-          .def("userAccess", &NameElem::userAccess, py::return_value_policy::reference_internal)                       \
-          .def("operatorAccess", &NameElem::operatorAccess, py::return_value_policy::reference_internal)               \
-          .def("expertAccess", &NameElem::expertAccess, py::return_value_policy::reference_internal)                   \
-          .def("adminAccess", &NameElem::adminAccess, py::return_value_policy::reference_internal)                     \
-          .def("key", &NameElem::key, py::return_value_policy::reference_internal)                                     \
-          .def("description", &NameElem::description, py::return_value_policy::reference_internal)                     \
-          .def("displayedName", &NameElem::displayedName, py::return_value_policy::reference_internal)                 \
-          .def("alias", &AliasAttributeWrap<NameElem>::aliasPy, py::return_value_policy::reference_internal)           \
-          .def("tags", (NameElem & (NameElem::*)(std::string const &, std::string const &))(&NameElem::tags),          \
-               py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                   \
-          .def("tags", (NameElem & (NameElem::*)(std::vector<std::string> const &))(&NameElem::tags), py::arg("tags"), \
-               py::return_value_policy::reference_internal)                                                            \
+#define KARABO_PYTHON_NODE_CHOICE_LIST(NameElem)                                                                      \
+    .def("observerAccess", &NameElem::observerAccess, py::return_value_policy::reference_internal)                    \
+          .def("userAccess", &NameElem::userAccess, py::return_value_policy::reference_internal)                      \
+          .def("operatorAccess", &NameElem::operatorAccess, py::return_value_policy::reference_internal)              \
+          .def("expertAccess", &NameElem::expertAccess, py::return_value_policy::reference_internal)                  \
+          .def("adminAccess", &NameElem::adminAccess, py::return_value_policy::reference_internal)                    \
+          .def("key", &NameElem::key, py::return_value_policy::reference_internal)                                    \
+          .def("description", &NameElem::description, py::return_value_policy::reference_internal)                    \
+          .def("displayedName", &NameElem::displayedName, py::return_value_policy::reference_internal)                \
+          .def("alias", &AliasAttributeWrap<NameElem>::aliasPy, py::return_value_policy::reference_internal)          \
+          .def("tags", (NameElem & (NameElem::*)(std::string const&, std::string const&))(&NameElem::tags),           \
+               py::arg("tags"), py::arg("sep") = " ,;", py::return_value_policy::reference_internal)                  \
+          .def("tags", (NameElem & (NameElem::*)(std::vector<std::string> const&))(&NameElem::tags), py::arg("tags"), \
+               py::return_value_policy::reference_internal)                                                           \
           .def("commit", &NameElem::commit, py::return_value_policy::reference_internal)
 
 #endif /* KARABIND_PYUTILSCHEMAELEMENT_HH */
