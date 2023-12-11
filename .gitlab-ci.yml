@@ -264,6 +264,7 @@ variables:
       - "src/deviceServer/**/*"
       - "src/brokerMessageLogger/**/*"
       - "src/tools/brokerRates/**/*"
+      - "src/tools/dataLoggerIndex/**/*"
   <<: *except-main
   except:
     changes:
