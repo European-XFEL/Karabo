@@ -24,7 +24,7 @@
 namespace bp = boost::python;
 
 // Translate C++ karabo::util::Exception into python RuntimeError exception
-void translatorException(const karabo::util::Exception &e) {
+void translatorException(const karabo::util::Exception& e) {
     // Assemble message from type, friendly message and - separated by \nDETAILS:\n" - detailed message.
     std::string msg(e.type());
     msg += ": ";
@@ -37,7 +37,7 @@ void translatorException(const karabo::util::Exception &e) {
     PyErr_SetString(PyExc_RuntimeError, msg.c_str());
 }
 
-void translatorRemoteException(const karabo::util::RemoteException &e) {
+void translatorRemoteException(const karabo::util::RemoteException& e) {
     // Assemble message from both, friendly message and details with "\nDETAILS:" as separator
     std::string msg(e.type());
     msg += ": ";
@@ -51,7 +51,7 @@ void translatorRemoteException(const karabo::util::RemoteException &e) {
     PyErr_SetString(PyExc_RuntimeError, msg.c_str());
 }
 
-void translatorTimeoutException(const karabo::util::TimeoutException &e) {
+void translatorTimeoutException(const karabo::util::TimeoutException& e) {
     const std::string msg(e.userFriendlyMsg(true)); // Clear stack
 
     // Pass C-pointer to Python
