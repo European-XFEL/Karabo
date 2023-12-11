@@ -442,6 +442,7 @@ async def test_cross(deviceTest):
 
     await shutdown(proxy)
     # it takes up to 5 s for the bound device to actually shut down
+    await process.communicate()
     await process.wait()
     # Wait a few seconds for the broker message
     await sleep(2)
