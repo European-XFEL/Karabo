@@ -31,7 +31,7 @@ from .base import KaraboImageView
 from .colorbar import ColorBarWidget, ColorViewBox
 from .dialogs.levels import LevelsDialog
 from .image_node import KaraboImageNode
-from .item import KaraboImageItem
+from .item import KaraboImageItem, karabo_default_image
 from .legends.picker import PickerLegend
 from .legends.scale import ScaleLegend
 from .plot import KaraboImagePlot
