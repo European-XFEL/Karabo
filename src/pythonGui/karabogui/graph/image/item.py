@@ -28,13 +28,17 @@ DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
 NULL_COLOR = QColor(255, 255, 255, 70)
 
 
+def karabo_default_image():
+    return np.zeros(shape=(50, 50), dtype=np.uint8)
+
+
 class KaraboImageItem(GraphicsObject):
     clicked = Signal(float, float)
     hovered = Signal(object, object)
 
     sigImageChanged = Signal()
 
-    def __init__(self, image=np.zeros((50, 50), dtype=np.uint8), parent=None):
+    def __init__(self, parent=None):
         GraphicsObject.__init__(self)
         self.auto_levels = True
 
@@ -55,7 +59,7 @@ class KaraboImageItem(GraphicsObject):
         self.levels = None
         # We have row-major
         self.axisOrder = getConfigOption("imageAxisOrder")
-        self.setImage(image)
+        self.setImage(karabo_default_image())
 
     # ---------------------------------------------------------------------
     # Public abstract methods
