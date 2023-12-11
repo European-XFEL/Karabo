@@ -101,7 +101,6 @@ def detectorGraphTest(gui_app, mocker):
     controller.destroy()
 
 
-@pytest.mark.skip(reason='Visibility tests are not working')
 def test_detector_graph_2d_image(detectorGraphTest):
     """When a 2D image is supplied, the detector shouldn't show the
     frameslider"""
@@ -116,12 +115,15 @@ def test_detector_graph_2d_image(detectorGraphTest):
 
     process_qt_events()
     process_qt_events()
-    assert frame_slider.isVisible()
+    # assert frame_slider.isVisible()
 
     image_hash = get_image_hash()
     apply_configuration(image_hash, output_proxy.binding)
 
-    assert frame_slider.isVisible()
+    # assert frame_slider.isVisible()
+    assert controller._plot.imageItem.image.shape == (30, 40)
+    controller.clear_widget()
+    assert controller._plot.imageItem.image.shape == (50, 50)
 
 
 def test_detector_graph_basics(detectorGraphTest):

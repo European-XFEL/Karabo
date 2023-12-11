@@ -701,6 +701,8 @@ class Manager(QObject):
             data_hash, meta_hash = self._big_data.pop(name)
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
+            if not device_proxy.online:
+                return
             binding = device_proxy.get_property_binding(prop_path)
             timestamp = Timestamp.fromHashAttributes(
                 meta_hash['timestamp', ...])
