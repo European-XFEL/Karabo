@@ -44,24 +44,24 @@ void exportPyUtilEpochstamp() {
           .export_values();
 
     bp::class_<Epochstamp> e("Epochstamp", bp::init<>());
-    e.def(bp::init<const unsigned long long &, const unsigned long long &>((bp::arg("seconds"), bp::arg("fractions"))));
-    e.def(bp::init<time_t const &>((bp::arg("tm"))));
-    bp::implicitly_convertible<time_t const &, Epochstamp>();
+    e.def(bp::init<const unsigned long long&, const unsigned long long&>((bp::arg("seconds"), bp::arg("fractions"))));
+    e.def(bp::init<time_t const&>((bp::arg("tm"))));
+    bp::implicitly_convertible<time_t const&, Epochstamp>();
 
-    e.def(bp::init<timeval const &>((bp::arg("tv"))));
-    bp::implicitly_convertible<timeval const &, Epochstamp>();
+    e.def(bp::init<timeval const&>((bp::arg("tv"))));
+    bp::implicitly_convertible<timeval const&, Epochstamp>();
 
-    e.def(bp::init<timespec const &>((bp::arg("ts"))));
-    bp::implicitly_convertible<timespec const &, Epochstamp>();
+    e.def(bp::init<timespec const&>((bp::arg("ts"))));
+    bp::implicitly_convertible<timespec const&, Epochstamp>();
 
-    e.def(bp::init<string const &>((bp::arg("pTimeStr"))));
-    bp::implicitly_convertible<string const &, Epochstamp>();
+    e.def(bp::init<string const&>((bp::arg("pTimeStr"))));
+    bp::implicitly_convertible<string const&, Epochstamp>();
 
-    e.def("getSeconds", (unsigned long long const &(Epochstamp::*)() const)(&Epochstamp::getSeconds),
+    e.def("getSeconds", (unsigned long long const& (Epochstamp::*)() const)(&Epochstamp::getSeconds),
           bp::return_value_policy<bp::copy_const_reference>());
 
     e.def("getFractionalSeconds",
-          (unsigned long long const &(Epochstamp::*)() const)(&Epochstamp::getFractionalSeconds),
+          (unsigned long long const& (Epochstamp::*)() const)(&Epochstamp::getFractionalSeconds),
           bp::return_value_policy<bp::copy_const_reference>());
 
     e.def("getTime", (time_t(Epochstamp::*)() const)(&Epochstamp::getTime));
@@ -74,7 +74,7 @@ void exportPyUtilEpochstamp() {
 
     e.def("now", (void(Epochstamp::*)())(&Epochstamp::now));
 
-    e.def("elapsed", (TimeDuration(Epochstamp::*)(Epochstamp const &) const)(&Epochstamp::elapsed),
+    e.def("elapsed", (TimeDuration(Epochstamp::*)(Epochstamp const&) const)(&Epochstamp::elapsed),
           (bp::arg("other") = karabo::util::Epochstamp()));
 
     e.def("fromHashAttributes", &Epochstamp::fromHashAttributes, bp::arg("attributes"));
@@ -95,11 +95,11 @@ void exportPyUtilEpochstamp() {
     e.def("toTimestamp", (double(Epochstamp::*)() const)(&Epochstamp::toTimestamp));
 
     e.def("toFormattedString",
-          (string(Epochstamp::*)(const string &, const string &) const)(&Epochstamp::toFormattedString),
+          (string(Epochstamp::*)(const string&, const string&) const)(&Epochstamp::toFormattedString),
           (bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
 
     e.def("toFormattedStringLocale",
-          (string(Epochstamp::*)(const string &, const string &, const string &)
+          (string(Epochstamp::*)(const string&, const string&, const string&)
                  const)(&Epochstamp::toFormattedStringLocale),
           (bp::arg("localeName") = "", bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
 
@@ -113,17 +113,17 @@ void exportPyUtilEpochstamp() {
     e.def(bp::self <= bp::self);
 
     // karabo::util::Epochstamp::operator=
-    e.def("assign", (Epochstamp & (Epochstamp::*)(time_t const &))(&Epochstamp::operator=), (bp::arg("tm")),
+    e.def("assign", (Epochstamp & (Epochstamp::*)(time_t const&))(&Epochstamp::operator=), (bp::arg("tm")),
           bp::return_self<>());
 
 
     // karabo::util::Epochstamp::operator=
-    e.def("assign", (Epochstamp & (Epochstamp::*)(timeval const &))(&Epochstamp::operator=), (bp::arg("tv")),
+    e.def("assign", (Epochstamp & (Epochstamp::*)(timeval const&))(&Epochstamp::operator=), (bp::arg("tv")),
           bp::return_self<>());
 
 
     //::karabo::util::Epochstamp::operator=
-    e.def("assign", (Epochstamp & (Epochstamp::*)(timespec const &))(&Epochstamp::operator=), (bp::arg("ts")),
+    e.def("assign", (Epochstamp & (Epochstamp::*)(timespec const&))(&Epochstamp::operator=), (bp::arg("ts")),
           bp::return_self<>());
 
     e.def(bp::self == bp::self);

@@ -26,7 +26,7 @@ using namespace karabo::util;
 using namespace std;
 
 
-void exportPyUtilEpochstamp(py::module_ &m) {
+void exportPyUtilEpochstamp(py::module_& m) {
     py::enum_<karabo::util::TIME_UNITS>(m, "TIME_UNITS")
           .value("ATTOSEC", karabo::util::ATTOSEC)
           .value("FEMTOSEC", karabo::util::FEMTOSEC)
@@ -45,19 +45,19 @@ void exportPyUtilEpochstamp(py::module_ &m) {
 
     e.def(py::init<>());
 
-    e.def(py::init<const unsigned long long &, const unsigned long long &>(), py::arg("seconds"), py::arg("fractions"));
+    e.def(py::init<const unsigned long long&, const unsigned long long&>(), py::arg("seconds"), py::arg("fractions"));
 
-    e.def(py::init<time_t const &>(), py::arg("tm"));
-    py::implicitly_convertible<time_t const &, Epochstamp>();
+    e.def(py::init<time_t const&>(), py::arg("tm"));
+    py::implicitly_convertible<time_t const&, Epochstamp>();
 
-    e.def(py::init<timeval const &>(), py::arg("tv"));
-    py::implicitly_convertible<timeval const &, Epochstamp>();
+    e.def(py::init<timeval const&>(), py::arg("tv"));
+    py::implicitly_convertible<timeval const&, Epochstamp>();
 
-    e.def(py::init<timespec const &>(), py::arg("ts"));
-    py::implicitly_convertible<timespec const &, Epochstamp>();
+    e.def(py::init<timespec const&>(), py::arg("ts"));
+    py::implicitly_convertible<timespec const&, Epochstamp>();
 
-    e.def(py::init<string const &>(), py::arg("pTimeStr"));
-    py::implicitly_convertible<string const &, Epochstamp>();
+    e.def(py::init<string const&>(), py::arg("pTimeStr"));
+    py::implicitly_convertible<string const&, Epochstamp>();
 
     e.def("getSeconds", &Epochstamp::getSeconds);
 
@@ -103,13 +103,13 @@ void exportPyUtilEpochstamp(py::module_ &m) {
     e.def(py::self <= py::self);
 
     // karabo::util::Epochstamp::operator=
-    e.def("assign", (Epochstamp & (Epochstamp::*)(time_t const &))(&Epochstamp::operator=), py::arg("tm"));
+    e.def("assign", (Epochstamp & (Epochstamp::*)(time_t const&))(&Epochstamp::operator=), py::arg("tm"));
 
     // karabo::util::Epochstamp::operator=
-    e.def("assign", (Epochstamp & (Epochstamp::*)(timeval const &))(&Epochstamp::operator=), py::arg("tv"));
+    e.def("assign", (Epochstamp & (Epochstamp::*)(timeval const&))(&Epochstamp::operator=), py::arg("tv"));
 
     //::karabo::util::Epochstamp::operator=
-    e.def("assign", (Epochstamp & (Epochstamp::*)(timespec const &))(&Epochstamp::operator=), py::arg("ts"));
+    e.def("assign", (Epochstamp & (Epochstamp::*)(timespec const&))(&Epochstamp::operator=), py::arg("ts"));
 
     e.def(py::self == py::self);
     e.def(py::self > py::self);

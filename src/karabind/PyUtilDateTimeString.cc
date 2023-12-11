@@ -27,18 +27,18 @@ using namespace karabo::util;
 using namespace std;
 
 
-void exportPyUtilDateTimeString(py::module_ &m) {
+void exportPyUtilDateTimeString(py::module_& m) {
     py::class_<DateTimeString> dts(m, "DateTimeString");
 
     dts.def(py::init<>());
 
-    dts.def(py::init<std::string const &>(), py::arg("timePoint"));
+    dts.def(py::init<std::string const&>(), py::arg("timePoint"));
 
-    dts.def(py::init<std::string const &, std::string const &, std::string const &, std::string const &>(),
+    dts.def(py::init<std::string const&, std::string const&, std::string const&, std::string const&>(),
             py::arg("inputDateStr"), py::arg("inputTimeStr"), py::arg("inputFractionSecondStr"),
             py::arg("inputTimeZoneStr"));
 
-    py::implicitly_convertible<std::string const &, karabo::util::DateTimeString>();
+    py::implicitly_convertible<std::string const&, karabo::util::DateTimeString>();
 
     dts.def("getDate", &DateTimeString::getDate);
 

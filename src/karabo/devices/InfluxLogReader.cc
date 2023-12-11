@@ -68,11 +68,11 @@ namespace karabo {
         namespace nl = nlohmann;
 
 
-        PropertyHistoryContext::PropertyHistoryContext(const std::string &deviceId, const std::string &property,
-                                                       const karabo::util::Epochstamp &from,
-                                                       const karabo::util::Epochstamp &to, int maxDataPoints,
-                                                       const karabo::xms::SignalSlotable::AsyncReply &aReply,
-                                                       const karabo::net::InfluxDbClient::Pointer &influxClient)
+        PropertyHistoryContext::PropertyHistoryContext(const std::string& deviceId, const std::string& property,
+                                                       const karabo::util::Epochstamp& from,
+                                                       const karabo::util::Epochstamp& to, int maxDataPoints,
+                                                       const karabo::xms::SignalSlotable::AsyncReply& aReply,
+                                                       const karabo::net::InfluxDbClient::Pointer& influxClient)
             : deviceId(deviceId),
               property(property),
               from(from),
@@ -87,15 +87,15 @@ namespace karabo {
         }
 
 
-        PropFromPastInfo::PropFromPastInfo(const std::string &name, const karabo::util::Types::ReferenceType type,
+        PropFromPastInfo::PropFromPastInfo(const std::string& name, const karabo::util::Types::ReferenceType type,
                                            bool infiniteOrNan)
             : name(name), type(type), infiniteOrNan(infiniteOrNan) {}
 
 
-        ConfigFromPastContext::ConfigFromPastContext(const std::string &deviceId,
-                                                     const karabo::util::Epochstamp &atTime,
-                                                     const karabo::xms::SignalSlotable::AsyncReply &aReply,
-                                                     const karabo::net::InfluxDbClient::Pointer &influxClient)
+        ConfigFromPastContext::ConfigFromPastContext(const std::string& deviceId,
+                                                     const karabo::util::Epochstamp& atTime,
+                                                     const karabo::xms::SignalSlotable::AsyncReply& aReply,
+                                                     const karabo::net::InfluxDbClient::Pointer& influxClient)
             : deviceId(deviceId),
               atTime(atTime),
               configTimePoint(Epochstamp(0, 0)),
@@ -109,7 +109,7 @@ namespace karabo {
         const int InfluxLogReader::kMaxHistorySize = 10'000;
         const TimeValue InfluxLogReader::kMaxInfluxDataDelaySecs = 300ull;
 
-        void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
+        void InfluxLogReader::expectedParameters(karabo::util::Schema& expected) {
             STRING_ELEMENT(expected)
                   .key("urlPropHistory")
                   .displayedName("URL for Property History")
@@ -148,7 +148,7 @@ namespace karabo {
         }
 
 
-        InfluxLogReader::InfluxLogReader(const karabo::util::Hash &cfg)
+        InfluxLogReader::InfluxLogReader(const karabo::util::Hash& cfg)
             : karabo::devices::DataLogReader(cfg),
               m_dbName(cfg.get<std::string>("dbname")),
               m_urlConfigSchema(cfg.get<std::string>("urlConfigSchema")),
@@ -192,7 +192,7 @@ namespace karabo {
         }
 
 
-        Hash InfluxLogReader::buildInfluxClientConfig(const std::string &dbUrlForSlot) const {
+        Hash InfluxLogReader::buildInfluxClientConfig(const std::string& dbUrlForSlot) const {
             Hash dbClientCfg("dbname", m_dbName, "durationUnit", INFLUX_DURATION_UNIT, "dbUser", m_dbUser, "dbPassword",
                              m_dbPassword);
             dbClientCfg.set("url", dbUrlForSlot);
@@ -201,8 +201,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::slotGetPropertyHistoryImpl(const std::string &deviceId, const std::string &property,
-                                                         const Hash &params) {
+        void InfluxLogReader::slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
+                                                         const Hash& params) {
             Epochstamp from;
             if (params.has("from")) from = Epochstamp(params.get<std::string>("from"));
             Epochstamp to;
@@ -245,7 +245,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncDataCountForProperty(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::asyncDataCountForProperty(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             /* The query for data count, differently from the query for the property values (or samples) that will
@@ -261,7 +261,7 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onDataCountForProperty, this, _1, ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying data count for property");
                 // As this is in the same thread at which the slot call started, if we send the async reply directly,
                 // the reply will be sent, and then unregistered from the SignalSlotable. When this method execution
@@ -281,8 +281,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::onDataCountForProperty(const karabo::net::HttpResponse &dataCountResp,
-                                                     const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::onDataCountForProperty(const karabo::net::HttpResponse& dataCountResp,
+                                                     const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(dataCountResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -297,12 +297,12 @@ namespace karabo {
                 // The format of the data received is available here
                 //  https://docs.influxdata.com/influxdb/v1.7/guides/querying_data/
                 respObj = nl::json::parse(dataCountResp.payload);
-                const auto &values = respObj["results"][0]["series"][0]["values"];
-                for (const auto &value : values) {
+                const auto& values = respObj["results"][0]["series"][0]["values"];
+                for (const auto& value : values) {
                     auto countValue = value[1].get<unsigned long long>();
                     dataCount += countValue;
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error summing up amount of values");
                 ctxt->aReply.error(errMsg);
                 return;
@@ -310,9 +310,9 @@ namespace karabo {
 
             bool allNumbers = true; // check if all fields support statistical aggregators
             try {
-                const auto &columns = respObj["results"][0]["series"][0]["columns"];
-                for (const auto &column : columns) {
-                    const std::string &columnStr = column.get<std::string>();
+                const auto& columns = respObj["results"][0]["series"][0]["columns"];
+                for (const auto& column : columns) {
+                    const std::string& columnStr = column.get<std::string>();
                     if (columnStr == "time") {
                         // "time" column in Influx response should not be type
                         // checked - it is always a numeric data type, won't be
@@ -336,7 +336,7 @@ namespace karabo {
                                                    << " returned column without type separator '" << column << "'";
                     }
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error checking if fields support statistics aggregators");
                 ctxt->aReply.error(errMsg);
                 return;
@@ -356,7 +356,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT /^" << ctxt->property << "-[A-Z0-9_]+$/ FROM \"" << ctxt->deviceId
@@ -368,13 +368,13 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "", ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying property values");
                 ctxt->aReply.error(errMsg);
             }
         }
 
-        void InfluxLogReader::asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-[A-Z0-9_]+$/, " << ctxt->maxDataPoints << ") FROM \""
@@ -386,16 +386,16 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onPropertyValues, this, _1, "sample_", ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying property values samples");
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onPropertyValues(const karabo::net::HttpResponse &valuesResp,
-                                               const std::string &columnPrefixToRemove,
-                                               const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::onPropertyValues(const karabo::net::HttpResponse& valuesResp,
+                                               const std::string& columnPrefixToRemove,
+                                               const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -414,7 +414,7 @@ namespace karabo {
                 ctxt->aReply(ctxt->deviceId, ctxt->property, propValues);
                 onOk();
 
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving values of property '" << ctxt->property << "' of device '" << ctxt->deviceId
                     << "' between '" << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "'";
@@ -423,7 +423,7 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             std::ostringstream iqlQuery;
             iqlQuery << "SELECT MEAN(/^" << ctxt->property << "-[A-Z0-9_]+$/) FROM \"" << ctxt->deviceId
                      << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
@@ -435,15 +435,15 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onMeanPropertyValues, this, _1, ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying property values samples");
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onMeanPropertyValues(const karabo::net::HttpResponse &valuesResp,
-                                                   const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+        void InfluxLogReader::onMeanPropertyValues(const karabo::net::HttpResponse& valuesResp,
+                                                   const boost::shared_ptr<PropertyHistoryContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -470,7 +470,7 @@ namespace karabo {
                     }
                     colKeyNames[col] = "v"; // the mean value will passed on in the key "v" to match the protocol
                 }
-                for (const std::vector<boost::optional<std::string>> &valuesRow : influxResult.second) {
+                for (const std::vector<boost::optional<std::string>>& valuesRow : influxResult.second) {
                     unsigned long long time =
                           std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
                     Epochstamp epoch(time / INFLUX_PRECISION_FACTOR,
@@ -483,7 +483,7 @@ namespace karabo {
                             continue;
                         }
                         // For nan/inf floating points we added "_INF" we skip.
-                        const std::string &typeNameInflux = colTypeNames[col];
+                        const std::string& typeNameInflux = colTypeNames[col];
                         const Types::ReferenceType type = Types::from<FromLiteral>(typeNameInflux);
                         addNodeToHash(hash, colKeyNames[col], type, 0ull, epoch, *(valuesRow[col]));
                         // skip further columns. In the rare case of schema evolution in the same interval
@@ -503,7 +503,7 @@ namespace karabo {
                 ctxt->aReply(ctxt->deviceId, ctxt->property, propValues);
                 onOk();
 
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving values of property '" << ctxt->property << "' of device '" << ctxt->deviceId
                     << "' between '" << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "'";
@@ -512,8 +512,8 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::slotGetConfigurationFromPastImpl(const std::string &deviceId,
-                                                               const std::string &timepoint) {
+        void InfluxLogReader::slotGetConfigurationFromPastImpl(const std::string& deviceId,
+                                                               const std::string& timepoint) {
             Epochstamp atTime(timepoint);
             SignalSlotable::AsyncReply aReply(this);
 
@@ -527,7 +527,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT karabo_user, format FROM \"" << ctxt->deviceId
@@ -539,7 +539,7 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onLastLoginFormatBeforeTime, this, _1, ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying last login before time");
                 boost::weak_ptr<karabo::xms::SignalSlotable> weakThis(weak_from_this());
                 EventLoop::getIOService().post([weakThis, ctxt, errMsg]() {
@@ -553,8 +553,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::onLastLoginFormatBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                                          const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::onLastLoginFormatBeforeTime(const karabo::net::HttpResponse& valueResp,
+                                                          const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -583,7 +583,7 @@ namespace karabo {
                     logFormatVersion = formatVal.get<int>();
                 }
                 ctxt->logFormatVersion = logFormatVersion;
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving timestamp and log format for last instantiation of device '" << ctxt->deviceId
                     << "' before '" << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast";
@@ -596,7 +596,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(karabo_user) FROM \"" << ctxt->deviceId << "__EVENTS\""
@@ -608,15 +608,15 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onLastLogoutBeforeTime, this, _1, ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying last logout before time");
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::onLastLogoutBeforeTime(const karabo::net::HttpResponse& valueResp,
+                                                     const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -644,7 +644,7 @@ namespace karabo {
                     lastLogoutBeforeTime = value.get<unsigned long long>();
                 }
                 ctxt->lastLogoutBeforeTime = lastLogoutBeforeTime;
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving timestamp of last end of logging for device '" << ctxt->deviceId
                     << "' before '" << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast";
@@ -657,7 +657,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(schema_digest) FROM \"" << ctxt->deviceId
@@ -669,15 +669,15 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onLastSchemaDigestBeforeTime, this, _1, ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying last schema digest before time");
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                                           const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse& valueResp,
+                                                           const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -711,7 +711,7 @@ namespace karabo {
                 } else {
                     digest = value.get<std::string>();
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving schema that was active for device '" << ctxt->deviceId << "' at '"
                     << ctxt->atTime.toIso8601Ext() << "' as part of operation getConfigurationFromPast";
@@ -724,8 +724,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncSchemaForDigest(const std::string &digest,
-                                                   const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncSchemaForDigest(const std::string& digest,
+                                                   const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT * FROM \"" << ctxt->deviceId << "__SCHEMAS\" WHERE \"digest\"='\"" << digest
@@ -735,16 +735,16 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(queryStr,
                                             bind_weak(&InfluxLogReader::onSchemaForDigest, this, _1, ctxt, digest));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const std::string errMsg = onException("Error querying schema for digest");
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
-                                                const boost::shared_ptr<ConfigFromPastContext> &ctxt,
-                                                const std::string &digest) {
+        void InfluxLogReader::onSchemaForDigest(const karabo::net::HttpResponse& schemaResp,
+                                                const boost::shared_ptr<ConfigFromPastContext>& ctxt,
+                                                const std::string& digest) {
             bool errorHandled = handleHttpResponseError(schemaResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -760,14 +760,14 @@ namespace karabo {
                 // are the keys and the columns indexes are the values. The first column,
                 // index 0, is the time and is skipped since it won't be used.
                 std::map<std::string, int> colMap;
-                const auto &respColumns = respObj["results"][0]["series"][0]["columns"];
+                const auto& respColumns = respObj["results"][0]["series"][0]["columns"];
                 for (size_t i = 1; i < respColumns.size(); i++) {
                     colMap[respColumns[i].get<std::string>()] = i;
                 }
                 // Initializes a reference to the values of the single "record" retrieved from Influx.
                 // It can be assumed that there is a single "record" in the response because the query
                 // that generated the response uses "ORDER BY time DESC" followed by "LIMIT 1".
-                const auto &respValues = respObj["results"][0]["series"][0]["values"][0];
+                const auto& respValues = respObj["results"][0]["series"][0]["values"][0];
 
                 int schemaChunks = 1;
                 const auto nChunksIt = colMap.find("n_schema_chunks");
@@ -787,7 +787,7 @@ namespace karabo {
 
                 encodedSch = base64Sch.str();
 
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving schema by digest for device '" << ctxt->deviceId << "' at '"
                     << ctxt->atTime.toIso8601Ext() << "'";
@@ -805,14 +805,14 @@ namespace karabo {
                 // retrieved is the last one (the most recent at the time the schema was saved in Influx).
                 std::vector<unsigned char> decodedSch;
                 base64Decode(encodedSch, decodedSch);
-                const char *decoded = reinterpret_cast<const char *>(decodedSch.data());
+                const char* decoded = reinterpret_cast<const char*>(decodedSch.data());
                 m_schemaSerializer->loadLastFromSequence(ctxt->configSchema, decoded, decodedSch.size());
-                const Schema &schema = ctxt->configSchema;
+                const Schema& schema = ctxt->configSchema;
 
                 // Stores the properties keys and types in the context.
                 ctxt->propsInfo.clear();
                 std::vector<std::string> schPaths = schema.getDeepPaths();
-                for (const std::string &path : schPaths) {
+                for (const std::string& path : schPaths) {
                     if (schema.isLeaf(path) &&
                         !(schema.hasArchivePolicy(path) && schema.getArchivePolicy(path) == Schema::NO_ARCHIVING)) {
                         // Current path is for a leaf node that set is to archive (more precisely, not set to not
@@ -826,7 +826,7 @@ namespace karabo {
                         }
                     }
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error processing schema retrieved for device '" << ctxt->deviceId << "' at '"
                     << ctxt->atTime.toIso8601Ext() << "'";
@@ -844,7 +844,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             const PropFromPastInfo propInfo = ctxt->propsInfo.front();
             ctxt->propsInfo.pop_front();
 
@@ -875,16 +875,16 @@ namespace karabo {
             try {
                 ctxt->influxClient->queryDb(
                       queryStr, bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfo, _1, ctxt));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 const auto errMsg = onException("Error querying property value before time");
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onPropValueBeforeTime(const PropFromPastInfo &propInfo,
-                                                    const karabo::net::HttpResponse &propValueResp,
-                                                    const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::onPropValueBeforeTime(const PropFromPastInfo& propInfo,
+                                                    const karabo::net::HttpResponse& propValueResp,
+                                                    const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(propValueResp, ctxt->aReply);
 
             if (errorHandled) {
@@ -893,12 +893,12 @@ namespace karabo {
                 return;
             }
 
-            const std::string &propName = propInfo.name;
-            const karabo::util::Types::ReferenceType &propType = propInfo.type;
+            const std::string& propName = propInfo.name;
+            const karabo::util::Types::ReferenceType& propType = propInfo.type;
 
             try {
                 nl::json respObj = nl::json::parse(propValueResp.payload);
-                const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
+                const auto& value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (!value.is_null()) {
                     auto timeObj = respObj["results"][0]["series"][0]["values"][0][0];
                     const Epochstamp timeEpoch(toEpoch(timeObj.get<unsigned long long>()));
@@ -927,12 +927,12 @@ namespace karabo {
                         }
                     }
                 }
-            } catch (std::exception &e) {
+            } catch (std::exception& e) {
                 std::ostringstream oss;
                 oss << "Error retrieving value of property '" << propName << "' of type '"
                     << Types::to<ToLiteral>(propType) << "' for device '" << ctxt->deviceId << "': " << e.what()
                     << "\nRemaining property value(s) to retrieve: " << ctxt->propsInfo.size() << ".";
-                const std::string &errMsg = oss.str();
+                const std::string& errMsg = oss.str();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Go on with the remaining properties.
             }
@@ -950,15 +950,15 @@ namespace karabo {
         }
 
 
-        std::string InfluxLogReader::unescapeLoggedString(const std::string &loggedStr) {
+        std::string InfluxLogReader::unescapeLoggedString(const std::string& loggedStr) {
             std::string unescaped = boost::replace_all_copy(loggedStr, "\\\"", "\"");
             boost::replace_all(unescaped, "\\\\", "\\");
             boost::replace_all(unescaped, DATALOG_NEWLINE_MANGLE, "\n");
             return unescaped;
         }
 
-        void InfluxLogReader::influxResultSetToVectorHash(const InfluxResultSet &influxResult,
-                                                          std::vector<Hash> &vectHash) {
+        void InfluxLogReader::influxResultSetToVectorHash(const InfluxResultSet& influxResult,
+                                                          std::vector<Hash>& vectHash) {
             // Finds the position of the trainId column, if it is in the result set.
             int tidCol = -1;
             auto iter = std::find(influxResult.first.begin(), influxResult.first.end(), "_tid");
@@ -978,7 +978,7 @@ namespace karabo {
 
             vectHash.reserve(influxResult.second.size());
             // Converts each row of values into a Hash.
-            for (const std::vector<boost::optional<std::string>> &valuesRow : influxResult.second) {
+            for (const std::vector<boost::optional<std::string>>& valuesRow : influxResult.second) {
                 unsigned long long time = std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
                 Epochstamp epoch(time / INFLUX_PRECISION_FACTOR,
                                  (time % INFLUX_PRECISION_FACTOR) * kFracConversionFactor);
@@ -1003,16 +1003,16 @@ namespace karabo {
                         // Figure out the real Karabo type:
                         // For nan/inf floating points we added "_INF" when writing to influxDB (and stored as
                         // strings).
-                        const std::string &typeNameInflux = colTypeNames[col];
+                        const std::string& typeNameInflux = colTypeNames[col];
                         const size_t posInf = typeNameInflux.rfind("_INF");
-                        const std::string &typeName =
+                        const std::string& typeName =
                               (posInf != std::string::npos && posInf == typeNameInflux.size() - 4ul
                                      ? typeNameInflux.substr(0, posInf)
                                      : typeNameInflux);
 
                         const Types::ReferenceType type = Types::from<FromLiteral>(typeName);
                         addNodeToHash(hash, "v", type, tid, epoch, *(valuesRow[col]));
-                    } catch (const std::exception &e) {
+                    } catch (const std::exception& e) {
                         KARABO_LOG_FRAMEWORK_ERROR
                               << "Error adding node to hash:"
                               << "\nValue type: " << colTypeNames[col] << "\nValue (as string): " << *(valuesRow[col])
@@ -1025,26 +1025,26 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::addNodeToHash(karabo::util::Hash &hash, const std::string &path,
-                                            const karabo::util::Types::ReferenceType &type, unsigned long long trainId,
-                                            const karabo::util::Epochstamp &epoch, const std::string &valueAsString) {
-            Hash::Node *node = nullptr;
+        void InfluxLogReader::addNodeToHash(karabo::util::Hash& hash, const std::string& path,
+                                            const karabo::util::Types::ReferenceType& type, unsigned long long trainId,
+                                            const karabo::util::Epochstamp& epoch, const std::string& valueAsString) {
+            Hash::Node* node = nullptr;
 
             switch (type) {
                 case Types::VECTOR_HASH: {
                     // Vectors of Hashes are binary serialized and then base64 encoded by the Influx Logger.
                     std::vector<unsigned char> base64Decoded;
                     base64Decode(valueAsString, base64Decoded);
-                    const char *decoded = reinterpret_cast<const char *>(base64Decoded.data());
+                    const char* decoded = reinterpret_cast<const char*>(base64Decoded.data());
                     node = &hash.set(path, std::vector<Hash>());
-                    std::vector<Hash> &value = node->getValue<std::vector<Hash>>();
+                    std::vector<Hash>& value = node->getValue<std::vector<Hash>>();
                     m_hashSerializer->load(value, decoded, base64Decoded.size());
                     break;
                 }
                 case Types::VECTOR_STRING: {
                     // Convert value from base64 -> JSON -> vector<string> ...
                     node = &hash.set(path, std::vector<std::string>());
-                    std::vector<std::string> &value = node->getValue<std::vector<std::string>>();
+                    std::vector<std::string>& value = node->getValue<std::vector<std::string>>();
                     std::vector<unsigned char> decoded;
                     base64Decode(valueAsString, decoded);
                     nl::json j = nl::json::parse(decoded.begin(), decoded.end());
@@ -1055,8 +1055,8 @@ namespace karabo {
                 }
                 case Types::VECTOR_CHAR: {
                     node = &hash.set(path, std::vector<char>());
-                    std::vector<char> &value = node->getValue<std::vector<char>>();
-                    base64Decode(valueAsString, *reinterpret_cast<std::vector<unsigned char> *>(&value));
+                    std::vector<char>& value = node->getValue<std::vector<char>>();
+                    base64Decode(valueAsString, *reinterpret_cast<std::vector<unsigned char>*>(&value));
                     break;
                 }
                 case Types::CHAR: {
@@ -1081,7 +1081,7 @@ namespace karabo {
 #define HANDLE_VECTOR_TYPE(VectorType, ElementType)                                      \
     case Types::VectorType: {                                                            \
         node = &hash.set(path, std::vector<ElementType>());                              \
-        std::vector<ElementType> &value = node->getValue<std::vector<ElementType>>();    \
+        std::vector<ElementType>& value = node->getValue<std::vector<ElementType>>();    \
         if (!valueAsString.empty()) {                                                    \
             value = std::move(fromString<ElementType, std::vector>(valueAsString, ",")); \
         }                                                                                \
@@ -1120,12 +1120,12 @@ namespace karabo {
                     node->setType(type);
                 }
             }
-            Hash::Attributes &attrs = node->getAttributes();
+            Hash::Attributes& attrs = node->getAttributes();
             Timestamp(epoch, trainId).toHashAttributes(attrs);
         }
 
 
-        void InfluxLogReader::slotGetBadData(const std::string &fromStr, const std::string &toStr) {
+        void InfluxLogReader::slotGetBadData(const std::string& fromStr, const std::string& toStr) {
             const Epochstamp from(fromStr);
             const Epochstamp to(toStr);
 
@@ -1147,7 +1147,7 @@ namespace karabo {
                 // InfluxDbClient will live long enough to fullfill the query.
                 influxClient->queryDb(queryStr,
                                       bind_weak(&InfluxLogReader::onGetBadData, this, _1, aReply, influxClient));
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::string details(e.what());
                 std::string errMsg("Error querying for bad data");
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg << ": " << details;
@@ -1163,8 +1163,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::onGetBadData(const HttpResponse &response, SignalSlotable::AsyncReply aReply,
-                                           const karabo::net::InfluxDbClient::Pointer & /* influxClient */) {
+        void InfluxLogReader::onGetBadData(const HttpResponse& response, SignalSlotable::AsyncReply aReply,
+                                           const karabo::net::InfluxDbClient::Pointer& /* influxClient */) {
             if (handleHttpResponseError(response, aReply)) {
                 // Nothing left to do, failure is already replied.
                 return;
@@ -1175,13 +1175,13 @@ namespace karabo {
                 jsonResultsToInfluxResultSet(response.payload, influxResult, "");
                 Hash result;
 
-                const std::vector<std::string> &deviceIds = influxResult.first;
+                const std::vector<std::string>& deviceIds = influxResult.first;
                 for (size_t i = 1; i < deviceIds.size(); ++i) { // but index 0 is "time"
                     result.set(deviceIds[i], std::vector<Hash>());
                 }
 
                 // Converts each row of values into a Hash.
-                for (const std::vector<boost::optional<std::string>> &valuesRow : influxResult.second) {
+                for (const std::vector<boost::optional<std::string>>& valuesRow : influxResult.second) {
                     const unsigned long long time =
                           std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
                     const Epochstamp epoch(toEpoch(time));
@@ -1189,7 +1189,7 @@ namespace karabo {
                     for (size_t i = 1; i < valuesRow.size(); ++i) {
                         if (valuesRow[i]) {
                             Hash h("info", std::move(*(valuesRow[i])));
-                            Hash::Node &node = h.set("time", epochStr);
+                            Hash::Node& node = h.set("time", epochStr);
                             epoch.toHashAttributes(node.getAttributes());
                             result.get<std::vector<Hash>>(deviceIds[i]).push_back(std::move(h));
                         }
@@ -1206,7 +1206,7 @@ namespace karabo {
                 aReply(result);
                 onOk();
 
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 std::string details(e.what());
                 std::string errMsg("Error unpacking retrieved bad data info");
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg << ": " << details;
@@ -1214,8 +1214,8 @@ namespace karabo {
             }
         }
 
-        bool InfluxLogReader::handleHttpResponseError(const karabo::net::HttpResponse &httpResponse,
-                                                      const karabo::xms::SignalSlotable::AsyncReply &asyncReply) {
+        bool InfluxLogReader::handleHttpResponseError(const karabo::net::HttpResponse& httpResponse,
+                                                      const karabo::xms::SignalSlotable::AsyncReply& asyncReply) {
             bool errorHandled = false;
 
             if (httpResponse.code >= 300) {
