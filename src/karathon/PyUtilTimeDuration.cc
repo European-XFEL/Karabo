@@ -30,8 +30,8 @@ using namespace std;
 
 void exportPyUtilTimeDuration() {
     bp::class_<TimeDuration> t("TimeDuration", bp::init<>());
-    t.def(bp::init<Hash const &>((bp::arg("hash"))));
-    bp::implicitly_convertible<Hash const &, TimeDuration>();
+    t.def(bp::init<Hash const&>((bp::arg("hash"))));
+    bp::implicitly_convertible<Hash const&, TimeDuration>();
     t.def(bp::init<long long unsigned int, long long unsigned int>((bp::arg("seconds"), bp::arg("fractions"))));
     t.def(bp::init<int, int, int, long long unsigned int, long long unsigned int>(
           (bp::arg("days"), bp::arg("hours"), bp::arg("minutes"), bp::arg("seconds"), bp::arg("fractions"))));
@@ -63,9 +63,9 @@ void exportPyUtilTimeDuration() {
           (bp::arg("days"), bp::arg("hours"), bp::arg("minutes"), bp::arg("seconds"), bp::arg("fractions")),
           bp::return_internal_reference<>());
 
-    t.def("format", (string(TimeDuration::*)(string const &) const)(&TimeDuration::format), (bp::arg("fmt")));
+    t.def("format", (string(TimeDuration::*)(string const&) const)(&TimeDuration::format), (bp::arg("fmt")));
 
-    t.def("fromHash", (void(TimeDuration::*)(Hash const &))(&TimeDuration::fromHash), (bp::arg("hash")));
+    t.def("fromHash", (void(TimeDuration::*)(Hash const&))(&TimeDuration::fromHash), (bp::arg("hash")));
 
     t.def("getDays", (unsigned long int (TimeDuration::*)() const)(&TimeDuration::getDays));
 
@@ -87,10 +87,10 @@ void exportPyUtilTimeDuration() {
 
     t.def("isNull", (bool(TimeDuration::*)() const)(&TimeDuration::isNull));
 
-    t.def("setDefaultFormat", (void (*)(string const &))(&TimeDuration::setDefaultFormat), (bp::arg("fmt")));
+    t.def("setDefaultFormat", (void (*)(string const&))(&TimeDuration::setDefaultFormat), (bp::arg("fmt")));
     t.staticmethod("setDefaultFormat");
 
-    t.def("toHash", (void(TimeDuration::*)(Hash &))(&TimeDuration::toHash), (bp::arg("hash")));
+    t.def("toHash", (void(TimeDuration::*)(Hash&))(&TimeDuration::toHash), (bp::arg("hash")));
 
     t.def(bp::self != bp::self);
     t.def(bp::self + bp::self);

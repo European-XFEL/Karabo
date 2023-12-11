@@ -44,12 +44,12 @@ namespace karabo {
             processString(KARABO_VERSION); // from repositoryVersion
         }
 
-        Version::Version(const std::string &version)
+        Version::Version(const std::string& version)
             : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
             processString(version);
         }
 
-        void Version::processString(const std::string &version) {
+        void Version::processString(const std::string& version) {
             //                       MANDATORY FIELDS       |OPTIONAL FIELDS                        |
             //                         Major   .Minor   .Patch(suffix         )(suf_n )(dev_suf)(dev_n)
             m_versionString = version;
@@ -63,10 +63,10 @@ namespace karabo {
                 m_minor = fromString<unsigned int>(versionParts.str(2));
                 m_patch = fromString<unsigned int>(versionParts.str(3));
                 // the strings below here might be empty since they belong to optional fields
-                const std::string &separator = versionParts.str(4);
-                const std::string &postVersion = versionParts.str(5);
-                const std::string &devSeparator = versionParts.str(6);
-                const std::string &devVersion = versionParts.str(7);
+                const std::string& separator = versionParts.str(4);
+                const std::string& postVersion = versionParts.str(5);
+                const std::string& devSeparator = versionParts.str(6);
+                const std::string& devVersion = versionParts.str(7);
                 if (separator == "a" && postVersion.size() > 0) {
                     m_postType = PostfixType::ALPHA;
                     m_post = fromString<unsigned int>(postVersion);
@@ -96,7 +96,7 @@ namespace karabo {
 
 
         std::string Version::getPathToKaraboInstallation() {
-            const char *envKarabo = getenv("KARABO");
+            const char* envKarabo = getenv("KARABO");
             if (envKarabo) {
                 // The KARABO env var is defined; we're done.
                 return std::string(envKarabo);
@@ -126,7 +126,7 @@ namespace karabo {
         }
 
 
-        const Version &Version::getKaraboVersion() {
+        const Version& Version::getKaraboVersion() {
             static const Version v;
             return v;
         }
@@ -136,7 +136,7 @@ namespace karabo {
             return getKaraboVersion().m_versionString;
         }
 
-        const std::string &Version::getString() const {
+        const std::string& Version::getString() const {
             return m_versionString;
         }
 
@@ -165,7 +165,7 @@ namespace karabo {
             return m_postType == PostfixType::POST;
         }
 
-        bool operator==(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+        bool operator==(const karabo::util::Version& v1, const karabo::util::Version& v2) {
             if (v1.m_major == v2.m_major && v1.m_minor == v2.m_minor && v1.m_patch == v2.m_patch &&
                 v1.m_postType == v2.m_postType && v1.m_post == v2.m_post && v1.m_dev == v2.m_dev) {
                 return true;
@@ -173,7 +173,7 @@ namespace karabo {
             return false;
         }
 
-        bool operator>(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+        bool operator>(const karabo::util::Version& v1, const karabo::util::Version& v2) {
             if (v1.m_major < v2.m_major) {
                 return false;
             } else if (v1.m_major > v2.m_major) {
@@ -203,19 +203,19 @@ namespace karabo {
             return false;
         }
 
-        bool operator!=(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+        bool operator!=(const karabo::util::Version& v1, const karabo::util::Version& v2) {
             return !(v1 == v2);
         }
 
-        bool operator>=(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+        bool operator>=(const karabo::util::Version& v1, const karabo::util::Version& v2) {
             return (v1 > v2) || (v1 == v2);
         }
 
-        bool operator<(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+        bool operator<(const karabo::util::Version& v1, const karabo::util::Version& v2) {
             return (v2 > v1);
         }
 
-        bool operator<=(const karabo::util::Version &v1, const karabo::util::Version &v2) {
+        bool operator<=(const karabo::util::Version& v1, const karabo::util::Version& v2) {
             return (v2 > v1) || (v1 == v2);
         }
 

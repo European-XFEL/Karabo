@@ -43,7 +43,7 @@ void Runner_Test::tearDown() {}
 
 void Runner_Test::testRunnerSuccess() {
     using namespace karabo::util;
-    char const *argv[] = {"SomeExecutable",
+    char const* argv[] = {"SomeExecutable",
                           "serverId=foo",
                           "autostart[0]={DataLoggerManager.serverList=dls1,dls2,dls3,dls4",
                           "DataLoggerManager.param1=12",
@@ -66,7 +66,7 @@ void Runner_Test::testRunnerSuccess() {
 
 void Runner_Test::testRunnerSuccess2() {
     using namespace karabo::util;
-    const char *argv[] = {"AnotherExecutable5", "serverId=bingo", "a[0].b=1", "a[0].c=2", "a[0].e={x=15", "y=88}"};
+    const char* argv[] = {"AnotherExecutable5", "serverId=bingo", "a[0].b=1", "a[0].c=2", "a[0].e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
@@ -81,7 +81,7 @@ void Runner_Test::testRunnerSuccess2() {
 
 void Runner_Test::testRunnerFailure1() {
     using namespace karabo::util;
-    const char *argv[] = {"AnotherExecutable", "serverId=bar", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}"};
+    const char* argv[] = {"AnotherExecutable", "serverId=bar", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
@@ -90,7 +90,7 @@ void Runner_Test::testRunnerFailure1() {
 
 void Runner_Test::testRunnerFailure2() {
     using namespace karabo::util;
-    const char *argv[] = {"AnotherExecutable2", "serverId=bar", "a=}b=1", "c=2", "d=3", "e={x=15", "y=88}"};
+    const char* argv[] = {"AnotherExecutable2", "serverId=bar", "a=}b=1", "c=2", "d=3", "e={x=15", "y=88}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
@@ -99,7 +99,7 @@ void Runner_Test::testRunnerFailure2() {
 
 void Runner_Test::testRunnerFailure3() {
     using namespace karabo::util;
-    const char *argv[] = {"AnotherExecutable3", "serverId=bla", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}}}"};
+    const char* argv[] = {"AnotherExecutable3", "serverId=bla", "a={b=1", "c=2", "d=3", "e={x=15", "y=88}}}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
@@ -108,14 +108,14 @@ void Runner_Test::testRunnerFailure3() {
 
 void Runner_Test::testRunnerFailure4() {
     using namespace karabo::util;
-    const char *argv[] = {"AnotherExecutable4", "serverId=bang", "a={{b=1}", "c=2", "d=3", "e={x=15", "y=88}}"};
+    const char* argv[] = {"AnotherExecutable4", "serverId=bang", "a={{b=1}", "c=2", "d=3", "e={x=15", "y=88}}"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     Hash configuration;
     CPPUNIT_ASSERT_THROW(RunnerDerived::parseCmd(argc, argv, configuration), ParameterException);
 }
 
 void Runner_Test::testRunnerWithInitJsonField() {
-    const char *initString = R"(
+    const char* initString = R"(
 init={
     "deviceId1": {
         "classId": "TheClassName",
@@ -136,7 +136,7 @@ init={
 }
     )";
 
-    char const *argv[] = {"SomeExecutable", "serverId=foo", initString};
+    char const* argv[] = {"SomeExecutable", "serverId=foo", initString};
     int argc = 3;
     karabo::util::Hash configuration;
     CPPUNIT_ASSERT_NO_THROW(RunnerDerived::parseCmd(argc, argv, configuration));
@@ -151,7 +151,7 @@ init={
 }
 
 void Runner_Test::testRunnerFailureWithInitAndAutostart() {
-    const char *initString = R"(
+    const char* initString = R"(
 init={
     "deviceId1": {
         "classId": "TheClassName",
@@ -171,7 +171,7 @@ init={
     }
 }
     )";
-    char const *argv[] = {"SomeExecutable", "serverId=foo",
+    char const* argv[] = {"SomeExecutable", "serverId=foo",
                           "autostart[0]={DataLoggerManager.serverList=dls1,dls2,dls3,dls4", initString};
     int argc = 4;
     karabo::util::Hash configuration;
