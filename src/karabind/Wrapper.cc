@@ -741,8 +741,7 @@ namespace karabind {
             auto base = py::cast(pBase);
             pBase.reset();
             void* ptr = static_cast<void*>(dataPtr.get());
-            // NOTE: the base is incremented to protect against destruction by Python
-            return py::array(dtype, shape, {}, ptr, base.inc_ref());
+            return py::array(dtype, shape, {}, ptr, base);
         }
 
 
