@@ -97,10 +97,10 @@ void exportPyUtilHash() {
           .value("NUMPY", PyTypes::NUMPY_DEFAULT);
 
     bp::class_<PyTypes>("TypesClass", bp::no_init)
-          .def("to", (const karabo::util::Types::ReferenceType (*)(const PyTypes::ReferenceType &)) & PyTypes::to,
+          .def("to", (const karabo::util::Types::ReferenceType (*)(const PyTypes::ReferenceType&)) & PyTypes::to,
                (bp::arg("Python_types")))
           .staticmethod("to")
-          .def("from", (const PyTypes::ReferenceType (*)(const karabo::util::Types::ReferenceType &)) & PyTypes::from,
+          .def("from", (const PyTypes::ReferenceType (*)(const karabo::util::Types::ReferenceType&)) & PyTypes::from,
                (bp::arg("C++_types")))
           .staticmethod("from")
           .def("category", (const PyTypes::ReferenceType (*)(int)) & PyTypes::category, (bp::arg("C++_types")))
@@ -136,18 +136,17 @@ void exportPyUtilHash() {
           "The HashAttributes class is a heterogeneous container with string key and \"any object\" value\n"
           "that preserves insertion order, i.e. it is behaving like an ordered map");
     a.def(bp::init<>());
-    a.def(bp::init<std::string const &, bp::object const &>());
-    a.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &>());
-    a.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &>());
-    a.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &>());
-    a.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &>());
-    a.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &>());
+    a.def(bp::init<std::string const&, bp::object const&>());
+    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&>());
+    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&>());
+    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&, std::string const&, bp::object const&>());
+    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&, std::string const&, bp::object const&, std::string const&, bp::object const&>());
+    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&, std::string const&, bp::object const&, std::string const&, bp::object const&,
+                   std::string const&, bp::object const&>());
     a.def("has", &AttributesWrap().has, (bp::arg("key")),
           "Returns True if HashAttributes container contains given \"key\"");
     a.def("__contains__", &AttributesWrap().has, (bp::arg("key")),
@@ -215,23 +214,22 @@ void exportPyUtilHash() {
                                                  "hash-key.  The Hash preserves insertion order.  The Hash\n"
                                                  "class is much like a XML-DOM container with the difference of "
                                                  "allowing only unique keys on a given tree-level.");
-    h.def(bp::init<std::string const &>());
-    h.def(bp::init<Hash const &>());
-    h.def(bp::init<std::string const &, bp::object const &>());
-    h.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &>());
-    h.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &>());
-    h.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &>());
-    h.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &>());
-    h.def(bp::init<std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &,
-                   std::string const &, bp::object const &, std::string const &, bp::object const &>());
+    h.def(bp::init<std::string const&>());
+    h.def(bp::init<Hash const&>());
+    h.def(bp::init<std::string const&, bp::object const&>());
+    h.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&>());
+    h.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&>());
+    h.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&, std::string const&, bp::object const&>());
+    h.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&, std::string const&, bp::object const&, std::string const&, bp::object const&>());
+    h.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
+                   bp::object const&, std::string const&, bp::object const&, std::string const&, bp::object const&,
+                   std::string const&, bp::object const&>());
     h.def("clear", &Hash::clear, "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
     h.def("empty", &HashWrap().empty, "h.empty() -> True if 'h' is empty otherwise False.\n");
-    h.def("getKeys", (void (*)(const karabo::util::Hash &, const bp::object &)) & HashWrap().getKeys,
+    h.def("getKeys", (void (*)(const karabo::util::Hash&, const bp::object&)) & HashWrap().getKeys,
           (bp::arg("target_container")),
           "This function follows the API of C++ counterpart. Put into the target container all the keys visible\n"
           "on the top level of the tree hierarchy.\n"
@@ -451,12 +449,12 @@ void exportPyUtilHash() {
 
 
     struct VectorHashPickleSuite : bp::pickle_suite {
-        static bp::tuple getstate(const std::vector<Hash> &vec) {
+        static bp::tuple getstate(const std::vector<Hash>& vec) {
             return Wrapper::fromStdVectorToPyTuple(vec);
         }
 
 
-        static void setstate(std::vector<Hash> &vec, bp::tuple state) {
+        static void setstate(std::vector<Hash>& vec, bp::tuple state) {
             vec = Wrapper::fromPyTupleToStdVector<Hash>(state);
         }
     };

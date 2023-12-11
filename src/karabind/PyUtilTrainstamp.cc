@@ -25,14 +25,14 @@ using namespace karabo::util;
 using namespace std;
 
 
-void exportPyUtilTrainstamp(py::module_ &m) {
+void exportPyUtilTrainstamp(py::module_& m) {
     py::class_<Trainstamp> t(m, "Trainstamp");
 
     t.def(py::init<>());
 
     t.def(py::init<const unsigned long long>(), py::arg("trainId"));
 
-    t.def("getTrainId", (unsigned long long const &(Trainstamp::*)() const) & Trainstamp::getTrainId,
+    t.def("getTrainId", (unsigned long long const& (Trainstamp::*)() const) & Trainstamp::getTrainId,
           py::return_value_policy::reference);
 
     t.def_static("hashAttributesContainTimeInformation", &Trainstamp::hashAttributesContainTimeInformation,
@@ -41,6 +41,6 @@ void exportPyUtilTrainstamp(py::module_ &m) {
     t.def_static("fromHashAttributes", (Trainstamp(*)(Hash::Attributes const)) & Trainstamp::fromHashAttributes,
                  py::arg("attributes"));
 
-    t.def("toHashAttributes", (void(Trainstamp::*)(Hash::Attributes &) const) & Trainstamp::toHashAttributes,
+    t.def("toHashAttributes", (void(Trainstamp::*)(Hash::Attributes&) const) & Trainstamp::toHashAttributes,
           py::arg("attributes"));
 }
