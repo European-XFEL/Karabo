@@ -203,6 +203,11 @@ def test_value_update(image_graph_setup):
     image_hash = get_image_hash(dimZ=3, stack_axis=False)
     apply_configuration(image_hash, output_proxy.binding)
     _assert_gray_features(controller, enabled=True)
+    assert controller._plot.imageItem.image.shape == (30, 40)
+
+    # Erase widget, a default with size 50, 50 is set
+    controller.clear_widget()
+    assert controller._plot.imageItem.image.shape == (50, 50)
 
 
 def test_undock_image(image_graph_setup, mocker):
