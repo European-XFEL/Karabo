@@ -19,6 +19,7 @@ import sys
 
 from qtpy.QtCore import Slot
 
+import karabogui.const as global_constants
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.messagebox import show_error
@@ -41,6 +42,8 @@ def create_cinema(ns):
                         'target_window': SceneTargetWindow.MainWindow,
                         'target': uuid}
             broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
+
+    global_constants.APPLICATION_MODE = True
 
     topology = get_topology()
     # Attach to the topology
