@@ -25,6 +25,10 @@ from platform import system
 from karabo.common.packaging import utils
 from karabo.common.scenemodel.api import SCENE_DEFAULT_DPI, SCENE_MAC_DPI
 
+# APPLICATION
+APPLICATION_MODE = False
+
+
 # WIDGET PROPERTIES
 WIDGET_MIN_WIDTH = 40
 WIDGET_MIN_HEIGHT = 18
