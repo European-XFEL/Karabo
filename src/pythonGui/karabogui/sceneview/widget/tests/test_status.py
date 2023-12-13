@@ -14,15 +14,16 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from unittest.mock import Mock
 
 from qtpy.QtCore import QPoint, QRect
 from qtpy.QtWidgets import QWidget
 
+import karabogui.const as global_constants
 from karabo.common.api import InstanceStatus
 from karabo.common.scenemodel.api import InstanceStatusModel
 from karabogui.binding.api import DeviceProxy, ProxyStatus
-from karabogui.testing import check_renderer_against_svg
+from karabogui.events import KaraboEvent
+from karabogui.testing import check_renderer_against_svg, click_button
 from karabogui.topology.api import SystemTreeNode
 
 from ..status import (
@@ -30,11 +31,10 @@ from ..status import (
 
 
 def test_instance_info_widget(gui_app, mocker):
-
     path = "karabogui.sceneview.widget.status.get_topology"
-    topo = Mock()
+    topo = mocker.Mock()
     mocker.patch(path).return_value = topo
-    root_proxy = DeviceProxy(device_id='XHQ_EH/MDL/STATUS')
+    root_proxy = DeviceProxy(device_id="XHQ_EH/MDL/STATUS")
     node = SystemTreeNode()
     node.attributes = {"type": "device", "status": InstanceStatus.OK.value}
     root_proxy.status = ProxyStatus.OFFLINE
@@ -90,6 +90,17 @@ def test_instance_info_widget(gui_app, mocker):
     # offline again
     root_proxy.status = ProxyStatus.OFFLINE
     assert_widget("OFFLINE", SVG_OFFLINE)
+
+    path = "karabogui.sceneview.widget.status.broadcast_event"
+    broadcast = mocker.patch(path)
+
+    click_button(widget)
+    if not global_constants.APPLICATION_MODE:
+        broadcast.assert_called_with(KaraboEvent.ShowDevice,
+                                     {"deviceId": "XHQ_EH/MDL/STATUS"})
+    else:
+        broadcast.assert_called_with(
+            KaraboEvent.RaiseEditor, {"proxy": root_proxy})
 
     # Make sure, basic interface is there
     widget.add_proxies(None)

@@ -20,11 +20,14 @@
 #############################################################################
 from pathlib import Path
 
+from qtpy.QtCore import Qt
 from qtpy.QtSvg import QSvgWidget
 
+import karabogui.const as global_constants
 from karabo.common.api import InstanceStatus
 from karabogui import icons
 from karabogui.binding.api import ProxyStatus
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_topology
 from karabogui.widgets.hints import KaraboSceneWidget
 
@@ -50,12 +53,20 @@ class InstanceStatusWidget(KaraboSceneWidget, QSvgWidget):
         self.device_id = model.keys[0].split(".", 1)[0]
         super().__init__(model=model, parent=parent)
         self.status = ProxyStatus.OFFLINE
+        self.setCursor(Qt.PointingHandCursor)
         self.proxy = get_topology().get_device(self.device_id)
         self.proxy.on_trait_change(self.proxy_online_change, "online")
         self.proxy.on_trait_change(self.proxy_status_change,
                                    "topology_node:status")
         self.proxy_online_change(self.proxy.online)
         self.setGeometry(model.x, model.y, model.width, model.height)
+
+    def mousePressEvent(self, event):
+        if global_constants.APPLICATION_MODE:
+            broadcast_event(KaraboEvent.RaiseEditor, {"proxy": self.proxy})
+        else:
+            broadcast_event(KaraboEvent.ShowDevice,
+                            {"deviceId": self.device_id})
 
     def getToolTip(self):
         return f"{self.device_id} - {self.status.name}"
