@@ -905,7 +905,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         s.def("setAllowedStates", [](Schema& self, const std::string& path, py::args args) {
             using namespace karabo::util;
-            py::tuple tstates = args.cast<py::tuple>();
+            py::sequence tstates = (args.size() == 1) ? args[0] : args.cast<py::tuple>();
             std::vector<State> states;
             for (size_t i = 0; i < py::len(tstates); ++i) {
                 const std::string state = tstates[i].attr("name").cast<std::string>();

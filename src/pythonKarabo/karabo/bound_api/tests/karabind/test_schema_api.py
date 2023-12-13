@@ -1029,6 +1029,30 @@ class Schema_TestCase(unittest.TestCase):
     #         "Some info")
 
     def test_allowed_states(self):
+        # The 'states' argument is tuple
+        schema = cppTestStruct1SchemaTestStruct1()
+        schema.setAllowedStates("exampleKey3", (State.ACQUIRING, State.NORMAL,
+                                State.PASSIVE))
+        allowedStates = schema.getAllowedStates("exampleKey3")
+        self.assertEqual(allowedStates,
+                         [State.ACQUIRING, State.NORMAL, State.PASSIVE])
+        # The 'states' argument is list
+        schema = cppTestStruct1SchemaTestStruct1()
+        schema.setAllowedStates("exampleKey3", [State.ACQUIRING, State.NORMAL,
+                                State.PASSIVE])
+        allowedStates = schema.getAllowedStates("exampleKey3")
+        self.assertEqual(allowedStates,
+                         [State.ACQUIRING, State.NORMAL, State.PASSIVE])
+        # The 'states' argument is a 'set'
+        schema = cppTestStruct1SchemaTestStruct1()
+        schema.setAllowedStates("exampleKey3", {State.ACQUIRING, State.NORMAL,
+                                State.PASSIVE})
+        allowedStates = schema.getAllowedStates("exampleKey3")
+        # the insertion order is not guaranteed for python 'set' ...
+        self.assertTrue(State.ACQUIRING in allowedStates)
+        self.assertTrue(State.NORMAL in allowedStates)
+        self.assertTrue(State.PASSIVE in allowedStates)
+        # The 'states' are *args
         schema = cppTestStruct1SchemaTestStruct1()
         schema.setAllowedStates("exampleKey3", State.ACQUIRING, State.NORMAL,
                                 State.PASSIVE)
