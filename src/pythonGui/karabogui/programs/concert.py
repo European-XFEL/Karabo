@@ -5,6 +5,7 @@ from typing import Dict
 import yaml
 from qtpy.QtCore import Slot
 
+import karabogui.const as global_constants
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.messagebox import show_error
@@ -33,6 +34,7 @@ def create_concert(data: Dict):
                         }
             broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
 
+    global_constants.APPLICATION_MODE = True
     topology = get_topology()
     # Attach to the topology
     topology.system_tree.on_trait_change(
