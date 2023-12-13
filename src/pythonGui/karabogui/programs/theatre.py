@@ -20,6 +20,7 @@ import sys
 
 from qtpy.QtCore import QObject, QTimer, Slot
 
+import karabogui.const as global_constants
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.programs.base import create_gui_app, init_gui
@@ -145,6 +146,7 @@ def create_theatre(ns):
     app = create_gui_app(sys.argv)
     init_gui(app, use_splash=not ns.nosplash)
 
+    global_constants.APPLICATION_MODE = True
     network = get_network()
     waiter = DeviceWaiter(ns.scene_id, ns.timeout)
 
