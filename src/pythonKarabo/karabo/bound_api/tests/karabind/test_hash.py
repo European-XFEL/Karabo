@@ -390,6 +390,38 @@ class Tests(unittest.TestCase):
         # Run test in karathon version
         inner(karathon.Hash, karathon.VectorHash)
 
+    def test_copy_and_VectorHash(self):
+        def inner(Hash, VectorHash):
+            arr = np.arange(20000, dtype=np.int16).reshape(100, 200)
+            self.assertEqual(arr[0][0], 0)
+            if Hash is karabind.Hash:
+                v = VectorHash([Hash('a', arr), Hash('b', 2)])
+            else:
+                # karathon supports only default constructor
+                v = VectorHash()
+                v.append(Hash('a', arr))
+                v.append(Hash('b', 2))
+            # Shallow copy ...
+            vc = copy.copy(v)
+            self.assertNotEqual(id(vc), id(v))
+            # karathon has no deepcopy
+            if Hash is karabind.Hash:
+                # Deep copy ...
+                vd = copy.deepcopy(v)
+                self.assertNotEqual(id(vd), id(v))
+            # Change origin vector...
+            arr[0][0] = 111
+            self.assertEqual(v[0]['a'][0][0], 111)
+            # Shallow copy has seen the change ...
+            self.assertEqual(vc[0]['a'][0][0], 111)
+            if Hash is karabind.Hash:
+                # But deep copy is unchanged ...
+                self.assertEqual(vd[0]['a'][0][0], 0)
+
+        # Run test in karabind version
+        inner(karabind.Hash, karabind.VectorHash)
+        inner(karathon.Hash, karathon.VectorHash)
+
     def test_getAs(self):
         def inner(Hash, Node, Types):
             # BOOL
