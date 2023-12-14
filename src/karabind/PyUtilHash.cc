@@ -943,8 +943,19 @@ void exportPyUtilHash(py::module_& m) {
     auto vh = py::bind_vector<std::vector<Hash>>(m, "VectorHash");
 
     vh.def("__copy__", [](const std::vector<Hash>& self) {
-        std::vector<Hash> vhc;
-        for (const Hash& h : self) vhc.push_back(h);
+        std::vector<py::object> vhc;
+        for (const auto& h : self) {
+            vhc.push_back(py::cast(h).attr("__copy__")());
+        }
+        return py::cast(std::move(vhc));
+    });
+
+    vh.def("__deepcopy__", [](const std::vector<Hash>& self, py::dict memo) {
+        std::vector<py::object> vhc;
+        for (const Hash& h : self) {
+            auto g = py::cast(h).attr("__deepcopy__")(memo);
+            vhc.push_back(g);
+        }
         return py::cast(std::move(vhc));
     });
 
