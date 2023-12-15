@@ -85,7 +85,7 @@ namespace karabo {
         template <typename Ret, typename... Args>
         class SlotN : public Slot {
            public:
-            typedef typename boost::function<Ret(Args...)> SlotHandler;
+            typedef typename boost::function<Ret(const Args&...)> SlotHandler;
 
             void registerSlotFunction(const SlotHandler& slotHandler) {
                 boost::mutex::scoped_lock lock(m_registeredSlotFunctionsMutex);
