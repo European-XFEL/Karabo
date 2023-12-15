@@ -156,12 +156,21 @@ void MetaTools_Test::testCallFromTuple() {
     std::string s("test");
     Foo f;
     Bar b;
+    CPPUNIT_ASSERT_EQUAL(0, Foo::nCopies);
 
     Hash h;
     pack(h, i, s, f); // We will copy f once here!!
+    CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies);
     auto barFn = boost::bind(&Bar::bar, &b, _1, _2, _3);
     call(barFn, unpack<int, std::string, Foo>(h)); // But not here!!
 
     CPPUNIT_ASSERT(b.gotCalled == true);
-    CPPUNIT_ASSERT(f.nCopies == 1);
+    CPPUNIT_ASSERT_EQUAL(1, Foo::nCopies);
+
+    // But we copy if we go via function with arguments by value
+    b.gotCalled = false;
+    boost::function<void(int, std::string, Foo)> funcWithArgsByValue = barFn;
+    call(funcWithArgsByValue, unpack<int, std::string, Foo>(h));
+    CPPUNIT_ASSERT(b.gotCalled == true);
+    CPPUNIT_ASSERT_GREATER(1, Foo::nCopies); // At least one extra copy
 }
