@@ -17,13 +17,16 @@
 import unittest
 
 from karabind import (
-    MANDATORY, METER, MICRO, STATE_ELEMENT, AccessLevel, AccessType,
-    ArchivePolicy, AssignmentType, DAQPolicy, Hash, MetricPrefix, NodeType,
-    Schema, Types, Unit, cppGraphicsRenderer1SchemaTest,
+    AMPERE, IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, MILLI,
+    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, AccessLevel, AccessType, ArchivePolicy, AssignmentType,
+    DaqDataType, DAQPolicy, Hash, Logger, MetricPrefix, NodeType, Schema,
+    Types, Unit, Validator, cppGraphicsRenderer1SchemaTest,
     cppOtherSchemaElementsSchemaOtherSchemaElements, cppShapeSchemaCircle,
     cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
     cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
 
+from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
 
@@ -733,43 +736,61 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_vectorElement exception: " + str(e))
 
-    #     try:
-    #         schema = cppSomeClassSchemaSomeClassId()
-    #         validator = Validator()
-    #         configuration = Hash('somelist', [])
-    #         ok, error, validated = validator.validate(schema, configuration)
-    #         if not ok:
-    #             raise RuntimeError(error)
-    #         somelist = validated['somelist']
-    #         somelist.append(99)
-    #         somelist.append(55)
-    #         configuration['somelist'] = somelist
-    #         ok, error, validated = validator.validate(schema, configuration)
-    #         if not ok:
-    #             raise RuntimeError(error)
-    #         self.assertIsNotNone(validated)
-    #     except Exception as e:
-    #         self.fail("test_vectorElement exception 2: " + str(e))
-    #
-    # def test_ndarrayElement(self):
-    #     schema = Configurator(ArrayContainer).getSchema("ArrayContainer")
-    #
-    #     assert schema.getDefaultValue("exampleKey16.shape") == [2, 3]
-    #     assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, 0]
-    #     assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
-    #
-    #     assert schema.getUnit("exampleKey16.data") == Unit.DEGREE_CELSIUS
-    #     assert schema.getMetricPrefix(
-    #         "exampleKey16.data") == MetricPrefix.CENTI
-    #
-    #     assert schema.isAccessReadOnly("exampleKey16")
-    #     assert schema.isAccessReadOnly("exampleKey17")
-    #     assert schema.isAccessReadOnly("exampleKey18")
-    #
-    #     assert schema.getSkipValidation("exampleKey16")
-    #     assert schema.getSkipValidation("exampleKey17")
-    #     assert not schema.getSkipValidation("exampleKey18")
-    #
+        try:
+            schema = cppSomeClassSchemaSomeClassId()
+            validator = Validator()
+            configuration = Hash('somelist', [])
+            ok, error, validated = validator.validate(schema, configuration)
+            if not ok:
+                raise RuntimeError(error)
+            somelist = validated['somelist']
+            somelist.append(99)
+            somelist.append(55)
+            configuration['somelist'] = somelist
+            ok, error, validated = validator.validate(schema, configuration)
+            if not ok:
+                raise RuntimeError(error)
+            self.assertIsNotNone(validated)
+        except Exception as e:
+            self.fail("test_vectorElement exception 2: " + str(e))
+
+    def test_ndarrayElement(self):
+        schema = Schema()
+        (
+            NDARRAY_ELEMENT(schema).key("example16")
+            .dtype("BOOL")
+            .shape([2, 3])
+            .unit(Unit.DEGREE_CELSIUS)
+            .metricPrefix(MetricPrefix.CENTI)
+            .skipValidation()
+            .commit(),
+
+            NDARRAY_ELEMENT(schema).key("example17")
+            .dtype("UINT32")
+            .shape([2, 5, 0])
+            .skipValidation()
+            .commit(),
+            # NOTE: validation is skipped for NDArray even when not explicitly
+            # asked for. However, this will change in the future.
+            NDARRAY_ELEMENT(schema).key("example18")
+            .dtype("FLOAT")
+            .shape("3,2,1")
+            .commit()
+        )
+
+        assert schema.getDefaultValue("example16.shape") == [2, 3]
+        assert schema.getDefaultValue("example17.shape") == [2, 5, 0]
+        assert schema.getDefaultValue("example18.shape") == [3, 2, 1]
+        assert schema.getUnit("example16.data") == Unit.DEGREE_CELSIUS
+        assert schema.getMetricPrefix("example16.data") == MetricPrefix.CENTI
+
+        assert schema.isAccessReadOnly("example16")
+        assert schema.isAccessReadOnly("example17")
+        assert schema.isAccessReadOnly("example18")
+        assert schema.getSkipValidation("example16")
+        assert schema.getSkipValidation("example17")
+        assert not schema.getSkipValidation("example18")
+
     # def test_listElement(self):
     #     schema = \
     #       Configurator(GraphicsRenderer2).getSchema("GraphicsRenderer2")
@@ -908,49 +929,80 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_perKeyFunctionality exception group 1: " + str(e))
 
-    # def test_merge(self):
-    #     try:
-    #         schema = Configurator(Base).getSchema('P1')
-    #         self.assertTrue("a" in schema)
-    #         self.assertFalse("x" in schema)
-    #         self.assertFalse("y" in schema)
-    #         self.assertFalse("z" in schema)
-    #
-    #         schema2 = Configurator(Base).getSchema('P2')
-    #         self.assertTrue("x" in schema2)
-    #         self.assertTrue("y" in schema2)
-    #         self.assertTrue("z" in schema2)
-    #
-    #         schema += schema2
-    #
-    #         self.assertTrue("a" in schema)
-    #         self.assertTrue("x" in schema)
-    #         self.assertTrue("y" in schema)
-    #         self.assertTrue("z" in schema)
-    #
-    #     except Exception as e:
-    #         self.fail("test_merge exception: " + str(e))
-    #
-    # def test_logger(self):
-    #     config = Hash("priority", "DEBUG")
-    #     Logger.configure(config)
-    #     root = Logger.getCategory()
-    #     a1 = Logger.getCategory("a1")
-    #     a1_a2 = Logger.getCategory("a1.a2")
-    #     root.DEBUG("ERROR")
-    #
-    #     Logger.useOstream()
-    #     root.DEBUG("ok")
-    #     a1.DEBUG("ok")
-    #     a1_a2.DEBUG("ok")
-    #     root.INFO("ok")
-    #     a1.INFO("ok")
-    #     a1_a2.INFO("ok")
-    #
-    #     Logger.reset()
-    #     root.DEBUG("ERROR")
-    #     a1.DEBUG("ERROR")
-    #     a1_a2.DEBUG("ERROR")
+    def test_merge(self):
+        schema = Schema()
+        (
+            STRING_ELEMENT(schema).key("a")
+            .description("a").displayedName("a")
+            .assignmentOptional().defaultValue("a value")
+            .tags("CY,CY,NC,JS,KW,NC")
+            .commit(),
+
+        )
+        self.assertTrue("a" in schema)
+        self.assertFalse("x" in schema)
+        self.assertFalse("y" in schema)
+        self.assertFalse("z" in schema)
+
+        schema2 = Schema()
+        (
+            STRING_ELEMENT(schema2).key("x")
+            .description("x")
+            .displayedName("x")
+            .assignmentOptional().defaultValue("a value")
+            .tags("LM,BH")
+            .commit(),
+
+            STRING_ELEMENT(schema2).key("y")
+            .tags("CY")
+            .displayedName("Example key 1")
+            .description("Example key 1 description")
+            .options("Radio,Air Condition,Navigation", ",")
+            .assignmentOptional().defaultValue("Radio")
+            .reconfigurable()
+            .commit(),
+
+            INT32_ELEMENT(schema2).key("z").alias(10)
+            .tags("CY,LM,KW")
+            .displayedName("Example key 2")
+            .description("Example key 2 description")
+            .options("5, 25, 10")
+            .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+            .assignmentOptional().defaultValue(10)
+            .init()
+            .commit(),
+        )
+        self.assertTrue("x" in schema2)
+        self.assertTrue("y" in schema2)
+        self.assertTrue("z" in schema2)
+
+        schema += schema2
+
+        self.assertTrue("a" in schema)
+        self.assertTrue("x" in schema)
+        self.assertTrue("y" in schema)
+        self.assertTrue("z" in schema)
+
+    def test_logger(self):
+        config = Hash("priority", "DEBUG")
+        Logger.configure(config)
+        root = Logger.getCategory()
+        a1 = Logger.getCategory("a1")
+        a1_a2 = Logger.getCategory("a1.a2")
+        root.DEBUG("ERROR")
+
+        Logger.useOstream()
+        root.DEBUG("ok")
+        a1.DEBUG("ok")
+        a1_a2.DEBUG("ok")
+        root.INFO("ok")
+        a1.INFO("ok")
+        a1_a2.INFO("ok")
+
+        Logger.reset()
+        root.DEBUG("ERROR")
+        a1.DEBUG("ERROR")
+        a1_a2.DEBUG("ERROR")
 
     def test_helpFunction(self):
         pass
@@ -958,75 +1010,69 @@ class Schema_TestCase(unittest.TestCase):
         # schema = TestStruct1.getSchema("TestStruct1")
         # schema.help()
 
-    # def test_schemaImageElement(self):
-    #     try:
-    #         schema = Configurator(TestStruct1).getSchema("TestStruct1")
-    #         self.assertEqual(schema.getDisplayType("myImageElement"),
-    #                          "ImageData")
-    #         self.assertEqual(schema.isCustomNode("myImageElement"), True)
-    #         self.assertEqual(schema.getCustomNodeClass("myImageElement"),
-    #                          "ImageData")
-    #         self.assertEqual(schema.getAccessMode("myImageElement"),
-    #                          AccessType.READ)
-    #         self.assertEqual(schema.getNodeType("myImageElement"),
-    #                          NodeType.NODE)
-    #         self.assertEqual(schema.getRequiredAccessLevel("myImageElement"),
-    #                          AccessLevel.OPERATOR)  # .operatorAccess()
-    #         self.assertEqual(schema.getDisplayedName("myImageElement"),
-    #                          "myImage")
-    #         self.assertEqual(schema.getDescription("myImageElement"),
-    #                          "Image Element")
-    #         self.assertEqual(schema.getDefaultValue("myImageElement.dims"),
-    #                          [100, 200])
-    #         schema2 = Configurator(SomeClass).getSchema("SomeClassId")
-    #         self.assertEqual(schema2.getDefaultValue("myImageElement.dims"),
-    #                          [110, 210])
-    #         ide = IMAGEDATA_ELEMENT(schema2).key("myImageElement2")
-    #         with self.assertRaises(RuntimeError):
-    #             ide.setDimensions(123)  # only list ans str are allowed
-    #
-    #         Hijack this test to test correct false result of isCustomNode,
-    #         but here just one type, excessive test is done for
-    #         underlying C++ code
-    #         self.assertEqual(schema.isCustomNode("exampleKey1"), False)
-    #     except Exception as e:
-    #         self.fail("test_schemaImageElement group 1: " + str(e))
-    #
-    #     try:
-    #         self.assertEqual(schema.getDescription("myImageElement.pixels"),
-    #          "Pixel array")
-    #         self.assertEqual(schema.getValueType("myImageElement.pixels"),
-    #         Types.VECTOR_CHAR)
-    #
-    #         self.assertEqual(schema.getDisplayedName("myImageElement.dims"),
-    #                          "Dimensions")
-    #         self.assertEqual(schema.getValueType("myImageElement.dims"),
-    #                          Types.VECTOR_UINT64)
-    #         self.assertEqual(schema.getDisplayType("myImageElement.dims"),
-    #                          "Curve")
-    #
-    #         self.assertEqual(
-    #             schema.getDisplayedName("myImageElement.encoding"),
-    #             "Encoding")
-    #         self.assertEqual(schema.getValueType("myImageElement.encoding"),
-    #                          Types.INT32)
-    #
-    #     self.assertEqual(
-    #     schema.getDisplayedName("myImageElement.pixels.isBigEndian"),
-    #     "Is big endian")
-    #     self.assertEqual(
-    #     schema.getValueType("myImageElement.pixels.isBigEndian"), Types.BOOL)
-    #     self.assertEqual(
-    #     schema.getDefaultValue("myImageElement.pixels.isBigEndian"), False)
-    #
-    #     except Exception as e:
-    #         self.fail("test_schemaImageElement group 2: " + str(e))
-    #
-    # def test_alarm_info(self):
-    #     schema = cppTestStruct1SchemaTestStruct1()
-    #     self.assertEqual(
-    #         schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW),
-    #         "Some info")
+    def test_schemaImageElement(self):
+        schema = Schema()
+        (
+            IMAGEDATA_ELEMENT(schema).key("myImage1")
+            .displayedName("myImage")
+            .description("Image1 Element")
+            .setDimensions("100, 200")
+            .operatorAccess()
+            .commit(),
+
+            IMAGEDATA_ELEMENT(schema).key("myImage2")
+            .displayedName("myImage2")
+            .description("Image2 Element")
+            .setDimensions([110, 210])
+            .operatorAccess()
+            .commit(),
+        )
+        self.assertEqual(schema.getDisplayType("myImage1"), "ImageData")
+        self.assertEqual(schema.isCustomNode("myImage1"), True)
+        self.assertEqual(schema.getCustomNodeClass("myImage1"), "ImageData")
+        self.assertEqual(schema.getAccessMode("myImage1"), AccessType.READ)
+        self.assertEqual(schema.getNodeType("myImage1"), NodeType.NODE)
+        self.assertEqual(schema.getRequiredAccessLevel("myImage1"),
+                         AccessLevel.OPERATOR)  # .operatorAccess()
+        self.assertEqual(schema.getDisplayedName("myImage1"), "myImage")
+        self.assertEqual(schema.getDescription("myImage1"),
+                         "Image1 Element")
+        self.assertEqual(schema.getDefaultValue("myImage1.dims"), [100, 200])
+
+        self.assertEqual(schema.getDefaultValue("myImage2.dims"), [110, 210])
+
+        ide = IMAGEDATA_ELEMENT(schema).key("moreImageElement")
+        with self.assertRaises(RuntimeError):
+            ide.setDimensions(123)  # only list ans str are allowed
+
+        self.assertEqual(schema.getDescription("myImage1.pixels"),
+                         "The N-dimensional array containing the pixels")
+        self.assertEqual(schema.getValueType("myImage1.pixels.data"),
+                         Types.BYTE_ARRAY)
+        self.assertEqual(schema.getDisplayedName("myImage1.dims"),
+                         "Dimensions")
+        self.assertEqual(schema.getValueType("myImage1.dims"),
+                         Types.VECTOR_UINT64)
+        self.assertEqual(schema.getDisplayType("myImage1.dims"), "Curve")
+
+        self.assertEqual(schema.getDisplayedName("myImage1.encoding"),
+                         "Encoding")
+        self.assertEqual(schema.getValueType("myImage1.encoding"),
+                         Types.INT32)
+
+        self.assertEqual(
+            schema.getDisplayedName("myImage1.pixels.isBigEndian"),
+            "Is big-endian")
+        self.assertEqual(
+            schema.getValueType("myImage1.pixels.isBigEndian"), Types.BOOL)
+        self.assertEqual(
+            schema.getDefaultValue("myImage1.pixels.isBigEndian"), False)
+
+    def test_alarm_info(self):
+        schema = cppTestStruct1SchemaTestStruct1()
+        self.assertEqual(
+            schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW),
+            "Some info")
 
     def test_allowed_states(self):
         # The 'states' argument is tuple
@@ -1060,24 +1106,24 @@ class Schema_TestCase(unittest.TestCase):
         self.assertEqual(allowedStates,
                          [State.ACQUIRING, State.NORMAL, State.PASSIVE])
 
-    # def test_daq_data_type(self):
-    #     schema = Schema()
-    #
-    #     NODE_ELEMENT(schema).key(
-    #         "trainData").commit()  # Has no DAQ data type yet
-    #     NODE_ELEMENT(schema).key("pulseData").setDaqDataType(
-    #         DaqDataType.PULSE).commit()
-    #
-    #     self.assertEqual(schema.hasDaqDataType("trainData"), False)
-    #     self.assertEqual(schema.hasDaqDataType("pulseData"), True)
-    #     self.assertEqual(schema.getDaqDataType("pulseData"),
-    #                      DaqDataType.PULSE)
-    #
-    #     Now add DAQ data type to node "trainData"
-    #     schema.setDaqDataType("trainData", DaqDataType.TRAIN)
-    #     self.assertEqual(schema.hasDaqDataType("trainData"), True)
-    #     self.assertEqual(schema.getDaqDataType("trainData"),
-    #                      DaqDataType.TRAIN)
+    def test_daq_data_type(self):
+        schema = Schema()
+
+        NODE_ELEMENT(schema).key(
+            "trainData").commit()  # Has no DAQ data type yet
+        NODE_ELEMENT(schema).key("pulseData").setDaqDataType(
+            DaqDataType.PULSE).commit()
+
+        self.assertEqual(schema.hasDaqDataType("trainData"), False)
+        self.assertEqual(schema.hasDaqDataType("pulseData"), True)
+        self.assertEqual(schema.getDaqDataType("pulseData"),
+                         DaqDataType.PULSE)
+
+        # Now add DAQ data type to node "trainData"
+        schema.setDaqDataType("trainData", DaqDataType.TRAIN)
+        self.assertEqual(schema.hasDaqDataType("trainData"), True)
+        self.assertEqual(schema.getDaqDataType("trainData"),
+                         DaqDataType.TRAIN)
 
     def test_state_element(self):
         schema = Schema()
@@ -1115,127 +1161,127 @@ class Schema_TestCase(unittest.TestCase):
 
         # There are more tests of tables in the integration tests...
 
-    # def test_overwrite_restrictions_for_options(self):
-    #     schema = Schema()
-    #     (
-    #         INT32_ELEMENT(schema).key("range")
-    #         .displayedName("Range")
-    #         .options("0,1")
-    #         .assignmentOptional().defaultValue(0)
-    #         .reconfigurable()
-    #         .commit()
-    #     )
-    #     vec = schema.getOptions("range")
-    #     self.assertEqual(len(vec), 2)
-    #     self.assertEqual(vec[0], 0)
-    #     self.assertEqual(vec[1], 1)
-    #     (
-    #         OVERWRITE_ELEMENT(schema).key("range")
-    #         .setNewOptions("0,1,2")
-    #         .commit()
-    #     )
-    #     vec = schema.getOptions("range")
-    #     self.assertEqual(len(vec), 3)
-    #     self.assertEqual(vec[0], 0)
-    #     self.assertEqual(vec[1], 1)
-    #     self.assertEqual(vec[2], 2)
-    #
-    # def test_overwrite_tags(self):
-    #     schema = Schema()
-    #     (
-    #         INT32_ELEMENT(schema).key("taggedProp")
-    #         .tags("bip, bop")
-    #         .assignmentOptional().defaultValue(0)
-    #         .reconfigurable()
-    #         .commit()
-    #     )
-    #     vec = schema.getTags("taggedProp")
-    #     self.assertEqual(len(vec), 2)
-    #     self.assertEqual(vec[0], "bip")
-    #     self.assertEqual(vec[1], "bop")
-    #     (
-    #         OVERWRITE_ELEMENT(schema).key("taggedProp")
-    #         .setNewTags("doff")
-    #         .commit()
-    #     )
-    #     vec = schema.getTags("taggedProp")
-    #     self.assertEqual(len(vec), 1)
-    #     self.assertEqual(vec[0], "doff")
-    #     (
-    #         OVERWRITE_ELEMENT(schema).key("taggedProp")
-    #         .setNewTags(["doff", "deff"])
-    #         .commit()
-    #     )
-    #     vec = schema.getTags("taggedProp")
-    #     self.assertEqual(len(vec), 2)
-    #     self.assertEqual(vec[0], "doff")
-    #     self.assertEqual(vec[1], "deff")
-    #     (
-    #         OVERWRITE_ELEMENT(schema).key("taggedProp")
-    #         .setNewTags(("chip", "chop"))
-    #         .commit()
-    #     )
-    #     vec = schema.getTags("taggedProp")
-    #     self.assertEqual(len(vec), 2)
-    #     self.assertEqual(vec[0], "chip")
-    #     self.assertEqual(vec[1], "chop")
-    #     Only iterable of str are allowed
-    #     with self.assertRaises(RuntimeError):
-    #         (
-    #             OVERWRITE_ELEMENT(schema).key("taggedProp")
-    #             .setNewTags((1, 2))
-    #             .commit()
-    #         )
-    #
-    # def test_allowed_actions(self):
-    #     s = Schema()
-    #     (
-    #         NODE_ELEMENT(s).key("node")
-    #         .setAllowedActions(("action1", "action2"))  # tuple
-    #         .commit(),
-    #
-    #         INT32_ELEMENT(s).key("node.int")
-    #         .assignmentMandatory()
-    #         .commit(),
-    #
-    #         NDARRAY_ELEMENT(s).key("node.arr")
-    #         .setAllowedActions(["otherAction"])  # list
-    #         .commit(),
-    #
-    #         IMAGEDATA_ELEMENT(s).key("image")
-    #         .setAllowedActions("")  # str - each char is taken, here none
-    #         .commit()
-    #     )
-    #
-    #     self.assertTrue(s.hasAllowedActions("node"))
-    #     self.assertFalse(s.hasAllowedActions("node.int"))
-    #     actions = s.getAllowedActions("node")
-    #     self.assertEqual(len(actions), 2)
-    #     self.assertEqual(actions[0], "action1")
-    #     self.assertEqual(actions[1], "action2")
-    #
-    #     self.assertTrue(s.hasAllowedActions("node.arr"))
-    #     actions = s.getAllowedActions("node.arr")
-    #     self.assertEqual(len(actions), 1)
-    #     self.assertEqual(actions[0], "otherAction")
-    #
-    #     self.assertTrue(s.hasAllowedActions("image"))
-    #     actions = s.getAllowedActions("image")
-    #     self.assertEqual(len(actions), 0)
-    #
-    #     Check setAllowedActions from Schema
-    #     and validate that also keys of a dict are taken:
-    #     s.setAllowedActions("node",
-    #                         {"actA": 1, "actB": 2, "actC": "who care"})
-    #     actions = s.getAllowedActions("node")
-    #     self.assertEqual(len(actions), 3)
-    #     self.assertEqual(actions[0], "actA")
-    #     self.assertEqual(actions[1], "actB")
-    #     self.assertEqual(actions[2], "actC")
-    #
-    #     Only (custom) nodes can have allowed actions:
-    #     with self.assertRaises(RuntimeError):
-    #         s.setAllowedActions("node.int", ["bla", "blue"])
+    def test_overwrite_restrictions_for_options(self):
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("range")
+            .displayedName("Range")
+            .options("0,1")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit()
+        )
+        vec = schema.getOptions("range")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], 0)
+        self.assertEqual(vec[1], 1)
+        (
+            OVERWRITE_ELEMENT(schema).key("range")
+            .setNewOptions("0,1,2")
+            .commit()
+        )
+        vec = schema.getOptions("range")
+        self.assertEqual(len(vec), 3)
+        self.assertEqual(vec[0], 0)
+        self.assertEqual(vec[1], 1)
+        self.assertEqual(vec[2], 2)
+
+    def test_overwrite_tags(self):
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("taggedProp")
+            .tags("bip, bop")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], "bip")
+        self.assertEqual(vec[1], "bop")
+        (
+            OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags("doff")
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 1)
+        self.assertEqual(vec[0], "doff")
+        (
+            OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags(["doff", "deff"])
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], "doff")
+        self.assertEqual(vec[1], "deff")
+        (
+            OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags(("chip", "chop"))
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], "chip")
+        self.assertEqual(vec[1], "chop")
+        # Only iterable of str are allowed
+        with self.assertRaises(RuntimeError):
+            (
+                OVERWRITE_ELEMENT(schema).key("taggedProp")
+                .setNewTags((1, 2))
+                .commit()
+            )
+
+    def test_allowed_actions(self):
+        s = Schema()
+        (
+            NODE_ELEMENT(s).key("node")
+            .setAllowedActions(("action1", "action2"))  # tuple
+            .commit(),
+
+            INT32_ELEMENT(s).key("node.int")
+            .assignmentMandatory()
+            .commit(),
+
+            NDARRAY_ELEMENT(s).key("node.arr")
+            .setAllowedActions(["otherAction"])  # list
+            .commit(),
+
+            IMAGEDATA_ELEMENT(s).key("image")
+            .setAllowedActions("")  # str - each char is taken, here none
+            .commit()
+        )
+
+        self.assertTrue(s.hasAllowedActions("node"))
+        self.assertFalse(s.hasAllowedActions("node.int"))
+        actions = s.getAllowedActions("node")
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0], "action1")
+        self.assertEqual(actions[1], "action2")
+
+        self.assertTrue(s.hasAllowedActions("node.arr"))
+        actions = s.getAllowedActions("node.arr")
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0], "otherAction")
+
+        self.assertTrue(s.hasAllowedActions("image"))
+        actions = s.getAllowedActions("image")
+        self.assertEqual(len(actions), 0)
+
+        # Check setAllowedActions from Schema
+        # and validate that also keys of a dict are taken:
+        s.setAllowedActions("node",
+                            {"actA": 1, "actB": 2, "actC": "who care"})
+        actions = s.getAllowedActions("node")
+        self.assertEqual(len(actions), 3)
+        self.assertEqual(actions[0], "actA")
+        self.assertEqual(actions[1], "actB")
+        self.assertEqual(actions[2], "actC")
+
+        # Only (custom) nodes can have allowed actions:
+        with self.assertRaises(RuntimeError):
+            s.setAllowedActions("node.int", ["bla", "blue"])
 
 
 if __name__ == '__main__':
