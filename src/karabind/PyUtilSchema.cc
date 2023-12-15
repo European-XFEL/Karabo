@@ -1050,15 +1050,25 @@ void exportPyUtilSchema(py::module_& m) {
 
         s.def(
               "getInfoForAlarm",
-              [](Schema& self, const std::string& path, const AlarmCondition& condition) -> py::str {
-                  return self.getInfoForAlarm(path, condition);
+              [](Schema& self, const std::string& path, const py::object& ocond) -> py::str {
+                  const std::string className = ocond.attr("__class__").attr("__name__").cast<std::string>();
+                  if (className != "AlarmCondition") {
+                      throw KARABO_PARAMETER_EXCEPTION("Parameter is not of AlarmCondition type");
+                  }
+                  const std::string& condition = ocond.attr("value").cast<std::string>();
+                  return self.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(condition));
               },
               py::arg("path"), py::arg("condition"));
 
         s.def(
               "doesAlarmNeedAcknowledging",
-              [](Schema& self, const std::string& path, const AlarmCondition& condition) -> py::bool_ {
-                  return self.doesAlarmNeedAcknowledging(path, condition);
+              [](Schema& self, const std::string& path, const py::object& ocond) -> py::bool_ {
+                  const std::string className = ocond.attr("__class__").attr("__name__").cast<std::string>();
+                  if (className != "AlarmCondition") {
+                      throw KARABO_PARAMETER_EXCEPTION("Parameter is not of AlarmCondition type");
+                  }
+                  const std::string& condition = ocond.attr("value").cast<std::string>();
+                  return self.doesAlarmNeedAcknowledging(path, karabo::util::AlarmCondition::fromString(condition));
               },
               py::arg("path"), py::arg("condition"));
 
@@ -1113,7 +1123,7 @@ void exportPyUtilSchema(py::module_& m) {
 
         s.def(
               "hasDaqDataType",
-              [](const Schema& self, const std::string& path) -> py::bool_ { return self.getDaqDataType(path); },
+              [](const Schema& self, const std::string& path) -> py::bool_ { return self.hasDaqDataType(path); },
               py::arg("path"));
 
         s.def(
