@@ -157,6 +157,7 @@ set(xmsTestRunner_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/xms/Memory_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/xms/Signal_Test.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/xms/SignalSlotable_Test.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/xms/Slot_Test.cc
     $<TARGET_OBJECTS:BROKER_UTILS>
     $<TARGET_OBJECTS:TEST_RUNNER>
 )
