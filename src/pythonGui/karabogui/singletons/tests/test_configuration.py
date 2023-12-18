@@ -49,14 +49,13 @@ class TestConfiguration(GuiTestCase):
         config['device_domain'] = 'CAS_INTERNAL'
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
-        self.assertEqual(len(config), 24)
+        self.assertEqual(len(config), 21)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['device_domain'], 'CAS_INTERNAL')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
         keys = [
             'access_level',
-            'alarm_visible',
             'broker_topic',
             'console_visible',
             'data_dir',
@@ -67,7 +66,6 @@ class TestConfiguration(GuiTestCase):
             'domain',
             'gui_servers',
             'highDPI',
-            'log_visible',
             'logbook_header_style',
             'logbook_stream',
             'logbook_topic',
@@ -75,7 +73,6 @@ class TestConfiguration(GuiTestCase):
             'main_geometry',
             'project_sort_column',
             'project_sort_order',
-            'property_alarm_color_configurator',
             'reactive_login',
             'username',
             'wizard']
@@ -99,7 +96,7 @@ class TestConfiguration(GuiTestCase):
             if item.dtype is not None:
                 counter += 1
                 self.assertIsNotNone(item.default)
-        self.assertEqual(counter, 10)
+        self.assertEqual(counter, 7)
 
     def test_set_bool_value(self):
         target = 'karabogui.singletons.configuration.QSettings'
@@ -126,12 +123,11 @@ class TestConfiguration(GuiTestCase):
         groups = config.groups()
         self.assertEqual(len(groups), 6)
         user_group = [item.name for item in groups[USER]]
-        self.assertEqual(len(user_group), 10)
+        self.assertEqual(len(user_group), 9)
         self.assertIn('wizard', user_group)
         self.assertIn('main_geometry', user_group)
         self.assertIn('highDPI', user_group)
         self.assertIn('development', user_group)
-        self.assertIn('property_alarm_color_configurator', user_group)
         self.assertIn('project_sort_column', user_group)
         self.assertIn('project_sort_order', user_group)
         network_group = [item.name for item in groups[NETWORK]]
@@ -153,9 +149,7 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('broker_topic', bone_group)
         self.assertIn('documentation', bone_group)
         panel_group = [item.name for item in groups[PANEL]]
-        self.assertEqual(len(panel_group), 3)
-        self.assertIn('alarm_visible', panel_group)
-        self.assertIn('log_visible', panel_group)
+        self.assertEqual(len(panel_group), 1)
         self.assertIn('console_visible', panel_group)
 
         info = config.info()
