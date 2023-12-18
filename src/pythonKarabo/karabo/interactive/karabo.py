@@ -368,7 +368,7 @@ def download(args):
             subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
             return dest
         except subprocess.CalledProcessError:
-            print("Dowloading binary for {}-{} failed."
+            print("Downloading binary for {}-{} failed."
                   .format(args.device, args.tag))
         return None
 
