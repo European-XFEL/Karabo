@@ -23,9 +23,7 @@ from weakref import WeakValueDictionary
 from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from qtpy.QtGui import QBrush, QColor
 
-from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
-    State)
+from karabo.common.api import State
 from karabo.native import AccessMode, Assignment, has_changes
 from karabogui.binding.api import (
     BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy,
@@ -34,16 +32,14 @@ from karabogui.binding.api import (
     WidgetNodeBinding, get_binding_value)
 from karabogui.fonts import get_qfont
 from karabogui.indicators import (
-    LOCKED_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_ALARM_COLOR_MAP,
-    PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR, STATE_COLORS,
-    get_state_color)
+    LOCKED_COLOR, PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR,
+    STATE_COLORS, get_state_color)
 from karabogui.request import send_property_changes
-from karabogui.singletons.api import get_config
 
 from .utils import (
     dragged_configurator_items, get_child_names, get_device_locked_string,
     get_device_state_string, get_icon, get_proxy_value, get_qcolor_state,
-    is_mandatory, threshold_triggered)
+    is_mandatory)
 
 SPECIAL_BINDINGS = (SlotBinding, ImageBinding,
                     NDArrayBinding, WidgetNodeBinding)
@@ -74,7 +70,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         self._property_proxies = {}
         self._model_index_refs = WeakValueDictionary()
         self._header_labels = ('Property', 'Current value on device', 'Value')
-        self._show_alarms = get_config()['property_alarm_color_configurator']
 
     # ----------------------------
     # Public interface
@@ -446,7 +441,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def _proxy_color(self, proxy):
         """data(role=Qt.ColorRole) for properties."""
         binding = proxy.binding
-        attributes = binding.attributes
         value = get_binding_value(binding)
         if value is None:
             return None  # indicate no color
@@ -457,16 +451,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
             if binding.display_type == 'AlarmCondition':
                 return PROPERTY_ALARM_COLOR_MAP.get(value)
-        elif self._show_alarms:
-            alarm_low = attributes.get(KARABO_ALARM_LOW)
-            alarm_high = attributes.get(KARABO_ALARM_HIGH)
-            if threshold_triggered(value, alarm_low, alarm_high):
-                return PROPERTY_ALARM_COLOR
-
-            warn_low = attributes.get(KARABO_WARN_LOW)
-            warn_high = attributes.get(KARABO_WARN_HIGH)
-            if threshold_triggered(value, warn_low, warn_high):
-                return PROPERTY_WARN_COLOR
         return None  # indicate no color
 
     def _proxy_data(self, index, proxy, role, column):
