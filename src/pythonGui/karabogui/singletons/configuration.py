@@ -139,8 +139,6 @@ class Configuration(QObject):
     # Panels
 
     console_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
-    alarm_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
-    log_visible = Item(default=False, q_set=True, group=PANEL, dtype=bool)
 
     # ----------------------------------------------
     # MainWindow, Wizard and DPI
@@ -151,8 +149,6 @@ class Configuration(QObject):
                    dtype=bool)
     main_geometry = Item(q_set=True, group=USER)
     development = Item(default=False, q_set=False, group=USER, dtype=bool)
-    property_alarm_color_configurator = Item(
-        default=False, q_set=True, group=USER, editable=True, dtype=bool)
     project_sort_column = Item(default=0, q_set=True, group=USER, dtype=int)
     project_sort_order = Item(default=0, q_set=True, group=USER, dtype=int)
     logbook_stream = Item(q_set=True, group=USER)
