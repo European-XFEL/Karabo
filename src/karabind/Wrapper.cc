@@ -1032,8 +1032,9 @@ namespace karabind {
             }
         } // else there is no exception, so keep pythonErrorMessage empty
 
-        // we reset it for later processing
-        PyErr_Restore(pexceptType, pexception, ptraceback); // ref count decremented
+        // Call the following function may result in SEGFAULT at interpreter epilogue code
+        // because ref. count is decrementing ... so we comment this ...
+        // PyErr_Restore(pexceptType, pexception, ptraceback); // ref count decremented
         PyErr_Clear();
         // Remove trailing newline
         boost::algorithm::trim_right(pythonErrorMessage);
