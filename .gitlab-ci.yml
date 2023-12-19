@@ -333,7 +333,7 @@ variables:
 # static source code analysis
 lint:
   stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3lint
+  image: europeanxfel/karabo-ci:miniconda-3lint-001
   script:
     - source ci/lint ALL
   only:
@@ -344,7 +344,7 @@ lint:
 
 test_docs:
   stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3
+  image: europeanxfel/karabo-ci:miniconda-3lint-001
   script:
     - pushd doc
     - pip install -r requirements.txt
