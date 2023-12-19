@@ -27,7 +27,7 @@ channels:
 dependencies:
   - python=3.8.*
   # for tests and building
-  - flake8=3.8.4
+  - flake8=6.1.0
   - isort=5.8.0
   - pytest=6.1.1
   - pytest-qt=3.3.0
