@@ -41,13 +41,13 @@ def test_validate_integers():
         binding = property_binding()
         value = binding.validate_trait("value", dtype(23))
         assert value == 23
-        assert type(value) == dtype
+        assert isinstance(value, dtype)
         value = binding.validate_trait("value", "23")
         assert value == 23
-        assert type(value) == dtype
+        assert isinstance(value, dtype)
         value = binding.validate_trait("value", 2)
         assert value == 2
-        assert type(value) == dtype
+        assert isinstance(value, dtype)
         # Put a goofy value and check raise
         with pytest.raises(TraitError):
             binding.validate_trait("value", [])
@@ -84,22 +84,22 @@ def test_validate_boolean():
     binding = BoolBinding()
     value = binding.validate_trait("value", 23)
     assert value is True
-    assert type(value) is bool
+    assert isinstance(value, bool)
     value = binding.validate_trait("value", "23")
     assert value is True
-    assert type(value) is bool
+    assert isinstance(value, bool)
     value = binding.validate_trait("value", False)
     assert value is False
-    assert type(value) is bool
+    assert isinstance(value, bool)
     value = binding.validate_trait("value", True)
     assert value is True
-    assert type(value) is bool
+    assert isinstance(value, bool)
     value = binding.validate_trait("value", 0)
     assert value is False
-    assert type(value) is bool
+    assert isinstance(value, bool)
     value = binding.validate_trait("value", 1)
     assert value is True
-    assert type(value) is bool
+    assert isinstance(value, bool)
     with pytest.raises(Exception):
         binding.validate_trait("value", "None")
     with pytest.raises(Exception):
@@ -112,16 +112,16 @@ def test_validate_float():
     binding = FloatBinding()
     value = binding.validate_trait("value", 23)
     assert value == 23.0
-    assert type(value) == float
+    assert isinstance(value, float)
     value = binding.validate_trait("value", "23")
     assert value == 23
-    assert type(value) == float
+    assert isinstance(value, float)
     value = binding.validate_trait("value", np.float32(4))
     assert value == 4.0
-    assert type(value) == np.float32
+    assert isinstance(value, np.float32)
     value = binding.validate_trait("value", np.float64(4))
     assert value == 4.0
-    assert type(value) == np.float64
+    assert isinstance(value, np.float64)
 
 
 def test_numpy_binding_types():
@@ -129,82 +129,81 @@ def test_numpy_binding_types():
     int64Property = Int64Binding()
     int64Property.value = np.int64(23)
     assert int64Property.value == 23
-    assert type(int64Property.value) == np.int64
+    assert isinstance(int64Property.value, np.int64)
     int64Property.value = 64
     assert int64Property.value == 64
-    assert type(int64Property.value) == np.int64
+    assert isinstance(int64Property.value, np.int64)
     int64Property.value = 23
     assert int64Property.value == 23
-    assert type(int64Property.value) == np.int64
+    assert isinstance(int64Property.value, np.int64)
 
     int32Property = Int32Binding()
     int32Property.value = np.int32(23)
     assert int32Property.value == 23
-    assert type(int32Property.value) == np.int32
+    assert isinstance(int32Property.value, np.int32)
     int32Property.value = 64
     assert int32Property.value == 64
-    assert type(int32Property.value) == np.int32
+    assert isinstance(int32Property.value, np.int32)
     int32Property.value = np.int16(16)
     assert int32Property.value == 16
-    assert type(int32Property.value) == np.int32
+    assert isinstance(int32Property.value, np.int32)
 
     int16Property = Int16Binding()
     int16Property.value = np.int16(23)
     assert int16Property.value == 23
-    assert type(int16Property.value) == np.int16
+    assert isinstance(int16Property.value, np.int16)
     int16Property.value = 64
     assert int16Property.value == 64
-    assert type(int16Property.value) == np.int16
+    assert isinstance(int16Property.value, np.int16)
     int16Property.value = np.int8(16)
     assert int16Property.value == 16
-    assert type(int16Property.value) == np.int16
+    assert isinstance(int16Property.value, np.int16)
 
     int8Property = Int8Binding()
     int8Property.value = np.int8(23)
     assert int8Property.value == 23
-    assert type(int8Property.value) == np.int8
+    assert isinstance(int8Property.value, np.int8)
     int8Property.value = 64
     assert int8Property.value == 64
-    print(type(int8Property.value))
-    assert type(int8Property.value) == np.int8
+    assert isinstance(int8Property.value, np.int8)
     int8Property.value = np.int16(16)
     assert int8Property.value == 16
-    assert type(int8Property.value) == np.int8
+    assert isinstance(int8Property.value, np.int8)
 
     uint64Property = Uint64Binding()
     uint64Property.value = np.uint64(23)
     assert uint64Property.value == 23
-    assert type(uint64Property.value) == np.uint64
+    assert isinstance(uint64Property.value, np.uint64)
     uint64Property.value = 64
     assert uint64Property.value == 64
-    assert type(uint64Property.value) == np.uint64
+    assert isinstance(uint64Property.value, np.uint64)
     uint64Property.value = np.int16(16)
     assert uint64Property.value == 16
-    assert type(uint64Property.value) == np.uint64
+    assert isinstance(uint64Property.value, np.uint64)
 
     uint32Property = Uint32Binding()
     uint32Property.value = np.uint32(23)
     assert uint32Property.value == 23
-    assert type(uint32Property.value) == np.uint32
+    assert isinstance(uint32Property.value, np.uint32)
     uint32Property.value = 64
     assert uint32Property.value == 64
-    assert type(uint32Property.value) == np.uint32
+    assert isinstance(uint32Property.value, np.uint32)
     uint32Property.value = np.int16(16)
     assert uint32Property.value == 16
-    assert type(uint32Property.value) == np.uint32
+    assert isinstance(uint32Property.value, np.uint32)
 
     uint16Property = Uint16Binding()
     uint16Property.value = np.uint16(23)
     assert uint16Property.value == 23
-    assert type(uint16Property.value) == np.uint16
+    assert isinstance(uint16Property.value, np.uint16)
     uint16Property.value = 64
     assert uint16Property.value == 64
-    assert type(uint16Property.value) == np.uint16
+    assert isinstance(uint16Property.value, np.uint16)
 
     uint8Property = Uint8Binding()
     uint8Property.value = np.uint8(23)
     assert uint8Property.value == 23
-    assert type(uint8Property.value) == np.uint8
+    assert isinstance(uint8Property.value, np.uint8)
     uint8Property.value = 64
     assert uint8Property.value == 64
-    assert type(uint8Property.value) == np.uint8
+    assert isinstance(uint8Property.value, np.uint8)
