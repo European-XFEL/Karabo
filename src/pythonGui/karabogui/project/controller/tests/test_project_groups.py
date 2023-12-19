@@ -67,7 +67,7 @@ class TestProjectGroupController(GuiTestCase):
         patched_show_filename_error = patch(
             "karabogui.project.controller.project_groups.show_filename_error")
 
-        with patched_get_config, patched_get_filename,\
+        with patched_get_config, patched_get_filename, \
                 patched_read_model, patched_show_filename_error:
             _load_macro(self.proj_controller)
 
