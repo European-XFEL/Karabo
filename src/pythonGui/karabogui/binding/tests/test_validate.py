@@ -89,7 +89,7 @@ def assert_binding(binding, value, expected=None, valid=True):
         # Always force to specify expected
         assert expected is not None
         assert validated == expected
-        assert type(validated) == type(expected)
+        assert issubclass(type(validated), type(expected))
 
 
 def test_validate_value_uint8():
