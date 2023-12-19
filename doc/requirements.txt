@@ -8,7 +8,7 @@ typing
 natsort
 psutil
 Jinja2<=3.0.3
-traits==4.6.0
+traits==6.0.0
 pint==0.17.0
 pytz>=2015.6
 urllib3<2.0.0
