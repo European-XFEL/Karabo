@@ -220,9 +220,10 @@ namespace karabo {
         }
 
 
-        karabo::util::Hash DeviceClient::prepareTopologyEntry(const std::string& path,
+        karabo::util::Hash DeviceClient::prepareTopologyEntry(const std::string& instanceId,
                                                               const karabo::util::Hash& instanceInfo) const {
             Hash entry;
+            const string path(prepareTopologyPath(instanceId, instanceInfo));
             Hash::Node& entryNode = entry.set(path, Hash());
             for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
                 entryNode.setAttribute(it->getKey(), it->getValueAsAny());
@@ -275,15 +276,15 @@ namespace karabo {
 
         void DeviceClient::_slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceNew was called for: " << instanceId;
-            const string path = this->prepareTopologyPath(instanceId, instanceInfo);
-            if (this->existsInRuntimeSystemDescription(path)) {
+
+            if (this->existsInRuntimeSystemDescription(this->prepareTopologyPath(instanceId, instanceInfo))) {
                 // The instance was probably killed and restarted again before we noticed that the heartbeats stopped.
                 // We should properly treat its death first (especially for servers, see _slotInstanceGone).
                 KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " still in runtime description - call _slotInstanceGone";
                 this->_slotInstanceGone(instanceId, instanceInfo);
             }
 
-            const Hash entry(prepareTopologyEntry(path, instanceInfo));
+            Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
             mergeIntoRuntimeSystemDescription(entry);
             if (isImmortal(instanceId)) { // A "zombie" that now gets alive again - connect and fill cache
                 connectAndRequest(instanceId);
@@ -344,14 +345,8 @@ namespace karabo {
 
         void DeviceClient::_slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceUpdated was called for: " << instanceId;
-            const string path = this->prepareTopologyPath(instanceId, instanceInfo);
-            if (!this->existsInRuntimeSystemDescription(path)) {
-                KARABO_LOG_FRAMEWORK_ERROR << instanceId
-                                           << " received instance update although not in runtime description";
-                return;
-            }
 
-            const Hash entry(prepareTopologyEntry(path, instanceInfo));
+            const Hash entry(prepareTopologyEntry(instanceId, instanceInfo));
             mergeIntoRuntimeSystemDescription(entry);
 
             if (m_instanceUpdatedHandler) m_instanceUpdatedHandler(entry);
@@ -365,12 +360,8 @@ namespace karabo {
         void DeviceClient::_slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceGone was called for: " << instanceId;
             try {
-                const string path = this->prepareTopologyPath(instanceId, instanceInfo);
-                if (!existsInRuntimeSystemDescription(path)) {
-                    KARABO_LOG_FRAMEWORK_ERROR << instanceId
-                                               << " received instance gone although not in runtime description";
-                    return;
-                }
+                const string path(prepareTopologyPath(instanceId, instanceInfo));
+                if (!existsInRuntimeSystemDescription(path)) return;
                 // clear cache
                 eraseFromRuntimeSystemDescription(path);
                 {
