@@ -357,13 +357,16 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
 
 
 @pytest.mark.parametrize(
-    "EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData, Timestamp",
+    "EventLoop, InputChannel, OutputChannel, Hash, VectorHash, "
+    "ChannelMetaData, Timestamp",
     [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
-      karathon.Hash, karathon.ChannelMetaData, karathon.Timestamp),
+      karathon.Hash, karathon.VectorHash, karathon.ChannelMetaData,
+      karathon.Timestamp),
      (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
-      karabind.Hash, karabind.ChannelMetaData, karabind.Timestamp)])
+      karabind.Hash, karabind.VectorHash, karabind.ChannelMetaData,
+      karabind.Timestamp)])
 def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
-                                Hash, ChannelMetaData, Timestamp):
+                                Hash, VectorHash, ChannelMetaData, Timestamp):
     # Test "shared selector"
     prefix = Hash.__module__  # distinguished names for each run
     t = threading.Thread(target=EventLoop.work)
@@ -372,33 +375,43 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     outputCh = OutputChannel.create(prefix + "output", "out",
                                     Hash("noInputShared", "wait"))
 
-    # Prepare data handlers for both input channels
-    counter1 = 0
-    counter2 = 0
-
-    def dataHandler1(meta, data):
-        nonlocal counter1
-        counter1 += 1
-
-    def dataHandler2(meta, data):
-        nonlocal counter2
-        counter2 += 1
-
-    def eosHandler1(inputCh):
-        nonlocal counter1
-        counter1 = 0
-
-    def eosHandler2(inputCh):
-        nonlocal counter2
-        counter2 = 0
-
-    # Create two inpout channels and register data handlers
+    # Create 2 input channels with configuration...
     cfg = Hash("connectedOutputChannels", [prefix + "output:out"],
                "dataDistribution", "shared")
     inputCh1 = InputChannel.create(prefix + "input", "in1", cfg)
     inputCh2 = InputChannel.create(prefix + "input", "in2", cfg)
-    inputCh1.registerDataHandler(dataHandler1)
-    inputCh2.registerDataHandler(dataHandler2)
+
+    # Prepare handlers for both input channels
+    counter1 = 0
+    counter2 = 0
+    meta1 = None
+    meta2 = None
+
+    # ... data handler for input channel 1 ...
+    def dataHandler(data, meta):
+        nonlocal meta1
+        nonlocal counter1
+        meta1 = meta
+        counter1 += 1
+
+    # ... and input handler for input channel 2 ...
+    def inputHandler(channel):
+        nonlocal meta2
+        nonlocal counter2
+        meta2 = channel.getMetaData()
+        counter2 += 1
+
+    def eosHandler1(channel):
+        nonlocal counter1
+        counter1 = 0
+
+    def eosHandler2(channel):
+        nonlocal counter2
+        counter2 = 0
+
+    # Register handlers correspondingly ...
+    inputCh1.registerDataHandler(dataHandler)
+    inputCh2.registerInputHandler(inputHandler)
     inputCh1.registerEndOfStreamEventHandler(eosHandler1)
     inputCh2.registerEndOfStreamEventHandler(eosHandler2)
 
@@ -444,10 +457,32 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
             time.sleep(0.001)
         assert trials > 0
 
+    def checkMetaDataInfo(m):
+        assert m is not None
+        assert isinstance(m, VectorHash) or isinstance(m, Hash)
+
+        def checkEntry(entry):
+            assert isinstance(entry, Hash)
+            if not entry.empty():
+                assert isinstance(entry['source'], str)
+                assert 'output:out' in entry['source']
+                assert entry['timestamp'] is True
+                ts = Timestamp.fromHashAttributes(
+                        entry.getAttributes('timestamp'))
+                assert isinstance(ts, Timestamp)
+
+        if isinstance(m, VectorHash):
+            for h in m:
+                checkEntry(h)
+        else:
+            checkEntry(m)
+
     waitForTotalNumData(1)
     assert counter1 + counter2 == 1
     assert counter1 == 1
     assert counter2 == 0
+    checkMetaDataInfo(meta1)
+    assert meta2 is None
 
     # Another data to input 1
     outputCh.write(Hash('int', 2), meta)
@@ -455,14 +490,19 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     waitForTotalNumData(2)
     assert counter1 == 2
     assert counter2 == 0
+    checkMetaDataInfo(meta1)
+    assert meta2 is None
 
     # Another data, now to input 2 via asyncUpdate() with defaults
+    meta1 = None
     numOfInput = 2
     outputCh.write(Hash('int', 3), meta)
     outputCh.asyncUpdate()
     waitForTotalNumData(3)
     assert counter1 == 2
     assert counter2 == 1
+    assert meta1 is None
+    checkMetaDataInfo(meta2)
 
     # Another data to input 2 via asyncUpdate(..) with arguments
     asyncUpdateDone = False
@@ -476,6 +516,9 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     waitForTotalNumData(4)
     assert counter1 == 2
     assert counter2 == 2
+    assert meta1 is None
+    checkMetaDataInfo(meta2)
+
     # Also check that handler is called
     trials = 1000
     while trials > 0:
@@ -510,6 +553,9 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     assert counter1 == 0
     assert counter2 == 0
 
+    meta1 = None
+    meta2 = None
+
     # Test that we can reset the selector.
     # (But we loose control who receives, so can hardly test.)
     outputCh.registerSharedInputSelector(None)
@@ -519,7 +565,10 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     outputCh.write(Hash('int', 8), meta)
     outputCh.update()
     waitForTotalNumData(2)
+
     assert counter1 + counter2 == 2
+    checkMetaDataInfo(meta1)
+    checkMetaDataInfo(meta2)
 
     # Finally test asyncSignalEndOfStream with handler argument
     asyncEosDone = False
