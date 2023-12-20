@@ -863,21 +863,17 @@ void PropertyTest_Test::testAttributeEditing() {
 
 void PropertyTest_Test::testNodedSlots() {
     std::clog << "Tested noded slots.. ";
-    auto caller = boost::make_shared<SignalSlotable>("caller");
-    caller->start();
     unsigned int counter = 42u;
     std::string remoteState;
     for (unsigned int i = 0; i < 10; i++) {
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get("testPropertyTest_0", "node.counter", counter));
         CPPUNIT_ASSERT_EQUAL(i, counter);
-        CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "node.increment")
-                                      .timeout(1000) // in ms
-                                      .receive(remoteState));
+        CPPUNIT_ASSERT_NO_THROW(remoteState =
+                                      m_deviceClient->execute1<std::string>("testPropertyTest_0", "node.increment"));
         CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(), remoteState);
+        remoteState.clear();
     }
-    CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "node.reset")
-                                  .timeout(1000) // in ms
-                                  .receive(remoteState));
+    CPPUNIT_ASSERT_NO_THROW(remoteState = m_deviceClient->execute1<std::string>("testPropertyTest_0", "node.reset"));
     CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(), remoteState);
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get("testPropertyTest_0", "node.counter", counter));
     CPPUNIT_ASSERT_EQUAL(0u, counter);
