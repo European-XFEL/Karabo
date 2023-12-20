@@ -547,3 +547,98 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     time.sleep(.2)
     t.join(timeout=10)
     assert not t.is_alive()
+
+
+@pytest.mark.parametrize(
+    "EventLoop, SignalSlotable, ConnectionStatus, ChannelMetaData, Timestamp,\
+     Hash, Types",
+    [
+     (karathon.EventLoop, karathon.SignalSlotable, karathon.ConnectionStatus,
+      karathon.ChannelMetaData, karathon.Timestamp, karathon.Hash,
+      karathon.Types),
+     (karabind.EventLoop, karabind.SignalSlotable, karabind.ConnectionStatus,
+      karabind.ChannelMetaData, karabind.Timestamp, karabind.Hash,
+      karabind.Types)
+     ])
+def test_pipeline_input_channel(EventLoop, SignalSlotable, ConnectionStatus,
+                                ChannelMetaData, Timestamp, Hash, Types):
+    t = threading.Thread(target=EventLoop.work)
+    t.start()
+    sso = SignalSlotable("outputChannel" + str(uuid.uuid4()))
+    sso.start()
+
+    def onOutputHandler(chan):
+        pass
+
+    out = sso.createOutputChannel("output", Hash("output"), onOutputHandler)
+
+    # Set up InputChannel
+    ssi = SignalSlotable("inputChannel" + str(uuid.uuid4()))
+    ssi.start()
+    iconf = Hash("inputChannel.connectedOutputChannels",
+                 ["outputChannel:output"], "inputChannel.onSlowness", "wait")
+    calls = 0
+
+    def inputDataHandler(data, meta):
+        nonlocal calls
+        calls += 1
+
+    inputChannel = ssi.createInputChannel("inputChannel", iconf,
+                                          inputDataHandler, None, None, None)
+
+    # Write first data - nobody connected yet.
+    meta = ChannelMetaData("outputChannel:output", Timestamp())
+
+    out.write(Hash("key", 42), meta)
+    out.update()
+
+    time.sleep(0.02)
+    assert calls == 0
+
+    outputInfo = out.getInformation()
+    assert outputInfo['port'] > 0
+    outputInfo["outputChannelString"] = "outputChannel:output"
+    outputInfo["memoryLocation"] = "local"
+
+    calls = 0
+    stat = inputChannel.getConnectionStatus()
+    assert len(stat) == 1
+    assert stat["outputChannel:output"] == ConnectionStatus.DISCONNECTED
+    # try to connect synchronously
+    assert "" == inputChannel.connectSync(outputInfo)
+    # ... but we need to wait for registration (getting 'hello') complete
+    trials = 1000
+    while trials > 0:
+        trials -= 1
+        registered = out.hasRegisteredCopyInputChannel(
+                inputChannel.getInstanceId())
+        if registered:
+            break
+        time.sleep(0.001)
+
+    assert registered is True
+
+    stat = inputChannel.getConnectionStatus()
+    assert len(stat) == 1
+    assert stat["outputChannel:output"] == ConnectionStatus.CONNECTED
+
+    out.write(Hash("key", 43), meta)
+    out.write(Hash("key", -43), meta)
+    out.update()
+
+    trials = 200
+    while trials > 0:
+        if calls == 2:
+            break
+        time.sleep(0.005)
+        trials -= 1
+    assert calls == 2
+
+    inputChannel.disconnect(outputInfo)
+    stat = inputChannel.getConnectionStatus()
+    assert len(stat) == 1
+    assert stat["outputChannel:output"] == ConnectionStatus.DISCONNECTED
+
+    EventLoop.stop()
+    time.sleep(.2)
+    t.join()
