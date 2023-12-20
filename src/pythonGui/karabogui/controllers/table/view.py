@@ -116,12 +116,16 @@ class KaraboTableView(QTableView):
     def dropEvent(self, event):
         """Reimplemented method of `QTableView`"""
         mime = self._inspect_event(event)
-        source_row, row = mime
+        source_row, index = mime
+        model = self.model()
+        source_index = model.index_ref(index)
+        row = (source_index.row() if source_index.isValid()
+               else model.rowCount() - 1)
         if row == source_row:
             return
         self.model().moveRow(QModelIndex(), source_row,
                              QModelIndex(), row)
-        self.selectRow(row)
+        self.selectRow(index.row())
 
     def _inspect_event(self, event):
         """Inspect the drag and either ignore or accept and provide data"""
@@ -141,7 +145,5 @@ class KaraboTableView(QTableView):
 
         source_row = decodeBinary(mime)["row"]
         index = self.indexAt(event.pos())
-        index = model.index_ref(index)
-        row = index.row() if index.isValid() else model.rowCount() - 1
         event.accept()
-        return source_row, row
+        return source_row, index
