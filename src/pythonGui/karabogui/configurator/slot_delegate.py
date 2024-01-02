@@ -57,6 +57,7 @@ def _slot_pixmap():
 class SlotButtonDelegate(QStyledItemDelegate):
     """A QStyledItemDelegate for slot buttons
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._button_states = {}
@@ -108,7 +109,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
         slot_pixmap = _slot_pixmap()
         pix_size = slot_pixmap.size()
         w, h = pix_size.width(), pix_size.height()
-        pix_rect = QRect(rect.x() + ICON_PADDING, rect.center().y() - h/2,
+        pix_rect = QRect(rect.x() + ICON_PADDING, rect.center().y() - h // 2,
                          w, h)
         QApplication.style().drawItemPixmap(painter, pix_rect, Qt.AlignCenter,
                                             slot_pixmap)
