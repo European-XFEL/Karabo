@@ -38,7 +38,7 @@ MOCK_MODULES = [
     "traits.traits_listener", "lxml", "paho", "async_timeout",
     "paho.mqtt", "paho.mqtt.client", "karabogui._version",
     "karabo._version", "karabo.common.packaging.utils",
-    "qtpy", "qtpy.QtGui", "qtpy.QtCore", "qtpy.QtWidgets",
+    "qtpy", "qtpy.QtGui", "qtpy.QtCore", "qtpy.QtWidgets", "qtpy.Qsci",
     "pyqtgraph", "pyqtgraph.exporters", "pyqtgraph.graphicsItems",
     "pyqtgraph.graphicsItems.LegendItem", "scipy", "scipy.optimize",
     "scipy.ndimage", "scipy.stats", "lttbc", "karabogui.sceneview.api",
