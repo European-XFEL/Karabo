@@ -71,6 +71,6 @@ def move_main_window(msg_box):
     if main_window is None or main_window.windowState() & Qt.WindowMinimized:
         return
     main_center = main_window.rect().center()
-    msg_box_ref = QPoint(msg_box.width() / 2, msg_box.height() / 2)
+    msg_box_ref = QPoint(msg_box.width() // 2, msg_box.height() // 2)
     global_center = main_window.mapToGlobal(main_center - msg_box_ref)
     msg_box.move(global_center)
