@@ -39,7 +39,7 @@ def test_mainwindow(gui_app, mocker, subtests):
 
         proj = ProjectModel()
         assert proj.conflict is False
-        qt_model = ProjectViewItemModel(parent=None)
+        qt_model = ProjectViewItemModel(parent=mw)
         qt_model.root_model = proj
         with singletons(project_model=qt_model):
             logger = mocker.patch("karabogui.mainwindow.get_logger")
@@ -63,33 +63,25 @@ def test_mainwindow(gui_app, mocker, subtests):
         assert mw.notification_banner.toPlainText() == ""
         assert mw.notification_banner.frameStyle() == QFrame.NoFrame
 
+    with subtests.test("Test the menu bar"):
+        menu_bar = mw.menuBar()
+        main_menus = [act.text() for act in menu_bar.actions()]
+        assert len(main_menus) == 5
+        assert main_menus == ["&File", "&Settings", "&Links",
+                              "&View", "&Help"]
 
-def test_menu(gui_app):
-    from karabogui.mainwindow import MainWindow
-    main_window = MainWindow()
-    menu_bar = main_window.menuBar()
-
-    main_menus = [act.text() for act in menu_bar.actions()]
-    assert len(main_menus) == 6
-    assert main_menus == ["&File", "&Panels", "&Settings", "&Links",
-                          "&View", "&Help"]
-
-
-def test_help_menu(gui_app):
-    from karabogui.mainwindow import MainWindow
-    main_window = MainWindow()
-    menu_bar = main_window.menuBar()
-    help_menu = [action.menu() for action in menu_bar.actions() if
-                 action.text() == "&Help"][0]
-    assert help_menu
-    help_actions = help_menu.actions()
-    help_menu_size = 10 if IS_LINUX_SYSTEM else 9
-    assert len(help_actions) == help_menu_size
-    expected = [
-        "About", "About Qt", "Tips'N'Tricks", "Check for Updates",
-        "Check for Project Duplicates", "Convert Numpy file to CSV file", "",
-        "Create Karabo Concert File", "Run Karabo Concert File"]
-    concert_shortcut = "Create Karabo Concert Desktop Shortcut"
-    if IS_LINUX_SYSTEM:
-        expected.insert(8, concert_shortcut)
-    assert expected == [action.text() for action in help_actions]
+        help_menu = [action.menu() for action in menu_bar.actions() if
+                     action.text() == "&Help"][0]
+        assert help_menu
+        help_actions = help_menu.actions()
+        help_menu_size = 10 if IS_LINUX_SYSTEM else 9
+        assert len(help_actions) == help_menu_size
+        expected = [
+            "About", "About Qt", "Tips'N'Tricks", "Check for Updates",
+            "Check for Project Duplicates", "Convert Numpy file to CSV file",
+            "",
+            "Create Karabo Concert File", "Run Karabo Concert File"]
+        concert_shortcut = "Create Karabo Concert Desktop Shortcut"
+        if IS_LINUX_SYSTEM:
+            expected.insert(8, concert_shortcut)
+        assert expected == [action.text() for action in help_actions]

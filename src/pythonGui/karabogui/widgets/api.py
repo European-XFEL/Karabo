@@ -15,8 +15,8 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 # flake8: noqa
-from .codeeditor import CodeBook, CodeEditor
 from .hints import (
     DoubleSpinBox, ElidingLabel, FrameWidget, Label, LineEdit, SpinBox,
     SvgWidget)
 from .range_slider import RangeSlider
+from .scintilla_editor import CodeBook, CodeEditor
