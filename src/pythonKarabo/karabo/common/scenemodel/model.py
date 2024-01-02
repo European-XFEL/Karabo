@@ -75,10 +75,10 @@ class UnknownXMLDataModel(XMLElementModel):
     children = List(Instance(BaseSceneObjectData))
 
     # XXX: These are needed by the GUI, but they will always be zero
-    x = Constant(0.0)
-    y = Constant(0.0)
-    height = Constant(0.0)
-    width = Constant(0.0)
+    x = Constant(0)
+    y = Constant(0)
+    height = Constant(0)
+    width = Constant(0)
 
     def generate_id(self):
         return self.randomize("unknown")
