@@ -147,7 +147,7 @@ class UnknownWidget(KaraboSceneWidget, QWidget):
 
             metrics = painter.fontMetrics()
             text_rect = metrics.boundingRect(unsupported_text)
-            pos = rect.center() - QPoint(text_rect.width() / 2,
-                                         -text_rect.height() / 2)
+            pos = rect.center() - QPoint(text_rect.width() // 2,
+                                         -text_rect.height() // 2)
             painter.setPen(QPen())
             painter.drawText(pos, unsupported_text)
