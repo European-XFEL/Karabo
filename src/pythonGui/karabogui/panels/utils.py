@@ -20,10 +20,8 @@ from karabogui import icons
 
 from .macropanel import MacroPanel
 from .scenepanel import ScenePanel
-from .scriptingpanel import ScriptingPanel
 
 PANEL_ICONS = {
-    ScriptingPanel: icons.consoleMenu,
     MacroPanel: icons.edit,
     ScenePanel: icons.image
 }
