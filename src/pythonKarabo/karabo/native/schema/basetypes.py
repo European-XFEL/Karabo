@@ -31,7 +31,8 @@ import numpy
 import pint
 import tabulate
 
-from karabo.native.data import EncodingType, Hash, HashList, MetricPrefix, Unit
+from karabo.native.data import (
+    EncodingType, Hash, HashList, HashType, MetricPrefix, Unit)
 
 from ..weak import Weak
 
@@ -225,7 +226,7 @@ class BoolValue(_Singleton):
     Objects of this class behave effectively like normal bools, just
     with a timestamp and a descriptor added.
     """
-    _hashBool = 1
+    _hashType = HashType.Bool
 
     # We cannot inherit from bool, so we need a brand-new class
 
@@ -248,7 +249,7 @@ class NoneValue(_Singleton):
 
     This is mostly the Karabo equivalent of `None`.
     """
-    _hashNone = 1
+    _hashType = HashType.None_
     value = None
 
     def __init__(self, value=None, **kwargs):

@@ -644,7 +644,7 @@ def get_hash_type_from_data(data):
     except AttributeError:
         if hasattr(data, '_hashType'):
             return data._hashType
-        elif isinstance(data, bool) or hasattr(data, '_hashBool'):
+        elif isinstance(data, bool):
             return HashType.Bool
         elif isinstance(data, (Enum, numbers.Integral)):
             return HashType.Int32
@@ -662,7 +662,7 @@ def get_hash_type_from_data(data):
                 return HashType(subtype.value + 1)
             else:
                 return HashType.VectorString
-        elif data is None or hasattr(data, '_hashNone'):
+        elif data is None:
             return HashType.None_
         try:
             memoryview(data)
