@@ -18,7 +18,7 @@ from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import GlobalAlarmModel
 from karabo.native import Configurable, String
-from karabogui.alarms.api import get_alarm_svg
+from karabogui.indicators import get_alarm_svg
 from karabogui.testing import get_class_property_proxy, set_proxy_value
 
 from ..alarm import DisplayAlarm
