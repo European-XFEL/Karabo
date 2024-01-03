@@ -685,8 +685,6 @@ class QuantityValue(KaraboValue, Quantity):
     def __new__(cls, value, unit=None, metricPrefix=MetricPrefix.NONE, *,
                 descriptor=None, timestamp=None):
         # weirdly, Pint uses __new__. Dunno why, but we need to follow.
-        if timestamp is None and isinstance(value, KaraboValue):
-            timestamp = value.timestamp
         if isinstance(unit, Unit):
             if unit is Unit.NOT_ASSIGNED:
                 unit = ""
@@ -704,8 +702,7 @@ class QuantityValue(KaraboValue, Quantity):
                     not isinstance(value, QuantityValue)):
                 # if pint didn't find a dimension in value,
                 # get it from the descriptor
-                self = cls(value, unit=descriptor.unitSymbol,
-                           metricPrefix=descriptor.metricPrefixSymbol)
+                self = super().__new__(cls, value, descriptor.units)
         return self
 
     def __init__(self, value, unit=None, metricPrefix=None, **kwargs):
