@@ -111,16 +111,15 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected);
 
-            InfluxLogReader(const karabo::util::Hash& cfg);
+            explicit InfluxLogReader(const karabo::util::Hash& cfg);
 
             virtual ~InfluxLogReader();
 
            protected:
-            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
-                                                    const karabo::util::Hash& params) override;
+            void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
+                                            const karabo::util::Hash& params) override;
 
-            virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
-                                                          const std::string& timepoint) override;
+            void slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint) override;
 
            private:
             /**
@@ -230,7 +229,7 @@ namespace karabo {
 
             /**
              * Unescapes a logged string. A logged string has its new lines mangled, then its double slashes
-             * escaped and then its double quotes scaped. This functions applies those transformations in the
+             * escaped and then its double quotes escaped. This functions applies those transformations in the
              * reverse order.
              * @param loggedStr The string as it has been escaped by the Influx Logger.
              * @return The unescaped original string.
@@ -262,7 +261,7 @@ namespace karabo {
             karabo::util::Epochstamp toEpoch(unsigned long long timeFromInflux) const;
 
             /**
-             * Builds and returns the configuration Hash for instantianting an InfluxDbClient to
+             * Builds and returns the configuration Hash for instantiating an InfluxDbClient to
              * be used in the execution of one of the slots supported by the reader.
              *
              * @param dbUrlForSlot the URL to be used in the configuration - each slot can use a
