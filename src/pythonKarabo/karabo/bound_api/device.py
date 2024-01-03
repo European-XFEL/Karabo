@@ -72,15 +72,31 @@ class PythonDevice(NoFsm):
     @staticmethod
     def expectedParameters(expected):
         (
-            STRING_ELEMENT(expected).key("_serverId_")
-            .displayedName("_ServerID_")
+            STRING_ELEMENT(expected).key("_deviceId_")
+            .displayedName("_DeviceID_")
             .description("Do not set this property, it will be set by the"
                          " device-server")
             .expertAccess().assignmentInternal().noDefaultValue().init()
             .commit(),
 
-            STRING_ELEMENT(expected).key("_deviceId_")
-            .displayedName("_DeviceID_")
+            STRING_ELEMENT(expected).key("deviceId")
+            .displayedName("DeviceID")
+            .description("The device instance ID uniquely identifies a device"
+                         " instance in the distributed system")
+            .readOnly()
+            .commit(),
+
+            INT32_ELEMENT(expected).key("heartbeatInterval")
+            .displayedName("Heartbeat interval")
+            .description("The heartbeat interval")
+            .assignmentOptional()
+            .defaultValue(20)  # smaller than C++ device: own process!
+            .minInc(10)  # avoid too much traffic
+            .adminAccess()
+            .commit(),
+
+            STRING_ELEMENT(expected).key("_serverId_")
+            .displayedName("_ServerID_")
             .description("Do not set this property, it will be set by the"
                          " device-server")
             .expertAccess().assignmentInternal().noDefaultValue().init()
@@ -92,13 +108,6 @@ class PythonDevice(NoFsm):
             .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
             .expertAccess()
             .init()
-            .commit(),
-
-            STRING_ELEMENT(expected).key("deviceId")
-            .displayedName("DeviceID")
-            .description("The device instance ID uniquely identifies a device"
-                         " instance in the distributed system")
-            .readOnly()
             .commit(),
 
             STRING_ELEMENT(expected).key("classId")
@@ -189,15 +198,6 @@ class PythonDevice(NoFsm):
             .description("The last slot called.")
             .adminAccess()
             .readOnly().initialValue("")
-            .commit(),
-
-            INT32_ELEMENT(expected).key("heartbeatInterval")
-            .displayedName("Heartbeat interval")
-            .description("The heartbeat interval")
-            .assignmentOptional()
-            .defaultValue(20)  # smaller than C++ device: own process!
-            .minInc(10)  # avoid too much traffic
-            .adminAccess()
             .commit(),
 
             NODE_ELEMENT(expected).key("performanceStatistics")
