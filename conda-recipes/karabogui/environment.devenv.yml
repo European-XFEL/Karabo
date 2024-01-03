@@ -41,9 +41,6 @@ dependencies:
   - pyqtgraph=0.13.3
   - qt-main=5.15
   - pyqt=5.15.9
-  - qtconsole=5.0.2
-  - ipython=7.13.0
-  - ipykernel=5.2.0
   - qscintilla2=2.14.0
   # Plotting and utils
   - numpy=1.23.*
@@ -57,7 +54,6 @@ dependencies:
   - lxml=4.4.1
   - requests=2.25.1
   - python-dateutil=2.8.1
-  - jupyter_client=6.0.0
   - conda
   - pyyaml=6.0.1
   - pint=0.17
