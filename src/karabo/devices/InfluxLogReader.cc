@@ -32,22 +32,7 @@
 #include <sstream>
 #include <vector>
 
-#include "karabo/net/EventLoop.hh"
-#include "karabo/net/HttpResponse.hh"
-#include "karabo/util/Base64.hh"
-#include "karabo/util/ClassInfo.hh"
-#include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/DateTimeString.hh"
-#include "karabo/util/Epochstamp.hh"
 #include "karabo/util/FromLiteral.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/MetaTools.hh"
-#include "karabo/util/OverwriteElement.hh"
-#include "karabo/util/Schema.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/StringTools.hh"
-#include "karabo/util/TimeDuration.hh"
-#include "karabo/util/Types.hh"
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
@@ -320,7 +305,7 @@ namespace karabo {
                         // convention.
                         continue;
                     }
-                    const std::string::size_type typeSeparatorPos = columnStr.rfind("-");
+                    const std::string::size_type typeSeparatorPos = columnStr.rfind('-');
                     if (typeSeparatorPos != std::string::npos) {
                         const std::string typeName = columnStr.substr(typeSeparatorPos + 1);
                         if (kNumberTypes.find(typeName) != kNumberTypes.end()) {
@@ -463,12 +448,12 @@ namespace karabo {
                 std::vector<std::string> colTypeNames(influxResult.first.size());
                 std::vector<std::string> colKeyNames(influxResult.first.size());
                 for (size_t col = 0; col < influxResult.first.size(); col++) {
-                    const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind("-");
+                    const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind('-');
                     if (typeSeparatorPos != std::string::npos) {
                         const std::string typeName = influxResult.first[col].substr(typeSeparatorPos + 1);
                         colTypeNames[col] = typeName;
                     }
-                    colKeyNames[col] = "v"; // the mean value will passed on in the key "v" to match the protocol
+                    colKeyNames[col] = "v"; // the mean value will be passed on in the key "v" to match the protocol
                 }
                 for (const std::vector<boost::optional<std::string>>& valuesRow : influxResult.second) {
                     unsigned long long time =
@@ -479,7 +464,7 @@ namespace karabo {
                     for (size_t col = 1; col < influxResult.first.size(); col++) {
                         if (!valuesRow[col]) {
                             // Skips any null value in the result set - any row returned by Influx will have at least
-                            // one non null value (may be an empty string).
+                            // one non-null value (maybe an empty string).
                             continue;
                         }
                         // For nan/inf floating points we added "_INF" we skip.
@@ -488,7 +473,7 @@ namespace karabo {
                         addNodeToHash(hash, colKeyNames[col], type, 0ull, epoch, *(valuesRow[col]));
                         // skip further columns. In the rare case of schema evolution in the same interval
                         // we take the first one reported. Multiple entries on the same timestamp will be an issue.
-                        continue;
+                        break;
                     }
                     if (hash.has("v")) {
                         // TODO: the timestamp is the beginning of the interval group.
@@ -531,7 +516,7 @@ namespace karabo {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT karabo_user, format FROM \"" << ctxt->deviceId
-                     << "__EVENTS\" WHERE \"type\" = '\"+LOG\"' AND time <= " << epochAsMicrosecString(ctxt->atTime)
+                     << R"(__EVENTS" WHERE "type" = '"+LOG"' AND time <= )" << epochAsMicrosecString(ctxt->atTime)
                      << m_durationUnit << " ORDER BY DESC LIMIT 1";
 
             const std::string queryStr = iqlQuery.str();
@@ -600,7 +585,7 @@ namespace karabo {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(karabo_user) FROM \"" << ctxt->deviceId << "__EVENTS\""
-                     << " WHERE \"type\" = '\"-LOG\"' AND time <= " << epochAsMicrosecString(ctxt->atTime)
+                     << R"( WHERE "type" = '"-LOG"' AND time <= )" << epochAsMicrosecString(ctxt->atTime)
                      << m_durationUnit;
 
             const std::string queryStr = iqlQuery.str();
@@ -661,7 +646,7 @@ namespace karabo {
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(schema_digest) FROM \"" << ctxt->deviceId
-                     << "__EVENTS\" WHERE \"type\" = '\"SCHEMA\"' AND time <= " << epochAsMicrosecString(ctxt->atTime)
+                     << R"(__EVENTS" WHERE "type" = '"SCHEMA"' AND time <= )" << epochAsMicrosecString(ctxt->atTime)
                      << m_durationUnit;
 
             const std::string queryStr = iqlQuery.str();
@@ -728,8 +713,8 @@ namespace karabo {
                                                    const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT * FROM \"" << ctxt->deviceId << "__SCHEMAS\" WHERE \"digest\"='\"" << digest
-                     << "\"' ORDER BY time DESC LIMIT 1";
+            iqlQuery << R"(SELECT * FROM ")" << ctxt->deviceId << R"(__SCHEMAS" WHERE "digest"='")" << digest
+                     << R"("' ORDER BY time DESC LIMIT 1)";
             const std::string queryStr = iqlQuery.str();
 
             try {
@@ -821,7 +806,7 @@ namespace karabo {
                         ctxt->propsInfo.emplace_back(path, valType, false);
                         if (valType == Types::FLOAT || valType == Types::DOUBLE) {
                             // For floating point properties we also "schedule"
-                            // their infinite or Nan potencial values for retrieval
+                            // their infinite or Nan potential values for retrieval
                             ctxt->propsInfo.emplace_back(path, valType, true);
                         }
                     }
@@ -969,7 +954,7 @@ namespace karabo {
             // Gets the data type names of each column.
             std::vector<std::string> colTypeNames(influxResult.first.size());
             for (size_t col = 0; col < influxResult.first.size(); col++) {
-                const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind("-");
+                const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind('-');
                 if (typeSeparatorPos != std::string::npos) {
                     const std::string typeName = influxResult.first[col].substr(typeSeparatorPos + 1);
                     colTypeNames[col] = typeName;
@@ -997,7 +982,7 @@ namespace karabo {
                     try {
                         if (!valuesRow[col]) {
                             // Skips any null value in the result set - any row returned by Influx will have at
-                            // least one non null value (may be an empty string).
+                            // least one non-null value (maybe an empty string).
                             continue;
                         }
                         // Figure out the real Karabo type:
@@ -1144,7 +1129,7 @@ namespace karabo {
                 // Not a priory clear which client to use. Since this slot is called so rarely, dare to use the one
                 // querying the database with the typically longer retention policy.
                 // Shared pointer to InfluxDbClient is not used by handler, but needs to be passed to guarantee that the
-                // InfluxDbClient will live long enough to fullfill the query.
+                // InfluxDbClient will live long enough to fulfill the query.
                 influxClient->queryDb(queryStr,
                                       bind_weak(&InfluxLogReader::onGetBadData, this, _1, aReply, influxClient));
             } catch (const std::exception& e) {
