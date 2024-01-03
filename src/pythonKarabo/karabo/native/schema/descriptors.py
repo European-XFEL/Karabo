@@ -676,6 +676,10 @@ class Slot(Descriptor):
         async def wrapper():
             try:
                 sigslot = device._ss
+                if len(args):
+                    raise KaraboError(
+                        f"Command Slot `{name}` does not take "
+                        f"arguments, got: {args}")
                 if (self.allowedStates is not None and
                         device.state not in self.allowedStates):
                     msg = ('Calling slot "{}" not allowed in '
