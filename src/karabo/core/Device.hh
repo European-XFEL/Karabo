@@ -238,8 +238,8 @@ namespace karabo {
                 using namespace karabo::xms;
 
                 STRING_ELEMENT(expected)
-                      .key("_serverId_")
-                      .displayedName("_ServerID_")
+                      .key("_deviceId_")
+                      .displayedName("_DeviceID_")
                       .description("Do not set this property, it will be set by the device-server")
                       .adminAccess()
                       .assignmentInternal()
@@ -248,8 +248,26 @@ namespace karabo {
                       .commit();
 
                 STRING_ELEMENT(expected)
-                      .key("_deviceId_")
-                      .displayedName("_DeviceID_")
+                      .key("deviceId")
+                      .displayedName("DeviceID")
+                      .description(
+                            "The device instance ID uniquely identifies a device instance in the distributed system")
+                      .readOnly()
+                      .commit();
+
+                INT32_ELEMENT(expected)
+                      .key("heartbeatInterval")
+                      .displayedName("Heartbeat interval")
+                      .description("The heartbeat interval")
+                      .assignmentOptional()
+                      .defaultValue(120)
+                      .minInc(10) // avoid too much traffic - 10 is minimum of server as well
+                      .adminAccess()
+                      .commit();
+
+                STRING_ELEMENT(expected)
+                      .key("_serverId_")
+                      .displayedName("_ServerID_")
                       .description("Do not set this property, it will be set by the device-server")
                       .adminAccess()
                       .assignmentInternal()
@@ -265,14 +283,6 @@ namespace karabo {
                       .defaultValue(karabo::util::Schema::OBSERVER)
                       .adminAccess()
                       .init()
-                      .commit();
-
-                STRING_ELEMENT(expected)
-                      .key("deviceId")
-                      .displayedName("DeviceID")
-                      .description(
-                            "The device instance ID uniquely identifies a device instance in the distributed system")
-                      .readOnly()
                       .commit();
 
                 STRING_ELEMENT(expected)
@@ -375,16 +385,6 @@ namespace karabo {
                       .adminAccess()
                       .readOnly()
                       .initialValue("")
-                      .commit();
-
-                INT32_ELEMENT(expected)
-                      .key("heartbeatInterval")
-                      .displayedName("Heartbeat interval")
-                      .description("The heartbeat interval")
-                      .assignmentOptional()
-                      .defaultValue(120)
-                      .minInc(10) // avoid too much traffic - 10 is minimum of server as well
-                      .adminAccess()
                       .commit();
 
                 NODE_ELEMENT(expected)
