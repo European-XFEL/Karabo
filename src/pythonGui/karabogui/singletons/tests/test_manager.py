@@ -26,7 +26,7 @@ from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     ProxyStatus, build_binding)
 from karabogui.events import KaraboEvent
-from karabogui.testing import GuiTestCase, alarm_data, singletons, system_hash
+from karabogui.testing import GuiTestCase, singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
 
 from ..manager import Manager, project_db_handler
@@ -618,18 +618,6 @@ class TestManager(GuiTestCase):
                 manager.handle_loginInformation(
                     accessLevel=AccessLevel.OBSERVER.value)
                 broad.assert_not_called()
-
-    def test_handle_alarm_update(self):
-        topology = Mock()
-        with singletons(topology=topology):
-            manager = Manager()
-            manager.handle_alarmUpdate('AlarmService', Hash(alarm_data()))
-
-    def test_handle_alarm_init(self):
-        topology = Mock()
-        with singletons(topology=topology):
-            manager = Manager()
-            manager.handle_alarmInit('AlarmService', Hash(alarm_data()))
 
     def test_handle_property_history(self):
         topology, device_proxy = Mock(), Mock()
