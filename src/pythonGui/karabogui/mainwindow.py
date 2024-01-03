@@ -350,7 +350,6 @@ class MainWindow(QMainWindow):
         if not self._quit():
             event.ignore()
             return
-        self._quit_console()
 
         event.accept()
         QMainWindow.closeEvent(self, event)
