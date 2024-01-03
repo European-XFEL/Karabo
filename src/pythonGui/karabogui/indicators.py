@@ -19,6 +19,8 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from enum import Enum
+from os import path as op
+from pathlib import Path
 
 from karabo.common.api import InstanceStatus, State
 from karabogui.binding.api import ProxyStatus
@@ -229,15 +231,58 @@ LOCKED_COLOR = (255, 145, 255, 128)
 
 PROPERTY_ALARM_COLOR_MAP = {
     None: ALL_OK_COLOR,
-    'none': None,
-    'alarm': PROPERTY_ALARM_COLOR,
-    'alarmLow': PROPERTY_ALARM_COLOR,
-    'alarmHigh': PROPERTY_ALARM_COLOR,
-    'alarmVarianceLow': PROPERTY_ALARM_COLOR,
-    'alarmVarianceHigh': PROPERTY_ALARM_COLOR,
-    'warn': PROPERTY_WARN_COLOR,
-    'warnLow': PROPERTY_WARN_COLOR,
-    'warnHigh': PROPERTY_WARN_COLOR,
-    'warnVarianceLow': PROPERTY_WARN_COLOR,
-    'warnVarianceHigh': PROPERTY_WARN_COLOR,
-    'interlock': PROPERTY_INTERLOCK_COLOR}
+    "none": None,
+    "alarm": PROPERTY_ALARM_COLOR,
+    "alarmLow": PROPERTY_ALARM_COLOR,
+    "alarmHigh": PROPERTY_ALARM_COLOR,
+    "alarmVarianceLow": PROPERTY_ALARM_COLOR,
+    "alarmVarianceHigh": PROPERTY_ALARM_COLOR,
+    "warn": PROPERTY_WARN_COLOR,
+    "warnLow": PROPERTY_WARN_COLOR,
+    "warnHigh": PROPERTY_WARN_COLOR,
+    "warnVarianceLow": PROPERTY_WARN_COLOR,
+    "warnVarianceHigh": PROPERTY_WARN_COLOR,
+    "interlock": PROPERTY_INTERLOCK_COLOR}
+
+WARN_GLOBAL = "warn"
+WARN_LOW = "warnLow"
+WARN_HIGH = "warnHigh"
+WARN_VARIANCE_LOW = "warnVarianceLow"
+WARN_VARIANCE_HIGH = "warnVarianceHigh"
+ALARM_GLOBAL = "alarm"
+ALARM_LOW = "alarmLow"
+ALARM_HIGH = "alarmHigh"
+ALARM_VARIANCE_LOW = "alarmVarianceLow"
+ALARM_VARIANCE_HIGH = "alarmVarianceHigh"
+INTERLOCK = "interlock"
+ALARM_NONE = "none"
+
+ICON_PATH = Path(icons.__file__)
+
+
+def get_alarm_svg(alarm_type):
+    """The svg icon for the given `alarm_type` is returned.
+    """
+    svg_none = op.join(ICON_PATH, "alarm_none.svg")
+    svg_warn = op.join(ICON_PATH, "warning.svg")
+    svg_alarm = op.join(ICON_PATH, "critical.svg")
+    svg_interlock = op.join(ICON_PATH, "interlock.svg")
+
+    ALARM_SVG = {
+        ALARM_NONE: svg_none,
+        WARN_GLOBAL: svg_warn,
+        WARN_LOW: svg_warn,
+        WARN_HIGH: svg_warn,
+        WARN_VARIANCE_LOW: svg_warn,
+        WARN_VARIANCE_HIGH: svg_warn,
+        ALARM_GLOBAL: svg_alarm,
+        ALARM_LOW: svg_alarm,
+        ALARM_HIGH: svg_alarm,
+        ALARM_VARIANCE_LOW: svg_alarm,
+        ALARM_VARIANCE_HIGH: svg_alarm,
+        INTERLOCK: svg_interlock,
+    }
+
+    alarm_svg = ALARM_SVG.get(alarm_type)
+    if alarm_svg is not None:
+        return alarm_svg
