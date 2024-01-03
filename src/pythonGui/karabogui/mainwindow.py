@@ -22,7 +22,6 @@ import os.path
 import shutil
 import webbrowser
 from enum import Enum
-from functools import partial
 from pathlib import Path
 
 from qtpy.QtCore import QPoint, QSize, Qt, Slot
@@ -47,7 +46,7 @@ from karabogui.indicators import get_processing_color
 from karabogui.logger import StatusLogWidget, get_logger
 from karabogui.panels.api import (
     ConfigurationPanel, DevicePanel, PanelContainer, ProjectPanel,
-    ScriptingPanel, TopologyPanel)
+    TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
 from karabogui.programs.utils import (
     create_linux_desktop_file, run_concert, save_concert_file)
@@ -61,15 +60,12 @@ from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
 
-CONSOLE_TITLE = 'Console'
-
 CONFIGURATOR_TITLE = 'Configuration Editor'
 SYSTEM_TOPOLOGY_TITLE = 'System Topology'
 DEVICE_TOPOLOGY_TITLE = 'Device Topology'
 PROJECT_TITLE = 'Projects'
 
 _PANEL_TITLE_CONFIG = {
-    CONSOLE_TITLE: 'console_visible',
 }
 
 MENU_HEIGHT = 40
@@ -139,28 +135,6 @@ class PanelAreaEnum(Enum):
     Right = 2
 
 
-def get_panel_visible(name):
-    """Get the associated panel configuration of a closable panel
-
-    This function uses a mapping between `panel title` and `configuration
-    name` to retrieve the configuration singleton configuration
-    """
-
-    config_name = _PANEL_TITLE_CONFIG[name]
-    return get_config()[config_name]
-
-
-def set_panel_visible(name, visible):
-    """Write the associated panel configuration of a closable panel"""
-    config_name = _PANEL_TITLE_CONFIG[name]
-    get_config()[config_name] = visible
-
-
-_CLOSABLE_PANELS = {
-    # Title: (class, position, icon)
-    CONSOLE_TITLE: (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
-}
-
 _PANELS = {
     # Title: (class, position)
     CONFIGURATOR_TITLE: (ConfigurationPanel, PanelAreaEnum.Right),
@@ -170,7 +144,6 @@ _PANELS = {
 }
 
 SETTINGS_TITLE = '&Settings'
-PANEL_MENU_TITLE = '&Panels'
 GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
 RTD_LINK = "https://rtd.xfel.eu/docs"
@@ -198,29 +171,10 @@ class MainWindow(QMainWindow):
 
         # Keep track of the panels!
         self._active_panels = {}
-
-        # Keep track of the closable panels!
-        self._active_closable_panels = {}
-
         self._panel_areas = {}
         self._setupPanelAreas()
         for name in _PANELS:
             self._open_panel(name)
-
-        # Create the menu bar for panels which are by default closed!
-        for name, data in _CLOSABLE_PANELS.items():
-            callback = partial(self._open_closable_panel, name)
-            action = QAction(name, self)
-            _, _, icon = data
-            action.setIcon(icon)
-            action.triggered.connect(callback)
-            self._addPanelMenuAction(action)
-            # Set the visibility with the panel configuration!
-            visible = get_panel_visible(name)
-            self.panelActions[name] = action
-            self.panelActions[name].setEnabled(not visible)
-            if visible:
-                self._open_closable_panel(name)
 
         self.title_info = {
             "project": None,
@@ -262,11 +216,6 @@ class MainWindow(QMainWindow):
     def _event_network(self, data):
         status = data.get('status', False)
         if not status:
-            active_panels = list(self._active_closable_panels.values())
-            for info in active_panels:
-                panel, area_enum = info
-                self.removePanel(panel, area_enum)
-
             # On disconnect, we select again the system topology!
             container = self._panel_areas[PanelAreaEnum.Left]
             tab = self._active_panels[SYSTEM_TOPOLOGY_TITLE]
@@ -554,16 +503,8 @@ class MainWindow(QMainWindow):
         mFileMenu = menuBar.addMenu("&File")
         mFileMenu.addAction(self.acExit)
 
-        # Display actions to reopen panels
-        mPanelMenu = menuBar.addMenu(PANEL_MENU_TITLE)
         # reference to view menu and its submenus {menuName: QMenu}
-        self.viewMenus = {PANEL_MENU_TITLE: mPanelMenu}
-
-        # As basic action, no extra sub menu is required and we directly insert
-        panelAction = QAction(icons.save, 'Save panel configuration', self)
-        panelAction.triggered.connect(self._store_panel_configuration)
-        mPanelMenu.addAction(panelAction)
-        mPanelMenu.addSeparator()
+        self.viewMenus = {}
 
         mSettingsMenu = menuBar.addMenu(SETTINGS_TITLE)
         self.settingsMenus = {SETTINGS_TITLE: mSettingsMenu}
@@ -681,16 +622,15 @@ class MainWindow(QMainWindow):
         right = PanelContainer("Configuration", right_area)
         self._panel_areas[PanelAreaEnum.Right] = right
 
-    def _addPanelMenuAction(self, action, name=PANEL_MENU_TITLE):
-        """Add a QAction to the view menu, If name is not PANEL_MENU_TITLE,
-        put the action in a sub menu.
+    def _addPanelMenuAction(self, action, name):
+        """Add a QAction to the view menu
 
         :param action: a QAction to a panel
-        :param name: name of the submenu or PANEL_MENU_TITLE
+        :param name: name of the submenu
         """
         viewMenus = self.viewMenus
         if name not in viewMenus:
-            viewMenus[name] = viewMenus[PANEL_MENU_TITLE].addMenu(name)
+            viewMenus[name] = viewMenus[name].addMenu(name)
             submenu = viewMenus[name]
         else:
             submenu = viewMenus[name]
@@ -699,19 +639,10 @@ class MainWindow(QMainWindow):
             submenu.setEnabled(not submenu.isEmpty())
 
     def _quit(self):
-        """ Check for project changes"""
+        """Check for project changes"""
         if self._should_save_project_before_closing():
             return False
-
         return True
-
-    def _quit_console(self):
-        """Make sure that we close the console when we exit the GUI! """
-        info = self._active_closable_panels.get(CONSOLE_TITLE, None)
-        if info is not None:
-            panel, area_enum = info
-            self.removePanel(panel, area_enum)
-            process_qt_events(timeout=5000)
 
     def _enable_toolbar(self, enable):
         self.acServerConnect.setEnabled(enable)
@@ -726,25 +657,6 @@ class MainWindow(QMainWindow):
         panel = klass()
         self._active_panels[name] = panel
         self.addPanel(panel, area_enum)
-
-    def _open_closable_panel(self, name):
-        panel_info = _CLOSABLE_PANELS.get(name)
-        if panel_info is None:
-            return
-
-        klass, area_enum, _ = panel_info
-        panel = klass()
-
-        # We must have a closable panel!
-        assert panel.allow_closing
-
-        self.addPanel(panel, area_enum)
-        panel.signalPanelClosed.connect(self.onPanelClose)
-        action = self.panelActions.get(name)
-        if action is not None:
-            action.setEnabled(False)
-
-        self._active_closable_panels[name] = (panel, area_enum)
 
     def _unminimize_remaining_panels(self):
         """Reset the maximization of any child panels
@@ -803,12 +715,6 @@ class MainWindow(QMainWindow):
         get_logger().info("Registered the Karabo client application with "
                           f"version <b>{const.GUI_VERSION_LONG}</b> "
                           "for the <b>URL scheme</b> protocol.")
-
-    @Slot()
-    def _store_panel_configuration(self):
-        for name in _CLOSABLE_PANELS:
-            visible = name in self._active_closable_panels
-            set_panel_visible(name, visible=visible)
 
     @Slot()
     def onConfiguration(self):
