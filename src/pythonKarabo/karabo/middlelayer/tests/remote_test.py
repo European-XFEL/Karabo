@@ -281,6 +281,11 @@ async def test_call_remote(deviceTest):
         await call("remote", "slotRemoteNotThere", 1, 2)
     assert "Slot does not exist" in str(exc)
 
+    # public slots don't take arguments
+    with pytest.raises(KaraboError) as exc:
+        await call("remote", "startIncrementSync", 1, 2)
+    assert "Slot `startIncrementSync` does not take arguments" in str(exc)
+
 
 @pytest.mark.timeout(30)
 @run_test
