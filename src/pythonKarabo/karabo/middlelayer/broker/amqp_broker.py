@@ -219,27 +219,25 @@ class AmqpBroker(Broker):
     def build_arguments(self, signal, targets, reply):
         p = Hash()
         p["signalFunction"] = signal
-        slotInstanceIds = (
-            "|" + "||".join(t for t in targets) + "|")
-        p["slotInstanceIds"] = slotInstanceIds
-        funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
-        p["slotFunctions"] = ("|" + "||".join(funcs) + "|")
+        slotInstanceIds = "||".join(targets)
+        p["slotInstanceIds"] = f"|{slotInstanceIds}|"
+        funcs = "||".join(f"{k}:{','.join(v)}" for k, v in targets.items())
+        p["slotFunctions"] = f"|{funcs}|"
         if reply is not None:
             p["replyTo"] = reply
         p["hostname"] = socket.gethostname()
         p["classId"] = self.classId
         # AMQP specific follows ...
-        slotInstanceId = slotInstanceIds.strip("|")
-        if signal in ("__replyNoWait__", "__reply__"):
+        if signal in {"__replyNoWait__", "__reply__"}:
             name = f"{self.domain}.slots"
-            routing_key = slotInstanceId
+            routing_key = slotInstanceIds
         elif signal == "call":
-            if slotInstanceId == "*":
+            if slotInstanceIds == "*":
                 name = f"{self.domain}.global_slots"
                 routing_key = ""
             else:
                 name = f"{self.domain}.slots"
-                routing_key = slotInstanceId
+                routing_key = slotInstanceIds
         else:
             name = f"{self.domain}.signals"
             routing_key = f"{self.deviceId}.{signal}"
@@ -272,7 +270,7 @@ class AmqpBroker(Broker):
             p = Hash()
             p["replyFrom"] = replyTo
             p["signalFunction"] = "__reply__"
-            p["slotInstanceIds"] = "|" + sender + "|"
+            p["slotInstanceIds"] = f"|{sender}|"
             p["error"] = error
             name = f"{self.domain}.slots"
             routing_key = sender
