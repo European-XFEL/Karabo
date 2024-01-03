@@ -371,17 +371,17 @@ fi
 sleep 2
 
 # Sets the test building and execution variables
-if [ "$RUNTESTS" = "y" ]; then
+if [ "$RUNTESTS" = "y" ] && [ "$SKIP_CPP_TESTS" = "n" ]; then
     BUILD_UNIT_TESTING="1"
 else
     BUILD_UNIT_TESTING="0"
 fi
-if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
+if [ "$RUNINTEGRATIONTESTS" = "y" ] && [ "$SKIP_CPP_TESTS" = "n" ]; then
     BUILD_INTEGRATION_TESTING="1"
 else
     BUILD_INTEGRATION_TESTING="0"
 fi
-if [ "$RUNLONGTESTS" = "y" ]; then
+if [ "$RUNLONGTESTS" = "y" ] && [ "$SKIP_CPP_TESTS" = "n" ]; then
     BUILD_LONG_RUN_TESTING="1"
 else
     BUILD_LONG_RUN_TESTING="0"
