@@ -16,16 +16,9 @@ import __PACKAGE_NAME__
 
 def test_import_sub_modules():
     """Check the device package for forbidden subimports"""
-    try:
-        from karabo.common.api import has_sub_imports
-        from karabo.middlelayer.testing import get_ast_objects
-    except (ModuleNotFoundError, ImportError):
-        print("Testing the imports of sub modules is not possible with "
-              " existing karabo version.")
-        return
-
+    from karabo.common.api import has_sub_imports
+    from karabo.middlelayer.testing import get_ast_objects
     ignore = ["karabo.middlelayer.testing"]
     ast_objects = get_ast_objects(__PACKAGE_NAME__)
     for ast_obj in ast_objects:
-        for mod in ["karabo.middlelayer", "karabo.middlelayer_api"]:
-            assert not len(has_sub_imports(ast_obj, mod, ignore))
+        assert not len(has_sub_imports(ast_obj, "karabo.middlelayer", ignore))
