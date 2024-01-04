@@ -139,7 +139,7 @@ repository. A recommended configuration is shown by the excerpt of the `.vscode/
 
 The VSCode C++ Extension installed in step 1.2 contains a recent version of the `clang-format` tool,
 so no installation is needed. If for some reason you prefer to use another instance of the 
-`clang-format` tool, please be informed that the Gitlab CI uses version `13.0` of `clang-format`.
+`clang-format` tool, please be informed that the Gitlab CI uses version `17.0.6` of `clang-format`.
 Formatting with any version older than that may result in the CI formatting test not passing.
 
 Before opening the Karabo Framework CMake project inside VSCode, the `auto_build_all.sh` script must have
