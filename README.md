@@ -60,8 +60,8 @@ Python source files must be compliant with `flake8` and `isort` and your
 modified C++ source files must be compliant with the `clang-format` settings in
 the `.clang-format` file at the root of the repository.
 
-The CI linting job currently use `clang-format 13.0.0`. Please make sure that
-you have this version available on your development system.
+The CI linting job currently use `clang-format 17.0.6`. Please make sure that
+you have at least this version available on your development system.
 
 There are instructions on how to setup a development system based on Visual
 Studio Code
