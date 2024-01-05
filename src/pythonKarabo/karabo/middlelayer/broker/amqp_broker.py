@@ -164,7 +164,7 @@ class AmqpBroker(Broker):
         # Add timestamp (epoch in ms) when message is sent
         header["MQTimestamp"] = numpy.int64(time.time() * 1000)
         header["signalInstanceId"] = self.deviceId
-        return b"".join([encodeBinary(header), encodeBinary(body)])
+        return encodeBinary(header) + encodeBinary(body)
 
     @ensure_running
     def send(self, exch, key, header, arguments):
@@ -183,7 +183,7 @@ class AmqpBroker(Broker):
         body["a1"] = self.deviceId
         body["a2"] = interval
         body["a3"] = info
-        msg = b"".join([encodeBinary(header), encodeBinary(body)])
+        msg = encodeBinary(header) + encodeBinary(body)
         exch = f"{self.domain}.signals"
         key = f"{self.deviceId}.signalHeartbeat"
         await self.channel.basic_publish(msg, routing_key=key, exchange=exch)
