@@ -875,7 +875,7 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
               }
               return allUp;
           },
-          20 * KRB_TEST_MAX_TIMEOUT * 1'000u // Factor 20: instantiation can take ages on busy CI...
+          40 * KRB_TEST_MAX_TIMEOUT * 1'000u // Increased tolerance: instantiation can be quite slow on a busy CI...
           ,
           100u);
     CPPUNIT_ASSERT_MESSAGE("Timeout while looking for data logger and readers instances.", succeeded);
@@ -1163,6 +1163,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
 
     // Now check that for all stored stamps, the stamps gathered for the reader are correct
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    int failedCycles = 0;
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Time stamp after increasing value
         const Epochstamp& stampAfter = stampsAfter[i];
@@ -1205,13 +1206,27 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
             nTries--;
         }
-        const std::string msg("Failed to retrieve expected configuration for device '" + m_deviceId + "' after " +
-                              toString(nChecks) + " attempts - " + toString(nRemoteExceptions) +
-                              " remote exceptions among them - conf: " + toString(conf));
+
+        std::string msg("\nFailed to retrieve expected configuration for device '" + m_deviceId + "' after " +
+                        toString(nChecks) + " attempts - " + toString(nRemoteExceptions) +
+                        " remote exceptions among them.\n");
+
+        if (conf.size() > 0) {
+            msg = msg + "On cycle '" + toString(i) + "' of  '" + toString(numCycles) + "', 'value' is '" +
+                  toString(conf.get<int>("value")) + "'; the expected value is '" + toString(static_cast<int>(i + 1)) +
+                  "'.\nThe retrieved 'value' timestamp is '" +
+                  Epochstamp::fromHashAttributes(conf.getAttributes("value")).toIso8601() +
+                  "'. The timepoint used by getConfigurationFromPast is '" + stampAfter.toIso8601() + "'.\n";
+        }
+
         CPPUNIT_ASSERT_MESSAGE(msg, conf.size() > 0);
         CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, static_cast<int>(i + 1), // +1: stamp is after update
-                                     conf.get<int>("value"));
+
+        if (conf.get<int>("value") != static_cast<int>(i + 1)) {
+            std::clog << msg << std::endl;
+            failedCycles++;
+            continue;
+        }
 
         // Check received stamps: For "value" be aware that we store with
         // microsec precision only: we might be 1 off since we cut off digits instead of rounding
@@ -1239,6 +1254,9 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                                    dt < 10.); // seen 2.95 (!) in https://git.xfel.eu/Karabo/Framework/-/jobs/290211
         }
     }
+
+    CPPUNIT_ASSERT_MESSAGE(toString(failedCycles) + " out of " + toString(numCycles) + " cycles failed!",
+                           failedCycles == 0);
 
     std::clog << "OK" << std::endl;
 }
