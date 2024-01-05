@@ -52,7 +52,7 @@ void exportPyUtilDims() {
     }
 
     {
-        bp::def("setDims", (void (*)(Hash& hash, const std::string&, const Dims&, const char))(&karabo::util::setDims),
+        bp::def("setDims", (void (*)(Hash&, const std::string&, const Dims&, const char))(&karabo::util::setDims),
                 (bp::arg("hash"), bp::arg("path"), bp::arg("dims"), bp::arg("sep") = '.'));
     }
 }
