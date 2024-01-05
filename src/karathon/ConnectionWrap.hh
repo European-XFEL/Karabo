@@ -56,10 +56,6 @@ namespace karathon {
         }
 
         static int startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
-
-       private:
-        static void proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler,
-                                           const karabo::net::Channel::Pointer& channel);
     };
 } // namespace karathon
 

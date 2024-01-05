@@ -636,11 +636,14 @@ namespace karathon {
      * a specialised implementation for the operator() might be needed, using e.g. the
      * Wrapper::toObject or Wrapper::from[...]ToPy[...] methods for conversion, see e.g. class HandlerWrapAny1.
      */
-    template <typename... Args> // if needed, could specify return type of operator() as fixed first template argument
+    template <typename... Args>
     class HandlerWrap {
        public:
         /**
-         * Construct a wrapper for a Python handler
+         * Construct a wrapper for a Python handler whose return value is ignored.
+         *
+         * `Args` are the C++ arguments that the wrapper is expected to be called with.
+         *
          * @param handler the Python callable to wrap
          * @param where a C string identifying which handler is wrapped,
          *              for debugging only, i.e. used if a call to the handler raises an exception
@@ -662,18 +665,62 @@ namespace karathon {
             try {
                 if (*m_handler) {
                     // Just call handler with individually unpacked arguments:
-                    (*m_handler)(bp::object(args)...); // std::forward(args)?
+                    (*m_handler)(bp::object(std::forward<Args>(args))...);
                 }
-            } catch (const bp::error_already_set& e) {
-                karathon::detail::treatError_already_set(*m_handler, m_where);
+            } catch (bp::error_already_set& e) {
+                detail::treatError_already_set(*m_handler, m_where);
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
-       protected: // not private - needed by HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
+       protected: // not private - needed by HandlerWrapExtra, HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
         std::shared_ptr<bp::object> m_handler;
         char const* const m_where;
+    };
+
+    /**
+     * Specialisation of HandlerWrap that stores an extra C++ object and
+     * passes it as second argument to the Python handler
+     *
+     * The arguments are converted to bp::object before passed to the Python handler.
+     */
+    template <typename FirstArg, typename ExtraArg, typename... Args>
+    class HandlerWrapExtra : public HandlerWrap<FirstArg, Args...> {
+       public:
+        HandlerWrapExtra(const bp::object& handler, char const* const where, const ExtraArg& extra)
+            : HandlerWrap<FirstArg, Args...>(handler, where), m_extraArg(extra) {}
+
+        // This definition resolves serfault issue while destroying m_extraArg == channel (Channel::Pointer type)
+        // since the destruction is done under the GIL.  Note that in karabind case this is not needed and this is
+        // considered here (boost::python?) as a hack.
+        ~HandlerWrapExtra() {
+            ScopedGILAcquire gil;
+            m_extraArg = nullptr;
+        }
+
+        void operator()(FirstArg first, Args... args) const {
+            ScopedGILAcquire gil;
+            try {
+                if (*m_handler) {
+                    // Call handler with individually unpacked arguments, but put the extra one as second:
+                    (*m_handler)(bp::object(std::move(first)), bp::object(m_extraArg),
+                                 bp::object(std::forward<Args>(args))...);
+                }
+            } catch (bp::error_already_set& e) {
+                detail::treatError_already_set(*m_handler, m_where);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+       private:
+        ExtraArg m_extraArg;
+        // Make (non-private) base class members available. Needed since 'C++ doesn’t consider superclass templates for
+        // name resolution' (see
+        // https://stackoverflow.com/questions/4010281/accessing-protected-members-of-superclass-in-c-with-templates):
+        using HandlerWrap<FirstArg, Args...>::m_handler;
+        using HandlerWrap<FirstArg, Args...>::m_where;
     };
 
     template <typename Ret, typename... Args>

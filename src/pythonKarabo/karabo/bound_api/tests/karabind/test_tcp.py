@@ -138,18 +138,9 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
     readMsg = bob.readHash()
     assert fullyEqual(readMsg, Hash("hash", "message"))
 
-    if type(alice) is not karathon.Channel:
-        # With karathon I get
-        # TypeError: Python type in parameters is not supported
-        # The above exception was the direct cause of the following exception:
-        # <snip>
-        #        with pytest.raises(RuntimeError) as excinfo:
-        # >           alice.write(1)  # not supported
-        # E           SystemError: <Boost.Python.function object at 0x...> \
-        #                                  returned a result with an error set
-        with pytest.raises(RuntimeError) as excinfo:
-            alice.write(1)  # not supported to write int
-            assert "Python Exception: Not supported type" in str(excinfo.value)
+    with pytest.raises(RuntimeError) as excinfo:
+        alice.write(1)  # not supported to write int
+        assert "Python Exception: Not supported type" in str(excinfo.value)
 
     alice.write(Hash("str", "header"), "messageStr")  # Hash, str
     readHeader, readMsg = bob.readHashStr()
@@ -172,12 +163,11 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
     assert fullyEqual(readHeader, Hash("a", "header"))
     assert fullyEqual(readMsg, Hash("hash", "message"))
 
-    if type(alice) is not karathon.Channel:
-        # With karathon I get TypeError etc., as above
-        with pytest.raises(RuntimeError) as excinfo:
-            alice.write(Hash("a", "header"), 1)  # not supported
-            assert "Python Exception: Not supported type" in str(excinfo.value)
+    with pytest.raises(RuntimeError) as excinfo:
+        alice.write(Hash("a", "header"), 1)  # not supported
+        assert "Python Exception: Not supported type" in str(excinfo.value)
 
+    if type(alice) is not karathon.Channel:
         # Not sure which error we would get here with karathon
         with pytest.raises(TypeError) as excinfo:
             alice.write(1, "message")  # not supported header type
@@ -318,25 +308,21 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
         with conditionRead:
             conditionRead.notify()
 
-    if type(alice) is not karathon.Channel:
-        # karathon produces
-        # SystemError: <Boost.Python.function object at 0x556c668fe940> \
-        #    returned a result with an error set
-        alice.writeAsyncHashStr(Hash("header", "message"), "body",
-                                writeComplete)
-        with conditionWrite:
-            conditionWrite.wait(timeout=10)
-        assert ecWrite.value() == 0
-        assert alice is channelWrite
+    alice.writeAsyncHashStr(Hash("header", "message"), "body",
+                            writeComplete)
+    with conditionWrite:
+        conditionWrite.wait(timeout=10)
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
 
-        bob.readAsyncHashStr(onRead2)
+    bob.readAsyncHashStr(onRead2)
 
-        with conditionRead:
-            conditionRead.wait(timeout=10)
-        assert ecRead.value() == 0
-        assert bob is channelRead
-        assert fullyEqual(headerRead, Hash("header", "message"))
-        assert msgRead == "body"
+    with conditionRead:
+        conditionRead.wait(timeout=10)
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert fullyEqual(headerRead, Hash("header", "message"))
+    assert msgRead == "body"
 
     ###################################################################
     # Write and read Hash, bytes
@@ -345,23 +331,21 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
     ecWrite = channelWrite = None
     ecRead = channelRead = headerRead = msgRead = None
 
-    if type(alice) is not karathon.Channel:
-        # karathon produces an exception "Error in 'onRead2'"
-        alice.writeAsyncHashStr(Hash("header", "message b"), b"bytes",
-                                writeComplete)
-        with conditionWrite:
-            conditionWrite.wait(timeout=10)
-        assert ecWrite.value() == 0
-        assert alice is channelWrite
+    alice.writeAsyncHashStr(Hash("header", "message b"), b"bytes",
+                            writeComplete)
+    with conditionWrite:
+        conditionWrite.wait(timeout=10)
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
 
-        bob.readAsyncHashStr(onRead2)
+    bob.readAsyncHashStr(onRead2)
 
-        with conditionRead:
-            conditionRead.wait(timeout=10)
-        assert ecRead.value() == 0
-        assert bob is channelRead
-        assert fullyEqual(headerRead, Hash("header", "message b"))
-        assert msgRead == "bytes"
+    with conditionRead:
+        conditionRead.wait(timeout=10)
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert fullyEqual(headerRead, Hash("header", "message b"))
+    assert msgRead == "bytes"
 
     ###################################################################
     # Write and read Hash, bytearray
@@ -370,24 +354,22 @@ def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
     ecWrite = channelWrite = None
     ecRead = channelRead = headerRead = msgRead = None
 
-    if type(alice) is not karathon.Channel:
-        # karathon produces an exception "Error in 'onRead2'"
-        alice.writeAsyncHashStr(Hash("header", "message b2"),
-                                bytearray("bytearray", encoding="utf8"),
-                                writeComplete)
-        with conditionWrite:
-            conditionWrite.wait(timeout=10)
-        assert ecWrite.value() == 0
-        assert alice is channelWrite
+    alice.writeAsyncHashStr(Hash("header", "message b2"),
+                            bytearray("bytearray", encoding="utf8"),
+                            writeComplete)
+    with conditionWrite:
+        conditionWrite.wait(timeout=10)
+    assert ecWrite.value() == 0
+    assert alice is channelWrite
 
-        bob.readAsyncHashStr(onRead2)
+    bob.readAsyncHashStr(onRead2)
 
-        with conditionRead:
-            conditionRead.wait(timeout=10)
-        assert ecRead.value() == 0
-        assert bob is channelRead
-        assert fullyEqual(headerRead, Hash("header", "message b2"))
-        assert msgRead == "bytearray"
+    with conditionRead:
+        conditionRead.wait(timeout=10)
+    assert ecRead.value() == 0
+    assert bob is channelRead
+    assert fullyEqual(headerRead, Hash("header", "message b2"))
+    assert msgRead == "bytearray"
 
     ###################################################################
     # Write and read Hash, Hash
@@ -431,42 +413,90 @@ class Server:
 
     def onError(self, ec, channel):
         DEBUG(f"SRV onError #{ec.value()} => {ec.message()}")
-        DEBUG(f" -- close channel: id {id(channel)}")
         channel.close()
         DEBUG("SRV channel closed")
+
+    def onWriteHashHashComplete(self, ec, channel):
+        DEBUG("SRV onWriteHashComplete entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # register for reading new Hash/Hash message
+        channel.readAsyncHashHash(self.onReadHashHash)
+        DEBUG("SRV onWriteHashHashComplete exit.")
+
+    def onReadHashHash(self, ec, channel, h, b):
+        DEBUG(f"SRV onReadHashHash entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # process the message
+        b["server"] = "SERVER: message processed!"
+        # send back to client
+        channel.writeAsyncHashHash(h, b, self.onWriteHashHashComplete)
+        DEBUG("SRV onReadHashHash exit.")
+
+    def onWriteHashStrComplete(self, ec, channel):
+        DEBUG("SRV onWriteHashStrComplete entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # register for reading new Hash/Hash message
+        channel.readAsyncHashHash(self.onReadHashHash)
+        DEBUG("SRV onWriteHashStrComplete exit.")
+
+    def onReadHashStr(self, ec, channel, h, s):
+        DEBUG(f"SRV onReadHashStr entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # send back to client
+        channel.writeAsyncHashStr(h, s, self.onWriteHashStrComplete)
+        DEBUG("SRV onReadHashStr exit.")
+
+    def onWriteHashComplete(self, ec, channel):
+        DEBUG("SRV onWriteHashComplete entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # register for reading new Hash/Str message
+        channel.readAsyncHashStr(self.onReadHashStr)
+        DEBUG("SRV onWriteHashComplete exit.")
+
+    def onReadHash(self, ec, channel, h):
+        DEBUG(f"SRV onReadHash entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # send back to client
+        channel.writeAsyncHash(h, self.onWriteHashComplete)
+        DEBUG("SRV onReadHash exit.")
+
+    def onWriteStrComplete(self, ec, channel):
+        DEBUG("SRV onWriteStrComplete entry.")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        # register for reading new Hash message
+        channel.readAsyncHash(self.onReadHash)
+        DEBUG("SRV onWriteStrComplete exit.")
+
+    def onReadStr(self, ec, channel, s):
+        DEBUG(f"SRV onReadStr entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            self.onError(ec, channel)
+            return
+        channel.writeAsyncStr(s, self.onWriteStrComplete)
+        DEBUG("SRV onReadStr exit.")
 
     def onConnect(self, ec, channel):
         DEBUG(f"SRV onConnect entry: #{ec.value()} -> {ec.message()}")
         if ec.value() != 0:
             self.onError(ec, channel)
             return
-
-        # register read handler for incoming Hash messages
-        channel.readAsyncHashHash(self.onReadHashHash)
+        # register read handler for incoming Str messages
+        channel.readAsyncStr(self.onReadStr)
         DEBUG("SRV onConnect exit.")
-
-    def onReadHashHash(self, ec, channel, h, b):
-        DEBUG(f"SRV onReadHashHash: #{ec.value()} => {ec.message()}")
-        if ec.value() != 0:
-            self.onError(ec, channel)
-            return
-
-        DEBUG(f"SRV onReadHashHash:\nHEADER ...\n{h}BODY...\n{b}\n")
-        # process the message
-        b["server"] = "SERVER: message processed!"
-        # send back to client
-        channel.writeAsyncHashHash(h, b, self.onWriteComplete)
-        DEBUG("SRV onReadHashHash exit.")
-
-    def onWriteComplete(self, ec, channel):
-        DEBUG("SRV onWriteComplete entry.")
-        if ec.value() != 0:
-            self.onError(ec, channel)
-            return
-
-        # register for reading new Hash message
-        channel.readAsyncHashHash(self.onReadHashHash)
-        DEBUG("SRV onWriteComplete exit.")
 
     # this method stops server
     def stop(self):
@@ -477,21 +507,19 @@ class Server:
     "Connection, EventLoop, Hash",
     [
         (karabind.Connection, karabind.EventLoop, karabind.Hash),
-        # karathon crashes since handlers are not properly wrapped
-        # (karathon.Connection, karathon.EventLoop, karathon.Hash)
+        (karathon.Connection, karathon.EventLoop, karathon.Hash)
     ])
 def test_tcp_client_server(Connection, EventLoop, Hash):
     # Pass 'karathon' or 'karabind' versions of Connection, EventLoop and Hash
+    counter = 0
+    count_max = 10
     server = Server(Connection, Hash)
     sthread = threading.Thread(target=EventLoop.run)
     sthread.start()
     EventLoop.addThread(4)
     DEBUG("CLN: EventLoop thread started...")
 
-    body = None
     failed = None
-
-    # define client callbacks ...
 
     def onError(ec, channel):
         channel.close()
@@ -500,8 +528,9 @@ def test_tcp_client_server(Connection, EventLoop, Hash):
 
     def onReadHashHash(ec, channel, header, body):
         nonlocal failed
-        DEBUG(f"CLN onReadHashHash #{ec.value()} => {ec.message()}")
-        DEBUG(f"CLN onReadHashHash ...\nHEADER...\n{header}BODY...\n{body}\n")
+        nonlocal counter
+        counter += 1
+        DEBUG(f"CLN onReadHashHash entry: #{ec.value()} => {ec.message()}")
         if ec.value() != 0:
             onError(ec, channel)
             return
@@ -515,15 +544,24 @@ def test_tcp_client_server(Connection, EventLoop, Hash):
             assert body['d.abc'] == 'rubbish'
         except BaseException as exc:
             failed = f'Hash inspection failed: {exc}'
-        finally:
+
+        if counter >= count_max:
             channel.close()
             server.stop()
             DEBUG("CLN: EventLoop stop")
             EventLoop.stop()
-            DEBUG("CLN onReadHashHash exit.")
+        else:
+            # Next message ...
+            body = Hash(
+                "a.b.c", 1,
+                "x.y.z", [1, 2, 3, 4, 5],
+                "d", Hash("abc", "rubbish"))
+            header = Hash("par1", 12)
+            channel.writeAsyncHashHash(header, body, onWriteHashHashComplete)
+        DEBUG(f"CLN onReadHashHash exit.\t\tCOUNT = {counter}\n")
 
-    def onWriteComplete(ec, channel):
-        DEBUG("CLN onWriteComplete entry.")
+    def onWriteHashHashComplete(ec, channel):
+        DEBUG("CLN onWriteHashHashComplete entry.")
         if ec.value() != 0:
             onError(ec, channel)
             return
@@ -532,30 +570,125 @@ def test_tcp_client_server(Connection, EventLoop, Hash):
             channel.readAsyncHashHash(None)
 
         channel.readAsyncHashHash(onReadHashHash)
-        DEBUG("CLN onWriteComplete exit")
+        DEBUG("CLN onWriteHashHashComplete exit")
 
-    def onConnect(ec, channel):
-        nonlocal body
-        DEBUG(f"CLN onConnect: #{ec.value()} => {ec.message()}")
+    def onReadHashStr(ec, channel, h, s):
+        nonlocal failed
+        nonlocal counter
+        counter += 1
+        DEBUG(f"CLN onReadHashStr entry: #{ec.value()} => {ec.message()}")
         if ec.value() != 0:
             onError(ec, channel)
             return
 
-        h = Hash(
+        try:
+            assert s == "some message"
+        except BaseException as exc:
+            failed = f'Message inspection failed: {exc}'
+            return
+
+        # Next message ...
+        body = Hash(
             "a.b.c", 1,
             "x.y.z", [1, 2, 3, 4, 5],
             "d", Hash("abc", "rubbish"))
-
         header = Hash("par1", 12)
-        body = h  # keep object alive until write complete
-        DEBUG("CLN onConnect writeAsyncHashHash:\nHEADER...")
-        DEBUG(f"{header}BODY\n{body}\n")
 
         with pytest.raises(RuntimeError):
             channel.writeAsyncHashHash(header, body, None)
 
-        channel.writeAsyncHashHash(header, body, onWriteComplete)
-        DEBUG("CLN onConnect exit.")
+        channel.writeAsyncHashHash(header, body, onWriteHashHashComplete)
+        DEBUG(f"CLN onReadHashStr exit.\t\t\tCOUNT = {counter}\n")
+
+    def onWriteHashStrComplete(ec, channel):
+        DEBUG("CLN onWriteHashStrComplete entry.")
+        if ec.value() != 0:
+            onError(ec, channel)
+            return
+
+        with pytest.raises(RuntimeError):
+            channel.readAsyncHashStr(None)
+
+        channel.readAsyncHashStr(onReadHashStr)
+        DEBUG("CLN onWriteHashStrComplete exit")
+
+    def onReadHash(ec, channel, body):
+        nonlocal failed
+        nonlocal counter
+        counter += 1
+        DEBUG(f"CLN onReadHash entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            onError(ec, channel)
+            return
+
+        try:
+            assert len(body) == 1
+            assert body['a'] == 12
+        except BaseException as exc:
+            failed = f'Message inspection failed: {exc}'
+            return
+
+        h = Hash('a', 1)
+        s = "some message"
+        channel.writeAsyncHashStr(h, s, onWriteHashStrComplete)
+        DEBUG(f"CLN onReadHash exit.\t\t\tCOUNT = {counter}\n")
+
+    def onWriteHashComplete(ec, channel):
+        DEBUG("CLN onWriteHashComplete entry.")
+        if ec.value() != 0:
+            onError(ec, channel)
+            return
+
+        with pytest.raises(RuntimeError):
+            channel.readAsyncHash(None)
+
+        channel.readAsyncHash(onReadHash)
+        DEBUG("CLN onWriteHashComplete exit")
+
+    def onReadStr(ec, channel, s):
+        nonlocal failed
+        nonlocal counter
+        counter += 1
+        DEBUG(f"CLN onReadStr entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            onError(ec, channel)
+            return
+
+        try:
+            assert s == 'Hello'
+        except BaseException as exc:
+            failed = f'Message inspection failed: {exc}'
+            return
+
+        h = Hash("a", 12)
+        channel.writeAsyncHash(h, onWriteHashComplete)
+        DEBUG(f"CLN onReadStr exit.\t\t\tCOUNT = {counter}\n")
+
+    def onWriteStrComplete(ec, channel):
+        DEBUG("CLN onWriteStrComplete entry.")
+        if ec.value() != 0:
+            onError(ec, channel)
+            return
+
+        with pytest.raises(RuntimeError):
+            channel.readAsyncStr(None)
+
+        channel.readAsyncStr(onReadStr)
+        DEBUG("CLN onWriteStrComplete exit")
+
+    def onConnect(ec, channel):
+        nonlocal counter
+        counter = 0
+        DEBUG(f"CLN onConnect entry: #{ec.value()} => {ec.message()}")
+        if ec.value() != 0:
+            onError(ec, channel)
+            return
+
+        with pytest.raises(RuntimeError):
+            channel.writeAsyncStr("Tschüß", None)
+
+        channel.writeAsyncStr("Hello", onWriteStrComplete)
+        DEBUG(f"CLN onConnect exit.\t\t\tCOUNT = {counter}\n")
 
     # Asynchronous TCP client
     # create client connection object

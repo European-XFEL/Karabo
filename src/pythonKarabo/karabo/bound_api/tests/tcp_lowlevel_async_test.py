@@ -52,7 +52,7 @@ class Server:
             print("Server channel closed")
 
     def onConnect(self, ec, channel):
-        print("Server.onConnect entry.")
+        print("SERVER: onConnect entry.")
         if ec.value() != 0:
             self.onError(ec, channel)
             return
@@ -68,10 +68,10 @@ class Server:
             print("*** Server.onConnect unexpected error: "
                   "{}".format(sys.exc_info()[0]))
         finally:
-            print("Server.onConnect exit.")
+            print("SERVER: onConnect exit.\n")
 
     def onReadHashHash(self, ec, channel, header, body):
-        print("Server.onReadHashHash entry.")
+        print("SERVER: onReadHashHash entry.")
         if ec.value() != 0:
             self.onError(ec, channel)
             return
@@ -80,17 +80,17 @@ class Server:
             body["server"] = "APPROVED!"
             channel.writeAsyncHashHash(header, body, self.onWriteComplete)
         except RuntimeError as e:
-            print("TCP Async server onReadHashHash: " + str(e))
+            print("*** Server onReadHashHash RuntimeError: " + str(e))
             raise
         except BaseException:
             print("*** Server.onReadHashHash unexpected error: "
                   "{}".format(sys.exc_info()[0]))
             raise
         finally:
-            print("Server.onReadHashHash exit.")
+            print("SERVER: onReadHashHash exit.")
 
     def onWriteComplete(self, ec, channel):
-        print("Server.onWriteComplete entry.")
+        print("SERVER: onWriteComplete entry.")
         if ec.value() != 0:
             self.onError(ec, channel)
             return
@@ -108,7 +108,7 @@ class Server:
                   "{}".format(sys.exc_info()[0]))
             raise
         finally:
-            print("Server.onWriteComplete exit.")
+            print("SERVER: onWriteComplete exit.")
 
     # this method stops server
     def stop(self):
@@ -119,64 +119,65 @@ class P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
         # choose the port not in use
         self.server = Server()
+        self.count = 10
         time.sleep(0.5)
 
     def tearDown(self):
-        pass  # self.server.stop() # stop server io service
+        pass
 
-    @unittest.skip(reason="Segfaulting on Python 3.8")
     def test_p2p_async(self):
+        # header = None
+        # body = None
 
         def onError(error_code, channel):
-            print(f"Error #{error_code.value()!r}"
+            print(f"CLIENT: Error #{error_code.value()!r}"
                   f" => {error_code.message()!r}")
             channel.close()
             EventLoop.stop()
 
         def onConnect(ec, channel):
+            # nonlocal header
+            # nonlocal body
 
-            print("Async client onConnect entry.")
+            print("CLIENT: onConnect entry.")
             if ec.value() != 0:
-                self.onError(ec, channel)
+                onError(ec, channel)
                 return
 
             try:
-                h = Hash(
+                body = Hash(
                     "a.b.c", 1,
                     "x.y.z", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
                     "d", Hash("abc", "rubbish"))
                 header = Hash("par1", 12)
-                body = h  # keep object alive until write complete
                 channel.writeAsyncHashHash(header, body, onWriteComplete)
-
             except RuntimeError as e:
-                print("ASync client onConnect:", str(e))
+                print("CLIENT: onConnect RuntimeError:", str(e))
             finally:
-                print("client.onConnect exit.")
+                print("CLIENT: onConnect exit.")
 
         def onWriteComplete(ec, channel):
-            print("ASync client onWriteComplete entry.")
+            print("CLIENT: onWriteComplete entry.")
             if ec.value() != 0:
-                self.onError(ec, channel)
+                onError(ec, channel)
                 return
 
             try:
                 channel.readAsyncHashHash(onReadHashHash)
-            except RuntimeError as e:
-                print("ASync client onWriteComplete:", str(e))
+            except BaseException as e:
+                print("CLIENT: onWriteComplete BaseException:", str(e))
             finally:
-                print("ASync client onWriteComplete exit")
+                print("CLIENT: onWriteComplete exit")
 
         def onReadHashHash(ec, channel, header, h):
-            print("ASync client onReadHashHash entry: ec.value = ",
-                  ec.value())
+            print("CLIENT: onReadHashHash entry")
             if ec.value() != 0:
-                self.onError(ec, channel)
+                onError(ec, channel)
                 return
 
-            print("ASync client onReadHashHash entry: header is ...\n" + str(
-                header))
+            print(f"CLIENT received the reply ...\t\tCOUNT = {self.count}\n")
+            self.count -= 1
             try:
                 self.assertEqual(len(h), 4)
                 self.assertEqual(h['server'], "APPROVED!")
@@ -186,13 +187,27 @@ class P2p_asyncTestCase(unittest.TestCase):
                                   14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
                                   25])
                 self.assertEqual(h['d.abc'], 'rubbish')
-                channel.close()
+                if self.count > 0:
+                    h = Hash(
+                        "a.b.c", 1,
+                        "x.y.z", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                  14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                                  25],
+                        "d", Hash("abc", "rubbish"))
+                    header = Hash("par1", 12)
+                    body = h  # keep object alive until write complete
+                    channel.writeAsyncHashHash(header, body, onWriteComplete)
+                else:
+                    channel.close()
+                    print("CLIENT channel closed.")
 
             except Exception as e:
                 self.fail(
-                    "test_asynchronous_client exception group 1: " + str(e))
+                    "CLIENT: Exception : " + str(e))
             finally:
-                print("ASync client onReadHashHash exit.")
+                print("CLIENT: onReadHashHash exit.")
+            if self.count == 0:
+                print()
 
         # Asynchronous TCP client
         # create client connection object
@@ -201,8 +216,10 @@ class P2p_asyncTestCase(unittest.TestCase):
                         "hostname", "localhost",
                         "port", self.server.port))
         connection.startAsync(onConnect)
+        print("================== Start run  ====================")
 
         EventLoop.run()
+        print("================== End of run ====================")
 
 
 if __name__ == '__main__':
