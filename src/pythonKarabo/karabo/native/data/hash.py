@@ -636,37 +636,60 @@ def get_hash_type_from_data(data):
     :param data: Any kind of data typically used in the control network
     :returns: HashType Enum
     """
+    return HashType(_get_hash_num_from_data(data))
+
+
+def _get_hash_type_by_class(data):
+    if hasattr(data, '_hashType'):
+        return data._hashType
+    elif isinstance(data, bool):
+        return HashType.Bool
+    elif isinstance(data, (Enum, numbers.Integral)):
+        return HashType.Int32
+    elif isinstance(data, numbers.Real):
+        return HashType.Double
+    elif isinstance(data, numbers.Complex):
+        return HashType.ComplexDouble
+    elif isinstance(data, bytes):
+        return HashType.VectorChar
+    elif isinstance(data, str):
+        return HashType.String
+    elif data is None:
+        return HashType.None_
+
+
+types_cache = {}
+
+
+def _get_hash_num_from_data(data):
+    """internal speed optimized version of `get_hash_type_from_data`
+
+    it returns the type number in a hash instead of the `HashType`,
+    and, especially, caches results where possible.
+    """
+
+    if (ret := types_cache.get(type(data))) is not None:
+        return ret
+
     try:
         if data.ndim == 1 and isinstance(data, np.ndarray):
-            return NUMPY_TO_HASH_TYPE_VECTOR[data.dtype.type]
+            return NUMPY_TO_HASH_TYPE_VECTOR[data.dtype.type].value
         else:
-            return NUMPY_TO_HASH_TYPE_SIMPLE[data.dtype.type]
+            ret = NUMPY_TO_HASH_TYPE_SIMPLE[data.dtype.type]
+            types_cache[type(data)] = ret.value
+            return ret.value
     except AttributeError:
-        if hasattr(data, '_hashType'):
-            return data._hashType
-        elif isinstance(data, bool):
-            return HashType.Bool
-        elif isinstance(data, (Enum, numbers.Integral)):
-            return HashType.Int32
-        elif isinstance(data, numbers.Real):
-            return HashType.Double
-        elif isinstance(data, numbers.Complex):
-            return HashType.ComplexDouble
-        elif isinstance(data, bytes):
-            return HashType.VectorChar
-        elif isinstance(data, str):
-            return HashType.String
+        if (ret := _get_hash_type_by_class(data)) is not None:
+            types_cache[type(data)] = ret.value
+            return ret.value
         elif isinstance(data, list):
             if data:
-                subtype = get_hash_type_from_data(data[0])
-                return HashType(subtype.value + 1)
+                return _get_hash_num_from_data(data[0]) + 1
             else:
-                return HashType.VectorString
-        elif data is None:
-            return HashType.None_
+                return HashType.VectorString.value
         try:
             memoryview(data)
-            return HashType.ByteArray
+            return HashType.ByteArray.value
         except TypeError:
             raise TypeError(f'unknown datatype {data.__class__}')
 
