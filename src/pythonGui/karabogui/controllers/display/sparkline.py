@@ -27,9 +27,6 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import SparklineModel
 from karabo.native import Timestamp
-from karabogui.alarms.api import (
-    ALARM_COLOR, ALARM_HIGH, ALARM_LOW, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
-    WARN_LOW)
 from karabogui.binding.api import FloatBinding, IntBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -39,7 +36,6 @@ SPARK_MIN_HEIGHT = 50
 SPARK_MIN_WIDTH = 200
 # timebases available for the widget, values in seconds
 TIMEBASES = (('60s', 60), ('10m', 600), ('10h', 36000))
-NO_ALARMS = {k: None for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
 
 
 class SparkRenderer(QWidget):
@@ -81,7 +77,6 @@ class SparkRenderer(QWidget):
         self.painter_path_max = None
 
         self.then = time.time()
-        self.alarms = NO_ALARMS
 
         self.tendency = 0
         self.tendency_indicators = {}
@@ -108,7 +103,7 @@ class SparkRenderer(QWidget):
         return scaled
 
     def resizeEvent(self, event):
-        self._update_ranges(self.yvals[-1], self.alarms)
+        self._update_ranges(self.yvals[-1])
         self._generate_curve()
         event.accept()
 
@@ -163,19 +158,6 @@ class SparkRenderer(QWidget):
 
             painter.drawPath(self.painter_path_min)
             painter.drawPath(self.painter_path_max)
-
-            # draw available alarm indicators
-            for alarm_type, val in self.alarms.items():
-                if val is None:
-                    continue
-                if WARN_GLOBAL in alarm_type:
-                    pen = QPen(QColor(*WARN_COLOR), 1, Qt.DashLine)
-                else:
-                    pen = QPen(QColor(*ALARM_COLOR), 1, Qt.SolidLine)
-
-                painter.setPen(pen)
-                val = self._scale_y(val, height)
-                painter.drawLine(0, val, width, val)
 
             # add min and max value indicators
             pen = QPen(Qt.black, 1, Qt.SolidLine)
@@ -240,11 +222,8 @@ class SparkRenderer(QWidget):
             path.lineTo(x[i], y[i])
         return path
 
-    def setData(self, value, timestamp, alarms):
+    def setData(self, value, timestamp):
         """Set a new data point with associated timestamp to the spark line
-
-        Alarms should be a dict indicating alarm bounds if they exists.
-        The expected keys are "warnLow", "warnHigh", "alarmLow" and "alarmHigh"
         Set the value to `None` if no bound is set.
         """
         t = timestamp.toTimestamp()
@@ -283,8 +262,7 @@ class SparkRenderer(QWidget):
         self.ycnts[-1] += 1
         self.ymax[-1] = max(self.ymax[-1], value)
         self.ymin[-1] = min(self.ymin[-1], value)
-        self._update_ranges(value, alarms)
-        self.alarms = alarms
+        self._update_ranges(value)
         # generate the curve with the painter path
         self._generate_curve()
 
@@ -326,11 +304,8 @@ class SparkRenderer(QWidget):
 
         self.yrange = (np.min(y), np.max(y))
 
-    def _update_ranges(self, value, alarms):
-        """Update data ranges as needed, depending on values and alarms.
-
-        If alarms are present, the range will be always be set such that
-        they are indicated.
+    def _update_ranges(self, value):
+        """Update data ranges as needed, depending on values.
         """
         # the y range which simply needs to scale to new maxima and minima
         if self.yrange is None or self.reset_range:
@@ -340,11 +315,6 @@ class SparkRenderer(QWidget):
             self.reset_range = False
         else:
             self.yrange = min(value, *self.yrange), max(value, *self.yrange)
-
-        alarmlst = [a for a in alarms.values() if a is not None]
-        if alarmlst:
-            self.yrange = (min(self.yrange[0], *alarmlst),
-                           max(self.yrange[1], *alarmlst))
 
         # scale to plot fraction
         pheight = self._plot_frac * self.height()
@@ -390,11 +360,6 @@ class DisplaySparkline(BaseBindingController):
         action_show_value.toggled.connect(self.toggle_show_value)
         action_show_value.setChecked(self.model.show_value)
         widget.addAction(action_show_value)
-
-        action_alarms = QAction("Use alarm range", widget, checkable=True)
-        action_alarms.toggled.connect(self.toggle_alarm_range)
-        action_alarms.setChecked(self.model.alarm_range)
-        widget.addAction(action_alarms)
 
         self.action_show_format = QAction("Set value format", widget)
         self.action_show_format.triggered.connect(self._change_show_format)
@@ -463,11 +428,6 @@ class DisplaySparkline(BaseBindingController):
         now = time.time()
         self._fetch_property_history(now - timebase, now)
 
-    @on_trait_change('model:alarm_range')
-    def _reset_yrange(self):
-        self.render_area.reset_range = True
-        self.value_update(self.proxy)
-
     @on_trait_change('model:show_value')
     def _show_value_update(self, value):
         self.line_edit.setVisible(value)
@@ -484,17 +444,8 @@ class DisplaySparkline(BaseBindingController):
             self.model.show_format = form
 
     def _draw(self, value, timestamp):
-        """ Draw data vs. time and alarm limits """
-        if self.model.alarm_range:
-            # extract alarms if present, if not the sparkrenderer expects
-            # `None` to process data
-            attrs = self.proxy.binding.attributes
-            alarms = {k: attrs.get(k, None)
-                      for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
-        else:
-            alarms = NO_ALARMS
-
-        self.render_area.setData(value, timestamp, alarms)
+        """ Draw data vs. time"""
+        self.render_area.setData(value, timestamp)
         self._set_text()
 
     def _fetch_property_history(self, t0, t1):
