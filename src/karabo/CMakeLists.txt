@@ -250,44 +250,6 @@ foreach (TMP_PATH ${HDR_FILES})
    list (APPEND INCLUDE_FILES ${TMP_PATH})
 endforeach()
 
-# Generate resolve-karabo-lib-target.cmake from the current
-# Karabo Lib target configured dependencies. That file contains
-# a macro that will allow isolated builds of Karabo Lib dependent
-# targets (builds where the ${KARABO_LIB_TARGET} in this project
-# is not a known target).
-message(CHECK_START "Generating \"resolve-karabo-lib-target.cmake\"")
-get_target_property(
-    KARABO_LIB_COMPILE_DEFINITIONS
-    ${KARABO_LIB_TARGET_NAME}
-    INTERFACE_COMPILE_DEFINITIONS
-)
-get_target_property(
-    KARABO_LIB_COMPILE_OPTIONS
-    ${KARABO_LIB_TARGET_NAME}
-    INTERFACE_COMPILE_OPTIONS
-)
-get_target_property(
-    KARABO_LIB_LINK_LIBRARIES
-    ${KARABO_LIB_TARGET_NAME}
-    INTERFACE_LINK_LIBRARIES
-)
-make_relative_to_cmake_prefix_path("${KARABO_LIB_LINK_LIBRARIES}" RELATIVE_LINK_LIBRARIES)
-set(KARABO_LIB_LINK_LIBRARIES "${RELATIVE_LINK_LIBRARIES}")
-list(APPEND CMAKE_MESSAGE_INDENT "  ")
-message(STATUS "COMPILE_DEFINITIONS for libkarabo:")
-message(STATUS "${KARABO_LIB_COMPILE_DEFINITIONS}")
-message(STATUS "COMPILE_OPTIONS for libkarabo:")
-message(STATUS "${KARABO_LIB_COMPILE_OPTIONS}")
-message(STATUS "LINK_LIBRARIES for libkarabo:")
-message(STATUS "${KARABO_LIB_LINK_LIBRARIES}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/resolve-karabo-lib-target.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/resolve-karabo-lib-target.cmake"
-    @ONLY
-)
-list(POP_BACK CMAKE_MESSAGE_INDENT)
-message(CHECK_PASS "done")
-
 # Creating karabo folder in include and lib folders
 install(DIRECTORY DESTINATION "lib")
 install(DIRECTORY DESTINATION "include/karabo")
