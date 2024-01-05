@@ -24,10 +24,10 @@ from traits.api import Instance
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.scenemodel.api import GlobalAlarmModel
-from karabogui.alarms.api import get_alarm_svg
 from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
+from karabogui.indicators import get_alarm_svg
 
 
 @register_binding_controller(ui_name="Alarm Widget",

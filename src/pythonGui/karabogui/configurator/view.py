@@ -39,12 +39,12 @@ from karabo.common.api import (
     KARABO_SCHEMA_TAGS, KARABO_SCHEMA_UNIT_SYMBOL)
 from karabo.native import AccessMode, Assignment
 from karabogui import icons
-from karabogui.alarms.api import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.generic_scenes import get_property_proxy_model
+from karabogui.indicators import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.widgets.popup import PopupWidget
 
 from .edit_delegate import EditDelegate
