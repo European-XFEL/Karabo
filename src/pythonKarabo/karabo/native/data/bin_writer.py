@@ -14,52 +14,51 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from functools import partial
-from struct import pack
+from struct import Struct, pack
 
 import numpy as np
 
 from .enums import NodeType
-from .hash import Hash, get_hash_type_from_data
+from .hash import Hash, _get_hash_num_from_data
 from .typenums import HashType
 
 __all__ = ['encodeBinary', 'writeBinary']
 
+packI = Struct('I').pack
+packB = Struct('B').pack
+
 
 def yieldKey(key):
-    key = key.encode('utf8')
-    yield pack('B', len(key))
+    key = key.encode()
+    yield packB(len(key))
     yield key
 
 
 def encodeBinary(data):
     """return the binary serialization of hash `data`"""
-    hash_type = get_hash_type_from_data(data)
-    writer = __WRITER_MAP[hash_type]
-    return b"".join(writer(data))
+    hash_type = _get_hash_num_from_data(data)
+    return b"".join(__WRITER_MAP[hash_type](data))
 
 
 def writeBinary(data, file):
     """write the hash in `data` into `file`"""
-    hash_type = get_hash_type_from_data(data)
-    writer = __WRITER_MAP[hash_type]
-    for d in writer(data):
+    hash_type = _get_hash_num_from_data(data)
+    for d in __WRITER_MAP[hash_type](data):
         file.write(d)
 
 
 def yield_binary_hash(data):
-    yield pack('I', len(data))
+    yield packI(len(data))
     for k, v, attrs in data.iterall():
         yield from yieldKey(k)
-        hash_type = get_hash_type_from_data(v)
-        type_writer = __WRITER_MAP[hash_type]
-        yield pack('II', hash_type.value, len(attrs))
+        hash_type = _get_hash_num_from_data(v)
+        yield pack('II', hash_type, len(attrs))
         for ak, av in attrs.items():
-            atype = get_hash_type_from_data(av)
+            atype = _get_hash_num_from_data(av)
             yield from yieldKey(ak)
-            yield pack('I', atype.value)
-            attr_writer = __WRITER_MAP[atype]
-            yield from attr_writer(av)
-        yield from type_writer(v)
+            yield packI(atype)
+            yield from __WRITER_MAP[atype](av)
+        yield from __WRITER_MAP[hash_type](v)
 
 
 def yield_binary_schema(data):
@@ -71,7 +70,7 @@ def yield_binary_schema(data):
             assert isinstance(data.hash[p], Hash), \
                 f"no proper node: {p}"
     binary = b''.join(yield_binary_hash(data.hash))
-    s = data.name.encode('utf8')
+    s = data.name.encode()
     yield pack('IB', len(binary) + len(s) + 1, len(s))
     yield s
     yield binary
@@ -83,27 +82,31 @@ def yield_binary_char(data):
 
 
 def yield_binary_vector_char(data):
-    yield pack('I', len(data))
+    yield packI(len(data))
     yield data
 
 
 def yield_binary_string(data):
-    yield from yield_binary_vector_char(data.encode('utf8'))
+    yield from yield_binary_vector_char(data.encode())
 
 
 def yield_binary_numpy_vector(data, numpy=None):
     if not isinstance(data, np.ndarray) or data.dtype != numpy:
         data = np.array(data, dtype=numpy)
-    yield pack('I', len(data))
+    yield packI(len(data))
     yield data.data
 
 
-def yield_binary_simple(data, fmt=None):
-    yield pack(fmt, data)
+def binary_simple_factory(fmt):
+    pack = Struct(fmt).pack
+
+    def yield_binary_simple(data):
+        yield pack(data)
+    return yield_binary_simple
 
 
 def yield_binary_bool(data):
-    yield pack('b', 1 if data else 0)
+    yield b'\1' if data else b'\0'
 
 
 def yield_binary_complex(data, fmt=None):
@@ -111,40 +114,40 @@ def yield_binary_complex(data, fmt=None):
 
 
 def yield_binary_vector_hash(data):
-    yield pack('I', len(data))
+    yield packI(len(data))
     for d in data:
         yield from yield_binary_hash(d)
 
 
 def yield_binary_vector_string(data):
-    yield pack('I', len(data))
+    yield packI(len(data))
     for d in data:
         yield from yield_binary_string(d)
 
 
 def yield_binary_empty(data):
-    yield pack('I', 0)
+    yield b'\0\0\0\0'
 
 
 def yield_binary_bytearray(data):
     mv = memoryview(data)
-    yield pack('I', mv.nbytes)
+    yield packI(mv.nbytes)
     yield mv
 
 
-__WRITER_MAP = {
+__WRITER_MAP = {k.value: v for k, v in {
     HashType.Bool: yield_binary_bool,
     HashType.Char: yield_binary_char,
-    HashType.Int8: partial(yield_binary_simple, fmt='b'),
-    HashType.UInt8: partial(yield_binary_simple, fmt='B'),
-    HashType.Int16: partial(yield_binary_simple, fmt='h'),
-    HashType.UInt16: partial(yield_binary_simple, fmt='H'),
-    HashType.Int32: partial(yield_binary_simple, fmt='i'),
-    HashType.UInt32: partial(yield_binary_simple, fmt='I'),
-    HashType.Int64: partial(yield_binary_simple, fmt='q'),
-    HashType.UInt64: partial(yield_binary_simple, fmt='Q'),
-    HashType.Float: partial(yield_binary_simple, fmt='f'),
-    HashType.Double: partial(yield_binary_simple, fmt='d'),
+    HashType.Int8: binary_simple_factory('b'),
+    HashType.UInt8: binary_simple_factory('B'),
+    HashType.Int16: binary_simple_factory('h'),
+    HashType.UInt16: binary_simple_factory('H'),
+    HashType.Int32: binary_simple_factory('i'),
+    HashType.UInt32: binary_simple_factory('I'),
+    HashType.Int64: binary_simple_factory('q'),
+    HashType.UInt64: binary_simple_factory('Q'),
+    HashType.Float: binary_simple_factory('f'),
+    HashType.Double: binary_simple_factory('d'),
     HashType.ComplexFloat: partial(yield_binary_complex, fmt='ff'),
     HashType.ComplexDouble: partial(yield_binary_complex, fmt='dd'),
 
@@ -173,4 +176,4 @@ __WRITER_MAP = {
     HashType.Schema: yield_binary_schema,
     HashType.None_: yield_binary_empty,
     HashType.ByteArray: yield_binary_bytearray,
-}
+}.items()}
