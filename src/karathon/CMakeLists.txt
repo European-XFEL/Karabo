@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+
 cmake_minimum_required(VERSION 3.15)
 
 project(
@@ -22,9 +23,6 @@ project(
 
 include("../cmake/cxx-options.cmake")
 include("../cmake/karabo-lib-target-name.cmake")
-include("../cmake/resolve-karabo-lib-target.cmake")
-
-resolveKaraboLibTarget()
 
 set(KARATHON_LIB_TARGET_NAME "karathon")
 
