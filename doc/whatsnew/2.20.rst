@@ -1,0 +1,65 @@
+..
+  Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
+
+***************************
+What's New in Karabo 2.20.0
+***************************
+
+Release date will be about spring 2024.
+
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+The Bound Python API got a new foundation: The binding code to make Karabo C++
+features available in Python has been completely rewritten using the modern
+and maintained `pybind11` library.
+The Bound interface is basically unchanged. Exceptions are listed
+among the breaking changes below.
+
+
+Breaking Changes
+++++++++++++++++
+
+Bound API
+===========
+
+- The *DeviceClient.registerPropertyMonitor* function does not take the
+  *userData* argument anymore and thus the passed *callbackFunction* will not
+  receive that as argument anymore, either.
+  Make use of *functools.partial* for the callback instead.
+
+
+Change of behaviour
++++++++++++++++++++
+
+
+
+Dependency Updates
+++++++++++++++++++
+
+This release contains a major Python update to **3.11** (was 3.8).
+
+
+Detailed Merge-Log
+++++++++++++++++++
+
+
+MDL/Native core
+===============
+
+
+Bound/cpp core
+==============
+
+
+Graphical User Interface
+========================
+
+Core Devices
+============
+
+Dependencies, Documentation and Tools
+=====================================
+
+
