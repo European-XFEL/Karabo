@@ -25,7 +25,6 @@ from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 import karabogui.access as krb_access
 from karabo.common.api import InstanceStatus
 from karabogui import icons
-from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.indicators import get_instance_info_icon
 from karabogui.singletons.api import get_topology
@@ -166,11 +165,6 @@ class SystemTreeModel(QAbstractItemModel):
                 return get_instance_info_icon(node.status)
             elif hierarchyLevel == 1:
                 return get_language_icon(node)
-        elif column == 2 and role == Qt.DecorationRole:
-            if hierarchyLevel == 3:
-                alarm_type = node.alarm_info.alarm_type
-                if alarm_type:
-                    return get_alarm_icon(alarm_type)
 
     def flags(self, index):
         """Reimplemented function of QAbstractItemModel.
