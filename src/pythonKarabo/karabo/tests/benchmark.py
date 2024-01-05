@@ -144,13 +144,17 @@ def run_benchmark(args):
         ('Deep', create_deep_hash),
     ]
     API_NAMES = {1: 'Bound', 2: 'Middlelayer'}
-    FACTORY_NAMES = {1: 'Binary', 2: 'XML'}
+    FACTORY_NAMES = {1: 'Binary read', 2: 'XML read',
+                     3: 'Binary write', 4: 'XML write'}
     MSG = '{}: API {} {} took {:.6f} s/call | {:.2f} calls/s ({} iterations)'
-    FUNC_FACTORY = BINARY_FUNCS if args.mode == 1 else XML_FUNCS
+    FUNC_FACTORY = BINARY_FUNCS if args.mode in (1, 3) else XML_FUNCS
     read_func, write_func, hash_factory = FUNC_FACTORY[args.api - 1]()
     for name, create_func in RUNS:
-        buffer = get_hash_buffer(create_func, write_func, hash_factory)
-        f_args = (read_func, buffer)
+        if args.mode in (1, 2):
+            buffer = get_hash_buffer(create_func, write_func, hash_factory)
+            f_args = (read_func, buffer)
+        else:
+            f_args = (write_func, create_func(hash_factory))
         avg_time, iterations = benchmark_wrapper(benchmark_read_func, f_args)
         print(MSG.format(name, API_NAMES[args.api], FACTORY_NAMES[args.mode],
                          avg_time, 1 / avg_time, iterations))
@@ -162,10 +166,11 @@ def main():
     parser.add_argument('-a', '--api', default=1, type=int,
                         help='Which API to benchmark')
     parser.add_argument('-m', '--mode', default=1, type=int,
-                        help='Which mode to use: 1 is binary, 2 is xml')
+                        help='Which mode to use: 1 is binary read, '
+                        '2 is xml read, 3 is binary write, 4 is xml write')
 
     args = parser.parse_args()
-    if 1 <= args.api <= 2 and 1 <= args.mode <= 2:
+    if 1 <= args.api <= 2 and 1 <= args.mode <= 4:
         run_benchmark(args)
 
 
