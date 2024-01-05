@@ -35,6 +35,42 @@ using namespace karabo::net;
 using namespace karathon;
 
 
+namespace karathon {
+
+    static void EventLoopWorkWrap() {
+        ScopedGILRelease nogil;
+        EventLoop::work();
+    }
+
+
+    static void EventLoopRunWrap() {
+        ScopedGILRelease nogil;
+        EventLoop::run();
+    }
+
+    static void EventLoopPostWrap(const bp::object& callable, const bp::object& delay) {
+        // Wrap with GIL since callable's reference count will increase:
+        HandlerWrap<> wrapped(callable, "EventLoop.post");
+        unsigned int delayMillisec = 0;
+        if (delay.ptr() != Py_None) {
+            const double delaySeconds = bp::extract<double>(delay); // needs GIL
+            delayMillisec = static_cast<unsigned int>(delaySeconds * 1.e3);
+        }
+        // No GIL when entering pure C++:
+        ScopedGILRelease nogil;
+        EventLoop::post(std::move(wrapped), delayMillisec);
+    }
+
+    static void EventLoopSetSignalHandler(const bp::object& handler) {
+        HandlerWrap<int> wrapped(handler, "EventLoop.setSignalHandler");
+        // No GIL when entering pure C++:
+        ScopedGILRelease nogil;
+        EventLoop::setSignalHandler(wrapped);
+    }
+
+} // namespace karathon
+
+
 void exportp2p() {
     bp::docstring_options docs(true, true, false);
 
@@ -64,7 +100,6 @@ void exportp2p() {
 
     {
         bp::class_<Connection, Connection::Pointer, boost::noncopyable>("Connection", bp::no_init)
-              //.def("expectedParameters", &Connection::expectedParameters, (bp::arg("expected")))
               .def("start", &ConnectionWrap().start,
                    "Starts the connection synchronously, i.e. it blocks until connection "
                    "with remote peer is established.  It returns a handle a.k.a channel used in all IO operations.")
@@ -74,10 +109,7 @@ void exportp2p() {
                    "the argument to the handler.\nRegister "
                    "new handlers in this handler using given channel if you want follow asynchronous model.")
               .def("stop", &ConnectionWrap().stop, "Stops IO service operation.")
-              //.def("createChannel", &Connection::createChannel)
-              //.def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being
-              // called in case of error conditions")
-              KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection);
+                    KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection);
     }
 
     {
@@ -88,10 +120,6 @@ void exportp2p() {
               bp::no_init)
 
               .def("getConnection", &Channel::getConnection, "Returns connection object for given channel")
-              .def("readSizeInBytes", &ChannelWrap().readSizeInBytes,
-                   "Returns message length you can receive by 'read' call.  It blocks until message length is arrived.")
-              .def("readAsyncSizeInBytes", &ChannelWrap().readAsyncSizeInBytes, (bp::arg("handler")),
-                   "Register a handler that will be called when message length is arrived.  Never blocks.")
               .def("readStr", &ChannelWrap().readStr,
                    "Read message and return it as a python string.  This function will block until message is arrived.")
               .def("readHash", &ChannelWrap().readHash,
@@ -148,10 +176,6 @@ void exportp2p() {
     }
 
     {
-        void EventLoopWorkWrap();
-        void EventLoopRunWrap();
-        void EventLoopPostWrap(const bp::object& callable, const bp::object& delay);
-        void EventLoopSetSignalHandler(const bp::object& handler);
         bp::class_<EventLoop, boost::noncopyable>(
               "EventLoop", "EventLoop is a singleton class wrapping Boost ASIO functionality.", bp::no_init)
               .def("work", &EventLoopWorkWrap,
@@ -180,36 +204,4 @@ void exportp2p() {
                    "'handler' has to take the signal value as argument.")
               .staticmethod("setSignalHandler");
     }
-}
-
-
-void EventLoopWorkWrap() {
-    ScopedGILRelease nogil;
-    EventLoop::work();
-}
-
-
-void EventLoopRunWrap() {
-    ScopedGILRelease nogil;
-    EventLoop::run();
-}
-
-void EventLoopPostWrap(const bp::object& callable, const bp::object& delay) {
-    // Wrap with GIL since callable's reference count will increase:
-    HandlerWrap<> wrapped(callable, "EventLoop.post");
-    unsigned int delayMillisec = 0;
-    if (delay.ptr() != Py_None) {
-        const double delaySeconds = bp::extract<double>(delay); // needs GIL
-        delayMillisec = static_cast<unsigned int>(delaySeconds * 1.e3);
-    }
-    // No GIL when entering pure C++:
-    ScopedGILRelease nogil;
-    EventLoop::post(std::move(wrapped), delayMillisec);
-}
-
-void EventLoopSetSignalHandler(const bp::object& handler) {
-    HandlerWrap<int> wrapped(handler, "EventLoop.setSignalHandler");
-    // No GIL when entering pure C++:
-    ScopedGILRelease nogil;
-    EventLoop::setSignalHandler(wrapped);
 }

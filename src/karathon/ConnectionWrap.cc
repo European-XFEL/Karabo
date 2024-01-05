@@ -35,18 +35,14 @@ namespace karathon {
         if (!PyCallable_Check(connectionHandler.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         int port = 0;
+        auto proxyWrap = HandlerWrap<const ErrorCode&, const Channel::Pointer&>(connectionHandler, "startAsync");
         try {
             ScopedGILRelease nogil;
-            port = connection->startAsync(boost::bind(proxyConnectionHandler, _1, connectionHandler, _2));
+            port = connection->startAsync(proxyWrap);
         } catch (...) {
             KARABO_RETHROW
         }
         return port;
     }
 
-
-    void ConnectionWrap::proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler,
-                                                const karabo::net::Channel::Pointer& channel) {
-        Wrapper::proxyHandler(connectionHandler, "Connection type", code, channel);
-    }
 } // namespace karathon
