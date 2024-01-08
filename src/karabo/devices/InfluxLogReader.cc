@@ -32,6 +32,7 @@
 #include <sstream>
 #include <vector>
 
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/FromLiteral.hh"
 
 
