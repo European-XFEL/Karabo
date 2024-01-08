@@ -212,6 +212,7 @@ class Device(InjectMixin, SignalSlotable):
         self.karaboVersion = karaboVersion
         self.pid = os.getpid()
         self._statusInfo = self._get_instance_info_status()
+        self._cachedSchema = self.getDeviceSchema()
 
     def _get_instance_info_status(self):
         if self.state == State.UNKNOWN:
@@ -383,12 +384,15 @@ class Device(InjectMixin, SignalSlotable):
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
-        return self.getDeviceSchema(
-            state=self.state if onlyCurrentState else None), self.deviceId
+        if onlyCurrentState:
+            return self.getDeviceSchema(state=self.state), self.deviceId
+        else:
+            return self._cachedSchema, self.deviceId
 
     def _notifyNewSchema(self):
         """Notfiy the network that our schema has changed"""
-        self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
+        self._cachedSchema = self.getDeviceSchema()
+        self.signalSchemaUpdated(self._cachedSchema, self.deviceId)
 
     @slot
     async def slotUpdateSchemaAttributes(self, updates):
