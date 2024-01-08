@@ -19,7 +19,7 @@
 
 namespace karabo {
     namespace util {
-        OverwriteElement::OverwriteElement(Schema& expected) : m_schema(&expected), m_path("") {}
+        OverwriteElement::OverwriteElement(Schema& expected) : m_schema(&expected), m_node(nullptr), m_path("") {}
 
 
         OverwriteElement& OverwriteElement::key(std::string const& name) {
@@ -33,7 +33,6 @@ namespace karabo {
                 }
             } else {
                 // Could be, the parameter is assembled under different rules, we should silently ignore this then.
-                m_node = 0;
                 // throw KARABO_PARAMETER_EXCEPTION("Key \"" + name + "\" was not set before, thus can not be
                 // overwritten.");
             }
@@ -305,7 +304,7 @@ namespace karabo {
 
         void OverwriteElement::commit() {
             // Checks consistency of default value and options (caveat: not only for things changed...)
-            if (m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
+            if (m_node && m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
                 switch (m_schema->getValueType(m_path)) {
                     CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::BOOL, bool);
                     CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::CHAR, char);

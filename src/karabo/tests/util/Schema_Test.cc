@@ -841,6 +841,12 @@ void Schema_Test::testOverwriteElement() {
         CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
     }
 
+    // Check that overwrite element silently accepts non-existing paths (may change in future versions)
+    {
+        Schema schema;
+        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path").setNewDefaultValue(1).commit());
+    }
+
     // Check that overwrite element checks that (new) default and options do not contradict
     {
         Schema schema;
