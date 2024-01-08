@@ -18,8 +18,7 @@ from struct import Struct, pack
 
 import numpy as np
 
-from .enums import NodeType
-from .hash import Hash, _get_hash_num_from_data
+from .hash import _get_hash_num_from_data
 from .typenums import HashType
 
 __all__ = ['encodeBinary', 'writeBinary']
@@ -62,17 +61,10 @@ def yield_binary_hash(data):
 
 
 def yield_binary_schema(data):
-    for p in data.hash.paths(intermediate=True):
-        nodeType = NodeType(data.hash[p, "nodeType"])
-        if nodeType is NodeType.Leaf:
-            assert not data.hash[p], f"no proper leaf: {p}"
-        else:
-            assert isinstance(data.hash[p], Hash), \
-                f"no proper node: {p}"
     binary = b''.join(yield_binary_hash(data.hash))
-    s = data.name.encode()
-    yield pack('IB', len(binary) + len(s) + 1, len(s))
-    yield s
+    name = data.name.encode()
+    yield pack('IB', len(binary) + len(name) + 1, len(name))
+    yield name
     yield binary
 
 
