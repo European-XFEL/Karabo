@@ -213,7 +213,8 @@ namespace karabo {
 
 
             void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt);
-            void onPropValueBeforeTime(const PropFromPastInfo& propInfo, const karabo::net::HttpResponse& propValueResp,
+            void onPropValueBeforeTime(const std::vector<PropFromPastInfo>& propInfos,
+                                       const karabo::net::HttpResponse& propValueResp,
                                        const boost::shared_ptr<ConfigFromPastContext>& ctxt);
 
             void slotGetBadData(const std::string& fromStr, const std::string& toStr);
