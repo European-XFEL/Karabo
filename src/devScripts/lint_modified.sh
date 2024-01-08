@@ -40,9 +40,8 @@ __lint_clang_format() {
 
     # Checks if clang-format is available and its version is at least the CI
     # version.
-    CI_CLANG_FORMAT_VERSION="13.0.0"
+    CI_CLANG_FORMAT_VERSION="17.0.6"
     CLANG_FORMAT_VERSION=$(clang-format --version | grep -P '\d+\.\d+\.\d+' -o)
-    echo "CLANG_FORMAT_VERSION = $CLANG_FORMAT_VERSION"
     ret_code=$?
     if [[ $ret_code != 0 ]]; then
         echo ""
@@ -51,7 +50,7 @@ __lint_clang_format() {
         echo ""
         return
     fi
-    if __version_lt $CLANG_FORMAT_VERSION $CI_CLANG_FORMAT_VERSION; then
+    if __version_lt "$CLANG_FORMAT_VERSION $CI_CLANG_FORMAT_VERSION"; then
         echo ""
         echo "WARNING: C++ format linting SKIPPED."
         echo "         Reason: Local clang-format version, $CLANG_FORMAT_VERSION, is older than the CI's, $CI_CLANG_FORMAT_VERSION."
@@ -60,7 +59,7 @@ __lint_clang_format() {
     fi
 
     echo ""
-    echo "Running clang-format `clang-format --version` on modified C++ files ..."
+    echo "Running clang-format $(clang-format --version) on modified C++ files ..."
 
     local -i formatted=0
     local -i errors=0
@@ -76,7 +75,7 @@ __lint_clang_format() {
             ((formatted+=1))
         fi
     done
-    echo "clang-format executed successfully on $formatted files out of $numfiles."
+    echo "clang-format executed successfully on $formatted files out of $num_files."
     echo ""
 }
 
@@ -89,7 +88,7 @@ __lint_isort() {
         return 0  # no file to be isorted
     fi
 
-    ISORT_VERSION=$(isort --version)
+    ISORT_VERSION=$(isort --vn)
     ret_code=$?
     if [[ $ret_code != 0 ]]; then
         echo ""
@@ -100,7 +99,7 @@ __lint_isort() {
     fi
 
     echo ""
-    echo "Running isort on modified Python files ..."
+    echo "Running isort $ISORT_VERSION on modified Python files ..."
 
     local -i formatted=0
     local -i errors=0
@@ -139,7 +138,7 @@ __lint_flake8() {
     fi
 
     echo ""
-    echo "Running flake8 checks on modified Python files ..."
+    echo "Running flake8 $FLAKE_8_VERSION checks on modified Python files ..."
 
     local -i formatted=0
     local -i errors=0
@@ -160,8 +159,8 @@ __lint_flake8() {
 
 
 # ----- main -----
-REPO_ROOT=`git rev-parse --show-toplevel`
-pushd $REPO_ROOT > /dev/null
+REPO_ROOT=$(git rev-parse --show-toplevel)
+pushd "$REPO_ROOT" > /dev/null || exit
 
 # Performs linting of the modified C++ files in the Framework
 __lint_clang_format
@@ -170,4 +169,4 @@ __lint_clang_format
 __lint_flake8
 __lint_isort
 
-popd
+popd || exit
