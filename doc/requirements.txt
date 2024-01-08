@@ -1,6 +1,7 @@
 sphinx==1.8.5
 git+https://git.xfel.eu/xfel-rtd/rtd-conf.git
 slumber
+alabaster==0.7.13
 breathe==4.7.3
 numpy
 matplotlib
