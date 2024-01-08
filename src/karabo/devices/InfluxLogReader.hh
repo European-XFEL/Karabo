@@ -113,7 +113,7 @@ namespace karabo {
 
             explicit InfluxLogReader(const karabo::util::Hash& cfg);
 
-            virtual ~InfluxLogReader();
+            ~InfluxLogReader();
 
            protected:
             void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
