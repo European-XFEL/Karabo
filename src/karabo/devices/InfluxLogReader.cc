@@ -35,6 +35,8 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/FromLiteral.hh"
 
+// The size of the batch of properties queried at once during slotGetConfigurationFromPast
+constexpr int PROPS_BATCH_SIZE = 20;
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogReader,
                                   karabo::devices::InfluxLogReader)
@@ -831,36 +833,45 @@ namespace karabo {
 
 
         void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
-            const PropFromPastInfo propInfo = ctxt->propsInfo.front();
-            ctxt->propsInfo.pop_front();
-
-            std::string fieldKey{propInfo.name};
-
-            fieldKey += "-" + Types::to<ToLiteral>(propInfo.type);
-            if (propInfo.infiniteOrNan) {
-                // We are supposed to retrieve a potential NAN or INF value
-                // for the property.
-                fieldKey += "_INF";
-            }
-
+            int nProps = 0;
             std::ostringstream iqlQuery;
-            iqlQuery << "SELECT LAST(\"" << fieldKey << "\") FROM \"" << ctxt->deviceId
-                     << "\" WHERE time <= " << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
+            std::vector<PropFromPastInfo> propInfos;
+            do {
+                const PropFromPastInfo propInfo = ctxt->propsInfo.front();
+                ctxt->propsInfo.pop_front();
 
-            if (ctxt->lastLoginBeforeTime != 0ull && ctxt->logFormatVersion > 0) {
-                // This is possible since in the new format timestamps older than the start of logging are
-                // replaced by start of logging. The restricted search in the past ensures that for unset
-                // properties with `noDefaultValue`, our query here does not return old values from previous
-                // incarnations of the device. For old data we need to keep the old behaviour since otherwise
-                // properties would be lost that had timestamps shortly before start of logging.
-                iqlQuery << " AND time >= " << ctxt->lastLoginBeforeTime << m_durationUnit;
-            }
+                std::string fieldKey{propInfo.name};
+
+                fieldKey += "-" + Types::to<ToLiteral>(propInfo.type);
+                if (propInfo.infiniteOrNan) {
+                    // We are supposed to retrieve a potential NAN or INF value
+                    // for the property.
+                    fieldKey += "_INF";
+                }
+
+                iqlQuery << (nProps > 0 ? "; " : "") << "SELECT LAST(\"" << fieldKey << "\") AS \"" << fieldKey
+                         << "\" FROM \"" << ctxt->deviceId << "\" WHERE time <= " << epochAsMicrosecString(ctxt->atTime)
+                         << m_durationUnit;
+
+                if (ctxt->lastLoginBeforeTime != 0ull && ctxt->logFormatVersion > 0) {
+                    // This is possible since in the new format timestamps older than the start of logging are
+                    // replaced by start of logging. The restricted search in the past ensures that for unset
+                    // properties with `noDefaultValue`, our query here does not return old values from previous
+                    // incarnations of the device. For old data we need to keep the old behaviour since otherwise
+                    // properties would be lost that had timestamps shortly before start of logging.
+                    iqlQuery << " AND time >= " << ctxt->lastLoginBeforeTime << m_durationUnit;
+                }
+
+                propInfos.push_back(propInfo);
+                nProps++;
+
+            } while (nProps < PROPS_BATCH_SIZE && !ctxt->propsInfo.empty());
 
             const std::string queryStr = iqlQuery.str();
 
             try {
                 ctxt->influxClient->queryDb(
-                      queryStr, bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfo, _1, ctxt));
+                      queryStr, bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfos, _1, ctxt));
             } catch (const std::exception& e) {
                 const auto errMsg = onException("Error querying property value before time");
                 ctxt->aReply.error(errMsg);
@@ -868,7 +879,7 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::onPropValueBeforeTime(const PropFromPastInfo& propInfo,
+        void InfluxLogReader::onPropValueBeforeTime(const std::vector<PropFromPastInfo>& propInfos,
                                                     const karabo::net::HttpResponse& propValueResp,
                                                     const boost::shared_ptr<ConfigFromPastContext>& ctxt) {
             bool errorHandled = handleHttpResponseError(propValueResp, ctxt->aReply);
@@ -879,48 +890,67 @@ namespace karabo {
                 return;
             }
 
-            const std::string& propName = propInfo.name;
-            const karabo::util::Types::ReferenceType& propType = propInfo.type;
-
             try {
                 nl::json respObj = nl::json::parse(propValueResp.payload);
-                const auto& value = respObj["results"][0]["series"][0]["values"][0][1];
-                if (!value.is_null()) {
-                    auto timeObj = respObj["results"][0]["series"][0]["values"][0][0];
-                    const Epochstamp timeEpoch(toEpoch(timeObj.get<unsigned long long>()));
-                    if (timeEpoch > ctxt->configTimePoint) {
-                        ctxt->configTimePoint = timeEpoch;
-                    }
-                    const boost::optional<std::string> valueAsString = jsonValueAsString(value);
-                    if (valueAsString) {
-                        if (!ctxt->configHash.has(propName)) {
-                            // The normal case - the result is not yet there
-                            addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
-                        } else {
-                            // Second query for field corresponding to property that
-                            // has already been queried.
-                            if (propInfo.infiniteOrNan) {
-                                const Epochstamp stampQuery1(
-                                      Epochstamp::fromHashAttributes(ctxt->configHash.getAttributes(propName)));
-                                if (stampQuery1 < timeEpoch) {
-                                    // This (i.e. the 2nd query) has more recent result
+                const std::size_t nProps = respObj["results"].size();
+
+                for (std::size_t propIdx = 0; propIdx < nProps; propIdx++) {
+                    const std::string& propName = propInfos[propIdx].name;
+                    const karabo::util::Types::ReferenceType& propType = propInfos[propIdx].type;
+
+                    try {
+                        const auto& value = respObj["results"][propIdx]["series"][0]["values"][0][1];
+                        if (!value.is_null()) {
+                            auto timeObj = respObj["results"][propIdx]["series"][0]["values"][0][0];
+                            const Epochstamp timeEpoch(toEpoch(timeObj.get<unsigned long long>()));
+                            if (timeEpoch > ctxt->configTimePoint) {
+                                ctxt->configTimePoint = timeEpoch;
+                            }
+                            const boost::optional<std::string> valueAsString = jsonValueAsString(value);
+                            if (valueAsString) {
+                                if (!ctxt->configHash.has(propName)) {
+                                    // The normal case - the result is not yet there
                                     addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                                } else {
+                                    // Second query for field corresponding to property that
+                                    // has already been queried.
+                                    if (propInfos[propIdx].infiniteOrNan) {
+                                        const Epochstamp stampQuery1(
+                                              Epochstamp::fromHashAttributes(ctxt->configHash.getAttributes(propName)));
+                                        if (stampQuery1 < timeEpoch) {
+                                            // This (i.e. the 2nd query) has more recent result
+                                            addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch,
+                                                          *valueAsString);
+                                        }
+                                    } else {
+                                        throw KARABO_LOGIC_EXCEPTION(
+                                              "Unexpected case of multiple metric retrieval for a property.");
+                                    }
                                 }
-                            } else {
-                                throw KARABO_LOGIC_EXCEPTION(
-                                      "Unexpected case of multiple metric retrieval for a property.");
                             }
                         }
+                    } catch (const std::exception& e) {
+                        std::ostringstream oss;
+                        oss << "Error retrieving value of property '" << propName << "' of type '"
+                            << Types::to<ToLiteral>(propType) << "' for device '" << ctxt->deviceId << "': " << e.what()
+                            << "\nRemaining property value(s) to retrieve: "
+                            << ctxt->propsInfo.size() + nProps - propIdx - 1u << ".";
+                        const std::string& errMsg = oss.str();
+                        KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                        // Go on with the remaining properties of this batch of properties.
                     }
-                }
+
+                } // for (std::size_t propIdx; propIdx < nProps; propIdx++)
             } catch (std::exception& e) {
                 std::ostringstream oss;
-                oss << "Error retrieving value of property '" << propName << "' of type '"
-                    << Types::to<ToLiteral>(propType) << "' for device '" << ctxt->deviceId << "': " << e.what()
-                    << "\nRemaining property value(s) to retrieve: " << ctxt->propsInfo.size() << ".";
+                oss << "Error retrieving results of queries for property batch with '" << propInfos.size()
+                    << "' properties for device ' " << ctxt->deviceId << "':\n";
+                for (const auto& propInfo : propInfos) {
+                    oss << "\t'" << propInfo.name << "' of type '" << Types::to<ToLiteral>(propInfo.type) << "'\n";
+                }
+                oss << e.what() << "\n";
                 const std::string& errMsg = oss.str();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                // Go on with the remaining properties.
             }
 
             if (ctxt->propsInfo.size() > 0) {

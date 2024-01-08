@@ -906,6 +906,9 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
 
 void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileMigratedDataEndsBefore,
                                                   bool dataWasMigrated) {
+    // Timestamp for test start - used to print test duration at the end.
+    Epochstamp testCaseStart;
+
     // Last value set in previous test cases for property 'int32Property'.
     const int kLastValueSet = 99;
 
@@ -1008,7 +1011,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
     CPPUNIT_ASSERT_EQUAL(false, deviceIdFound);
 
     // There is an interval between the device being killed and the event that it is gone reaching the logger.
-    // But we need to be sure that the timepoint used in the request for configuration from past is affter the
+    // But we need to be sure that the timepoint used in the request for configuration from past is after the
     // timestamp associated to the device shutdown event.
     // In rare CI cases this sleep seems not to be enough, therefore the loop below that even postpones the
     // requested timepoint.
@@ -1075,11 +1078,21 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
                      "data)."
                   << std::endl;
     }
+
+    const karabo::util::TimeDuration testDuration = testCaseStart.elapsed();
+
+    const std::streamsize currPrecision{std::clog.precision()};
+    std::clog << "(testLastKnownConfiguration took " << std::setprecision(4) << static_cast<double>(testDuration)
+              << " sec. to execute)" << std::setprecision(currPrecision) << std::endl;
+
+    std::clog << ("OK") << std::endl;
 }
 
 
 void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
-    std::clog << "Testing past configuration retrieval with stamp older than device..." << std::flush;
+    std::clog << "Testing past configuration retrieval with stamp older than device..." << std::endl;
+
+    Epochstamp testCaseStart;
 
     // Start device and take care that the logger is ready for it
     // Use platform-dependent name for the device: concurrent tests in CI operate
@@ -1255,8 +1268,38 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         }
     }
 
-    CPPUNIT_ASSERT_MESSAGE(toString(failedCycles) + " out of " + toString(numCycles) + " cycles failed!",
-                           failedCycles == 0);
+    std::ostringstream valueHist;
+    if (failedCycles > 0) {
+        // Gather the value history during the test period to ease troubleshooting a test failure.
+        const std::string fromEpochStr{testCaseStart.toIso8601Ext()};
+        const std::string toEpochStr{Epochstamp().toIso8601Ext()};
+        valueHist << "History of property 'value' of device '" << deviceId << "' between '" << fromEpochStr << "' and '"
+                  << toEpochStr << "':\n";
+        Hash params;
+        params.set("from", fromEpochStr);
+        params.set("to", toEpochStr);
+        params.set("maxNumData", numCycles * 2);
+        vector<Hash> history;
+        std::string histDevice, histProperty;
+        m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "value", params)
+              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+              .receive(histDevice, histProperty, history);
+        for (const Hash& histEntry : history) {
+            valueHist << Epochstamp::fromHashAttributes(histEntry.getAttributes("v")).toIso8601Ext() << " - "
+                      << histEntry.get<int>("v") << "\n";
+        }
+        valueHist << "\n";
+    }
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          toString(failedCycles) + " out of " + toString(numCycles) + " cycles failed!\n" + valueHist.str(), 0,
+          failedCycles);
+
+    const karabo::util::TimeDuration testDuration = testCaseStart.elapsed();
+
+    const std::streamsize currPrecision{std::clog.precision()};
+    std::clog << "(testCfgFromPastRestart took " << std::setprecision(4) << static_cast<double>(testDuration)
+              << " sec. to execute)" << std::setprecision(currPrecision) << std::endl;
 
     std::clog << "OK" << std::endl;
 }
@@ -1841,6 +1884,10 @@ void BaseLogging_Test::testChar(bool testPastConf) {
 
 
 void BaseLogging_Test::testNans() {
+    std::clog << "Test handling of NaNs for getPropertyHistory and getConfigurationFromPast ..." << std::endl;
+
+    Epochstamp testCaseStart;
+
     const std::string deviceId(m_deviceId + "forNan");
     std::pair<bool, std::string> success =
           m_deviceClient->instantiate(m_server, "NanTestDevice", Hash("deviceId", deviceId), KRB_TEST_MAX_TIMEOUT);
@@ -2042,6 +2089,12 @@ void BaseLogging_Test::testNans() {
     // Clean-up
     success = m_deviceClient->killDevice(deviceId);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    const karabo::util::TimeDuration testDuration = testCaseStart.elapsed();
+
+    const std::streamsize currPrecision{std::clog.precision()};
+    std::clog << "(testNans took " << std::setprecision(4) << static_cast<double>(testDuration) << " sec. to execute)"
+              << std::setprecision(currPrecision) << std::endl;
 
     std::clog << "Ok" << std::endl;
 }
