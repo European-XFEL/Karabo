@@ -76,7 +76,7 @@ namespace karabind {
                 py::gil_scoped_release release;
                 karabo::io::loadFromFile(t, fileName, config);
             }
-            return py::cast(t);
+            return py::cast(std::move(t));
         }
     };
 
@@ -86,7 +86,7 @@ namespace karabind {
         static py::object save(karabo::io::TextSerializer<T>& s, const T& object) {
             std::string archive;
             s.save(object, archive);
-            return py::cast(archive);
+            return py::cast(std::move(archive));
         }
 
         static py::object load(karabo::io::TextSerializer<T>& s, const py::object& obj) {
