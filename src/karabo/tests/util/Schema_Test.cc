@@ -841,10 +841,16 @@ void Schema_Test::testOverwriteElement() {
         CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
     }
 
-    // Check that overwrite element silently accepts non-existing paths (may change in future versions)
+    // Check that overwrite element does not accept non-existing paths
     {
         Schema schema;
-        CPPUNIT_ASSERT_NO_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path").setNewDefaultValue(1).commit());
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).key("non_existing_path"), karabo::util::ParameterException);
+    }
+
+    // Check that overwrite element complains if key(...) is not called first (too lazy to test all cases...)
+    {
+        Schema schema;
+        CPPUNIT_ASSERT_THROW(OVERWRITE_ELEMENT(schema).commit(), karabo::util::LogicException);
     }
 
     // Check that overwrite element checks that (new) default and options do not contradict

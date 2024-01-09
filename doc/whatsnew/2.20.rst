@@ -21,6 +21,12 @@ among the breaking changes below.
 Breaking Changes
 ++++++++++++++++
 
+C++ API
+===========
+- *OverwriteElement* got more strict: Before it was silently ignoring cases
+  like overwriting a non-existing key or inconsistencies between options and
+  default values. Now it throws.
+
 Bound API
 ===========
 
