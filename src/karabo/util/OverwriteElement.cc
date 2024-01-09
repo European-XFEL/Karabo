@@ -32,71 +32,80 @@ namespace karabo {
                           node->getAttribute<std::vector<bool>>(KARABO_OVERWRITE_RESTRICTIONS));
                 }
             } else {
-                // Could be, the parameter is assembled under different rules, we should silently ignore this then.
-                // throw KARABO_PARAMETER_EXCEPTION("Key \"" + name + "\" was not set before, thus can not be
-                // overwritten.");
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + name +
+                                                 "' not in actual schema, thus cannot be overwritten.");
             }
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewDisplayedName(const std::string& name) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.displayedName);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_DISPLAYED_NAME, name);
+            m_node->setAttribute(KARABO_SCHEMA_DISPLAYED_NAME, name);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewDescription(const std::string& description) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.description);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_DESCRIPTION, description);
+            m_node->setAttribute(KARABO_SCHEMA_DESCRIPTION, description);
             return *this;
         }
 
 
         OverwriteElement& OverwriteElement::setNewAssignmentMandatory() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.assignmentMandatory);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewAssignmentOptional() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.assignmentOptional);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewAssignmentInternal() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.assignmentInternal);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowInit() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.init);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowReconfigurable() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.reconfigurable);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowReadOnly() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.readOnly);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
+            m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowValidate() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.skipValidation);
-            if (m_node) m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, false);
+            m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, false);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowSkipValidation() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.skipValidation);
-            if (m_node) m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, true);
+            m_node->setAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION, true);
             return *this;
         }
 
@@ -166,12 +175,14 @@ namespace karabo {
         }
 
         OverwriteElement& OverwriteElement::setNewOptions(const std::vector<std::string>& opts) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.options);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
+            m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewAllowedStates(const std::vector<karabo::util::State>& states) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.allowedStates);
             const std::string stateList = karabo::util::toString(states);
             if (m_node)
@@ -226,66 +237,71 @@ namespace karabo {
         }
 
         OverwriteElement& OverwriteElement::setNowObserverAccess() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.observerAccess);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowUserAccess() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.userAccess);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
+            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowOperatorAccess() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.operatorAccess);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
+            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowExpertAccess() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.expertAccess);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
+            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNowAdminAccess() {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.adminAccess);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
+            m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewUnit(const UnitType& unit) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.unit);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
+            m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
             std::pair<std::string, std::string> names = karabo::util::getUnit(unit);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
+            m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
+            m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
             return *this;
         }
 
         OverwriteElement& OverwriteElement::setNewMetricPrefix(const MetricPrefixType& metricPrefix) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.metricPrefix);
-            if (m_node) m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
+            m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
             std::pair<std::string, std::string> names = karabo::util::getMetricPrefix(metricPrefix);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
-            if (m_node) m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
+            m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
+            m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
             return *this;
         }
 
 
         OverwriteElement& OverwriteElement::setNewOverwriteRestrictions(OverwriteElement::Restrictions& restrictions) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
             checkIfRestrictionApplies(m_restrictions.overwriteRestrictions);
-            if (m_node) {
-                if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
-                    OverwriteElement::Restrictions existing;
-                    existing.assignFromAttrVector(
-                          m_node->getAttribute<std::vector<bool>>(KARABO_OVERWRITE_RESTRICTIONS));
-                    // now merge
-                    restrictions.merge(existing);
-                }
-                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
+            if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
+                OverwriteElement::Restrictions existing;
+                existing.assignFromAttrVector(m_node->getAttribute<std::vector<bool>>(KARABO_OVERWRITE_RESTRICTIONS));
+                // now merge
+                restrictions.merge(existing);
             }
+            m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
             return *this;
         }
 
@@ -304,7 +320,8 @@ namespace karabo {
 
         void OverwriteElement::commit() {
             // Checks consistency of default value and options (caveat: not only for things changed...)
-            if (m_node && m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+            if (m_schema->hasOptions(m_path) && m_schema->hasDefaultValue(m_path)) {
                 switch (m_schema->getValueType(m_path)) {
                     CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::BOOL, bool);
                     CASE_CHECK_DEFAULT_IN_OPTIONS(Types::ReferenceType::CHAR, char);
@@ -329,7 +346,8 @@ namespace karabo {
 
 
         void OverwriteElement::checkIfRestrictionApplies(const Restrictions::Restriction& restriction) const {
-            if (restriction == true && m_node) {
+            if (!m_node) throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+            if (restriction == true) {
                 const std::string& key = m_node->getKey();
                 const std::string& name = restriction.name;
                 const std::string& msg = "Element (" + key + ") does not allow overwriting attribute " + name + "!";
