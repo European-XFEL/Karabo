@@ -233,8 +233,11 @@ namespace karabo {
              */
             template <class AliasType>
             OverwriteElement& setNewAlias(const AliasType& alias) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.alias);
-                if (m_node) m_node->setAttribute<AliasType>(KARABO_SCHEMA_ALIAS, alias);
+                m_node->setAttribute<AliasType>(KARABO_SCHEMA_ALIAS, alias);
                 return *this;
             }
 
@@ -244,8 +247,11 @@ namespace karabo {
              * @return
              */
             OverwriteElement& setNewTags(const std::vector<std::string>& tags) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.tag);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_TAGS, tags);
+                m_node->setAttribute(KARABO_SCHEMA_TAGS, tags);
                 return *this;
             }
 
@@ -304,8 +310,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.defaultValue);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, value);
+                m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, value);
                 return *this;
             }
 
@@ -316,8 +325,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMinInc(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.minInc);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_INC, value);
+                m_node->setAttribute(KARABO_SCHEMA_MIN_INC, value);
                 return *this;
             }
 
@@ -328,8 +340,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMaxInc(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.maxInc);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_INC, value);
+                m_node->setAttribute(KARABO_SCHEMA_MAX_INC, value);
                 return *this;
             }
 
@@ -340,8 +355,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMinExc(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.minExc);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_EXC, value);
+                m_node->setAttribute(KARABO_SCHEMA_MIN_EXC, value);
                 return *this;
             }
 
@@ -352,8 +370,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMaxExc(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.maxExc);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_EXC, value);
+                m_node->setAttribute(KARABO_SCHEMA_MAX_EXC, value);
                 return *this;
             }
 
@@ -364,8 +385,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMin(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.min);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN, value);
+                m_node->setAttribute(KARABO_SCHEMA_MIN, value);
                 return *this;
             }
 
@@ -376,8 +400,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMax(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.max);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX, value);
+                m_node->setAttribute(KARABO_SCHEMA_MAX, value);
                 return *this;
             }
 
@@ -388,8 +415,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMinSize(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.minSize);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
+                m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
                 return *this;
             }
 
@@ -400,8 +430,11 @@ namespace karabo {
              */
             template <class ValueType>
             OverwriteElement& setNewMaxSize(const ValueType& value) {
+                if (!m_node) {
+                    throw KARABO_LOGIC_EXCEPTION("Please call key(..) before other methods of OverwriteElement");
+                }
                 checkIfRestrictionApplies(m_restrictions.maxSize);
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
+                m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
                 return *this;
             }
 
