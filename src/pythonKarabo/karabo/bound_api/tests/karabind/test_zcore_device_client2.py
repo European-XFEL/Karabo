@@ -47,13 +47,14 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     # test getInstanceId
     clientId = c.getInstanceId()
     (host, klass, pid) = clientId.split('_', 3)
-    assert host == socket.gethostname()
+    assert host == socket.gethostname().split(".", 1)[0]  # split domain away
     assert klass == 'DeviceClient'
     assert pid == str(os.getpid())
 
     # Test getPropertyHistory
     # Expect TymeoutError since DataLogReader is not running.
     # To reduce waiting time, set new internal timeout
+    cachedTimeout = c.getInternalTimeout()
     c.setInternalTimeout(50)
 
     with pytest.raises(RuntimeError):
@@ -78,108 +79,63 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     assert 'timed out' in errmsg
 
     # Restore default ...
-    c.setInternalTimeout(3000)
+    c.setInternalTimeout(cachedTimeout)
 
-    serverId = f'cppServer/{uuid.uuid4()}'
-    deviceId = f'data/prop/{uuid.uuid4()}'
+    # avoid id clash between test runs
+    serverId = f'cppServer/{Hash.__module__}'
+    deviceId = f'data/prop/{Hash.__module__}'
 
-    # test registerInstance{New,Update,Gone}Monitor...
+    # test registerInstance{New,Update}Monitor...
+    instanceNewArg = instanceUpdatedArg = None
 
     def onInstanceNew(topologyEntry):
-        # topologyEntry is Hash
-        assert isinstance(topologyEntry, Hash)
-        if topologyEntry.getKeys()[0] == 'client':
-            cinfo = topologyEntry['client']
-            assert clientId == cinfo.getKeys()[0]
-            assert cinfo.getAttribute(clientId, 'type') == 'client'
-            assert (cinfo.getAttribute(clientId, 'lang') == 'bound' or
-                    cinfo.getAttribute(clientId, 'lang') == 'cpp')
-            assert cinfo.getAttribute(clientId, 'host') == host
-            assert cinfo.getAttribute(clientId, 'status') == "ok"
-            print("\nclient entry new     -------------------------------- OK")
-        elif topologyEntry.getKeys()[0] == 'server':
-            sinfo = topologyEntry['server']
-            assert sinfo.getAttribute(serverId, 'type') == 'server'
-            assert sinfo.getAttribute(serverId, 'lang') == 'cpp'
-            assert sinfo.getAttribute(serverId, 'host') == host
-            assert sinfo.getAttribute(serverId, 'serverId') == serverId
-            assert sinfo.getAttribute(serverId, 'log') == "FATAL"
-            print("server entry new     -------------------------------- OK")
-        elif topologyEntry.getKeys()[0] == 'device':
-            dinfo = topologyEntry['device']
-            assert dinfo.getAttribute(deviceId, 'type') == 'device'
-            assert dinfo.getAttribute(deviceId, 'classId') == 'PropertyTest'
-            assert dinfo.getAttribute(deviceId, 'host') == host
-            assert dinfo.getAttribute(deviceId, 'status') == "ok"
-            print("device entry new     -------------------------------- OK")
+        nonlocal instanceNewArg
+        instanceNewArg = topologyEntry
 
     def onInstanceUpdated(topologyEntry):
-        # topologyEntry is Hash
-        assert isinstance(topologyEntry, Hash)
-        if topologyEntry.getKeys()[0] == 'client':
-            cinfo = topologyEntry['client']
-            assert clientId == cinfo.getKeys()[0]
-            assert cinfo.getAttribute(clientId, 'type') == 'client'
-            assert (cinfo.getAttribute(clientId, 'lang') == 'bound' or
-                    cinfo.getAttribute(clientId, 'lang') == 'cpp')
-            assert cinfo.getAttribute(clientId, 'host') == host
-            assert cinfo.getAttribute(clientId, 'status') == "ok"
-            print("client entry updated -------------------------------- OK")
-        elif topologyEntry.getKeys()[0] == 'server':
-            sinfo = topologyEntry['server']
-            assert sinfo.getAttribute(serverId, 'type') == 'server'
-            assert sinfo.getAttribute(serverId, 'lang') == 'cpp'
-            assert sinfo.getAttribute(serverId, 'host') == host
-            assert sinfo.getAttribute(serverId, 'serverId') == serverId
-            assert sinfo.getAttribute(serverId, 'log') == "FATAL"
-            print("server entry updated -------------------------------- OK")
-        elif topologyEntry.getKeys()[0] == 'device':
-            dinfo = topologyEntry['device']
-            assert dinfo.getAttribute(deviceId, 'type') == 'device'
-            assert dinfo.getAttribute(deviceId, 'classId') == 'PropertyTest'
-            assert dinfo.getAttribute(deviceId, 'host') == host
-            assert dinfo.getAttribute(deviceId, 'status') == "ok"
-            print("device entry updated -------------------------------- OK")
-
-    def onInstanceGone(instId, info):
-        assert isinstance(instId, str)
-        assert isinstance(info, Hash)
-        if info['type'] == 'client':
-            assert instId == clientId
-            assert info['host'] == host
-            assert info['status'] == "ok"
-            print("client entry gone    -------------------------------- OK")
-        elif info['type'] == 'server':
-            assert instId == serverId
-            assert info['serverId'] == serverId
-            assert info['lang'] == 'cpp'
-            assert info['host'] == host
-            assert info['log'] == "FATAL"
-            print("server entry gone    -------------------------------- OK")
-        elif info['type'] == 'device':
-            assert instId == deviceId
-            assert info['classId'] == 'PropertyTest'
-            assert info['host'] == host
-            assert info['status'] == "ok"
-            print("device entry gone    -------------------------------- OK")
-
-    def onSchemaUpdated(devId, schema):
-        assert isinstance(devId, str)
-        assert isinstance(schema, Schema)
-        print('device schema updated ------------------------------- OK')
+        nonlocal instanceUpdatedArg
+        instanceUpdatedArg = topologyEntry
 
     c.registerInstanceNewMonitor(onInstanceNew)
     c.registerInstanceUpdatedMonitor(onInstanceUpdated)
-    c.registerInstanceGoneMonitor(onInstanceGone)
-    c.registerSchemaUpdatedMonitor(onSchemaUpdated)
     c.enableInstanceTracking()
 
     # Configure and start device server ...
-    # ... and make sure that plugins contains DataGenerator
-    config = Hash("serverId", serverId, "scanPlugins", False)
+    logLevel = "FATAL"
+    config = Hash("serverId", serverId, "Logger.priority", logLevel)
     startDeviceServer(config)
     # Test getServers...
     assert serverId in c.getServers()
+    # Check that instanceNew handler was called properly
+    # (If 'is Hash' fails sometimes, better check first in a loop with timeout.
+    # But as the client knows the server, instanceNew should have been called.)
+    assert type(instanceNewArg) is Hash
+    assert instanceNewArg.has("server." + serverId)
+    serverInfo = instanceNewArg["server"]
+    assert serverInfo.getAttribute(serverId, "type") == "server"
+    assert serverInfo.getAttribute(serverId, "lang") == "cpp"
+    assert serverInfo.getAttribute(serverId, "host") == host
+    assert serverInfo.getAttribute(serverId, "serverId") == serverId
+    assert serverInfo.getAttribute(serverId, "log") == logLevel
+
+    # Check that instanceUpdated handler was called properly. Note that here we
+    # rely on the fact that C++ server sends instanceUpdate soon after
+    # instanceNew, extending the known deviceClasses. (Instead of sending
+    # instanceNew after plugins are known. If that changes, find something else
+    # for testing instanceUpdateHandler...)
+    timeout = 10
+    while timeout > 0:
+        if type(instanceUpdatedArg) is Hash:
+            break
+        timeout -= 0.1
+        time.sleep(0.1)
+
+    assert type(instanceUpdatedArg) is Hash
+    assert instanceUpdatedArg.has("server." + serverId)
+    serverUpdate = instanceUpdatedArg["server"]
+    assert serverUpdate.getAttribute(serverId, "type") == "server"
+    klasses = serverUpdate.getAttribute(serverId, "deviceClasses")
+    assert "PropertyTest" in klasses
 
     # Test getSystemTopology ...
     topology = c.getSystemTopology()
@@ -196,16 +152,11 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     # Test exists...
     a, b = c.exists(serverId)
     assert a is True
-    assert serverId in c.getServers()
-    # Test getClasses...
-    for i in range(30):
-        classes = c.getClasses(serverId)
-        if classes:
-            break
-        time.sleep(1)
-
+    # Test getClasses... (can test directly since waited already for update)
+    classes = c.getClasses(serverId)
     assert isinstance(classes, list)
     assert "PropertyTest" in classes
+
     # Test getClassProperties...
     props = c.getClassProperties(serverId, "PropertyTest")
     assert isinstance(props, list) is True
@@ -215,10 +166,17 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     assert 'karaboVersion' in props
 
     # Test instantiate...
+    instanceNewArg = None
     #     synopsis: instantiate(serverId, classId, config, timeout)
-    c.instantiate(serverId, Hash('PropertyTest.deviceId', deviceId), 5)
+    c.instantiate(serverId, Hash('PropertyTest.deviceId', deviceId), 10)
     # Test getDevices...
     assert deviceId in c.getDevices(serverId)
+    assert type(instanceNewArg) is Hash
+    assert instanceNewArg.has("device." + deviceId)
+    deviceInfo = instanceNewArg["device"]
+    assert deviceInfo.getAttribute(deviceId, "type") == "device"
+    assert deviceInfo.getAttribute(deviceId, "host") == host
+    assert deviceInfo.getAttribute(deviceId, "serverId") == serverId
 
     # Test get/set ...
     assert c.get(deviceId, 'node.counter') == 0
@@ -226,18 +184,37 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     assert c.get(deviceId, 'node.counter') == 10
     assert c.get(deviceId, 'node.counterReadOnly') == 10
 
+    # Schema update monitor
+    onSchemaUpdatedArg1 = onSchemaUpdatedArg2 = None
+
+    def onSchemaUpdated(devId, schema):
+        nonlocal onSchemaUpdatedArg1, onSchemaUpdatedArg2
+        onSchemaUpdatedArg1 = devId
+        onSchemaUpdatedArg2 = schema
+
+    c.registerSchemaUpdatedMonitor(onSchemaUpdated)
+    c.execute(deviceId, "slotUpdateSchema")
+    assert type(onSchemaUpdatedArg1) is str
+    assert onSchemaUpdatedArg1 == deviceId
+    assert type(onSchemaUpdatedArg2) is Schema
+
+    onPropertyChangeArgs = None
+
     # Switch on monitor for device property
     def onPropertyChange(devId, key, value, ts):
-        assert isinstance(devId, str)
-        assert isinstance(key, str)
-        assert isinstance(value, int)
-        # assert isinstance(ts, Timestamp)
-        print(f'\tprop changed: {devId} {key} -> {value} ({ts})')
+        nonlocal onPropertyChangeArgs
+        onPropertyChangeArgs = (devId, key, value, ts)
 
     c.registerPropertyMonitor(deviceId, 'int32Property', onPropertyChange)
 
     # test 'set' ...
     c.set(deviceId, 'int32Property', 48000000)
+    assert type(onPropertyChangeArgs) is tuple
+    assert onPropertyChangeArgs[0] == deviceId
+    assert onPropertyChangeArgs[1] == "int32Property"
+    assert onPropertyChangeArgs[2] == 48000000
+    assert onPropertyChangeArgs[3].toIso8601Ext().endswith("Z")
+
     c.set(deviceId, 'int32Property', 777)
 
     c.unregisterPropertyMonitor(deviceId, 'int32Property')
@@ -292,15 +269,19 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     # c.setDeviceMonitorInterval(5)
 
     # Switch on the monitoring for device properties...
+    onDeviceParametersChangeArg1 = onDeviceParametersChangeArg2 = None
+
     def onDeviceParametersChange(devId, configChanged):
-        assert isinstance(devId, str)
-        assert isinstance(configChanged, Hash)
-        print('\tdevice parameters changed OK')
+        nonlocal onDeviceParametersChangeArg1, onDeviceParametersChangeArg2
+        onDeviceParametersChangeArg1 = devId
+        onDeviceParametersChangeArg2 = configChanged
 
     c.registerDeviceMonitor(deviceId, onDeviceParametersChange)
 
-    for i in range(3, 5):
-        c.execute(deviceId, 'node.increment', 5)
+    c.execute(deviceId, 'node.increment', 5)
+    assert onDeviceParametersChangeArg1 == deviceId
+    assert type(onDeviceParametersChangeArg2) is Hash
+    assert onDeviceParametersChangeArg2.has("node.counter")
 
     # Switch off monitoring for device properties...
     c.unregisterDeviceMonitor(deviceId)
@@ -313,19 +294,40 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     assert isinstance(h, Hash)
     assert h.getKeys()[0] == deviceId
     assert h.getAttribute(deviceId, "classId") == "PropertyTest"
-    print("data source as hash  -------------------------------- OK")
 
-    # test 'setAttribute'
-    c.setAttribute(deviceId, 'int32Property', 'blabla', 12)
+    # test 'setAttribute' - it updates the schema again
+    onSchemaUpdatedArg1 = onSchemaUpdatedArg2 = None
+    c.setAttribute(deviceId, 'int32Property', 'minInc', 12)
+    assert type(onSchemaUpdatedArg1) is str
+    assert onSchemaUpdatedArg1 == deviceId
+    assert type(onSchemaUpdatedArg2) is Schema
+    assert onSchemaUpdatedArg2.getMinInc("int32Property") == 12
 
-    lck = c.lock(deviceId, recursive=False, timeout=0)
-    print("device locked        -------------------------------- "
-          f"{lck.valid()}")
+    lck = c.lock(deviceId, recursive=False, timeout=3)
+    assert lck.valid()
     lck.unlock()
 
+    # Test instanceGoneMonitor
+    instanceGoneArg1 = instanceGoneArg2 = None
+
+    def onInstanceGone(instId, info):
+        nonlocal instanceGoneArg1, instanceGoneArg2
+        instanceGoneArg1 = instId
+        instanceGoneArg2 = info
+
+    c.registerInstanceGoneMonitor(onInstanceGone)
+
     # shutdown device ...
-    # Test killDevice...
+    # Test killDevice and gone monitor...
     c.killDevice(deviceId, 10)
+    assert type(instanceGoneArg1) is str
+    assert instanceGoneArg1 == deviceId
+    assert type(instanceGoneArg2) is Hash
+    assert instanceGoneArg2["type"] == "device"
+    assert instanceGoneArg2["classId"] == "PropertyTest"
+    assert instanceGoneArg2["host"] == host
+    assert instanceGoneArg2["status"] == "ok"
+
     # de-register device server...
     stopDeviceServer(serverId)
     Logger.reset()
