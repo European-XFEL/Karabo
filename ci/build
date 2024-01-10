@@ -117,17 +117,6 @@ __deps_build() {
     bash build.sh -q $DEPS_BASE_NAME CI
     $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
     $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-    bash build.sh -p $DEPS_BASE_NAME CI
-    export PACKAGE_FILENAME=$DEPS_BASE_NAME-*.tar.gz
-    # if in a merge request, rename the archive to the branch filename.
-    # The build script will set the filename's suffix to the last dependencies tag.
-    # CI_COMMIT_TAG is set on tag-triggered pipelines and
-    # CI_MERGE_REQUEST_SOURCE_BRANCH_NAME is set on merge requests
-    if [ "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" != "" ] && [ "$CI_COMMIT_TAG" == "" ]; then
-        mv $DEPS_BASE_NAME-*.tar.gz $DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz
-        export PACKAGE_FILENAME=$DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz
-    fi
-    sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $PACKAGE_FILENAME $SSH_PREFIX/karaboDevelopmentDeps/
 }
 
 
