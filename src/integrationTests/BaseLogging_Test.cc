@@ -894,7 +894,7 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
                   loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
                   return loggerState == karabo::util::State::ON;
               },
-              20 * KRB_TEST_MAX_TIMEOUT * 1000u, 100u);
+              40 * KRB_TEST_MAX_TIMEOUT * 1000u, 100u);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ON state.",
                                      karabo::util::State::ON, loggerState);

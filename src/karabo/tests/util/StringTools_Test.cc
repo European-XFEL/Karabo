@@ -178,14 +178,14 @@ void StringTools_Test::testFromString() {
 
     // tests for set
     {
-        auto aSet = fromString<int, std::set>("77", ",");
+        auto aSet = fromStringToSortedCont<int, std::set>("77", ",");
         CPPUNIT_ASSERT_EQUAL(1ul, aSet.size());
         CPPUNIT_ASSERT_EQUAL(77, *(aSet.begin()));
 
-        aSet = fromString<int, std::set>("", ",");
+        aSet = fromStringToSortedCont<int, std::set>("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aSet.size());
 
-        aSet = fromString<int, std::set>("-32768, -77, 32767, -77", ",");
+        aSet = fromStringToSortedCont<int, std::set>("-32768, -77, 32767, -77", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aSet.size());
         auto it = aSet.begin();
         CPPUNIT_ASSERT_EQUAL(-32768, *it);
