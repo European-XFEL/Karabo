@@ -176,11 +176,14 @@ runPythonTests() {
     if [ ! -z "$KARABO_CI_BROKERS" ]; then
         runPythonTestsCI $*
     else
-        # Uncomment or adjust depending on the broker environment
-        safeRunTests "tcp://exflbkr02n0:7777" $*
-        # safeRunTests "mqtt://exfldl02n0:1883" $*
-        # safeRunTests "amqp://xfel:karabo@exflctrl01:5672" $*
-        # safeRunTests "redis://exflctrl01:6379" $*
+        if [ ! -z "$KARABO_BROKER" ]; then
+            BROKER=$KARABO_BROKER
+        else
+            # Uncomment or adjust depending on the broker environment
+            # BROKER="tcp://exflbkr02n0:7777"
+            BROKER="amqp://xfel:karabo@exflctrl01:5672"
+        fi
+        safeRunTests $BROKER $*
     fi
 
     export KARABO_BROKER=${savedBroker}
