@@ -34,6 +34,7 @@ Bound API
   *userData* argument anymore and thus the passed *callbackFunction* will not
   receive that as argument anymore, either.
   Make use of *functools.partial* for the callback instead.
+- The *bound.api* `VectorString` has been removed. Use a python `list` instead.
 
 
 Change of behaviour
