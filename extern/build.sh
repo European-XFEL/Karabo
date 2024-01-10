@@ -9,26 +9,6 @@ source "$scriptDir/../set_lsb_release_info.sh"
 ##############################################################################
 # Important constants
 
-BUILD_MARKER_NAME=".marker.txt"
-DEPS_MANAGER_MARKER_NAME=".conan.pip.marker.txt"
-DEPS_MARKER_NAME=".deps_tag.txt"
-if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
-    KARABO_UPLOAD_CURL_PREFIX=http://exflctrl01.desy.de/karabo
-fi
-DEP_URL_BASE="${KARABO_UPLOAD_CURL_PREFIX}/karaboDevelopmentDeps"
-DEPS_OS_IDENTIFIER=$LSB_RELEASE_DIST$(echo $LSB_RELEASE_VERSION | sed -r 's/^([0-9]+).*/\1/')
-DEP_TAG_PATTERN="deps-*"
-
-declare -A DEPS_BASE_NAME_MAP
-DEPS_BASE_NAME_MAP['Ubuntu18']='Ubuntu-18'
-DEPS_BASE_NAME_MAP['Ubuntu19']='Ubuntu-18'
-DEPS_BASE_NAME_MAP['Ubuntu20']='Ubuntu-20'
-DEPS_BASE_NAME_MAP['Ubuntu22']='Ubuntu-22'
-DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
-DEPS_BASE_NAME_MAP['AlmaLinux8']='AlmaLinux-8'
-DEPS_BASE_NAME_MAP['AlmaLinux9']='AlmaLinux-9'
-DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
-
 PYTHON_VERSION=3.11.6
 PYTHON_PATH_VERSION=3.11
 CONAN_RECIPE_CHANNEL=py311
@@ -37,8 +17,6 @@ LOG4CPP_VERSION=1.1.3
 DAEMONTOOLS_VERSION=1.11-karabo3
 OPENMQ_VERSION=5.1.3
 OPENMQC_VERSION=5.1.4.1
-CPP_STD_LIB_VERSION=c++11
-CPP_STD=14
 
 ##############################################################################
 # Define a bunch of functions to be called later
@@ -61,108 +39,6 @@ check_for() {
     return 0
 }
 
-check_if_download_needed() {
-    local deps_tag=$(get_last_deps_tag)
-
-    if [ "$deps_tag" = "" ]; then
-        # This branch has no dependencies tag. Use old build logic.
-        return 2
-    fi
-
-    local build_marker_path=$INSTALL_PREFIX/$BUILD_MARKER_NAME
-    if [ -f $build_marker_path ]; then
-        # This branch was built using the old system. Use old build logic
-        return 2
-    fi
-
-    local deps_marker_path=$INSTALL_PREFIX/$DEPS_MARKER_NAME
-    if [ ! -f $deps_marker_path ]; then
-         # Clean directory. The dependencies should be downloaded
-        return 1
-    fi
-
-    local installed_tag=$(cat $deps_marker_path)
-    if [ $deps_tag != $installed_tag ]; then
-        # Wrong dependency version. The dependencies should be downloaded
-        return 1
-    fi
-
-    # The correct dependencies are already installed
-    return 0
-}
-
-download_latest_deps() {
-    local deps_base_name=${DEPS_BASE_NAME_MAP[$DEPS_OS_IDENTIFIER]}
-
-    if [ -z $deps_base_name ]; then
-        echo
-        echo "Failed to download the pre-compiled external dependencies because"
-        echo "OS: '$DEPS_OS_IDENTIFIER' is not in the list of supported platforms!"
-        echo
-        sleep 2
-        return 1
-    fi
-
-    local deps_tag=$(get_last_deps_tag)
-
-    # Allow for the dependency tag to be specified (for testing)
-    if [ ! -z $FORCED_DEPS_TAG ]; then
-        deps_tag=$FORCED_DEPS_TAG
-    fi
-
-    local deps_file=$deps_base_name-$deps_tag.tar.gz
-    local deps_url=$DEP_URL_BASE/$deps_file
-
-    echo "### Downloading external dependencies from $deps_url. ###"
-    echo
-
-    # Make sure curl is available
-    check_for curl
-    if [ $? -ne 0 ]; then
-        return 1
-    fi
-    # Make sure conan is available
-    check_for conan
-    if [ $? -ne 0 ]; then
-        return 1
-    fi
-
-    # Attempt to download, quietly
-    curl -fO $deps_url &> /dev/null
-    if [ $? -ne 0 ]; then
-        if [ -f $deps_file ]; then
-            rm $deps_file
-        fi
-
-        echo "Fetching $deps_url failed!"
-        return 1
-    fi
-
-    # Unpack
-    tar -zxf $deps_file
-    rm $deps_file
-    mkdir -p $INSTALL_PREFIX
-    mv -f $deps_base_name/* $INSTALL_PREFIX
-    rm -rf $deps_base_name
-
-    # Adjust for the local environment
-    echo "### Updating dependencies for the local environment... (this takes a while) ###"
-    echo
-
-    # Leave a marker for later
-    echo $deps_tag > $INSTALL_PREFIX/$DEPS_MARKER_NAME
-    return 0
-}
-
-element_in() {
-    local e
-    for e in ${@:2}
-    do
-        [[ "$e" == "$1" ]] && return 0
-    done
-    return 1
-}
-
 get_abs_path() {
     local parent_dir=$(dirname "$1")
     local _basename=$(basename "$1")
@@ -177,36 +53,6 @@ get_abs_path() {
     esac
     cd - >/dev/null
     echo "$abs_path"
-}
-
-get_last_deps_tag() {
-    # Do a fast check for our special tag
-    local has_tag=$(git tag -l "$DEP_TAG_PATTERN")
-    if [ "$has_tag" = "" ]; then
-        # Bail out early
-        echo "" && return 1
-    fi
-
-    # Step through commits in reverse chronological order
-    for rev in $(git rev-list HEAD)
-    do
-        local tagname=$(git tag -l "$DEP_TAG_PATTERN" --points-at $rev)
-        # Once we find a commit with a "deps-*" tag, we're done.
-        if [ "$tagname" != "" ]; then
-            echo $tagname && return 0
-        fi
-    done
-
-    # No tag was found
-    echo "" && return 1
-}
-
-package_deps_directory() {
-    local version=$(get_last_deps_tag)
-    local install_dir=$(basename $INSTALL_PREFIX)
-    pushd $(dirname $INSTALL_PREFIX)
-    safeRunCommand "tar -zcf $install_dir-$version.tar.gz $install_dir"
-    popd
 }
 
 checkReturnCode() {
@@ -252,33 +98,7 @@ safeRunCommandQuiet() {
     exec 3>&1
 }
 
-try_dependency_download() {
-    check_if_download_needed
-    local dl_needed=$?
-    if [ $dl_needed -eq 1 ]; then
-        # No. Try to download them
-        download_latest_deps
-        if [ $? -eq 0 ]; then
-            echo "### All external dependencies successfully installed from download. ###"
-            exit 0
-        else
-            echo "No pre-built dependencies could be downloaded for this branch."
-            echo "External dependencies will be built from source."
-            echo
-        fi
-    elif [ $dl_needed -eq 0 ]; then
-        echo "### All external dependencies already installed from download. ###"
-        exit 0
-    fi
-}
-
 install_python() {
-    local package_status=$(get_package_manager_status)
-    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
-
-    element_in "python-install" "${package_status[@]}"
-    local vin=$?
-    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         pushd $scriptDir
 
         # create default build profile
@@ -301,33 +121,10 @@ install_python() {
         safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
         popd
-        echo "python-install" >> $marker_path
-    fi
-}
-
-get_package_manager_status() {
-    mkdir -p $INSTALL_PREFIX
-    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
-
-    # Check if $marker_path exists or not => if it does then read contents.
-    # Otherwise create the file and input names of packages one by one as they are installed.
-    if [ ! -f $marker_path ]; then
-        touch $marker_path
-    fi
-
-    # Read the marker file into a variable as a list
-    local built_deps=""
-    IFS=$'\r\n' built_deps=$(cat $marker_path)
-    unset IFS
-
-    echo $built_deps
 }
 
 install_from_deps() {
     pushd $scriptDir
-    # we use markers to not repeat steps in the build stage.
-    local package_status=$(get_package_manager_status)
-    local marker_path=$INSTALL_PREFIX/$DEPS_MANAGER_MARKER_NAME
 
     # use pip in INSTALL_PREFIX by calling python3 -m pip <args>
     local pip_install_cmd="$INSTALL_PREFIX/bin/python3 -m pip install"
@@ -337,18 +134,9 @@ install_from_deps() {
     # since this includes conan, we need to force a reinstall, otherwise
     # only the stdlib version of conan will be available, no commands can
     # be issued directly from the CLI.
-    element_in "pip-pre-requirements" "${package_status[@]}"
-    local vin=$?
-    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         safeRunCommandQuiet "$pip_install_cmd --force-reinstall -r requirements-pre.txt"
-        echo "pip-pre-requirements" >> $marker_path
-    fi
 
     # next is conan
-    element_in "conan" "${package_status[@]}"
-    local vin=$?
-    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
-
         # create default build profile
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
 
@@ -366,15 +154,12 @@ install_from_deps() {
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         # boost:python_executable comes from a variable, so it must be defined here
-        local build_opts="--build=missing -o boost:python_executable=$INSTALL_PREFIX/bin/python"
+        local build_opts="--build=missing -s build_type=Release -o boost:python_executable=$INSTALL_PREFIX/bin/python"
         # apply custom profile on top of default profile
         local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
 
         # install packages listed in the extern/conanfile.txt
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
-
-        echo "conan" >> $marker_path
-    fi
 
     # install python requirements
     # we do this in multiple stages, as pip has issues resolving a
@@ -383,16 +168,11 @@ install_from_deps() {
     # switch to calling pip executable within INSTALL_PREFIX to test it
     pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
 
-    element_in "pip-requirements" "${package_status[@]}"
-    local vin=$?
-    if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         # important dependencies that many other packages will need
         # (ie: numpy) are installed first
         safeRunCommandQuiet "$pip_install_cmd -r requirements-0.txt"
         # install everything else
         safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
-        echo "pip-requirements" >> $marker_path
-    fi
 
     # check numpy capabilities
     $INSTALL_PREFIX/bin/python -c "import numpy; print(numpy.show_config())"
@@ -457,9 +237,10 @@ INSTALL_PREFIX=$(get_abs_path $1)
 WHAT=${@:2}
 FORCE="n"
 
-if [ "$WHAT" = "ALL" ]; then
-    # Attempt to install dependencies from FTP
-    try_dependency_download
+# Make sure conan is available
+check_for conan
+if [ $? -ne 0 ]; then
+    return 1
 fi
 
 # python download and install to allow full bootstrap
@@ -472,10 +253,5 @@ install_from_deps
 pushd $EXTERN_DIR
 safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
 popd
-
-# Package everything up, if requested
-if [ "$BUILD_PACKAGE" = "y" ]; then
-    package_deps_directory
-fi
 
 echo "### All external dependencies successfully installed/already present. ###"
