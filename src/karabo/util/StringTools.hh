@@ -456,11 +456,11 @@ namespace karabo {
          * @return
          */
         template <typename T,
-                  template <typename ELEM, typename = std::allocator<ELEM> > class CONT> // e.g. for vector container
+                  template <typename ELEM, typename = std::allocator<ELEM>> class CONT> // e.g. for vector container
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
                 if (value.empty()) return CONT<T>();
-                CONT<std::string> elements;
+                CONT<std::string, std::allocator<std::string>> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
                 if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
@@ -531,12 +531,24 @@ namespace karabo {
             return tmp;
         }
 
-        template <typename T, template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> >
+        //
+        // The method below has been renamed as part of the migration from C++14 to C++17.
+        // In C++17, matching of template template arguments started taking default template arguments
+        // into consideration. Due to this change, this template overload started clashing with the
+        // one on line 458. Before C++ 17 this overload would match sorted containers like sets and the
+        // one on line 458 would match containers like vectors. With C++ 17, some existing uses became
+        // ambiguous (e.g. "std::set<std::string> tagSet = fromString<std::string, std::set>(tags, sep);"
+        // from line 42 of file HashFilter.cc).
+        //
+        // Details about this change of behavior in C++ 17 can be seem
+        // https://developers.redhat.com/articles/2021/08/06/porting-your-code-c17-gcc-11#new_template_template_parameter_matching
+        //
+        template <typename T, template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM>>
                               class CONT> // e.g. for set
-        inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
+        inline CONT<T> fromStringToSortedCont(const std::string& value, const std::string& separator = ",") {
             try {
                 if (value.empty()) return CONT<T>();
-                CONT<std::string> elements;
+                CONT<std::string, std::less<std::string>> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
                 if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
@@ -704,9 +716,9 @@ namespace karabo {
         /**
          * This class is taken from http://www.c-plusplus.de/forum/168607
          */
-        template <class E, class T = std::char_traits<E>, class Sub1 = std::allocator<E> >
+        template <class E, class T = std::char_traits<E>, class Sub1 = std::allocator<E>>
 
-        class Widen : public std::unary_function<const std::string&, std::basic_string<E, T, Sub1> > {
+        class Widen : public std::unary_function<const std::string&, std::basic_string<E, T, Sub1>> {
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
@@ -722,7 +734,7 @@ namespace karabo {
                 using namespace std;
                 pCType_ = &_USE(loc, ctype<E>);
 #else
-                pCType_ = &std::use_facet<std::ctype<E> >(loc);
+                pCType_ = &std::use_facet<std::ctype<E>>(loc);
 #endif
             }
 
