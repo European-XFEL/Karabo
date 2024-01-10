@@ -81,8 +81,8 @@ from .bound_tool import (
     Rotation, Schema, SignalSlotable, SignalSlotableIntern, Slot,
     SlotElementBase, TextSerializerHash, TextSerializerSchema, TimeDuration,
     Timestamp, Trainstamp, Types, TypesClass, Unit, Validator,
-    ValidatorValidationRules, VectorHash, VectorHashPointer, VectorString,
-    _DimsIntern, fullyEqual, isStdVectorDefaultConversion, loadFromFile,
-    saveToFile, setDims, setStdVectorDefaultConversion, similar)
+    ValidatorValidationRules, VectorHash, VectorHashPointer, _DimsIntern,
+    fullyEqual, isStdVectorDefaultConversion, loadFromFile, saveToFile,
+    setDims, setStdVectorDefaultConversion, similar)
 from .common.alarm_conditions import AlarmCondition
 from .common.states import State, StateSignifier
