@@ -58,7 +58,7 @@ if not use_karabind:
         SignalSlotableIntern, Slot, SlotElementBase, TextSerializerHash,
         TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
         TypesClass, Unit, Validator, ValidatorValidationRules, VectorHash,
-        VectorHashPointer, VectorString, _DimsIntern, fullyEqual,
+        VectorHashPointer, _DimsIntern, fullyEqual,
         isStdVectorDefaultConversion, loadFromFile, saveToFile, setDims,
         setStdVectorDefaultConversion, similar)
 else:
@@ -105,12 +105,8 @@ else:
     class AbstractInput:
         pass
 
-    class VectorString:
-        pass
-
     def isStdVectorDefaultConversion():
         return True
 
     def setStdVectorDefaultConversion():
         pass
-
