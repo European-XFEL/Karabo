@@ -17,6 +17,10 @@ and maintained `pybind11` library.
 The Bound interface is basically unchanged. Exceptions are listed
 among the breaking changes below.
 
+The C++ API now requires a C++ 17 compliant compiler. A breaking change to
+the interface of `karabo::util::StringTools` resulted from the migration to
+C++ 17 and is documented below.
+
 
 Breaking Changes
 ++++++++++++++++
@@ -59,6 +63,12 @@ MDL/Native core
 Bound/cpp core
 ==============
 
+- The **StringTools::fromString** template overload that returns a sorted container
+with the strings contained in an input string has been renamed to
+**StringTools::fromStringToSortedCont**. The change comes from a modification
+in the way a C++ compiler matches template template arguments with defaults introduced
+by C++ 17. More details are provided by comments in **StringTools.hh**.
+
 
 Graphical User Interface
 ========================
@@ -68,5 +78,3 @@ Core Devices
 
 Dependencies, Documentation and Tools
 =====================================
-
-
