@@ -21,14 +21,10 @@
 
 #include <chrono>
 #include <cmath>
-// TODO: When the Framework migrates to C++ 17 or later, change this to
-//       "#include <string_view>".
-//       GCC's libstdc++ provides "std::experimental::string_view"
-//       for C++ 14 or later.
-#include <experimental/string_view>
 #include <future>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <string_view>
 
 #include "karabo/net/InfluxDbClient.hh"
 #include "karabo/util/DataLogUtils.hh"
@@ -644,9 +640,7 @@ namespace karabo {
 
 
         bool InfluxDeviceData::logNewSchema(const std::string& schemaDigest, const std::vector<char>& schemaArchive) {
-            // TODO: replace the line below by "using std::string_view" once
-            //       the Framework is migrated to C++ 17 or later.
-            using std::experimental::string_view;
+            using std::string_view;
             // Encode serialized schema into Base64
             const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(schemaArchive.data());
             const std::string base64Schema = base64Encode(uarchive, schemaArchive.size());
