@@ -42,6 +42,8 @@ openssl/1.0.2t   # Centos7 can only handle newer versions if compiled from sourc
 # openblas/0.3.20
 
 [generators]
+CMakeDeps
+CMakeToolchain
 deploy
 pkg_config
 
