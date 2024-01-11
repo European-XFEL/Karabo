@@ -29,7 +29,7 @@ endif()
 include("../../cmake/cxx-options.cmake")
 include("../../cmake/karabo-lib-target-name.cmake")
 
-find_library(CPPUNIT cppunit)
+find_package(cppunit REQUIRED)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
@@ -53,21 +53,21 @@ add_library(BROKER_UTILS OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/BrokerUtils.cc)
 target_link_libraries(
     BROKER_UTILS
     ${KARABO_LIB_TARGET_NAME}
-    ${CPPUNIT}
+    cppunit::cppunit
 )
 
 add_library(TEST_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunner.cc)
 target_link_libraries(
     TEST_RUNNER
     ${KARABO_LIB_TARGET_NAME}
-    ${CPPUNIT}
+    cppunit::cppunit
 )
 
 add_library(TEST_RUNNER_NOLOOP OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/testRunnerNoLoop.cc)
 target_link_libraries(
     TEST_RUNNER_NOLOOP
     ${KARABO_LIB_TARGET_NAME}
-    ${CPPUNIT}
+    cppunit::cppunit
 )
 
 set(coreTestRunner_FILES
@@ -157,7 +157,7 @@ foreach(testTarget IN LISTS TEST_TARGETS)
     target_link_libraries(
         ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
-        ${CPPUNIT}
+        cppunit::cppunit
     )
     message(STATUS "Added unit test executable ${testTarget}")
 
