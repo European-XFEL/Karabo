@@ -159,39 +159,12 @@ add_library(
 )
 
 # finding dependencies
-set(EXTERN_DEPS_INCLUDE "" )
-
-find_package(OpenSSL REQUIRED)
-list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
-
-# Force cmake to ignore any BoostConfig.cmake and boost-config.cmake that can
-# be found on the system when the local system already has Boost installed and
-# this locally installed Boost has version 1.70+ or has been compiled with the
-# boost-cmake project (details at https://cmake.org/cmake/help/latest/module/FindBoost.html).
-# For this project, we always want to find the Boost installation in the
-# CMAKE_PREFIX_PATH tree.
-set(Boost_NO_BOOST_CMAKE 1)
-find_package(Boost 1.82 EXACT REQUIRED
-             COMPONENTS atomic chrono date_time filesystem regex system thread)
-list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
-
-macro(add_dep LIBNAME INCLUDE_PATH)
-    find_library(${LIBNAME}_LIB ${LIBNAME})
-    find_path(${LIBNAME}_INC_PATH ${INCLUDE_PATH})
-    list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${${LIBNAME}_INC_PATH})
-    message(STATUS "${LIBNAME}_INC_PATH = ${${LIBNAME}_INC_PATH}")
-    message(STATUS "${LIBNAME}_LIB = ${${LIBNAME}_LIB}")
-endmacro()
-
-add_dep(log4cpp krb_log4cpp)
-add_dep(pugixml pugixml.hpp)
-add_dep(cppunit cppunit)
-add_dep(openmqc openmqc)
-add_dep(amqpcpp amqpcpp)
-
-list(REMOVE_DUPLICATES EXTERN_DEPS_INCLUDE_DIRS)
-
-message(STATUS "OPENSSL_INCLUDE_DIR = ${OPENSSL_INCLUDE_DIR}")
+find_package(Boost REQUIRED)
+find_package(amqpcpp REQUIRED)
+find_package(log4cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(openmqc REQUIRED)
+find_package(pugixml REQUIRED)
 
 set_target_properties(
         ${KARABO_LIB_TARGET_NAME} PROPERTIES
@@ -210,8 +183,8 @@ target_compile_options(
     PUBLIC -Wfatal-errors -Wno-unused-local-typedefs -Wno-deprecated-declarations -Wall)
 
 target_include_directories(
-     ${KARABO_LIB_TARGET_NAME}
-     PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/..> $<INSTALL_INTERFACE:include/karabo>
+    ${KARABO_LIB_TARGET_NAME}
+    PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/..> $<INSTALL_INTERFACE:include/karabo>
 )
 
 target_include_directories(
@@ -219,27 +192,31 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>  $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(
-    ${KARABO_LIB_TARGET_NAME} SYSTEM
-    PUBLIC "${EXTERN_DEPS_INCLUDE_DIRS}"
+# Adding dependecies to KARABO_LIB_TARGET_NAME
+# These are linked against and provided to the public link interface
+target_link_libraries(
+    ${KARABO_LIB_TARGET_NAME}
+    PUBLIC
+    amqpcpp  # not a typo, this package does not define a namespace
+    Boost::headers
+    log4cpp::log4cpp
+    nlohmann_json::nlohmann_json
+    openmqc::openmqc
+    pugixml::pugixml
 )
 
-# Adding dependecy libraries into the karabo project
+# Adding interface libraries to KARABO_LIB_TARGET_NAME
+# These are *NOT* linked against, only provided as part of the link interface
 target_link_libraries(
-        ${KARABO_LIB_TARGET_NAME}
-        ${Boost_ATOMIC_LIBRARY}
-        ${Boost_FILESYSTEM_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
-        ${Boost_CHRONO_LIBRARY}
-        ${Boost_DATE_TIME_LIBRARY}
-        ${Boost_REGEX_LIBRARY}
-        ${Boost_SIGNALS_LIBRARY}
-        ${Boost_THREAD_LIBRARY}
-        ${OPENSSL_LIBRARIES}
-        ${openmqc_LIB}
-        ${amqpcpp_LIB}
-        ${log4cpp_LIB}
-        ${pugixml_LIB}
+    ${KARABO_LIB_TARGET_NAME}
+    INTERFACE
+    Boost::atomic
+    Boost::chrono
+    Boost::date_time
+    Boost::filesystem
+    Boost::regex
+    Boost::system
+    Boost::thread
 )
 
 # Headers to be installed

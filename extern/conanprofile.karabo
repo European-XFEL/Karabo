@@ -1,6 +1,7 @@
 include(default)
 
 [settings]
+build_type=Release
 compiler.libcxx=libstdc++11
 compiler.cppstd=14
 

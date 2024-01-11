@@ -109,7 +109,7 @@ install_python() {
         # configure prefix paths
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # build python if not found in conan cache
-        local build_opts="--build=missing -s build_type=Release"
+        local build_opts="--build=missing"
         # apply custom profile on top of default profile
         local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
         # always compile patchelf and b2 from source (needed later), avoids CentOS7 failures
@@ -154,7 +154,7 @@ install_from_deps() {
         local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         # boost:python_executable comes from a variable, so it must be defined here
-        local build_opts="--build=missing -s build_type=Release -o boost:python_executable=$INSTALL_PREFIX/bin/python"
+        local build_opts="--build=missing -o boost:python_executable=$INSTALL_PREFIX/bin/python"
         # apply custom profile on top of default profile
         local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
 

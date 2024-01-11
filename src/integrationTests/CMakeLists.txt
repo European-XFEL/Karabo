@@ -29,7 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-find_library(CPPUNIT cppunit)
+find_package(cppunit REQUIRED)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
@@ -37,13 +37,13 @@ add_library(INTEGRATION_RUNNER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/integrationRun
 target_link_libraries(
     INTEGRATION_RUNNER
     ${KARABO_LIB_TARGET_NAME}
-    ${CPPUNIT}
+    cppunit::cppunit
 )
 add_library(TCP_ADAPTER OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/TcpAdapter.cc)
 target_link_libraries(
     TCP_ADAPTER
     ${KARABO_LIB_TARGET_NAME}
-    ${CPPUNIT}
+    cppunit::cppunit
 )
 
 
@@ -130,7 +130,7 @@ foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
     target_link_libraries(
         ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
-        ${CPPUNIT}
+        cppunit::cppunit
     )
     message(STATUS "Added integration test executable ${testTarget}")
 
