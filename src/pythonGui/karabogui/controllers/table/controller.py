@@ -408,7 +408,8 @@ class BaseTableController(BaseBindingController):
             self.sourceModel().setData(index, device)
 
     def _set_index_default(self):
-        index = self.currentIndex()
+        model = self.tableWidget().model()
+        index = model.index_ref(self.currentIndex())
         key = list(self._bindings.keys())[index.column()]
         binding = self._bindings[key]
         default_value = get_default_value(binding, force=True)
@@ -594,3 +595,39 @@ class BaseFilterTableController(BaseTableController):
         enabled = not self.model.showFilterKeyColumn
         self.model.showFilterKeyColumn = enabled
         self.columnCombo.setVisible(enabled)
+
+    # ------------------------------------------------------------------------
+    # Action interface
+
+    def sourceRow(self):
+        """Method to retrieve the selected row of the source model"""
+        index = self.currentIndex()
+        return self.tableModel().mapToSource(index).row()
+
+    def add_row(self):
+        row = self.sourceRow()
+        self._item_model.add_row(row)
+
+    def add_row_below(self):
+        row = self.sourceRow()
+        self._item_model.add_row(row)
+
+    def duplicate_row(self):
+        row = self.sourceRow()
+        self._item_model.duplicate_row(row)
+
+    def move_row_up(self):
+        row = self.sourceRow()
+        select = self.currentIndex().row() - 1
+        self._item_model.move_row_up(row)
+        self._table_widget.selectRow(select)
+
+    def move_row_down(self):
+        row = self.sourceRow()
+        select = self.currentIndex().row() + 1
+        self._item_model.move_row_down(row)
+        self._table_widget.selectRow(select)
+
+    def remove_row(self):
+        row = self.sourceRow()
+        self._item_model.removeRows(row, 1, QModelIndex())
