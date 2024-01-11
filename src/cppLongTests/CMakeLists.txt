@@ -29,7 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
 endif()
 
-find_library(CPPUNIT cppunit)
+find_package(cppunit REQUIRED)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testresults)
 
@@ -53,7 +53,7 @@ foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
     target_link_libraries(
         ${testTarget}
         ${KARABO_LIB_TARGET_NAME}
-        ${CPPUNIT}
+        cppunit::cppunit
     )
     message(STATUS "Added long running test executable ${testTarget}")
 
