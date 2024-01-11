@@ -6,13 +6,15 @@
 External Dependency Management in Karabo
 ========================================
 
-The Karabo Framework bundles a large number of third party packages upon which
-it is dependent. This includes things like boost, Qt, and AMQP.
+The Karabo Framework depends on a large number of third party packages.
+The karabo C++ library dependencies are managed using the conan open
+source package manager. This automatically provides things like Python,
+boost, AMQP, etc.
 
 Because building these dependencies has become a time consuming and sensitive
-process, they are now being managed by an automated system. Using the
+process, they are now being managed by an automated system. Together with the
 CI (continuous integration) features of GitLab, the dependencies are
-automatically built into a redistributable bundle whenever one or more of those
+automatically built and cached whenever one or more of those
 dependencies changes.
 
 
@@ -23,46 +25,25 @@ After cloning the framework from git, or doing a clean rebuild, the external
 dependencies should first be installed. This is handled automatically by the
 ``auto_build_all.sh`` script.
 
-The already-built dependencies will be downloaded from
-http://exflctrl01.desy.de/karabo/karaboDevelopmentDeps/. They will be unpacked
-and certain file paths within will be rewritten to match the environment where
-the framework is being built.
-
-**NOTE**: The build requirements include the ``curl`` and ``file`` commands. If
-you do not have these installed, the download will fail and you will have to
-wait for the dependencies to be built locally.
+The already-built dependencies will be downloaded from the public conan
+repository when available. If pre-built binaries are not available, then the
+source code will be download and compiled locally according to the script
+in the conanfile.py of the dependency package.
 
 
 Mechanism for Determining Correct Dependencies to Install
 ---------------------------------------------------------
 
-You might now be wondering: "How does the script know *which* dependencies to
-download?". That's a very good question. The short answer is that the correct
-version is found by querying the git repository. This information, combined
-with the ID of the user's OS is used to determine the correct URL for the
-dependencies.
+The conan package manager enables building the karabo framework with a
+deterministic build environment. All of the build options, compiler
+and host system settings are used to compute a package ID for the dependency.
+The package ID is a unique identifier that conan uses to determine package
+compatibility with a host system and other dependencies.
 
-The detailed answer is that each "version" of the dependencies recieves a
-specially formatted tag on the master branch of the framework git repository.
-These tags can be thought of as markers in the linear history which denote safe,
-usuable versions of the dependencies. It is important that tags are not added to
-"broken" commits.
+If you are interested in a more detailed explanation of how this works, you
+can read more about it at blog.conan.io:
 
-So, starting from the current HEAD commit in a local git repository, the history
-is examined one commit at a time until the most recent dependency tag is located.
-This tag is then combined with the OS identifier and a URL is generated. See
-below for a description of the naming convention used for these dependency tags.
-
-**NOTE:** Please observe that this mechanism can only work if the dependency
-tags are only added to the master branch. **NEVER NEVER NEVER** add a dependency
-tag to a different branch; but especially not to a long lived branch which might
-later be merged into the master branch. **It is crucially important** that
-history can be walked directly back to the nearest dependency tag. If there is
-any ambiguity about what that tag is, then this mechanism will cease to work in
-a reliable fashion.
-
-All that said, this is a robust solution for people developing the framework.
-It does not affect users who install from a pre-built version of the framework.
+https://blog.conan.io/2019/09/27/package-id-modes.html
 
 
 Adding/Removing/Updating a Dependency
@@ -100,7 +81,7 @@ the framework locally using this package:
 .. code-block:: bash
 
     ./auto_build_all.sh Clean-All
-    FORCED_DEPS_TAG=deps-mr-<package> ./auto_build_all.sh Debug --pyDevelop
+    ./auto_build_all.sh Debug --pyDevelop
 
 This will build the framework using the updated dependency packages created
 from your feature branch. Once finished, you can try to use the framework to
