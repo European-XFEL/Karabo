@@ -41,15 +41,8 @@ message(STATUS "NumPy include dirs = '${Python3_NumPy_INCLUDE_DIRS}'")
 # requires a suffix with the version of Python the Boost Python package has
 # been built against. More details at:
 # https://stackoverflow.com/questions/56067518/cmake-could-not-find-boost-python
-#
-# Force cmake to ignore any BoostConfig.cmake and boost-config.cmake that can
-# be found on the local system when it already has Boost installed and Boost has
-# version 1.70+ or has been compiled with the boost-cmake project
-# (details at https://cmake.org/cmake/help/latest/module/FindBoost.html).
-# For this project, we always want to find the Boost installation in the
-# CMAKE_PREFIX_PATH tree.
-set(Boost_NO_BOOST_CMAKE 1)
-find_package(Boost 1.82 EXACT REQUIRED COMPONENTS python311)
+
+find_package(Boost REQUIRED COMPONENTS python311)
 
 file(GLOB_RECURSE KARATHON_SRCS CONFIGURE_DEPENDS "*.cc")
 
@@ -94,7 +87,7 @@ target_include_directories(
 target_link_libraries(
     ${KARATHON_LIB_TARGET_NAME}
     ${KARABO_LIB_TARGET_NAME}
-    Boost::python311
+    boost::python311
     ${PYTHON_LIBRARIES}
 )
 
