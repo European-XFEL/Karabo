@@ -45,14 +45,14 @@ class KaraboTableView(QTableView):
         self.setDragEnabled(writable)
         self.setDropIndicatorShown(writable)
 
-    def referenceIndex(self):
+    def currentIndex(self):
         """Convenience function to return the current reference index
 
         Note: Method added with Karabo 2.16.X
         """
         selection = self.selectionModel()
         if selection is not None and selection.hasSelection():
-            return self.model().index_ref(selection.currentIndex())
+            return selection.currentIndex()
         return QModelIndex()
 
     def keyPressEvent(self, event):
@@ -61,36 +61,35 @@ class KaraboTableView(QTableView):
             return super().keyPressEvent(event)
 
         if event.matches(QKeySequence.New):
-            index = self.referenceIndex()
             model = self.model()
+            index = model.index_ref(self.currentIndex())
             if not index.isValid():
                 index = model.index(0, 0)
-            row = index.row()
-            model.add_row(row + 1)
-            self.selectRow(row + 1)
+            model.add_row(index.row() + 1)
+            self.selectRow(self.currentIndex().row() + 1)
             event.accept()
             return
         elif event.matches(QKeySequence.Delete):
-            index = self.referenceIndex()
+            model = self.model()
+            index = model.index_ref(self.currentIndex())
             if index.isValid():
-                row = index.row()
-                self.model().remove_row(row)
+                model.remove_row(index.row())
             event.accept()
             return
         elif event.matches(QKeySequence.SelectPreviousLine):
-            index = self.referenceIndex()
+            model = self.model()
+            index = model.index_ref(self.currentIndex())
             if index.isValid():
-                row = index.row()
-                self.model().move_row_up(row)
-                self.selectRow(row - 1)
+                model.move_row_up(index.row())
+                self.selectRow(self.currentIndex().row() - 1)
             event.accept()
             return
         elif event.matches(QKeySequence.SelectNextLine):
-            index = self.referenceIndex()
+            model = self.model()
+            index = model.index_ref(self.currentIndex())
             if index.isValid():
-                row = index.row()
-                self.model().move_row_down(row)
-                self.selectRow(row + 1)
+                model.move_row_down(index.row())
+                self.selectRow(self.currentIndex().row() + 1)
             event.accept()
             return
         return super().keyPressEvent(event)
