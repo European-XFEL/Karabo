@@ -1,7 +1,7 @@
 import os
 
 from conans import ConanFile, AutoToolsBuildEnvironment
-from conans.tools import download, untargz, patch, rmdir
+from conans.tools import collect_libs, download, untargz, rmdir
 from conan.tools.files import copy
 
 
@@ -35,6 +35,9 @@ class Log4cppConan(ConanFile):
         autotools.install()
 
     def package_info(self):
-        self.cpp_info.libs = ['log4cpp']
-        if self.settings.os == "Linux":
-            self.cpp_info.libs.append("pthread")
+        self.cpp_info.includedirs = ["include"]
+        self.cpp_info.libdirs = ["lib"]
+        self.cpp_info.libs = collect_libs(self)
+        # self.cpp_info.libs = ['log4cpp']
+        # if self.settings.os == "Linux":
+        #     self.cpp_info.libs.append("pthread")
