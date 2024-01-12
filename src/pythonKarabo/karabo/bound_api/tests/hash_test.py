@@ -416,34 +416,36 @@ class Hash_TestCase(unittest.TestCase):
         #  h = Hash("b", 2 ** 64)
         # SystemError: <Boost.Python.function object at 0x242c6c0> returned a
         #              result with an error set
-        with self.assertRaises(SystemError):
+        exc = SystemError if Hash.__module__ == "karathon" else RuntimeError
+        with self.assertRaises(exc):
             h = Hash("b", 2 ** 64)
-        with self.assertRaises(OverflowError):
+        exc = OverflowError if Hash.__module__ == "karathon" else RuntimeError
+        with self.assertRaises(exc):
             h = Hash("vb", [2 ** 64])
         for value, type_ in values_and_types.items():
-            msg = f"Failed to unbox {value}"
+            msg = f"Failed to unbox {value}: "
             try:
                 h = Hash("a", value)
                 self.assertEqual(h.getType("a"), type_[0], msg=msg)
                 self.assertEqual(h["a"], value, msg=msg)
-            except OverflowError:
-                self.fail(msg)
+            except Exception as e:
+                self.fail(msg + repr(e))
             # Now for vectors:
             # first most broad int type first
-            msg = f"Failed to unbox {value} in list"
+            msg = f"Failed to unbox {value} in list: "
             try:
                 h = Hash("a", [value, 0])
                 self.assertEqual(h.getType("a"), type_[1], msg=msg)
                 self.assertEqual(h["a"], [value, 0], msg=msg + " - first")
-            except OverflowError:
-                self.fail(msg)
+            except Exception as e:
+                self.fail(msg + repr(e))
             # then most broad int type last
             try:
                 h = Hash("a", [0, value])
                 self.assertEqual(h.getType("a"), type_[1], msg=msg)
                 self.assertEqual(h["a"], [0, value], msg=msg + " - last")
-            except OverflowError:
-                self.fail(msg)
+            except Exception as e:
+                self.fail(msg + repr(e))
 
     def test_numpy_arrays(self):
         arr = np.ones((100,), dtype=np.uint32)
