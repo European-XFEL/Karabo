@@ -99,28 +99,32 @@ safeRunCommandQuiet() {
 }
 
 install_python() {
-        pushd $scriptDir
+    pushd $scriptDir
 
-        # create default build profile
-        safeRunCommandQuiet "conan profile new default --detect --force"
+    # create default build profile
+    safeRunCommandQuiet "conan profile new default --detect --force"
+    # package_revision_mode is best: https://blog.conan.io/2019/09/27/package-id-modes.html
+    safeRunCommandQuiet "conan config set general.default_package_id_mode=package_revision_mode"
 
-        # python package opts
-        local package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
-        # configure prefix paths
-        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
-        # build python if not found in conan cache
-        local build_opts="--build=missing"
-        # apply custom profile on top of default profile
-        local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
-        # always compile patchelf and b2 from source (needed later), avoids CentOS7 failures
-        safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf $profile_opts"
-        safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 $profile_opts"
-        # copy conan recipe from extern/resources/python to local conan cache
-        safeRunCommandQuiet "conan export $package_opts"
-        # install packages listed in the extern/conanfile-bootstrap.txt
-        safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
+    # python package opts
+    local package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
+    # configure prefix paths
+    local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
+    # build python if not found in conan cache
+    local build_opts="--build=missing"
+    # apply custom profile on top of default profile
+    local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
+    # always compile patchelf and b2 from source (needed later), avoids CentOS7 failures
+    if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
+        safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
+        safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 --build=missing $profile_opts"
+    fi
+    # copy conan recipe from extern/resources/python to local conan cache
+    safeRunCommandQuiet "conan export $package_opts"
+    # install packages listed in the extern/conanfile-bootstrap.txt
+    safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
-        popd
+    popd
 }
 
 install_from_deps() {
