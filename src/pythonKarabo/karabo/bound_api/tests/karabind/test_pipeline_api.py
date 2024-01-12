@@ -30,6 +30,39 @@ import karathon
 # karabind.Logger.useOstream()
 
 
+def createConnectedInput(InputClass,
+                         inputInstanceId, inputChannelId, inputCfg,
+                         outputChannel):
+    """
+    Creates an input channel of class InputChannel with given instance/channel
+    ids and config.
+    Then synchronously connects to outputChannel (with assert on success).
+    """
+    outputInfo = outputChannel.getInformation()
+    outputInfo["outputChannelString"] = outputChannel.getInstanceIdName()
+    outputInfo["memoryLocation"] = "local"
+
+    inputCfg["connectedOutputChannels"] = outputInfo["outputChannelString"]
+    inputChannel = InputClass.create(inputInstanceId, inputChannelId,
+                                     inputCfg)
+    assert "" == inputChannel.connectSync(outputInfo)
+
+    inputId = inputInstanceId + ":" + inputChannelId
+    trials = 1000
+    while trials > 0:
+        trials -= 1
+        # Check whether InputChannel is registered to receive all data
+        done = (outputChannel.hasRegisteredCopyInputChannel(inputId)
+                or outputChannel.hasRegisteredSharedInputChannel(inputId))
+        if done:
+            break
+        time.sleep(0.001)
+
+    assert done
+
+    return inputChannel
+
+
 class Writer:
     def __init__(self, chan, Hash, num, meta):
         self.out = chan
@@ -61,23 +94,20 @@ def test_pipeline_many_to_one(
     n_threads = 6
     EventLoop.addThread(n_threads)
 
-    outputInstanceId = "outputChannel" + str(uuid.uuid4())
+    outputInstanceIdPre = "outputChannel_"
     oconf = Hash()
     outputs = []
     outputIds = []
 
-    def onOutputHandler(chan):
-        pass
-
     for i in range(n_threads):
         chanid = f'output{i}'
-        out = OutputChannel.create(outputInstanceId, chanid, oconf)
-        out.registerIOEventHandler(onOutputHandler)
+        out = OutputChannel.create(outputInstanceIdPre + str(i), chanid, oconf)
+        out.registerIOEventHandler(None)  # See test_pipeline_handlers
         outputs.append(out)
         outputIds.append(out.getInstanceId() + ':' + chanid)
 
     # Set up input channel
-    inputInstanceId = "inputChannel" + str(uuid.uuid4())
+    inputInstanceId = "inputChannel"
     iconf = Hash("connectedOutputChannels", outputIds,
                  "onSlowness", "wait")
     nReceivedEos = 0
@@ -112,6 +142,7 @@ def test_pipeline_many_to_one(
 
     # Use factory function to create InputChannel instance ...
     inputChannel = InputChannel.create(inputInstanceId, "input0", iconf)
+    # Here dataHandler, but None as inputhandler (see test_pipeline_handlers)
     inputChannel.registerDataHandler(iData)
     inputChannel.registerInputHandler(None)
     inputChannel.registerEndOfStreamEventHandler(iEos)
@@ -687,6 +718,71 @@ def test_pipeline_input_channel(EventLoop, SignalSlotable, ConnectionStatus,
     stat = inputChannel.getConnectionStatus()
     assert len(stat) == 1
     assert stat["outputChannel:output"] == ConnectionStatus.DISCONNECTED
+
+    EventLoop.stop()
+    time.sleep(.2)
+    t.join()
+
+
+@pytest.mark.parametrize(
+    "EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData, Timestamp",
+    [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
+      karathon.Hash, karathon.ChannelMetaData, karathon.Timestamp),
+     (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
+      karabind.Hash, karabind.ChannelMetaData, karabind.Timestamp)])
+def test_pipeline_handlers(
+        EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData,
+        Timestamp):
+    t = threading.Thread(target=EventLoop.work)
+    t.start()
+
+    # Test handlers that can be registered to input and output channels and
+    # are not treated in other tests
+
+    # 1)
+    # onOutputHandler of output channel ('None' tested in ..._many_to_one)
+    output = OutputChannel.create("output", "out", Hash())
+    outputIdInOutputHandler = None
+
+    def onOutputHandler(chan):
+        nonlocal outputIdInOutputHandler
+        outputIdInOutputHandler = chan.getInstanceId()
+
+    output.registerIOEventHandler(onOutputHandler)
+
+    # Need connected input channel to get IO event to be handled
+    inputChannel = createConnectedInput(InputChannel, "input", "in",
+                                        Hash("onSlowness", "wait"), output)
+
+    output.write(Hash("data", "some"), ChannelMetaData("source", Timestamp()))
+    output.update()
+
+    assert outputIdInOutputHandler == output.getInstanceId()
+
+    # 2)
+    # Now specify input handler, but 'None' as data and eos handlers
+    # (vice versa tested in test_many_to_one)
+    inputHandlerCalled = False
+
+    def inputHandler(chan):
+        nonlocal inputHandlerCalled
+        inputHandlerCalled = True
+
+    inputChannel.registerDataHandler(None)
+    inputChannel.registerInputHandler(inputHandler)
+    inputChannel.registerEndOfStreamEventHandler(None)
+
+    output.write(Hash("data", "more"), ChannelMetaData("source", Timestamp()))
+    output.update()
+
+    timeout = 5.
+    while timeout > 0.:
+        if inputHandlerCalled:
+            break
+        time.sleep(0.01)
+        timeout -= 0.01
+
+    assert inputHandlerCalled
 
     EventLoop.stop()
     time.sleep(.2)
