@@ -339,7 +339,7 @@ class BaseSeriesGraph(BaseBindingController):
         else:
             # Preserve resolution with `fromMSecsSinceEpoch`
             # Qt has deprecated `QDateTime.fromTime_t`
-            return QDateTime.fromMSecsSinceEpoch(max(timestamps) * 1000)
+            return QDateTime.fromMSecsSinceEpoch(int(max(timestamps) * 1000))
 
     def _draw_start_time(self, proxy, value, timestamp):
         if proxy in self._curves_start:
