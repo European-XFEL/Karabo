@@ -24,18 +24,22 @@ class Tests(unittest.TestCase):
 
     def test_constructor(self):
         def inner(Attributes, Node):
-            # Empty hash attributes
+            # Can contruct only empty hash attributes
             ha = Attributes()
             self.assertEqual(len(ha), 0)
             self.assertTrue(ha.empty())
-            # Only default HashAttributes constructor allowed in karabind
+            # No args are accepted
             with self.assertRaises(TypeError):
-                ha = karabind.HashAttributes('a', 1)
-            # Contruction of HashAttributesNode is not possible in python
-            with self.assertRaises(TypeError):
-                ha = karabind.HashAttributesNode()
-            with self.assertRaises(RuntimeError):
-                ha = karathon.HashAttributesNode()
+                ha = Attributes('a', 1)
+
+            # Construction of HashAttributesNode is not possible in python
+            # (but exceptions differ)
+            if Node is karabind.HashAttributesNode:
+                with self.assertRaises(TypeError):
+                    _ = Node()
+            else:
+                with self.assertRaises(RuntimeError):
+                    _ = Node()
 
         # Run test in karabind version
         inner(karabind.HashAttributes, karabind.HashAttributesNode)
