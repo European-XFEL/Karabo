@@ -618,6 +618,8 @@ void exportPyXmsInputOutputChannel() {
               .def("getInstanceId", &karabo::xms::OutputChannel::getInstanceId,
                    bp::return_value_policy<bp::copy_const_reference>())
 
+              .def("getInstanceIdName", &karabo::xms::OutputChannel::getInstanceIdName)
+
               .def("registerIOEventHandler", &karathon::OutputChannelWrap().registerIOEventHandlerPy)
 
               .def("getInformation", &karabo::xms::OutputChannel::getInformation)
