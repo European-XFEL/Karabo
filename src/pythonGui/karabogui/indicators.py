@@ -19,7 +19,6 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
 from enum import Enum
-from os import path as op
 from pathlib import Path
 
 from karabo.common.api import InstanceStatus, State
@@ -257,16 +256,16 @@ ALARM_VARIANCE_HIGH = "alarmVarianceHigh"
 INTERLOCK = "interlock"
 ALARM_NONE = "none"
 
-ICON_PATH = Path(icons.__file__)
+ICON_PATH = Path(icons.__file__).parent
 
 
 def get_alarm_svg(alarm_type):
     """The svg icon for the given `alarm_type` is returned.
     """
-    svg_none = op.join(ICON_PATH, "alarm_none.svg")
-    svg_warn = op.join(ICON_PATH, "warning.svg")
-    svg_alarm = op.join(ICON_PATH, "critical.svg")
-    svg_interlock = op.join(ICON_PATH, "interlock.svg")
+    svg_none = str(ICON_PATH.joinpath("alarm_none.svg"))
+    svg_warn = str(ICON_PATH.joinpath("warning.svg"))
+    svg_alarm = str(ICON_PATH.joinpath("critical.svg"))
+    svg_interlock = str(ICON_PATH.joinpath("interlock.svg"))
 
     ALARM_SVG = {
         ALARM_NONE: svg_none,
