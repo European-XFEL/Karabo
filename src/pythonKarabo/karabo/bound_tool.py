@@ -102,6 +102,15 @@ else:
         VectorHashPointer, _DimsIntern, fullyEqual, loadFromFile, saveToFile,
         setDims, similar)
 
+    # For comptibility with old karathon bindings, take care that e.g.
+    # str(Types.INT32) is 'INT32' and not 'Types.INT32'
+    def __typesToString(self):
+        repStr = repr(self)  # i.e. '<Types.{this we want}: {enum value}>'
+        return repStr[7:repStr.find(':')]
+
+    setattr(Types, "__str__", __typesToString)
+        
+
     class AbstractInput:
         pass
 
