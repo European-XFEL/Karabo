@@ -135,18 +135,11 @@ void exportPyUtilHash() {
           "HashAttributes",
           "The HashAttributes class is a heterogeneous container with string key and \"any object\" value\n"
           "that preserves insertion order, i.e. it is behaving like an ordered map");
+    // Constructor as empty attributes:
     a.def(bp::init<>());
-    a.def(bp::init<std::string const&, bp::object const&>());
-    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&>());
-    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
-                   bp::object const&>());
-    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
-                   bp::object const&, std::string const&, bp::object const&>());
-    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
-                   bp::object const&, std::string const&, bp::object const&, std::string const&, bp::object const&>());
-    a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&, std::string const&,
-                   bp::object const&, std::string const&, bp::object const&, std::string const&, bp::object const&,
-                   std::string const&, bp::object const&>());
+    // This would allow to put two items into the attributes - but as bp::object's without conversion to
+    // their C++ counterparts, so it is useless and skipped (for any number of key/value pairs)
+    // a.def(bp::init<std::string const&, bp::object const&, std::string const&, bp::object const&>());
     a.def("has", &AttributesWrap().has, (bp::arg("key")),
           "Returns True if HashAttributes container contains given \"key\"");
     a.def("__contains__", &AttributesWrap().has, (bp::arg("key")),
