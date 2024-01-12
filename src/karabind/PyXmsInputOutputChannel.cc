@@ -133,10 +133,16 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
 
               .def("getInstanceId", &OutputChannel::getInstanceId, py::return_value_policy::reference_internal)
 
+              .def("getInstanceIdName", &OutputChannel::getInstanceIdName)
+
               .def("registerIOEventHandler",
                    [](const OutputChannel::Pointer& self, const py::object& handler) {
-                       using Wrap = HandlerWrap<OutputChannel::Pointer>;
-                       self->registerIOEventHandler(Wrap(handler, "IOEvent"));
+                       if (handler.is_none()) {
+                           self->registerIOEventHandler(boost::function<void(const OutputChannel::Pointer&)>());
+                       } else {
+                           using Wrap = HandlerWrap<OutputChannel::Pointer>;
+                           self->registerIOEventHandler(Wrap(handler, "IOEvent"));
+                       }
                    })
 
               .def("getInformation", &OutputChannel::getInformation)
