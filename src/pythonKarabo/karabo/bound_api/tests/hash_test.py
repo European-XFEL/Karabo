@@ -26,7 +26,7 @@ import weakref
 import numpy as np
 
 from karabo.bound import (
-    Hash, HashAttributes, HashMergePolicy, Types, VectorHash, fullyEqual,
+    Hash, HashMergePolicy, Types, VectorHash, fullyEqual,
     isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar)
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
@@ -486,9 +486,6 @@ class Hash_TestCase(unittest.TestCase):
     def test_iteration(self):
         h = Hash("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5,
                  "order", 6)
-        a = HashAttributes("should", 1, "be", 2, "iterated", 3, "in", 4,
-                           "correct", 5, "order", 6)
-        self.assertIsNotNone(a)
         try:
             insertionOrder = list()
             for k in h:
