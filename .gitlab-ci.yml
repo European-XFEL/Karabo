@@ -57,7 +57,8 @@ variables:
     # install conan to docker image
     - python3 -m pip install --upgrade pip
     - python3 -m pip install conan==1.62.0
-    # install perl FindBin module (AlmaLinux is missing this for openssl build)
+    # install perl modules (AlmaLinux is missing these)
+    - yum -q -y install perl-open || true
     - yum -q -y install perl-FindBin || true
     # do CI build
     - source set_lsb_release_info.sh
