@@ -101,6 +101,8 @@ safeRunCommandQuiet() {
 install_python() {
     pushd $scriptDir
 
+    safeRunCommandQuiet "rm -rf $INSTALL_PREFIX/conan_out"
+
     # create default build profile
     safeRunCommandQuiet "conan profile new default --detect --force"
     # package_revision_mode is best: https://blog.conan.io/2019/09/27/package-id-modes.html
@@ -165,6 +167,9 @@ install_from_deps() {
 
         # install packages listed in the extern/conanfile.txt
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
+        # fix read-only files installed by openssl (to enable conan reinstalls)
+        safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
+        safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/lib/engines/*"
 
     # install python requirements
     # we do this in multiple stages, as pip has issues resolving a
