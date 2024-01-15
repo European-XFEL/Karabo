@@ -104,6 +104,7 @@ install_python() {
     # create default build profile
     safeRunCommandQuiet "conan profile new default --detect --force"
     # package_revision_mode is best: https://blog.conan.io/2019/09/27/package-id-modes.html
+    safeRunCommandQuiet "conan config set general.revisions_enabled=1"
     safeRunCommandQuiet "conan config set general.default_package_id_mode=package_revision_mode"
 
     # python package opts
