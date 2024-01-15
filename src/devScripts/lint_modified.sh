@@ -40,7 +40,7 @@ __lint_clang_format() {
 
     # Checks if clang-format is available and its version is at least the CI
     # version.
-    CI_CLANG_FORMAT_VERSION="17.0.6"
+    CI_CLANG_FORMAT_VERSION="17.0.0"
     CLANG_FORMAT_VERSION=$(clang-format --version | grep -P '\d+\.\d+\.\d+' -o)
     ret_code=$?
     if [[ $ret_code != 0 ]]; then
@@ -50,7 +50,7 @@ __lint_clang_format() {
         echo ""
         return
     fi
-    if __version_lt "$CLANG_FORMAT_VERSION $CI_CLANG_FORMAT_VERSION"; then
+    if __version_lt $CLANG_FORMAT_VERSION $CI_CLANG_FORMAT_VERSION; then
         echo ""
         echo "WARNING: C++ format linting SKIPPED."
         echo "         Reason: Local clang-format version, $CLANG_FORMAT_VERSION, is older than the CI's, $CI_CLANG_FORMAT_VERSION."
