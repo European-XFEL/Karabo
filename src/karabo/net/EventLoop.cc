@@ -65,7 +65,7 @@ namespace karabo {
             boost::function<void(boost::system::error_code ec, int signo)> signalHandler =
                   [&loop](boost::system::error_code ec, int signo) {
                       if (ec == boost::asio::error::operation_aborted) {
-                          KARABO_LOG_FRAMEWORK_ERROR
+                          KARABO_LOG_FRAMEWORK_WARN
                                 << "*** EventLoop::work() signalHandler: signal_set cancelled. signal: " << signo;
                       }
                       if (ec) return;
