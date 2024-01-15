@@ -2,6 +2,7 @@ import os
 
 from conans import ConanFile
 from conans.tools import download, unzip
+from conan.tools.cmake import CMake, CMakeToolchain
 
 
 class KaraboDaemonToolsConan(ConanFile):
@@ -10,7 +11,9 @@ class KaraboDaemonToolsConan(ConanFile):
     description = "Karabo specific fork of daemontools"
     settings = "os", "arch", "compiler", "build_type"
     url = "https://github.com/tecki/daemontools-encore/"
-    license="https://github.com/tecki/daemontools-encore/blob/master/LICENSE"
+    license = "https://github.com/tecki/daemontools-encore/blob/master/LICENSE"
+    generators = "CMakeToolchain", "CMakeDeps"
+    exports = ["CMakeLists.txt"]
 
     def source(self):
         zip_name = "daemontools-encore-%s.zip" % self.version
@@ -20,9 +23,13 @@ class KaraboDaemonToolsConan(ConanFile):
         os.unlink(zip_name)
 
     def build(self):
-        self.run("bash makemake")
-        self.run("make programs")
-        self.run(f"mkdir bin; cp $(cut -d: -f6 BIN) bin")
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
 
     def package(self):
-        self.copy("*", "bin", "bin")
+        cmake = CMake(self)
+        cmake.install()
+
+    def package_info(self):
+        self.cpp_info.bindirs = ["bin"]
