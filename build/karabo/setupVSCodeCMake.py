@@ -87,7 +87,8 @@ def cmake_settings(build_type: str,
     build_integration_testing = "1" if build_integration_tests else "0"
     build_long_run_testing = "1" if build_long_tests else "0"
     gen_code_coverage = "1" if build_type.upper() == "CODECOVERAGE" else "0"
-
+    # NOTE: Please keep in sync with the arguments passed to cmake configure
+    # step in auto_build_all.sh:
     cmake_config_settings = {
         "CMAKE_BUILD_TYPE": cmake_build_type,
         "CMAKE_INSTALL_PREFIX": cmake_install_prefix,
@@ -95,7 +96,9 @@ def cmake_settings(build_type: str,
         "BUILD_UNIT_TESTING": build_unit_testing,
         "BUILD_INTEGRATION_TESTING": build_integration_testing,
         "BUILD_LONG_RUN_TESTING": build_long_run_testing,
-        "GEN_CODE_COVERAGE": gen_code_coverage
+        "GEN_CODE_COVERAGE": gen_code_coverage,
+        "CMAKE_MAP_IMPORTED_CONFIG_DEBUG": "Release",
+        "CMAKE_TOOLCHAIN_FILE": cmake_prefix_path + "/conan_out/conan_toolchain.cmake"
     }
 
     return {
