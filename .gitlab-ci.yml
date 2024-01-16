@@ -28,7 +28,7 @@ variables:
 .target_os_matrix:
   all_targets:
     matrix:
-      - ARCH_TAG: ["almalinux-8-004", "almalinux-9-005", "centos-7-004", "debian-10-004", "ubuntu-20-004", "ubuntu-22-003"]
+      - ARCH_TAG: ["almalinux-8-004", "almalinux-9-005", "centos-7-004", "debian-10-004", "ubuntu-20-004", "ubuntu-22-003", "redhat-9-001"]
   only_centos7:
     matrix:
       - ARCH_TAG: ["centos-7-004"]
