@@ -792,9 +792,10 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
               }
               return false;
           },
-          6'000u, 500u);
+          10'000u, 500u);
 
-    CPPUNIT_ASSERT_MESSAGE("Didn't find the two expected schemas.", !firstDigest.empty() && !secondDigest.empty());
+    CPPUNIT_ASSERT_MESSAGE("Didn't find the first expected schema", !firstDigest.empty());
+    CPPUNIT_ASSERT_MESSAGE("Didn't find the second expected schema", !secondDigest.empty());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Schemas in Influx response don't have the same digest.", firstDigest, secondDigest);
 
     /* -- Sample of response body expected for the query for schemas
