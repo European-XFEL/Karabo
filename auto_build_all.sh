@@ -444,6 +444,9 @@ pushd $FRAMEWORK_BUILD_DIR
 # Use the cmake from the EXTERN_DEPS_DIR - cmake is an external dependency
 # of Karabo as it is used to compile some other dependencies, like the
 # MQTT client lib.
+# NOTE:
+# Please keep in sync with the cmake.configureSettings generated in
+# build/karabo/setupVSCodeCMake.py.
 safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
     -DBUILD_UNIT_TESTING=$BUILD_UNIT_TESTING \
     -DBUILD_INTEGRATION_TESTING=$BUILD_INTEGRATION_TESTING \
