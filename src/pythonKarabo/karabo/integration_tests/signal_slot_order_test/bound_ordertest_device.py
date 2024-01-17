@@ -109,7 +109,7 @@ class BoundOrderTestDevice(PythonDevice):
                            "int32Property", self["int32Property"])
             try:
                 req = self.request(other, "slotReconfigure", updates)
-                req.waitForReply(2000)
+                req.waitForReply(5000)
                 if not self.connect(other, "signalCount", "", "slotCount"):
                     raise RuntimeError("Failed to connect to 'signalCount' of "
                                        f"'{other}'")
