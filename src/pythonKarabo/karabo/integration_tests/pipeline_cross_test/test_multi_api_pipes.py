@@ -22,6 +22,7 @@ from karabo.integration_tests.utils import BoundDeviceTestCase
 
 class TestCrossPipelining(BoundDeviceTestCase):
     _max_timeout = 60  # in seconds
+    _slot_timeout_ms = 5000
     _sender_freq = 20.0  # in Hz
     _fast_proc_time = 0  # fast receiver processing time (ms.)
     _slow_proc_time = 100  # slow receiver processing time (ms.)
@@ -239,7 +240,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
             for devId in outputs_not_connected:
                 req = caller.request(devId, "slotGetConfiguration")
                 try:
-                    cfg, _ = req.waitForReply(2000)
+                    cfg, _ = req.waitForReply(self._slot_timeout_ms)
                 except Exception as e:
                     infoMsg += f"\n{devId} cfg problem: {repr(e)}"
                 else:
@@ -679,7 +680,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         caller.start()
 
         requestor = caller.request(devId, "slotGetConfiguration")
-        dev_props, _ = requestor.waitForReply(1000)  # in ms
+        dev_props, _ = requestor.waitForReply(self._slot_timeout_ms)
         if (dev_props.get(propertyName) == whatItShouldBe
             or (isinstance(whatItShouldBe, State)
                 and dev_props.get(propertyName) == whatItShouldBe.name)):
@@ -718,11 +719,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
         caller.start()
 
         requestor = caller.request(devId, "slotGetConfiguration")
-        dev_props, _ = requestor.waitForReply(1000)  # in ms
+        dev_props, _ = requestor.waitForReply(self._slot_timeout_ms)
         res = dev_props.get(propertyName)
 
         requestor = caller.request(devId2, "slotGetConfiguration")
-        dev_props2, _ = requestor.waitForReply(1000)  # in ms
+        dev_props2, _ = requestor.waitForReply(self._slot_timeout_ms)
         res2 = dev_props2.get(propertyName2)
 
         if res == res2:
