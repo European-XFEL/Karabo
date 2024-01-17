@@ -19,8 +19,9 @@ from time import sleep
 from karabo.bound import ConnectionStatus, Hash, InputChannel
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
-# Sleeping loops of up to 2 seconds to let things happen on busy CI
-n_loops = 200
+# Sleeping loops of up to 5 seconds to let things happen on busy CI
+# (failed once with 2 seconds)
+n_loops = 500
 sleep_in_loop = 0.01
 
 
