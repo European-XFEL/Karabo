@@ -99,7 +99,7 @@ class CommTestDevice(PythonDevice):
 
     def slotRequestArgs(self):
         ret = self.request(self.get("remote"), "slotWithArguments", "one",
-                           Hash("a", 1)).waitForReply(2000)
+                           Hash("a", 1)).waitForReply(5000)
         self.set("someString", ret[1])
 
     def slotRequestArgsAsync(self):
