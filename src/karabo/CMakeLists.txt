@@ -116,7 +116,7 @@ else()
 endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/util/repositoryVersion.in
-               ${CMAKE_CURRENT_SOURCE_DIR}/util/repositoryVersion
+               ${CMAKE_BINARY_DIR}/include/repositoryVersion.hh
                @ONLY
 )
 

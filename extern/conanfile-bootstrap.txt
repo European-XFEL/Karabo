@@ -2,9 +2,6 @@
 cpython/3.11.6@karabo/py311
 cmake/3.27.1
 
-[generators]
-deploy
-
 [options]
 # statically link by default
 *:shared=False
