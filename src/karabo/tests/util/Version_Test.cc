@@ -25,7 +25,8 @@
 #include "Version_Test.hh"
 
 #include <karabo/util/Version.hh>
-#include <karabo/util/repositoryVersion>
+
+#include "repositoryVersion.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Version_Test);
 
