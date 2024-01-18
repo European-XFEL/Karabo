@@ -60,8 +60,8 @@ def _get_lsb_release_info() -> Dict[str, str]:
 
 
 def cmake_settings(build_type: str,
-                   build_unit_tests: bool,
-                   build_integration_tests: bool,
+                   skip_build_unit_tests: bool,
+                   skip_build_integration_tests: bool,
                    build_long_tests: bool) -> Dict[str, Union[str, Dict]]:
 
     arch = os.uname().machine
@@ -83,8 +83,8 @@ def cmake_settings(build_type: str,
 
     cmake_build_directory = f"{base_dir}/build_{cmake_build_type.lower()}"
 
-    build_unit_testing = "1" if build_unit_tests else "0"
-    build_integration_testing = "1" if build_integration_tests else "0"
+    build_unit_testing = "0" if skip_build_unit_tests else "1"
+    build_integration_testing = "0" if skip_build_integration_tests else "1"
     build_long_run_testing = "1" if build_long_tests else "0"
     gen_code_coverage = "1" if build_type.upper() == "CODECOVERAGE" else "0"
     # NOTE: Please keep in sync with the arguments passed to cmake configure
@@ -169,8 +169,8 @@ def update_cmake_settings(settings: Dict[str, str]) -> int:
 
 
 def setupVSCodeCMake(build_type: str,
-                     build_unit_tests: bool,
-                     build_integration_tests: bool,
+                     skip_build_unit_tests: bool,
+                     skip_build_integration_tests: bool,
                      build_long_tests: bool) -> int:
     """
     Updates (or initializes) the "settings.json" file of the VSCode Workspace
@@ -188,8 +188,9 @@ def setupVSCodeCMake(build_type: str,
     """
     os_type = os.uname().sysname
     if os_type.upper() == "LINUX":
-        settings = cmake_settings(build_type, build_unit_tests,
-                                  build_integration_tests, build_long_tests)
+        settings = cmake_settings(build_type, skip_build_unit_tests,
+                                  skip_build_integration_tests,
+                                  build_long_tests)
     else:
         print("")
         print("This script must be run on a Linux system.")
@@ -208,25 +209,26 @@ if __name__ == "__main__":
                     choices=["Debug", "Release", "CodeCoverage"],
                     nargs="?", default="Debug",
                     help="Build type (default is 'Debug')")
-    ap.add_argument("--buildUnitTests", action="store_false",
-                    help="Build C++ unit tests?")
-    ap.add_argument("--buildIntegrationTests", action="store_false",
-                    help="Build C++ integration tests?")
+    ap.add_argument("--skipBuildUnitTests", action="store_true",
+                    help="Skip building of C++ unit tests?")
+    ap.add_argument("--skipBuildIntegrationTests", action="store_true",
+                    help="Skip building of C++ integration tests?")
     ap.add_argument("--buildLongTests", action="store_true",
-                    help="Build C++ long-running tests?")
+                    help="Build C++ long-running tests? (default is to skip)")
     cmd_args = ap.parse_args()
 
-    if (cmd_args.build_type == "CodeCoverage" and
-            not (cmd_args.buildUnitTests or cmd_args.buildIntegrationTests or
-                 cmd_args.buildLongTests)):
+    no_test_build = (cmd_args.skipBuildUnitTests and
+                     cmd_args.skipBuildIntegrationTests and
+                     not cmd_args.buildLongTests)
+    if cmd_args.build_type == "CodeCoverage" and no_test_build:
         print("")
         print("ERROR: CodeCoverage requires building some type of test.")
         print("")
         sys.exit(os.EX_CONFIG)
 
     ret_code = setupVSCodeCMake(cmd_args.build_type,
-                                cmd_args.buildUnitTests,
-                                cmd_args.buildIntegrationTests,
+                                cmd_args.skipBuildUnitTests,
+                                cmd_args.skipBuildIntegrationTests,
                                 cmd_args.buildLongTests)
 
     sys.exit(ret_code)
