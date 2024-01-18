@@ -24,14 +24,6 @@ OPENMQC_VERSION=5.1.4.1
 check_for() {
     which $1 &> /dev/null
     if [ $? -ne 0 ]; then
-        echo
-        echo
-        echo "!!! '$1' command not found!"
-        echo "Please install '$1' so that dependencies can be downloaded!"
-        echo
-        echo
-        # Give the user time to see the message
-        sleep 2
         return 1
     fi
 
@@ -127,23 +119,25 @@ install_python() {
     # install packages listed in the extern/conanfile-bootstrap.txt
     safeRunCommandQuiet "conan install conanfile-bootstrap.txt $folder_opts $build_opts $profile_opts"
 
+    # use pip in INSTALL_PREFIX by calling python3 -m pip <args>
+    local pip_install_cmd="$INSTALL_PREFIX/bin/python3 -m pip install"
+
+    # install python requirements
+    # we do this in multiple stages, as pip has issues resolving a
+    # too complex dependency chain with many pinned versions.
+    safeRunCommandQuiet "$pip_install_cmd --force-reinstall -r requirements-pre.txt"
+    # important dependencies that many other packages will need
+    # (ie: numpy) are installed first
+    safeRunCommandQuiet "$pip_install_cmd -r requirements-0.txt"
+    # install everything else
+    safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
+
     popd
 }
 
 install_from_deps() {
     pushd $scriptDir
 
-    # use pip in INSTALL_PREFIX by calling python3 -m pip <args>
-    local pip_install_cmd="$INSTALL_PREFIX/bin/python3 -m pip install"
-
-    # install requirements that should be installed before everything else,
-    # such as pip, conan, and other tools to build/install packages
-    # since this includes conan, we need to force a reinstall, otherwise
-    # only the stdlib version of conan will be available, no commands can
-    # be issued directly from the CLI.
-        safeRunCommandQuiet "$pip_install_cmd --force-reinstall -r requirements-pre.txt"
-
-    # next is conan
         # create default build profile
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan profile new default --detect --force"
 
@@ -171,22 +165,6 @@ install_from_deps() {
         safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
         safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/lib/engines/*"
 
-    # install python requirements
-    # we do this in multiple stages, as pip has issues resolving a
-    # too complex dependency chain with many pinned versions.
-
-    # switch to calling pip executable within INSTALL_PREFIX to test it
-    pip_install_cmd="$INSTALL_PREFIX/bin/pip install"
-
-        # important dependencies that many other packages will need
-        # (ie: numpy) are installed first
-        safeRunCommandQuiet "$pip_install_cmd -r requirements-0.txt"
-        # install everything else
-        safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
-
-    # check numpy capabilities
-    $INSTALL_PREFIX/bin/python -c "import numpy; print(numpy.show_config())"
-
     # for whatever reason conan does not reliably copy *.pc files from its root directory
     # we do this here instead, and also capture any .pc files our from source builds created
     # in the process.
@@ -194,10 +172,10 @@ install_from_deps() {
     cp $INSTALL_PREFIX/conan_out/*.pc $INSTALL_PREFIX/lib/pkgconfig/
     # now fix occurences of prefixes such that packages can use the "--define-prefix" option
     # of pkgconfig
-    safeRunCommand "sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
-    safeRunCommand "sed -i 's|libdir=.*|libdir=\${prefix}/lib|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
-    safeRunCommand "sed -i 's|includedir=.*|includedir=\${prefix}/include|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
-    safeRunCommand "sed -i 's|exec_prefix=.*|exec_prefix=\${prefix}|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc"
+    sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc
+    sed -i 's|libdir=.*|libdir=\${prefix}/lib|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc
+    sed -i 's|includedir=.*|includedir=\${prefix}/include|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc
+    sed -i 's|exec_prefix=.*|exec_prefix=\${prefix}|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc
 
     popd
 }
@@ -250,13 +228,25 @@ FORCE="n"
 # Make sure conan is available
 check_for conan
 if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "!!! 'conan' command not found!"
+    echo "Please install 'conan' so that dependencies can be downloaded!"
+    echo
+    echo
+    # Give the user time to see the message
+    sleep 2
     return 1
 fi
 
 # python download and install to allow full bootstrap
-install_python
+# install framework python dependencies via pip
+check_for $INSTALL_PREFIX/bin/python
+if [ $? -ne 0 ]; then
+    install_python
+fi
 
-# install via conan and pip next
+# install framework build dependencies via conan
 install_from_deps
 
 # fix rpaths
