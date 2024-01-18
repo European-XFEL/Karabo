@@ -29,7 +29,6 @@ src/pythonKarabo/karabo/_version.py
 src/pythonGui/build/
 src/pythonGui/dist/
 _version.py
-/src/karabo/util/repositoryVersion
 .*
 build/python/*.exe
 !.gitignore
