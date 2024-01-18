@@ -30,7 +30,7 @@
 
 #include "Exception.hh"
 #include "StringTools.hh"
-#include "repositoryVersion"
+#include "repositoryVersion.hh"
 
 // Temporary change to trigger CI build.
 
