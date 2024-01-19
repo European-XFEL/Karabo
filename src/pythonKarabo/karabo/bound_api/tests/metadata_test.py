@@ -19,6 +19,7 @@
 
 import unittest
 
+import karathon
 from karabo.bound import ChannelMetaData, Epochstamp, Timestamp, Trainstamp
 
 
@@ -35,7 +36,10 @@ class Metadata_TestCase(unittest.TestCase):
             meta.getTimestamp().getFractionalSeconds() == 789333123456789123)
         self.assertTrue(
             meta.getTimestamp().toFormattedString() == ts.toFormattedString())
-        self.assertFalse(meta.getTimestamp() == ts)
+        if ChannelMetaData is karathon.ChannelMetaData:
+            self.assertFalse(meta.getTimestamp() == ts)
+        else:
+            self.assertTrue(meta.getTimestamp() == ts)
 
         meta.setSource('xyz')
         self.assertFalse(meta.getSource() == 'abc')

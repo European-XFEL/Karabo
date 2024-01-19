@@ -573,6 +573,7 @@ def test_sigslot_request(EventLoop, SignalSlotable, Hash):
     # This also tests a bit the exception handling:
     # errorMsg has the main message,
     # detailsMsg contains C++ and Python traces.
+    # print(f'\n*** errorMsg "{errorMsg}"\n*** detailsMsg "{detailsMsg}"')
     msgWhoFailed = "Remote Exception from bob"
     msgSlotFailure = 'Error in slot "slotError"'
     msgRuntimeError = "What's the universe and the rest?"
