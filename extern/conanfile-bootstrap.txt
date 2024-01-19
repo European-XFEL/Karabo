@@ -1,6 +1,7 @@
 [requires]
 cpython/3.11.6@karabo/py311
 cmake/3.27.1
+patchelf/0.13
 
 [options]
 # statically link by default
