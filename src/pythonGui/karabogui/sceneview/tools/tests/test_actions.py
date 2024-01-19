@@ -18,6 +18,7 @@ import pytest
 from qtpy.QtWidgets import QBoxLayout
 
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, SceneModel
+from karabogui.const import IS_MAC_SYSTEM
 
 from ...view import SceneView
 from ..actions import BoxHSceneAction, BoxVSceneAction
@@ -43,6 +44,7 @@ def test_basics(scene_view, scene_model):
     _assert_sceneview_contents(scene_view, scene_model, changed=False)
 
 
+@pytest.mark.skipif(IS_MAC_SYSTEM, reason="Segfault on MacOS")
 def test_horz_layout_action(scene_view, scene_model):
     action = BoxHSceneAction()
 
@@ -73,6 +75,7 @@ def test_horz_layout_action(scene_view, scene_model):
     scene_view.destroy()
 
 
+@pytest.mark.skipif(IS_MAC_SYSTEM, reason="Segfault on MacOS")
 def test_vert_layout_action(scene_view, scene_model):
     action = BoxVSceneAction()
 
