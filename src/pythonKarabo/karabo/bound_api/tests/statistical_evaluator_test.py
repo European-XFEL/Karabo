@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import unittest
 
+import karathon
 from karabo.bound import RollingWindowStatistics
 
 
@@ -71,7 +72,10 @@ class RollingWindowStatistics_TestCase(unittest.TestCase):
     def test_rolling_window_statistics_no_copy(self):
         import copy
         stat = RollingWindowStatistics(10)
-        self.assertRaises(RuntimeError, copy.copy, stat)
+        if RollingWindowStatistics is karathon.RollingWindowStatistics:
+            self.assertRaises(RuntimeError, copy.copy, stat)
+        else:
+            self.assertRaises(TypeError, copy.copy, stat)
 
 
 if __name__ == '__main__':
