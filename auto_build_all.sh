@@ -223,7 +223,7 @@ End-of-help
 fi
 
 # Get some information about our system
-MACHINE=$(uname -m)
+TARGET_ARCH=$(uname -m)
 OS=$(uname -s)
 source "$scriptDir/set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
@@ -238,7 +238,7 @@ fi
 # required by CMake since it doesn't allow a path in CMAKE_PREFIX_PATH to
 # be internal to the source tree.
 EXTERN_DEPS_BASE_DIR="$scriptDir/extern"
-EXTERN_DEPS_DIR="$EXTERN_DEPS_BASE_DIR/$DISTRO_ID-$DISTRO_RELEASE-$MACHINE"
+EXTERN_DEPS_DIR="$EXTERN_DEPS_BASE_DIR/$DISTRO_ID-$DISTRO_RELEASE-$TARGET_ARCH"
 
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
@@ -437,7 +437,7 @@ fi
 LOWER_CMAKE_CONF=$(echo "$CONF" | tr '[:upper:]' '[:lower:]')
 FRAMEWORK_BUILD_DIR="$scriptDir/build_$LOWER_CMAKE_CONF"
 mkdir -p $FRAMEWORK_BUILD_DIR
-FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/karabo"
+FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$TARGET_ARCH/karabo"
 
 pushd $FRAMEWORK_BUILD_DIR
 
@@ -453,7 +453,7 @@ safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
     -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
     -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
     -DCMAKE_MAP_IMPORTED_CONFIG_DEBUG=Release \
-    -DCMAKE_TOOLCHAIN_FILE=$EXTERN_DEPS_DIR/conan_out/conan_toolchain.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=$EXTERN_DEPS_DIR/conan_toolchain-$TARGET_ARCH/conan_toolchain.cmake \
     -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
     -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
     $scriptDir/src/.
@@ -489,8 +489,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Cleans-up the artifacts produced by conan install that won't be needed anymore.
-rm -rf $EXTERN_DEPS_DIR/conan_out
+# Move the conan toolchain files out of the INSTALL_PREFIX
+safeRunCommand rm -rf $EXTERN_DEPS_BASE_DIR/conan_toolchain-$TARGET_ARCH
+safeRunCommand mv $EXTERN_DEPS_DIR/conan_toolchain-$TARGET_ARCH $EXTERN_DEPS_BASE_DIR
 
 # Installs the components of the Karabo Framework that are not built
 # with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be

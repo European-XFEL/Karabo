@@ -74,7 +74,7 @@ echo
 echo "### INFO Building is parallelized into $NUM_CORES threads."
 echo
 
-MACHINE=$(uname -m)
+TARGET_ARCH=$(uname -m)
 OS=$(uname -s)
 source "$KARABO/bin/.set_lsb_release_info.sh"
 if [ "$OS" = "Linux" ]; then
@@ -87,7 +87,7 @@ DEPVERSION=$(git rev-parse --short HEAD)
 DEPNAME=`basename $originalPwd`
 PACKAGENAME=$DEPNAME-$DEPVERSION-$KARABOVERSION
 EXTRACT_SCRIPT=$KARABO/bin/.extract-dependency.sh
-INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${TARGET_ARCH}.sh
 DISTDIR=$originalPwd/localdist
 PACKAGEDIR=$originalPwd/package
 SITE_PACKAGES_DIR=`$PYTHON -c "import site; print(site.getsitepackages()[0])"`
