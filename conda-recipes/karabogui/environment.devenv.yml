@@ -21,42 +21,42 @@ channels:
   - http://{{ xfel_conda_channel }}/karabo/channel
   - http://{{ xfel_conda_channel }}/karabo/channel/mirror/conda-forge
   - conda-forge
-  - defaults
 {{ conda_local_channel }}
 
 dependencies:
-  - python=3.8.*
+  - python=3.10.*
   # for tests and building
   - flake8=6.1.0
   - isort=5.8.0
-  - pytest=6.1.1
-  - pytest-qt=3.3.0
+  - pytest=7.4.4
+  - pytest-qt=4.3.1
   - pytest-cov=2.12.1
-  - pytest-mock=2.0.0
-  - pytest-subtests=0.5.0
+  - pytest-mock=3.6.1
+  - pytest-subtests=0.11.0
+  - packaging=23.1
   - setuptools
   - setuptools_scm
   # GUI
-  - qtpy=2.3.1
+  - qtpy=2.4.1
   - pyqtgraph=0.13.3
-  - qt-main=5.15
+  - qt-main=5.15.*
   - pyqt=5.15.9
   - qscintilla2=2.14.0
   # Plotting and utils
-  - numpy=1.23.*
-  - scipy=1.9.*
-  - lttbc=0.2.1
+  - numpy=1.26.*
+  - scipy=1.11.*
+  - lttbc=0.2.4
   - natsort=6.2.0
   # Other
   - cycler=0.10.0
   - tabulate=0.8.9
-  - traits=6.0.0
-  - lxml=4.4.1
-  - requests=2.25.1
+  - traits=6.4.3
+  - lxml=4.9.2
+  - requests=2.28.1
   - python-dateutil=2.8.1
   - conda
   - pyyaml=6.0.1
-  - pint=0.17
+  - pint=0.21
 
 environment:
   PYTHONPATH:
