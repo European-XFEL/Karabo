@@ -337,7 +337,8 @@ namespace karabind {
                 } else if (operand.type() == typeid(std::vector<bool>)) {
                     return py::cast(boost::any_cast<std::vector<bool>>(operand));
                 } else if (operand.type() == typeid(std::vector<char>)) {
-                    return py::cast(boost::any_cast<std::vector<char>>(operand));
+                    const std::vector<char>& v = boost::any_cast<std::vector<char>>(operand);
+                    return py::bytes(v.data(), v.size());
                 } else if (operand.type() == typeid(std::vector<signed char>)) {
                     return py::cast(boost::any_cast<std::vector<signed char>>(operand));
                 } else if (operand.type() == typeid(std::vector<unsigned char>)) {
