@@ -17,7 +17,7 @@
 
 originalPwd=$(pwd)
 OS=$(uname -s)
-MACHINE=$(uname -m)
+TARGET_ARCH=$(uname -m)
 
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
@@ -37,7 +37,7 @@ if [ "$OS" = "Linux" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythondependency.sh
-INSTALLSCRIPT=$DISTDIR/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=$DISTDIR/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${TARGET_ARCH}.sh
 PYTHON=$KARABO/extern/bin/python
 PIP=$KARABO/extern/bin/pip
 WHEEL_INSTALL_FLAGS=

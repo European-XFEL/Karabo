@@ -66,7 +66,7 @@ BUNDLE_ACTION=$3
 PYOPT=$4
 EXTERN_DEPS_DIR=$5
 OS=$(uname -s)
-MACHINE=$(uname -m)
+TARGET_ARCH=$(uname -m)
 PACKAGENAME=karabo
 VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
 
@@ -82,8 +82,8 @@ fi
 BASEDIR=$(get_abs_path $scriptDir/../../)
 EXTRACT_SCRIPT=$scriptDir/extract.sh
 PYTHON_FIXER_SCRIPT=$scriptDir/fix-python-scripts.sh
-PACKAGEDIR=$BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
-INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+PACKAGEDIR=$BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$TARGET_ARCH/$PACKAGENAME
+INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${TARGET_ARCH}.sh
 
 # Carefully clean the bundle
 if [ -d $PACKAGEDIR ]; then

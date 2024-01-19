@@ -32,7 +32,7 @@ CONF=$2
 PLATFORM=$3
 
 OS=$(uname -s)
-MACHINE=$(uname -m)
+TARGET_ARCH=$(uname -m)
 VERSION=$(git rev-parse --short HEAD)
 
 if [ -z $KARABO ]; then
@@ -55,7 +55,7 @@ fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-cppplugin.sh
 PACKAGEDIR=$(pwd)/package
-INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}-${CONF}.sh
+INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${TARGET_ARCH}-${CONF}.sh
 
 # Always clean the bundle
 rm -rf $PACKAGEDIR
