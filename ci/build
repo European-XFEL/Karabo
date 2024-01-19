@@ -71,7 +71,7 @@ __release_build() {
     esac
 
     case "$1" in
-        debian*|ubuntu*|centos*|almalinux*)
+        debian*|ubuntu*|centos*|almalinux*|redhat*)
             export REL_OS_NAME=$LSB_RELEASE_DIST
             export REL_OS_VERS_LONG=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
             export REL_ARTIFACT_NAME=karabo-$REL_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh
