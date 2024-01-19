@@ -93,7 +93,7 @@ safeRunCommandQuiet() {
 install_python() {
     pushd $scriptDir
 
-    safeRunCommandQuiet "rm -rf $INSTALL_PREFIX/conan_out"
+    safeRunCommandQuiet "rm -rf $INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH"
 
     # create default build profile
     safeRunCommandQuiet "conan profile new default --detect --force"
@@ -104,7 +104,7 @@ install_python() {
     # python package opts
     local package_opts="./resources/python/conanfile.py cpython/$PYTHON_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
     # configure prefix paths
-    local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
+    local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
     # build python if not found in conan cache
     local build_opts="--build=missing"
     # apply custom profile on top of default profile
@@ -132,6 +132,9 @@ install_python() {
     # install everything else
     safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
 
+    # fix rpaths
+    safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
+
     popd
 }
 
@@ -152,7 +155,7 @@ install_from_deps() {
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan export ./resources/openmqc/conanfile.py openmqc/$OPENMQC_VERSION@karabo/$CONAN_RECIPE_CHANNEL"
 
         # configure prefix paths
-        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_out --output-folder=$INSTALL_PREFIX"
+        local folder_opts="--install-folder=$INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH --output-folder=$INSTALL_PREFIX"
         # when should conan build from sources? missing means if no pre-compiled binary package exists
         # boost:python_executable comes from a variable, so it must be defined here
         local build_opts="--build=missing -o boost:python_executable=$INSTALL_PREFIX/bin/python"
@@ -169,7 +172,7 @@ install_from_deps() {
     # we do this here instead, and also capture any .pc files our from source builds created
     # in the process.
     safeRunCommand "mkdir -p $INSTALL_PREFIX/lib/pkgconfig/"
-    cp $INSTALL_PREFIX/conan_out/*.pc $INSTALL_PREFIX/lib/pkgconfig/
+    cp $INSTALL_PREFIX/conan_toolchain-$TARGET_ARCH/*.pc $INSTALL_PREFIX/lib/pkgconfig/
     # now fix occurences of prefixes such that packages can use the "--define-prefix" option
     # of pkgconfig
     sed -i 's|prefix=.*|prefix=\${KARABO}/extern|g' $INSTALL_PREFIX/lib/pkgconfig/*.pc
@@ -222,6 +225,7 @@ done
 # $2+ WHAT            Which packages to build (symbolic or specific)
 EXTERN_DIR=$(dirname $0)
 INSTALL_PREFIX=$(get_abs_path $1)
+TARGET_ARCH=$(uname -m)
 WHAT=${@:2}
 FORCE="n"
 
@@ -248,10 +252,5 @@ fi
 
 # install framework build dependencies via conan
 install_from_deps
-
-# fix rpaths
-pushd $EXTERN_DIR
-safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
-popd
 
 echo "### All external dependencies successfully installed/already present. ###"

@@ -64,10 +64,6 @@ rewrite_python_shebangs() {
 }
 
 rewrite_rpaths() {
-    # Relocate libexslt.so
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/lib/libxslt.so"
-    safeRunCommand "$INSTALL_PREFIX/bin/patchelf --force-rpath --set-rpath '\$ORIGIN/../lib/' $INSTALL_PREFIX/lib/libexslt.so"
-
     # Relocate the libraries/executables
     # skip installed python libs/exes (they are already relocated)
     local fixer_opts="-f -g '[!python]*' -l $INSTALL_PREFIX/lib -d $INSTALL_PREFIX/bin"
