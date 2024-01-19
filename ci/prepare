@@ -8,7 +8,12 @@ __enable_gcc7() {
 
 __lang_setting() {
     case "$1" in
-        CentOS|AlmaLinux)
+        # Red Hat is currently identified as "Red", since the "NAME" value in
+        # /etc/os-release is "Red Hat Enterprise Linux".
+        # FIXME: use "ID" from /etc/os-release instead of "NAME"- for Red Hat
+        #        "ID" has a more reasonable "rhel" value (check for the other
+        #        platforms)
+        CentOS|AlmaLinux|Red)
             localedef -c -i en_US -f UTF-8 en_US.utf8
             export LANG=en_US.UTF-8
             __enable_gcc7 $1
