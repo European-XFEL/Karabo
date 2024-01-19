@@ -39,7 +39,7 @@ if [ "$1" = "develop" ]; then
 fi
 
 OS=$(uname -s)
-MACHINE=$(uname -m)
+TARGET_ARCH=$(uname -m)
 if tmp=$(svn info . | grep URL)
 then
     tmp=${tmp%%-*}
@@ -80,7 +80,7 @@ if [ "$OS" = "Linux" ]; then
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythonplugin.sh
-INSTALLSCRIPT=package/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=package/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${TARGET_ARCH}.sh
 PYTHON=$KARABO/extern/bin/python3
 PIP=$KARABO/extern/bin/pip
 
