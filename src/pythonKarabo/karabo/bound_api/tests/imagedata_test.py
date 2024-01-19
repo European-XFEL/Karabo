@@ -17,6 +17,7 @@ import weakref
 
 import numpy as np
 
+import karathon
 from karabo.bound import Encoding, Hash, ImageData, Rotation, Types
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
@@ -108,7 +109,10 @@ def test_ndarry_refcounting():
     arr = np.asarray(np.arange(20000, dtype='uint8').reshape(100, 200),
                      order='F')
     img_data = ImageData(arr).getData()
-    assert not compare_ndarray_data_ptrs(img_data, arr)
+    if ImageData is karathon.ImageData:
+        assert not compare_ndarray_data_ptrs(img_data, arr)
+    else:  # karabind
+        assert compare_ndarray_data_ptrs(img_data, arr)
 
     img_data_weak = weakref.ref(img_data)
     assert img_data_weak() is not None
