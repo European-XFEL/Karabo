@@ -18,9 +18,9 @@
 """
 import os
 
-use_karabind = 'USE_KARABIND' in os.environ
+use_karathon = 'USE_KARATHON' in os.environ
 
-if not use_karabind:
+if use_karathon:
     from karathon import (
         ADMIN, ALARM_ELEMENT, AMPERE, AMPERE_PER_SECOND, ATTO, ATTOSEC, BAR,
         BAYER, BECQUEREL, BGR, BGRA, BIT, BMP, BOOL_ELEMENT, BYTE,

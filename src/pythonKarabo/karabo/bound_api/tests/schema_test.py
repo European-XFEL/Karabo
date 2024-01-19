@@ -16,12 +16,11 @@
 import unittest
 
 from karabo.bound import (
-    IMAGEDATA_ELEMENT, INIT, INT32_ELEMENT, MANDATORY, METER, MICRO,
-    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, READ, STATE_ELEMENT,
-    WRITE, AccessLevel, AccessType, AlarmCondition, ArchivePolicy,
-    AssemblyRules, AssignmentType, Configurator, DaqDataType, DAQPolicy, Hash,
-    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator,
-    fullyEqual)
+    IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, NDARRAY_ELEMENT,
+    NODE_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT, AccessLevel, AccessType,
+    AlarmCondition, ArchivePolicy, AssignmentType, Configurator, DaqDataType,
+    DAQPolicy, Hash, Logger, MetricPrefix, NodeType, Schema, State, Types,
+    Unit, Validator, fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1,
@@ -71,8 +70,7 @@ class Schema_TestCase(unittest.TestCase):
 
     def test_getRootName(self):
         try:
-            schema = Schema("MyTest",
-                            AssemblyRules(AccessType(READ | WRITE | INIT)))
+            schema = Schema("MyTest")
             TestStruct1.expectedParameters(schema)
             self.assertEqual(schema.getRootName(), "MyTest")
         except Exception as e:

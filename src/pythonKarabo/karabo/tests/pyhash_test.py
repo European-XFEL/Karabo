@@ -21,9 +21,7 @@ from numpy.testing import assert_equal
 
 from karabo.bound import (
     NODE_ELEMENT, BinarySerializerHash, Hash as BoundHash,
-    Schema as BoundSchema, TextSerializerHash, Types,
-    VectorHash as BoundVectorHash, isStdVectorDefaultConversion,
-    setStdVectorDefaultConversion)
+    Schema as BoundSchema, TextSerializerHash, VectorHash as BoundVectorHash)
 from karabo.middlelayer import Configurable
 from karabo.native import (
     AccessMode, Hash, HashByte, HashList, Int32, Int64, NodeType, Schema,
@@ -165,16 +163,6 @@ class Hash_TestCase(unittest.TestCase):
         h["char"] = HashByte("c")
         h["none"] = None
         if use_bound:
-            restore_stdVector = False
-            if isStdVectorDefaultConversion(Types.NUMPY):
-                # Set the stdVectorDefaultConversion back to its default.
-                # The goal is to test the Bound Hash in its default and
-                # most frequently used form.
-                # Specific tests for compatibility between the two types of
-                # default conversion for Bound Hash vectors already exist at
-                # 'bound_api.tests.Hash_TestCase'.
-                restore_stdVector = True
-                setStdVectorDefaultConversion(Types.PYTHON)
             h["vector"] = [i for i in range(7)]
             h["emptyvector"] = []
             h["vectorbool"] = [True, False, True]
@@ -183,8 +171,6 @@ class Hash_TestCase(unittest.TestCase):
             h["hash"] = BoundHash("a", 3, "b", 7.1)
             h["hashlist"] = [BoundHash("a", 3), BoundHash()]
             h["emptyhashlist"] = BoundVectorHash()
-            if restore_stdVector:
-                setStdVectorDefaultConversion(Types.NUMPY)
             # Bound uses setAttribute for setting attributes.
             # TODO: Add one attribute of type VectorHash and
             # one of type Schema.
