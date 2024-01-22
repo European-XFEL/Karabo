@@ -43,6 +43,7 @@ class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
     static int NUM_RETRY;
     static int PAUSE_BEFORE_RETRY_MILLIS;
     static int WAIT_WRITES;
+    static const char* DEFAULT_TEST_LOG_PRIORITY;
 
     void influxAllTestRunner();
 
