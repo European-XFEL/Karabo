@@ -346,8 +346,8 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceUpdated was called for: " << instanceId;
             const string path = this->prepareTopologyPath(instanceId, instanceInfo);
             if (!this->existsInRuntimeSystemDescription(path)) {
-                KARABO_LOG_FRAMEWORK_ERROR << instanceId
-                                           << " received instance update although not in runtime description";
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": ignore instance update from '" << instanceId
+                                           << "' because that instance is not in runtime description";
                 return;
             }
 
