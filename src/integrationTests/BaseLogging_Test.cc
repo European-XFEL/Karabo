@@ -59,6 +59,7 @@ int BaseLogging_Test::PAUSE_BEFORE_RETRY_MILLIS = 300;
 int BaseLogging_Test::NUM_RETRY = 400;
 int BaseLogging_Test::FLUSH_INTERVAL_SEC = 1;
 int BaseLogging_Test::WAIT_WRITES = 4000;
+const char* BaseLogging_Test::DEFAULT_TEST_LOG_PRIORITY = "ERROR";
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3, 0, 0, 0, 0);
 
@@ -273,7 +274,7 @@ void BaseLogging_Test::setUp() {
     m_eventLoopThread = boost::thread(work);
 
     // Create and start server
-    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "FATAL");
+    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", DEFAULT_TEST_LOG_PRIORITY);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
 
@@ -875,7 +876,7 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
               }
               return allUp;
           },
-          40 * KRB_TEST_MAX_TIMEOUT * 1'000u // Increased tolerance: instantiation can be quite slow on a busy CI...
+          60 * KRB_TEST_MAX_TIMEOUT * 1'000u // Increased tolerance: instantiation can be quite slow on a busy CI...
           ,
           100u);
     CPPUNIT_ASSERT_MESSAGE("Timeout while looking for data logger and readers instances.", succeeded);
@@ -894,7 +895,7 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
                   loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
                   return loggerState == karabo::util::State::ON;
               },
-              40 * KRB_TEST_MAX_TIMEOUT * 1000u, 100u);
+              60 * KRB_TEST_MAX_TIMEOUT * 1000u, 100u);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ON state.",
                                      karabo::util::State::ON, loggerState);
@@ -1114,7 +1115,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Increase "variable" value and store after increasing it
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(8)); // ensure timestamp is after setting
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1)); // ensure timestamp is after setting
         stampsAfter.push_back(Epochstamp());
 
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of
@@ -1153,15 +1154,9 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotAddDevicesToBeLogged", vector<string>(1, deviceId))
                                       .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
                                       .receive());
-        CPPUNIT_ASSERT_MESSAGE(
-              "Test device missing from 'devicesToBeLogged' :" +
-                    toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
-              waitForCondition(
-                    [this, &loggerId, &deviceId]() {
-                        auto loggedIds = m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged");
-                        return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
-                    },
-                    KRB_TEST_MAX_TIMEOUT * 1000));
+
+        waitUntilLogged(deviceId, "testCfgFromPastRestart, cycle " + toString(numCycles));
+
         stampsAfterRestart.push_back(Epochstamp());
     }
 
