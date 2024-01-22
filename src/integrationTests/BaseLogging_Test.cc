@@ -1278,12 +1278,12 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
         Hash params;
         params.set("from", fromEpochStr);
         params.set("to", toEpochStr);
-        params.set("maxNumData", numCycles * 2);
+        params.set("maxNumData", static_cast<int>(numCycles * 2));
         vector<Hash> history;
         std::string histDevice, histProperty;
-        m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "value", params)
-              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-              .receive(histDevice, histProperty, history);
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "value", params)
+                                      .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                      .receive(histDevice, histProperty, history));
         for (const Hash& histEntry : history) {
             valueHist << Epochstamp::fromHashAttributes(histEntry.getAttributes("v")).toIso8601Ext() << " - "
                       << histEntry.get<int>("v") << "\n";
