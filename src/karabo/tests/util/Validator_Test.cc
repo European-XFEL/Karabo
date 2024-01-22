@@ -28,6 +28,9 @@
 #include <utility>
 #include <vector>
 
+#include "ConfigurationTestClasses.hh"
+#include "karabo/core/Device.hh"
+#include "karabo/devices/PropertyTest.hh"
 #include "karabo/util/AlarmConditionElement.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/NodeElement.hh"
@@ -48,6 +51,7 @@ using util::STATE_ELEMENT;
 using util::STRING_ELEMENT;
 using util::TABLE_ELEMENT;
 using util::VECTOR_CHAR_ELEMENT;
+using util::VECTOR_UINT32_ELEMENT;
 using util::VECTOR_UINT8_ELEMENT;
 using xms::SLOT_ELEMENT;
 
@@ -559,4 +563,861 @@ void Validator_Test::testOutputChannelSchemaRemoval() {
     CPPUNIT_ASSERT_MESSAGE(res.second, !res.first);
     CPPUNIT_ASSERT(validated.has("outputChannel.schema"));
     CPPUNIT_ASSERT(validated.get<util::Hash>("outputChannel.schema").empty());
+}
+
+
+void Validator_Test::testPropertyTestValidation() {
+    util::Validator::ValidationRules rules;
+    // Set validation rules used during reconfiguration...
+    rules.allowAdditionalKeys = false;
+    rules.allowMissingKeys = true;
+    rules.allowUnrootedConfiguration = true;
+    rules.injectDefaults = false;
+    util::Validator validator(rules);
+    util::Hash validated;
+
+    using namespace karabo::devices;
+
+    int64_t elapsedTimeIn_microseconds = 0ll;
+
+    // No schema was provided for validator ...
+    CPPUNIT_ASSERT(!validator.hasReconfigurableParameter());
+
+    auto schema = core::BaseDevice::getSchema("PropertyTest");
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("boolProperty", true), validated);
+        // Schema for PropertyTest contains reconfigurable parameters...
+        CPPUNIT_ASSERT_MESSAGE("Reconfigurable parameters are expected in PropertyTest schema",
+                               validator.hasReconfigurableParameter());
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("boolProperty"));
+    CPPUNIT_ASSERT(validated.get<bool>("boolProperty") == true);
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("charProperty", 'B'), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("charProperty"));
+    CPPUNIT_ASSERT(validated.get<char>("charProperty") == 'B');
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("int8Property", 34), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("int8Property"));
+    CPPUNIT_ASSERT(validated.get<signed char>("int8Property") == 34);
+
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("uint8Property", 113), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("uint8Property"));
+    CPPUNIT_ASSERT(validated.get<unsigned char>("uint8Property") == 113);
+
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("int16Property", 2300), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("int16Property"));
+    CPPUNIT_ASSERT(validated.get<short>("int16Property") == 2300);
+
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("uint16Property", 55555), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("uint16Property"));
+    CPPUNIT_ASSERT(validated.get<unsigned short>("uint16Property") == 55555);
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("int32Property", 23000000), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("int32Property"));
+    CPPUNIT_ASSERT(validated.get<int>("int32Property") == 23000000);
+
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("int64Property", 3200000000LL), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("int64Property"));
+    CPPUNIT_ASSERT(validated.get<long long>("int64Property") == 3200000000LL);
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("uint64Property", 3200000000ULL), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("uint64Property"));
+    CPPUNIT_ASSERT(validated.get<unsigned long long>("uint64Property") == 3200000000ULL);
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("floatProperty", 3.45678F), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("floatProperty"));
+    float fvalue = validated.get<float>("floatProperty");
+    CPPUNIT_ASSERT(fvalue == 3.45678F);
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("doubleProperty", 5.678901234), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("doubleProperty"));
+    CPPUNIT_ASSERT(validated.get<double>("doubleProperty") == 5.678901234);
+
+    validated.clear();
+
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("stringProperty", "Some text"), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("stringProperty"));
+    CPPUNIT_ASSERT(validated.get<std::string>("stringProperty") == "Some text");
+
+    validated.clear();
+
+    const std::vector<bool> vbool{true, false, false, true, true};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.boolProperty", vbool), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.boolProperty"));
+    {
+        const std::vector<bool> v = validated.get<std::vector<bool>>("vectors.boolProperty");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 5);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vbool[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<char> vchar{'A', 'B', 'C', 'X', 'Y', 'Z'};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.charProperty", vchar), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.charProperty"));
+    {
+        const std::vector<char>& v = validated.get<std::vector<char>>("vectors.charProperty");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vchar[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<signed char> vschar{41, 42, 43, 44, 45, 46};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.int8Property", vschar), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.int8Property"));
+    {
+        const std::vector<signed char>& v = validated.get<std::vector<signed char>>("vectors.int8Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vschar[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<unsigned char> vuchar{41, 42, 43, 44, 45, 46};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.uint8Property", vuchar), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.uint8Property"));
+    {
+        const std::vector<unsigned char>& v = validated.get<std::vector<unsigned char>>("vectors.uint8Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vuchar[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<short> vshort{41, 42, 43, 44, 45, 46};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.int16Property", vshort), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.int16Property"));
+    {
+        const std::vector<short>& v = validated.get<std::vector<short>>("vectors.int16Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vshort[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<unsigned short> vushort{41, 42, 43, 44, 45, 46};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.uint16Property", vushort), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.uint16Property"));
+    {
+        const std::vector<unsigned short>& v = validated.get<std::vector<unsigned short>>("vectors.uint16Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vushort[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<int> vint{41, 42, 43, 44, 45, 46};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.int32Property", vint), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.int32Property"));
+    {
+        const std::vector<int>& v = validated.get<std::vector<int>>("vectors.int32Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vint[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<unsigned int> vuint{90000041, 90000042, 90000043, 90000044, 90000045, 90000046};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.uint32Property", vuint), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.uint32Property"));
+    {
+        const std::vector<unsigned int>& v = validated.get<std::vector<unsigned int>>("vectors.uint32Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vuint[i]);
+    }
+
+
+    VECTOR_UINT32_ELEMENT(schema)
+          .key("vectors.uint32PropertyRestrict")
+          .assignmentOptional()
+          .noDefaultValue()
+          .minSize(2)
+          .maxSize(4)
+          .reconfigurable()
+          .commit();
+
+    validated.clear();
+
+    const std::vector<unsigned int> vuintAboveMaxSize{90000041, 90000042, 90000043, 90000044, 90000045, 90000046};
+    {
+        auto res =
+              validator.validate(schema, util::Hash("vectors.uint32PropertyRestrict", vuintAboveMaxSize), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'is greater than upper bound' substring.\nGot:" + res.second,
+                               res.second.find("is greater than upper bound") != std::string::npos);
+    }
+
+    validated.clear();
+
+    const std::vector<unsigned int> vuintBelowMinSize{
+          90000041,
+    };
+    {
+        auto res =
+              validator.validate(schema, util::Hash("vectors.uint32PropertyRestrict", vuintBelowMinSize), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'is smaller than lower bound' substring.\nGot:" + res.second,
+                               res.second.find("is smaller than lower bound") != std::string::npos);
+    }
+
+
+    validated.clear();
+
+    const std::vector<long long> vlonglong{20000000041LL, 20000000042LL, 20000000043LL,
+                                           20000000044LL, 20000000045LL, 20000000046LL};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.int64Property", vlonglong), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.int64Property"));
+    {
+        const std::vector<long long>& v = validated.get<std::vector<long long>>("vectors.int64Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vlonglong[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<unsigned long long> vulonglong{90000000041LL, 90000000042LL, 90000000043LL,
+                                                     90000000044LL, 90000000045LL, 90000000046LL};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.uint64Property", vulonglong), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.uint64Property"));
+    {
+        const std::vector<unsigned long long>& v =
+              validated.get<std::vector<unsigned long long>>("vectors.uint64Property");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vulonglong[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<float> vfloat{1.23456, 2.34567, 3.45678, 4.56789, 5.67891, 6.78912};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.floatProperty", vfloat), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.floatProperty"));
+    {
+        const std::vector<float>& v = validated.get<std::vector<float>>("vectors.floatProperty");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vfloat[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<double> vdouble{1.234567891, 2.345678912, 3.456789123, 4.567891234, 5.678901234, 6.123456789};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.doubleProperty", vdouble), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.doubleProperty"));
+    {
+        const std::vector<double>& v = validated.get<std::vector<double>>("vectors.doubleProperty");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT(v[i] == vdouble[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<std::string> vstring{"1111111", "2222222", "3333333", "4444444", "5555555", "6666666"};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("vectors.stringProperty", vstring), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("vectors.stringProperty"));
+    {
+        const std::vector<std::string>& v = validated.get<std::vector<std::string>>("vectors.stringProperty");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 6);
+        for (size_t i = 0; i < size; ++i) CPPUNIT_ASSERT_EQUAL(v[i], vstring[i]);
+    }
+
+    validated.clear();
+
+    const std::vector<util::Hash> vtable{{util::Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.9837F, "e5", 1.23456),
+                                          util::Hash("e1", "def", "e2", true, "e3", 13, "e4", 0.3456F, "e5", 2.23456),
+                                          util::Hash("e1", "ghi", "e2", false, "e3", 14, "e4", 0.7891F, "e5", 3.2345),
+                                          util::Hash("e1", "jkl", "e2", false, "e3", 15, "e4", 0.2222F, "e5", 4.2345)}};
+    {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+        auto res = validator.validate(schema, util::Hash("table", vtable), validated);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("table"));
+    {
+        const std::vector<util::Hash>& v = validated.get<std::vector<util::Hash>>("table");
+        const size_t size = v.size();
+        CPPUNIT_ASSERT(size == 4);
+        for (size_t i = 0; i < size; ++i) {
+            CPPUNIT_ASSERT(v[i].fullyEquals(vtable[i], true));
+        }
+    }
+
+    util::Schema rowSchemaRestrict;
+    INT32_ELEMENT(rowSchemaRestrict)
+          .key("par1")
+          .assignmentOptional()
+          .defaultValue(5)
+          .minInc(3)
+          .maxInc(10)
+          .reconfigurable()
+          .commit();
+    INT32_ELEMENT(rowSchemaRestrict)
+          .key("par2")
+          .assignmentOptional()
+          .defaultValue(6)
+          .minExc(1)
+          .maxExc(10)
+          .reconfigurable()
+          .commit();
+    STRING_ELEMENT(rowSchemaRestrict)
+          .key("par3")
+          .options("word1, word2, word3")
+          .assignmentOptional()
+          .defaultValue("word2")
+          .reconfigurable()
+          .commit();
+
+    TABLE_ELEMENT(schema)
+          .key("tableRestrict")
+          .setColumns(rowSchemaRestrict)
+          .assignmentOptional()
+          .defaultValue(std::vector<util::Hash>())
+          .minSize(2)
+          .maxSize(3)
+          .reconfigurable()
+          .commit();
+
+    // Test when the table size above maximum
+    validated.clear();
+
+    const std::vector<util::Hash> vAboveMaxSize{
+          {util::Hash("par1", 7, "par2", 10, "par3", "word1"), util::Hash("par1", 8, "par2", 9, "par3", "word1"),
+           util::Hash("par1", 9, "par2", 8, "par3", "word3"), util::Hash("par1", 10, "par2", 7, "par3", "word3")}};
+
+    {
+        auto res = validator.validate(schema, util::Hash("tableRestrict", vAboveMaxSize), validated);
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'must have no more than' substring.\nGot:" + res.second,
+                               res.second.find("must have no more than") != std::string::npos);
+    }
+
+    // Test when the table size below minimum
+    validated.clear();
+
+    const std::vector<util::Hash> vBelowMinSize({util::Hash("par1", 7, "par2", 10, "par3", "word1")});
+    {
+        auto res = validator.validate(schema, util::Hash("tableRestrict", vBelowMinSize), validated);
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'must have at least' substring.\nGot:" + res.second,
+                               res.second.find("must have at least") != std::string::npos);
+    }
+
+    // Test if unknown column
+    validated.clear();
+
+    const std::vector<util::Hash> vUnknownPar(
+          {util::Hash("par1", 7, "par2", 8, "par3", "word1"), util::Hash("par1", 8, "par2", 7, "par4", "word1")});
+    {
+        auto res = validator.validate(schema, util::Hash("tableRestrict", vUnknownPar), validated);
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'unexpected configuration parameter' substring.\nGot:" + res.second,
+                               res.second.find("unexpected configuration parameter") != std::string::npos);
+    }
+
+    // Test when the value above maximum
+    validated.clear();
+
+    const std::vector<util::Hash> vAboveMaxValue(
+          {util::Hash("par1", 7, "par2", 11, "par3", "word1"), util::Hash("par1", 8, "par2", 7, "par3", "word1")});
+    {
+        auto res = validator.validate(schema, util::Hash("tableRestrict", vAboveMaxValue), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of upper bound' substring.\nGot:" + res.second,
+                               res.second.find("out of upper bound") != std::string::npos);
+    }
+
+    // Test when the value below minimum
+    validated.clear();
+
+    const std::vector<util::Hash> vBelowMinValue(
+          {util::Hash("par1", 1, "par2", 7, "par3", "word1"), util::Hash("par1", 8, "par2", 7, "par3", "word1")});
+    {
+        auto res = validator.validate(schema, util::Hash("tableRestrict", vBelowMinValue), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of lower bound' substring.\nGot:" + res.second,
+                               res.second.find("out of lower bound") != std::string::npos);
+    }
+
+    // Test for wrong option
+    validated.clear();
+
+    const std::vector<util::Hash> vUnknownOption(
+          {util::Hash("par1", 4, "par2", 7, "par3", "word5"), util::Hash("par1", 8, "par2", 7, "par3", "word1")});
+    {
+        auto res = validator.validate(schema, util::Hash("tableRestrict", vUnknownOption), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not one of the valid options' substring.\nGot:" + res.second,
+                               res.second.find("is not one of the valid options") != std::string::npos);
+    }
+
+    // State test:  success
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("state", "STARTED"), validated);
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("state"));
+    CPPUNIT_ASSERT(validated.get<std::string>("state") == "STARTED");
+    CPPUNIT_ASSERT(validated.getAttributes("state").has(KARABO_INDICATE_STATE_SET));
+
+    // State test: "is not a valid state string"
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("state", "NOTSTARTED"), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not a valid state string' substring.\nGot:" + res.second,
+                               res.second.find("is not a valid state string") != std::string::npos);
+    }
+
+    // State test: "is not on e of the valid options"
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("state", "RUNNING"), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not one of the valid options' substring.\nGot:" + res.second,
+                               res.second.find("is not one of the valid options") != std::string::npos);
+    }
+
+    // Add ALARM_ELEMENT to the schema
+    ALARM_ELEMENT(schema).key("alarmCond").commit();
+
+    // Alarm test: success
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("alarmCond", "alarm"), validated);
+
+        CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    }
+    CPPUNIT_ASSERT(validated.size() == 1);
+    CPPUNIT_ASSERT(validated.has("alarmCond"));
+    CPPUNIT_ASSERT(validated.get<std::string>("alarmCond") == "alarm");
+    CPPUNIT_ASSERT(validated.getAttributes("alarmCond").has(KARABO_INDICATE_ALARM_SET));
+
+    // Alarm test: "is not a valid alarm string"
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("alarmCond", "SomeCrazyReason"), validated);
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'is not a valid alarm string' substring.\nGot:" + res.second,
+                               res.second.find("is not a valid alarm string") != std::string::npos);
+    }
+
+    // Check minInc, maxInc: out of ... bound
+
+    util::OVERWRITE_ELEMENT(schema)
+          .key("int16Property")
+          .setNewDefaultValue(7)
+          .setNewMinInc(5)
+          .setNewMaxInc(10)
+          .commit();
+
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("int16Property", 25), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of upper bound' substring.\nGot:" + res.second,
+                               res.second.find("out of upper bound") != std::string::npos);
+    }
+
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("int16Property", 2), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of lower bound' substring.\nGot:" + res.second,
+                               res.second.find("out of lower bound") != std::string::npos);
+    }
+
+    // Check minExc, maxExc: out of ... bound
+    util::OVERWRITE_ELEMENT(schema)
+          .key("int16Property")
+          .setNewDefaultValue(7)
+          .setNewMinExc(5)
+          .setNewMaxExc(10)
+          .commit();
+
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("int16Property", 10), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of upper bound' substring.\nGot:" + res.second,
+                               res.second.find("out of upper bound") != std::string::npos);
+    }
+
+    validated.clear();
+
+    {
+        auto res = validator.validate(schema, util::Hash("int16Property", 5), validated);
+
+        CPPUNIT_ASSERT(!res.first);
+        CPPUNIT_ASSERT_MESSAGE("Expected error with 'out of lower bound' substring.\nGot:" + res.second,
+                               res.second.find("out of lower bound") != std::string::npos);
+    }
+
+    using namespace configurationTest;
+
+    validated.clear();
+
+    {
+        auto gr = GraphicsRenderer::create("GraphicsRenderer", Hash("color", "orange"));
+        const Schema& schema = gr->getSchema("GraphicsRenderer");
+
+        for (int i = 1; i <= 99; ++i) {
+            const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+            // Check CHOICE_ELEMENT and BOOL_ELEMENT processing ...
+            auto res = validator.validate(schema, Hash("shapes.Circle.radius", float(i), "bold", true), validated);
+
+            const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+            elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+            CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+            CPPUNIT_ASSERT(validated.size() == 2);
+            CPPUNIT_ASSERT(validated.has("shapes.Circle.radius"));
+            CPPUNIT_ASSERT(validated.get<float>("shapes.Circle.radius") == float(i));
+            CPPUNIT_ASSERT(validated.has("bold"));
+            CPPUNIT_ASSERT(validated.get<bool>("bold"));
+        }
+    }
+
+    validated.clear();
+
+    {
+        Schema schema;
+        OtherSchemaElements::expectedParameters(schema);
+
+        for (int i = 1; i <= 99; ++i) {
+            const auto startTimepoint = std::chrono::high_resolution_clock::now();
+
+            // Check LIST_ELEMENT and VECTOR_DOUBLE_ELEMENT processing...
+            auto conf = Hash("shapeList[0].Rectangle.b", float(i));
+            std::vector<double> vdouble{5.55, 4.44, 3.33};
+            conf.set("vecDoubleReconfigStr", vdouble);
+            auto res = validator.validate(schema, conf, validated);
+
+            const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+            elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+            CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+            CPPUNIT_ASSERT(validated.size() == 2);
+            CPPUNIT_ASSERT(validated.has("shapeList[0].Rectangle.b"));
+            CPPUNIT_ASSERT(validated.get<float>("shapeList[0].Rectangle.b") == float(i));
+            CPPUNIT_ASSERT(validated.has("vecDoubleReconfigStr"));
+            const std::vector<double>& vd = validated.get<std::vector<double>>("vecDoubleReconfigStr");
+            CPPUNIT_ASSERT(vd[0] == 5.55);
+            CPPUNIT_ASSERT(vd[1] == 4.44);
+            CPPUNIT_ASSERT(vd[2] == 3.33);
+        }
+    }
+    std::cerr << "\nTest elapsed time (microsecs) : " << elapsedTimeIn_microseconds << std::endl;
 }
