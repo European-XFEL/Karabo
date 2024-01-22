@@ -738,17 +738,8 @@ def test_filter_table_model_view_view_key_events(
     assert model.rowCount(QModelIndex()) == 3
 
     assert not controller.isReadOnly()
-    controller.tableWidget().selectRow(3)
-    # 1. Add a row
-    keySequence(controller.tableWidget(), QKeySequence.New)
-    assert model.rowCount(QModelIndex()) == 4
 
-    # 2. Select last row and delete a row
-    controller.tableWidget().selectRow(4)
-    keySequence(controller.tableWidget(), QKeySequence.Delete)
-    assert model.rowCount(QModelIndex()) == 3
-
-    # 3. Move row up and down
+    # 1. Move row up and down
     model = controller.sourceModel()
     assert model.index(0, 0).data() == "a"
     assert model.index(1, 0).data() == "b"
@@ -760,6 +751,16 @@ def test_filter_table_model_view_view_key_events(
     keySequence(controller.tableWidget(), QKeySequence.SelectNextLine)
     assert model.index(0, 0).data() == "a"
     assert model.index(1, 0).data() == "b"
+
+    controller.tableWidget().selectRow(3)
+    # 2. Add a row
+    keySequence(controller.tableWidget(), QKeySequence.New)
+    assert model.rowCount(QModelIndex()) == 4
+
+    # 3. Select last row and delete a row
+    controller.tableWidget().selectRow(4)
+    keySequence(controller.tableWidget(), QKeySequence.Delete)
+    assert model.rowCount(QModelIndex()) == 3
 
 
 def test_filter_table_model_view_table_controller_extras(gui_app):
