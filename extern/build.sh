@@ -109,10 +109,12 @@ install_python() {
     local build_opts="--build=missing"
     # apply custom profile on top of default profile
     local profile_opts="-pr:b=./conanprofile.karabo -pr:h=./conanprofile.karabo"
-    # always compile patchelf and b2 from source (needed later), avoids CentOS7 failures
+    # always compile patchelf, b2, openssl from source (needed later), ensures linkage against correct GLIBC version symbols
     if [[ $INSTALL_PREFIX == *"CentOS-7"* ]]; then
         safeRunCommandQuiet "conan install patchelf/0.13@ --build=patchelf --build=missing $profile_opts"
         safeRunCommandQuiet "conan install b2/4.9.6@ --build=b2 --build=missing $profile_opts"
+        safeRunCommand "conan install openssl/1.1.1l@ --build=openssl --build=missing -o shared=True $profile_opts"
+        safeRunCommand "conan install openssl/1.1.1l@ --build=openssl --build=missing -o shared=False $profile_opts"
     fi
     # copy conan recipe from extern/resources/python to local conan cache
     safeRunCommandQuiet "conan export $package_opts"
@@ -164,9 +166,12 @@ install_from_deps() {
 
         # install packages listed in the extern/conanfile.txt
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
-        # fix read-only files installed by openssl (to enable conan reinstalls)
+        # fix read-only files installed by nss (to enable conan reinstalls)
         safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
-        safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/lib/engines/*"
+        # dump libcrypto.so version info
+        ldd -v $INSTALL_PREFIX/lib/libcrypto.so
+        ldd -v $INSTALL_PREFIX/lib/libpython.so
+        ldd $INSTALL_PREFIX/lib/* | grep version
 
     # for whatever reason conan does not reliably copy *.pc files from its root directory
     # we do this here instead, and also capture any .pc files our from source builds created
