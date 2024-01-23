@@ -42,7 +42,7 @@ def test_development_topology_dialog(gui_app, mocker):
                                   QItemSelectionModel.ClearAndSelect)
         dialog.onKillInstance()
         assert manager.shutdownServer.call_count == 1
-        assert manager.shutdownServer.called_with("devserver", parent=dialog)
+        manager.shutdownServer.assert_called_with("devserver", parent=dialog)
 
 
 def test_model_tester():
