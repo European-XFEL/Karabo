@@ -64,7 +64,7 @@ class ImageRendererModel(BaseWidgetObjectData):
     image = String
 
     def _id_default(self):
-        return f"image{randint(0, 1e6)}"
+        return f"image{randint(0, int(1e6))}"
 
 
 @register_scene_reader("ImageRenderer")

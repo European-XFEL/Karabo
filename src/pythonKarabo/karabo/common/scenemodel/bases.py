@@ -133,4 +133,4 @@ class XMLElementModel(BaseSceneObjectData):
         return ""
 
     def randomize(self, text):
-        return f"{text}{randint(0, 1e6)}"
+        return f"{text}{randint(0, int(1e6))}"
