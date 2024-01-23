@@ -97,7 +97,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
         button_state = handle_default_state(allowed, state)
         self._button_states[key] = state
         button = QStyleOptionButton()
-        button.state = button_state.value
+        button.state = button_state
         button.rect = _get_button_rect(option.rect)
         button.text = index.data()
         button.features = QStyleOptionButton.AutoDefaultButton
