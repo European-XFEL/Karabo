@@ -191,7 +191,7 @@ class EditDelegate(QStyledItemDelegate):
             palette.setBrush(QPalette.Button, QBrush(color))
             button.palette = palette
 
-        button.state = button_state.value
+        button.state = button_state
         button.rect = _get_table_button_rect(option)
         button.text = TABLE_BUTTON_TEXT
         button.features = QStyleOptionButton.AutoDefaultButton
