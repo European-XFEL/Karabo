@@ -18,14 +18,13 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
-from enum import Enum
 
 from qtpy.QtCore import QEvent, QMargins
 from qtpy.QtWidgets import (
     QApplication, QStyle, QStyledItemDelegate, QStyleOptionButton)
 
 
-class ButtonState(Enum):
+class ButtonState:
     PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
     ENABLED = QStyle.State_Enabled | QStyle.State_Raised | QStyle.State_Off
     DISABLED = QStyle.State_On
@@ -64,7 +63,7 @@ class TableButtonDelegate(QStyledItemDelegate):
             key = (index.row(), index.column())
             state = self._button_states.get(key, ButtonState.ENABLED)
         button = QStyleOptionButton()
-        button.state = state.value
+        button.state = state
         button.rect = option.rect
         button.text = self.get_button_text(index) or "No text"
         button.features = QStyleOptionButton.None_
