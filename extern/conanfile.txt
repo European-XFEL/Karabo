@@ -38,7 +38,7 @@ nss/3.72
 # forced - these are pinned to allow conan to resolve dependency conflicts
 zlib/1.2.13
 sqlite3/3.36.0
-openssl/1.0.2t   # Centos7 can only handle newer versions if compiled from source (like patchelf/b2 in build.sh)
+openssl/1.1.1l
 # openblas/0.3.20
 
 [generators]
