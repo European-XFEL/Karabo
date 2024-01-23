@@ -15,7 +15,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 import json
-from enum import Enum
 
 from qtpy.QtCore import QMimeData, Qt
 from qtpy.QtGui import QColor, QPalette
@@ -39,7 +38,7 @@ FIXED_ROW_HEIGHT = 30
 RECURSIVE_BINDING = (BindingRoot, ChoiceOfNodesBinding, NodeBinding)
 
 
-class ButtonState(Enum):
+class ButtonState:
     PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
     ENABLED = QStyle.State_Enabled | QStyle.State_Raised | QStyle.State_Off
     DISABLED = QStyle.State_On
