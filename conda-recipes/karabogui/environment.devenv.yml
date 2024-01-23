@@ -24,7 +24,7 @@ channels:
 {{ conda_local_channel }}
 
 dependencies:
-  - python=3.10.*
+  - python=3.11.*
   # for tests and building
   - flake8=6.1.0
   - isort=5.8.0
