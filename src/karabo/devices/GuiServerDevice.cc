@@ -20,6 +20,8 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+// Temporary change to trigger the CI
+
 #include "GuiServerDevice.hh"
 
 #include "karabo/core/InstanceChangeThrottler.hh"
