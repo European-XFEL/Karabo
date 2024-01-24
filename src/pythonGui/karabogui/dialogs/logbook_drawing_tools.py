@@ -200,6 +200,34 @@ class EraserTool(BaseDrawingTool):
         pass
 
 
+class CropTool(BaseDrawingTool):
+
+    def mouse_down(self, scene, event):
+        pos = event.scenePos()
+        pen = QPen(QBrush(QColor(0, 0, 255, 127)), 2)
+        self.start_pos = pos
+        self.graphics_item = scene.addRect(
+            pos.x(), pos.y(), 0, 0, pen, QBrush())
+
+    def mouse_move(self, scene, event):
+        pos = event.scenePos()
+        if self.start_pos and self.graphics_item:
+            width = pos.x() - self.start_pos.x()
+            height = pos.y() - self.start_pos.y()
+            self.graphics_item.setRect(self.start_pos.x(), self.start_pos.y(),
+                                       width, height)
+            self.graphics_item.setBrush(QColor(0, 0, 255, 127))
+
+    def mouse_up(self, scene, event):
+        scene.removeItem(self.graphics_item)
+        rect = self.graphics_item.rect()
+        scene.crop(rect)
+        # Remove the remnants of annotations.
+        for item in scene.items():
+            if item and not isinstance(item, QGraphicsPixmapItem):
+                scene.removeItem(item)
+
+
 TOOLS_FACTORY = namedtuple("TOOL_FACTORY", ["tooltip", "icon", "drawing_tool"])
 
 
@@ -211,6 +239,8 @@ def get_tools():
                       drawing_tool=RectTool),
         TOOLS_FACTORY(tooltip="Add Text to the Image", icon=icons.text,
                       drawing_tool=TextTool),
-        TOOLS_FACTORY(
-            tooltip="Delete item", icon=icons.eraser, drawing_tool=EraserTool)
+        TOOLS_FACTORY(tooltip="Delete item", icon=icons.eraser,
+                      drawing_tool=EraserTool),
+        TOOLS_FACTORY(tooltip="Crop image", icon=icons.crop,
+                      drawing_tool=CropTool),
              ]
