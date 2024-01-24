@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (
 from karabo.native import Hash, HashList
 from karabogui.binding.api import DeviceClassProxy, build_binding
 from karabogui.dialogs.logbook_drawing_tools import (
-    LineTool, RectTool, TextTool)
+    CropTool, LineTool, RectTool, TextTool)
 from karabogui.dialogs.logbook_preview import LogBookPreview
 from karabogui.panels.api import ConfigurationPanel
 from karabogui.singletons.api import get_config
@@ -177,9 +177,10 @@ def test_toolbar(dialog):
     toolbar = dialog.drawing_toolbar
     assert toolbar.isVisibleTo(dialog)
     actions = toolbar.actions()
-    assert len(actions) == 5
-    expected = ["Change annotation color", "Draw Line", "Draw Rectangle",
-                "Add Text to the Image", "Delete item"]
+    assert len(actions) == 7
+    # First item is a label with  warning text
+    expected = ["", "Change annotation color", "Draw Line", "Draw Rectangle",
+                "Add Text to the Image", "Delete item", "Crop image"]
     assert [action.toolTip() for action in actions] == expected
 
 
@@ -239,6 +240,13 @@ def test_drawing_tools(dialog, mocker):
     QTest.mouseMove(widget, QPoint(200, 200))
     QTest.mouseRelease(widget, Qt.LeftButton, Qt.NoModifier)
     assert len(canvas.items()) == 4
+
+    tool = CropTool()
+    canvas.set_drawing_tool(tool)
+    assert canvas.drawing_tool is not None
+    can_draw.return_value = False
+    QTest.mousePress(widget, Qt.LeftButton, Qt.NoModifier, pos)
+    assert canvas.drawing_tool is None
 
 
 def test_topics(dialog):
