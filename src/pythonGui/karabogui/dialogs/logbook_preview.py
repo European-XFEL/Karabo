@@ -21,14 +21,15 @@ from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QCheckBox, QColorDialog, QComboBox, QDialog,
-    QDialogButtonBox, QGraphicsScene, QGridLayout, QLabel, QLineEdit,
-    QSizePolicy, QTableWidgetItem, QToolButton, QWidget)
+    QDialogButtonBox, QGraphicsPixmapItem, QGraphicsScene, QGridLayout, QLabel,
+    QLineEdit, QSizePolicy, QTableWidgetItem, QToolButton, QWidget)
 
 from karabo.common.scenemodel.api import create_base64image
 from karabo.native import Hash, HashList
 from karabogui import icons
 from karabogui.const import IS_MAC_SYSTEM
-from karabogui.dialogs.logbook_drawing_tools import BaseDrawingTool, get_tools
+from karabogui.dialogs.logbook_drawing_tools import (
+    BaseDrawingTool, CropTool, get_tools)
 from karabogui.dialogs.utils import get_dialog_ui
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
@@ -160,6 +161,7 @@ class Canvas(QGraphicsScene):
     QGraphicsScene to draw shapes using mouse to annotate the image.
     """
     resetTool = Signal()
+    fitViewRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -168,6 +170,8 @@ class Canvas(QGraphicsScene):
     def mousePressEvent(self, event):
         if self._can_draw(event):
             self.drawing_tool.mouse_down(self, event)
+        else:
+            self.set_drawing_tool(None)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -178,6 +182,8 @@ class Canvas(QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self._can_draw(event):
             self.drawing_tool.mouse_up(self, event)
+        elif isinstance(self.drawing_tool, CropTool):
+            self.removeItem(self.drawing_tool.graphics_item)
         self.set_drawing_tool(None)
         super().mouseReleaseEvent(event)
 
@@ -197,6 +203,29 @@ class Canvas(QGraphicsScene):
     def set_drawing_color(self, color):
         if self.drawing_tool is not None:
             self.drawing_tool.set_pen_color(color)
+
+    def crop(self, rect):
+        for item in self.items():
+            if isinstance(item, QGraphicsPixmapItem):
+                break
+            item = None
+        if item is None:
+            return
+        rect = rect.normalized()
+        height = int(rect.height())
+        width = int(rect.width())
+        pixmap = QPixmap(width, height)
+        with QPainter(pixmap) as painter:
+            self.render(painter, source=rect, mode=Qt.KeepAspectRatio)
+        item.setPixmap(pixmap)
+        self.setSceneRect(0, 0, rect.width(), rect.height())
+        self.fitViewRequested.emit()
+
+    @property
+    def pixmap_item(self):
+        for item in self.items():
+            if isinstance(item, QGraphicsPixmapItem):
+                return item.pixmap()
 
 
 class LogBookPreview(QDialog):
@@ -227,6 +256,7 @@ class LogBookPreview(QDialog):
         self.canvas.addPixmap(self.pixmap)
         self.view.setScene(self.canvas)
         self.canvas.resetTool.connect(self.reset_tool)
+        self.canvas.fitViewRequested.connect(self._fit_in_view)
 
         validator = NumberValidator(
             minInc=MIN_ZOOM_FACTOR, maxInc=MAX_ZOOM_FACTOR, decimals=1)
@@ -239,12 +269,6 @@ class LogBookPreview(QDialog):
         self.data = None
         self._destinations = []
 
-        # Show the current zoom factor of the image.
-        transform = self.view.transform()
-        width_scale = transform.m11()
-        height_scale = transform.m22()
-        zooming_factor = ((width_scale + height_scale) / 2) * 100
-        self.zoom_factor_edit.setText(str(round(zooming_factor, 1)))
         self.zoom_factor.currentIndexChanged.connect(self.change_zoom_factor)
         self.zoom_factor_edit.editingFinished.connect(self.change_zoom_factor)
 
@@ -451,7 +475,9 @@ class LogBookPreview(QDialog):
         io_buffer = QBuffer(image_byte)
         io_buffer.open(QIODevice.WriteOnly)
         image_format = "png"
-        pixmap = QPixmap(self.pixmap.size())
+        pixmap = self.canvas.pixmap_item
+        if pixmap is None:
+            pixmap = QPixmap(self.pixmap.size())
         with QPainter(pixmap) as painter:
             self.canvas.render(painter, source=self.canvas.sceneRect(),
                                mode=Qt.KeepAspectRatio)
@@ -495,11 +521,19 @@ class LogBookPreview(QDialog):
 
         return info
 
+    @Slot()
     def _fit_in_view(self):
         """Adjust the image's size to fit the QGraphicsView, ensuring the
         entire image is visible."""
         scene_rect = self.view.sceneRect()
         self.view.fitInView(scene_rect, Qt.KeepAspectRatio)
+
+        # Show the current zoom factor of the image.
+        transform = self.view.transform()
+        width_scale = transform.m11()
+        height_scale = transform.m22()
+        zooming_factor = ((width_scale + height_scale) / 2) * 100
+        self.zoom_factor_edit.setText(str(round(zooming_factor, 1)))
 
     def _create_destination_widget(self):
         destination_widget = DestinationWidget(parent=self.stream_widget)
@@ -570,6 +604,14 @@ class LogBookPreview(QDialog):
         """Create a toolbar with annotate tools """
         toolbar = ToolBar(parent=self)
         self.action_group_draw = QActionGroup(self)
+        text = "Annotations cannot be \nremoved after cropping"
+        warning_text = QLabel(text, parent=toolbar)
+        font = warning_text.font()
+        font.setPointSize(10)
+        font.setItalic(True)
+        warning_text.setFont(font)
+        self._warning_action = toolbar.addWidget(warning_text)
+        self._warning_action.setVisible(False)
 
         color_action = QAction(parent=self)
         color_action.setToolTip("Change annotation color")
@@ -596,6 +638,7 @@ class LogBookPreview(QDialog):
     @Slot()
     def _change_color(self):
         """Show a color dialog to choose the annotation color """
+        self._warning_action.setVisible(False)
         color = QColorDialog.getColor(
             initial=self._annotation_color, parent=self)
         # To avoid the dialog hiding behind the main window
@@ -617,9 +660,12 @@ class LogBookPreview(QDialog):
         self.view.setCursor(Qt.CrossCursor)
         self.canvas.set_drawing_tool(tool)
         self.canvas.set_drawing_color(self._annotation_color)
+        warning_visible = isinstance(tool, CropTool)
+        self._warning_action.setVisible(warning_visible)
 
     @Slot()
     def reset_tool(self):
         for action in self.action_group_draw.actions():
             action.setChecked(False)
         self.view.setCursor(Qt.ArrowCursor)
+        self._warning_action.setVisible(False)
