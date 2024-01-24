@@ -16,10 +16,10 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-import karabind
-import pytest
-
-import karathon
+from karabo.bound import (
+    AMPERE, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
+    INT64_ELEMENT, LIST_ELEMENT, METER, MILLI, NODE_ELEMENT, STRING_ELEMENT,
+    UINT32_ELEMENT, AssemblyRules, Hash, HashFilter, Validator)
 from karabo.bound_api.decorators import (
     KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.common.states import State
@@ -39,26 +39,6 @@ class P1Y(BaseY):
 
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            # Schema = karabind.Schema
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            UINT32_ELEMENT = karabind.UINT32_ELEMENT
-            INT64_ELEMENT = karabind.INT64_ELEMENT
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            METER = karabind.METER
-            MILLI = karabind.MILLI
-        elif isinstance(expected, karathon.Schema):
-            # Schema = karathon.Schema
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            UINT32_ELEMENT = karathon.UINT32_ELEMENT
-            INT64_ELEMENT = karathon.INT64_ELEMENT
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            METER = karathon.METER
-            MILLI = karathon.MILLI
-        else:
-            raise TypeError("Unsupported argument type")
         (
             STRING_ELEMENT(expected).key("a")
             .description("a").displayedName("a")
@@ -121,18 +101,6 @@ class P2Y(BaseY):
 
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            AMPERE = karabind.AMPERE
-            MILLI = karabind.MILLI
-        elif isinstance(expected, karathon.Schema):
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            AMPERE = karathon.AMPERE
-            MILLI = karathon.MILLI
-        else:
-            raise TypeError("Unsupported argument type")
         (
             STRING_ELEMENT(expected).key("x")
             .description("x")
@@ -169,18 +137,6 @@ class P3Y(BaseY):
 
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            METER = karabind.METER
-            MILLI = karabind.MILLI
-        elif isinstance(expected, karathon.Schema):
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            METER = karathon.METER
-            MILLI = karathon.MILLI
-        else:
-            raise TypeError("Unsupported argument type")
         (
             STRING_ELEMENT(expected).key("k")
             .description("k").displayedName("k")
@@ -216,27 +172,6 @@ class GraphicsRenderer2Y:
 
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            BOOL_ELEMENT = karabind.BOOL_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            CHOICE_ELEMENT = karabind.CHOICE_ELEMENT
-            NODE_ELEMENT = karabind.NODE_ELEMENT
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            LIST_ELEMENT = karabind.LIST_ELEMENT
-            METER = karabind.METER
-            MILLI = karabind.MILLI
-        elif isinstance(expected, karathon.Schema):
-            BOOL_ELEMENT = karathon.BOOL_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            CHOICE_ELEMENT = karathon.CHOICE_ELEMENT
-            NODE_ELEMENT = karathon.NODE_ELEMENT
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            LIST_ELEMENT = karathon.LIST_ELEMENT
-            METER = karathon.METER
-            MILLI = karathon.MILLI
-        else:
-            raise TypeError("Unsupported argument type")
-
         (
             BOOL_ELEMENT(expected).key("antiAlias")
             .tags("NC")
@@ -319,15 +254,9 @@ class GraphicsRenderer2Y:
         )
 
 
-@pytest.mark.parametrize(
-    "AssemblyRules, Schema, HashFilter, Hash, Validator",
-    [(karathon.AssemblyRules, karathon.Schema, karathon.HashFilter,
-      karathon.Hash, karathon.Validator),
-     (karabind.AssemblyRules, karabind.Schema, karabind.HashFilter,
-      karabind.Hash, karabind.Validator)])
-def test_hash_filter(AssemblyRules, Schema, HashFilter, Hash, Validator):
+def test_hash_filter():
     schema = GraphicsRenderer2Y.getSchema(
-          "GraphicsRenderer2Y", rules=AssemblyRules())
+        "GraphicsRenderer2Y", rules=AssemblyRules())
     validator = Validator()
     _, _, config = validator.validate(schema, Hash())
 
