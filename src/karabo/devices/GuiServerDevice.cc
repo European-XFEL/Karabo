@@ -42,6 +42,8 @@ using namespace karabo::io;
 using namespace karabo::xms;
 using namespace boost::placeholders;
 
+// Temporary change to trigger the CI
+
 
 KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, karabo::devices::GuiServerDevice)
 
