@@ -31,6 +31,7 @@ DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
 DEPS_BASE_NAME_MAP['AlmaLinux8']='AlmaLinux-8'
 DEPS_BASE_NAME_MAP['AlmaLinux9']='AlmaLinux-9'
 DEPS_BASE_NAME_MAP['Debian10']='Debian-10'
+DEPS_BASE_NAME_MAP['Red9']='RedHat-9'
 
 PYTHON_VERSION=3.8.16
 PYTHON_PATH_VERSION=3.8
@@ -401,7 +402,7 @@ download_sources() {
     local vin=$?
     if [ $vin -eq 1 -o "$FORCE" = "y" ]; then
         pushd $scriptDir
-        safeRunCommand "$INSTALL_PREFIX/bin/python3 -m pip install pyyaml"
+        safeRunCommand "$INSTALL_PREFIX/bin/python3 -m pip install pyyaml==6.0"
         safeRunCommand "$INSTALL_PREFIX/bin/python3 download_helper.py downloads.yml"
         popd
     fi
