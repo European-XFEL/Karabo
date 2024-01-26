@@ -31,11 +31,14 @@ def test_check_broker_scheme():
     with pytest.raises(RuntimeError):
         check_broker_scheme(hosts)
 
-    # 3.1 correct scheme amqp, also with `-`
+    # 3.1 correct scheme amqp, also with `-` and `.`
     hosts = ["amqp://control:spirit@exflc1:1111",
              "amqp://control:spirit@exfl-bkr-1:1111"]
     assert not check_broker_scheme(hosts)
     hosts = ["amqp://control:spirit@exflc1:1111"]
+    assert not check_broker_scheme(hosts)
+    hosts = ["amqp://control:spirit@exflc1.desy.de:1111",
+             "amqp://control:spirit@192.168.1.1:1111"]
     assert not check_broker_scheme(hosts)
 
     # 3.2 correct scheme jms
