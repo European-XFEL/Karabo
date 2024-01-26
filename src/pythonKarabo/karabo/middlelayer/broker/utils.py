@@ -19,7 +19,7 @@ _BROKER_SCHEMES = ("tcp", "amqp")
 _SCHEME_DELIMITER = "://"
 _AMQP_REGEX = re.compile(
     r"^(amqp:\/\/)([A-Za-z0-9]+)(\:)+([A-Za-z0-9]+)"
-    r"(\@)+([A-Za-z0-9\-]+)(\:)+([0-9]+)")
+    r"(\@)+([A-Za-z0-9\-\.]+)(\:)+([0-9]+)")
 
 
 def all_equal(iterable):
