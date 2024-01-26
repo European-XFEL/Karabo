@@ -1,6 +1,30 @@
 ..
   Copyright (C) European XFEL GmbH Schenefeld. All rights reserved.
 
+
+***************************
+What's New in Karabo 2.19.3
+***************************
+
+This patch release is directed towards the latest topology errors. Before, an instance update
+received a device that is not yet present in the topology is rejected. This is correct behavior,
+but did lead to a lot of false topologies.
+Now an instance update will complete a topology again. Note that for 2.20.X this behavior is reverted again.
+
+- Revert "C++: Protect from false instanceUpdate receival --- be verbose on faulty messages" (Cherry pick 2.19.X)
+
+
+***************************
+What's New in Karabo 2.19.2
+***************************
+
+This patch release is directed to the dataloggers. After the change in 2.19.0 to always create
+a new client for an influx request, schema retrievals did cause the dataloggers to segfault.
+Now a single client is retained and always disconnected after the requests.
+
+- perf(InfluxLogger): single DbClient for reading, disconnect when idle (2.19.X-hotfix)
+
+
 ***************************
 What's New in Karabo 2.19.1
 ***************************
