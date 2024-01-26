@@ -74,6 +74,7 @@ class Receiver(Device):
 
 
 class CrazyInjector(Device):
+    """A device that constantly updates output channels schema"""
     running = True
 
     output = OutputChannel(
