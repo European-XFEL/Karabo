@@ -218,10 +218,6 @@ class KaraboROI(ROI):
             newPos = self.mapToParent(ev.pos()) + self.cursorOffset
             self.translate(newPos - self.pos(), snap=snap, finish=False)
 
-    def viewRangeChanged(self):
-        super().viewRangeChanged()
-        self.maxBounds = self.getViewBox().viewRect()
-
     def movePoint(self, handle, pos, modifiers=None, finish=True,
                   coords='parent'):
         # pos is the new position of the handle in scene coords,
