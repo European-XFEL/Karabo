@@ -14,21 +14,13 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
-import karabind
-import pytest
-
-import karathon
+from karabo.bound import (
+    FLOAT_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, Schema, Types)
 
 
 class ShapePosition:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             FLOAT_ELEMENT(expected).key("shapeX")
             .displayedName("Shape X")
@@ -49,14 +41,6 @@ class ShapePosition:
 class Circle:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            NODE_ELEMENT = karabind.NODE_ELEMENT
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            NODE_ELEMENT = karathon.NODE_ELEMENT
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             NODE_ELEMENT(expected).key("center")
             .displayedName("Center")
@@ -76,14 +60,6 @@ class Circle:
 class Rectangle:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            NODE_ELEMENT = karabind.NODE_ELEMENT
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            NODE_ELEMENT = karathon.NODE_ELEMENT
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             NODE_ELEMENT(expected).key("topLeftCorner")
             .displayedName("Top-left corner")
@@ -110,12 +86,6 @@ class Rectangle:
 class A:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karathon.Schema):
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-        elif isinstance(expected, karabind.Schema):
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             INT32_ELEMENT(expected)
             .key("a")
@@ -125,23 +95,13 @@ class A:
         )
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_appendSchema(Schema, Types):
+def test_appendSchema():
     dataschema = Schema()
     A.expectedParameters(dataschema)
 
     class B:
         @staticmethod
         def expectedParameters(expected):
-            if isinstance(expected, karathon.Schema):
-                NODE_ELEMENT = karathon.NODE_ELEMENT
-            elif isinstance(expected, karabind.Schema):
-                NODE_ELEMENT = karabind.NODE_ELEMENT
-            else:
-                raise TypeError("Unsupported argument type")
             (
                 NODE_ELEMENT(expected)
                 .key("node")
@@ -156,11 +116,7 @@ def test_appendSchema(Schema, Types):
     assert schema.getDefaultValue("node.a") == 10
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_appendParametersOf(Schema, Types):
+def test_appendParametersOf():
     schema = Schema("circle")
     Circle.expectedParameters(schema)
     assert schema.getRootName() == "circle"
