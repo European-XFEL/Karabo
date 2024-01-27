@@ -13,20 +13,13 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import karabind
+
 import numpy as np
-import pytest
 
-import karathon
+from karabo.bound import Dims, Encoding, Hash, ImageData, Rotation
 
 
-@pytest.mark.parametrize(
-    "ImageData, Encoding, Dims, Hash, ROT_180",
-    [(karathon.ImageData, karathon.Encoding, karathon.Dims,
-      karathon.Hash, karathon.ROT_180),
-     (karabind.ImageData, karabind.Encoding, karabind.Dims,
-      karabind.Hash, karabind.ROT_180)])
-def test_imagedata_buildUp(ImageData, Encoding, Dims, Hash, ROT_180):
+def test_imagedata_buildUp():
     # Create numpy array ...
     arr = np.array([[1, 2], [3, 4], [5, 6]])
     # By default: 64 bits
@@ -78,15 +71,11 @@ def test_imagedata_buildUp(ImageData, Encoding, Dims, Hash, ROT_180):
     # check shape of image
     assert img.getData().shape == (3, 2)
     # rotate 180 grad
-    img.setRotation(ROT_180)
-    assert img.getRotation() == ROT_180
+    img.setRotation(Rotation.ROT_180)
+    assert img.getRotation() == Rotation.ROT_180
 
 
-@pytest.mark.parametrize(
-    "Hash, ImageData, Dims, Encoding",
-    [(karathon.Hash, karathon.ImageData, karathon.Dims, karathon.Encoding),
-     (karabind.Hash, karabind.ImageData, karabind.Dims, karabind.Encoding)])
-def test_imagedata_hash(Hash, ImageData, Dims, Encoding):
+def test_imagedata_hash():
     # Create numpy array
     arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
     # Python is an owner of data
