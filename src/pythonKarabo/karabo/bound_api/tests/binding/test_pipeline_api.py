@@ -19,10 +19,10 @@ import threading
 import time
 import uuid
 
-import karabind
-import pytest
-
-import karathon
+from karabo.bound import (
+    ChannelMetaData, ConnectionStatus, EventLoop, Hash, InputChannel,
+    OutputChannel, SignalSlotable, Timestamp, Types, VectorHash)
+from karabo.bound_tool import use_karathon
 
 # Enable logs for debugging - does not matter which bindings are used:
 # config = karabind.Hash("priority", "DEBUG")
@@ -77,16 +77,7 @@ class Writer:
         self.out.signalEndOfStream()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData, "
-    "Timestamp",
-    [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
-      karathon.Hash, karathon.ChannelMetaData, karathon.Timestamp),
-     (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
-      karabind.Hash, karabind.ChannelMetaData, karabind.Timestamp)])
-def test_pipeline_many_to_one(
-        EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData,
-        Timestamp):
+def test_pipeline_many_to_one():
     t = threading.Thread(target=EventLoop.work)
     t.start()
     assert t.is_alive() is True
@@ -219,20 +210,7 @@ def test_pipeline_many_to_one(
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotable, ConnectionStatus, ChannelMetaData, Timestamp,\
-     Hash, Types",
-    [
-     (karathon.EventLoop, karathon.SignalSlotable, karathon.ConnectionStatus,
-      karathon.ChannelMetaData, karathon.Timestamp, karathon.Hash,
-      karathon.Types),
-     (karabind.EventLoop, karabind.SignalSlotable, karabind.ConnectionStatus,
-      karabind.ChannelMetaData, karabind.Timestamp, karabind.Hash,
-      karabind.Types)
-     ])
-def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
-                                     ConnectionStatus, ChannelMetaData,
-                                     Timestamp, Hash, Types):
+def test_pipeline_connect_disconnect():
     t = threading.Thread(target=EventLoop.work)
     t.start()
     assert t.is_alive() is True
@@ -279,7 +257,7 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
 
     # Write first data - nobody connected yet.
     meta = ChannelMetaData("outputChannel:output", Timestamp())
-    if ChannelMetaData is karabind.ChannelMetaData:
+    if not use_karathon:
         assert meta.getSource() == meta['source']
         assert meta.getTimestamp() == meta['timestamp']
 
@@ -387,17 +365,7 @@ def test_pipeline_connect_disconnect(EventLoop, SignalSlotable,
     assert calls == count
 
 
-@pytest.mark.parametrize(
-    "EventLoop, InputChannel, OutputChannel, Hash, VectorHash, "
-    "ChannelMetaData, Timestamp",
-    [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
-      karathon.Hash, karathon.VectorHash, karathon.ChannelMetaData,
-      karathon.Timestamp),
-     (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
-      karabind.Hash, karabind.VectorHash, karabind.ChannelMetaData,
-      karabind.Timestamp)])
-def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
-                                Hash, VectorHash, ChannelMetaData, Timestamp):
+def test_pipeline_one_to_shared():
     # Test "shared selector"
     prefix = Hash.__module__  # distinguished names for each run
     t = threading.Thread(target=EventLoop.work)
@@ -629,19 +597,7 @@ def test_pipeline_one_to_shared(EventLoop, InputChannel, OutputChannel,
     assert not t.is_alive()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotable, ConnectionStatus, ChannelMetaData, Timestamp,\
-     Hash, Types",
-    [
-     (karathon.EventLoop, karathon.SignalSlotable, karathon.ConnectionStatus,
-      karathon.ChannelMetaData, karathon.Timestamp, karathon.Hash,
-      karathon.Types),
-     (karabind.EventLoop, karabind.SignalSlotable, karabind.ConnectionStatus,
-      karabind.ChannelMetaData, karabind.Timestamp, karabind.Hash,
-      karabind.Types)
-     ])
-def test_pipeline_input_channel(EventLoop, SignalSlotable, ConnectionStatus,
-                                ChannelMetaData, Timestamp, Hash, Types):
+def test_pipeline_input_channel():
     t = threading.Thread(target=EventLoop.work)
     t.start()
     sso = SignalSlotable("outputChannel" + str(uuid.uuid4()))
@@ -724,15 +680,7 @@ def test_pipeline_input_channel(EventLoop, SignalSlotable, ConnectionStatus,
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData, Timestamp",
-    [(karathon.EventLoop, karathon.InputChannel, karathon.OutputChannel,
-      karathon.Hash, karathon.ChannelMetaData, karathon.Timestamp),
-     (karabind.EventLoop, karabind.InputChannel, karabind.OutputChannel,
-      karabind.Hash, karabind.ChannelMetaData, karabind.Timestamp)])
-def test_pipeline_handlers(
-        EventLoop, InputChannel, OutputChannel, Hash, ChannelMetaData,
-        Timestamp):
+def test_pipeline_handlers():
     t = threading.Thread(target=EventLoop.work)
     t.start()
 
