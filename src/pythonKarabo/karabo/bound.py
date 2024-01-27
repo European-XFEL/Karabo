@@ -82,7 +82,9 @@ from .bound_tool import (
     SlotElementBase, TextSerializerHash, TextSerializerSchema, TimeDuration,
     Timestamp, Trainstamp, Types, TypesClass, Unit, Validator,
     ValidatorValidationRules, VectorHash, VectorHashPointer, _DimsIntern,
-    fullyEqual, isStdVectorDefaultConversion, loadFromFile, saveToFile,
-    setDims, setStdVectorDefaultConversion, similar)
+    fullyEqual, isStdVectorDefaultConversion, loadFromFile, loadHashFromFile,
+    loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile, setDims,
+    setStdVectorDefaultConversion, similar, startDeviceServer,
+    stopDeviceServer)
 from .common.alarm_conditions import AlarmCondition
 from .common.states import State, StateSignifier

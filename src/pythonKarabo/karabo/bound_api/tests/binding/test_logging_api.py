@@ -14,19 +14,10 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
-import karabind
-import pytest
-
-import karathon
+from karabo.bound import Hash, Logger
 
 
-@pytest.mark.parametrize(
-    "Logger, Hash",
-    [
-        (karathon.Logger, karathon.Hash),
-        (karabind.Logger, karabind.Hash)
-    ])
-def test_logging_config_rules(Logger, Hash):
+def test_logging_config_rules():
     # Python API: 'Logger.logXXX(message, category)
     # We are chatty in this test
     # But the idea is to only see OKs and never ERROR
@@ -76,13 +67,7 @@ def test_logging_config_rules(Logger, Hash):
     Logger.logInfo("ERROR", "a1.a2")
 
 
-@pytest.mark.parametrize(
-    "Logger, Hash",
-    [
-        (karathon.Logger, karathon.Hash),
-        (karabind.Logger, karabind.Hash)
-    ])
-def test_logging_config_more(Logger, Hash):
+def test_logging_config_more():
     Logger.reset()
     config = Hash("priority", "INFO")
     Logger.configure(config)
@@ -96,13 +81,7 @@ def test_logging_config_more(Logger, Hash):
     Logger.logInfo("FILE-OK", "a1.a2")
 
 
-@pytest.mark.parametrize(
-    "Logger, Hash",
-    [
-        (karathon.Logger, karathon.Hash),
-        (karabind.Logger, karabind.Hash)
-    ])
-def test_logging_last_message(Logger, Hash):
+def test_logging_last_message():
     # Reset (remove all appenders) and clear the cache
     Logger.reset()
 
