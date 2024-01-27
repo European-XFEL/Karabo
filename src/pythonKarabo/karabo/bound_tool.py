@@ -59,8 +59,10 @@ if use_karathon:
         TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
         TypesClass, Unit, Validator, ValidatorValidationRules, VectorHash,
         VectorHashPointer, _DimsIntern, fullyEqual,
-        isStdVectorDefaultConversion, loadFromFile, saveToFile, setDims,
-        setStdVectorDefaultConversion, similar)
+        isStdVectorDefaultConversion, loadFromFile, loadHashFromFile,
+        loadSchemaFromFile, saveHashToFile, saveSchemaToFile, saveToFile,
+        setDims, setStdVectorDefaultConversion, similar, startDeviceServer,
+        stopDeviceServer)
 else:
     from karabind import (
         ADMIN, ALARM_ELEMENT, AMPERE, AMPERE_PER_SECOND, ATTO, ATTOSEC, BAR,
@@ -99,8 +101,10 @@ else:
         SignalSlotableIntern, Slot, SlotElementBase, TextSerializerHash,
         TextSerializerSchema, TimeDuration, Timestamp, Trainstamp, Types,
         TypesClass, Unit, Validator, ValidatorValidationRules, VectorHash,
-        VectorHashPointer, _DimsIntern, fullyEqual, loadFromFile, saveToFile,
-        setDims, similar)
+        VectorHashPointer, _DimsIntern, cppNDArray, cppNDArrayCopy, fullyEqual,
+        loadFromFile, loadHashFromFile, loadSchemaFromFile, saveHashToFile,
+        saveSchemaToFile, saveToFile, setDims, similar, startDeviceServer,
+        stopDeviceServer)
 
     # For comptibility with old karathon bindings, take care that e.g.
     # str(Types.INT32) is 'INT32' and not 'Types.INT32'

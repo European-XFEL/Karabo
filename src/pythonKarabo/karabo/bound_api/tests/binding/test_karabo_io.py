@@ -14,12 +14,12 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
-import karabind
-import pytest
-
-import karathon
-from karabo.bound_api.decorators import (
-    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
+from karabo.bound import (
+    ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, KARABO_CLASSINFO,
+    KARABO_CONFIGURATION_BASE_CLASS, STATE_ELEMENT, STRING_ELEMENT,
+    BinarySerializerHash, BinarySerializerSchema, Hash, MetricPrefix, Schema,
+    TextSerializerHash, TextSerializerSchema, Unit, fullyEqual,
+    loadHashFromFile, loadSchemaFromFile, saveHashToFile, saveSchemaToFile)
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
@@ -29,12 +29,6 @@ from karabo.common.states import State
 class ShapeY:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            BOOL_ELEMENT = karabind.BOOL_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            BOOL_ELEMENT = karathon.BOOL_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             BOOL_ELEMENT(expected)
             .key("shadowEnabled")
@@ -51,22 +45,6 @@ class ShapeY:
 class CircleY(ShapeY):
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            STATE_ELEMENT = karabind.STATE_ELEMENT
-            ALARM_ELEMENT = karabind.ALARM_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            Unit = karabind.Unit
-            MetricPrefix = karabind.MetricPrefix
-        elif isinstance(expected, karathon.Schema):
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            STATE_ELEMENT = karathon.STATE_ELEMENT
-            ALARM_ELEMENT = karathon.ALARM_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            Unit = karathon.Unit
-            MetricPrefix = karathon.MetricPrefix
-        else:
-            raise TypeError("Unsupported argument type")
         (
             FLOAT_ELEMENT(expected)
             .key("radius")
@@ -110,14 +88,7 @@ class CircleY(ShapeY):
         )
 
 
-@pytest.mark.parametrize(
-    "BinarySerializerHash, TextSerializerHash, Hash, fullyEqual",
-    [(karathon.BinarySerializerHash, karathon.TextSerializerHash,
-        karathon.Hash, karathon.fullyEqual),
-     (karabind.BinarySerializerHash, karabind.TextSerializerHash,
-        karabind.Hash, karabind.fullyEqual)])
-def test_serializer_Hash(BinarySerializerHash, TextSerializerHash, Hash,
-                         fullyEqual):
+def test_serializer_Hash():
     config = Hash("indentation", -1)
     ser = TextSerializerHash.create("Xml", config)
     data = Hash('a.b.c', 1, 'x.y.z', [1, 2, 3, 4, 5, 6, 7])
@@ -138,14 +109,7 @@ KRB_Type="VECTOR_INT32">1,2,3,4,5,6,7</z></y></x></root>'
     assert fullyEqual(g, data) is True
 
 
-@pytest.mark.parametrize(
-    "BinarySerializerSchema, TextSerializerSchema, Hash, Schema",
-    [(karathon.BinarySerializerSchema, karathon.TextSerializerSchema,
-        karathon.Hash, karathon.Schema),
-     (karabind.BinarySerializerSchema, karabind.TextSerializerSchema,
-        karabind.Hash, karabind.Schema)])
-def test_serializer_schema(BinarySerializerSchema, TextSerializerSchema, Hash,
-                           Schema):
+def test_serializer_schema():
     schema = Schema()
     CircleY.expectedParameters(schema)
     config = Hash("indentation", -1)
@@ -163,13 +127,7 @@ def test_serializer_schema(BinarySerializerSchema, TextSerializerSchema, Hash,
     assert schema2.getParameterHash() == schema.getParameterHash()
 
 
-@pytest.mark.parametrize(
-    "saveHashToFile, loadHashFromFile, Hash, fullyEqual",
-    [(karathon.saveHashToFile, karathon.loadHashFromFile, karathon.Hash,
-      karathon.fullyEqual),
-     (karabind.saveHashToFile, karabind.loadHashFromFile, karabind.Hash,
-      karabind.fullyEqual)])
-def test_file_tools_hash(saveHashToFile, loadHashFromFile, Hash, fullyEqual):
+def test_file_tools_hash():
     h = Hash("a", 10, "b.c", "Hallo World", "x.y.z", [1, 2, 3, 4, 5])
     saveHashToFile(h, '/tmp/hallo.xml')
     g = loadHashFromFile('/tmp/hallo.xml')
@@ -179,14 +137,7 @@ def test_file_tools_hash(saveHashToFile, loadHashFromFile, Hash, fullyEqual):
     assert fullyEqual(h, g) is True
 
 
-@pytest.mark.parametrize(
-    "saveSchemaToFile, loadSchemaFromFile, Schema, fullyEqual",
-    [(karathon.saveSchemaToFile, karathon.loadSchemaFromFile, karathon.Schema,
-      karathon.fullyEqual),
-     (karabind.saveSchemaToFile, karabind.loadSchemaFromFile, karabind.Schema,
-      karabind.fullyEqual)])
-def test_file_tools_schema(saveSchemaToFile, loadSchemaFromFile, Schema,
-                           fullyEqual):
+def test_file_tools_schema():
     schema = Schema()
     CircleY.expectedParameters(schema)
     saveSchemaToFile(schema, '/tmp/circle.xml')
