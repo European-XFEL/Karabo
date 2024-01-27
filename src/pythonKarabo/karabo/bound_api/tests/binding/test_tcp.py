@@ -16,25 +16,23 @@
 
 import threading
 
-import karabind
 import pytest
 
-import karathon
+from karabo.bound import (
+    Broker, Connection, EventLoop, Hash, Schema, SignalSlotable, fullyEqual)
+from karabo.bound_tool import use_karathon
 
 debugFlag = False
 lock = threading.Lock()
 
 # For debugging to get exceptions printed that are caugth by C++ event loop:
-# from karathon import Logger
+# from karabo.bound import Logger
 # Logger.configure()
 # Logger.useOstream()
 
 
 @pytest.fixture(scope="module")
 def event_loop():
-    # We test the TCP code here and it does not matter which event loop
-    # bindings we use - so choose karabind.
-    EventLoop = karabind.EventLoop
     loop_thread = threading.Thread(target=EventLoop.work)
     loop_thread.start()
     # test_asynch_write_read needs an extra thread if readAsyncXxx would be
@@ -48,13 +46,7 @@ def event_loop():
     assert not loop_thread.is_alive()
 
 
-@pytest.mark.parametrize(
-    "Broker, Schema, Hash, SignalSlotable",
-    [(karabind.Broker, karabind.Schema, karabind.Hash,
-      karabind.SignalSlotable),
-     (karathon.Broker, karathon.Schema, karathon.Hash, karathon.SignalSlotable)
-     ])
-def test_broker(Broker, Schema, Hash, SignalSlotable):
+def test_broker():
 
     s = Schema()
     Broker.expectedParameters(s)
@@ -74,7 +66,7 @@ def test_broker(Broker, Schema, Hash, SignalSlotable):
 
 # Could become a fixture that requires event_loop fixture, but then I do not
 # know how to pass the classes
-def setup_server_client(Connection, Hash):
+def setup_server_client():
     """
     Create server and client connected to each other, using Connection and Hash
     classes as passed by argument.
@@ -104,7 +96,7 @@ def setup_server_client(Connection, Hash):
     assert alice is not None
     aliceConn2 = alice.getConnection()
     assert type(aliceConn) is Connection
-    if Connection is not karathon.Connection:
+    if not use_karathon:
         # karathon creates a new Python object here :-(
         assert aliceConn2 is aliceConn
 
@@ -113,14 +105,9 @@ def setup_server_client(Connection, Hash):
     return alice, aliceConn, bob, bobConn
 
 
-@pytest.mark.parametrize(
-    "Connection, Hash, fullyEqual",
-    [(karabind.Connection, karabind.Hash, karabind.fullyEqual),
-     (karathon.Connection, karathon.Hash, karathon.fullyEqual)
-     ])
-def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
+def test_synch_write_read(event_loop):
 
-    alice, aliceConn, bob, bobConn = setup_server_client(Connection, Hash)
+    alice, aliceConn, bob, bobConn = setup_server_client()
 
     alice.write("messageStr")  # str
     readMsg = bob.readStr()
@@ -167,7 +154,7 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
         alice.write(Hash("a", "header"), 1)  # not supported
         assert "Python Exception: Not supported type" in str(excinfo.value)
 
-    if type(alice) is not karathon.Channel:
+    if not use_karathon:
         # Not sure which error we would get here with karathon
         with pytest.raises(TypeError) as excinfo:
             alice.write(1, "message")  # not supported header type
@@ -175,15 +162,10 @@ def test_synch_write_read(event_loop, Connection, Hash, fullyEqual):
                     in str(excinfo.value))
 
 
-@pytest.mark.parametrize(
-    "Connection, Hash, fullyEqual",
-    [(karabind.Connection, karabind.Hash, karabind.fullyEqual),
-     (karathon.Connection, karathon.Hash, karathon.fullyEqual)
-     ])
-def test_asynch_write_read(event_loop, Connection, Hash, fullyEqual):
+def test_asynch_write_read(event_loop):
     # Test asynchronous write and read methods.
 
-    alice, aliceConn, bob, bobConn = setup_server_client(Connection, Hash)
+    alice, aliceConn, bob, bobConn = setup_server_client()
 
     ###################################################################
     # Write and read str
@@ -503,14 +485,7 @@ class Server:
         self.conn.stop()
 
 
-@pytest.mark.parametrize(
-    "Connection, EventLoop, Hash",
-    [
-        (karabind.Connection, karabind.EventLoop, karabind.Hash),
-        (karathon.Connection, karathon.EventLoop, karathon.Hash)
-    ])
-def test_tcp_client_server(Connection, EventLoop, Hash):
-    # Pass 'karathon' or 'karabind' versions of Connection, EventLoop and Hash
+def test_tcp_client_server():
     counter = 0
     count_max = 10
     server = Server(Connection, Hash)

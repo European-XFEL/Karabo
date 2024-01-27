@@ -20,13 +20,12 @@ import uuid
 from contextlib import nullcontext as does_not_raise
 from functools import partial
 
-import karabind
 import pytest
 
-import karathon
+from karabo.bound import EventLoop, Hash, SignalSlotable
 
 
-class SignalSlotableWithSlotsKarathon(karathon.SignalSlotable):
+class SignalSlotableWithSlots(SignalSlotable):
     def slotOneArg(self, a):
         pass
 
@@ -41,26 +40,7 @@ class SignalSlotableWithSlotsKarathon(karathon.SignalSlotable):
         self.reply(len(args), a)
 
 
-class SignalSlotableWithSlotsKarabind(karabind.SignalSlotable):
-    def slotOneArg(self, a):
-        pass
-
-    def slotVarArgs(self, *args):
-        self.reply(len(args))
-
-    def slotTwoArgDef(self, a, b, c=42):
-        self.reply(a + b + c)
-
-    # A keyword only argument with default
-    def slotKwargs(self, *args, a=77):
-        self.reply(len(args), a)
-
-
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotableWithSlots, Hash",
-    [(karathon.EventLoop, SignalSlotableWithSlotsKarathon, karathon.Hash),
-     (karabind.EventLoop, SignalSlotableWithSlotsKarabind, karabind.Hash)])
-def test_sigslot_register_function(EventLoop, SignalSlotableWithSlots, Hash):
+def test_sigslot_register_function():
     t = threading.Thread(target=EventLoop.work)
     t.start()
 
@@ -166,11 +146,7 @@ def test_sigslot_register_function(EventLoop, SignalSlotableWithSlots, Hash):
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotableWithSlots, Hash",
-    [(karathon.EventLoop, SignalSlotableWithSlotsKarathon, karathon.Hash),
-     (karabind.EventLoop, SignalSlotableWithSlotsKarabind, karabind.Hash)])
-def test_sigslot_register_method(EventLoop, SignalSlotableWithSlots, Hash):
+def test_sigslot_register_method():
     t = threading.Thread(target=EventLoop.work)
     t.start()
 
@@ -264,11 +240,7 @@ def test_sigslot_register_method(EventLoop, SignalSlotableWithSlots, Hash):
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotableWithSlots, Hash",
-    [(karathon.EventLoop, SignalSlotableWithSlotsKarathon, karathon.Hash),
-     (karabind.EventLoop, SignalSlotableWithSlotsKarabind, karabind.Hash)])
-def test_sigslot_register_lambda(EventLoop, SignalSlotableWithSlots, Hash):
+def test_sigslot_register_lambda():
     t = threading.Thread(target=EventLoop.work)
     t.start()
 
@@ -314,11 +286,7 @@ def test_sigslot_register_lambda(EventLoop, SignalSlotableWithSlots, Hash):
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotable, Hash",
-    [(karathon.EventLoop, karathon.SignalSlotable, karathon.Hash),
-     (karabind.EventLoop, karabind.SignalSlotable, karabind.Hash)])
-def test_sigslot_unique_id(EventLoop, SignalSlotable, Hash):
+def test_sigslot_unique_id():
     t = threading.Thread(target=EventLoop.work)
     t.start()
     assert t.is_alive() is True
@@ -353,11 +321,7 @@ def test_sigslot_unique_id(EventLoop, SignalSlotable, Hash):
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotable, Hash",
-    [(karathon.EventLoop, karathon.SignalSlotable, karathon.Hash),
-     (karabind.EventLoop, karabind.SignalSlotable, karabind.Hash)])
-def test_sigslot_request(EventLoop, SignalSlotable, Hash):
+def test_sigslot_request():
     t = threading.Thread(target=EventLoop.work)
     t.start()
 
@@ -820,11 +784,7 @@ def test_sigslot_request(EventLoop, SignalSlotable, Hash):
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, SignalSlotable",
-    [(karathon.EventLoop, karathon.SignalSlotable),
-     (karabind.EventLoop, karabind.SignalSlotable)])
-def test_sigslot_asyncreply(EventLoop, SignalSlotable):
+def test_sigslot_asyncreply():
     t = threading.Thread(target=EventLoop.work)
     t.start()
 

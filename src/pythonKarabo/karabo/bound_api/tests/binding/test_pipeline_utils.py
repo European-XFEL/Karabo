@@ -14,20 +14,13 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 
-import karabind
-import pytest
+from karabo.bound import (
+    INPUT_CHANNEL, INT32_ELEMENT, OUTPUT_CHANNEL, ChannelMetaData, Epochstamp,
+    Schema, Timestamp, Trainstamp)
+from karabo.bound_tool import use_karathon
 
-import karathon
 
-
-@pytest.mark.parametrize(
-    "Epochstamp, Timestamp, Trainstamp, ChannelMetaData",
-    [(karathon.Epochstamp, karathon.Timestamp, karathon.Trainstamp,
-      karathon.ChannelMetaData),
-     (karabind.Epochstamp, karabind.Timestamp, karabind.Trainstamp,
-      karabind.ChannelMetaData)])
-def test_metadata_general_functionality(Epochstamp, Timestamp, Trainstamp,
-                                        ChannelMetaData):
+def test_metadata_general_functionality():
     es = Epochstamp(1356441936, 789333123456789123)
     ts = Timestamp(es, Trainstamp(987654321))
     meta = ChannelMetaData('abc', ts)
@@ -37,7 +30,7 @@ def test_metadata_general_functionality(Epochstamp, Timestamp, Trainstamp,
     assert meta.getTimestamp().getSeconds() == 1356441936
     assert meta.getTimestamp().getFractionalSeconds() == 789333123456789123
     assert meta.getTimestamp().toFormattedString() == ts.toFormattedString()
-    if Timestamp is karabind.Timestamp:
+    if not use_karathon:
         # Equality operator is bound
         assert meta.getTimestamp() == ts
     else:
@@ -55,14 +48,7 @@ def test_metadata_general_functionality(Epochstamp, Timestamp, Trainstamp,
     assert meta.getTimestamp().toFormattedString() == ts1.toFormattedString()
 
 
-@pytest.mark.parametrize(
-    "Schema, INT32_ELEMENT, OUTPUT_CHANNEL, INPUT_CHANNEL",
-    [(karathon.Schema, karathon.INT32_ELEMENT, karathon.OUTPUT_CHANNEL,
-      karathon.INPUT_CHANNEL),
-     (karabind.Schema, karabind.INT32_ELEMENT, karabind.OUTPUT_CHANNEL,
-      karabind.INPUT_CHANNEL)])
-def test_channel_schema_declarations(Schema, INT32_ELEMENT, OUTPUT_CHANNEL,
-                                     INPUT_CHANNEL):
+def test_channel_schema_declarations():
     pipeSchema = Schema()
     INT32_ELEMENT(pipeSchema).key("int32").readOnly().commit()
 

@@ -13,17 +13,12 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
-import karabind
-import pytest
 
-import karathon
+from karabo.bound import Hash, HashNode, Types
+from karabo.bound_tool import use_karathon
 
 
-@pytest.mark.parametrize(
-    "Hash,HashNode,Types",
-    [(karabind.Hash, karabind.HashNode, karabind.Types),
-     (karathon.Hash, karathon.HashNode, karathon.Types)])
-def test_hashNode(Hash, HashNode, Types):
+def test_hashNode():
     # Test "getKey", "setValue", "getValue", "getValueAs",
     #      "setAttribute", "getAttribute", "getAttributeAs",
     #      "hasAttribute", "setAttributes", "getAttributes",
@@ -74,14 +69,14 @@ def test_hashNode(Hash, HashNode, Types):
     # "test_hash_attributes_node.py"
     # .... skipped tests
     assert node.getValueAs(Types.DOUBLE) == 1.0
-    if Types is karabind.Types:
+    if not use_karathon:
         assert node.getValueAs("COMPLEX_FLOAT") == (1 + 0j)
         assert node.getValueAs("COMPLEX_DOUBLE") == (1 + 0J)
     assert node.getValueAs(Types.STRING) == '1'
     assert node.getValueAs(Types.VECTOR_BOOL) == [True]
     assert node.getValueAs(Types.VECTOR_INT16) == [1]
     # .... skipped tests ...
-    if Types is karabind.Types:
+    if not use_karathon:
         assert node.getValueAs(Types.VECTOR_FLOAT) == [1.0]
         assert node.getValueAs(Types.VECTOR_DOUBLE) == [1.0]
         assert node.getValueAs(Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
@@ -103,7 +98,7 @@ def test_hashNode(Hash, HashNode, Types):
     assert n.getValueAs(Types.UINT64) == 1
     assert n.getValueAs(Types.FLOAT) == 1.0
     assert n.getValueAs(Types.DOUBLE) == 1.0
-    if Types is karabind.Types:
+    if not use_karathon:
         assert n.getValueAs(Types.COMPLEX_FLOAT) == (1 + 0j)
         assert n.getValueAs(Types.COMPLEX_DOUBLE) == (1 + 0j)
     assert n.getValueAs(Types.STRING) == '1'
@@ -114,7 +109,7 @@ def test_hashNode(Hash, HashNode, Types):
     assert n.getValueAs(Types.VECTOR_INT16) == [1]
     # ... skipped tests
     assert n.getValueAs(Types.VECTOR_UINT64) == [1]
-    if Types is karabind.Types:
+    if not use_karathon:
         assert n.getValueAs(Types.VECTOR_FLOAT) == [1.0]
         assert n.getValueAs(Types.VECTOR_DOUBLE) == [1.0]
         assert n.getValueAs(Types.VECTOR_COMPLEX_FLOAT) == [(1 + 0j)]
@@ -129,7 +124,7 @@ def test_hashNode(Hash, HashNode, Types):
     assert n.getValueAs(Types.INT8) == 42
     # ... skipped tests
     assert n.getValueAs(Types.DOUBLE) == 42
-    if Types is karabind.Types:
+    if not use_karathon:
         assert n.getValueAs(Types.COMPLEX_FLOAT) == (42 + 0j)
         assert n.getValueAs(Types.COMPLEX_DOUBLE) == (42 + 0j)
     assert n.getValueAs(Types.STRING) == '42'
@@ -142,7 +137,7 @@ def test_hashNode(Hash, HashNode, Types):
     assert n.getValueAs(Types.VECTOR_INT16) == [42]
     # ... skipped tests
     assert n.getValueAs(Types.VECTOR_UINT64) == [42]
-    if Types is karabind.Types:
+    if not use_karathon:
         assert n.getValueAs(Types.VECTOR_FLOAT) == [42.0]
         assert n.getValueAs(Types.VECTOR_DOUBLE) == [42.0]
         assert n.getValueAs("VECTOR_COMPLEX_FLOAT") == [(42 + 0j)]
@@ -163,14 +158,14 @@ def test_hashNode(Hash, HashNode, Types):
     assert node.getAttributeAs("a", Types.INT8) == 15
     # ... skipped tests
     assert node.getAttributeAs("a", "DOUBLE") == 15
-    if Types is karabind.Types:
+    if not use_karathon:
         assert node.getAttributeAs("a", Types.COMPLEX_FLOAT) == (15 + 0j)
         assert node.getAttributeAs("a", Types.COMPLEX_DOUBLE) == (15 + 0j)
     assert node.getAttributeAs("a", Types.STRING) == '15'
     # Base64 encoding
     # assert node.getAttributeAs("a", Types.VECTOR_INT8) == [15]
     # assert node.getAttributeAs("a", Types.VECTOR_UINT8) == [15]
-    if Types is karabind.Types:
+    if not use_karathon:
         assert node.getAttributeAs("a", "VECTOR_INT16") == [15]
         # ... skipped tests
         assert node.getAttributeAs("a", Types.VECTOR_DOUBLE) == [15]
