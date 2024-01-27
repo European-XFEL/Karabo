@@ -19,25 +19,14 @@ import time
 import uuid
 from threading import Thread
 
-import karabind
 import pytest
 
-import karathon
+from karabo.bound import (
+    DeviceClient, EventLoop, Hash, Logger, Schema, startDeviceServer,
+    stopDeviceServer)
 
 
-@pytest.mark.parametrize(
-    "EventLoop, DeviceClient, Hash, Schema, startDeviceServer,"
-    "stopDeviceServer, Logger",
-    [
-     (karathon.EventLoop, karathon.DeviceClient, karathon.Hash,
-      karathon.Schema, karathon.startDeviceServer, karathon.stopDeviceServer,
-      karathon.Logger),
-     (karabind.EventLoop, karabind.DeviceClient, karabind.Hash,
-      karabind.Schema, karabind.startDeviceServer, karabind.stopDeviceServer,
-      karabind.Logger)
-     ])
-def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
-                                startDeviceServer, stopDeviceServer, Logger):
+def test_device_client_sync_api():
     # Run CPP event loop in background ...
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
@@ -335,17 +324,7 @@ def test_device_client_sync_api(EventLoop, DeviceClient, Hash, Schema,
     loopThread.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer, "
-    "Logger",
-    [
-     (karathon.EventLoop, karathon.DeviceClient, karathon.Hash,
-      karathon.startDeviceServer, karathon.stopDeviceServer, karathon.Logger),
-     (karabind.EventLoop, karabind.DeviceClient, karabind.Hash,
-      karabind.startDeviceServer, karabind.stopDeviceServer, karabind.Logger)
-     ])
-def test_device_client_async_api(EventLoop, DeviceClient, Hash,
-                                 startDeviceServer, stopDeviceServer, Logger):
+def test_device_client_async_api():
     # Run CPP event loop in background ...
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
@@ -402,8 +381,12 @@ def test_device_client_async_api(EventLoop, DeviceClient, Hash,
     assert c.get(deviceId, 'node.counterReadOnly') == 10
 
     # getDeviceSchemaNoWait (pre-cache) ...
+    trials = 1000
+    while trials > 0 and c.getDeviceSchemaNoWait(deviceId).empty():
+        time.sleep(0.02)
+        trials -= 1
     schema = c.getDeviceSchemaNoWait(deviceId)
-    assert schema.empty() is True
+    assert schema.empty() is False
 
     # shutdown device ...
     c.killDeviceNoWait(deviceId)

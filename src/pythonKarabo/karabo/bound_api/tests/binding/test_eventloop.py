@@ -19,17 +19,10 @@ from signal import SIGTERM
 from threading import Lock, Thread
 from time import sleep
 
-import karabind
-import pytest
-
-import karathon
+from karabo.bound import Epochstamp, EventLoop
 
 
-@pytest.mark.parametrize(
-    "EventLoop, Epochstamp",
-    [(karathon.EventLoop, karathon.Epochstamp),
-     (karabind.EventLoop, karabind.Epochstamp)])
-def test_eventloop_post(EventLoop, Epochstamp):
+def test_eventloop_post():
     done = False
 
     def func():
@@ -90,10 +83,7 @@ def test_eventloop_post(EventLoop, Epochstamp):
     t.join()
 
 
-@pytest.mark.parametrize(
-    "EventLoop",
-    [(karathon.EventLoop), (karabind.EventLoop)])
-def test_eventloop_signalHandler(EventLoop):
+def test_eventloop_signalHandler():
     signal = None
 
     def handler(sig):

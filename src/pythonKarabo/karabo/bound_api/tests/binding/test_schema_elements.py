@@ -15,15 +15,26 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 import copy
 
-import karabind
 import numpy as np
 import pytest
 
-import karathon
-from karabo.bound_api.decorators import (
-    KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
+from karabo.bound import (
+    ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, DOUBLE_ELEMENT, EVERY_1S,
+    EVERY_100MS, EVERY_EVENT, FLOAT_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT,
+    INT64_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
+    LIST_ELEMENT, METER, MICRO, NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT,
+    OVERWRITE_ELEMENT, PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT,
+    VECTOR_BOOL_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
+    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, AccessLevel, AccessType,
+    ArchivePolicy, AssemblyRules, AssignmentType, Encoding, Hash, MetricPrefix,
+    NodeType, Schema, Types, Unit, fullyEqual)
+from karabo.bound_tool import use_karathon
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
+
+if not use_karathon:
+    from karabo.bound_tool import BYTEARRAY_ELEMENT, cppNDArray, cppNDArrayCopy
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -31,12 +42,6 @@ from karabo.common.states import State
 class ShapeX:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            BOOL_ELEMENT = karabind.BOOL_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            BOOL_ELEMENT = karathon.BOOL_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             BOOL_ELEMENT(expected)
             .key("shadowEnabled")
@@ -53,22 +58,6 @@ class ShapeX:
 class CircleX(ShapeX):
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            STATE_ELEMENT = karabind.STATE_ELEMENT
-            ALARM_ELEMENT = karabind.ALARM_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            Unit = karabind.Unit
-            MetricPrefix = karabind.MetricPrefix
-        elif isinstance(expected, karathon.Schema):
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            STATE_ELEMENT = karathon.STATE_ELEMENT
-            ALARM_ELEMENT = karathon.ALARM_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            Unit = karathon.Unit
-            MetricPrefix = karathon.MetricPrefix
-        else:
-            raise TypeError("Unsupported argument type")
         (
             FLOAT_ELEMENT(expected)
             .key("radius")
@@ -117,16 +106,6 @@ class EditableCircleX(CircleX):
     @staticmethod
     def expectedParameters(expected):
         CircleX.expectedParameters(expected)
-        if isinstance(expected, karabind.Schema):
-            OVERWRITE_ELEMENT = karabind.OVERWRITE_ELEMENT
-            Unit = karabind.Unit
-            MetricPrefix = karabind.MetricPrefix
-        elif isinstance(expected, karathon.Schema):
-            OVERWRITE_ELEMENT = karathon.OVERWRITE_ELEMENT
-            Unit = karathon.Unit
-            MetricPrefix = karathon.MetricPrefix
-        else:
-            raise TypeError("Unsupported argument type")
         (
             OVERWRITE_ELEMENT(expected).key("radius")
             .setNewDisplayedName("New Radius")
@@ -173,16 +152,6 @@ class EditableCircleX(CircleX):
 class RectangleX(ShapeX):
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            Unit = karabind.Unit
-            MetricPrefix = karabind.MetricPrefix
-        elif isinstance(expected, karathon.Schema):
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            Unit = karathon.Unit
-            MetricPrefix = karathon.MetricPrefix
-        else:
-            raise TypeError("Unsupported argument type")
         (
             FLOAT_ELEMENT(expected)
             .key("a")
@@ -220,12 +189,6 @@ class EditableRectangleX(RectangleX):
     @staticmethod
     def expectedParameters(expected):
         RectangleX.expectedParameters(expected)
-        if isinstance(expected, karabind.Schema):
-            OVERWRITE_ELEMENT = karabind.OVERWRITE_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            OVERWRITE_ELEMENT = karathon.OVERWRITE_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
         (
             OVERWRITE_ELEMENT(expected).key("a")
             .setNewAssignmentInternal()
@@ -245,23 +208,6 @@ class EditableRectangleX(RectangleX):
 class GraphicsRendererX1:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            # Schema = karabind.Schema
-            BOOL_ELEMENT = karabind.BOOL_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            CHOICE_ELEMENT = karabind.CHOICE_ELEMENT
-            NODE_ELEMENT = karabind.NODE_ELEMENT
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-        elif isinstance(expected, karathon.Schema):
-            # Schema = karathon.Schema
-            BOOL_ELEMENT = karathon.BOOL_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            CHOICE_ELEMENT = karathon.CHOICE_ELEMENT
-            NODE_ELEMENT = karathon.NODE_ELEMENT
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-        else:
-            raise TypeError("Unsupported argument type")
-
         (
             BOOL_ELEMENT(expected)
             .key("antiAlias")
@@ -347,62 +293,6 @@ class GraphicsRendererX1:
 class TestStruct1:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            Schema = karabind.Schema
-            Hash = karabind.Hash
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-            UINT32_ELEMENT = karabind.UINT32_ELEMENT
-            DOUBLE_ELEMENT = karabind.DOUBLE_ELEMENT
-            INT64_ELEMENT = karabind.INT64_ELEMENT
-            UINT64_ELEMENT = karabind.UINT64_ELEMENT
-            VECTOR_INT32_ELEMENT = karabind.VECTOR_INT32_ELEMENT
-            VECTOR_UINT32_ELEMENT = karabind.VECTOR_UINT32_ELEMENT
-            # VECTOR_INT64_ELEMENT = karabind.VECTOR_INT64_ELEMENT
-            # VECTOR_UINT64_ELEMENT = karabind.VECTOR_UINT64_ELEMENT
-            VECTOR_DOUBLE_ELEMENT = karabind.VECTOR_DOUBLE_ELEMENT
-            VECTOR_STRING_ELEMENT = karabind.VECTOR_STRING_ELEMENT
-            PATH_ELEMENT = karabind.PATH_ELEMENT
-            NDARRAY_ELEMENT = karabind.NDARRAY_ELEMENT
-            SLOT_ELEMENT = karabind.SLOT_ELEMENT
-            NODE_ELEMENT = karabind.NODE_ELEMENT
-            TABLE_ELEMENT = karabind.TABLE_ELEMENT
-            CHOICE_ELEMENT = karabind.CHOICE_ELEMENT
-            BYTEARRAY_ELEMENT = karabind.BYTEARRAY_ELEMENT
-            Unit = karabind.Unit
-            MetricPrefix = karabind.MetricPrefix
-            EVERY_100MS = karabind.EVERY_100MS
-            EVERY_1S = karabind.EVERY_1S
-            NO_ARCHIVING = karabind.NO_ARCHIVING
-        elif isinstance(expected, karathon.Schema):
-            Schema = karathon.Schema
-            Hash = karathon.Hash
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-            UINT32_ELEMENT = karathon.UINT32_ELEMENT
-            DOUBLE_ELEMENT = karathon.DOUBLE_ELEMENT
-            INT64_ELEMENT = karathon.INT64_ELEMENT
-            UINT64_ELEMENT = karathon.UINT64_ELEMENT
-            VECTOR_INT32_ELEMENT = karathon.VECTOR_INT32_ELEMENT
-            VECTOR_UINT32_ELEMENT = karathon.VECTOR_UINT32_ELEMENT
-            # VECTOR_INT64_ELEMENT = karathon.VECTOR_INT64_ELEMENT
-            # VECTOR_UINT64_ELEMENT = karathon.VECTOR_UINT64_ELEMENT
-            VECTOR_DOUBLE_ELEMENT = karathon.VECTOR_DOUBLE_ELEMENT
-            VECTOR_STRING_ELEMENT = karathon.VECTOR_STRING_ELEMENT
-            PATH_ELEMENT = karathon.PATH_ELEMENT
-            NDARRAY_ELEMENT = karathon.NDARRAY_ELEMENT
-            SLOT_ELEMENT = karathon.SLOT_ELEMENT
-            NODE_ELEMENT = karathon.NODE_ELEMENT
-            TABLE_ELEMENT = karathon.TABLE_ELEMENT
-            CHOICE_ELEMENT = karathon.CHOICE_ELEMENT
-            BYTEARRAY_ELEMENT = karathon.BYTEARRAY_ELEMENT
-            Unit = karathon.Unit
-            MetricPrefix = karathon.MetricPrefix
-            EVERY_100MS = karathon.EVERY_100MS
-            EVERY_1S = karathon.EVERY_1S
-            NO_ARCHIVING = karathon.NO_ARCHIVING
-        else:
-            raise TypeError("Unsupported argument type")
         (
             STRING_ELEMENT(expected)
             .key("exampleKey1")
@@ -462,7 +352,7 @@ class TestStruct1:
             .commit(),
         )
 
-        if BYTEARRAY_ELEMENT is karabind.BYTEARRAY_ELEMENT:
+        if not use_karathon:
             (
                 # Always readOnly(), by default as well
                 BYTEARRAY_ELEMENT(expected)
@@ -803,50 +693,6 @@ class TestStruct1:
 class OtherSchemaElementsX:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            Hash = karabind.Hash
-            Schema = karabind.Schema
-            FLOAT_ELEMENT = karabind.FLOAT_ELEMENT
-            SLOT_ELEMENT = karabind.SLOT_ELEMENT
-            PATH_ELEMENT = karabind.PATH_ELEMENT
-            STRING_ELEMENT = karabind.STRING_ELEMENT
-            VECTOR_INT32_ELEMENT = karabind.VECTOR_INT32_ELEMENT
-            VECTOR_DOUBLE_ELEMENT = karabind.VECTOR_DOUBLE_ELEMENT
-            VECTOR_BOOL_ELEMENT = karabind.VECTOR_BOOL_ELEMENT
-            NDARRAY_ELEMENT = karabind.NDARRAY_ELEMENT
-            Types = karabind.Types
-            LIST_ELEMENT = karabind.LIST_ELEMENT
-            NODE_ELEMENT = karabind.NODE_ELEMENT
-            Types = karabind.Types
-            TABLE_ELEMENT = karabind.TABLE_ELEMENT
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-            IMAGEDATA_ELEMENT = karabind.IMAGEDATA_ELEMENT
-            # EVERY_10MIN = karabind.EVERY_10MIN
-            EVERY_EVENT = karabind.EVERY_EVENT
-            # NO_ARCHIVING = karabind.NO_ARCHIVING
-        elif isinstance(expected, karathon.Schema):
-            Hash = karathon.Hash
-            Schema = karathon.Schema
-            FLOAT_ELEMENT = karathon.FLOAT_ELEMENT
-            SLOT_ELEMENT = karathon.SLOT_ELEMENT
-            PATH_ELEMENT = karathon.PATH_ELEMENT
-            STRING_ELEMENT = karathon.STRING_ELEMENT
-            VECTOR_INT32_ELEMENT = karathon.VECTOR_INT32_ELEMENT
-            VECTOR_DOUBLE_ELEMENT = karathon.VECTOR_DOUBLE_ELEMENT
-            VECTOR_BOOL_ELEMENT = karathon.VECTOR_BOOL_ELEMENT
-            NDARRAY_ELEMENT = karathon.NDARRAY_ELEMENT
-            Types = karathon.Types
-            LIST_ELEMENT = karathon.LIST_ELEMENT
-            NODE_ELEMENT = karathon.NODE_ELEMENT
-            Types = karathon.Types
-            TABLE_ELEMENT = karathon.TABLE_ELEMENT
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-            IMAGEDATA_ELEMENT = karathon.IMAGEDATA_ELEMENT
-            # EVERY_10MIN = karathon.EVERY_10MIN
-            EVERY_EVENT = karathon.EVERY_EVENT
-            # NO_ARCHIVING = karathon.NO_ARCHIVING
-        else:
-            raise TypeError("Unsupported argument type")
         (
             SLOT_ELEMENT(expected)
             .key("slotTest")
@@ -1099,28 +945,6 @@ class OtherSchemaElementsX:
 class SomeClass:
     @staticmethod
     def expectedParameters(expected):
-        if isinstance(expected, karabind.Schema):
-            INT32_ELEMENT = karabind.INT32_ELEMENT
-            DOUBLE_ELEMENT = karabind.DOUBLE_ELEMENT
-            VECTOR_INT32_ELEMENT = karabind.VECTOR_INT32_ELEMENT
-            IMAGEDATA_ELEMENT = karabind.IMAGEDATA_ELEMENT
-            Unit = karabind.Unit
-            MetricPrefix = karabind.MetricPrefix
-            EVERY_100MS = karabind.EVERY_100MS
-            Encoding = karabind.Encoding
-            Types = karabind.Types
-        elif isinstance(expected, karathon.Schema):
-            INT32_ELEMENT = karathon.INT32_ELEMENT
-            DOUBLE_ELEMENT = karathon.DOUBLE_ELEMENT
-            VECTOR_INT32_ELEMENT = karathon.VECTOR_INT32_ELEMENT
-            IMAGEDATA_ELEMENT = karathon.IMAGEDATA_ELEMENT
-            Unit = karathon.Unit
-            MetricPrefix = karathon.MetricPrefix
-            EVERY_100MS = karathon.EVERY_100MS
-            Encoding = karathon.Encoding
-            Types = karathon.Types
-        else:
-            raise TypeError("Unsupported argument type")
         (
             INT32_ELEMENT(expected)
             .key("x")
@@ -1225,11 +1049,7 @@ class SomeClass:
         )
 
 
-@pytest.mark.parametrize(
-    "Schema, AssemblyRules, AccessLevel",
-    [(karathon.Schema, karathon.AssemblyRules, karathon.AccessLevel),
-     (karabind.Schema, karabind.AssemblyRules, karabind.AccessLevel)])
-def test_buildUp(Schema, AssemblyRules, AccessLevel):
+def test_buildUp():
     schema = ShapeX.getSchema("CircleX", AssemblyRules())
     assert schema.isAccessInitOnly("shadowEnabled") is True
     assert schema.isAccessInitOnly("radius") is True
@@ -1302,17 +1122,13 @@ def test_buildUp(Schema, AssemblyRules, AccessLevel):
     assert schema.isLeaf("shapes.circle.radius") is True
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getRootName(Schema):
+def test_getRootName():
     schema = Schema("MyTest")
     TestStruct1.expectedParameters(schema)
     assert schema.getRootName() == "MyTest"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getTags(Schema):
+def test_getTags():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getTags("exampleKey1")[0] == "hardware"
@@ -1324,13 +1140,11 @@ def test_getTags(Schema):
     assert schema.getTags("exampleKey4")[0] == "software"
     assert schema.getTags("exampleKey5")[0] == "h/w"
     assert schema.getTags("exampleKey5")[1] == "d.m.y"
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getTags("rarray")[0] == "software"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_setTags(Schema):
+def test_setTags():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.hasTags('x') is True
@@ -1339,11 +1153,7 @@ def test_setTags(Schema):
     assert schema.getTags('x') == ['CY', 'SE']
 
 
-@pytest.mark.parametrize(
-    "Schema, AccessLevel",
-    [(karathon.Schema, karathon.AccessLevel),
-     (karabind.Schema, karabind.AccessLevel)])
-def test_getsetAccessLevel(Schema, AccessLevel):
+def test_getsetAccessLevel():
     sch = Schema()
     SomeClass.expectedParameters(sch)
     assert sch.getRequiredAccessLevel('x') == AccessLevel.EXPERT
@@ -1367,13 +1177,11 @@ def test_getsetAccessLevel(Schema, AccessLevel):
     assert sch.getRequiredAccessLevel('exampleKey10') == AccessLevel.USER
     # observerAccess in reconfigurable
     assert sch.getRequiredAccessLevel('exampleKey11') == AccessLevel.OBSERVER
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert sch.getRequiredAccessLevel('rarray') == AccessLevel.USER
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_isNode(Schema):
+def test_isNode():
     schema = Schema("test")
     GraphicsRendererX1.expectedParameters(schema)
     assert schema.getRootName() == "test"
@@ -1382,11 +1190,7 @@ def test_isNode(Schema):
     assert schema.isNode("shapes") is False
 
 
-@pytest.mark.parametrize(
-    "Schema, NodeType",
-    [(karathon.Schema, karathon.NodeType),
-     (karabind.Schema, karabind.NodeType)])
-def test_getNodeType(Schema, NodeType):
+def test_getNodeType():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     nodeType = schema.getNodeType("exampleKey1")
@@ -1399,11 +1203,7 @@ def test_getNodeType(Schema, NodeType):
     assert schema.getNodeType("shapes.rectangle") == NodeType.NODE
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_getValueType(Schema, Types):
+def test_getValueType():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getValueType("exampleKey1") == Types.STRING
@@ -1416,13 +1216,11 @@ def test_getValueType(Schema, Types):
     assert schema.getValueType("exampleKey7b") == Types.VECTOR_UINT32
     assert schema.getValueType("exampleKey8") == Types.VECTOR_DOUBLE
     assert schema.getValueType("exampleKey9") == Types.VECTOR_STRING
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getValueType("rarray") == Types.BYTE_ARRAY
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getAliasAsString(Schema):
+def test_getAliasAsString():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getAliasAsString("exampleKey2") == "10"
@@ -1431,13 +1229,11 @@ def test_getAliasAsString(Schema):
     assert schema.getAliasAsString("exampleKey5") == "exampleAlias5"
     assert schema.getAliasAsString("exampleKey6") == "1193046,43724"
     assert schema.getAliasAsString("testPath") == "5"
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getAliasAsString("rarray") == "aliasReadArray"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_keyHasAlias(Schema):
+def test_keyHasAlias():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.keyHasAlias("exampleKey1") is False
@@ -1447,13 +1243,11 @@ def test_keyHasAlias(Schema):
     assert schema.keyHasAlias("exampleKey5") is True
     assert schema.keyHasAlias("exampleKey6") is True
     assert schema.keyHasAlias("testPath") is True
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.keyHasAlias("rarray") is True
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_aliasHasKey(Schema):
+def test_aliasHasKey():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.aliasHasKey(10) is True
@@ -1463,13 +1257,11 @@ def test_aliasHasKey(Schema):
     assert schema.aliasHasKey([0x00123456, 0x0000aacc]) is True
     assert schema.aliasHasKey(7) is False
     assert schema.aliasHasKey(5) is True
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.aliasHasKey("aliasReadArray") is True
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getAliasFromKey(Schema):
+def test_getAliasFromKey():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getAliasFromKey("exampleKey2") == 10
@@ -1478,13 +1270,11 @@ def test_getAliasFromKey(Schema):
     assert schema.getAliasFromKey("exampleKey5") == "exampleAlias5"
     assert schema.getAliasFromKey("exampleKey6") == [0x00123456, 0x0000aacc]
     assert schema.getAliasFromKey("testPath") == 5
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getAliasFromKey("rarray") == "aliasReadArray"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_setAlias(Schema):
+def test_setAlias():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.getAliasFromKey("x") == 10
@@ -1494,9 +1284,7 @@ def test_setAlias(Schema):
     assert schema.getAliasFromKey("x") == 99
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getKeyFromAlias(Schema):
+def test_getKeyFromAlias():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getKeyFromAlias(10) == "exampleKey2"
@@ -1505,15 +1293,11 @@ def test_getKeyFromAlias(Schema):
     assert schema.getKeyFromAlias("exampleAlias5") == "exampleKey5"
     assert schema.getKeyFromAlias([0x00123456, 0x0000aacc]) == "exampleKey6"
     assert schema.getKeyFromAlias(5) == "testPath"
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getKeyFromAlias("aliasReadArray") == "rarray"
 
 
-@pytest.mark.parametrize(
-    "Schema, AccessType",
-    [(karathon.Schema, karathon.AccessType),
-     (karabind.Schema, karabind.AccessType)])
-def test_getAccessMode(Schema, AccessType):
+def test_getAccessMode():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getAccessMode("exampleKey1") == AccessType.WRITE
@@ -1526,15 +1310,11 @@ def test_getAccessMode(Schema, AccessType):
     assert schema.getAccessMode("testPath") == AccessType.WRITE
     assert schema.getAccessMode("testPath2") == AccessType.READ
     assert schema.getAccessMode("testPath3") == AccessType.INIT
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getAccessMode("rarray") == AccessType.READ
 
 
-@pytest.mark.parametrize(
-    "Schema, AssignmentType",
-    [(karathon.Schema, karathon.AssignmentType),
-     (karabind.Schema, karabind.AssignmentType)])
-def test_getAssignment(Schema, AssignmentType):
+def test_getAssignment():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getAssignment("exampleKey1") == AssignmentType.OPTIONAL
@@ -1549,11 +1329,7 @@ def test_getAssignment(Schema, AssignmentType):
     assert schema.getAssignment("testPath3") == AssignmentType.MANDATORY
 
 
-@pytest.mark.parametrize(
-    "Schema, AssignmentType",
-    [(karathon.Schema, karathon.AssignmentType),
-     (karabind.Schema, karabind.AssignmentType)])
-def test_setAssignment(Schema, AssignmentType):
+def test_setAssignment():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.hasAssignment('x') is True
@@ -1566,29 +1342,23 @@ def test_setAssignment(Schema, AssignmentType):
     assert schema.getAssignment('x') == AssignmentType.MANDATORY
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getDescription(Schema):
+def test_getDescription():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getDescription('exampleKey1') == "Example key 1 description"
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getDescription('rarray') == \
             "Example of ByteArray for reading"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_setDescription(Schema):
+def test_setDescription():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     schema.setDescription('exampleKey1', "No description")
     assert schema.getDescription('exampleKey1') == "No description"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getOptions(Schema):
+def test_getOptions():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
 
@@ -1608,9 +1378,7 @@ def test_getOptions(Schema):
     assert schema.getOptions("testPath")[1] == "file2"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_setOptions(Schema):
+def test_setOptions():
     schema = Schema()
     SomeClass.expectedParameters(schema)
 
@@ -1625,20 +1393,14 @@ def test_setOptions(Schema):
     assert options == [20, 5, 11, 13, 25]
 
 
-# @pytest.mark.parametrize(
-#     "Schema", [(karathon.Schema), (karabind.Schema)])
-# def test_displayType(Schema):
+# def test_displayType():
 #     schema = Schema()
 #     TestStruct1.expectedParameters(schema)
 #     display = schema.getDisplayType("myNode")
 #     assert display == "WidgetNode"
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_getDefaultValue(Schema, Types):
+def test_getDefaultValue():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getDefaultValue("exampleKey1") == "Navigation"
@@ -1667,16 +1429,14 @@ def test_getDefaultValue(Schema, Types):
     # readOnly default specified by 'defaultValue'. not 'initialValue':
     assert schema.getDefaultValue("exampleKey5b") == 42
     assert schema.getDefaultValue("exampleKey7b") == [11, 22, 33]
-    if Schema is karabind.Schema:
+    if not use_karathon:
         assert schema.getDefaultValue("rarray") == \
             b'abcdef \xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 012345'
         assert schema.getDefaultValue("rarray1") == b'hello world'
         assert schema.getDefaultValue("rarray2") == b'Tsch\xc3\xbc\xc3\x9f!'
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_setDefaultValue(Schema):
+def test_setDefaultValue():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.isAssignmentOptional('x') is True
@@ -1686,9 +1446,7 @@ def test_setDefaultValue(Schema):
     assert schema.getDefaultValue("x") == 10
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getAllowedStates(Schema):
+def test_getAllowedStates():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     astates = schema.getAllowedStates("exampleKey3")
@@ -1700,11 +1458,7 @@ def test_getAllowedStates(Schema):
     assert schema.getAllowedStates("exampleKey7")[1] == State.NORMAL
 
 
-@pytest.mark.parametrize(
-    "Schema, Unit",
-    [(karathon.Schema, karathon.Unit),
-     (karabind.Schema, karabind.Unit)])
-def test_getUnit(Schema, Unit):
+def test_getUnit():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getUnit("exampleKey2") == Unit.METER
@@ -1712,11 +1466,7 @@ def test_getUnit(Schema, Unit):
     assert schema.getUnitSymbol("exampleKey2") == "m"
 
 
-@pytest.mark.parametrize(
-    "Schema, Unit, METER",
-    [(karathon.Schema, karathon.Unit, karathon.METER),
-     (karabind.Schema, karabind.Unit, karabind.METER)])
-def test_setUnit(Schema, Unit, METER):
+def test_setUnit():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.getUnit("x") == Unit.AMPERE
@@ -1727,11 +1477,7 @@ def test_setUnit(Schema, Unit, METER):
     assert schema.getUnitSymbol("x") == "m"
 
 
-@pytest.mark.parametrize(
-    "Schema, MetricPrefix",
-    [(karathon.Schema, karathon.MetricPrefix),
-     (karabind.Schema, karabind.MetricPrefix)])
-def test_getMetricPrefix(Schema, MetricPrefix):
+def test_getMetricPrefix():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getMetricPrefix("exampleKey2") == MetricPrefix.MILLI
@@ -1739,11 +1485,7 @@ def test_getMetricPrefix(Schema, MetricPrefix):
     assert schema.getMetricPrefixSymbol("exampleKey2") == "m"
 
 
-@pytest.mark.parametrize(
-    "Schema, MetricPrefix, MICRO",
-    [(karathon.Schema, karathon.MetricPrefix, karathon.MICRO),
-     (karabind.Schema, karabind.MetricPrefix, karabind.MICRO)])
-def test_setMetricPrefix(Schema, MetricPrefix, MICRO):
+def test_setMetricPrefix():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.getMetricPrefix("x") == MetricPrefix.MILLI
@@ -1753,11 +1495,7 @@ def test_setMetricPrefix(Schema, MetricPrefix, MICRO):
     assert schema.getMetricPrefixSymbol("x") == "u"
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_getMinIncMaxInc(Schema, Types):
+def test_getMinIncMaxInc():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getMinInc("exampleKey2") == 5
@@ -1766,11 +1504,7 @@ def test_getMinIncMaxInc(Schema, Types):
     assert schema.getMaxIncAs("exampleKey2", Types.STRING) == "25"
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_setMinIncMaxInc(Schema, Types):
+def test_setMinIncMaxInc():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.getMinInc("x") == 5
@@ -1785,11 +1519,7 @@ def test_setMinIncMaxInc(Schema, Types):
     assert schema.getMaxIncAs("x", Types.STRING) == "30"
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_getMinExcMaxExc(Schema, Types):
+def test_getMinExcMaxExc():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getMinExc("exampleKey3") == 10
@@ -1802,9 +1532,7 @@ def test_getMinExcMaxExc(Schema, Types):
     assert schema.getMaxExcAs("exampleKey4", Types.STRING) == "5.55"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_setMinExcMaxExc(Schema):
+def test_setMinExcMaxExc():
     schema = Schema()
     SomeClass.expectedParameters(schema)
     assert schema.getMinExc("y") == 0
@@ -1815,9 +1543,7 @@ def test_setMinExcMaxExc(Schema):
     assert schema.getMaxExc("y") == 30
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_hasgetsetMinMaxSize(Schema):
+def test_hasgetsetMinMaxSize():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.hasMinSize('exampleKey10') is True
@@ -1839,9 +1565,7 @@ def test_hasgetsetMinMaxSize(Schema):
     assert schema.getMaxSize('exampleKey11') == 42
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_hasgetsetMinMax(Schema):
+def test_hasgetsetMinMax():
     schema = Schema()
     OtherSchemaElementsX.expectedParameters(schema)
     assert schema.hasMin('shapeList') is False
@@ -1854,9 +1578,7 @@ def test_hasgetsetMinMax(Schema):
     assert schema.getMax('shapeList') == 5
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_listelem(Schema):
+def test_listelem():
     # sch = Configurator(OtherSchemaElementsX).getSchema(
     #     "OtherSchemaElementsX", AssemblyRules())
     sch = Schema()
@@ -1873,9 +1595,7 @@ def test_listelem(Schema):
     assert sch.isLeaf("shapeList.BizarreForm.length") is True
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_getWarnAlarmLowHigh(Schema):
+def test_getWarnAlarmLowHigh():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getWarnLow("exampleKey5") == -10
@@ -1888,11 +1608,7 @@ def test_getWarnAlarmLowHigh(Schema):
     assert schema.getAlarmHigh("exampleKey6") == 22.777
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_getWarnAlarmLowHighAs(Schema, Types):
+def test_getWarnAlarmLowHighAs():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.getWarnLowAs("exampleKey5", Types.STRING) == "-10"
@@ -1905,9 +1621,7 @@ def test_getWarnAlarmLowHighAs(Schema, Types):
     assert schema.getAlarmHighAs("exampleKey6", Types.STRING) == "22.777"
 
 
-@pytest.mark.parametrize(
-    "Schema", [(karathon.Schema), (karabind.Schema)])
-def test_hasWarnAlarm(Schema):
+def test_hasWarnAlarm():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     assert schema.hasWarnLow("exampleKey5") is True
@@ -1919,11 +1633,7 @@ def test_hasWarnAlarm(Schema):
     assert schema.hasAlarmHigh("exampleKey1") is False
 
 
-@pytest.mark.parametrize(
-    "Schema, Types",
-    [(karathon.Schema, karathon.Types),
-     (karabind.Schema, karabind.Types)])
-def test_vectorElement(Schema, Types):
+def test_vectorElement():
     s = Schema()
     TestStruct1.expectedParameters(s)
     assert s.isAccessReadOnly("exampleKey7") is True
@@ -1949,11 +1659,7 @@ def test_vectorElement(Schema, Types):
     assert s.getMaxSize("exampleKey10") == 7
 
 
-@pytest.mark.parametrize(
-    "Schema, Hash, fullyEqual",
-    [(karathon.Schema, karathon.Hash, karathon.fullyEqual),
-     (karabind.Schema, karabind.Hash, karabind.fullyEqual)])
-def test_table_element(Schema, Hash, fullyEqual):
+def test_table_element():
     schema = Schema()
     TestStruct1.expectedParameters(schema)
     # Both, defaultValue and initialValue should work for read-only tables
@@ -1967,12 +1673,7 @@ def test_table_element(Schema, Hash, fullyEqual):
     # There are more tests of tables in the integration tests...
 
 
-@pytest.mark.parametrize(
-    "Schema, INT32_ELEMENT, OVERWRITE_ELEMENT",
-    [(karathon.Schema, karathon.INT32_ELEMENT, karathon.OVERWRITE_ELEMENT),
-     (karabind.Schema, karabind.INT32_ELEMENT, karabind.OVERWRITE_ELEMENT)])
-def test_overwrite_restrictions_for_options(Schema, INT32_ELEMENT,
-                                            OVERWRITE_ELEMENT):
+def test_overwrite_restrictions_for_options():
     schema = Schema()
     (
         INT32_ELEMENT(schema).key("range")
@@ -1998,11 +1699,7 @@ def test_overwrite_restrictions_for_options(Schema, INT32_ELEMENT,
     assert vec[2] == 2
 
 
-@pytest.mark.parametrize(
-    "Schema, INT32_ELEMENT, OVERWRITE_ELEMENT",
-    [(karathon.Schema, karathon.INT32_ELEMENT, karathon.OVERWRITE_ELEMENT),
-     (karabind.Schema, karabind.INT32_ELEMENT, karabind.OVERWRITE_ELEMENT)])
-def test_overwrite_tags(Schema, INT32_ELEMENT, OVERWRITE_ELEMENT):
+def test_overwrite_tags():
     schema = Schema()
     (
         INT32_ELEMENT(schema).key("taggedProp")
@@ -2050,10 +1747,7 @@ def test_overwrite_tags(Schema, INT32_ELEMENT, OVERWRITE_ELEMENT):
         )
 
 
-@pytest.mark.parametrize(
-    "Schema",
-    [(karathon.Schema), (karabind.Schema)])
-def test_choice_element(Schema):
+def test_choice_element():
     s = Schema()
     TestStruct1.expectedParameters(s)
     # ------ Optional, defaultValueFromString
@@ -2100,11 +1794,7 @@ def test_choice_element(Schema):
     assert s.has("testChoice4.RectangleX.b") is True
 
 
-@pytest.mark.parametrize(
-    "Schema, AccessLevel, ArchivePolicy",
-    [(karathon.Schema, karathon.AccessLevel, karathon.ArchivePolicy),
-     (karabind.Schema, karabind.AccessLevel, karabind.ArchivePolicy)])
-def test_table_elements(Schema, AccessLevel, ArchivePolicy):
+def test_table_elements():
     sch = Schema()
     OtherSchemaElementsX.expectedParameters(sch)
     assert sch.has("testTable") is True
@@ -2172,11 +1862,7 @@ def test_table_elements(Schema, AccessLevel, ArchivePolicy):
     assert sch.getArchivePolicy("tableReadOnly") == ArchivePolicy.EVERY_EVENT
 
 
-@pytest.mark.parametrize(
-    "Schema, Encoding, AccessLevel",
-    [(karathon.Schema, karathon.Encoding, karathon.AccessLevel),
-     (karabind.Schema, karabind.Encoding, karabind.AccessLevel)])
-def test_imagedata_element(Schema, Encoding, AccessLevel):
+def test_imagedata_element():
     sch = Schema()
     SomeClass.expectedParameters(sch)
     h = sch.getParameterHash()
@@ -2214,11 +1900,7 @@ def test_imagedata_element(Schema, Encoding, AccessLevel):
     assert sch.getRequiredAccessLevel("myImageElement") == AccessLevel.ADMIN
 
 
-@pytest.mark.parametrize(
-    "Schema, Encoding, AccessLevel",
-    [(karathon.Schema, karathon.Encoding, karathon.AccessLevel),
-     (karabind.Schema, karabind.Encoding, karabind.AccessLevel)])
-def test_slot_element(Schema, Encoding, AccessLevel):
+def test_slot_element():
     sch = Schema()
     TestStruct1.expectedParameters(sch)
     assert sch.has("slotTest") is True
@@ -2248,14 +1930,7 @@ def test_slot_element(Schema, Encoding, AccessLevel):
     assert sch.getRequiredAccessLevel("slotStop") == AccessLevel.ADMIN
 
 
-@pytest.mark.parametrize(
-    "Schema, NODE_ELEMENT, INT32_ELEMENT, NDARRAY_ELEMENT, IMAGEDATA_ELEMENT",
-    [(karathon.Schema, karathon.NODE_ELEMENT, karathon.INT32_ELEMENT,
-      karathon.NDARRAY_ELEMENT, karathon.IMAGEDATA_ELEMENT, ),
-     (karabind.Schema, karabind.NODE_ELEMENT, karabind.INT32_ELEMENT,
-      karabind.NDARRAY_ELEMENT, karabind.IMAGEDATA_ELEMENT, )])
-def test_allowed_actions(Schema, NODE_ELEMENT, INT32_ELEMENT, NDARRAY_ELEMENT,
-                         IMAGEDATA_ELEMENT):
+def test_allowed_actions():
     s = Schema()
     (
         NODE_ELEMENT(s).key("node")
@@ -2306,51 +1981,49 @@ def test_allowed_actions(Schema, NODE_ELEMENT, INT32_ELEMENT, NDARRAY_ELEMENT,
         s.setAllowedActions("node.int", ["bla", "blue"])
 
 
-@pytest.mark.parametrize(
-    "cppNDArray, cppNDArrayCopy",
-    [(karabind.cppNDArray, karabind.cppNDArrayCopy)])
-def test_cpp_ndarray(cppNDArray, cppNDArrayCopy):
-    # Build numpy arrays on C++ side and convert them to the python objects
-    # using commented binding code below  (see "karabind_test.cc")
-    # Conversions happen at the last step...
+if not use_karathon:
+    def test_cpp_ndarray():
+        # Build numpy arrays on C++ side and convert them to the python objects
+        # using commented binding code below  (see "karabind_test.cc")
+        # Conversions happen at the last step...
 
-    # m.def("cppNDArray", []() {
-    #     const Dims shape(3, 4);
-    #     std::vector<int> someData(3 * 4, 7);
-    #     for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
-    #     NDArray nda(someData.begin(), someData.end(), shape);
-    #     return karabind::wrapper::castNDArrayToPy(nda);
-    # });
-    # m.def("cppNDArrayCopy", []() {
-    #     const Dims shape(3, 4);
-    #    std::vector<int> someData(3 * 4, 7);
-    #    for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
-    #    NDArray nda(someData.begin(), someData.end(), shape);
-    #    return karabind::wrapper::copyNDArrayToPy(nda);
-    # });
+        # m.def("cppNDArray", []() {
+        #     const Dims shape(3, 4);
+        #     std::vector<int> someData(3 * 4, 7);
+        #     for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+        #     NDArray nda(someData.begin(), someData.end(), shape);
+        #     return karabind::wrapper::castNDArrayToPy(nda);
+        # });
+        # m.def("cppNDArrayCopy", []() {
+        #     const Dims shape(3, 4);
+        #    std::vector<int> someData(3 * 4, 7);
+        #    for (int i = 0; i < 3; ++i) someData[i] = 100 + i;
+        #    NDArray nda(someData.begin(), someData.end(), shape);
+        #    return karabind::wrapper::copyNDArrayToPy(nda);
+        # });
 
-    # create py::array (numpy.array) objects
-    a = cppNDArray()
-    b = cppNDArrayCopy()
-    # These binding return the same data
-    assert np.all(a == b)
-    # The only difference between them is data ownership ...
-    # C++ is an owner of data array
-    assert a.flags.owndata is False
-    assert a.base is not None
-    # Python is an owner of data array
-    assert b.flags.owndata is True
-    assert b.base is None
-    assert np.all(a == b)
-    # this works like 'deepcopy'
-    c = a.copy()
-    assert c.flags.owndata is True
-    assert c.base is None
-    # or use deepcopy directly ..
-    d = copy.deepcopy(a)
-    assert d.flags.owndata is True
-    assert d.base is None
-    # and copy works like deepcopy
-    e = copy.copy(a)
-    assert e.flags.owndata is True
-    assert e.base is None
+        # create py::array (numpy.array) objects
+        a = cppNDArray()
+        b = cppNDArrayCopy()
+        # These binding return the same data
+        assert np.all(a == b)
+        # The only difference between them is data ownership ...
+        # C++ is an owner of data array
+        assert a.flags.owndata is False
+        assert a.base is not None
+        # Python is an owner of data array
+        assert b.flags.owndata is True
+        assert b.base is None
+        assert np.all(a == b)
+        # this works like 'deepcopy'
+        c = a.copy()
+        assert c.flags.owndata is True
+        assert c.base is None
+        # or use deepcopy directly ..
+        d = copy.deepcopy(a)
+        assert d.flags.owndata is True
+        assert d.base is None
+        # and copy works like deepcopy
+        e = copy.copy(a)
+        assert e.flags.owndata is True
+        assert e.base is None
