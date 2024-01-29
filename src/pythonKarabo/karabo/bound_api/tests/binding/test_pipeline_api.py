@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import copy
+import socket
 import threading
 import time
 import uuid
@@ -742,6 +743,10 @@ def test_pipeline_handlers(
     # 1)
     # onOutputHandler of output channel ('None' tested in ..._many_to_one)
     output = OutputChannel.create("output", "out", Hash())
+    initCfg = output.getInitialConfiguration()
+    # Since we have "default" as "hostname" property, channel address is
+    # resolved to hostname
+    assert initCfg["address"] == socket.gethostname()
     outputIdInOutputHandler = None
 
     def onOutputHandler(chan):
