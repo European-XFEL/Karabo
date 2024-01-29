@@ -46,10 +46,10 @@ from karabo.native import (
     dtype_from_number, encodeBinary, encodeXML, get_array_data,
     get_default_value, get_descriptor_from_data, get_hash_type_from_data,
     get_image_data, get_instance_parent, get_timestamp, has_changes,
-    hashToDict, hashtype_from_string, hoursAgo, is_equal, isSet, loadFromFile,
-    minutesAgo, newest_timestamp, read_project_model, sanitize_table_schema,
-    saveToFile, simple_deepcopy, string_from_hashtype, unit_registry as unit,
-    write_project_model, writeBinary, writeXML)
+    hashToDict, hashtype_from_string, hoursAgo, is_equal, isSet, isStringSet,
+    loadFromFile, minutesAgo, newest_timestamp, read_project_model,
+    sanitize_table_schema, saveToFile, simple_deepcopy, string_from_hashtype,
+    unit_registry as unit, write_project_model, writeBinary, writeXML)
 
 from . import numeric
 from .configuration import (
