@@ -1319,8 +1319,7 @@ class PythonDevice(NoFsm):
         Internal method to create an OutputChannel for given path.
         Needs _stateChangeLock protection
         """
-        # Would best be INFO level, but without broadcasting:
-        self.log.DEBUG(f"Creating output channel '{path}'")
+        self.log.INFO(f"Creating output channel '{path}'")
         outputChannel = self._ss.createOutputChannel(
             path, self._parameters)
         if not outputChannel:
@@ -1344,14 +1343,17 @@ class PythonDevice(NoFsm):
                     # else might just be removed by self.updateSchema
 
             outputChannel.registerShowStatisticsHandler(statsHandler)
+            # Publish the resolved address of the output channel
+            update = Hash(path, outputChannel.getInitialConfiguration())
+            # No lock since this method requires _stateChangeLock protection
+            self._setNoStateLock(update, self.getActualTimestamp())
 
     def _prepareInputChannel(self, path):
         """
         Internal method to create an InputChannel for given path.
         Needs _stateChangeLock protection
         """
-        # Would best be INFO level, but without broadcasting:
-        self.log.DEBUG(f"Creating input channel '{path}'")
+        self.log.INFO(f"Creating input channel '{path}'")
         handlers = self._inputChannelHandlers.get(path, [None] * 3)
 
         def tracker(name, status):

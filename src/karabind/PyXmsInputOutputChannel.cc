@@ -135,6 +135,8 @@ void exportPyXmsInputOutputChannel(py::module_& m) {
 
               .def("getInstanceIdName", &OutputChannel::getInstanceIdName)
 
+              .def("getInitialConfiguration", &OutputChannel::getInitialConfiguration)
+
               .def("registerIOEventHandler",
                    [](const OutputChannel::Pointer& self, const py::object& handler) {
                        if (handler.is_none()) {
