@@ -60,10 +60,6 @@ class EditableComboBoxModel(BaseEditWidget):
     """A model for EditableComboBox"""
 
 
-class DaemonManagerModel(BaseWidgetObjectData):
-    """A model for the DaemonManager Table element"""
-
-
 class HistoricTextModel(BaseWidgetObjectData):
     """A model for the historic text element
 
@@ -541,7 +537,6 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = (
-        "DaemonManagerModel",
         "DisplayTextLogModel",
         "EditableComboBoxModel",
         "EditableRegexListModel",
