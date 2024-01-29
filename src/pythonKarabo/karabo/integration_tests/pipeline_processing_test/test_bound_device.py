@@ -13,6 +13,7 @@
 # Karabo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
+import socket
 from datetime import datetime
 from time import sleep
 
@@ -46,6 +47,11 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                                       self.KRB_TEST_MAX_TIMEOUT)
         self.assertTrue(ok, msg)
 
+        # Since we use "default" as "hostname" property, the address is
+        # resolved to hostname
+        outAddress = self.dc.get("p2pTestSender", "output1.address")
+        self.assertEqual(outAddress, socket.gethostname())
+
         config = Hash("deviceId", "pipeTestReceiver", "processingTime", 0,
                       "input", Hash("connectedOutputChannels",
                                     "p2pTestSender:output1",
@@ -66,8 +72,7 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                                       self.KRB_TEST_MAX_TIMEOUT)
         self.assertTrue(ok, msg)
 
-        # Wait until all inputs from pipeTestReceiver have connected, without
-        # it can fail as in https://git.xfel.eu/Karabo/Framework/-/jobs/283455
+        # Wait until all inputs from pipeTestReceiver have connected
         def condition():
             cfg = self.dc.get("p2pTestSender")
             return (len(cfg["output1.connections"]) == 1 and
