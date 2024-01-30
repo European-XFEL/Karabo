@@ -35,10 +35,10 @@ class TestNetwork(GuiTestCase):
     def test_member_variables(self):
         network = Network()
         with singletons(network=network):
-            self.assertEqual(network.hostname, 'localhost')
-            self.assertEqual(network.username, 'operator')
-            self.assertEqual(network.password, 'karabo')
-            self.assertEqual(network.port, 44444)
+            assert network.hostname == 'localhost'
+            assert network.username == 'operator'
+            assert network.password == 'karabo'
+            assert network.port == 44444
 
     @patch('karabogui.singletons.network.QTcpSocket')
     def test_connect_directly(self, socket):
@@ -50,11 +50,11 @@ class TestNetwork(GuiTestCase):
             username = "admin"
             success = network.connectToServerDirectly(
                 username, host, port)
-            self.assertTrue(success)
+            assert success
             socket().connectToHost.assert_called_with(host, port)
 
             network.onConnected()
-            self.assertEqual(config["username"], username)
+            assert config["username"] == username
             # And disconnect!
             network.disconnectFromServer()
             socket().disconnectFromHost.assert_called_once()
@@ -73,7 +73,7 @@ class TestNetwork(GuiTestCase):
             username = "admin"
             success = network.connectToServerDirectly(
                 username, host, port)
-            self.assertTrue(success)
+            assert success
             socket().connectToHost.assert_called_with(host, port)
 
             # We received reply, we set server information and connect
@@ -92,188 +92,162 @@ class TestNetwork(GuiTestCase):
                 network.parseInput(data)
 
             _trigger_message_parse()
-            self.assertIsNotNone(self._last_hash)
-            self.assertIsInstance(self._last_hash, Hash)
-            self.assertEqual(self._last_hash["type"], "login")
+            assert self._last_hash is not None
+            assert isinstance(self._last_hash, Hash)
+            assert self._last_hash["type"] == "login"
 
             with self.subTest("Test alarm interface"):
                 instanceId = "test"
                 network.onAcknowledgeAlarm(instanceId=instanceId, rowId="2")
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "acknowledgeAlarm")
-                self.assertEqual(self._last_hash["alarmInstanceId"],
-                                 instanceId)
-                self.assertEqual(self._last_hash["acknowledgedRows"],
-                                 Hash("2", True))
+                assert self._last_hash["type"] == "acknowledgeAlarm"
+                assert self._last_hash["alarmInstanceId"] == instanceId
+                assert self._last_hash["acknowledgedRows"] == Hash("2", True)
 
                 network.onRequestAlarms(instanceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestAlarms")
-                self.assertEqual(self._last_hash["alarmInstanceId"],
-                                 instanceId)
+                assert self._last_hash["type"] == "requestAlarms"
+                assert self._last_hash["alarmInstanceId"] == instanceId
 
             with self.subTest("Test misc network"):
                 output_device = "NODEVICE/DESY/GLASPALACE"
                 network.onSubscribeToOutput(output_device, "output", True)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "subscribeNetwork")
-                self.assertEqual(self._last_hash["channelName"],
-                                 f"{output_device}:output")
-                self.assertEqual(self._last_hash["subscribe"], True)
+                assert self._last_hash["type"] == "subscribeNetwork"
+                assert self._last_hash[
+                           "channelName"] == f"{output_device}:output"
+                assert self._last_hash["subscribe"] is True
 
                 network.onRequestNetwork(f"{output_device}:output")
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestNetwork")
-                self.assertEqual(self._last_hash["channelName"],
-                                 f"{output_device}:output")
+                assert self._last_hash["type"] == "requestNetwork"
+                assert self._last_hash["channelName"] == \
+                       f"{output_device}:output"
 
                 network.onError("This is an error")
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "error")
-                self.assertEqual(self._last_hash["traceback"],
-                                 "This is an error")
+                assert self._last_hash["type"] == "error"
+                assert self._last_hash["traceback"] == "This is an error"
 
             with self.subTest("Test Network Project Interface"):
                 project_manager = "KaraboProjectDB"
 
                 network.onProjectBeginSession(project_manager)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
 
                 network.onProjectEndSession(project_manager)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
 
                 network.onListProjectDomains(project_manager)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
 
                 network.onProjectListItems(project_manager, "FXE", "scene")
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
-                self.assertEqual(self._last_hash["args.domain"], "FXE")
-                self.assertEqual(self._last_hash["args.item_types"], ["scene"])
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
+                assert self._last_hash["args.domain"] == "FXE"
+                assert self._last_hash["args.item_types"] == ["scene"]
 
                 items = [str(uuid4()), str(uuid4())]
                 network.onProjectLoadItems(project_manager, items)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
-                self.assertEqual(self._last_hash["args.items"], items)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
+                assert self._last_hash["args.items"] == items
 
                 network.onProjectSaveItems(project_manager, items)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
-                self.assertEqual(self._last_hash["args.items"], items)
-                self.assertIsNotNone(self._last_hash["args.client"])
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
+                assert self._last_hash["args.items"] == items
+                assert self._last_hash["args.client"] is not None
 
                 network.onProjectUpdateAttribute(project_manager, items)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"],
-                                 project_manager)
-                self.assertEqual(self._last_hash["args.items"], items)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == project_manager
+                assert self._last_hash["args.items"] == items
 
             with self.subTest("Protocol Methods"):
                 deviceId = "NoDeviceHere"
                 network.onKillDevice(deviceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "killDevice")
-                self.assertEqual(self._last_hash["deviceId"],
-                                 deviceId)
+                assert self._last_hash["type"] == "killDevice"
+                assert self._last_hash["deviceId"] == deviceId
 
                 serverId = "ProjectDBServer"
                 network.onKillServer(serverId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "killServer")
-                self.assertEqual(self._last_hash["serverId"], serverId)
+                assert self._last_hash["type"] == "killServer"
+                assert self._last_hash["serverId"] == serverId
 
                 network.onGetDeviceConfiguration(deviceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "getDeviceConfiguration")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
+                assert self._last_hash["type"] == "getDeviceConfiguration"
+                assert self._last_hash["deviceId"] == deviceId
 
                 dev_config = Hash("position", 5)
                 network.onReconfigure(deviceId, dev_config)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "reconfigure")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
-                self.assertEqual(self._last_hash["configuration"], dev_config)
-                self.assertEqual(self._last_hash["reply"], True)
-                self.assertEqual(self._last_hash["timeout"], 5)
+                assert self._last_hash["type"] == "reconfigure"
+                assert self._last_hash["deviceId"] == deviceId
+                assert self._last_hash["configuration"] == dev_config
+                assert self._last_hash["reply"] is True
+                assert self._last_hash["timeout"] == 5
 
                 classId = "NoSpecialClassId"
                 network.onInitDevice(serverId, classId, deviceId, dev_config)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "initDevice")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
-                self.assertEqual(self._last_hash["serverId"], serverId)
-                self.assertEqual(self._last_hash["classId"], classId)
-                self.assertEqual(self._last_hash["configuration"], dev_config)
+                assert self._last_hash["type"] == "initDevice"
+                assert self._last_hash["deviceId"] == deviceId
+                assert self._last_hash["serverId"] == serverId
+                assert self._last_hash["classId"] == classId
+                assert self._last_hash["configuration"] == dev_config
 
                 slotName = "start"
                 network.onExecute(deviceId, slotName, False)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "execute")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
-                self.assertEqual(self._last_hash["command"], slotName)
-                self.assertEqual(self._last_hash["reply"], True)
-                self.assertEqual(self._last_hash["timeout"], 5)
+                assert self._last_hash["type"] == "execute"
+                assert self._last_hash["deviceId"] == deviceId
+                assert self._last_hash["command"] == slotName
+                assert self._last_hash["reply"] is True
+                assert self._last_hash["timeout"] == 5
 
                 network.onExecuteGeneric(deviceId, slotName, dev_config)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestGeneric")
-                self.assertEqual(self._last_hash["instanceId"], deviceId)
-                self.assertEqual(self._last_hash["slot"], slotName)
-                self.assertEqual(self._last_hash["args"], dev_config)
-                self.assertEqual(self._last_hash["timeout"], 5)
-                self.assertEqual(self._last_hash["replyType"],
-                                 "requestGeneric")
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == deviceId
+                assert self._last_hash["slot"] == slotName
+                assert self._last_hash["args"] == dev_config
+                assert self._last_hash["timeout"] == 5
+                assert self._last_hash["replyType"] == "requestGeneric"
 
                 network.onStartMonitoringDevice(deviceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "startMonitoringDevice")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
+                assert self._last_hash["type"] == "startMonitoringDevice"
+                assert self._last_hash["deviceId"] == deviceId
 
                 network.onStopMonitoringDevice(deviceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "stopMonitoringDevice")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
+                assert self._last_hash["type"] == "stopMonitoringDevice"
+                assert self._last_hash["deviceId"] == deviceId
 
                 network.onGetClassSchema(serverId, classId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "getClassSchema")
-                self.assertEqual(self._last_hash["serverId"], serverId)
-                self.assertEqual(self._last_hash["classId"], classId)
+                assert self._last_hash["type"] == "getClassSchema"
+                assert self._last_hash["serverId"] == serverId
+                assert self._last_hash["classId"] == classId
 
                 network.onGetDeviceSchema(deviceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "getDeviceSchema")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
+                assert self._last_hash["type"] == "getDeviceSchema"
+                assert self._last_hash["deviceId"] == deviceId
 
                 path = "position"
                 t0 = 0
@@ -282,63 +256,62 @@ class TestNetwork(GuiTestCase):
                 network.onGetPropertyHistory(deviceId, path, t0, t1,
                                              maxNumData)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "getPropertyHistory")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
-                self.assertEqual(self._last_hash["t0"], t0)
-                self.assertEqual(self._last_hash["t1"], t1)
-                self.assertEqual(self._last_hash["property"], path)
-                self.assertEqual(self._last_hash["maxNumData"], maxNumData)
+                assert self._last_hash["type"] == "getPropertyHistory"
+                assert self._last_hash["deviceId"] == deviceId
+                assert self._last_hash["t0"] == t0
+                assert self._last_hash["t1"] == t1
+                assert self._last_hash["property"] == path
+                assert self._last_hash["maxNumData"] == maxNumData
 
             with self.subTest("Configuration Interface"):
                 preview = True
                 network.onGetConfigurationFromPast(deviceId, t0, preview)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "getConfigurationFromPast")
-                self.assertEqual(self._last_hash["deviceId"], deviceId)
-                self.assertEqual(self._last_hash["time"], t0)
-                self.assertEqual(self._last_hash["preview"], preview)
+                assert self._last_hash["type"] == "getConfigurationFromPast"
+                assert self._last_hash["deviceId"] == deviceId
+                assert self._last_hash["time"] == t0
+                assert self._last_hash["preview"] == preview
 
                 conf_name = "test"
                 network.onGetConfigurationFromName(deviceId, conf_name,
                                                    preview)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestGeneric")
-                self.assertEqual(self._last_hash["args.deviceId"], deviceId)
-                self.assertEqual(self._last_hash["timeout"], 5)
-                self.assertEqual(self._last_hash["preview"], preview)
-                self.assertEqual(self._last_hash["slot"],
-                                 "slotGetConfigurationFromName")
-                self.assertEqual(self._last_hash["replyType"],
-                                 "getConfigurationFromName")
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["args.deviceId"] == deviceId
+                assert self._last_hash["timeout"] == 5
+                assert self._last_hash["preview"] == preview
+                assert self._last_hash[
+                           "slot"] == "slotGetConfigurationFromName"
+                assert self._last_hash[
+                           "replyType"] == "getConfigurationFromName"
 
                 network.onListConfigurationFromName(deviceId)
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestGeneric")
-                self.assertEqual(self._last_hash["args.deviceId"], deviceId)
-                self.assertEqual(self._last_hash["args.name"], "")
-                self.assertEqual(self._last_hash["slot"],
-                                 "slotListConfigurationFromName")
-                self.assertEqual(self._last_hash["replyType"],
-                                 "listConfigurationFromName")
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["args.deviceId"] == deviceId
+                assert self._last_hash["args.name"] == ""
+                assert self._last_hash[
+                           "slot"] == "slotListConfigurationFromName"
+                assert self._last_hash[
+                           "replyType"] == "listConfigurationFromName"
 
                 network.onSaveConfigurationFromName(conf_name, [deviceId])
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestGeneric")
-                self.assertEqual(self._last_hash["args.deviceIds"], [deviceId])
-                self.assertEqual(self._last_hash["args.name"], conf_name)
-                self.assertEqual(self._last_hash["slot"],
-                                 "slotSaveConfigurationFromName")
-                self.assertEqual(self._last_hash["replyType"],
-                                 "saveConfigurationFromName")
-                self.assertEqual(self._last_hash["timeout"], 5)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["args.deviceIds"] == [deviceId]
+                assert self._last_hash["args.name"] == conf_name
+                assert self._last_hash[
+                           "slot"] == "slotSaveConfigurationFromName"
+                assert self._last_hash[
+                           "replyType"] == "saveConfigurationFromName"
+                assert self._last_hash["timeout"] == 5
 
             with self.subTest("Log messages"):
                 network.onSetLogPriority("swerver", "ERROR")
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "setLogPriority")
-                self.assertEqual(self._last_hash["instanceId"], "swerver")
-                self.assertEqual(self._last_hash["priority"], "ERROR")
+                assert self._last_hash["type"] == "setLogPriority"
+                assert self._last_hash["instanceId"] == "swerver"
+                assert self._last_hash["priority"] == "ERROR"
 
             with patch('karabogui.singletons.network.QMessageBox') as mbox, \
                     patch('karabogui.singletons.network.LoginDialog') as dia:
@@ -377,10 +350,7 @@ class TestNetwork(GuiTestCase):
                     caption=caption)
 
                 _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"], "requestGeneric")
-                self.assertEqual(
-                    self._last_hash["instanceId"], "KaraboLogBook")
-                self.assertEqual(
-                    self._last_hash["args.name"], name)
-                self.assertEqual(
-                    self._last_hash["args.dataType"], dataType)
+                assert self._last_hash["type"] == "requestGeneric"
+                assert self._last_hash["instanceId"] == "KaraboLogBook"
+                assert self._last_hash["args.name"] == name
+                assert self._last_hash["args.dataType"] == dataType

@@ -42,14 +42,14 @@ class TestKaraboImageView(GuiTestCase):
             the aux plots should have data """
 
         # Check no data on init
-        self.assertFalse(self.widget.plotItem.image_set)
-        self.assertEqual(self.aux_plots.current_plot, AuxPlots.NoPlot)
+        assert not self.widget.plotItem.image_set
+        assert self.aux_plots.current_plot == AuxPlots.NoPlot
 
         # Setup widget
         self.widget.show_aux_plots(AuxPlots.ProfilePlot)
         roi_item = self.roi.add(ROITool.Rect, pos=QPointF(3, 3), size=(3, 3))
         self.roi.show(ROITool.Rect)
-        self.assertTrue(roi_item.isVisible())
+        assert roi_item.isVisible()
 
         self._assert_aux_plots_data(has_data=False)
 
@@ -58,8 +58,8 @@ class TestKaraboImageView(GuiTestCase):
         self.widget.plotItem.set_image(image)
 
         # Check if image is properly set
-        self.assertTrue(self.widget.plotItem.image_set)
-        self.assertTrue(np.array_equal(self.widget.plotItem.image, image))
+        assert self.widget.plotItem.image_set
+        assert np.array_equal(self.widget.plotItem.image, image)
 
         self._assert_aux_plots_data(has_data=True)
 
@@ -70,10 +70,10 @@ class TestKaraboImageView(GuiTestCase):
         self.widget.plotItem.set_image(image)
 
         # Check if image is properly set
-        self.assertTrue(self.widget.plotItem.image_set)
+        assert self.widget.plotItem.image_set
         np.testing.assert_array_equal(self.widget.plotItem.image, image)
 
-        self.assertEqual(self.aux_plots.current_plot, AuxPlots.NoPlot)
+        assert self.aux_plots.current_plot == AuxPlots.NoPlot
 
     def test_empty_list_image(self):
         """This test checks empty image with [] as input"""
@@ -82,7 +82,7 @@ class TestKaraboImageView(GuiTestCase):
         self.widget.plotItem.set_image(image)
 
         # Check if image is properly set
-        self.assertFalse(self.widget.plotItem.image_set)
+        assert not self.widget.plotItem.image_set
 
     def test_none_image(self):
         """This test checks empty image with None as input"""
@@ -91,11 +91,11 @@ class TestKaraboImageView(GuiTestCase):
         self.widget.plotItem.set_image(image)
 
         # Check if image is properly set
-        self.assertFalse(self.widget.plotItem.image_set)
+        assert not self.widget.plotItem.image_set
 
     def _assert_aux_plots_data(self, has_data=True):
         current_plot = self.aux_plots.current_plot
-        self.assertIsNotNone(current_plot)
+        assert current_plot is not None
 
         assert_method = (self.assertFalse if has_data
                          else self.assertTrue)
@@ -136,13 +136,13 @@ class TestKaraboImageView(GuiTestCase):
         self.widget.restore(config)
 
         # Check blank axes
-        self.assertEqual(top.labelText, x_label)
-        self.assertEqual(bottom.labelText, '')
-        self.assertEqual(left.labelText, y_label)
-        self.assertEqual(right.labelText, '')
+        assert top.labelText == x_label
+        assert bottom.labelText == ''
+        assert left.labelText == y_label
+        assert right.labelText == ''
 
         # Check visibility
-        self.assertEqual(top.label.isVisible(), x_visible)
-        self.assertEqual(bottom.label.isVisible(), False)  # always false
-        self.assertEqual(left.label.isVisible(), y_visible)
-        self.assertEqual(right.label.isVisible(), False)  # always false
+        assert top.label.isVisible() == x_visible
+        assert bottom.label.isVisible() is False  # always false
+        assert left.label.isVisible() == y_visible
+        assert right.label.isVisible() is False  # always false

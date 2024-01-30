@@ -32,15 +32,15 @@ class TestCapabilityDialog(GuiTestCase):
         with singletons(topology=topology, network=network):
             # 1. Test init without deviceId as argument
             dialog = DeviceCapabilityDialog()
-            self.assertFalse(dialog.isModal())
+            assert not dialog.isModal()
             # We have 1 device in the QListWidget found in topology
-            self.assertEqual(dialog.deviceNames.count(), 1)
+            assert dialog.deviceNames.count() == 1
 
             # Selection of device
-            self.assertEqual(dialog.device_id, "")
+            assert dialog.device_id == ""
             dialog.deviceNames.setCurrentRow(0)
             dialog.on_deviceNames_itemSelectionChanged()
-            self.assertEqual(dialog.device_id, "divvy")
+            assert dialog.device_id == "divvy"
 
             # Device in topology with default 'scene`
             device = topology.get_device("divvy")
@@ -49,19 +49,19 @@ class TestCapabilityDialog(GuiTestCase):
 
             # Scene is available and can be selected
             dialog.on_deviceNames_itemSelectionChanged()
-            self.assertEqual(dialog.capaNames.count(), 1)
+            assert dialog.capaNames.count() == 1
             dialog.capaNames.setCurrentRow(0)
-            self.assertEqual(dialog.capa_name, "scene")
+            assert dialog.capa_name == "scene"
 
             # Finish dialog with success!
             dialog.done(1)
 
             # 2. Test with a deviceId in the beginning!
             dialog = DeviceCapabilityDialog(device_id="divvy")
-            self.assertFalse(dialog.isModal())
+            assert not dialog.isModal()
             # We have 1 device in the QListWidget found in topology
-            self.assertEqual(dialog.deviceNames.count(), 1)
-            self.assertEqual(dialog.device_id, "divvy")
+            assert dialog.deviceNames.count() == 1
+            assert dialog.device_id == "divvy"
 
             # Finish dialog declined!
             dialog.done(0)
