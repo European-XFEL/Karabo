@@ -229,8 +229,9 @@ class SceneView(QWidget):
             proxy = item.widget_controller.proxy
             if proxy_selecting:
                 device = None
-                if isinstance(proxy, DeviceProxy) and proxy.online:
-                    device = proxy
+                if (isinstance(proxy.root_proxy, DeviceProxy)
+                        and proxy.root_proxy.online):
+                    device = proxy.root_proxy
                 broadcast_event(KaraboEvent.RaiseEditor, {"proxy": device})
             else:
                 # If we having a control modifier, we ask for the scene
