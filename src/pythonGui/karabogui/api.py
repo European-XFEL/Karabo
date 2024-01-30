@@ -86,4 +86,4 @@ from karabogui.validators import (
     RegexValidator)
 from karabogui.widgets.api import (
     CodeBook, ElidingLabel, FrameWidget, Label, LineEdit, RangeSlider,
-    SvgWidget)
+    SvgWidget, ToolBar)
