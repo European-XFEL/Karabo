@@ -20,3 +20,4 @@ from .hints import (
     SvgWidget)
 from .range_slider import RangeSlider
 from .scintilla_editor import CodeBook, CodeEditor
+from .toolbar import ToolBar
