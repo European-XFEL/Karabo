@@ -46,7 +46,7 @@ class _BaseImageItemTest(GuiTestCase):
         self.imageItem.setImage(image)
         self.process_qt_events()
         np.testing.assert_array_equal(image, self.imageItem.image)
-        self.assertIsNone(self.imageItem.qimage)
+        assert self.imageItem.qimage is None
 
         # Render QImage
         self.imageItem._viewBox().autoRange()
@@ -66,11 +66,11 @@ class _BaseImageItemTest(GuiTestCase):
     def assert_downsample(self, downsampling):
         """Check downsample ratio and the resulting qimage dimensions"""
         if downsampling is None:
-            self.assertIsNone(self.imageItem._lastDownsample)
+            assert self.imageItem._lastDownsample is None
         else:
             xds, yds = self.imageItem._lastDownsample
-            self.assertGreaterEqual(xds, downsampling)
-            self.assertGreaterEqual(yds, downsampling)
+            assert xds >= downsampling
+            assert yds >= downsampling
 
     def assert_qimage(self, image, *, img_format):
         qimage = self.imageItem.qimage
@@ -81,8 +81,8 @@ class _BaseImageItemTest(GuiTestCase):
             width = round(width / xds)
             height = round(height / yds)
 
-        self.assertEqual(qimage.width(), width)
-        self.assertEqual(qimage.height(), height)
+        assert qimage.width() == width
+        assert qimage.height() == height
 
 
 class TestKaraboImageItem(_BaseImageItemTest):
@@ -131,7 +131,7 @@ class TestKaraboImageItem(_BaseImageItemTest):
 
         np.testing.assert_array_equal(self.imageItem._origin,
                                       np.array([10, 20]))
-        self.assertTrue(received)
+        assert received
         self.assert_rgb_image(image)
         plotItem.imageTransformed.disconnect(slotTransform)
 
