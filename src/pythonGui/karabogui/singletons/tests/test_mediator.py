@@ -36,26 +36,26 @@ class TestMediator(GuiTestCase):
         }
 
         mediator = Mediator()
-        self.assertEqual(len(mediator._listeners.keys()), 0)
+        assert len(mediator._listeners.keys()) == 0
 
         with singletons(mediator=mediator):
             register_for_broadcasts(event_map)
-            self.assertIn(KaraboEvent.ShowDevice, mediator._listeners.keys())
-            self.assertEqual(len(mediator._listeners.keys()), 1)
+            assert KaraboEvent.ShowDevice in mediator._listeners.keys()
+            assert len(mediator._listeners.keys()) == 1
 
-            self.assertEqual(instanceId, "")
+            assert instanceId == ""
             broadcast_event(KaraboEvent.ShowDevice,
                             data={"instanceId": "Marty"})
             self.process_qt_events()
-            self.assertEqual(instanceId, "Marty")
+            assert instanceId == "Marty"
 
             # Unregister once
             unregister_from_broadcasts(event_map)
-            self.assertEqual(len(mediator._listeners.keys()), 0)
+            assert len(mediator._listeners.keys()) == 0
 
             # Unregister twice, no harm
             unregister_from_broadcasts(event_map)
-            self.assertEqual(len(mediator._listeners.keys()), 0)
+            assert len(mediator._listeners.keys()) == 0
 
 
 if __name__ == "__main__":
