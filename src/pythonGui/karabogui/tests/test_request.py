@@ -57,27 +57,27 @@ class TestRequestModule(GuiTestCase):
 
             config = Hash("foo", True, "bar", "a", "charlie", 0)
             apply_configuration(config, self.root_proxy.binding)
-            self.assertEqual(received, 1)
+            assert received == 1
             apply_configuration(config, self.root_proxy.binding)
-            self.assertEqual(received, 1)
+            assert received == 1
 
             handler = onConfigurationUpdate(proxy, handler, remove=False)
             apply_configuration(config, self.root_proxy.binding)
-            self.assertEqual(received, 2)
+            assert received == 2
             apply_configuration(config, self.root_proxy.binding)
-            self.assertEqual(received, 3)
+            assert received == 3
 
             # Remove manually
             proxy.binding.on_trait_change(handler, "config_update",
                                           remove=True)
             apply_configuration(config, self.root_proxy.binding)
-            self.assertEqual(received, 3)
+            assert received == 3
 
             network = mock.Mock()
             with singletons(network=network):
                 onConfigurationUpdate(proxy, handler, request=True)
                 apply_configuration(config, self.root_proxy.binding)
-                self.assertEqual(received, 4)
+                assert received == 4
                 network.onGetDeviceConfiguration.assert_called_with("marty")
 
     def test_schema_update(self):
@@ -94,26 +94,26 @@ class TestRequestModule(GuiTestCase):
 
             build_binding(get_simple_schema(),
                           existing=self.root_proxy.binding)
-            self.assertEqual(received, 1)
+            assert received == 1
             build_binding(get_simple_schema(),
                           existing=self.root_proxy.binding)
-            self.assertEqual(received, 1)
+            assert received == 1
 
             handler = onSchemaUpdate(proxy, handler, remove=False)
             build_binding(get_simple_schema(),
                           existing=self.root_proxy.binding)
-            self.assertEqual(received, 2)
+            assert received == 2
 
             build_binding(get_simple_schema(),
                           existing=self.root_proxy.binding)
-            self.assertEqual(received, 3)
+            assert received == 3
 
             # Remove manually
             self.root_proxy.on_trait_change(handler, "schema_update",
                                             remove=True)
             build_binding(get_simple_schema(),
                           existing=self.root_proxy.binding)
-            self.assertEqual(received, 3)
+            assert received == 3
 
             network = mock.Mock()
             with singletons(network=network):
@@ -129,7 +129,7 @@ class TestRequestModule(GuiTestCase):
             with singletons(manager=manager):
                 # 1. Success case
                 project = ProjectModel(simple_name="MyProject")
-                self.assertEqual(len(project.macros), 0)
+                assert len(project.macros) == 0
 
                 token = get_macro_from_server("macro_device",
                                               "new_macro", project)
@@ -148,7 +148,7 @@ class TestRequestModule(GuiTestCase):
                     broadcast.assert_called_with(KaraboEvent.ShowMacroView,
                                                  {"model": mock.ANY})
                 # A new macro has been added
-                self.assertEqual(len(project.macros), 1)
+                assert len(project.macros) == 1
 
                 # 2. False case
                 token = get_macro_from_server("macro_device",
@@ -165,7 +165,7 @@ class TestRequestModule(GuiTestCase):
                     mbox.show_warning.assert_called_once()
 
                 # No further macro added
-                self.assertEqual(len(project.macros), 1)
+                assert len(project.macros) == 1
 
     def test_get_scene_from_server(self):
         network = mock.Mock()
@@ -174,7 +174,7 @@ class TestRequestModule(GuiTestCase):
             with singletons(manager=manager):
                 # 1. Success case
                 project = ProjectModel(simple_name="MyProject")
-                self.assertEqual(len(project.scenes), 0)
+                assert len(project.scenes) == 0
 
                 token = get_scene_from_server("scene_device",
                                               "new_scene", project)
@@ -195,7 +195,7 @@ class TestRequestModule(GuiTestCase):
                         {"model": mock.ANY,
                          'target_window': SceneTargetWindow.Dialog})
                 # A new scene has been added
-                self.assertEqual(len(project.scenes), 1)
+                assert len(project.scenes) == 1
 
                 # 2. False case - from scene protocol
                 token = get_scene_from_server("scene_device",
@@ -212,7 +212,7 @@ class TestRequestModule(GuiTestCase):
                     mbox.show_warning.assert_called_once()
 
                 # No further scene added
-                self.assertEqual(len(project.scenes), 1)
+                assert len(project.scenes) == 1
 
                 # 3. False case - from failing slot call
                 token = get_scene_from_server("scene_device",
@@ -229,10 +229,10 @@ class TestRequestModule(GuiTestCase):
                     mbox.show_warning.assert_called_once()
 
                 # No further scene added
-                self.assertEqual(len(project.scenes), 1)
+                assert len(project.scenes) == 1
 
                 # 4. success case, with position
-                self.assertEqual(len(project.scenes), 1)
+                assert len(project.scenes) == 1
                 token = get_scene_from_server("scene_device",
                                               "extra_scene", project=None,
                                               position=[0, 120])
@@ -257,7 +257,7 @@ class TestRequestModule(GuiTestCase):
                          "target_window": SceneTargetWindow.Dialog,
                          "position": [0, 120]})
                 # A new scene has not been added
-                self.assertEqual(len(project.scenes), 1)
+                assert len(project.scenes) == 1
 
     def test_signature_scene_from_server(self):
         """If this tests fails, we need to check the db connection db scene"""
@@ -268,7 +268,7 @@ class TestRequestModule(GuiTestCase):
         assert "slot_name" in params
         assert "target_window" in params
         assert "scene_name" in params
-        self.assertEqual(len(params), 6)
+        assert len(params) == 6
 
 
 if __name__ == "__main__":
