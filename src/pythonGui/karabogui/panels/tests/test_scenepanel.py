@@ -53,24 +53,24 @@ class TestScenePanel(GuiTestCase):
 
     def test_resize_scene(self):
         panel_size = self.panel.size()
-        self.assertEqual(self.scene_size, self.model_size)
+        assert self.scene_size == self.model_size
 
         # Docked
         width, height = (100, 200)
         self._resize_scene(width, height, docked=True)
-        self.assertTrue(self.panel.is_docked)
-        self.assertEqual(self.scene_size, (width, height))
-        self.assertEqual(self.scene_size, self.model_size)
-        self.assertEqual(self.panel.size(), panel_size)
+        assert self.panel.is_docked
+        assert self.scene_size == (width, height)
+        assert self.scene_size == self.model_size
+        assert self.panel.size() == panel_size
 
         # Undocked
         width, height = (300, 400)
         self.panel.onUndock()
         self._resize_scene(width, height, docked=False)
-        self.assertFalse(self.panel.is_docked)
-        self.assertEqual(self.scene_size, (width, height))
-        self.assertEqual(self.scene_size, self.model_size)
-        self.assertNotEqual(self.panel.size(), panel_size)
+        assert not self.panel.is_docked
+        assert self.scene_size == (width, height)
+        assert self.scene_size == self.model_size
+        assert self.panel.size() != panel_size
 
     def _resize_scene(self, width=100, height=200, docked=False):
         mocked_exec = mock.patch(f"{DIALOG_PATH}.exec",

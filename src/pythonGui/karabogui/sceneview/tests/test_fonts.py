@@ -121,10 +121,10 @@ class BaseWidgetFontTest(BaseSceneFontTest):
         if isinstance(size, QSize):
             size = (size.width(), size.height())
 
-        self.assertEqual(model.x, pos[0])
-        self.assertEqual(model.y, pos[1])
-        self.assertEqual(model.width, size[0])
-        self.assertEqual(model.height, size[1])
+        assert model.x == pos[0]
+        assert model.y == pos[1]
+        assert model.width == size[0]
+        assert model.height == size[1]
 
     def _assert_font_size(self, obj, expected=SCENE_FONT_SIZE):
         if isinstance(obj, ControllerContainer):
@@ -134,7 +134,7 @@ class BaseWidgetFontTest(BaseSceneFontTest):
         else:
             # We want to compare the absolve value of the font size
             qfont = get_qfont(obj.font, adjust_size=False)
-        self.assertEqual(qfont.pointSize(), expected)
+        assert qfont.pointSize() == expected
 
 
 class TestSceneFonts(BaseSceneFontTest):
@@ -166,7 +166,7 @@ class TestSceneFonts(BaseSceneFontTest):
             if isinstance(widget, ControllerContainer):
                 # Get the internal widget from the controller container
                 widget = widget.widget_controller.widget
-            self.assertTrue(widget.font().family() in FONT_FAMILIES)
+            assert widget.font().family() in FONT_FAMILIES
 
 
 @skipIf(system() == "Darwin",

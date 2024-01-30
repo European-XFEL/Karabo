@@ -108,19 +108,19 @@ class TestDeprecatedWidgets(GuiTestCase):
         # Check if old model from SVG is replaced
         svg = self._generate_svg("DisplayPlot", keys=VECTOR_PROXIES)
         model = self._load_scene(svg)
-        self.assertIsInstance(model, VectorGraphModel)
+        assert isinstance(model, VectorGraphModel)
 
         # Check if number of data items corresponds with the keys
         widget = self._get_controller(model).widget
         data_items = widget.plotItem.dataItems
-        self.assertEqual(len(data_items), 2)
+        assert len(data_items) == 2
 
         # Verify data item values. Set values first to trigger data plotting.
         self._set_values()
         for curve in data_items:
             name = self._get_name(curve.name())
             expected_value = self._get_value(name)
-            self.assertTrue(name in VECTOR_PROXIES)
+            assert name in VECTOR_PROXIES
             assert_array_equal(curve.xData, np.arange(len(expected_value)))
             assert_array_equal(curve.yData, expected_value)
 
@@ -128,12 +128,12 @@ class TestDeprecatedWidgets(GuiTestCase):
         # Check if old model from SVG is replaced
         svg = self._generate_svg("XYVector", keys=VECTOR_PROXIES)
         model = self._load_scene(svg)
-        self.assertIsInstance(model, VectorXYGraphModel)
+        assert isinstance(model, VectorXYGraphModel)
 
         # Check if number of data items corresponds with the keys
         widget = self._get_controller(model).widget
         data_items = widget.plotItem.dataItems
-        self.assertEqual(len(data_items), 1)
+        assert len(data_items) == 1
 
         # Verify data item values. Set values first to trigger data plotting.
         self._set_values()
@@ -145,43 +145,43 @@ class TestDeprecatedWidgets(GuiTestCase):
         # Check if old model from SVG is replaced
         svg = self._generate_svg("DisplayTrendline", keys=NUMBER_PROXIES)
         model = self._load_scene(svg)
-        self.assertIsInstance(model, TrendGraphModel)
+        assert isinstance(model, TrendGraphModel)
 
         # Check if number of data items corresponds with the keys
         widget = self._get_controller(model)._plot
         data_items = widget.plotItem.dataItems
-        self.assertEqual(len(data_items), len(NUMBER_PROXIES))
+        assert len(data_items) == len(NUMBER_PROXIES)
 
         # Verify data item values. Set values first to trigger data plotting.
         self._set_values()
         for curve in data_items:
             name = self._get_name(curve.name())
             expected_value = self._get_value(name)
-            self.assertTrue(name in NUMBER_PROXIES)
+            assert name in NUMBER_PROXIES
             assert_array_equal(curve.yData, [expected_value])
 
     def test_qwt_displayimage(self):
         svg = self._generate_svg("DisplayImage", keys=[IMAGE])
         model = self._load_scene(svg)
-        self.assertIsInstance(model, ImageGraphModel)
+        assert isinstance(model, ImageGraphModel)
         self._assert_image_model(model)
 
     def test_qwt_displayalignedimage(self):
         svg = self._generate_svg("DisplayAlignedImage", keys=[IMAGE])
         model = self._load_scene(svg)
-        self.assertIsInstance(model, DetectorGraphModel)
+        assert isinstance(model, DetectorGraphModel)
         self._assert_image_model(model)
 
     def test_qwt_displayimageelement(self):
         svg = self._generate_svg("DisplayImageElement", keys=[IMAGE])
         model = self._load_scene(svg)
-        self.assertIsInstance(model, WebCamGraphModel)
+        assert isinstance(model, WebCamGraphModel)
         self._assert_image_model(model)
 
     def test_qwt_webcamimage(self):
         svg = self._generate_svg("WebcamImage", keys=[IMAGE], image_attrs=True)
         model = self._load_scene(svg)
-        self.assertIsInstance(model, WebCamGraphModel)
+        assert isinstance(model, WebCamGraphModel)
         self._assert_image_model(model)
 
     def test_qwt_scientificimage(self):
@@ -189,7 +189,7 @@ class TestDeprecatedWidgets(GuiTestCase):
                                  keys=[IMAGE],
                                  image_attrs=True)
         model = self._load_scene(svg)
-        self.assertIsInstance(model, WebCamGraphModel)
+        assert isinstance(model, WebCamGraphModel)
         self._assert_image_model(model)
 
     @skipIf(system() == "Windows",
@@ -197,7 +197,7 @@ class TestDeprecatedWidgets(GuiTestCase):
     def test_mpl_xyplot(self):
         svg = self._generate_svg("XYPlot", keys=NUMBER_PROXIES[:2])
         model = self._load_scene(svg)
-        self.assertIsInstance(model, ScatterGraphModel)
+        assert isinstance(model, ScatterGraphModel)
 
         # Verify scatter item values.
         # Set values first to trigger data plotting.
@@ -211,18 +211,18 @@ class TestDeprecatedWidgets(GuiTestCase):
     def test_mpl_multicurveplot(self):
         svg = self._generate_svg("MultiCurvePlot", keys=NUMBER_PROXIES)
         model = self._load_scene(svg)
-        self.assertIsInstance(model, MultiCurveGraphModel)
+        assert isinstance(model, MultiCurveGraphModel)
 
         # Check if number of data items corresponds with the keys
         widget = self._get_controller(model).widget
         data_items = widget.plotItem.dataItems
-        self.assertEqual(len(data_items), len(NUMBER_PROXIES) - 1)
+        assert len(data_items) == len(NUMBER_PROXIES) - 1
 
         # Verify data item values. Set values first to trigger data plotting.
         self._set_values()
         for curve in data_items:
             name = self._get_name(curve.name())
-            self.assertTrue(name in NUMBER_PROXIES)
+            assert name in NUMBER_PROXIES
             assert_array_equal(curve.xData, self._get_value(X_NUMBER))
             assert_array_equal(curve.yData, self._get_value(name))
 

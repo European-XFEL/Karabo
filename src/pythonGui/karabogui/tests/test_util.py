@@ -31,7 +31,7 @@ class TestUtilsGUI(GuiTestCase):
     def test_assert_filename(self):
         def assert_filename(filename, *, invalid):
             invalid_chars = _get_invalid_chars(filename)
-            self.assertEqual(set(list(invalid)), set(invalid_chars))
+            assert set(list(invalid)) == set(invalid_chars)
 
         assert_filename("foo", invalid='')
         assert_filename("FoO/Bar-bAz_123", invalid='')
@@ -47,20 +47,20 @@ class TestUtilsGUI(GuiTestCase):
 
         spinbox = QSpinBox()
         spinbox.valueChanged.connect(slotReceived)
-        self.assertEqual(count, 0)
+        assert count == 0
         spinbox.setValue(100)
-        self.assertEqual(count, 1)
+        assert count == 1
 
         # Update the spinbox, but block the signals
         with SignalBlocker(spinbox):
             for i in range(10):
                 spinbox.setValue(i)
-            self.assertEqual(spinbox.value(), i)
+            assert spinbox.value() == i
 
         # Still only once
-        self.assertEqual(count, 1)
+        assert count == 1
         spinbox.setValue(100)
-        self.assertEqual(count, 2)
+        assert count == 2
 
         # Reset the counter and setup a slider
         count = 0
@@ -69,42 +69,42 @@ class TestUtilsGUI(GuiTestCase):
         slider.valueChanged.connect(slotReceived)
         slider.setRange(0, 100)
         slider.setValue(20)
-        self.assertEqual(count, 1)
+        assert count == 1
 
         # Works, now block both
         with SignalBlocker(spinbox, slider):
             for i in range(10):
                 spinbox.setValue(i)
                 slider.setValue(i)
-            self.assertEqual(spinbox.value(), i)
-            self.assertEqual(slider.value(), i)
-        self.assertEqual(count, 1)
+            assert spinbox.value() == i
+            assert slider.value() == i
+        assert count == 1
 
         # Other initialization
         count = 0
         blocker = SignalBlocker(spinbox)
-        self.assertEqual(len(blocker.objects), 1)
+        assert len(blocker.objects) == 1
         with blocker:
             spinbox.setValue(10000)
-        self.assertEqual(count, 0)
+        assert count == 0
 
     def test_version_compatible(self):
         """Test that we can verify versions"""
-        self.assertTrue(version_compatible("2.14.0a2", 2, 14))
-        self.assertTrue(version_compatible("2.14.0a2", 2, 13))
-        self.assertTrue(version_compatible("2.14.0rc1", 2, 14))
-        self.assertFalse(version_compatible("2.14.0a2", 2, 15))
-        self.assertTrue(version_compatible("asdeaeddevelopmode", 2, 14))
-        self.assertTrue(version_compatible("asdeaeddevelopmode", 12, 33333))
+        assert version_compatible("2.14.0a2", 2, 14)
+        assert version_compatible("2.14.0a2", 2, 13)
+        assert version_compatible("2.14.0rc1", 2, 14)
+        assert not version_compatible("2.14.0a2", 2, 15)
+        assert version_compatible("asdeaeddevelopmode", 2, 14)
+        assert version_compatible("asdeaeddevelopmode", 12, 33333)
         # minor smaller
-        self.assertTrue(version_compatible("3.1.0a2", 2, 15))
+        assert version_compatible("3.1.0a2", 2, 15)
 
         # Test garbage
-        self.assertFalse(version_compatible("2.&7as7.13", 2, 0))
+        assert not version_compatible("2.&7as7.13", 2, 0)
 
     def test_qversion_compatible(self):
-        self.assertTrue(qtversion_compatible(5, 13))
-        self.assertTrue(qtversion_compatible(5, 9))
+        assert qtversion_compatible(5, 13)
+        assert qtversion_compatible(5, 9)
 
     def test_html_list_string(self):
         info = ["1", "2", 4, []]

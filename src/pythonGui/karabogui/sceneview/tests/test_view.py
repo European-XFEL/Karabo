@@ -61,15 +61,15 @@ class TestLoadSVG(GuiTestCase):
         self.view = SceneView()
 
     def _load_file(self, dir, file_name):
-        self.assertIsNone(self.view.scene_model)
-        self.assertIsInstance(self.view.layout, GroupLayout)
+        assert self.view.scene_model is None
+        assert isinstance(self.view.layout, GroupLayout)
 
         scene_model = sm.read_scene(op.join(dir, file_name))
         scene_model.children.append(UNKNOWN_XML_MODEL)
         self.view.update_model(scene_model)
-        self.assertIsInstance(self.view.scene_model, sm.SceneModel)
-        self.assertEqual(self.view.scene_model.width, self.view.width())
-        self.assertEqual(self.view.scene_model.height, self.view.height())
+        assert isinstance(self.view.scene_model, sm.SceneModel)
+        assert self.view.scene_model.width == self.view.width()
+        assert self.view.scene_model.height == self.view.height()
 
     def test_loading_karabo_svg(self):
         self._load_file(DATA_DIR, "all.svg")
@@ -145,7 +145,7 @@ class BaseSceneViewTest(GuiTestCase):
         # Check if model is modified
         if modified is None:
             modified = expected.modified
-        self.assertEqual(actual.modified, modified)
+        assert actual.modified == modified
 
         # Check widget
         self.assert_widget(actual)
@@ -237,8 +237,8 @@ class TestSceneView(BaseSceneViewTest):
     def test_basics(self):
         self.scene_view.update_model(self.scene_model)
         scene_geom = self.scene_view.geometry()
-        self.assertEqual(scene_geom.width(), self.scene_model.width)
-        self.assertEqual(scene_geom.height(), self.scene_model.height)
+        assert scene_geom.width() == self.scene_model.width
+        assert scene_geom.height() == self.scene_model.height
 
 
 class TestLoadSceneModel(BaseSceneViewTest):
@@ -403,16 +403,16 @@ class TestLoadSceneModel(BaseSceneViewTest):
         geom_traits = ["x", "y", "width", "height"]
         actual_values = actual.trait_get(geom_traits)
         expected_values = expected.trait_get(geom_traits)
-        self.assertDictEqual(actual_values, expected_values)
+        assert actual_values == expected_values
 
     def assert_widget(self, model):
         widget = self._get_widget(model)
         scene_geom = widget.geometry()
         model_geom = model.trait_get("x", "y", "width", "height")
-        self.assertEqual(scene_geom.x(), model_geom.get("x", 0))
-        self.assertEqual(scene_geom.y(), model_geom.get("y", 0))
-        self.assertEqual(scene_geom.width(), model_geom.get("width"))
-        self.assertEqual(scene_geom.height(), model_geom.get("height"))
+        assert scene_geom.x() == model_geom.get("x", 0)
+        assert scene_geom.y() == model_geom.get("y", 0)
+        assert scene_geom.width() == model_geom.get("width")
+        assert scene_geom.height() == model_geom.get("height")
 
     # ----------------------------------------------------------------------
     # Helper methods
@@ -496,13 +496,13 @@ class TestClipboardActions(BaseSceneViewTest):
 
     def _assert_cut_models(self, *models):
         copied_models = self._get_selected_models()
-        self.assertEqual(len(self.scene_model.children), len(models))
+        assert len(self.scene_model.children) == len(models)
         # Check if the copied models are in the scene
         for copied in copied_models:
-            self.assertIn(copied, self.scene_model.children)
+            assert copied in self.scene_model.children
         # Check if the models are deleted in the scene
         for model in models:
-            self.assertNotIn(model, self.scene_model.children)
+            assert model not in self.scene_model.children
 
     def _assert_copy_paste(self, *models, pos=(30, 30)):
         with self._setup_and_test_selection(*models, pos=pos):
@@ -520,9 +520,9 @@ class TestClipboardActions(BaseSceneViewTest):
 
     def _assert_copied_models(self, *models):
         copied_models = self._get_selected_models()
-        self.assertEqual(len(self.scene_model.children), len(models) * 2)
+        assert len(self.scene_model.children) == len(models) * 2
         for model in copied_models + list(models):
-            self.assertIn(model, self.scene_model.children)
+            assert model in self.scene_model.children
 
     # ----------------------------------------------------------------------
     # Reimplemented methods
@@ -551,16 +551,16 @@ class TestClipboardActions(BaseSceneViewTest):
             # to be blank also.
             if not actual.id:
                 is_valid = not is_valid
-            self.assertTrue(is_valid)
+            assert is_valid
 
         # Correct expected position
         copied = self.copy_model(expected)
         add_offset(copied, x=offset[0], y=offset[1])
 
         # Check if the rest of the traits are equivalent
-        self.assertTrue(type(actual), type(expected))
-        self.assertDictEqual(actual.trait_get(trait_names),
-                             copied.trait_get(trait_names))
+        assert type(actual), type(expected)
+        assert actual.trait_get(trait_names) == \
+               copied.trait_get(trait_names)
 
     # ----------------------------------------------------------------------
     # Helper methods
@@ -598,11 +598,11 @@ class TestClipboardActions(BaseSceneViewTest):
         try:
             # Reset scene view
             self.set_models_to_scene()
-            self.assertEqual(len(self.scene_model.children), 0)
+            assert len(self.scene_model.children) == 0
 
             # Add models to scene
             self.set_models_to_scene(*models)
-            self.assertEqual(len(self.scene_model.children), len(models))
+            assert len(self.scene_model.children) == len(models)
             # Copy-paste
             self.scene_view.select_models(*models)
             yield

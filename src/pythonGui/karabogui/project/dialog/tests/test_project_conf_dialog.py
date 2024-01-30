@@ -35,7 +35,7 @@ class TestProjectHandleDialog(GuiTestCase):
                 device_id="divvy", class_id="FooClass", server_id="swerver")
             topology.ensure_proxy_class_schema(
                 device_id="divvy", class_id="FooClass", server_id="swerver")
-            self.assertEqual(project_device.status, ProxyStatus.ONLINE)
+            assert project_device.status == ProxyStatus.ONLINE
             topology.class_schema_updated(server_id="swerver",
                                           class_id="FooClass",
                                           schema=get_device_schema())
@@ -47,41 +47,41 @@ class TestProjectHandleDialog(GuiTestCase):
                     name="default", configuration=config,
                     project_device=project_device)
 
-                self.assertEqual(dialog.windowTitle(),
-                                 "Configuration default - divvy")
-                self.assertEqual(config, dialog.configuration)
+                assert dialog.windowTitle() == \
+                       "Configuration default - divvy"
+                assert config == dialog.configuration
 
                 # We have a single invalid path
-                self.assertEqual(len(dialog._invalid_paths), 1)
+                assert len(dialog._invalid_paths) == 1
 
-                self.assertEqual(dialog.ui_num_paths.text(), "# 1")
-                self.assertEqual(dialog.ui_paths.count(), 1)
-                self.assertEqual(dialog.ui_paths.currentText(),
-                                 "doubleProperty")
+                assert dialog.ui_num_paths.text() == "# 1"
+                assert dialog.ui_paths.count() == 1
+                assert dialog.ui_paths.currentText() == \
+                       "doubleProperty"
 
                 # Erase invalid path
                 self.click(dialog.ui_erase_path)
-                self.assertEqual(dialog.ui_num_paths.text(), "# 0")
-                self.assertEqual(dialog.ui_paths.count(), 0)
-                self.assertEqual(dialog.ui_paths.currentText(), "")
+                assert dialog.ui_num_paths.text() == "# 0"
+                assert dialog.ui_paths.count() == 0
+                assert dialog.ui_paths.currentText() == ""
 
             with self.subTest("Test with invalid config key, sanitize"):
                 config = Hash("doubleProperty", [1.2, 2.4])
                 dialog = DeviceConfigurationDialog(
                     name="default", configuration=config,
                     project_device=project_device)
-                self.assertEqual(dialog.ui_num_paths.text(), "# 1")
-                self.assertEqual(dialog.ui_paths.count(), 1)
-                self.assertEqual(dialog.ui_paths.currentText(),
-                                 "doubleProperty")
+                assert dialog.ui_num_paths.text() == "# 1"
+                assert dialog.ui_paths.count() == 1
+                assert dialog.ui_paths.currentText() == \
+                       "doubleProperty"
 
-                self.assertEqual(len(dialog._invalid_paths), 1)
+                assert len(dialog._invalid_paths) == 1
 
                 # Sanitize
                 self.click(dialog.ui_sanitize)
-                self.assertEqual(dialog.ui_num_paths.text(), "# 0")
-                self.assertEqual(dialog.ui_paths.count(), 0)
-                self.assertEqual(dialog.ui_paths.currentText(), "")
+                assert dialog.ui_num_paths.text() == "# 0"
+                assert dialog.ui_paths.count() == 0
+                assert dialog.ui_paths.currentText() == ""
 
             with self.subTest("Erase all, even valid keys"):
                 config = Hash("notinschema", False, "doubleProperty",
@@ -89,22 +89,22 @@ class TestProjectHandleDialog(GuiTestCase):
                 dialog = DeviceConfigurationDialog(
                     name="default", configuration=config,
                     project_device=project_device)
-                self.assertEqual(dialog.ui_num_paths.text(), "# 3")
-                self.assertEqual(dialog.ui_paths.count(), 3)
-                self.assertEqual(dialog.ui_paths.currentText(),
-                                 "notinschema")
+                assert dialog.ui_num_paths.text() == "# 3"
+                assert dialog.ui_paths.count() == 3
+                assert dialog.ui_paths.currentText() == \
+                       "notinschema"
 
                 # A single invalid one
-                self.assertEqual(len(dialog._invalid_paths), 1)
+                assert len(dialog._invalid_paths) == 1
 
                 # Erase all
                 self.click(dialog.ui_erase_all)
-                self.assertEqual(dialog.ui_num_paths.text(), "# 0")
-                self.assertEqual(dialog.ui_paths.count(), 0)
-                self.assertEqual(dialog.ui_paths.currentText(), "")
+                assert dialog.ui_num_paths.text() == "# 0"
+                assert dialog.ui_paths.count() == 0
+                assert dialog.ui_paths.currentText() == ""
 
                 # Result is empty configuration after erase
-                self.assertTrue(dialog.configuration.empty())
+                assert dialog.configuration.empty()
 
             with self.subTest(msg="Test with valid empty config"):
                 config = Hash()
@@ -113,12 +113,12 @@ class TestProjectHandleDialog(GuiTestCase):
                     project_device=project_device)
 
                 # Everything is fine
-                self.assertEqual(dialog.ui_num_paths.text(), "# 0")
-                self.assertEqual(dialog.ui_paths.count(), 0)
-                self.assertEqual(dialog.ui_paths.currentText(), "")
+                assert dialog.ui_num_paths.text() == "# 0"
+                assert dialog.ui_paths.count() == 0
+                assert dialog.ui_paths.currentText() == ""
 
-                self.assertEqual(dialog.ui_valid_info.toPlainText(),
-                                 "No conflicts in configuration!")
+                assert dialog.ui_valid_info.toPlainText() == \
+                       "No conflicts in configuration!"
 
             with self.subTest(msg="Test with attribute removal on and off"):
                 config = Hash("doubleProperty", 1.2)
@@ -126,23 +126,23 @@ class TestProjectHandleDialog(GuiTestCase):
                 dialog = DeviceConfigurationDialog(
                     name="default", configuration=config,
                     project_device=project_device)
-                self.assertTrue(dialog.ui_remove_attributes.isChecked())
+                assert dialog.ui_remove_attributes.isChecked()
 
                 # Everything is fine
-                self.assertEqual(dialog.ui_num_paths.text(), "# 1")
-                self.assertEqual(dialog.ui_paths.count(), 1)
-                self.assertEqual(dialog.ui_paths.currentText(),
-                                 "doubleProperty")
+                assert dialog.ui_num_paths.text() == "# 1"
+                assert dialog.ui_paths.count() == 1
+                assert dialog.ui_paths.currentText() == \
+                       "doubleProperty"
                 # No conflicts, but sanitize will remove attributes
                 # and still a reconfigurable is left over
                 self.click(dialog.ui_sanitize)
-                self.assertEqual(dialog.ui_num_paths.text(), "# 1")
-                self.assertEqual(dialog.ui_paths.count(), 1)
-                self.assertEqual(dialog.ui_paths.currentText(),
-                                 "doubleProperty")
+                assert dialog.ui_num_paths.text() == "# 1"
+                assert dialog.ui_paths.count() == 1
+                assert dialog.ui_paths.currentText() == \
+                       "doubleProperty"
                 conf = dialog.configuration
                 attributes = conf["doubleProperty", ...]
-                self.assertNotIn("alarmLow", attributes)
+                assert "alarmLow" not in attributes
 
                 # Now test without removing attributes
                 config = Hash("doubleProperty", 1.2)
@@ -151,9 +151,9 @@ class TestProjectHandleDialog(GuiTestCase):
                     name="default", configuration=config,
                     project_device=project_device)
                 dialog.ui_remove_attributes.setChecked(False)
-                self.assertFalse(dialog.ui_remove_attributes.isChecked())
+                assert not dialog.ui_remove_attributes.isChecked()
                 self.click(dialog.ui_sanitize)
-                self.assertEqual(dialog.ui_paths.count(), 1)
+                assert dialog.ui_paths.count() == 1
 
 
 if __name__ == "__main__":

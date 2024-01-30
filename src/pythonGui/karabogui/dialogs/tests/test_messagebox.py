@@ -37,20 +37,19 @@ class TestMessageBox(GuiTestCase):
             "New device online",
             "The new motor arrived in the experimental hall")
 
-        self.assertEqual(len(box_info.existing), 2)
-        self.assertEqual(len(box_error.existing), 2)
+        assert len(box_info.existing) == 2
+        assert len(box_error.existing) == 2
 
-        self.assertEqual(box_error.details_textedit.toPlainText(),
-                         "Temperature to high")
-        self.assertEqual(box_error._is_showing_details, False)
+        m = "Temperature to high"
+        assert box_error.details_textedit.toPlainText() == m
+        assert box_error._is_showing_details is False
         self.click(box_error.show_details_button)
         self.process_qt_events()
-        self.assertEqual(box_error._is_showing_details, True)
-        self.assertEqual(box_info.text_label.text(),
-                         "New device online")
+        assert box_error._is_showing_details is True
+        assert box_info.text_label.text() == "New device online"
         box_error.close()
-        self.assertEqual(len(box_error.existing), 1)
-        self.assertEqual(len(box_info.existing), 1)
+        assert len(box_error.existing) == 1
+        assert len(box_info.existing) == 1
 
         # Close same again, graceful
         box_error.close()
@@ -58,7 +57,7 @@ class TestMessageBox(GuiTestCase):
         box_warning = self._create_messagebox(
             QMessageBox.Warning,
             "Take care!")
-        self.assertEqual(len(box_warning.existing), 2)
+        assert len(box_warning.existing) == 2
 
         with mock.patch("karabogui.dialogs.messagebox.QMenu") as m:
             box_warning._show_context_menu(QPoint(0, 0))

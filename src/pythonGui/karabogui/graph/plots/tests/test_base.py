@@ -96,24 +96,24 @@ class TestPlotViewExport(GuiTestCase):
 
         if exported:
             zipped = np.load(filename)
-            self.assertIsInstance(zipped, np.lib.npyio.NpzFile)
-            self.assertSetEqual(set(names), set(zipped.files))
+            assert isinstance(zipped, np.lib.npyio.NpzFile)
+            assert set(names) == set(zipped.files)
             for index, name in enumerate(names):
                 self._assert_ndarray(zipped[name], has_data[index])
 
     def _assert_exported(self, filename, exported):
         self._delete_file(filename)
-        self.assertFalse(os.path.isfile(filename))
+        assert not os.path.isfile(filename)
 
         with patch('karabogui.util.getSaveFileName', return_value=filename):
             self.widget.export()
 
-        self.assertTrue(os.path.isfile(filename) is exported)
+        assert os.path.isfile(filename) is exported
 
     def _assert_ndarray(self, data, has_data=True):
         x_array = X_ARRAY if has_data else []
         y_array = Y_ARRAY if has_data else []
-        self.assertIsInstance(data, np.ndarray)
+        assert isinstance(data, np.ndarray)
         np.testing.assert_array_equal(data[0], x_array)
         np.testing.assert_array_equal(data[1], y_array)
 
@@ -318,23 +318,23 @@ class TestPlotViewRestore(_BasePlotTest):
         self.restore(roi_items=roi_items, roi_tool=roi_tool)
 
         # Check if only one ROI type is present and current
-        self.assertEqual(controller.current_tool, roi_tool)
-        self.assertEqual(len(controller.roi_items), 1)
+        assert controller.current_tool == roi_tool
+        assert len(controller.roi_items) == 1
 
         # Check if only one ROI item is present
         crosshairs = controller.roi_items[roi_tool]
-        self.assertEqual(len(crosshairs), 1)
+        assert len(crosshairs) == 1
 
         # Check ROI item and coords
         crosshair = crosshairs[0]
-        self.assertIsInstance(crosshair, CrosshairROI)
+        assert isinstance(crosshair, CrosshairROI)
         x, y = crosshair.coords
-        self.assertEqual(x, 15)
-        self.assertEqual(y, 15)
+        assert x == 15
+        assert y == 15
         assert crosshair.center == QPointF(15.000000, 15.000000)
 
         # Check if tool button is checked
-        self.assertTrue(toolbar.buttons[ROITool(roi_tool).name].isChecked())
+        assert toolbar.buttons[ROITool(roi_tool).name].isChecked()
 
     def test_restore_manual_ranges(self):
         # Set range with with log
@@ -352,35 +352,35 @@ class TestPlotViewRestore(_BasePlotTest):
         left_axes = self.widget.plotItem.getAxis("left")
         x_label = bottom_axes.label
         y_label = left_axes.label
-        self.assertEqual(x_label.isVisible(), False)
-        self.assertEqual(y_label.isVisible(), False)
+        assert x_label.isVisible() is False
+        assert y_label.isVisible() is False
 
         self.restore(x_label="Axis", y_label="Axis")
-        self.assertEqual(x_label.isVisible(), True)
-        self.assertEqual(y_label.isVisible(), True)
+        assert x_label.isVisible() is True
+        assert y_label.isVisible() is True
 
         self.restore(x_label="", y_label="")
-        self.assertEqual(x_label.isVisible(), False)
-        self.assertEqual(y_label.isVisible(), False)
+        assert x_label.isVisible() is False
+        assert y_label.isVisible() is False
 
         self.restore(x_units="mm", y_units="mm")
-        self.assertEqual(x_label.isVisible(), True)
-        self.assertEqual(y_label.isVisible(), True)
+        assert x_label.isVisible() is True
+        assert y_label.isVisible() is True
 
         self.restore(x_units="", y_units="")
-        self.assertEqual(x_label.isVisible(), False)
-        self.assertEqual(y_label.isVisible(), False)
+        assert x_label.isVisible() is False
+        assert y_label.isVisible() is False
 
     def test_title_background(self):
         toolbar = self.widget.add_toolbar()
         self.restore(background="white")
         brush = self.widget.graph_view.backgroundBrush()
-        self.assertEqual(brush.color().getRgb(), (255, 255, 255, 255))
+        assert brush.color().getRgb() == (255, 255, 255, 255)
         self.restore(background="red")
         brush = self.widget.graph_view.backgroundBrush()
-        self.assertEqual(brush.color().getRgb(), (255, 0, 0, 255))
-        self.assertIsNotNone(self.widget._toolbar)
+        assert brush.color().getRgb() == (255, 0, 0, 255)
+        assert self.widget._toolbar is not None
 
         tb = toolbar.widget
         sheet = tb.styleSheet()
-        self.assertIn("background-color: rgba(255, 0, 0, 255)", sheet)
+        assert "background-color: rgba(255, 0, 0, 255)" in sheet

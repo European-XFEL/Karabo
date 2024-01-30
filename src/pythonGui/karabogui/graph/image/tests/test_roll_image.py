@@ -28,10 +28,10 @@ class TestRollImage(unittest.TestCase):
         value = np.array([1] * size)
         image.add(np.arange(size))
         np.testing.assert_array_almost_equal(image.data[0], np.arange(size))
-        self.assertEqual(len(image.data), 1)
+        assert len(image.data) == 1
         image.add(value)
         np.testing.assert_array_almost_equal(image.data[0], value)
-        self.assertEqual(len(image.data), 2)
+        assert len(image.data) == 2
 
     def test_overflow(self):
         image = RollImage()
@@ -41,10 +41,10 @@ class TestRollImage(unittest.TestCase):
         for i in range(image.stack + 1):
             image.add(arange_value)
         np.testing.assert_array_almost_equal(image.data[0], arange_value)
-        self.assertEqual(len(image.data), image.stack)
+        assert len(image.data) == image.stack
         image.add(value)
         np.testing.assert_array_almost_equal(image.data[0], value)
-        self.assertEqual(len(image.data), image.stack)
+        assert len(image.data) == image.stack
         np.testing.assert_array_almost_equal(image.data[1], arange_value)
 
     def test_invalid_values(self):
@@ -55,7 +55,7 @@ class TestRollImage(unittest.TestCase):
         image.add(value)
 
         # Check if image is finite
-        self.assertTrue(np.all(np.isfinite(image.data)))
+        assert np.all(np.isfinite(image.data))
         # Check if inf is turned into zero
         value[0] = 0
         np.testing.assert_equal(image.data[0], value)
@@ -66,7 +66,7 @@ class TestRollImage(unittest.TestCase):
         image.add(value)
 
         # Check if image is finite
-        self.assertTrue(np.all(np.isfinite(image.data)))
+        assert np.all(np.isfinite(image.data))
         # Check if nans are turned into zero
         value[[3, 5]] = 0
         np.testing.assert_equal(image.data[0], value)
@@ -78,7 +78,7 @@ class TestRollImage(unittest.TestCase):
         # Check empty value at first set
         empty = np.array([])
         image.add(empty)
-        self.assertIsNone(image.data)
+        assert image.data is None
 
         # Check empty value at nth set
         value = np.ones(size, dtype=np.float64)
@@ -86,7 +86,7 @@ class TestRollImage(unittest.TestCase):
         image.add(value)
         image.add(value)
         image.add(empty)
-        self.assertIsNone(image.data)
+        assert image.data is None
 
     def test_stack_change_reset(self):
         image = RollImage()
@@ -94,15 +94,15 @@ class TestRollImage(unittest.TestCase):
         arange_value = np.arange(size)
         for i in range(image.stack + 1):
             image.add(arange_value)
-        self.assertIsNotNone(image.data)
+        assert image.data is not None
         # Stack is 100 by default
         image.stack = 100
-        self.assertIsNotNone(image.data)
+        assert image.data is not None
         image.stack = 20
-        self.assertIsNone(image.data)
+        assert image.data is None
         arange_value = np.arange(size)
         for i in range(image.stack + 1):
             image.add(arange_value)
-        self.assertIsNotNone(image.data)
+        assert image.data is not None
         image.reset()
-        self.assertIsNone(image.data)
+        assert image.data is None

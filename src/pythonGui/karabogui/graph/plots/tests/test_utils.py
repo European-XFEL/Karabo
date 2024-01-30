@@ -32,14 +32,14 @@ class TestPlotUtils(unittest.TestCase):
     def test_sample_threshold(self):
         """Test the sample threshold finding"""
         threshold = _get_sample_threshold(1000)
-        self.assertEqual(threshold, TYPICAL)
+        assert threshold == TYPICAL
         threshold = _get_sample_threshold(10000)
-        self.assertEqual(threshold, TYPICAL)
+        assert threshold == TYPICAL
         threshold = _get_sample_threshold(200000)
-        self.assertEqual(threshold, TYPICAL)
+        assert threshold == TYPICAL
         threshold = _get_sample_threshold(200001)
-        self.assertEqual(threshold, 30000)
+        assert threshold == 30000
         threshold = _get_sample_threshold(300000)
-        self.assertEqual(threshold, 30000)
+        assert threshold == 30000
         threshold = _get_sample_threshold(600000)
-        self.assertEqual(threshold, 60000)
+        assert threshold == 60000

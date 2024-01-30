@@ -36,16 +36,16 @@ class TestHistogramPlot(GuiTestCase):
 
     def test_basics(self):
         np.testing.assert_array_equal(self._plot_item.levels, LEVELS)
-        self.assertIsInstance(self._plot_item.gradient, QLinearGradient)
-        self.assertIsInstance(self._plot_item._pen, QPen)
-        self.assertIsNone(self._plot_item.plotItem.vb.menu)
+        assert isinstance(self._plot_item.gradient, QLinearGradient)
+        assert isinstance(self._plot_item._pen, QPen)
+        assert self._plot_item.plotItem.vb.menu is None
 
     def test_set_colormap(self):
         cmap = "magma"
         self._plot_item.colormap = cmap
         stops = [(stop, color.getRgb()[:3])
                  for stop, color in self._plot_item.gradient.stops()]
-        self.assertListEqual(stops, COLORMAPS[cmap])
+        assert stops == COLORMAPS[cmap]
 
     def test_set_data(self):
         # 1. Set data equal to levels
