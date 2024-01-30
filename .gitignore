@@ -9,6 +9,7 @@ GNU_MacPorts-MacOSX
 *.profraw
 *~
 *.orig
+*.log
 /karabo
 package/
 run/bin/allInfo
