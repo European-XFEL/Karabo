@@ -35,25 +35,25 @@ class TestTipWizard(GuiTestCase):
         self.wizard = None
 
     def test_basic_wizard(self):
-        self.assertEqual(len(self.wizard.pageIds()), 8)
-        self.assertEqual(self.wizard.windowTitle(), "Karabo Tips & Tricks")
-        self.assertEqual(self.wizard.wizardStyle(), QWizard.ClassicStyle)
+        assert len(self.wizard.pageIds()) == 8
+        assert self.wizard.windowTitle() == "Karabo Tips & Tricks"
+        assert self.wizard.wizardStyle() == QWizard.ClassicStyle
 
-        self.assertEqual(self.wizard.startId(), 0)
+        assert self.wizard.startId() == 0
 
-        self.assertEqual(self.wizard.currentId(), -1)
+        assert self.wizard.currentId() == -1
         self.wizard.restart()
-        self.assertEqual(self.wizard.currentId(), 0)
+        assert self.wizard.currentId() == 0
         self.wizard.next()
-        self.assertEqual(self.wizard.currentId(), 1)
+        assert self.wizard.currentId() == 1
 
         # Test the deactivation for next time
         config = Configuration()
         with singletons(configuration=config):
             self.wizard.update_start(0)
-            self.assertEqual(config["wizard"], True)
+            assert config["wizard"] is True
             self.wizard.update_start(1)
-            self.assertEqual(config["wizard"], False)
+            assert config["wizard"] is False
 
 
 if __name__ == "__main__":

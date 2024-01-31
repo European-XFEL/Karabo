@@ -33,7 +33,7 @@ class TestConfigurationFromPastDialog(GuiTestCase):
         mediator.unregister_listener = mock.Mock()
         with singletons(mediator=mediator, network=network):
             dialog = ConfigurationFromPastDialog(instance_id="divvy")
-            self.assertEqual(dialog.ui_instance_id.text(), "divvy")
+            assert dialog.ui_instance_id.text() == "divvy"
             # Dialog registers to mediator
             mediator.register_listener.assert_called_once()
 
@@ -58,7 +58,7 @@ class TestConfigurationFromPastDialog(GuiTestCase):
                 prev_time = dialog.ui_timepoint.dateTime()
                 self.click(getattr(dialog, button))
                 self.process_qt_events()
-                self.assertNotEqual(dialog.ui_timepoint.dateTime(), prev_time)
+                assert dialog.ui_timepoint.dateTime() != prev_time
 
             # Unregister and set successful
             dialog.done(1)

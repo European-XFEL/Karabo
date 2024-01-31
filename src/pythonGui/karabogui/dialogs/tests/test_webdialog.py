@@ -14,40 +14,34 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
-from unittest import TestCase
 
 from qtpy.QtGui import QValidator
 
 from ..webdialog import WebValidator
 
 
-class TestWebValidator(TestCase):
+def test_valid_url(gui_app):
+    validator = WebValidator()
+    user_pass_url = "http://username:password@someurl.com"
+    ip_address = "192.168.1.1"
+    localhost_with_port = "localhost:8080"
+    simple_website = "google.com"
+    query_url = "ftp://someurl.com/page.html?param1=1&param2=2"
+    cinema_url = "karabo://cinema?param1=1&param2=2"
+    new_gui_url = "karabo://gui"
+    _assert_url(validator, user_pass_url, valid=True)
+    _assert_url(validator, ip_address, valid=True)
+    _assert_url(validator, localhost_with_port, valid=True)
+    _assert_url(validator, simple_website, valid=True)
+    _assert_url(validator, query_url, valid=True)
+    _assert_url(validator, new_gui_url, valid=True)
+    _assert_url(validator, cinema_url, valid=True)
+    _assert_url(validator, "invalid url", valid=False)
 
-    def setUp(self):
-        self._validator = WebValidator()
 
-    def test_valid_url(self):
-        user_pass_url = "http://username:password@someurl.com"
-        ip_address = "192.168.1.1"
-        localhost_with_port = "localhost:8080"
-        simple_website = "google.com"
-        query_url = "ftp://someurl.com/page.html?param1=1&param2=2"
-        cinema_url = "karabo://cinema?param1=1&param2=2"
-        new_gui_url = "karabo://gui"
-
-        self._assert_url(user_pass_url, valid=True)
-        self._assert_url(ip_address, valid=True)
-        self._assert_url(localhost_with_port, valid=True)
-        self._assert_url(simple_website, valid=True)
-        self._assert_url(query_url, valid=True)
-        self._assert_url(new_gui_url, valid=True)
-        self._assert_url(cinema_url, valid=True)
-        self._assert_url("invalid url", valid=False)
-
-    def _assert_url(self, url, *, valid):
-        result, _, _ = self._validator.validate(url, pos=0)
-
-        if valid:
-            self.assertEqual(result, QValidator.Acceptable)
-        else:
-            self.assertNotEqual(result, QValidator.Acceptable)
+def _assert_url(validator, url, *, valid):
+    result, _, _ = validator.validate(url, pos=0)
+    if valid:
+        assert result == QValidator.Acceptable
+    else:
+        assert result != QValidator.Acceptable

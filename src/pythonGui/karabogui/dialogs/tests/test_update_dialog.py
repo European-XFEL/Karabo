@@ -78,10 +78,10 @@ class TestCase(GuiTestCase):
             self.click(dialog.bt_refresh)
 
             # Should refresh current and latest versions
-            self.assertEqual(dialog.lb_current.text(), '1')
-            self.assertEqual(dialog.lb_latest.text(), '2')
+            assert dialog.lb_current.text() == '1'
+            assert dialog.lb_latest.text() == '2'
 
-            self.assertTrue(dialog.bt_update.isEnabled())
+            assert dialog.bt_update.isEnabled()
 
     def test_latest_version(self):
         """Tests the model of the extension updater"""

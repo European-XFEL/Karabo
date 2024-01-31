@@ -62,19 +62,19 @@ class BaseCinemaInstallerTest(GuiTestCase):
         # Assert available models
         items = self.get_listwidget_items(current_page.available_listwidget)
         avail_models = [item.data(Qt.UserRole) for item in items]
-        self.assertEqual(avail_models, available)
+        assert avail_models == available
 
         current_controller = self.installer.current_controller
-        self.assertEqual(current_controller.available_scenes, available)
+        assert current_controller.available_scenes == available
 
         # Assert selected models
         items = self.get_listwidget_items(current_page.selected_listwidget)
         sel_models = [item.data(Qt.UserRole) for item in items]
-        self.assertEqual(sel_models, selected)
+        assert sel_models == selected
 
-        self.assertEqual(current_controller.selected_scenes, selected)
+        assert current_controller.selected_scenes == selected
         # Assert that the wizard can go next if there are selected items
-        self.assertEqual(current_page.isComplete(), bool(selected))
+        assert current_page.isComplete() == bool(selected)
 
     def assert_configure_link_page(self, **kwargs):
         # Defaults here that are updated
@@ -88,18 +88,18 @@ class BaseCinemaInstallerTest(GuiTestCase):
         current_controller = self.installer.current_controller
         # Assert shortcut config
         for k, v in config.items():
-            self.assertEqual(current_controller.link[k], v)
+            assert current_controller.link[k] == v
 
         # Assert widget values
         current_page = current_controller.page
-        self.assertEqual(current_page.splash_checkbox.isChecked(),
-                         config["show_splash"])
-        self.assertEqual(current_page.login_checkbox.isChecked(),
-                         config["show_login"])
-        self.assertEqual(current_page.username_combobox.currentText(),
-                         config["username"])
-        self.assertEqual(current_page.host_lineedit.text(), config["host"])
-        self.assertEqual(current_page.port_lineedit.text(), config["port"])
+        assert current_page.splash_checkbox.isChecked() == \
+               config["show_splash"]
+        assert current_page.login_checkbox.isChecked() == \
+               config["show_login"]
+        assert current_page.username_combobox.currentText() == \
+               config["username"]
+        assert current_page.host_lineedit.text() == config["host"]
+        assert current_page.port_lineedit.text() == config["port"]
 
     def start_installer(self, **traits):
         self.installer.trait_set(**traits)
@@ -125,7 +125,7 @@ class TestSelectScenes(BaseCinemaInstallerTest):
         self.start_installer(project_model=project_model)
         # The wizard goes directly to the select scenes page
         current_controller = self.installer.current_controller
-        self.assertIsInstance(current_controller, SelectScenesController)
+        assert isinstance(current_controller, SelectScenesController)
 
     def test_changes(self, mocked_network):
         """Test the changes (add/remove) of the Select Scenes Controller"""
@@ -171,14 +171,12 @@ class TestSelectScenes(BaseCinemaInstallerTest):
         # Go next!
         self.installer.widget.next()
         current_controller = self.installer.current_controller
-        self.assertIsInstance(current_controller,
-                              ConfigureController)
+        assert isinstance(current_controller, ConfigureController)
 
         # Go back and check that nothing has changed
         self.installer.widget.back()
         current_controller = self.installer.current_controller
-        self.assertIsInstance(current_controller,
-                              SelectScenesController)
+        assert isinstance(current_controller, SelectScenesController)
         self.assert_select_scenes_page(available_scenes, selected_scenes)
 
     def _add_model(self, model):
@@ -212,10 +210,10 @@ class TestConfigureLink(BaseCinemaInstallerTest):
         # The wizard goes directly to the configure shortcut page
 
         current_controller = self.installer.current_controller
-        self.assertIsInstance(current_controller, ConfigureController)
+        assert isinstance(current_controller, ConfigureController)
         self.assert_configure_link_page(uuids=[selected_scene.uuid])
         current_page = current_controller.page
-        self.assertTrue(current_page.isComplete())
+        assert current_page.isComplete()
 
     def test_init_multiple_selected(self, mocked_network):
         """Test the setup of ConfigureLinkController with multiple scenes"""
@@ -233,11 +231,11 @@ class TestConfigureLink(BaseCinemaInstallerTest):
 
         # The wizard goes directly to the configure shortcut page
         current_controller = self.installer.current_controller
-        self.assertIsInstance(current_controller, ConfigureController)
+        assert isinstance(current_controller, ConfigureController)
         self.assert_configure_link_page(
             uuids=[scene.uuid for scene in selected_scenes])
         current_page = current_controller.page
-        self.assertTrue(current_page.isComplete())
+        assert current_page.isComplete()
 
     def test_changes(self, mocked_network):
         """Test the changes of the link configuration and validation"""
@@ -254,37 +252,37 @@ class TestConfigureLink(BaseCinemaInstallerTest):
 
         # Toggle splash checkbox
         page.splash_checkbox.toggle()
-        self.assertEqual(link["show_splash"], page.splash_checkbox.isChecked())
+        assert link["show_splash"] == page.splash_checkbox.isChecked()
 
         # Toggle login checkbox
         page.login_checkbox.toggle()
         is_checked = page.login_checkbox.isChecked()
-        self.assertEqual(link["show_login"], is_checked)
-        self.assertEqual(page.username_combobox.isVisible(), not is_checked)
-        self.assertEqual(page.host_lineedit.isVisible(), not is_checked)
-        self.assertEqual(page.port_lineedit.isVisible(), not is_checked)
+        assert link["show_login"] == is_checked
+        assert page.username_combobox.isVisible() == (not is_checked)
+        assert page.host_lineedit.isVisible() == (not is_checked)
+        assert page.port_lineedit.isVisible() == (not is_checked)
 
         # Admin Level
         page.username_combobox.setCurrentText("operator")
-        self.assertEqual(link["username"], "operator")
+        assert link["username"] == "operator"
 
         # Edit host field: invalid
         self._edit_lineedit('', page.host_lineedit)
-        self.assertFalse(page.isComplete())
+        assert not page.isComplete()
 
         # Edit host field: valid
         self._edit_lineedit("some-host", page.host_lineedit)
-        self.assertTrue(page.isComplete())
-        self.assertEqual(link["host"], "some-host")
+        assert page.isComplete()
+        assert link["host"] == "some-host"
 
         # Edit port field: invalid
         self._edit_lineedit('', page.port_lineedit)
-        self.assertFalse(page.isComplete())
+        assert not page.isComplete()
 
         # Edit port: valid
         self._edit_lineedit("34567", page.port_lineedit)
-        self.assertTrue(page.isComplete())
-        self.assertEqual(link["port"], "34567")
+        assert page.isComplete()
+        assert link["port"] == "34567"
 
     def _edit_lineedit(self, text, line_edit):
         line_edit.setFocus()
