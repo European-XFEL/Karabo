@@ -37,7 +37,7 @@ from karabo.common.api import (
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-# Use patched DeviceClient, not the one directly from karathon:
+# Use patched DeviceClient, not the one directly from bound_tool:
 from .device_client import DeviceClient
 from .no_fsm import NoFsm
 

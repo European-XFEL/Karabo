@@ -16,10 +16,7 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-import karabind
-
-import karathon
-from karabo.bound_tool import AssemblyRules
+from karabo.bound_tool import AssemblyRules, Schema, Validator
 
 
 class Configurator:
@@ -114,12 +111,7 @@ class Configurator:
         clist = []
         inheritanceChain(Derived, Derived.__bases_classid__, clist)
         # clist contains list of classes in inheritance order
-        if isinstance(rules, karathon.AssemblyRules):
-            schema = karathon.Schema(classid, rules)
-        elif isinstance(rules, karabind.AssemblyRules):
-            schema = karabind.Schema(classid, rules)
-        else:
-            raise ValueError("Unsupported binding framework!")
+        schema = Schema(classid, rules)
         for theClass in clist:
             try:
                 if hasattr(theClass, "expectedParameters"):
@@ -184,13 +176,6 @@ class Configurator:
             configuration = configuration[classid]
         else:
             raise TypeError("Wrong number of arguments and/or their types")
-        # Which binding framework is used?
-        if isinstance(configuration, karathon.Hash):
-            module = karathon
-        elif isinstance(configuration, karabind.Hash):
-            module = karabind
-        else:
-            raise ValueError("Unknown binding framework")
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -202,10 +187,10 @@ class Configurator:
         Derived = self.baseRegistry[classid]
 
         schema = Configurator(Derived.__base_classid__).getSchema(
-            classid, module.AssemblyRules())
+            classid, AssemblyRules())
         if not validation:
             return Derived(configuration)
-        validator = module.Validator()
+        validator = Validator()
         result, error, validated = validator.validate(schema, configuration)
         if not result:
             raise RuntimeError(f"Validation Exception: {error}")
