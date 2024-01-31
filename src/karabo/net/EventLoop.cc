@@ -103,8 +103,8 @@ namespace karabo {
         void EventLoop::_run() {
             // First restart io service if e.g. stop() was called
             // before this run() and after a previous run() had finished since out of work.
-            m_running = true;
             m_ioService.restart();
+            m_running = true; // _addThread(..) must not directly add a thread before m_ioService.restart();
             runProtected();
             m_running = false;
             clearThreadPool();
@@ -202,13 +202,16 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
                                                << ") from event-loop, now running: " << poolSize << " threads in total";
                 }
-                // Join without lock - though thread should already be returned from before we get here?
-                lock.unlock();
+                // Join _with_ lock:
+                // * We get here only when m_ioService.run() has finished for 'theThread', so nothing running anymore
+                //   and join() is trivial.
+                // * The lock guarantees that two threads do not try to join each other concurrently which would be a
+                //   deadlock (though logically that cannot happen anyway here since m_ioService.run() is not running
+                //   anymore and thus the thread cannot get the task to destroy another thread).
                 theThread->join();
                 delete theThread;
             }
         }
-
 
         void EventLoop::clearThreadPool() {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
