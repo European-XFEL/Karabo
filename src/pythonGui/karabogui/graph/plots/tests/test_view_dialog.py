@@ -27,12 +27,12 @@ class TestDialogs(GuiTestCase):
     def test_view_dialog(self):
         # Test no config dialog
         dialog = GraphViewDialog()
-        self.assertEqual(dialog.graph_bg_color, "transparent")
-        self.assertFalse(dialog.ui_cb_background.isChecked())
+        assert dialog.graph_bg_color == "transparent"
+        assert not dialog.ui_cb_background.isChecked()
 
         settings = dialog.settings
-        self.assertEqual(settings["background"], "transparent")
-        self.assertEqual(settings["title"], "")
+        assert settings["background"] == "transparent"
+        assert settings["title"] == ""
 
         path = "karabogui.graph.plots.dialogs.view.QColorDialog"
         with mock.patch(path) as color:
@@ -43,23 +43,23 @@ class TestDialogs(GuiTestCase):
             self.click(dialog.ui_cb_background)
             self.click(dialog.ui_pb_background)
             self.process_qt_events()
-            self.assertEqual(dialog.graph_bg_color, c.name())
+            assert dialog.graph_bg_color == c.name()
 
             settings = dialog.settings
-            self.assertEqual(settings["background"], c.name())
-            self.assertEqual(settings["title"], "")
+            assert settings["background"] == c.name()
+            assert settings["title"] == ""
 
             # Disable background again
             self.click(dialog.ui_cb_background)
             settings = dialog.settings
-            self.assertEqual(settings["background"], "transparent")
-            self.assertEqual(settings["title"], "")
+            assert settings["background"] == "transparent"
+            assert settings["title"] == ""
 
             title = "XRAY"
             dialog.ui_title.setText(title)
             settings = dialog.settings
-            self.assertEqual(settings["background"], "transparent")
-            self.assertEqual(settings["title"], title)
+            assert settings["background"] == "transparent"
+            assert settings["title"] == title
 
 
 if __name__ == "__main__":

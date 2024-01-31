@@ -43,13 +43,13 @@ class TestProfileAuxPlot(GuiTestCase):
         self._emitted_value = value
 
     def test_basics(self):
-        self.assertEqual(len(self._controller.controllers), 2)
+        assert len(self._controller.controllers) == 2
         for aux_plot in self._controller.controllers.values():
-            self.assertIsInstance(aux_plot, ProfileController)
-            self.assertIsInstance(aux_plot.plot, ProfilePlot)
-            self.assertIsInstance(aux_plot.analyzer, ProfileAnalyzer)
+            assert isinstance(aux_plot, ProfileController)
+            assert isinstance(aux_plot.plot, ProfilePlot)
+            assert isinstance(aux_plot.analyzer, ProfileAnalyzer)
 
-        self.assertFalse(self._controller.show_stats)
+        assert not self._controller.show_stats
 
     def test_analyze(self):
         # 1. Check default
@@ -78,7 +78,7 @@ class TestProfileAuxPlot(GuiTestCase):
                                  x_slice=slice(X_LENGTH),
                                  y_slice=slice(Y_LENGTH))
 
-        self.assertTrue(region.valid() is valid)
+        assert region.valid() is valid
         self._controller._enable_fitting(fitted)
         self._controller.process(region)
 
@@ -129,18 +129,18 @@ class TestProfileAuxPlot(GuiTestCase):
         # Start from disabled stats
         if self._controller.show_stats:
             self._controller._enable_fitting(False)
-            self.assertFalse(self._controller.show_stats)
-            self.assertIsNone(self._emitted_value)
+            assert not self._controller.show_stats
+            assert self._emitted_value is None
 
         # Show stats
         self._controller._enable_fitting(True)
-        self.assertTrue(self._controller.show_stats)
+        assert self._controller.show_stats
         assertion(self._emitted_value.html, '')
 
         # Hide stats
         self._controller._enable_fitting(False)
-        self.assertFalse(self._controller.show_stats)
-        self.assertIsNone(self._emitted_value)
+        assert not self._controller.show_stats
+        assert self._emitted_value is None
 
     @staticmethod
     def assertArrayIsEmpty(array):

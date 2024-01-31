@@ -59,10 +59,10 @@ class TestStickerWidget(GuiTestCase):
 
     def test_basics(self):
         # Check widget properties
-        self.assertEqual(self.widget.toPlainText(), self.model.text)
+        assert self.widget.toPlainText() == self.model.text
         model_rect = QRect(self.model.x, self.model.y,
                            self.model.width, self.model.height)
-        self.assertTrue(self.widget.rect() == model_rect)
+        assert self.widget.rect() == model_rect
 
         # Check dialog properties. It is needed to be shown to process painting
         # and check sizes
@@ -70,9 +70,9 @@ class TestStickerWidget(GuiTestCase):
         dialog.show()
         dialog_sticker = dialog.leText
 
-        self.assertTrue(dialog_sticker.size() == self.widget.size())
-        self.assertTrue(dialog_sticker.toPlainText() == self.model.text)
+        assert dialog_sticker.size() == self.widget.size()
+        assert dialog_sticker.toPlainText() == self.model.text
 
         are_viewports_equivalent = (dialog_sticker.viewport().size()
                                     == self.widget.viewport().size())
-        self.assertTrue(are_viewports_equivalent)
+        assert are_viewports_equivalent

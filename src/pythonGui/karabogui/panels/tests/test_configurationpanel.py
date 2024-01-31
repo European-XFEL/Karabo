@@ -522,7 +522,7 @@ class TestSetProxyConfiguration(GuiTestCase):
         if np.isscalar(expected):
             if casted and actual is not None:
                 expected = type(actual)(expected)
-            self.assertEqual(actual, expected)
+            assert actual == expected
         elif isinstance(actual, HashList):
             for actual_row, expected_row in zip(actual, expected):
                 for path, actual_value in actual_row.items():

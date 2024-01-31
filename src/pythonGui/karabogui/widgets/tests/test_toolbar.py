@@ -26,14 +26,14 @@ class TestPopUp(GuiTestCase):
 
     def test_default(self):
         widget = ToolBar()
-        self.assertEqual(widget.windowTitle(), "")
-        self.assertEqual(widget.iconSize(), QSize(19, 19))
-        self.assertEqual(widget.isMovable(), False)
-        self.assertEqual(widget.isFloatable(), True)
+        assert widget.windowTitle() == ""
+        assert widget.iconSize() == QSize(19, 19)
+        assert widget.isMovable() is False
+        assert widget.isFloatable() is True
 
         # title test
         widget = ToolBar("new toolbar")
-        self.assertEqual(widget.windowTitle(), "new toolbar")
+        assert widget.windowTitle() == "new toolbar"
 
         with mock.patch.object(widget, 'addWidget') as mock_method:
             # add_expander will add a widget to the toolbar. This way
