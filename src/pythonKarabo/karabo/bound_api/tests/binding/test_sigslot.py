@@ -25,6 +25,18 @@ import pytest
 from karabo.bound import EventLoop, Hash, SignalSlotable
 
 
+@pytest.fixture(scope="module")
+def eventLoopFixt():
+    loop_thread = threading.Thread(target=EventLoop.work)
+    loop_thread.start()
+
+    yield  # now all (since scope="module") tests are executed
+
+    EventLoop.stop()
+    loop_thread.join(timeout=10)
+    assert not loop_thread.is_alive()
+
+
 class SignalSlotableWithSlots(SignalSlotable):
     def slotOneArg(self, a):
         pass
@@ -40,9 +52,7 @@ class SignalSlotableWithSlots(SignalSlotable):
         self.reply(len(args), a)
 
 
-def test_sigslot_register_function():
-    t = threading.Thread(target=EventLoop.work)
-    t.start()
+def test_sigslot_register_function(eventLoopFixt):
 
     timeout = 2000  # timeout in ms
 
@@ -141,14 +151,8 @@ def test_sigslot_register_function():
     assert length == 2
     assert a == 77
 
-    sigSlot = None
-    EventLoop.stop()
-    t.join()
 
-
-def test_sigslot_register_method():
-    t = threading.Thread(target=EventLoop.work)
-    t.start()
+def test_sigslot_register_method(eventLoopFixt):
 
     timeout = 2000  # timeout in ms
 
@@ -235,14 +239,8 @@ def test_sigslot_register_method():
     assert 2 == length
     assert 77 == a
 
-    sigSlot = None
-    EventLoop.stop()
-    t.join()
 
-
-def test_sigslot_register_lambda():
-    t = threading.Thread(target=EventLoop.work)
-    t.start()
+def test_sigslot_register_lambda(eventLoopFixt):
 
     timeout = 2000  # timeout in ms
 
@@ -281,15 +279,8 @@ def test_sigslot_register_lambda():
     assert 42 == a
     assert 43 == b
 
-    sigSlot = None
-    EventLoop.stop()
-    t.join()
 
-
-def test_sigslot_unique_id():
-    t = threading.Thread(target=EventLoop.work)
-    t.start()
-    assert t.is_alive() is True
+def test_sigslot_unique_id(eventLoopFixt):
 
     oneId = "one" + str(uuid.uuid4())
     twoId = "two" + str(uuid.uuid4())
@@ -317,13 +308,9 @@ def test_sigslot_unique_id():
     one_again = SignalSlotable(oneId)
     with pytest.raises(Exception):
         one_again.start()
-    EventLoop.stop()
-    t.join()
 
 
-def test_sigslot_request():
-    t = threading.Thread(target=EventLoop.work)
-    t.start()
+def test_sigslot_request(eventLoopFixt):
 
     bobId = "bob" + str(uuid.uuid4())
     bob = SignalSlotable(bobId)
@@ -778,15 +765,8 @@ def test_sigslot_request():
 
     del req
 
-    alice = None
-    bob = None
-    EventLoop.stop()
-    t.join()
 
-
-def test_sigslot_asyncreply():
-    t = threading.Thread(target=EventLoop.work)
-    t.start()
+def test_sigslot_asyncreply(eventLoopFixt):
 
     bobId = "bob" + str(uuid.uuid4())
     bob = SignalSlotable(bobId)
@@ -933,8 +913,3 @@ def test_sigslot_asyncreply():
     assert msgWhoFailed in detailsMsg
     assert details in detailsMsg
     del req
-
-    alice = None
-    bob = None
-    EventLoop.stop()
-    t.join()
