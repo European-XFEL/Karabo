@@ -54,7 +54,7 @@ class InstanceStatusWidget(KaraboSceneWidget, QSvgWidget):
         super().__init__(model=model, parent=parent)
         self.status = ProxyStatus.OFFLINE
         self.setCursor(Qt.PointingHandCursor)
-        self.proxy = get_topology().get_device(self.device_id)
+        self.proxy = get_topology().get_device(self.device_id, False)
         self.proxy.on_trait_change(self.proxy_online_change, "online")
         self.proxy.on_trait_change(self.proxy_status_change,
                                    "topology_node:status")
