@@ -27,53 +27,52 @@ class TestAppConfDialog(GuiTestCase):
         config = Configuration()
         with singletons(configuration=config):
             dialog = ConfigurationDialog()
-            self.assertFalse(dialog.isModal())
+            assert not dialog.isModal()
             model = dialog.tree_view.model()
-            self.assertIsNotNone(model)
+            assert model is not None
             # We have 6 childen on root (groups)
-            self.assertEqual(model.rowCount(), 6)
+            assert model.rowCount() == 6
             group_index = model.index(1, 0)
             index = model.index(0, 0, group_index)
-            self.assertIsNotNone(index.data())
+            assert index.data() is not None
             index = model.index(0, 1, group_index)
-            self.assertIsNotNone(index.data())
+            assert index.data() is not None
 
-            self.assertEqual(model.headerData(
-                0, Qt.Horizontal, Qt.DisplayRole), 'Name')
-            self.assertEqual(model.headerData(
-                1, Qt.Horizontal, Qt.DisplayRole), 'Setting')
+            assert model.headerData(
+                0, Qt.Horizontal, Qt.DisplayRole) == 'Name'
+            assert model.headerData(
+                1, Qt.Horizontal, Qt.DisplayRole) == 'Setting'
 
             flag = model.flags(index)
-            self.assertEqual(int(flag), 33)
-            self.assertEqual(flag & Qt.ItemIsEnabled, Qt.ItemIsEnabled)
-            self.assertEqual(flag & Qt.ItemIsSelectable, Qt.ItemIsSelectable)
-            self.assertNotEqual(flag & Qt.ItemIsEditable, Qt.ItemIsEditable)
-            self.assertEqual(model.columnCount(None), 2)
+            assert int(flag) == 33
+            assert flag & Qt.ItemIsEnabled == Qt.ItemIsEnabled
+            assert flag & Qt.ItemIsSelectable == Qt.ItemIsSelectable
+            assert flag & Qt.ItemIsEditable != Qt.ItemIsEditable
+            assert model.columnCount(None) == 2
 
-            self.assertTrue(model.setData(index, "Karabo", Qt.EditRole))
-            self.assertEqual(index.data(), "Karabo")
+            assert model.setData(index, "Karabo", Qt.EditRole)
+            assert index.data() == "Karabo"
 
             # Check a boolean
             group_index = model.index(5, 0)
-            self.assertEqual(group_index.data(), "user")
+            assert group_index.data() == "user"
             index = model.index(8, 0, group_index)
-            self.assertEqual(index.data(), "wizard")
+            assert index.data() == "wizard"
             index_value = model.index(8, 1, group_index)
             flag = model.flags(index_value)
-            self.assertEqual(int(flag), 49)
-            self.assertEqual(flag & Qt.ItemIsEnabled, Qt.ItemIsEnabled)
-            self.assertEqual(flag & Qt.ItemIsUserCheckable,
-                             Qt.ItemIsUserCheckable)
+            assert int(flag) == 49
+            assert flag & Qt.ItemIsEnabled == Qt.ItemIsEnabled
+            assert flag & Qt.ItemIsUserCheckable == Qt.ItemIsUserCheckable
 
-            self.assertFalse(dialog.expanded)
+            assert not dialog.expanded
             dialog.expandAll()
-            self.assertTrue(dialog.expanded)
+            assert dialog.expanded
 
             # Double clicks, unfortunately, we cannot use QTest for that
             dialog.onDoubleClickHeader()
-            self.assertFalse(dialog.expanded)
+            assert not dialog.expanded
             dialog.onDoubleClickHeader()
-            self.assertTrue(dialog.expanded)
+            assert dialog.expanded
 
     def test_model_tester(self):
         from pytestqt.modeltest import ModelTester

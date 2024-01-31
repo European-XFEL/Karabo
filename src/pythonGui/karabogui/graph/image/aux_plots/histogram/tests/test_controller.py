@@ -39,12 +39,12 @@ class TestHistogramAggregator(GuiTestCase):
         self._emitted_value = value
 
     def test_basics(self):
-        self.assertEqual(len(self._aggregator.controllers), 1)
+        assert len(self._aggregator.controllers) == 1
         aux_plot = self._aggregator.controller
-        self.assertIsInstance(aux_plot, HistogramController)
-        self.assertIsInstance(aux_plot.plot, HistogramPlot)
-        self.assertIsInstance(aux_plot.analyzer, HistogramAnalyzer)
-        self.assertTrue(self._aggregator.show_stats)
+        assert isinstance(aux_plot, HistogramController)
+        assert isinstance(aux_plot.plot, HistogramPlot)
+        assert isinstance(aux_plot.analyzer, HistogramAnalyzer)
+        assert self._aggregator.show_stats
 
     def test_analyze(self):
         curve_item = self._aggregator.controller.plot._data_item
@@ -58,8 +58,8 @@ class TestHistogramAggregator(GuiTestCase):
 
         # 2. Check valid region
         self._analyze_region(valid=True)
-        self.assertIsNotNone(analyzer._hist)
-        self.assertIsNotNone(analyzer._edges)
+        assert analyzer._hist is not None
+        assert analyzer._edges is not None
         np.testing.assert_array_equal(curve_item.xData, analyzer._edges)
         np.testing.assert_array_equal(curve_item.yData, analyzer._hist)
 
@@ -90,7 +90,7 @@ class TestHistogramAggregator(GuiTestCase):
                                  x_slice=slice(5),
                                  y_slice=slice(4))
 
-        self.assertTrue(region.valid() is valid)
+        assert region.valid() is valid
         self._aggregator.process(region)
 
     def _assert_show_stats(self, valid=True):
@@ -99,7 +99,7 @@ class TestHistogramAggregator(GuiTestCase):
         # Start from disabled stats
         if self._aggregator.show_stats:
             self._aggregator.show_stats = False
-            self.assertIsNone(self._emitted_value)
+            assert self._emitted_value is None
 
         # Show stats
         self._aggregator.show_stats = True
@@ -107,4 +107,4 @@ class TestHistogramAggregator(GuiTestCase):
 
         # Hide stats
         self._aggregator.show_stats = False
-        self.assertIsNone(self._emitted_value)
+        assert self._emitted_value is None

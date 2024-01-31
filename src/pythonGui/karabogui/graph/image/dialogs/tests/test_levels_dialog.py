@@ -42,15 +42,15 @@ class TestLevelsDialog(GuiTestCase):
         self.imageItem.setImage(image)
         image_levels = self.imageItem.levels
         auto_levels = self.imageItem.auto_levels
-        self.assertTrue(auto_levels)
+        assert auto_levels
         dialog = LevelsDialog(image_levels, image_range, auto_levels)
 
         # ----------------------------------------------------------------
         # Change auto level and cross check with a slot
 
-        self.assertTrue(dialog.automatic_checkbox.isChecked())
-        self.assertFalse(dialog.min_spinbox.isEnabled())
-        self.assertFalse(dialog.max_spinbox.isEnabled())
+        assert dialog.automatic_checkbox.isChecked()
+        assert not dialog.min_spinbox.isEnabled()
+        assert not dialog.max_spinbox.isEnabled()
 
         received = None
         count = 0
@@ -64,34 +64,34 @@ class TestLevelsDialog(GuiTestCase):
         dialog.levelsPreview.connect(levelUpdate)
 
         # Now change the auto levels
-        self.assertIsNone(received, None)
+        assert received is None, None
         dialog.automatic_checkbox.setChecked(False)
-        self.assertIsNotNone(dialog.levels, None)
-        self.assertEqual(count, 1)
-        self.assertIsNotNone(received)
+        assert dialog.levels is not None, None
+        assert count == 1
+        assert received is not None
         dialog.automatic_checkbox.setChecked(True)
-        self.assertEqual(dialog.levels, None)
-        self.assertEqual(count, 2)
-        self.assertIsNone(received)
+        assert dialog.levels is None
+        assert count == 2
+        assert received is None
 
         # ----------------------------------------------------------------
         # Change spin boxes
 
         dialog.automatic_checkbox.setChecked(False)
-        self.assertTrue(dialog.min_spinbox.isEnabled())
-        self.assertTrue(dialog.max_spinbox.isEnabled())
+        assert dialog.min_spinbox.isEnabled()
+        assert dialog.max_spinbox.isEnabled()
         count = 0
 
         dialog.min_spinbox.setValue(2)
-        self.assertEqual(count, 1)
-        self.assertEqual(received, [2.0, 99.0])
+        assert count == 1
+        assert received == [2.0, 99.0]
         dialog.max_spinbox.setValue(55)
-        self.assertEqual(count, 2)
-        self.assertEqual(received, [2.0, 55.0])
+        assert count == 2
+        assert received == [2.0, 55.0]
 
         # For now, `slider.setValue` does not emit
         dialog.slider.setValue(13, 44)
-        self.assertEqual(count, 2)
+        assert count == 2
 
         # Finally disconnect
         dialog.levelsPreview.disconnect(levelUpdate)
@@ -109,24 +109,24 @@ class TestLevelsDialog(GuiTestCase):
 
         # Do some prior checking before the actual tests
         np.testing.assert_array_equal(image_levels, image_range)
-        self.assertTrue(auto_levels)
+        assert auto_levels
 
         # Instantiate dialog
         dialog = LevelsDialog(image_levels, image_range, auto_levels)
 
         # Check dialog widgets if enabled
-        self.assertTrue(dialog.automatic_checkbox.isChecked())
-        self.assertFalse(dialog.min_spinbox.isEnabled())
-        self.assertFalse(dialog.max_spinbox.isEnabled())
+        assert dialog.automatic_checkbox.isChecked()
+        assert not dialog.min_spinbox.isEnabled()
+        assert not dialog.max_spinbox.isEnabled()
 
         # Check dialog widget values
-        self.assertEqual(dialog.min_spinbox.value(), image_levels[0])
-        self.assertEqual(dialog.max_spinbox.value(), image_levels[1])
+        assert dialog.min_spinbox.value() == image_levels[0]
+        assert dialog.max_spinbox.value() == image_levels[1]
 
         # Check slider range
-        self.assertFalse(dialog.slider.isEnabled())
-        self.assertEqual(dialog.slider.minimum(), image_range[0])
-        self.assertEqual(dialog.slider.maximum(), image_range[1])
+        assert not dialog.slider.isEnabled()
+        assert dialog.slider.minimum() == image_range[0]
+        assert dialog.slider.maximum() == image_range[1]
 
     def test_image_float_range(self):
         # Setup levels dialog
@@ -139,22 +139,22 @@ class TestLevelsDialog(GuiTestCase):
 
         # Do some prior checking before the actual tests
         np.testing.assert_array_equal(image_levels, image_range)
-        self.assertTrue(auto_levels)
+        assert auto_levels
 
         # Instantiate dialog
         dialog = LevelsDialog(image_levels, image_range, auto_levels)
 
         # Check dialog widgets if enabled
-        self.assertTrue(dialog.automatic_checkbox.isChecked())
-        self.assertFalse(dialog.min_spinbox.isEnabled())
-        self.assertFalse(dialog.max_spinbox.isEnabled())
+        assert dialog.automatic_checkbox.isChecked()
+        assert not dialog.min_spinbox.isEnabled()
+        assert not dialog.max_spinbox.isEnabled()
 
         # Check dialog widget values
         assert_allclose(dialog.min_spinbox.value(), image_levels[0], atol=0.1)
         assert_allclose(dialog.max_spinbox.value(), image_levels[1], atol=0.1)
 
         # Check slider range
-        self.assertFalse(dialog.slider.isEnabled())
+        assert not dialog.slider.isEnabled()
 
     def test_image_not_autolevel(self):
         """Tests the dialog initialization for imageItems with
@@ -171,21 +171,21 @@ class TestLevelsDialog(GuiTestCase):
 
         # Do some prior checking before the actual tests
         np.testing.assert_array_equal(image_levels, input_levels)
-        self.assertFalse(auto_levels)
+        assert not auto_levels
 
         # Instantiate dialog
         dialog = LevelsDialog(image_levels, input_levels, auto_levels)
 
         # Check dialog widgets if enabled
-        self.assertFalse(dialog.automatic_checkbox.isChecked())
-        self.assertTrue(dialog.min_spinbox.isEnabled())
-        self.assertTrue(dialog.max_spinbox.isEnabled())
+        assert not dialog.automatic_checkbox.isChecked()
+        assert dialog.min_spinbox.isEnabled()
+        assert dialog.max_spinbox.isEnabled()
 
         # Check dialog widget values
-        self.assertEqual(dialog.min_spinbox.value(), image_levels[0])
-        self.assertEqual(dialog.min_label.text(), str(image_levels[0]))
-        self.assertEqual(dialog.max_spinbox.value(), image_levels[1])
-        self.assertEqual(dialog.max_label.text(), str(image_levels[1]))
+        assert dialog.min_spinbox.value() == image_levels[0]
+        assert dialog.min_label.text() == str(image_levels[0])
+        assert dialog.max_spinbox.value() == image_levels[1]
+        assert dialog.max_label.text() == str(image_levels[1])
 
     def test_accepted_autolevel(self):
         """Check if accepted values are input values"""
@@ -207,7 +207,7 @@ class TestLevelsDialog(GuiTestCase):
         dialog.accept()
 
         # Check if changes are saved
-        self.assertIsNone(dialog.levels)
+        assert dialog.levels is None
 
     def test_accepted_not_autolevel(self):
         # Setup levels dialog

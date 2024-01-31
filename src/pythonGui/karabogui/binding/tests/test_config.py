@@ -242,7 +242,7 @@ def test_extract_edit():
     binding = build_binding(schema)
     apply_default_configuration(binding)
 
-    # 'a' has default value == True, give 'e' an alarm low attribute
+    # 'a' has default value is True, give 'e' an alarm low attribute
     # XXX: j1 will always be extracted
     config = Hash('a', False, 'e', 0.0, 'j1', [])
     apply_project_configuration(config, binding)
@@ -256,7 +256,7 @@ def test_extract_online_edit():
     binding = build_binding(schema)
     apply_default_configuration(binding)
 
-    # 'a' has default value == True
+    # 'a' has default value is True
     # `j1` is ListOfNodes
     config = Hash('a', False, 'e', 0.0, 'j1', [])
     apply_project_configuration(config, binding)

@@ -47,20 +47,20 @@ class TestLoginDialog(GuiTestCase):
         with singletons(mediator=mediator):
             server_id = "swerver"
             dialog = LogDialog(server_id, parent=None)
-            self.assertEqual(dialog.server_id, server_id)
-            self.assertEqual(dialog.ui_server_id.text(), server_id)
+            assert dialog.server_id == server_id
+            assert dialog.ui_server_id.text() == server_id
 
             logs = Hash("content", data)
             dialog.request_handler(True, logs)
             table_view = dialog.log_widget.table
             table_model = table_view.model()
-            self.assertEqual(table_model.rowCount(), 2)
+            assert table_model.rowCount() == 2
 
             # Get instanceId
             index = table_model.index(0, 2)
             actual_instanceId = "XHQ_EG_DG/MOTOR/MOTOR1"
             instanceId = table_model.data(index, role=Qt.DisplayRole)
-            self.assertEqual(instanceId, actual_instanceId)
+            assert instanceId == actual_instanceId
 
             # Select that index
             table_view.selectionModel().setCurrentIndex(
