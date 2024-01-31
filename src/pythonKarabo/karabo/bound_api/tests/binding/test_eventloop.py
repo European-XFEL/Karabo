@@ -89,6 +89,7 @@ def test_eventloop_signalHandler():
     def handler(sig):
         nonlocal signal
         signal = sig
+        # More workaround required after "xms_test.py" influence
         EventLoop.stop()
 
     EventLoop.setSignalHandler(handler)
