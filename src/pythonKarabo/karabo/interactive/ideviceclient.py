@@ -17,7 +17,7 @@ from threading import Thread
 
 from IPython import start_ipython
 
-from karathon import EventLoop
+from karabo.bound import EventLoop
 
 
 def main():

@@ -29,8 +29,8 @@ import tzlocal
 from dateutil import parser
 
 from karabo._version import version as karaboVersion
-from karabo.bound import DeviceClient as BoundDeviceClient
-from karathon import Hash, TextSerializerHash
+from karabo.bound import (
+    DeviceClient as BoundDeviceClient, Hash, TextSerializerHash)
 
 # ip = IPython.core.ipapi.get()
 ip = IPython.get_ipython()
