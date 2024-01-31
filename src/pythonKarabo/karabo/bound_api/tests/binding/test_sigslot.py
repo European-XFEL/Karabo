@@ -368,6 +368,12 @@ def test_sigslot_request(eventLoopFixt):
     wait_for_handled()
     assert handled is True
     assert called == 0
+    # test again via return-argument-generic receiveAsync
+    handled = False
+    req = alice.request(bobId, "slot0")
+    req.receiveAsync(handle0)
+    wait_for_handled()
+    assert 0 == called
 
     # Test one argument
     handled = False
