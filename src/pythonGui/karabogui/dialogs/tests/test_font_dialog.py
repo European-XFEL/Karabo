@@ -96,21 +96,17 @@ class TestFontDialog(GuiTestCase):
 
     def _assert_qfont(self, qfont):
         dialog = self.dialog
-        self.assertEqual(dialog.qfont, qfont)
-        self.assertEqual(dialog.font_combobox.currentText(),
-                         get_alias_from_font(qfont.family()))
-        self.assertEqual(dialog.font_size_combobox.currentText(),
-                         str(qfont.pointSize()))
-        self.assertEqual(dialog.bold_checkbox.isChecked(),
-                         qfont.bold())
-        self.assertEqual(dialog.italic_checkbox.isChecked(),
-                         qfont.italic())
-        self.assertEqual(dialog.strikeout_checkbox.isChecked(),
-                         qfont.strikeOut())
-        self.assertEqual(dialog.underline_checkbox.isChecked(),
-                         qfont.underline())
+        assert dialog.qfont == qfont
+        assert dialog.font_combobox.currentText() == get_alias_from_font(
+            qfont.family())
+        assert dialog.font_size_combobox.currentText() == str(
+            qfont.pointSize())
+        assert dialog.bold_checkbox.isChecked() == qfont.bold()
+        assert dialog.italic_checkbox.isChecked() == qfont.italic()
+        assert dialog.strikeout_checkbox.isChecked() == qfont.strikeOut()
+        assert dialog.underline_checkbox.isChecked() == qfont.underline()
 
         # Check if font string is equal to the font
         new_font = QFont()
         new_font.fromString(qfont.toString())
-        self.assertEqual(dialog.qfont, new_font)
+        assert dialog.qfont == new_font

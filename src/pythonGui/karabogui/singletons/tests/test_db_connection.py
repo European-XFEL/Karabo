@@ -39,11 +39,11 @@ class TestDBConnection(GuiTestCase):
         network = mock.Mock()
         with singletons(network=network, configuration=config,
                         mediator=mediator):
-            self.assertEqual(len(mediator._listeners.keys()), 0)
+            assert len(mediator._listeners.keys()) == 0
             db_conn = ProjectDatabaseConnection()
             # db connection registers handlers in the mediator
-            self.assertEqual(len(mediator._listeners.keys()), 4)
-            self.assertEqual(db_conn.default_domain, domain)
+            assert len(mediator._listeners.keys()) == 4
+            assert db_conn.default_domain == domain
 
             # 1. Get the available domains
             db_conn.get_available_domains()
@@ -61,18 +61,18 @@ class TestDBConnection(GuiTestCase):
             )
 
             # 4. Read data from project db
-            self.assertEqual(db_conn.is_reading(), False)
-            self.assertEqual(db_conn.is_writing(), False)
-            self.assertEqual(db_conn.is_processing(), False)
+            assert db_conn.is_reading() is False
+            assert db_conn.is_writing() is False
+            assert db_conn.is_processing() is False
 
             project_uuid = str(uuid.uuid4())
             model = ProjectModel(uuid=project_uuid)
             model.initialized = True
 
             db_conn.retrieve(domain, project_uuid, model)
-            self.assertEqual(db_conn.is_writing(), False)
-            self.assertEqual(db_conn.is_reading(), True)
-            self.assertEqual(db_conn.is_processing(), True)
+            assert db_conn.is_writing() is False
+            assert db_conn.is_reading() is True
+            assert db_conn.is_processing() is True
 
             # Network did not send yet
             network.onProjectLoadItems.assert_not_called()
@@ -87,8 +87,8 @@ class TestDBConnection(GuiTestCase):
                                    "xml", "")]}
             broadcast_event(KaraboEvent.ProjectItemsLoaded, data)
             self.process_qt_events()
-            self.assertEqual(db_conn.is_reading(), False)
-            self.assertEqual(db_conn.is_processing(), False)
+            assert db_conn.is_reading() is False
+            assert db_conn.is_processing() is False
 
             # And the `False` success case
             db_conn.retrieve(domain, project_uuid, model)
@@ -97,14 +97,14 @@ class TestDBConnection(GuiTestCase):
                                    "xml", "")]}
             broadcast_event(KaraboEvent.ProjectItemsLoaded, data)
             self.process_qt_events()
-            self.assertEqual(db_conn.is_reading(), False)
-            self.assertEqual(db_conn.is_processing(), False)
+            assert db_conn.is_reading() is False
+            assert db_conn.is_processing() is False
 
             # 5. Save data in project db
             db_conn.store(domain, project_uuid, model)
-            self.assertEqual(db_conn.is_writing(), True)
-            self.assertEqual(db_conn.is_reading(), False)
-            self.assertEqual(db_conn.is_processing(), True)
+            assert db_conn.is_writing() is True
+            assert db_conn.is_reading() is False
+            assert db_conn.is_processing() is True
             network.onProjectSaveItems.assert_not_called()
 
             db_conn.flush()
@@ -116,8 +116,8 @@ class TestDBConnection(GuiTestCase):
 
             broadcast_event(KaraboEvent.ProjectItemsSaved, data)
             self.process_qt_events()
-            self.assertEqual(db_conn.is_writing(), False)
-            self.assertEqual(db_conn.is_processing(), False)
+            assert db_conn.is_writing() is False
+            assert db_conn.is_processing() is False
 
             # 6 Save a failed item top level success
             db_conn.store(domain, project_uuid, model)
@@ -128,12 +128,12 @@ class TestDBConnection(GuiTestCase):
                                    "xml", "")]}
             broadcast_event(KaraboEvent.ProjectItemsSaved, data)
             self.process_qt_events()
-            self.assertEqual(db_conn.is_processing(), False)
+            assert db_conn.is_processing() is False
 
             # 7. Save an item, low level success failure
             db_conn.store(domain, project_uuid, model)
             db_conn.flush()
-            self.assertEqual(db_conn.is_processing(), True)
+            assert db_conn.is_processing() is True
             data = {"success": True,
                     "items": [Hash("domain", domain, "uuid", project_uuid,
                                    "entry", {}, "success", False,
@@ -142,7 +142,7 @@ class TestDBConnection(GuiTestCase):
             with mock.patch(mbox_path) as mb:
                 broadcast_event(KaraboEvent.ProjectItemsSaved, data)
                 self.process_qt_events()
-                self.assertEqual(db_conn.is_processing(), False)
+                assert db_conn.is_processing() is False
                 mb.show_error.assert_called_with("Conflict")
 
             # 8. Update project attribute
@@ -158,27 +158,27 @@ class TestDBConnection(GuiTestCase):
 
             # 9. Topology events, disconnect and come back with device
             network.reset_mock()
-            self.assertEqual(db_conn._have_logged_in, True)
+            assert db_conn._have_logged_in is True
 
             data = {"status": False}
             broadcast_event(KaraboEvent.NetworkConnectStatus, data)
             self.process_qt_events()
-            self.assertEqual(db_conn._have_logged_in, False)
+            assert db_conn._have_logged_in is False
 
             data = {"status": True}
             broadcast_event(KaraboEvent.NetworkConnectStatus, data)
             self.process_qt_events()
-            self.assertEqual(db_conn._have_logged_in, False)
+            assert db_conn._have_logged_in is False
 
             data = {"device": KARABO_PROJECT_MANAGER}
             broadcast_event(KaraboEvent.ProjectDBConnect, data)
             self.process_qt_events()
             network.onProjectBeginSession.assert_called_once()
-            self.assertEqual(db_conn._have_logged_in, True)
+            assert db_conn._have_logged_in is True
 
             # 9. Configuration
             db_conn.default_domain = "New"
-            self.assertEqual(config["domain"], "New")
+            assert config["domain"] == "New"
 
             # 10. Database scene
             scene_uuid = str(uuid.uuid4())

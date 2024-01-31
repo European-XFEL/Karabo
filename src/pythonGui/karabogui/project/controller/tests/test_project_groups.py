@@ -75,9 +75,9 @@ class TestProjectGroupController(GuiTestCase):
                   for macro in self.proj_controller.model.macros]
 
         if is_valid:
-            self.assertTrue(name in macros)
+            assert name in macros
         else:
-            self.assertFalse(name in macros)
+            assert not (name in macros)
 
     def _assert_load_scene_name(self, name, is_valid):
         patched_get_config = patch(
@@ -103,6 +103,6 @@ class TestProjectGroupController(GuiTestCase):
                   for scene in self.proj_controller.model.scenes]
 
         if is_valid:
-            self.assertTrue(name in scenes)
+            assert name in scenes
         else:
-            self.assertFalse(name in scenes)
+            assert not (name in scenes)

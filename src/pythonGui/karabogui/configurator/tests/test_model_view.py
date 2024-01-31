@@ -89,7 +89,7 @@ class TestConfiguratorProjectDevice(GuiTestCase):
         apply_default_configuration(root.binding)
         self.view.assign_proxy(proxy=root)
         self.model = self.view.model()
-        self.assertIsInstance(self.model, ConfigurationTreeModel)
+        assert isinstance(self.model, ConfigurationTreeModel)
         self.model.root = root
         self.model._config_update()
 
@@ -152,10 +152,10 @@ class TestConfiguratorProjectDevice(GuiTestCase):
 
     def test_swap(self):
         self.view.swap_models()
-        self.assertIsInstance(self.view.model(), ConfiguratorFilterModel)
-        self.assertFalse(self.view.model().dynamicSortFilter())
+        assert isinstance(self.view.model(), ConfiguratorFilterModel)
+        assert not self.view.model().dynamicSortFilter()
         self.view.swap_models()
-        self.assertNotIsInstance(self.view.model(), ConfiguratorFilterModel)
+        assert not isinstance(self.view.model(), ConfiguratorFilterModel)
 
 
 class TestConfiguratorDevice(GuiTestCase):
@@ -168,7 +168,7 @@ class TestConfiguratorDevice(GuiTestCase):
         apply_default_configuration(root.binding)
         self.view.assign_proxy(proxy=root)
         self.model = self.view.model()
-        self.assertIsInstance(self.model, ConfigurationTreeModel)
+        assert isinstance(self.model, ConfigurationTreeModel)
         self.model.root = root
 
     def test_get_property_proxy_data(self):
