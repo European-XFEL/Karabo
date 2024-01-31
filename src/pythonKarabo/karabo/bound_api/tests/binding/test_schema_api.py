@@ -15,6 +15,7 @@
 # FITNESS FOR A PARTICULAR PURPOSE.
 
 import pytest
+
 from karabind import (
     AMPERE, IMAGEDATA_ELEMENT, INT32_ELEMENT, MANDATORY, METER, MICRO, MILLI,
     NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT,
@@ -24,7 +25,6 @@ from karabind import (
     cppOtherSchemaElementsSchemaOtherSchemaElements, cppShapeSchemaCircle,
     cppShapeSchemaEditableCircle, cppSomeClassSchemaSomeClassId,
     cppTestStruct1SchemaMyTest, cppTestStruct1SchemaTestStruct1, fullyEqual)
-
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
