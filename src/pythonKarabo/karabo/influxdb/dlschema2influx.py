@@ -24,11 +24,11 @@ from urllib.parse import urlparse
 
 import numpy as np
 
+# we use bound here to ensure serialization compatiblity between
+# the loggers running in C++ and the migration script
+from karabo.bound import BinarySerializerSchema, TextSerializerSchema
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import device_id_from_path, escape_measurement
-# we use karathon here to ensure serialization compatiblity between
-# the loggers running in C++ and the migration script
-from karathon import BinarySerializerSchema, TextSerializerSchema
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
 MAX_SCHEMA_TRUNK_SIZE = 1_048_576  # in bytes
@@ -106,8 +106,8 @@ class DlSchema2Influx():
             'write_retries': [],
         }
         schema_update_epoch = op.getmtime(self.schema_path)
-        karathon_text_ser = TextSerializerSchema.create("Xml")
-        karathon_bin_ser = BinarySerializerSchema.create("Bin")
+        bound_text_ser = TextSerializerSchema.create("Xml")
+        bound_bin_ser = BinarySerializerSchema.create("Bin")
         with open(self.schema_path) as fp:
 
             for i, l in enumerate(fp):
@@ -117,11 +117,11 @@ class DlSchema2Influx():
                     if line_fields:
                         # line has been parsed successfully
                         # save the event entry for the schema update
-                        # use karathon to ensure the same code base as for
+                        # use karabo.bound to ensure the same code base as for
                         # live logging when serializing.
                         xml = line_fields['schema']
-                        karathon_schema = karathon_text_ser.load(xml)
-                        b_schema = karathon_bin_ser.save(karathon_schema)
+                        bound_schema = bound_text_ser.load(xml)
+                        b_schema = bound_bin_ser.save(bound_schema)
                         digest = hashlib.sha1(b_schema).hexdigest()
                         safe_m = escape_measurement(self.device_id)
                         data.append(
