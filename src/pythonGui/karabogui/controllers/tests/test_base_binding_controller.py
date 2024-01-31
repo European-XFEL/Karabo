@@ -281,7 +281,7 @@ class TestBaseBindingController(GuiTestCase):
 
             # Value update is not effective anymore
             set_proxy_value(self.second, self.second.path, "NoUpdateShould")
-            self.assertNotEqual(controller.widget.text(), "NoUpdateShould")
+            assert controller.widget.text() != "NoUpdateShould"
 
     def test_single_value_update(self):
         set_proxy_value(self.first, 'first', 'Foo')
@@ -349,8 +349,8 @@ class TestBaseBindingController(GuiTestCase):
             config = Hash('node', Hash('first', 'foo', 'second', 'bar'))
             apply_configuration(config, binding)
             value_update.assert_called_once_with(proxy)
-            self.assertEqual(first_value, 'foo')
-            self.assertEqual(second_value, 'bar')
+            assert first_value == 'foo'
+            assert second_value == 'bar'
 
     def _mocked_value_update(self, proxy):
         self.received_values.append(proxy.value)
@@ -363,7 +363,7 @@ class TestBaseBindingController(GuiTestCase):
         # Trigger value_update
         set_proxy_value(proxy, proxy.path, value)
         value_update.assert_called_once_with(proxy)
-        self.assertEqual(self.received_values, [value])
+        assert self.received_values == [value]
 
     def test_init(self):
         # Check controller that can_show_nothing and without values
@@ -413,7 +413,7 @@ class TestBaseBindingController(GuiTestCase):
             calls = [mock.call(proxy) for proxy in proxies]
             value_update.assert_has_calls(calls)
             values = [proxy.value for proxy in proxies]
-            self.assertEqual(self.received_values, values)
+            assert self.received_values == values
 
     def test_deferred_update(self):
         deferred_before = self.single.deferred

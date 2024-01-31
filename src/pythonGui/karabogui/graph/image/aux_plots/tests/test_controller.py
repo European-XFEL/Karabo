@@ -31,19 +31,19 @@ class TestAuxPlots(GuiTestCase):
 
     def test_basics(self):
         controllers = self._controller._aggregators
-        self.assertEqual(self._controller.current_plot, AuxPlots.NoPlot)
-        self.assertEqual(controllers, {})
+        assert self._controller.current_plot == AuxPlots.NoPlot
+        assert controllers == {}
 
         # Add aux plot controllers
         for aux_plot, klass in AGGREGATOR_MAP.items():
             self._controller.add(aux_plot)
-            self.assertIn(aux_plot, controllers)
-            self.assertIsInstance(controllers[aux_plot], klass)
+            assert aux_plot in controllers
+            assert isinstance(controllers[aux_plot], klass)
 
-        self.assertEqual(self._controller.current_plot, AuxPlots.NoPlot)
+        assert self._controller.current_plot == AuxPlots.NoPlot
 
         layout_plots = set(self._image_layout.ci.items.keys())
-        self.assertEqual(len(layout_plots), 0)
+        assert len(layout_plots) == 0
 
         # Show profile plot first
         self._controller.current_plot = AuxPlots.ProfilePlot
@@ -59,7 +59,7 @@ class TestAuxPlots(GuiTestCase):
 
         # Clear controller
         self._controller.destroy()
-        self.assertTrue(len(self._image_layout.ci.items) == 0)
+        assert len(self._image_layout.ci.items) == 0
 
     def _assert_plots(self, *, shown):
         layout_plots = self._image_layout.ci.items.keys()

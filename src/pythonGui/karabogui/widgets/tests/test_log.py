@@ -62,16 +62,16 @@ class TestLogWidget(GuiTestCase):
         model = widget.table.model()
         data = create_log_data()
         widget.onLogDataAvailable(data)
-        self.assertEqual(model.rowCount(), 300)
+        assert model.rowCount() == 300
         # add 300 more to overshoot and prune, stays at 300
         widget.onLogDataAvailable(data)
-        self.assertEqual(model.rowCount(), 300)
-        self.assertGreater(model.rowCount(), 0)
+        assert model.rowCount() == 300
+        assert model.rowCount() > 0
         widget.onClearLog()
-        self.assertEqual(model.rowCount(), 0)
+        assert model.rowCount() == 0
         # Do a reset with new data
         widget.initialize(data)
-        self.assertEqual(model.rowCount(), 300)
+        assert model.rowCount() == 300
 
     def test_clipboard_doubleclick(self):
         widget = LogWidget()
@@ -92,7 +92,7 @@ class TestLogWidget(GuiTestCase):
         widget._copy_clipboard()
         clipboard = QApplication.clipboard()
         text = clipboard.text()
-        self.assertIn("XFEL_EG_RACK/MOTOR/95", text)
+        assert "XFEL_EG_RACK/MOTOR/95" in text
 
 
 if __name__ == "__main__":
