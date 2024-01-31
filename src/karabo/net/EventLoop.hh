@@ -165,7 +165,7 @@ namespace karabo {
             boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
             mutable boost::mutex m_threadPoolMutex;
-            bool m_running;
+            std::atomic<bool> m_running;
 
             static boost::shared_ptr<EventLoop> m_instance;
             static boost::once_flag m_initInstanceFlag;
