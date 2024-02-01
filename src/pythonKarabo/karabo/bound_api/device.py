@@ -121,7 +121,7 @@ class PythonDevice(NoFsm):
             .displayedName("Class version")
             .description("The version of the class of this device defined in"
                          " KARABO_CLASSINFO, prepended by package name")
-            .adminAccess()
+            .expertAccess()
             # No version dependent initial value: It would make the static
             # schema version dependent, i.e. introduce fake changes.
             .readOnly()
@@ -131,7 +131,7 @@ class PythonDevice(NoFsm):
             .displayedName("Karabo version")
             .description("The version of the Karabo framework running this "
                          "device")
-            .adminAccess()
+            .expertAccess()
             .readOnly()
             # No version dependent initial value, see above at "classVersion".
             .commit(),
