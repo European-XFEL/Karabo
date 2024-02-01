@@ -205,9 +205,9 @@ def test_value_update(image_graph_setup):
     _assert_gray_features(controller, enabled=True)
     assert controller._plot.imageItem.image.shape == (30, 40)
 
-    # Erase widget, a default with size 50, 50 is set
+    # Erase widget, a default with size 10, 10 is set
     controller.clear_widget()
-    assert controller._plot.imageItem.image.shape == (50, 50)
+    assert controller._plot.imageItem.image.shape == (10, 10)
 
 
 def test_undock_image(image_graph_setup, mocker):
