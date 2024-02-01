@@ -235,7 +235,7 @@ class DeviceSceneLinkWidget(BaseLinkWidget):
         self.layout.setStackingMode(QStackedLayout.StackAll)
         self.layout.addWidget(self.status_symbol)
 
-        self.proxy = get_topology().get_device(self.deviceId)
+        self.proxy = get_topology().get_device(self.deviceId, False)
         self.proxy_status_change(self.proxy.status)
         self.proxy.on_trait_change(self.proxy_status_change, "status")
 
