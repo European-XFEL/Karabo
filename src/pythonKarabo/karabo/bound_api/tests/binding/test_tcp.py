@@ -32,7 +32,7 @@ lock = threading.Lock()
 
 
 @pytest.fixture(scope="module")
-def event_loop():
+def eventLoop():
     loop_thread = threading.Thread(target=EventLoop.work)
     loop_thread.start()
     # test_asynch_write_read needs an extra thread if readAsyncXxx would be
@@ -64,7 +64,7 @@ def test_broker():
     assert broker.getBrokerUrl().startswith(brokerProtocol + "://")
 
 
-# Could become a fixture that requires event_loop fixture, but then I do not
+# Could become a fixture that requires eventLoop fixture, but then I do not
 # know how to pass the classes
 def setup_server_client():
     """
@@ -105,7 +105,7 @@ def setup_server_client():
     return alice, aliceConn, bob, bobConn
 
 
-def test_synch_write_read(event_loop):
+def test_synch_write_read(eventLoop):
 
     alice, aliceConn, bob, bobConn = setup_server_client()
 
@@ -162,7 +162,7 @@ def test_synch_write_read(event_loop):
                     in str(excinfo.value))
 
 
-def test_asynch_write_read(event_loop):
+def test_asynch_write_read(eventLoop):
     # Test asynchronous write and read methods.
 
     alice, aliceConn, bob, bobConn = setup_server_client()
