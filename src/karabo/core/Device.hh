@@ -298,7 +298,7 @@ namespace karabo {
                       .key("classVersion")
                       .displayedName("Class version")
                       .description("The version of the class of this device defined in KARABO_CLASSINFO")
-                      .adminAccess()
+                      .expertAccess()
                       .readOnly()
                       // No version dependent initial value:
                       // It would make the static schema version dependent, i.e. introduce fake changes.
@@ -308,7 +308,7 @@ namespace karabo {
                       .key("karaboVersion")
                       .displayedName("Karabo version")
                       .description("The version of the Karabo framework running this device")
-                      .adminAccess()
+                      .expertAccess()
                       .readOnly()
                       // No version dependent initial value, see above for "classVersion"
                       .commit();
