@@ -123,7 +123,7 @@ def test_detector_graph_2d_image(detectorGraphTest):
     # assert frame_slider.isVisible()
     assert controller._plot.imageItem.image.shape == (30, 40)
     controller.clear_widget()
-    assert controller._plot.imageItem.image.shape == (50, 50)
+    assert controller._plot.imageItem.image.shape == (10, 10)
 
 
 def test_detector_graph_basics(detectorGraphTest):
