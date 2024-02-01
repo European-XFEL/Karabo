@@ -70,7 +70,7 @@ class Device(InjectMixin, SignalSlotable):
     classVersion = String(
         displayedName="Class version",
         description="The version of the class of this device",
-        requiredAccessLevel=AccessLevel.ADMIN,
+        requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
         # No version dependent default value: It would make the static
         # schema version dependent, i.e. introduce fake changes.
@@ -79,7 +79,7 @@ class Device(InjectMixin, SignalSlotable):
     karaboVersion = String(
         displayedName="Karabo version",
         description="The version of the Karabo framework running this device",
-        requiredAccessLevel=AccessLevel.ADMIN,
+        requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
         # No version dependent default value, see above at "classVersion".
         daqPolicy=DaqPolicy.OMIT)
