@@ -592,7 +592,7 @@ class PipelineContext(NetworkInput):
         """Reimplemented function of `NetworkInput`"""
         self._connected = False
 
-    async def handler(self, data, meta):
+    def handler(self, data, meta):
         """Reimplemented function of `NetworkInput`"""
         for future in self._futures:
             future.set_result((data, meta))
