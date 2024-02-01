@@ -215,6 +215,9 @@ namespace karabo {
             RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string& scope) const;
 
            private:
+            void validateUserOnly(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
+                                  std::string scope = "");
+
             void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
                             std::string scope = "");
 
