@@ -29,7 +29,7 @@ NULL_COLOR = QColor(255, 255, 255, 70)
 
 
 def karabo_default_image():
-    return np.zeros(shape=(50, 50), dtype=np.uint8)
+    return np.zeros(shape=(10, 10), dtype=np.uint8)
 
 
 class KaraboImageItem(GraphicsObject):
@@ -39,7 +39,7 @@ class KaraboImageItem(GraphicsObject):
     sigImageChanged = Signal()
 
     def __init__(self, parent=None):
-        GraphicsObject.__init__(self)
+        super().__init__()
         self.auto_levels = True
 
         self._origin = np.array([0, 0])
@@ -55,7 +55,7 @@ class KaraboImageItem(GraphicsObject):
         self.image = None
         self.qimage = None
 
-        self.clickTools = (MouseTool.Picker,)
+        self.clickTools = {MouseTool.Picker}
         self.levels = None
         # We have row-major
         self.axisOrder = getConfigOption("imageAxisOrder")
