@@ -799,7 +799,7 @@ void DataLogging_Test::testInfluxSafeSchemaRetentionPeriod() {
               }
               return false;
           },
-          10'000u, 500u);
+          20'000u, 500u); // seen timeout with 10,000 ms
 
     CPPUNIT_ASSERT_MESSAGE("Didn't find the first expected schema", !firstDigest.empty());
     CPPUNIT_ASSERT_MESSAGE("Didn't find the second expected schema", !secondDigest.empty());
