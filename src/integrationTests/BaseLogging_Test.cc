@@ -867,19 +867,41 @@ void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
 
     bool succeeded = waitForCondition(
           [this, &devices]() {
-              const Hash topo(m_deviceClient->getSystemTopology());
-              CPPUNIT_ASSERT(topo.has("device"));
-              const Hash& device = topo.get<Hash>("device");
-              bool allUp = true;
-              for (const string& deviceId : devices) {
-                  allUp = allUp && device.has(deviceId);
+              auto inClientTopo = [&devices](const Hash& topo) {
+                  const Hash& device = topo.get<Hash>("device");
+                  bool allUp = true;
+                  for (const string& deviceId : devices) {
+                      allUp = allUp && device.has(deviceId);
+                  }
+                  return allUp;
+              };
+              bool allInTopo = inClientTopo(m_deviceClient->getSystemTopology());
+              if (!allInTopo) {
+                  // Use bad exists interface (request/reply with 200 ms timeout) to workaround unreliable client cache
+                  bool missing = false;
+                  for (const std::string& device : devices) {
+                      if (!m_deviceServer->exists(device).first) missing = true;
+                  }
+                  // Check topology again to avoid blaming when just later than exists(..) check
+                  if (!missing && !inClientTopo(m_deviceClient->getSystemTopology())) {
+                      std::clog << "Note: All up, but client cache did not see them!" << std::endl;
+                  }
+                  return !missing;
               }
-              return allUp;
+              return allInTopo;
           },
           60 * KRB_TEST_MAX_TIMEOUT * 1'000u // Increased tolerance: instantiation can be quite slow on a busy CI...
           ,
           100u);
-    CPPUNIT_ASSERT_MESSAGE("Timeout while looking for data logger and readers instances.", succeeded);
+    if (!succeeded) { // Debuggig output
+        for (const std::string& device : devices) {
+            bool isThere = m_deviceServer->exists(device).first;
+            std::clog << device << ": " << (isThere ? "online" : "offline") << std::endl;
+        }
+    }
+    CPPUNIT_ASSERT_MESSAGE(
+          "Timeout looking for logger and readers instances. Up are only " + toString(m_deviceClient->getDevices()),
+          succeeded);
 
     if (waitForLoggerReady) {
         // Makes sure that the DataLogger has reached ON state before proceeding.
