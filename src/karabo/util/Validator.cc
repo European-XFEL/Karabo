@@ -150,45 +150,45 @@ namespace karabo {
             // No "injectDefaults", no "additionalKeys", allow "misssingKeys", allow "unrootedConfig"
             // Iterate user
             for (Hash::const_iterator uit = user.begin(); uit != user.end(); ++uit) {
-                const Hash::Node& unode = *uit;
-                const string& key = unode.getKey();
+                const Hash::Node& userNode = *uit;
+                const string& key = userNode.getKey();
 
                 string currentScope;
                 if (scope.empty()) currentScope = key;
                 else currentScope = scope + "." + key;
 
-                auto mnodep = master.find(key);
-                if (!mnodep) { // no "additionalKeys" allowed
+                auto masterNode = master.find(key);
+                if (!masterNode) { // no "additionalKeys" allowed
                     report << "Encountered unexpected configuration parameter: \"" << currentScope << "\"" << endl;
                     return;
                 }
-                if (mnodep->hasAttribute(KARABO_SCHEMA_SKIP_VALIDATION) &&
-                    mnodep->getAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION)) {
+                if (masterNode->hasAttribute(KARABO_SCHEMA_SKIP_VALIDATION) &&
+                    masterNode->getAttribute<bool>(KARABO_SCHEMA_SKIP_VALIDATION)) {
                     // Skip validation of this node and its children, if requested.
                     continue;
                 }
 
-                int nodeType = mnodep->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
-                const bool hasRowSchema = mnodep->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
-                const bool hasClassAttribute = mnodep->hasAttribute(KARABO_SCHEMA_CLASS_ID);
+                int nodeType = masterNode->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
+                const bool hasRowSchema = masterNode->hasAttribute(KARABO_SCHEMA_ROW_SCHEMA);
+                const bool hasClassAttribute = masterNode->hasAttribute(KARABO_SCHEMA_CLASS_ID);
 
                 if (nodeType == Schema::LEAF) {
-                    Hash::Node& node = working.setNode(unode); // copies also attributes, i.e. timestamp!
+                    Hash::Node& workNode = working.setNode(userNode); // copies also attributes, i.e. timestamp!
                     if (hasRowSchema)
-                        node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA,
-                                          mnodep->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
-                    if (unode.hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
-                        const std::string& classId = unode.getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
-                        if (classId == "State") node.setAttribute(KARABO_INDICATE_STATE_SET, true);
-                        else if (classId == "AlarmCondition") node.setAttribute(KARABO_INDICATE_ALARM_SET, true);
-                        node.setAttribute(KARABO_HASH_CLASS_ID, classId);
+                        workNode.setAttribute(KARABO_SCHEMA_ROW_SCHEMA,
+                                              masterNode->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
+                    if (userNode.hasAttribute(KARABO_SCHEMA_CLASS_ID)) {
+                        const std::string& classId = userNode.getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID);
+                        if (classId == "State") workNode.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        else if (classId == "AlarmCondition") workNode.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                        workNode.setAttribute(KARABO_HASH_CLASS_ID, classId);
                     }
-                    this->validateLeaf(*mnodep, node, report, currentScope);
+                    this->validateLeaf(*masterNode, workNode, report, currentScope);
                 } else if (nodeType == Schema::NODE) {
                     // See comment in `r_validate`...
-                    if (isOutputChannelSchema(*mnodep)) {
+                    if (isOutputChannelSchema(*masterNode)) {
                         working.set(key, Hash());
-                        bool userHashHasOutputSchemaEntries = !onlyContainsEmptyHashLeafs(unode);
+                        bool userHashHasOutputSchemaEntries = !onlyContainsEmptyHashLeafs(userNode);
 
                         if (userHashHasOutputSchemaEntries) {
                             report << "Configuring output channel schema is not allowed: '" << currentScope << "'"
@@ -198,34 +198,34 @@ namespace karabo {
                                 // children of output channel's schema node.
                     }
 
-                    if (hasClassAttribute && mnodep->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID) == "Slot") {
+                    if (hasClassAttribute && masterNode->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID) == "Slot") {
                         // Slot nodes should not appear in the validated output nor in the input.
                         // Tolerate empty node input for backward compatibility, though.
-                        if (unode.getType() != Types::HASH || !unode.getValue<Hash>().empty()) {
+                        if (userNode.getType() != Types::HASH || !userNode.getValue<Hash>().empty()) {
                             report << "There is configuration provided for Slot '" << currentScope << "'" << endl;
                             return;
                         }
                         continue;
                     }
 
-                    if (unode.getType() != Types::HASH) {
+                    if (userNode.getType() != Types::HASH) {
                         if (hasClassAttribute) {
                             // The node reflects a configuration for a class,
                             // what is provided here is the object already -> copy over and shut-up
-                            Hash::Node& workNode = working.setNode(unode);
+                            Hash::Node& workNode = working.setNode(userNode);
                             workNode.setAttribute(KARABO_HASH_CLASS_ID,
-                                                  mnodep->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
+                                                  masterNode->getAttribute<std::string>(KARABO_SCHEMA_CLASS_ID));
                             continue;
                         } else {
                             report << "Parameter \"" << currentScope
                                    << "\" has incorrect node type, expecting HASH not "
-                                   << Types::to<ToLiteral>(unode.getType()) << endl;
+                                   << Types::to<ToLiteral>(userNode.getType()) << endl;
                             return;
                         }
                     } else {
                         Hash::Node& workNode = working.set(key, Hash()); // Insert empty node
-                        validateUserOnly(mnodep->getValue<Hash>(), unode.getValue<Hash>(), workNode.getValue<Hash>(),
-                                         report, currentScope);
+                        validateUserOnly(masterNode->getValue<Hash>(), userNode.getValue<Hash>(),
+                                         workNode.getValue<Hash>(), report, currentScope);
                     }
                 } else if (nodeType == Schema::CHOICE_OF_NODES) {
                     std::set<std::string> validOptions;
@@ -233,12 +233,12 @@ namespace karabo {
 
                     // If the option has all-default parameters the user lazily may have set the option as string
                     // instead of HASH We will allow for this and silently inject an empty Hash instead
-                    if (unode.getType() == Types::STRING) {
+                    if (userNode.getType() == Types::STRING) {
                         // cout << "Silently converting from STRING" << endl;
                         string optionName = user.get<string>(key);
                         if (validOptions.find(optionName) != validOptions.end()) {             // Is a valid option
                             Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
-                            r_validate(mnodep->getValue<Hash>().get<Hash>(optionName), Hash(),
+                            r_validate(masterNode->getValue<Hash>().get<Hash>(optionName), Hash(),
                                        workNode.getValue<Hash>().get<Hash>(optionName), report,
                                        currentScope + "." + optionName);
                         } else {
@@ -247,19 +247,20 @@ namespace karabo {
                             report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                             return;
                         }
-                    } else if (unode.getType() != Types::HASH) {
+                    } else if (userNode.getType() != Types::HASH) {
                         report << "Parameter \"" << currentScope << "\" has incorrect type, expecting HASH not "
-                               << Types::to<ToLiteral>(unode.getType()) << endl;
+                               << Types::to<ToLiteral>(userNode.getType()) << endl;
                         return;
                     } else {
-                        const Hash& choice = unode.getValue<Hash>();
+                        const Hash& choice = userNode.getValue<Hash>();
                         if (choice.size() == 1) { // That is what we expect it should be
                             const Hash::Node& usersOption = *(choice.begin());
                             const string& optionName = usersOption.getKey();
                             if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                 Hash::Node& workNode =
                                       working.set(key, Hash(optionName, Hash())); // Inject empty choice
-                                r_validate(mnodep->getValue<Hash>().get<Hash>(optionName), usersOption.getValue<Hash>(),
+                                r_validate(masterNode->getValue<Hash>().get<Hash>(optionName),
+                                           usersOption.getValue<Hash>(),
                                            workNode.getValue<Hash>().get<Hash>(optionName), report,
                                            currentScope + "." + optionName);
                             } else {
@@ -285,19 +286,19 @@ namespace karabo {
 
                     // If the options have all-default parameters the user lazily may have set the option as string
                     // instead of HASH We will allow for this and silently inject an empty Hashes instead
-                    if (unode.getType() == Types::VECTOR_STRING) {
+                    if (userNode.getType() == Types::VECTOR_STRING) {
                         const vector<string> optionNames(user.get<vector<string>>(key));
                         int optionNamesSize = static_cast<int>(optionNames.size());
-                        if (mnodep->hasAttribute(KARABO_SCHEMA_MIN) &&
-                            (optionNamesSize < mnodep->getAttribute<int>(KARABO_SCHEMA_MIN))) {
+                        if (masterNode->hasAttribute(KARABO_SCHEMA_MIN) &&
+                            (optionNamesSize < masterNode->getAttribute<int>(KARABO_SCHEMA_MIN))) {
                             report << "Too less options given for (list-)parameter: \"" << key
-                                   << "\". Expecting at least " << mnodep->getAttribute<int>(KARABO_SCHEMA_MIN);
+                                   << "\". Expecting at least " << masterNode->getAttribute<int>(KARABO_SCHEMA_MIN);
                             return;
                         }
-                        if (mnodep->hasAttribute(KARABO_SCHEMA_MAX) &&
-                            (optionNamesSize > mnodep->getAttribute<int>(KARABO_SCHEMA_MAX))) {
+                        if (masterNode->hasAttribute(KARABO_SCHEMA_MAX) &&
+                            (optionNamesSize > masterNode->getAttribute<int>(KARABO_SCHEMA_MAX))) {
                             report << "Too many options given for (list-)parameter: \"" << key
-                                   << "\". Expecting at most " << mnodep->getAttribute<int>(KARABO_SCHEMA_MAX);
+                                   << "\". Expecting at most " << masterNode->getAttribute<int>(KARABO_SCHEMA_MAX);
                             return;
                         }
 
@@ -305,7 +306,7 @@ namespace karabo {
                             std::cout << "Silently converting from STRING" << endl;
                             if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                 Hash tmp;
-                                r_validate(mnodep->getValue<Hash>().get<Hash>(optionName), Hash(), tmp, report,
+                                r_validate(masterNode->getValue<Hash>().get<Hash>(optionName), Hash(), tmp, report,
                                            currentScope + "." + optionName);
                                 workNodes.push_back(Hash(optionName, tmp));
                             } else {
@@ -315,24 +316,24 @@ namespace karabo {
                                 return;
                             }
                         }
-                    } else if (unode.getType() != Types::VECTOR_HASH) {
+                    } else if (userNode.getType() != Types::VECTOR_HASH) {
                         report << "Parameter \"" << currentScope << "\" has incorrect type, expecting VECTOR_HASH not "
-                               << Types::to<ToLiteral>(unode.getType()) << endl;
+                               << Types::to<ToLiteral>(userNode.getType()) << endl;
                         return;
                     } else {
-                        const vector<Hash>& userOptions = unode.getValue<vector<Hash>>();
+                        const vector<Hash>& userOptions = userNode.getValue<vector<Hash>>();
                         int optionNamesSize = static_cast<int>(userOptions.size());
-                        if (mnodep->hasAttribute(KARABO_SCHEMA_MIN) &&
-                            (optionNamesSize < mnodep->getAttribute<int>(KARABO_SCHEMA_MIN))) {
+                        if (masterNode->hasAttribute(KARABO_SCHEMA_MIN) &&
+                            (optionNamesSize < masterNode->getAttribute<int>(KARABO_SCHEMA_MIN))) {
                             report << "Too less options given for (list-)parameter: \"" << key
-                                   << "\". Expecting at least " << mnodep->getAttribute<int>(KARABO_SCHEMA_MIN);
+                                   << "\". Expecting at least " << masterNode->getAttribute<int>(KARABO_SCHEMA_MIN);
                             report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                             return;
                         }
-                        if (mnodep->hasAttribute(KARABO_SCHEMA_MAX) &&
-                            (optionNamesSize > mnodep->getAttribute<int>(KARABO_SCHEMA_MAX))) {
+                        if (masterNode->hasAttribute(KARABO_SCHEMA_MAX) &&
+                            (optionNamesSize > masterNode->getAttribute<int>(KARABO_SCHEMA_MAX))) {
                             report << "Too many options given for (list-)parameter: \"" << key
-                                   << "\". Expecting at most " << mnodep->getAttribute<int>(KARABO_SCHEMA_MAX);
+                                   << "\". Expecting at most " << masterNode->getAttribute<int>(KARABO_SCHEMA_MAX);
                             report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                             return;
                         }
@@ -349,10 +350,10 @@ namespace karabo {
                                     if (rootNode.getType() == Types::STRING && rootNode.getValue<string>().empty()) {
                                         // Silently taking empty string as Hash
                                         Hash faked;
-                                        r_validate(mnodep->getValue<Hash>().get<Hash>(optionName), faked, tmp, report,
-                                                   currentScope + "." + optionName);
+                                        r_validate(masterNode->getValue<Hash>().get<Hash>(optionName), faked, tmp,
+                                                   report, currentScope + "." + optionName);
                                     } else {
-                                        r_validate(mnodep->getValue<Hash>().get<Hash>(optionName),
+                                        r_validate(masterNode->getValue<Hash>().get<Hash>(optionName),
                                                    rootNode.getValue<Hash>(), tmp, report,
                                                    currentScope + "." + optionName);
                                     }
