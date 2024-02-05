@@ -110,8 +110,10 @@ class MiddlelayerDevice(DeviceClientBase):
         self.rawchannelmeta = meta
 
     output = OutputChannel(Child)
+
     imageOutput = OutputChannel(ImageChannel)
-    rawoutput = OutputChannel()
+
+    rawOutput = OutputChannel()
 
     @Slot()
     async def retrieveInterfaces(self):
@@ -203,7 +205,7 @@ async def test_cross(deviceTest):
                "Logger.priority", "FATAL",
                "middlelayerDevice", "middlelayerDevice",
                "input.connectedOutputChannels",
-               ["middlelayerDevice:output", "middlelayerDevice:rawoutput"])
+               ["middlelayerDevice:output", "middlelayerDevice:rawOutput"])
     process.stdin.write(encodeBinary(cfg))
     process.stdin.close()
     # And get a new proxy!
