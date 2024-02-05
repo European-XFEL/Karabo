@@ -247,7 +247,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
         """Testing the loading of display widgets"""
         self._assert_geometry(sm.CheckBoxModel)
         self._assert_geometry(sm.ColorBoolModel)
-        self._assert_geometry(sm.DaemonManagerModel)
         self._assert_geometry(sm.DisplayCommandModel)
         self._assert_geometry(sm.DisplayIconCommandModel)
         self._assert_geometry(sm.DisplayLabelModel)
