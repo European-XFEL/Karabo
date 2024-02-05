@@ -1290,15 +1290,6 @@ class VectorHash(Vector):
         ht = TypeHash()
         return HashList(ht.cast(o) for o in other)
 
-    @property
-    def coltypes(self):
-        import warnings
-        warnings.warn(
-            "'coltypes' is deprecated and will be removed in 2.12, "
-            "please use the property `bindings` in the future",
-            DeprecationWarning, stacklevel=2)
-        return self.bindings
-
     def toKaraboValue(self, data, strict=True):
         timestamp = None
         if strict:
@@ -1317,9 +1308,9 @@ class VectorHash(Vector):
                 tablerow = ()
                 for name in self.dtype.names:
                     desc = self.bindings[name]
-                    # NOTE: This is in principle not an MDL problem, but a GUI
-                    # one who lost all its casting since a year for the table
-                    # element. We protect here for the time being.
+                    # Convert all cells to their respective dtype and check
+                    # the values with toKaraboValue for their attribute
+                    # (min, max, ...) compliance
                     value = desc.cast(datarow[name])
                     kvalue = desc.toKaraboValue(value, strict=False)
                     tablerow += (kvalue.value,)
