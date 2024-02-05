@@ -16,12 +16,12 @@
 from asyncio import gather, get_event_loop
 from itertools import chain
 
-from karabo.native import Configurable, Descriptor, MetaConfigurable, Overwrite
+from karabo.native import Configurable, Descriptor, Overwrite
 
 
-class MetaInjectable(MetaConfigurable):
+class MetaInjectable(type):
+
     def __init__(self, name, bases, namespace):
-        self._added_attrs = []
         super().__init__(name, bases, namespace)
         self._added_attrs.clear()
 
@@ -92,7 +92,7 @@ class InjectMixin(Configurable):
 
     def __new__(cls, configuration={}, **kwargs):
         """each object gets its own personal class, that it may modify"""
-        newtype = MetaInjectable(cls.__name__, (cls,), {})
+        newtype = MetaInjectable(cls.__name__, (cls,), {"_added_attrs": []})
         ret = super(Configurable, cls).__new__(newtype)
         # Make the original module available
         ret.__module_orig__ = cls.__module__
