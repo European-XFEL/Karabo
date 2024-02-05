@@ -276,15 +276,14 @@ class Macro(Device):
                 await self._last_action
 
     @classmethod
-    def register(cls, name, dict):
-        # configurable subclasses
-        for k, v in dict.items():
+    def __init_subclass__(cls, **kwargs):
+        for k, v in cls.__dict__.items():
             # patch slots for macro state machine behavior
             if isinstance(v, Slot) and not isinstance(v, MacroSlot):
                 passive_state = cls.abstractPassiveState
                 active_state = cls.abstractActiveState
                 _wrapslot(v, k, passive_state, active_state)
-        super().register(name, dict)
+        super().__init_subclass__(**kwargs)
         # Overwrite to provide the top-level class
         Macro.klass = cls
         cls.__monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
