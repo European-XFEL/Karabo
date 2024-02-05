@@ -14,7 +14,6 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.
 from asyncio import gather
-from collections import OrderedDict
 from functools import partial
 from weakref import WeakKeyDictionary
 
@@ -26,16 +25,8 @@ from karabo.native.time_mixin import get_timestamp
 
 from .basetypes import KaraboValue, NoneValue, isSet
 from .descriptors import Attribute, Descriptor, Integer, Slot
-from .registry import Registry
 
-__all__ = ['Configurable', 'ChoiceOfNodes', 'ListOfNodes', 'MetaConfigurable',
-           'Node', 'Overwrite']
-
-
-class MetaConfigurable(type(Registry)):
-    @staticmethod
-    def __prepare__(name, bases):
-        return OrderedDict()
+__all__ = ['Configurable', 'ChoiceOfNodes', 'ListOfNodes', 'Node', 'Overwrite']
 
 
 def _get_setters(instance, hsh, only_changes=False):
@@ -71,7 +62,7 @@ def _get_setters(instance, hsh, only_changes=False):
     return setter
 
 
-class Configurable(Registry, metaclass=MetaConfigurable):
+class Configurable:
     """The base class for everything that has Karabo attributes.
 
     A class with Karabo attributes inherits from this class.
@@ -122,15 +113,12 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             self._initializers.extend(init)
 
     @classmethod
-    def register(cls, name, dict):
-        super().register(name, dict)
-        for k, v in dict.items():
-            if isinstance(v, Descriptor):
-                # in python 3.6 replaced with __set_name__
-                v.key = k
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        for k, v in cls.__dict__.items():
             if isinstance(v, Overwrite):
                 setattr(cls, k, v.overwrite(getattr(super(cls, cls), k)))
-        cls._attrs = [k for k in dict
+        cls._attrs = [k for k in cls.__dict__
                       if isinstance(getattr(cls, k), Descriptor)]
         allattrs = []
         seen = set()
@@ -143,7 +131,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         cls._subclasses = {}
         for b in cls.__bases__:
             if issubclass(b, Configurable):
-                b._subclasses[name] = cls
+                b._subclasses[cls.__name__] = cls
 
     @classmethod
     def getClassSchema(cls, device=None, state=None):
