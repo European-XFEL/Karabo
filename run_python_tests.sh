@@ -130,12 +130,19 @@ safeRunTests() {
         BROKER_TYPE="jms"
     fi
     export KARABO_BROKER=$BROKER
+
+    if [ "$USE_KARATHON" = "1" ]; then
+        BIND_MODE="Running tests with karathon"
+    else
+        BIND_MODE="Running tests with karabind"
+    fi
     echo
     echo "*************************************************************************************************"
     echo "*************************************************************************************************"
     echo "**"
     echo "**   Running Karabo Python ${TEST_SUITE_NAME} tests with ${BROKER_TYPE^^} broker  ... ${KARABO_BROKER}"
     echo "**   Broker Topic is ${KARABO_BROKER_TOPIC}"
+    echo "**   Python bindings: ${BIND_MODE}"
     echo "**"
     echo "*************************************************************************************************"
     echo "*************************************************************************************************"
@@ -168,11 +175,13 @@ runPythonTestsCI() {
     do
         safeRunTests $BROKER $*
     done
+    # On CI we run once with karathon
+    export USE_KARATHON="1"
+    safeRunTests $BROKER $*
 }
 
 runPythonTests() {
     savedBroker=${KARABO_BROKER}
-
     if [ ! -z "$KARABO_CI_BROKERS" ]; then
         runPythonTestsCI $*
     else
