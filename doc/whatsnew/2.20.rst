@@ -39,11 +39,13 @@ Bound API
   receive that as argument anymore, either.
   Make use of *functools.partial* for the callback instead.
 - The *bound.api* `VectorString` has been removed. Use a python `list` instead.
+- The *bound.api* `[set|is]VectorDefaultConversion` treatment has been removed, now always converting C++ vectors to lists.
 - Some exception types changed:
    - `SystemError` -> `RuntimeError` when a Python integer larger than
      2:sup:`64` - 1 is put into a `Hash`
    - `OverflowError` -> `RuntimeError` when a Python integer larger than
      2:sup:`64` - 1 is part of a list and that is put into a `Hash`
+   - `RuntimeError` -> `TypeError` when the result stats of `RollingWindowStatistics` are copied
 
 
 Change of behaviour
