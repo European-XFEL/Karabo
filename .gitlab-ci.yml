@@ -96,7 +96,7 @@ variables:
   stage: test
   <<: *services_template
   <<: *artifacts-spec
-  cache: !reference [.build_cache, cache_ro]
+  cache: !reference [.build_cache, cache_rw]
   tags:
     - KaraboFramework
   image: europeanxfel/karabo-ci:$ARCH_TAG
