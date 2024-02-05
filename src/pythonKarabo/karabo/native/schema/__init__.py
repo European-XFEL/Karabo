@@ -25,9 +25,8 @@ from .descriptors import *
 from .image_data import *
 from .jsonencoder import *
 from .ndarray import *
-from .registry import *
 from .utils import *
 
 __all__ = (basetypes.__all__ + configurable.__all__ + descriptors.__all__ +
            image_data.__all__ + jsonencoder.__all__ + ndarray.__all__ +
-           registry.__all__ + utils.__all__)
+           utils.__all__)

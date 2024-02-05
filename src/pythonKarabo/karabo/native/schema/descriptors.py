@@ -36,7 +36,6 @@ from karabo.native.data import (
 from .basetypes import (
     BoolValue, EnumValue, KaraboValue, NoneValue, QuantityValue, StringValue,
     TableValue, VectorCharValue, VectorStringValue, isSet)
-from .registry import Registry
 from .utils import get_default_value, sanitize_table_schema
 
 __all__ = [
@@ -472,6 +471,9 @@ class Descriptor:
 
         self.__doc__ = self.description
 
+    def __set_name__(self, owner, name):
+        self.key = name
+
     @property
     def attributes(self):
         """Return the attributes of this descriptor in a dictionary form
@@ -713,7 +715,7 @@ class Slot(Descriptor):
         return self
 
 
-class Type(Descriptor, Registry):
+class Type(Descriptor):
     """A Type is a descriptor that does not contain other descriptors.
 
     All basic Karabo types are described by a Type.
@@ -777,10 +779,9 @@ class Type(Descriptor, Registry):
         return cls._hashname
 
     @classmethod
-    def register(cls, name, dict):
-        super().register(name, dict)
-
-        if "number" in dict:
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if "number" in cls.__dict__:
             cls.types[cls.number] = cls
             s = ''
             lastlower = False
@@ -791,7 +792,7 @@ class Type(Descriptor, Registry):
                 lastlower = c.islower()
             cls._hashname = s.rstrip('_')
             cls.fromname[cls.hashname()] = cls
-        if 'numpy' in dict:
+        if 'numpy' in cls.__dict__:
             cls.strs[np.dtype(cls.numpy).str] = cls
 
     def toDataAndAttrs(self, data):
@@ -826,9 +827,9 @@ class Vector(Type):
     maxSize = Attribute(dtype=np.uint32)
 
     @classmethod
-    def register(cls, name, dict):
-        super().register(name, dict)
-        if "basetype" in dict:
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if "basetype" in cls.__dict__:
             cls.basetype.vectortype = cls
 
     def check(self, ret):
@@ -850,8 +851,8 @@ class NumpyVector(Vector):
     numpy = np.object_
 
     @classmethod
-    def register(cls, name, dict):
-        super().register(name, dict)
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
         cls.vstrs[cls.basetype.numpy().dtype.str] = cls
 
     def cast(self, other):
