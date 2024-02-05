@@ -20,10 +20,15 @@
 #############################################################################
 from qtpy import uic
 from qtpy.QtCore import Qt, Slot
-from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QComboBox, QDialog
 
+from karabogui.util import generateObjectName
+from karabogui.validators import IntValidator
+
 from .utils import get_dialog_ui
+
+FINE_COLOR = "black"
+ERROR_COLOR = "red"
 
 
 class LoginDialog(QDialog):
@@ -33,6 +38,12 @@ class LoginDialog(QDialog):
         filepath = get_dialog_ui("logindialog.ui")
         uic.loadUi(filepath, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+
+        objectName = generateObjectName(self.ui_port)
+        self._port_sheet = (f"QWidget#{objectName}" +
+                            " {{ color: {}; }}")
+        self.ui_port.setObjectName(objectName)
+        sheet = self._port_sheet.format(FINE_COLOR)
 
         index = self.ui_username.findText(username)
         self.ui_username.setCurrentIndex(index)
@@ -53,7 +64,9 @@ class LoginDialog(QDialog):
 
         port = str(port) if port else "44444"
         self.ui_port.setText(port)
-        self.ui_port.setValidator(QIntValidator(None))
+        self.ui_port.setValidator(IntValidator(maxInc=65535, parent=self))
+        self.ui_port.setStyleSheet(sheet)
+        self.ui_port.textChanged.connect(self.on_port_changed)
 
     @Slot(str)
     def on_hostname_changed(self, value):
@@ -63,6 +76,11 @@ class LoginDialog(QDialog):
             hostname, port = self.ui_hostname.currentText().split(":")
             self.ui_hostname.setEditText(hostname)
             self.ui_port.setText(port)
+        self._update_dialog()
+
+    @Slot()
+    def on_port_changed(self):
+        self._update_dialog()
 
     @property
     def username(self):
@@ -84,3 +102,13 @@ class LoginDialog(QDialog):
     def gui_servers(self):
         return [self.ui_hostname.itemText(i)
                 for i in range(self.ui_hostname.count())]
+
+    def _update_dialog(self):
+        acceptable_port = self.ui_port.hasAcceptableInput()
+        color = FINE_COLOR if acceptable_port else ERROR_COLOR
+        sheet = self._port_sheet.format(color)
+        self.ui_port.setStyleSheet(sheet)
+
+        acceptable_host = self.ui_hostname.currentText() != ""
+        enabled = acceptable_host and acceptable_port
+        self.ui_connect.setEnabled(enabled)
