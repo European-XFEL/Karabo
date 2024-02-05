@@ -64,16 +64,16 @@ from .widgets.icon import (
 from .widgets.links import DeviceSceneLinkModel, SceneLinkModel, WebLinkModel
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
-    BaseLabelModel, CheckBoxModel, ComboBoxModel, DaemonManagerModel,
-    DirectoryModel, DisplayAlarmFloatModel, DisplayAlarmIntegerModel,
-    DisplayFloatModel, DisplayLabelModel, DisplayListModel,
-    DisplayTextLogModel, DisplayTimeModel, EditableChoiceElementModel,
-    EditableComboBoxModel, EditableListElementModel, EditableListModel,
-    EditableRegexListModel, EditableRegexModel, EditableSpinBoxModel,
-    FileInModel, FileOutModel, GlobalAlarmModel, HexadecimalModel,
-    HistoricTextModel, InstanceStatusModel, IntLineEditModel, LabelModel,
-    LampModel, LineEditModel, RunConfiguratorModel, SliderModel, StickerModel,
-    TickSliderModel, WidgetNodeModel)
+    BaseLabelModel, CheckBoxModel, ComboBoxModel, DirectoryModel,
+    DisplayAlarmFloatModel, DisplayAlarmIntegerModel, DisplayFloatModel,
+    DisplayLabelModel, DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
+    EditableChoiceElementModel, EditableComboBoxModel,
+    EditableListElementModel, EditableListModel, EditableRegexListModel,
+    EditableRegexModel, EditableSpinBoxModel, FileInModel, FileOutModel,
+    GlobalAlarmModel, HexadecimalModel, HistoricTextModel, InstanceStatusModel,
+    IntLineEditModel, LabelModel, LampModel, LineEditModel,
+    RunConfiguratorModel, SliderModel, StickerModel, TickSliderModel,
+    WidgetNodeModel)
 from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.tools import (
     ImageRendererModel, create_base64image, extract_base64image)
