@@ -168,8 +168,8 @@ class UpdateDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         uic.loadUi(get_dialog_ui('update_dialog.ui'), self)
+        self.setModal(False)
         self.setAttribute(Qt.WA_DeleteOnClose)
-
         self.lb_current.setText(UNDEFINED_VERSION)
         self.lb_latest.setText(UNDEFINED_VERSION)
         self.bt_refresh.setIcon(icons.refresh)
@@ -186,6 +186,13 @@ class UpdateDialog(QDialog):
         self._process = None
         self._wheel_file = None
         self._remote_server = EXTENSIONS_URL_TEMPLATE.format(KARABO_CHANNEL)
+        self.extension_url.setText(
+            f"The extensions wheels can be downloaded from: "
+            f"<a href=\"{self._remote_server}\">{self._remote_server}</a>")
+        self.extension_url.setTextFormat(Qt.RichText)
+        self.extension_url.setTextInteractionFlags(
+            Qt.TextBrowserInteraction)
+        self.extension_url.setOpenExternalLinks(True)
         self.refresh_versions()
 
     def refresh_versions(self):
