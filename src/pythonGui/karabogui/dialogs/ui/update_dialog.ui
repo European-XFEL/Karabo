@@ -68,6 +68,24 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="extension_url">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <italic>true</italic>
+      </font>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -278,6 +296,7 @@
   <zorder>label_3</zorder>
   <zorder>groupBox</zorder>
   <zorder></zorder>
+  <zorder>extension_url</zorder>
  </widget>
  <resources/>
  <connections/>
