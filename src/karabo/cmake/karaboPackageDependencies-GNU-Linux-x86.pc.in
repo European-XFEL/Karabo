@@ -1,10 +1,13 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 include="${prefix}/include"
 extern_include="${prefix}/extern/include"
+libdir="${prefix}/lib"
+extern_libdir="${prefix}/extern/lib"
 
 Name: KaraboPackageDependencies
 Version: @KARABO_VERSION_MAJOR@.@KARABO_VERSION_MINOR@.@KARABO_VERSION_PATCH@
 Description: This file describes all karabo dependencies. It only works within the software bundle.
 URL: https://docs.xfel.eu/share/page/site/KaraboFramework/dashboard
-Libs: -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_regex -lboost_system -lboost_thread -llog4cpp -lopenmqc -lamqpcpp -lev -lpthread -lpugixml
+Requires: amqpcpp openmqc pugixml boost_chrono boost_date_time boost_filesystem boost_regex boost_system boost_thread
+Libs: -L${libdir} -L${extern_libdir} -lkarabo -llog4cpp -lpthread
 Cflags: -I${include} -I${extern_include} -Dcimg_display=0
