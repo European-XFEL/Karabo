@@ -18,6 +18,8 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 #############################################################################
+import os.path as op
+import re
 from functools import partial
 
 from qtpy.QtCore import QEvent, QSize, Qt, Slot
@@ -25,6 +27,7 @@ from qtpy.QtGui import QKeySequence, QPalette
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QApplication, QDialog, QMenu, QScrollArea)
 
+from karabo.common.scenemodel.api import write_scene
 from karabogui import icons
 from karabogui.dialogs.api import ResizeSceneDialog
 from karabogui.events import KaraboEvent, broadcast_event
@@ -40,7 +43,8 @@ from karabogui.sceneview.tools.api import (
     ScenePasteReplaceAction, SceneSelectAllAction, SceneSelectionTool,
     SceneSendToBackAction, StickerTool, TextSceneTool, UngroupSceneAction,
     WebLinkTool)
-from karabogui.util import move_to_cursor
+from karabogui.singletons.api import get_config
+from karabogui.util import getSaveFileName, move_to_cursor
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
@@ -105,6 +109,9 @@ class ScenePanel(BasePanelWidget):
         always_visible_tb.addSeparator()
         always_visible_tb.addAction(self.ac_apply_all)
         always_visible_tb.addAction(self.ac_decline_all)
+        if get_config()["development"]:
+            always_visible_tb.addAction(self.ac_save_scene)
+
         always_visible_tb.add_expander()
 
         tool_bar = ToolBar("Drawing", parent=self)
@@ -171,6 +178,32 @@ class ScenePanel(BasePanelWidget):
 
     # ----------------------------
     # Qt slots
+
+    @Slot()
+    def save_scene(self):
+        config = get_config()
+        path = config['data_dir']
+        directory = path if path and op.isdir(path) else ""
+        scene = self.model
+        filename = scene.simple_name
+        filename = re.sub(r'[\W]', '-', filename)
+        fn = getSaveFileName(caption='Save scene to file',
+                             filter='SVG (*.svg)',
+                             suffix='svg',
+                             selectFile=filename,
+                             directory=directory,
+                             parent=self)
+        if not fn:
+            return
+
+        # Store old scene dialog path
+        config['data_dir'] = op.dirname(fn)
+
+        if not fn.endswith('.svg'):
+            fn = f'{fn}.svg'
+
+        with open(fn, 'w') as fout:
+            fout.write(write_scene(scene))
 
     @Slot()
     def apply_editor_changes(self):
@@ -240,6 +273,8 @@ class ScenePanel(BasePanelWidget):
         self.ac_decline_all = QAction(icons.no, 'Decline All Changes', self)
         self.ac_decline_all.triggered.connect(self.decline_editor_changes)
 
+        self.ac_save_scene = QAction(icons.saveAs, 'Save to file', self)
+        self.ac_save_scene.triggered.connect(self.save_scene)
         self.qactions = []
         mode_qactions = self.create_mode_qactions()
         tool_qactions = [self._build_qaction(a)
