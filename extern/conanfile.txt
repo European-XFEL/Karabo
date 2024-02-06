@@ -30,7 +30,6 @@ libjpeg/9c
 libtiff/4.0.8
 
 # any
-libev/4.33
 nss/3.72
 # we could use this if we update the framework
 # redboltz-mqtt_cpp/13.0.0
