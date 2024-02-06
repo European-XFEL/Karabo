@@ -248,7 +248,7 @@ namespace karabo {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
                 if (node) {
-                    return string(it->getKey() + "." + instanceId);
+                    return string(it->getKey() + ".") += instanceId;
                 }
             }
             return string();
@@ -275,16 +275,33 @@ namespace karabo {
 
         void DeviceClient::_slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceNew was called for: " << instanceId;
-            const string path = this->prepareTopologyPath(instanceId, instanceInfo);
-            if (this->existsInRuntimeSystemDescription(path)) {
-                // The instance was probably killed and restarted again before we noticed that the heartbeats stopped.
-                // We should properly treat its death first (especially for servers, see _slotInstanceGone).
-                KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " still in runtime description - call _slotInstanceGone";
-                this->_slotInstanceGone(instanceId, instanceInfo);
-            }
 
+            const string path = this->prepareTopologyPath(instanceId, instanceInfo);
             const Hash entry(prepareTopologyEntry(path, instanceInfo));
-            mergeIntoRuntimeSystemDescription(entry);
+
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                if (m_runtimeSystemDescription.has(path)) {
+                    // The instance was probably killed and restarted again before we noticed that the heartbeats
+                    // stopped. We should properly treat its death first (especially for servers, see
+                    // _slotInstanceGone).
+                    KARABO_LOG_FRAMEWORK_DEBUG << instanceId
+                                               << " still in runtime description - call _slotInstanceGone";
+                    // Logically it is safe to lock and unlock: All _slotInstance[New|Updated|Gone] calls
+                    // are serialised since they originate from calls of our instance to itself via the signals emitted
+                    // by our SignalSlotable for the corresponding broadcast calls.
+                    // Note a caveat:
+                    // m_runtimeSystemDescription is also touched by schemas and configurations that need to be cached!
+                    // Since these are not updated from broadcast calls, order is lost. Better separate cache of
+                    // topology and cache of schemas and configurations?
+                    lock.unlock();
+                    // It is also safe to call a slot method directly here: All _slotInstanceXxx slots are called
+                    // sequentially for the above reason, so this method call cannot be in parallel to real slot call.
+                    this->_slotInstanceGone(instanceId, instanceInfo);
+                    lock.lock();
+                }
+                m_runtimeSystemDescription.merge(entry);
+            }
             if (isImmortal(instanceId)) { // A "zombie" that now gets alive again - connect and fill cache
                 connectAndRequest(instanceId);
             }
@@ -345,14 +362,17 @@ namespace karabo {
         void DeviceClient::_slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceUpdated was called for: " << instanceId;
             const string path = this->prepareTopologyPath(instanceId, instanceInfo);
-            if (!this->existsInRuntimeSystemDescription(path)) {
-                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": ignore instance update from '" << instanceId
-                                           << "' because that instance is not in runtime description";
-                return;
-            }
-
             const Hash entry(prepareTopologyEntry(path, instanceInfo));
-            mergeIntoRuntimeSystemDescription(entry);
+
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                if (!m_runtimeSystemDescription.has(path)) {
+                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": ignore instance update from '" << instanceId
+                                               << "' because that instance is not in runtime description";
+                    return;
+                }
+                m_runtimeSystemDescription.merge(entry);
+            }
 
             if (m_instanceUpdatedHandler) m_instanceUpdatedHandler(entry);
 
@@ -366,63 +386,86 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceGone was called for: " << instanceId;
             try {
                 const string path = this->prepareTopologyPath(instanceId, instanceInfo);
-                if (!existsInRuntimeSystemDescription(path)) {
-                    KARABO_LOG_FRAMEWORK_ERROR << instanceId
-                                               << " received instance gone although not in runtime description";
-                    return;
-                }
-                // clear cache
-                eraseFromRuntimeSystemDescription(path);
+
+                std::vector<std::pair<std::string, Hash>> devicesOfServer;
                 {
-                    boost::mutex::scoped_lock lock(m_instanceUsageMutex);
-                    InstanceUsage::iterator it = m_instanceUsage.find(instanceId);
-                    if (it != m_instanceUsage.end()) {
-                        if (isImmortal(instanceId)) {
-                            // Gone (i.e. dead), but immortal for us - a zombie!
-                            // Mark it for reconnection (resurrection...) , see age(..) and connectNeeded(..)
-                            it->second = -1;
-                        } else {
-                            m_instanceUsage.erase(it);
-                        }
-                        // Take care to avoid the automatic re-connect of SignalSlotable - for zombies we do it
-                        // ourselves in _slotInstanceNew and take care to get the initial configuration as well.
-                        disconnect(instanceId);
+                    boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                    if (!m_runtimeSystemDescription.has(path)) {
+                        KARABO_LOG_FRAMEWORK_ERROR << instanceId
+                                                   << " received instance gone although not in runtime description";
+                        return;
                     }
+                    if (path.find("server.") == 0ul) { // A server
+                        devicesOfServer = findAndEraseDevicesAsGone(instanceId);
+                    }
+                    // clear cache
+                    m_runtimeSystemDescription.erase(path);
                 }
-
-                if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
-
-                if (m_instanceChangeThrottler) {
-                    m_instanceChangeThrottler->submitInstanceGone(instanceId, instanceInfo);
+                for (const auto& pairDeviceIdAndInstanceInfo : devicesOfServer) {
+                    treatInstanceAsGone(pairDeviceIdAndInstanceInfo.first, pairDeviceIdAndInstanceInfo.second);
                 }
+                treatInstanceAsGone(instanceId, instanceInfo);
 
-                if (getInstanceType(instanceInfo) != "server") return;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in _slotInstanceGone: " << e.what();
+            }
+        }
 
-                // It is a server, so treat also all its devices as dead.
-                const Hash deviceSection(getSectionFromRuntimeDescription("device"));
+        std::vector<std::pair<std::string, karabo::util::Hash>> DeviceClient::findAndEraseDevicesAsGone(
+              const std::string& serverId) {
+            std::vector<std::pair<std::string, karabo::util::Hash>> devicesOfServer;
 
-                for (Hash::const_iterator it = deviceSection.begin(); it != deviceSection.end(); ++it) {
+            boost::optional<util::Hash::Node&> deviceNode = m_runtimeSystemDescription.find("device");
+            if (deviceNode) {
+                Hash& devices = deviceNode->getValue<Hash>();
+
+                for (Hash::iterator it = devices.begin(); it != devices.end(); ++it) {
                     const Hash::Attributes& attributes = it->getAttributes();
-                    if (attributes.has("serverId") && attributes.get<string>("serverId") == instanceId) {
+                    if (attributes.has("serverId") && attributes.get<string>("serverId") == serverId) {
                         // OK, device belongs to the server that is gone.
                         const string& deviceId = it->getKey();
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Treat device '" << deviceId << "' as gone since its server '"
+                                                   << serverId << "' is.";
+                        // Generate instanceInfo as it would come with instanceGone:
                         Hash deviceInstanceInfo;
                         for (Hash::Attributes::const_iterator jt = attributes.begin(); jt != attributes.end(); ++jt) {
                             deviceInstanceInfo.set(jt->getKey(), jt->getValueAsAny());
                         }
-                        // Call the slot of our SignalSlotable to deregister the device.
-                        // This will erase it from the tracked list and brings us back into this method.
-                        xms::SignalSlotable::Pointer p(m_signalSlotable.lock());
-                        if (p) p->call("", "slotInstanceGone", deviceId, deviceInstanceInfo);
+                        devicesOfServer.push_back(std::make_pair(deviceId, std::move(deviceInstanceInfo)));
                     }
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in _slotInstanceGone: " << e;
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in _slotInstanceGone";
+                // Erase the found devices from m_runtimeSystemDescription ('devices' is a reference into it!):
+                for (const auto& pairDeviceIdInstanceInfo : devicesOfServer) {
+                    devices.erase(pairDeviceIdInstanceInfo.first);
+                }
             }
+            return devicesOfServer;
         }
 
+        void DeviceClient::treatInstanceAsGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            {
+                boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                InstanceUsage::iterator it = m_instanceUsage.find(instanceId);
+                if (it != m_instanceUsage.end()) {
+                    // Should only happen or devices...
+                    if (isImmortal(instanceId)) {
+                        // Gone (i.e. dead), but immortal for us - a zombie!
+                        // Mark it for reconnection (resurrection...) , see age(..) and connectNeeded(..)
+                        it->second = -1;
+                    } else {
+                        m_instanceUsage.erase(it);
+                    }
+                    // Take care to avoid the automatic re-connect of SignalSlotable - for zombies we do it
+                    // ourselves in _slotInstanceNew and take care to get the initial configuration as well.
+                    disconnect(instanceId);
+                }
+            }
+            if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
+
+            if (m_instanceChangeThrottler) {
+                m_instanceChangeThrottler->submitInstanceGone(instanceId, instanceInfo);
+            }
+        }
 
         void DeviceClient::setInternalTimeout(const unsigned int internalTimeout) {
             m_internalTimeout = internalTimeout;

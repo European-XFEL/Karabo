@@ -69,7 +69,7 @@ namespace karabo {
             friend class Device;
 
             /// keys are instance IDs, values are a sets of properties that changed
-            typedef std::map<std::string, std::set<std::string> > SignalChangedMap;
+            typedef std::map<std::string, std::set<std::string>> SignalChangedMap;
             typedef boost::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceNewHandler;
             typedef boost::function<void(const karabo::util::Hash& /*topologyEntry*/)> InstanceUpdatedHandler;
             typedef boost::function<void(const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/)>
@@ -1463,11 +1463,11 @@ namespace karabo {
 
             virtual void _slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
 
-            virtual void _slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void _slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void _slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void _slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void _slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void _slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             virtual void _slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
@@ -1593,6 +1593,25 @@ namespace karabo {
              *                         default ID for the service device type is used.
              */
             void initServiceDeviceIds(const karabo::util::Hash& serviceDeviceIds);
+
+            /**
+             * Helper for _slotInstanceGone for servers
+             *
+             * Finds all devices that belong to given server, removes them from  m_runtimeSystemDescription and returns
+             * pairs of their deviceIds and instanceInfo.
+             * Requires protection of m_runtimeSystemDescriptionMutex.
+             */
+            std::vector<std::pair<std::string, karabo::util::Hash>> findAndEraseDevicesAsGone(
+                  const std::string& serverId);
+
+            /**
+             * Helper for _slotInstanceGone
+             *
+             * Does all needed action
+             * - despite of removal from m_runtimeSystemDescription
+             * - and despite of special treatment of devices on the server if instance is a server
+             */
+            void treatInstanceAsGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
         };
     } // namespace core
 } // namespace karabo
