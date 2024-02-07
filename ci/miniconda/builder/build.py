@@ -297,7 +297,6 @@ class Builder:
             '-c', self.mirror_channel,
             '-c', self.mirror_conda_forge,
             '-c', 'conda-forge',
-            '-c', 'defaults',
             '--override-channels',
             '--no-anaconda-upload',
             '--quiet')
@@ -320,8 +319,7 @@ class Builder:
             '-c', 'local',
             '-c', self.mirror_channel,
             '-c', self.mirror_conda_forge,
-            '-c', 'conda-forge',
-            '-c', 'defaults')
+            '-c', 'conda-forge')
         return env
 
     # -----------------------------------------------------------------------
