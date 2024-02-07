@@ -17,7 +17,7 @@
 import numpy as np
 from scipy.optimize import curve_fit
 from traits.api import (
-    Any, Array, ArrayOrNone, Bool, Dict, Function, Property, cached_property)
+    Any, Array, ArrayOrNone, Bool, Callable, Dict, Property, cached_property)
 
 from karabogui.graph.common.api import ImageRegion
 from karabogui.graph.common.fitting import gaussian_fit as gauss1d
@@ -38,7 +38,7 @@ class ProfileAnalyzer(BaseAnalyzer):
     axis_data = ArrayOrNone
 
     # The profiling function
-    _profile_function = Function(np.average)
+    _profile_function = Callable(np.average)
 
     # --- Arrays ---
     # Resulting arrays from `analyze`
