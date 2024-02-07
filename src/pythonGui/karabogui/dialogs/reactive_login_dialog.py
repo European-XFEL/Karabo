@@ -32,6 +32,7 @@ from qtpy.QtNetwork import (
 from qtpy.QtWidgets import QDialog
 
 from karabo.native import decodeBinary
+from karabogui import access as krb_access
 
 from .utils import get_dialog_ui
 
@@ -132,7 +133,7 @@ class ReactiveLoginDialog(QDialog):
 
     @property
     def access_level(self) -> str:
-        level = "observer"
+        level = krb_access.GLOBAL_ACCESS_LEVEL.name.lower()
         if self.login_type is LoginType.ACCESS_LEVEL:
             level = self.combo_access_level.currentText()
         return level
