@@ -25,14 +25,17 @@
 #define KARABO_CORE_GUISERVERDEVICE_HH
 
 #include <atomic>
+#include <boost/shared_ptr.hpp>
 #include <krb_log4cpp/Priority.hh>
 #include <set>
 #include <unordered_map>
 
 #include "karabo/core/Device.hh"
+#include "karabo/devices/GuiServerSessionEscalator.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/UserAuthClient.hh"
+#include "karabo/util/Schema.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
 
@@ -73,6 +76,21 @@ namespace karabo {
                 // might be used for logs if GDPR requirements forbid using the
                 // userId directly in the logs.
                 std::string oneTimeToken;
+                // The userId for an authenticated GUI Client escalated session.
+                // Escalated sessions can only be "derived" from a user authenticated
+                // session and can only exist for a limited amount of time. An
+                // escalated session is started after a successful authentication of
+                // the user requesting the escalation.
+                std::string escalationUserId;
+                // The one time token for an authenticated GUI Client escalated
+                // session. Only available for client sessions with user authentication
+                // while inside the escalation window.
+                std::string escalationToken;
+                // Access level when the user did the escalation. Sent by the client as
+                // part of an escalation request so the server can send it back later at
+                // deescalation time.
+                karabo::util::Schema::AccessLevel levelBeforeEscalation{karabo::util::Schema::AccessLevel::OBSERVER};
+
 
                 ChannelData() : clientVersion("0.0.0"){};
 
@@ -154,6 +172,9 @@ namespace karabo {
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
 
             karabo::net::UserAuthClient m_authClient;
+            // The internal session escalator has to be built after the GuiServer is fully constructed - it binds to a
+            // method of the GuiServer.
+            boost::shared_ptr<GuiServerSessionEscalator> m_sessionEscalator;
 
            public:
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
@@ -287,35 +308,68 @@ namespace karabo {
              */
             void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
-            /** Creates the internal ChannelData entry and update the device Configuration
+            /**
+             * @brief Creates an internal ChannelData structure mapped to the TCP Channel in charge of
+             * the connection between the GUI Client and the GUI Server. Also updates the number of
+             * connected clients property of the GUI Server.
+             *
+             * Called after a successful user authorization based on a one-time token (when the
+             * GUI Server requires user authentication).
+             *
+             * For GUI Servers that don't require user authentication / authorization, it's
+             * called right after the message of "type" "login" is received by the server and
+             * the client's version is verified as one being supported by the server.  The
+             * client's version verification is also performed by a GUI Server that requires
+             * authentication (right before the token validation).
+             *
+             * @note The access level is not being saved in the internal ChannelData structure
+             * because all the access level enforcement is currently client side only. If any
+             * enforcement is required on the server side, the access level information must
+             * be stored in ChannelData and updated whenever the user downgrades his/her access
+             * level on the GUI client.
+             *
+             * @param version the version of the connected GUI client
+             * @param channel the TCP channel for the connection being registered
+             * @param userId the ID of the user logged in the connected GUI Client
+             * @param oneTimeToken the one-time token resulting from the user authentication
+             * previously triggered by GUI client - the token is used by the GUI Server to
+             * validate the authentication and to authorize the user (send the user's login access
+             * level back to the GUI Client).
              */
             void registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer& channel,
                                  const std::string& userId = "", const std::string& oneTimeToken = "");
 
-            /** handles incoming data in the Hash  ``info`` from ``channel``
+            /**
+             * @brief Handler for login messages expected to be sent by a
+             * GUI Client right after it establishes a TCP connection to the
+             * GUI Server.
              *
-             * When the client has connected, only the ``login`` ``type`` is
-             * allowed.
-             * The expected hash must contain a ``version`` string and a ``user`` string.
-             * The ``version`` string is verified against the minimum client version.
-             * The ``user`` string is required but currently not used.
+             * Keeps discarding and logging warnings for any message whose
+             * "type" is not "login". When such an unexpected message is received,
+             * the GUI server binds this handler again to the TCP channel.
              *
-             * Upon successful completion of the login request the ``onRead``
-             * function is bound to the channel, allowing normal operation.
-             * In case of failure the ```onLoginMessage` is bound again to the channel.
+             * When a message of "type" of "login" is received, its handling is
+             * delegated to onLogin(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&,
+             * karabo::util::Hash&)
              *
-             * @param e holds an error code if the eventloop cancel this task or the channel is closed
-             * @param channel
-             * @param info
+             * @param e holds an error code if the eventloop cancels this task or the channel is closed
+             * @param channel the TCP channel for the recently established connection with a GUI client
+             * @param info a Hash containing the message "type" and, for "login" messages, some info related
+             * to the login process, like the version of the connected GUI client and some user related info,
+             * like the userID or the oneTimeToken the GUI Client received upon successfully authenticating
+             * the user logging in.
              */
-            void onLoginMessage(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel,
+            void onWaitForLogin(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel,
                                 karabo::util::Hash& info);
 
+            bool isUserAuthActive() const;
+
             /**
-             * Handles a login request of a user on a gui client. If the login credentials
-             * are valid the current system topology is returned.
-             * @param channel
-             * @param info
+             * @brief Handles a login request of a user on a GUI client. If the login credentials
+             * are valid, the current system topology is sent to the client.
+             *
+             * @param channel the TCP channel between the GUI client and the GUI server
+             * @param info Hash with information needed to validate the login request.
              */
             void onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& info);
 
@@ -332,6 +386,17 @@ namespace karabo {
             void onTokenAuthorizeResult(const WeakChannelPointer& channel, const std::string& userId,
                                         const karabo::util::Version& cliVersion, const std::string& oneTimeToken,
                                         const karabo::net::OneTimeTokenAuthorizeResult& authResult);
+
+            /**
+             * @brief Handles a session escalation expired event communicated by the internal instance of the
+             * GuiServerSessionEscalator.
+             *
+             * The expiration is handled by sending a message of type "onEscalationExpired" to the client associated
+             * with the expired token. The message carries a Hash with paths "expiredToken" and "expirationTime."
+             *
+             * @param expiredEscalationInfo data about the expired escalation.
+             */
+            void onEscalationExpiration(const ExpiredEscalationInfo& info);
 
             /**
              * handles incoming data in the Hash  ``info`` from ``channel``.
@@ -376,6 +441,8 @@ namespace karabo {
              *      requestGeneric                 onRequestGeneric
              *      subscribeLogs                  <no action anymore>
              *      setLogPriority                 onSetLogPriority
+             *      escalate                       onEscalate
+             *      deescalate                     onDeescalate
              *      =============================  =========================
              *
              * \endverbatim
@@ -470,6 +537,44 @@ namespace karabo {
              * @param info
              */
             void onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * @brief Handles a message of type "escalate" by escalating the current unescalated user-authenticated
+             * session (if there's one). The escalation is an asynchronous operation whose completion (either
+             * successfully or not) will be handled by the onEscalateResult method.
+             *
+             * @param channel the TCP channel connecting to the client that requested the escalation.
+             * @param info a Hash which is supposed to contain an "escalationToken" whose value is a one-time token that
+             * must be successfuly authorized for the escalation to happen.
+             */
+            void onEscalate(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * @brief Handles the result of an "escalate" request sent by a connected client.
+             *
+             * @param channel the TCP channel connecting to the client that requested the escalation that will be used
+             * to send a message of type "onEscalate" with the escalation results back to the client.
+             * @param levelBeforeEscalation sent by the client as part of the escalate request to be sent back at
+             * deescalation time.
+             * @param result the results of the escalation operation that will be sent back to the client.
+             */
+            void onEscalateResult(WeakChannelPointer channel, karabo::util::Schema::AccessLevel levelBeforeEscalation,
+                                  const EscalateResult& result);
+
+            /**
+             * @brief Handles a message of type "deescalate" by deescalating the current escalated user-authenticated
+             * session (if there's one). The deescalation is performed synchronously (there's no I/O involved) and its
+             * results are transmitted back to the client through a message of type "onDeescalate".
+             *
+             * @param channel the TCP channel connecting to the client that requested the escalation. Will be used to
+             * send the response back to the client.
+             * @param info a Hash which is supposed to contain an "escalationToken" whose value is a one-time token that
+             * must match the one associated to the current escalated session.
+             *
+             * @note the hash with the results of the deescalation sent back to the requesting client has the fields
+             * "success", "reason" and "escalationToken" (an echo of the token provided in the request).
+             */
+            void onDeescalate(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Callback helper for ``onExecute``
