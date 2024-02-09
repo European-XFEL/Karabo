@@ -30,7 +30,6 @@
 #include <karabo/util/StringTools.hh>
 #include <nlohmann/json.hpp>
 
-// namespace Belle = OB::Belle;
 namespace nl = nlohmann;
 using namespace std;
 using namespace karabo::util;
@@ -42,9 +41,11 @@ using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 
 string TestKaraboAuthServer::VALID_TOKEN{"01234567-89ab-cdef-0123-456789abcdef"};
 
-int TestKaraboAuthServer::VALID_ACCESS_LEVEL{static_cast<int>(Schema::AccessLevel::ADMIN)};
+int TestKaraboAuthServer::VALID_ACCESS_LEVEL{static_cast<int>(Schema::AccessLevel::OPERATOR)};
 
 string TestKaraboAuthServer::INVALID_TOKEN_MSG{"Invalid one-time token!"};
+
+string TestKaraboAuthServer::VALID_USER_ID{"Bob"};
 
 class TestKaraboAuthServer::Impl {
    public:
@@ -114,7 +115,8 @@ class TestKaraboAuthServer::Impl {
                 validToken = true;
             }
         }
-        res.body() = validToken ? R"({"success": true, "user": "John", "error_msg": "", "visib_level": )" +
+        res.body() = validToken ? R"({"success": true, "user":")" + TestKaraboAuthServer::VALID_USER_ID +
+                                        R"(", "error_msg": "", "visib_level": )" +
                                         toString(TestKaraboAuthServer::VALID_ACCESS_LEVEL) + "}"
                                 : R"({"success": false, "user": "", "visib_level": 0, "error_msg": ")" +
                                         TestKaraboAuthServer::INVALID_TOKEN_MSG + "\"}";
