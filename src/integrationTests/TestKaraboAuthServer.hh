@@ -62,6 +62,8 @@ class TestKaraboAuthServer {
     static int VALID_ACCESS_LEVEL;
     // The error message returned for any invalid token.
     static std::string INVALID_TOKEN_MSG;
+    // The user Id associated to the valid token
+    static std::string VALID_USER_ID;
 
    private:
     class Impl; // Forward declaration of the implementation class
