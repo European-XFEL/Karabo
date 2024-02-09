@@ -902,17 +902,21 @@ namespace karabo {
         void InfluxDataLogger::preDestruction() {
             DataLogger::preDestruction();
 
-            auto prom = boost::make_shared<std::promise<void>>();
-            std::future<void> fut = prom->get_future();
-            m_clientWrite->flushBatch([prom](const HttpResponse& resp) { prom->set_value(); });
+            if (m_clientWrite->isConnected()) {
+                auto prom = boost::make_shared<std::promise<void>>();
+                std::future<void> fut = prom->get_future();
+                m_clientWrite->flushBatch([prom](const HttpResponse& resp) { prom->set_value(); });
 
-            auto status = fut.wait_for(std::chrono::milliseconds(1500));
+                auto status = fut.wait_for(std::chrono::milliseconds(1500));
 
-            if (status != std::future_status::ready) {
-                KARABO_LOG_FRAMEWORK_WARN << "Timeout in flushBatch while waiting for response from InfluxDB.";
-                return;
+                if (status != std::future_status::ready) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Timeout in flushBatch while waiting for response from InfluxDB.";
+                    return;
+                }
+                fut.get();
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Skip final flush to influx since not connected";
             }
-            fut.get();
         }
 
 

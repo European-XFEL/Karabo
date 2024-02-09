@@ -239,8 +239,8 @@ namespace karabo {
             // mutex. For those we release the lock and try a few more times. If that does not help, there is probably
             // something misbehaving and we give up - the exception will likely finish the process.
             while (!m_threadMap.empty()) {
-                // 50 rounds: overall delay of up to 5 s from this loop plus 0.1 s per loop times stuck thread
-                if (++round > 50) {
+                // 100 rounds: overall delay of up to 10 s from this loop plus 0.1 s per loop times stuck thread
+                if (++round > 100) {
                     using karabo::util::toString; // note that m_threadPool.size() needs mutex
                     throw KARABO_TIMEOUT_EXCEPTION("Repeated failure to join all threads, " +
                                                          toString(m_threadPool.size()) += " threads left");
