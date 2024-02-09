@@ -80,6 +80,7 @@ stages:
     # install conan to docker image
     - python3 -m pip install --upgrade pip
     - python3 -m pip install conan==1.62.0
+    - dnf -y --allowerasing install openssl-devel || true
     # run full framework build & tests
     - source set_lsb_release_info.sh
     - source ci/prepare "$CI_BUILD_NAME"

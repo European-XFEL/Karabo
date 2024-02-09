@@ -29,9 +29,14 @@ export LSB_RELEASE_DIST=UNKNOWN
 export LSB_RELEASE_VERSION="0"
 
 if [ -f "/etc/os-release" ]; then
-    LSB_RELEASE_DIST=$(cat "/etc/os-release" | awk -F= '{if($1 == "NAME") print $2}' | tr -d \" | awk '{print $1}')
+    . /etc/os-release
+    LSB_RELEASE_DIST=${NAME%% *}
+    if [ "$LSB_RELEASE_DIST" = "Red" ]; then
+       # Change the dist name value to match what the deployment script expects
+       LSB_RELEASE_DIST="Redhat"
+    fi
     export LSB_RELEASE_DIST
-    LSB_RELEASE_VERSION=$(cat "/etc/os-release" | awk -F= '{if($1 == "VERSION_ID") print $2}' | tr -d \")
+    LSB_RELEASE_VERSION=$VERSION_ID
     export LSB_RELEASE_VERSION
 else
     eval which lsb_release &> /dev/null
