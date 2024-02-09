@@ -22,6 +22,7 @@
 #include "GuiServer_Test.hh"
 
 #include <cstdlib>
+#include <karabo/devices/GuiServerSessionEscalator.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/StringTools.hh>
 
@@ -35,6 +36,9 @@ using namespace std;
 #define CONNECTION_KEEP_ALIVE 15
 
 #define TEST_GUI_SERVER_ID "testGuiServerDevice"
+
+// Maximum escalation time to be used in the tests (in seconds)
+#define MAX_ESCALATION_TIME 2u
 
 USING_KARABO_NAMESPACES
 
@@ -147,11 +151,14 @@ void GuiServer_Test::appTestRunner() {
     TestKaraboAuthServer tstAuthServer(authServerAddr, authServerPort);
     boost::thread srvRunner = boost::thread([&tstAuthServer]() { tstAuthServer.run(); });
 
-    success_n = m_deviceClient->instantiate(
-          "testGuiVersionServer", "GuiServerDevice",
-          Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.16", "authServer",
-               "http://" + authServerAddr + ":" + toString(authServerPort), "timeout", 0),
-          KRB_TEST_MAX_TIMEOUT);
+    // Instantiates a GUI Server in Authenticated mode with a maximum escalation time of 2 seconds for
+    // the purposes of the integrated tests.
+    success_n =
+          m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
+                                      Hash("deviceId", TEST_GUI_SERVER_ID, "port", 44450, "minClientVersion", "2.16",
+                                           "authServer", "http://" + authServerAddr + ":" + toString(authServerPort),
+                                           "timeout", 0, "maxEscalationTime", MAX_ESCALATION_TIME),
+                                      KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
     waitForCondition(
           [this]() {
@@ -163,6 +170,11 @@ void GuiServer_Test::appTestRunner() {
     testMissingTokenOnLogin();
     testInvalidTokenOnLogin();
     testValidTokenOnLogin();
+
+    testMissingTokenOnEscalate();
+    testInvalidTokenOnEscalate();
+    testEscalateDeescalate();
+    testEscalateExpiration();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -1440,6 +1452,219 @@ void GuiServer_Test::testValidTokenOnLogin() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
         timeout -= 5;
     }
+
+    std::clog << "OK" << std::endl;
+}
+
+void GuiServer_Test::testMissingTokenOnEscalate() {
+    std::clog << "testMissingTokenOnEscalate: " << std::flush;
+
+    Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                   "2.20.0", "levelBeforeEscalation", static_cast<int>(Schema::AccessLevel::OPERATOR));
+
+    Hash escalateInfo("type", "escalate", "version", "2.20.0");
+
+    resetTcpConnection();
+
+    // Performs an authenticated login successfully - escalation is only available from that point on.
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
+                           lastMessage.has("accessLevel"));
+    // Attempt at an escalation without the required token
+    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    messageQ->pop(lastMessage);
+    bool success = lastMessage.get<bool>("success");
+    const std::string& reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalate request succeeded unexpectedely", false, success);
+    CPPUNIT_ASSERT_MESSAGE("Error reason differs from the expected. Received error reason: '" + reason + "'",
+                           reason.find("Required \"escalationToken\" field missing") != std::string::npos);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
+
+    std::clog << "OK" << std::endl;
+}
+
+
+void GuiServer_Test::testInvalidTokenOnEscalate() {
+    std::clog << "testInvalidTokenOnEscalate: " << std::flush;
+
+    Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                   "2.20.0");
+
+    Hash escalateInfo("type", "escalate", "escalationToken", "abcd", "version", "2.20.0", "levelBeforeEscalation",
+                      static_cast<int>(Schema::AccessLevel::OPERATOR));
+
+    resetTcpConnection();
+
+    // Performs an authenticated login successfully - escalation is only available from that point on.
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
+                           lastMessage.has("accessLevel"));
+    // Attempts at an escalate with an invalid token
+    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    messageQ->pop(lastMessage);
+    bool success = lastMessage.get<bool>("success");
+    const std::string& reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalate request succeeded unexpectedely", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalate failure reason", TestKaraboAuthServer::INVALID_TOKEN_MSG, reason);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
+
+    std::clog << "OK" << std::endl;
+}
+
+void GuiServer_Test::testEscalateDeescalate() {
+    std::clog << "testEscalateDeescalate: " << std::flush;
+
+    Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                   "2.20.0");
+
+    Hash escalateInfo("type", "escalate", "escalationToken", TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0",
+                      "levelBeforeEscalation", static_cast<int>(Schema::AccessLevel::OPERATOR));
+
+    Hash deescalateInfo("type", "deescalate", "escalationToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                        "2.20.0");
+
+    resetTcpConnection();
+
+    // Performs an authenticated login successfully - escalation is only available from that point on.
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
+                           lastMessage.has("accessLevel"));
+    // Request an escalation with a valid token.
+    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    messageQ->pop(lastMessage);
+    bool success = lastMessage.get<bool>("success");
+    std::string reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalation request failed", true, success);
+    CPPUNIT_ASSERT_MESSAGE("Field 'reason' should be empty. Instead it has '" + reason + "'", reason.empty());
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'accessLevel' field", lastMessage.has("accessLevel"));
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'escalationDurationSecs' field",
+                           lastMessage.has("escalationDurationSecs"));
+    // Request an escalation with a valid token - should be rejected since we are already escalated
+    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    messageQ->pop(lastMessage);
+    success = lastMessage.get<bool>("success");
+    reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalation request didn't fail as expected", false, success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Reason for failed escalation over escalation",
+                                 std::string{"There's already an active escalated session."}, reason);
+    // Request a deescalation
+    messageQ = m_tcpAdapter->getNextMessages("onDeescalate", 1, [&] { m_tcpAdapter->sendMessage(deescalateInfo); });
+    messageQ->pop(lastMessage);
+    success = lastMessage.get<bool>("success");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Deescalation request failed", true, success);
+    Schema::AccessLevel levelBeforeEscalation =
+          static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeEscalation"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("levelBeforeEscalation", Schema::AccessLevel::OPERATOR, levelBeforeEscalation);
+    std::string loggedUserId = lastMessage.get<std::string>("loggedUserId");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("loggedUserId", TestKaraboAuthServer::VALID_USER_ID, loggedUserId);
+    // Request deescalate again - should fail as there is no active escalation
+    messageQ = m_tcpAdapter->getNextMessages("onDeescalate", 1, [&] { m_tcpAdapter->sendMessage(deescalateInfo); });
+    messageQ->pop(lastMessage);
+    success = lastMessage.get<bool>("success");
+    reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Deescalation unexpectedly succeeded - there should be no active escalation.", false,
+                                 success);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+          "Reason for failed escalation over escalation unexpected",
+          std::string{"There's no active escalated session associated with the requesting client."}, reason);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
+
+    std::clog << "OK" << std::endl;
+}
+
+void GuiServer_Test::testEscalateExpiration() {
+    std::clog << "testEscalateExpiration: " << std::flush;
+
+    Hash loginInfo("type", "login", "clientId", "desk010", "oneTimeToken", TestKaraboAuthServer::VALID_TOKEN, "version",
+                   "2.20.0");
+
+    Hash escalateInfo("type", "escalate", "escalationToken", TestKaraboAuthServer::VALID_TOKEN, "version", "2.20.0",
+                      "levelBeforeEscalation", static_cast<int>(Schema::AccessLevel::OPERATOR));
+
+    resetTcpConnection();
+
+    // Performs an authenticated login successfully - escalation is only available from that point on.
+    Hash lastMessage;
+    karabo::TcpAdapter::QueuePtr messageQ =
+          m_tcpAdapter->getNextMessages("loginInformation", 1, [&] { m_tcpAdapter->sendMessage(loginInfo); });
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'accessLevel' missing in loginInformation sent by the GUI Server",
+                           lastMessage.has("accessLevel"));
+    // Request an escalation with a valid token - waits for 2 messages: the "onEscalate"escalation result message
+    // (should be successful) immediately after and about 10 seconds later (2 seconds is the test GUI Server
+    // value for its "maxEscalationTime" property and 10 seconds is the interval of the internal timer used by the
+    // escalation management class to check for expired escalations) the "onEscalationExpired" message.
+    messageQ = m_tcpAdapter->getNextMessages("onEscalate", 1, [&] { m_tcpAdapter->sendMessage(escalateInfo); });
+    messageQ->pop(lastMessage);
+    bool success = lastMessage.get<bool>("success");
+    std::string reason = lastMessage.get<std::string>("reason");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Escalation request failed", true, success);
+    CPPUNIT_ASSERT_MESSAGE("Field 'reason' should be empty.", reason.empty());
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'accessLevel' field", lastMessage.has("accessLevel"));
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'escalationDurationSecs' field",
+                           lastMessage.has("escalationDurationSecs"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of escalationDurationSecs", MAX_ESCALATION_TIME,
+                                 lastMessage.get<unsigned int>("escalationDurationSecs"));
+    // No triggering needed and timeout large enough to guarantee an expiration being detected.
+    const size_t lifetimePlusCheckInterval =
+          1'000ul * (MAX_ESCALATION_TIME + karabo::devices::CHECK_ESCALATE_EXPIRATION_INTERVAL_SECS);
+    messageQ = m_tcpAdapter->getNextMessages(
+          "onEscalationExpired", 1ul, [] {}, lifetimePlusCheckInterval);
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT_MESSAGE("'onEscalationExpired' message should have an 'expiredToken' field",
+                           lastMessage.has("expiredToken"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected expired token value", TestKaraboAuthServer::VALID_TOKEN,
+                                 lastMessage.get<std::string>("expiredToken"));
+    CPPUNIT_ASSERT_MESSAGE("'onEscalate' message should have an 'expirationTime' field",
+                           lastMessage.has("expirationTime"));
+    Epochstamp expiredAt = Epochstamp(lastMessage.get<std::string>("expirationTime"));
+    const double expiredElapsed = static_cast<double>(expiredAt.elapsed());
+    CPPUNIT_ASSERT_GREATER(static_cast<double>(MAX_ESCALATION_TIME), expiredElapsed);
+    CPPUNIT_ASSERT_LESS(static_cast<double>(lifetimePlusCheckInterval / 1'000ul + 1), expiredElapsed);
+
+    Schema::AccessLevel levelBeforeEscalation =
+          static_cast<Schema::AccessLevel>(lastMessage.get<int>("levelBeforeEscalation"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("levelBeforeEscalation", Schema::AccessLevel::OPERATOR, levelBeforeEscalation);
+    std::string loggedUserId = lastMessage.get<std::string>("loggedUserId");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("loggedUserId", TestKaraboAuthServer::VALID_USER_ID, loggedUserId);
+
+    int timeout = 1500;
+    // wait for the GUI server to log us out
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT_MESSAGE("Disconnection from GUI Server timedout.", m_tcpAdapter->connected());
 
     std::clog << "OK" << std::endl;
 }

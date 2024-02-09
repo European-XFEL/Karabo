@@ -88,6 +88,16 @@ namespace karabo {
                   .init()
                   .commit();
 
+            UINT32_ELEMENT(expected)
+                  .key("maxEscalationTime")
+                  .displayedName("Max. Escalation Time")
+                  .description("Maximum duration of a session escalation, in seconds")
+                  .assignmentOptional()
+                  .defaultValue(5 * 60)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
+
             OVERWRITE_ELEMENT(expected).key("deviceId").setNewDefaultValue("Karabo_GuiServer_0").commit();
 
             OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
@@ -375,6 +385,10 @@ namespace karabo {
                 // Note that instanceNew(..) will be called for all instances already in the game.
                 remote().enableInstanceTracking();
 
+                m_sessionEscalator = boost::make_shared<GuiServerSessionEscalator>(
+                      m_topic, get<std::string>("authServer"), get<unsigned int>("maxEscalationTime"),
+                      bind_weak(&GuiServerDevice::onEscalationExpiration, this, _1));
+
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
                 m_guiDebugProducer = getConnection();
@@ -532,7 +546,7 @@ namespace karabo {
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
                 channel->readAsyncHash(
-                      bind_weak(&karabo::devices::GuiServerDevice::onLoginMessage, this, _1, channel, _2));
+                      bind_weak(&karabo::devices::GuiServerDevice::onWaitForLogin, this, _1, channel, _2));
 
                 string const version = karabo::util::Version::getVersion();
                 Hash systemInfo("type", "brokerInformation");
@@ -579,7 +593,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onLoginMessage(const karabo::net::ErrorCode& e,
+        void GuiServerDevice::onWaitForLogin(const karabo::net::ErrorCode& e,
                                              const karabo::net::Channel::Pointer& channel, karabo::util::Hash& info) {
             if (e) {
                 channel->close();
@@ -602,11 +616,11 @@ namespace karabo {
                     safeClientWrite(WeakChannelPointer(channel), h);
                 }
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLoginMessage(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onWaitForLogin(): " << e.what();
             }
 
             // Read the next Hash from the client
-            channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onLoginMessage, this, _1, channel, _2));
+            channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onWaitForLogin, this, _1, channel, _2));
         }
 
         void GuiServerDevice::sendLoginErrorAndDisconnect(const Channel::Pointer& channel, const string& userId,
@@ -635,17 +649,175 @@ namespace karabo {
                     sendLoginErrorAndDisconnect(channel, clientId, clientVersion.getString(), errorMsg);
                     return;
                 } else {
+                    karabo::util::Schema::AccessLevel level{Schema::AccessLevel::OBSERVER};
+                    if (!m_isReadOnly) {
+                        Schema::AccessLevel loginAccessLevel = authResult.accessLevel;
+                        if (loginAccessLevel > MAX_LOGIN_ACCESS_LEVEL) {
+                            loginAccessLevel = MAX_LOGIN_ACCESS_LEVEL;
+                        }
+                        level = loginAccessLevel;
+                    }
                     registerConnect(clientVersion, channel, authResult.userId, oneTimeToken);
 
                     // For read-only servers, the access level is always OBSERVER.
                     Hash h("type", "loginInformation");
-                    h.set("accessLevel", m_isReadOnly ? static_cast<int>(Schema::AccessLevel::OBSERVER)
-                                                      : static_cast<int>(authResult.accessLevel));
+                    h.set("accessLevel", static_cast<int>(level));
                     safeClientWrite(channel, h);
 
                     sendSystemTopology(weakChannel);
                 }
             }
+        }
+
+        void GuiServerDevice::onEscalationExpiration(const ExpiredEscalationInfo& info) {
+            // Retrieve the channel associated with the expired token by searching channel data
+            const std::string& expiredToken = info.expiredToken;
+            Schema::AccessLevel levelBeforeEscalation{Schema::AccessLevel::OBSERVER};
+            std::string loggedUserId;
+            Channel::Pointer chanForExpiration;
+            {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (auto& [channel, channelData] : m_channels) {
+                    if (channelData.escalationToken == expiredToken) {
+                        chanForExpiration = channel;
+                        levelBeforeEscalation = channelData.levelBeforeEscalation;
+                        loggedUserId = channelData.userId;
+                        channelData.escalationToken = "";
+                        channelData.escalationUserId = "";
+                        break;
+                    }
+                }
+            }
+            if (chanForExpiration) {
+                // Sends a message about the escalation expiration to the associated client
+                Hash h("type", "onEscalationExpired", "expiredToken", info.expiredToken, "expirationTime",
+                       info.expirationTime.toIso8601Ext(), "levelBeforeEscalation",
+                       static_cast<int>(levelBeforeEscalation), "loggedUserId", loggedUserId);
+
+                safeClientWrite(WeakChannelPointer(chanForExpiration), h);
+            }
+        }
+
+        void GuiServerDevice::onEscalate(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            const karabo::net::Channel::Pointer chan = channel.lock();
+            if (!chan) {
+                // Channel not valid anymore.
+                return;
+            }
+            std::string errorMsg;
+            if (!isUserAuthActive()) {
+                errorMsg = "Session escalation is only available for user-authenticated sessions!";
+            } else if (!info.has("escalationToken")) {
+                std::ostringstream oss;
+                oss << "Required \"escalationToken\" field missing in escalate request:\n" << info << std::endl;
+                errorMsg = oss.str();
+            } else if (!info.has("levelBeforeEscalation")) {
+                std::ostringstream oss;
+                oss << "Required \"levelBeforeEscalation\" field missing in escalate request:\n" << info << std::endl;
+                errorMsg = oss.str();
+            } else {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                auto it = m_channels.find(chan);
+                if (it != m_channels.end() && !it->second.escalationToken.empty()) {
+                    errorMsg = "There's already an active escalated session.";
+                }
+            }
+            if (!errorMsg.empty()) {
+                const Hash h("type", "onEscalate", "success", false, "reason", errorMsg);
+                safeClientWrite(channel, h);
+                KARABO_LOG_FRAMEWORK_ERROR << "Refused escalation request (from " << getChannelAddress(chan)
+                                           << "): " + errorMsg;
+                return;
+            }
+
+            const std::string escalationToken = info.get<std::string>("escalationToken");
+            const Schema::AccessLevel levelBeforeEscalation =
+                  static_cast<Schema::AccessLevel>(info.get<int>("levelBeforeEscalation"));
+            m_sessionEscalator->escalate(escalationToken, bind_weak(&GuiServerDevice::onEscalateResult, this, channel,
+                                                                    levelBeforeEscalation, _1));
+        }
+
+        void GuiServerDevice::onEscalateResult(WeakChannelPointer channel, Schema::AccessLevel levelBeforeEscalation,
+                                               const EscalateResult& result) {
+            const karabo::net::Channel::Pointer chan = channel.lock();
+            if (!chan) {
+                // Channel is no longer valid
+                return;
+            }
+            const Hash h("type", "onEscalate", "success", result.success, "reason", result.errMsg, "escalationToken",
+                         result.escalationToken, "escalationDurationSecs", result.escalationDurationSecs, "accessLevel",
+                         static_cast<int>(result.accessLevel));
+            if (result.success) {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                auto it = m_channels.find(chan);
+                if (it != m_channels.end()) {
+                    ChannelData& data = it->second;
+                    data.escalationToken = result.escalationToken;
+                    data.escalationUserId = result.userId;
+                    data.levelBeforeEscalation = levelBeforeEscalation;
+                }
+            }
+            safeClientWrite(channel, h);
+        }
+
+        void GuiServerDevice::onDeescalate(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            const karabo::net::Channel::Pointer chan = channel.lock();
+            if (!chan) {
+                // Channel not valid anymore.
+                return;
+            }
+            std::string errorMsg;
+            std::string escalationToken;
+            if (!isUserAuthActive()) {
+                errorMsg = "Session deescalation is only available for user-authenticated sessions!";
+            } else if (!info.has("escalationToken")) {
+                errorMsg = "Required \"escalationToken\" field missing in deescalate request.";
+            } else {
+                escalationToken = info.get<std::string>("escalationToken");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                auto it = m_channels.find(chan);
+                if (it != m_channels.end()) {
+                    const std::string& chanEscalationToken = it->second.escalationToken;
+                    if (chanEscalationToken.empty()) {
+                        errorMsg = "There's no active escalated session associated with the requesting client.";
+                    } else if (chanEscalationToken != escalationToken) {
+                        errorMsg =
+                              "The escalation token associated with the session doesn't match the one provided in "
+                              "the deescalate request!";
+                    }
+                }
+            }
+            if (!errorMsg.empty()) {
+                const Hash h("type", "onDeescalate", "success", false, "reason", errorMsg);
+                safeClientWrite(channel, h);
+                KARABO_LOG_FRAMEWORK_ERROR << "Refused deescalation request (from " << getChannelAddress(chan)
+                                           << "): " + errorMsg;
+                return;
+            }
+            DeescalationResult result = m_sessionEscalator->deescalate(escalationToken);
+            Hash h("type", "onDeescalate", "success", result.success, "reason", result.errMsg, "escalationToken",
+                   result.escalationToken);
+            {
+                // Even if the deescalate didn't return a success - meaning it didn't find the escalationToken in its
+                // internal data (see note on GuiServerSessionEscalator::deescalate doc comments), we must clear the
+                // channel data.
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                auto it = m_channels.find(chan);
+                if (it != m_channels.end()) {
+                    ChannelData& data = it->second;
+                    data.escalationToken = "";
+                    data.escalationUserId = "";
+                    h.set("levelBeforeEscalation", static_cast<int>(data.levelBeforeEscalation));
+                    h.set("loggedUserId", data.userId);
+                    data.levelBeforeEscalation = Schema::AccessLevel::OBSERVER;
+                }
+            }
+            safeClientWrite(channel, h);
+        }
+
+
+        bool GuiServerDevice::isUserAuthActive() const {
+            return !get<string>("authServer").empty();
         }
 
         void GuiServerDevice::onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& hash) {
@@ -654,7 +826,7 @@ namespace karabo {
 
                 // Check valid login.
                 const Version clientVersion(hash.get<string>("version"));
-                const bool userAuthActive = !get<string>("authServer").empty();
+                const bool userAuthActive = isUserAuthActive();
                 // Before version 2.16 of the Framework, the  GUI client sends the clientId (clientHostname-clientPID)
                 // under the "username" key. Since version 2.16, that key name is being deprecated in favor or the
                 // "clientId" key. For backward compatibility, both keys will be kept during the deprecation period.
@@ -737,6 +909,10 @@ namespace karabo {
                               "' is not allowed on this GUI client version. Please upgrade your GUI client");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
+                    } else if (type == "escalate") {
+                        onEscalate(channel, info);
+                    } else if (type == "deescalate") {
+                        onDeescalate(channel, info);
                     } else if (type == "reconfigure") {
                         onReconfigure(channel, info);
                     } else if (type == "execute") {
