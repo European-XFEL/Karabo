@@ -93,6 +93,31 @@ class GuiServer_Test : public CPPUNIT_NS::TestFixture {
      */
     void testValidTokenOnLogin();
 
+    /**
+     * @brief Checks that a "escalate" message with no "oneTimeToken" is refused by a GUI Server configured to require
+     * authentication and an error notification is returned to the GUI Client.
+     *
+     */
+    void testMissingTokenOnEscalate();
+
+    /**
+     * @brief Checks that when a "escalation" message with an invalid "oneTimeToken" is received by the GUI Server, it
+     * returns a corresponding error notification to the GUI Client.
+     *
+     */
+    void testInvalidTokenOnEscalate();
+
+    /**
+     * @brief Checks that the "normal" login > escalate > deescalate sequence works. Also checks that attempts of double
+     * escalations and deescalations are rejected.
+     */
+    void testEscalateDeescalate();
+
+    /**
+     * @brief Checks that an escalate expires after the expected expiration time.
+     */
+    void testEscalateExpiration();
+
     void testDisconnect();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
