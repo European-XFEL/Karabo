@@ -338,8 +338,8 @@ class ProgressBarDelegate(NumberDelegate):
         progress_bar = QStyleOptionProgressBar()
         progress_bar.rect = option.rect
         if self.has_limits:
-            progress_bar.minimum = self.min_value
-            progress_bar.maximum = self.max_value
+            progress_bar.minimum = int(self.min_value)
+            progress_bar.maximum = int(self.max_value)
             progress_bar.textVisible = True
             progress_bar.text = index.data(role=Qt.DisplayRole)
             progress_bar.progress = float(index.data(role=Qt.EditRole))
