@@ -38,7 +38,6 @@ nss/3.72
 zlib/1.2.13
 sqlite3/3.36.0
 openssl/1.1.1l
-# openblas/0.3.20
 
 [generators]
 CMakeDeps
