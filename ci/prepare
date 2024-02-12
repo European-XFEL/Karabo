@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 __enable_gcc7() {
     # for the Centos7 build
     DIST_MAJOR=$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
@@ -47,16 +49,30 @@ __start_Xvfb() {
 
 echo "Start to prepare environment for job: {$1}"
 
-JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
-JOB_TYPE=$(echo $1 | cut -f2 -d' ')
-JOB_TYPE=${JOB_TYPE//:}
-TARGET_OS=$(echo $1 | cut -f3 -d' ')
-TARGET_OS=${TARGET_OS//[}
-TARGET_OS=${TARGET_OS//]}
-
-if [[ $TARGET_OS == "miniconda-osx64" ]]; then
-    return 0
-fi
-
 REL_OS_NAME=$LSB_RELEASE_DIST
 __lang_setting $REL_OS_NAME
+
+export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
+export KARABO_PROJECT_DB=existdb_host
+export KARABO_PROJECT_DB_PORT=8080
+export KARABO_TEST_PROJECT_DB=existdb_host
+export KARABO_TEST_PROJECT_DB_PORT=8080
+export KARABO_TEST_INFLUXDB_HOST=influxdb_host
+export KARABO_TEST_INFLUXDB_PORT=8086
+export KARABO_TEST_INFLUXDB_DB=$INFLUXDB_DB
+
+export KARABO_INFLUXDB_DBNAME=$INFLUXDB_DB
+# this is for the influxDb /query and /ping endpoint
+export KARABO_INFLUXDB_QUERY_USER=$INFLUXDB_USER
+export KARABO_INFLUXDB_QUERY_PASSWORD=$INFLUXDB_USER_PASSWORD
+export KARABO_INFLUXDB_QUERY_URL=tcp://$KARABO_TEST_INFLUXDB_HOST:$KARABO_TEST_INFLUXDB_PORT
+# this is for the influxDb /write endpoint
+export KARABO_INFLUXDB_WRITE_USER=$INFLUXDB_ADMIN_USER
+export KARABO_INFLUXDB_WRITE_PASSWORD=$INFLUXDB_ADMIN_PASSWORD
+export KARABO_INFLUXDB_WRITE_URL=tcp://$KARABO_TEST_INFLUXDB_HOST:$KARABO_TEST_INFLUXDB_PORT
+
+# todo refactor
+export KARABO_TEST_INFLUXDB_USER=$INFLUXDB_USER
+export KARABO_TEST_INFLUXDB_PASSWORD=$INFLUXDB_USER_PASSWORD
+export KARABO_TEST_INFLUXDB_ADMUSER=$INFLUXDB_ADMIN_USER
+export KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD=$INFLUXDB_ADMIN_PASSWORD
