@@ -78,7 +78,7 @@ def save_concert_file(file_name, scene_data):
     """
     domain = get_config()["domain"]
     network = get_network()
-    user = network.access_level
+    user = network.username
     hostname = network.hostname
     port = network.port
 
