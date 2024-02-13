@@ -175,10 +175,6 @@ class RangeSlider(QSlider):
     # -----------------------------------------------------------------------
     # Paint Methods
 
-    @property
-    def offset_position(self):
-        return int(self.minimum() - 1e6)
-
     def paintEvent(self, event):
         """Reimplemented method of QSlider"""
         with QPainter(self) as painter:
@@ -188,11 +184,6 @@ class RangeSlider(QSlider):
 
             # Lower position
             style_option.rect = self.rect()
-
-            # Note: This is a Mac rendering problem, it would paint an
-            # additional slider. This is fixed by Qt. 5.15 !
-            style_option.sliderPosition = self.offset_position
-            style_option.sliderValue = self.offset_position
 
             # Draw the groove but no ticks
             style_option.subControls = QStyle.SC_SliderGroove
