@@ -342,7 +342,7 @@ class ProgressBarDelegate(NumberDelegate):
             progress_bar.maximum = int(self.max_value)
             progress_bar.textVisible = True
             progress_bar.text = index.data(role=Qt.DisplayRole)
-            progress_bar.progress = float(index.data(role=Qt.EditRole))
+            progress_bar.progress = int(float(index.data(role=Qt.EditRole)))
         QApplication.style().drawControl(QStyle.CE_ProgressBar, progress_bar,
                                          painter)
 
