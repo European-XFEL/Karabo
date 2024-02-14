@@ -43,21 +43,21 @@ TARGET_ARCH=$(uname -m)
 if tmp=$(svn info . | grep URL)
 then
     tmp=${tmp%%-*}
-    VERSION=${tmp##*/}
+    REPO_TAG=${tmp##*/}
     if [ "$VERSION" = "trunk" ]; then
         tmp=$(svn info . | grep Revision)
-        VERSION=r${tmp##*: }
+        REPO_TAG=r${tmp##*: }
     fi
 elif tmp=$(jsvn info . | grep URL)
 then
     tmp=${tmp%%-*}
-    VERSION=${tmp##*/}
+    REPO_TAG=${tmp##*/}
     if [ "$VERSION" = "trunk" ]; then
         tmp=$(jsvn info . | grep Revision)
-        VERSION=r${tmp##*: }
+        REPO_TAG=r${tmp##*: }
     fi
 else
-    VERSION=$(git rev-parse --short HEAD)
+    REPO_TAG=$(git rev-parse --short HEAD)
 fi
 
 if [ -z $KARABO ]; then
@@ -115,7 +115,7 @@ fi
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
 # Create installation script
-echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT dist/$WHEELNAME > $INSTALLSCRIPT
+echo -e '#!/bin/bash\n'"VERSION=$REPO_TAG\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT dist/$WHEELNAME > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 
