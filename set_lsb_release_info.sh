@@ -33,7 +33,7 @@ if [ -f "/etc/os-release" ]; then
     LSB_RELEASE_DIST=${NAME%% *}
     if [ "$LSB_RELEASE_DIST" = "Red" ]; then
        # Change the dist name value to match what the deployment script expects
-       LSB_RELEASE_DIST="Redhat"
+       LSB_RELEASE_DIST="RedHat"
     fi
     export LSB_RELEASE_DIST
     LSB_RELEASE_VERSION=$VERSION_ID
