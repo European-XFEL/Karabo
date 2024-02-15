@@ -18,7 +18,8 @@ import socket
 import warnings
 from asyncio import (
     CancelledError, Future, IncompleteReadError, Lock, Queue, TimeoutError,
-    gather, get_event_loop, open_connection, shield, start_server, wait_for)
+    ensure_future, gather, get_event_loop, open_connection, shield,
+    start_server, wait_for)
 from collections import deque
 from contextlib import closing
 from ipaddress import ip_address, ip_network
@@ -35,7 +36,8 @@ from karabo.native import (
     isSet)
 
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
-from .synchronization import background, firstCompleted, sleep, synchronize
+from .synchronization import (
+    KaraboFuture, background, firstCompleted, sleep, synchronize)
 
 DEFAULT_MAX_QUEUE_LENGTH = 2
 IPTOS_LOWDELAY = 0x10
@@ -864,8 +866,11 @@ class OutputProxy(SubProxyBase):
         """Disconnect from the output channel"""
         if self in self._parent._remote_output_channel:
             self._parent._remote_output_channel.remove(self)
-        if self.task is not None and not self.task.done():
-            self.task.cancel()
+        if self.task is not None:
+            if isinstance(self.task, KaraboFuture):
+                ensure_future(self.task.cancel())
+            else:
+                self.task.cancel()
             self.task = None
 
 
