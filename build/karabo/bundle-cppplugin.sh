@@ -33,7 +33,7 @@ PLATFORM=$3
 
 OS=$(uname -s)
 MACHINE=$(uname -m)
-VERSION=$(git rev-parse --short HEAD)
+REPO_TAG=$(git rev-parse --short HEAD)
 
 if [ -z $KARABO ]; then
   echo "\$KARABO is not defined. Make sure you have sourced the activate script for the Karabo Framework which you would like to use."
@@ -43,7 +43,7 @@ else
 fi
 
 PLUGINNAME=`basename $(pwd)`
-PACKAGENAME=$PLUGINNAME-$VERSION-$KARABOVERSION
+PACKAGENAME=$PLUGINNAME-$REPO_TAG-$KARABOVERSION
 
 NUM_CORES=2  # default
 source "$KARABO/bin/.set_lsb_release_info.sh"
@@ -72,7 +72,7 @@ cd $PACKAGEDIR
 safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz *.so"
 
 # Create installation script
-echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
+echo -e '#!/bin/bash\n'"VERSION=$REPO_TAG\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 # Clean up
