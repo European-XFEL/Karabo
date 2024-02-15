@@ -20,18 +20,21 @@ import pytest
 
 
 def run(module, generate_coverage=False):
-    opts = ["-v", "--disable-warnings", "--pyargs", f"--junitxml=junit.{module}.xml", module]
+    opts = ["-v", "--disable-warnings", "-n", "2", "--pyargs",
+            f"--junitxml=junit.{module}.xml", module]
     if generate_coverage:
-        opts.extend([f"--cov={module}", "--cov-report", "term", "--cov-report", "xml"])
+        opts.extend([f"--cov={module}", "--cov-report", "term",
+                     "--cov-report", "xml"])
     return pytest.main(opts)
 
 
 def main():
     exit(reduce(or_,
                 [run("karabo.common"),
-                run("karabo.native"),
-                run("karabogui", generate_coverage=True),
-                ]))
+                 run("karabo.native"),
+                 run("karabogui", generate_coverage=True),
+                 ]))
+
 
 if __name__ == "__main__":
     main()
