@@ -14,6 +14,8 @@
 # The Karabo Gui is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
+import pytest
+
 from karabogui.widgets.scintilla_api import create_symbols
 from karabogui.widgets.scintilla_editor import (
     ERROR_INDICATOR, HIGHLIGHT_INDICATOR, STYLE_ISSUE_INDICATOR, CodeBook,
@@ -38,13 +40,27 @@ class New(Macro):  # miss blank lines above
 """
 
 
-def test_scintilla_editor(gui_app):
+@pytest.fixture()
+def code_editor(gui_app):
+    editor = CodeEditor(use_api=False)
+    yield editor
+    editor.destroy()
+
+
+@pytest.fixture()
+def code_book(gui_app):
+    book = CodeBook()
+    yield book
+    book.destroy()
+
+
+def test_scintilla_editor(code_book):
     symbols = create_symbols()
     assert len(symbols) > 150
 
-    code_book = CodeBook(code="from karabo.native import Hash")
-
     editor = code_book.code_editor
+
+    editor.setText("from karabo.native import Hash")
     # Basic default features
     assert editor.tabWidth() == 4
     assert editor.autoIndent()
@@ -53,8 +69,7 @@ def test_scintilla_editor(gui_app):
     assert code_book.getEditorCode() is not None
 
 
-def test_find_match(gui_app):
-    code_editor = CodeEditor(use_api=False)
+def test_find_match(code_editor):
     code_editor.setText(MULTILINE_CODE)
 
     def assert_mouse_position(line, index):
@@ -92,8 +107,7 @@ def test_find_match(gui_app):
                                       find_backward=True)
 
 
-def test_replace(gui_app):
-    code_editor = CodeEditor(use_api=False)
+def test_replace(code_editor):
     code_editor.setText(MULTILINE_CODE)
 
     def assert_mouse_position(line, index):
@@ -130,9 +144,8 @@ def test_replace(gui_app):
     assert code_editor.text() == expected
 
 
-def test_highlight(gui_app):
+def test_highlight(code_editor):
     """ Test for highlight and clear highlight"""
-    code_editor = CodeEditor(use_api=False)
     code_editor.setText(MULTILINE_CODE)
 
     def has_highlight(pos):
@@ -168,13 +181,13 @@ def test_highlight(gui_app):
         assert not has_highlight(pos)
 
 
-def test_highlight_from_find_toolbar(gui_app):
+def test_highlight_from_find_toolbar(code_book):
     """
     Typing/clearing the search text in the Find Toolbar should highlight it
     and also update the label in the toolbar.
     """
-    code_book = CodeBook(code=MULTILINE_CODE)
     code_editor = code_book.code_editor
+    code_editor.setText(MULTILINE_CODE)
     find_toolbar = code_book.find_toolbar
     find_toolbar.find_line_edit.setText("is")
     assert len(code_editor._highlights) == 2
@@ -184,12 +197,12 @@ def test_highlight_from_find_toolbar(gui_app):
     assert find_toolbar.result_label.text() == "0 Results"
 
 
-def test_code_quality_check(gui_app):
+def test_code_quality_check(code_book):
     """Test the Code Quality checking in the Macro Editor"""
-    code_book = CodeBook(code=REAL_CODE)
-    code_book.checkCode()
-    code_editor = code_book.code_editor
 
+    code_editor = code_book.code_editor
+    code_editor.setText(REAL_CODE)
+    code_book.checkCode()
     style_issue_lines = set()
     error_lines = set()
     for pos in range(len(code_editor.text())):
@@ -222,7 +235,7 @@ def test_code_quality_check(gui_app):
 
     error_message = "invalid syntax"
     assert code_editor.SendScintilla(
-            code_editor.SCI_ANNOTATIONGETTEXT, 7) == len(error_message)
+        code_editor.SCI_ANNOTATIONGETTEXT, 7) == len(error_message)
 
     #  Clear all indicators.
     code_book.clearIndicators()
