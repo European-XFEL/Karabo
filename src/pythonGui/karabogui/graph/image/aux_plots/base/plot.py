@@ -60,7 +60,7 @@ class AuxPlotViewBox(ViewBox):
         if self.menu is None:
             return
         pos = event.screenPos()
-        self.menu.popup(QPoint(pos.x(), pos.y()))
+        self.menu.popup(QPoint(int(pos.x()), int(pos.y())))
 
 
 class AuxPlotItem(PlotItem):
