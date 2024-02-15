@@ -73,7 +73,8 @@ else
 fi
 
 # Create a self-extracting installation script
-echo -e '#!/bin/bash\n'"VERSION=$VERSION\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $WHEELFILE > $INSTALLSCRIPT
+REPO_TAG=$(git rev-parse --short HEAD)
+echo -e '#!/bin/bash\n'"VERSION=$REPO_TAG\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $WHEELFILE > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 cd $originalPwd

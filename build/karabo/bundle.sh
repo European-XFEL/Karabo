@@ -68,7 +68,7 @@ EXTERN_DEPS_DIR=$5
 OS=$(uname -s)
 MACHINE=$(uname -m)
 PACKAGENAME=karabo
-VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
+PACKAGE_REPO_TAG=$(git describe --exact-match --tags HEAD 2>/dev/null)
 
 NUM_CORES=2  # default
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
@@ -157,7 +157,7 @@ if [ "$BUNDLE_ACTION" = "package" ]; then
     cd $PACKAGEDIR/../
     safeRunCommand "zip -qr ${PACKAGENAME}.zip $PACKAGENAME --exclude $PACKAGENAME/var/\* $PACKAGENAME/devices/\* $PACKAGENAME/installed/\* $PACKAGENAME/plugins/\*"
     # Create installation script
-    echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.zip > $INSTALLSCRIPT
+    echo -e '#!/bin/bash\n'"VERSION=$PACKAGE_REPO_TAG" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.zip > $INSTALLSCRIPT
     safeRunCommand "zip -A ${INSTALLSCRIPT}"
     chmod a+x $INSTALLSCRIPT
     rm ${PACKAGENAME}.zip
