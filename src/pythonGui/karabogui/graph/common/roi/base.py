@@ -156,7 +156,7 @@ class KaraboROI(ROI):
     def raiseContextMenu(self, ev):
         menu = self.getMenu()
         pos = ev.screenPos()
-        menu.popup(QPoint(pos.x(), pos.y()))
+        menu.popup(QPoint(int(pos.x()), int(pos.y())))
 
     def getMenu(self):
         if self.menu is not None:
