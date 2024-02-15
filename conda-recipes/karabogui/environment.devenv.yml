@@ -33,6 +33,7 @@ dependencies:
   - pytest-cov=2.12.1
   - pytest-mock=3.6.1
   - pytest-subtests=0.11.0
+  - pytest-xdist=3.5.*
   - packaging=23.1
   - setuptools>=69.*
   - setuptools_scm>=7.*

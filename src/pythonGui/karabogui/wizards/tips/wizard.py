@@ -61,7 +61,7 @@ class TipsTricksWizard(QWizard):
         super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Karabo Tips & Tricks")
-
+        self.setWizardStyle(QWizard.ClassicStyle)
         checkbox = QCheckBox("Don't show tips at startup!")
         show_wizard = get_config()['wizard']
         checkbox.setChecked(not show_wizard)
