@@ -304,7 +304,6 @@ namespace karabind {
                 }
             }
 
-
             void receiveAsyncPy0(const py::object& replyCallback) {
                 // replyCallback, errorCallback, timeoutMs, numCallbackArgs
                 receiveAsyncPy(replyCallback, py::none(), py::none(), py::cast(0));
