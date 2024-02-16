@@ -109,6 +109,58 @@ namespace karabo {
             m_signalSlotable->addReceiveAsyncErrorHandles(m_replyId, timer, errorHandler);
         }
 
+        void SignalSlotable::Requestor::getSignalInstanceId(const karabo::util::Hash::Pointer& header,
+                                                            std::string& result) {
+            if (header && header->has("signalInstanceId") && header->is<std::string>("signalInstanceId")) {
+                header->get("signalInstanceId", result);
+            }
+        };
+
+        std::pair<karabo::util::Hash::Pointer, karabo::util::Hash::Pointer>
+        SignalSlotable::Requestor::receiveResponseHashes() {
+            karabo::util::Hash::Pointer header, body;
+            try {
+                receiveResponse(header, body); // sends request and blocks until reply arrives or times out
+                const boost::optional<karabo::util::Hash::Node&> errorNode = header->find("error");
+                if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
+                    // Handling an error, so double check that input is as expected, i.e. body has key "a1":
+                    const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
+                    const std::string text(textNode && textNode->is<std::string>()
+                                                 ? textNode->getValue<std::string>()
+                                                 : "Error signaled, but body without string at key \"a1\"");
+                    const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2"); // since 2.14.0
+                    const std::string details(detailsNode && detailsNode->is<std::string>()
+                                                    ? detailsNode->getValue<std::string>()
+                                                    : std::string());
+                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
+                }
+
+            } catch (const karabo::util::TimeoutException&) {
+                // rethrow as same type without message: detailedMsg() will show the full trace, userFriendlyMsg() just
+                // one line
+                KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION(std::string()));
+            } catch (const karabo::util::RemoteException&) {
+                throw; // Do not change the type, just throw again.
+            } catch (const karabo::util::CastException&) {
+                std::string signalInstanceId("unknown");
+                getSignalInstanceId(header, signalInstanceId);
+                const std::string msg("'" + m_signalSlotable->getInstanceId() +
+                                      "' received incompatible response "
+                                      "from '" +
+                                      signalInstanceId + "'");
+                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(msg));
+            } catch (const karabo::util::Exception& e) {
+                std::string signalInstanceId("unknown");
+                getSignalInstanceId(header, signalInstanceId);
+                const std::string msg("Error while '" + m_signalSlotable->getInstanceId() +
+                                      "' received following reply from '" + signalInstanceId +
+                                      "': " + (body ? toString(*body) : std::string()));
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION(msg));
+            }
+
+            return std::make_pair(header, body);
+        }
+
 
         /**
          * Register a new slot function for a slot. A new slot is generated
@@ -234,6 +286,16 @@ namespace karabo {
             }
         }
 
+        std::vector<boost::any> SignalSlotable::Requestor::receiveAsVecOfAny() {
+            karabo::util::Hash::Pointer replyBodyPtr = receiveResponseHashes().second;
+            std::set<std::string> paths;
+            std::vector<boost::any> replyValues;
+            replyValues.reserve(replyBodyPtr->size());
+            for (auto it = replyBodyPtr->mbegin(); it != replyBodyPtr->mend(); ++it) {
+                replyValues.push_back(it->second.getValueAsAny());
+            }
+            return replyValues;
+        }
 
         SignalSlotable::SignalSlotable()
             : m_randPing(rand() + 2),
