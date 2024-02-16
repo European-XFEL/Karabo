@@ -18,11 +18,26 @@ import time
 import uuid
 from threading import Thread
 
-from karabo.bound import (
-    DeviceClient, EventLoop, Hash, Logger, startDeviceServer, stopDeviceServer)
+import pytest
+
+import karabind
+import karathon
 
 
-def test_device_client_sync_api():
+@pytest.mark.parametrize(
+    "EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer, "
+    "Logger",
+    [
+        (karathon.EventLoop, karathon.DeviceClient, karathon.Hash,
+         karathon.startDeviceServer, karathon.stopDeviceServer,
+         karathon.Logger),
+        (karabind.EventLoop, karabind.DeviceClient, karabind.Hash,
+         karabind.startDeviceServer, karabind.stopDeviceServer,
+         karabind.Logger)
+    ])
+def test_device_client_sync_api(EventLoop, DeviceClient, Hash,
+                                startDeviceServer, stopDeviceServer,
+                                Logger):
     # Run CPP event loop in background ...
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
@@ -104,7 +119,20 @@ def test_device_client_sync_api():
     loopThread.join()
 
 
-def test_device_client_async_api():
+@pytest.mark.parametrize(
+    "EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer, "
+    "Logger",
+    [
+        (karathon.EventLoop, karathon.DeviceClient, karathon.Hash,
+         karathon.startDeviceServer, karathon.stopDeviceServer,
+         karathon.Logger),
+        (karabind.EventLoop, karabind.DeviceClient, karabind.Hash,
+         karabind.startDeviceServer, karabind.stopDeviceServer,
+         karabind.Logger)
+    ])
+def test_device_client_async_api(
+        EventLoop, DeviceClient, Hash, startDeviceServer, stopDeviceServer,
+        Logger):
     # Run CPP event loop in background ...
     loopThread = Thread(target=EventLoop.work)
     loopThread.start()
@@ -162,4 +190,95 @@ def test_device_client_async_api():
     stopDeviceServer(serverId)
     Logger.reset()
     EventLoop.stop()
+    loopThread.join()
+
+
+def test_slots_with_args():
+    from karabind import DeviceClient, Hash, SignalSlotable
+
+    # Run CPP event loop in background ...
+    loopThread = Thread(target=karabind.EventLoop.work)
+    loopThread.start()
+
+    deviceId = "slotWithArgsTester"
+    sigSlot = SignalSlotable(deviceId, Hash(), 60, Hash())
+
+    product = 0  # Updated by argSlotMultiplyInternal
+
+    def argSlotMultiplyInternal(num1, num2):
+        """A slot with args that returns no value"""
+        nonlocal product
+        product = num1 * num2
+
+    def argSlotMultiply(num1, num2):
+        """A slot with args that returns a single value"""
+        nonlocal sigSlot
+        sigSlot.reply(num1 * num2)
+
+    def argSlotDivide(dividend, divisor):
+        """A slot with args that returns two values"""
+        nonlocal sigSlot
+        sigSlot.reply(dividend // divisor, dividend % divisor)
+
+    def argSlotThreeCases(input_str):
+        """A slot with arg that returns three values"""
+        nonlocal sigSlot
+        sigSlot.reply(input_str.upper(), input_str.lower(), input_str)
+
+    def argSlotZahlen(digit):
+        """A slot with arg that returns four values"""
+        nonlocal sigSlot
+        digit_dict = {
+            "ptBR": ["Zero", "Um", "Dois", "Três", "Quatro", "Cinco", "Seis",
+                     "Sete", "Oito", "Nove"],
+            "enUS": ["Zero", "One", "Two", "Three", "Four", "Five", "Six",
+                     "Seven", "Eight", "Nine"],
+            "deDE": ["Null", "Eins", "Zwei", "Drei", "Vier", "Fünf", "Sechs",
+                     "Sieben", "Acht", "Neun"],
+            "roman": ["? (Romans didn't have zero)", "I", "II", "III", "IV",
+                      "V", "VI", "VII", "VIII", "IX"]
+        }
+        idx = digit % 10
+        sigSlot.reply(digit_dict["ptBR"][idx], digit_dict["enUS"][idx],
+                      digit_dict["deDE"][idx], digit_dict["roman"][idx])
+
+    sigSlot.start()
+    cli = DeviceClient("DeviceClientUnderTest")
+
+    # Slot with two args and no return value (actually returns an empty tuple)
+    sigSlot.registerSlot(argSlotMultiplyInternal)
+    emptyTuple = cli.executeN(deviceId, "argSlotMultiplyInternal", 12, 4)
+    assert product == 48
+    assert len(emptyTuple) == 0
+
+    # Slot with two args and one return value
+    sigSlot.registerSlot(argSlotMultiply)
+    multResult, = cli.executeN(deviceId, "argSlotMultiply", 12, 4)
+    assert multResult == 48
+
+    # Slot with two args and two return values
+    sigSlot.registerSlot(argSlotDivide)
+    (quotient, remainder) = cli.executeN(deviceId, "argSlotDivide", 12, 4)
+    assert quotient == 3
+    assert remainder == 0
+
+    # Slot with one arg and three return values
+    sigSlot.registerSlot(argSlotThreeCases)
+    (allUp, allLow, echoed) = cli.executeN(deviceId,
+                                           "argSlotThreeCases", "Input_Str",
+                                           timeoutInSeconds=20)
+    assert allUp == "INPUT_STR"
+    assert allLow == "input_str"
+    assert echoed == "Input_Str"
+
+    # Slot with one arg and four return values
+    sigSlot.registerSlot(argSlotZahlen)
+    (ptBr, enUS, deDE, roman) = cli.executeN(
+        deviceId, "argSlotZahlen", 5, timeoutInSeconds=15)
+    assert ptBr == "Cinco"
+    assert enUS == "Five"
+    assert deDE == "Fünf"
+    assert roman == "V"
+
+    karabind.EventLoop.stop()
     loopThread.join()

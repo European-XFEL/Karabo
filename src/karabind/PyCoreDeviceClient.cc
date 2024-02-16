@@ -137,6 +137,23 @@ namespace karabind {
             DeviceClient::execute(instanceId, functionName, timeout);
         }
 
+        /**
+         * @brief Executes a function on a device synchronously.
+         * @param Args Variadic template for the slot args (no arg is a particular case).
+         * @param deviceId The devideId
+         * @param command The command
+         * @param timeoutInSeconds Timeout
+         * @returns a vector with the values that compose the reply as instances of boost::any.
+         */
+        template <typename... Args>
+        std::vector<boost::any> executeVectOfAnyReplyPy(const std::string& deviceId, const std::string& command,
+                                                        int timeoutInSeconds = 3, const Args&... slotArgs) {
+            // For supporting legacy code that uses -1 as the default timeout value.
+            if (timeoutInSeconds == -1) timeoutInSeconds = 3;
+            KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
+            return sp->request(deviceId, command, slotArgs...).timeout(timeoutInSeconds * 1000).receiveAsVecOfAny();
+        }
+
         void killDeviceNoWait(const std::string& deviceId) {
             py::gil_scoped_release release;
             this->karabo::core::DeviceClient::killDeviceNoWait(deviceId);
@@ -501,7 +518,8 @@ void exportPyCoreDeviceClient(py::module_& m) {
                     return py::cast(self->listConfigurationFromName(deviceId, namePart));
                 },
                 py::arg("deviceId"), py::arg("namePart") = "",
-                "listConfigurationFromName(deviceId, namePart): Returns the device configurations saved under names "
+                "listConfigurationFromName(deviceId, namePart): Returns the device configurations saved under "
+                "names "
                 "that "
                 "contain a given name part.\n"
                 "If an empty name part is given, all the configurations stored for the device will be returned.\n"
@@ -518,8 +536,10 @@ void exportPyCoreDeviceClient(py::module_& m) {
                     return py::cast(self->getConfigurationFromName(deviceId, name));
                 },
                 py::arg("deviceId"), py::arg("name"),
-                "getConfigurationFromName(deviceId, name): Returns the device configuration saved under a given name.\n"
-                "May return an empty result if there's no configuration stored for the device under the given name.\n"
+                "getConfigurationFromName(deviceId, name): Returns the device configuration saved under a given "
+                "name.\n"
+                "May return an empty result if there's no configuration stored for the device under the given "
+                "name.\n"
                 "The function return is a Hash with the following keys:\n",
                 "\"success\" a boolean indicating whether the operation was successful.\n"
                 "\"reason\" a string describing the failure condition - empty on success.\n"
@@ -741,6 +761,102 @@ void exportPyCoreDeviceClient(py::module_& m) {
 
           .def("execute", &DeviceClientWrap::execute, py::arg("instanceId"), py::arg("functionName"),
                py::arg("timeoutInSeconds") = -1)
+
+          .def(
+                "executeN",
+                [](const DeviceClientWrap::Pointer& self, std::string& instanceId, const std::string& functionName,
+                   py::args args, int timeoutInSeconds = 3) -> py::tuple {
+                    std::vector<boost::any> replyValues;
+                    switch (args.size()) {
+                        case 0: {
+                            py::gil_scoped_release release;
+                            replyValues = self->executeVectOfAnyReplyPy<>(instanceId, functionName, timeoutInSeconds);
+                            break;
+                        }
+                        case 1: {
+                            boost::any a1;
+                            wrapper::castPyToAny(args[0], a1);
+                            py::gil_scoped_release release;
+                            replyValues = self->executeVectOfAnyReplyPy<boost::any>(instanceId, functionName,
+                                                                                    timeoutInSeconds, a1);
+                            break;
+                        }
+                        case 2: {
+                            boost::any a1, a2;
+                            wrapper::castPyToAny(args[0], a1);
+                            wrapper::castPyToAny(args[1], a2);
+                            py::gil_scoped_release release;
+                            replyValues = self->executeVectOfAnyReplyPy<boost::any, boost::any>(
+                                  instanceId, functionName, timeoutInSeconds, a1, a2);
+                            break;
+                        }
+                        case 3: {
+                            boost::any a1, a2, a3;
+                            wrapper::castPyToAny(args[0], a1);
+                            wrapper::castPyToAny(args[1], a2);
+                            wrapper::castPyToAny(args[2], a3);
+                            py::gil_scoped_release release;
+                            replyValues = self->executeVectOfAnyReplyPy<boost::any, boost::any, boost::any>(
+                                  instanceId, functionName, timeoutInSeconds, a1, a2, a3);
+                            break;
+                        }
+                        case 4: {
+                            boost::any a1, a2, a3, a4;
+                            wrapper::castPyToAny(args[0], a1);
+                            wrapper::castPyToAny(args[1], a2);
+                            wrapper::castPyToAny(args[2], a3);
+                            wrapper::castPyToAny(args[3], a4);
+                            py::gil_scoped_release release;
+                            replyValues = self->executeVectOfAnyReplyPy<boost::any, boost::any, boost::any, boost::any>(
+                                  instanceId, functionName, timeoutInSeconds, a1, a2, a3, a4);
+                            break;
+                        }
+                        default:
+                            throw KARABO_PARAMETER_EXCEPTION("Execute supports slots with up to 4 parameters");
+                    }
+
+                    // Note: currently py::make_tuple can make tuples with cardinalities varying from 0 to 10.
+                    switch (replyValues.size()) {
+                        case 0:
+                            return py::make_tuple();
+                            break;
+                        case 1: {
+                            py::object a1 = wrapper::castAnyToPy(replyValues[0]);
+                            return py::make_tuple(a1);
+                            break;
+                        }
+                        case 2: {
+                            py::object a1 = wrapper::castAnyToPy(replyValues[0]);
+                            py::object a2 = wrapper::castAnyToPy(replyValues[1]);
+                            return py::make_tuple(a1, a2);
+                            break;
+                        }
+                        case 3: {
+                            py::object a1 = wrapper::castAnyToPy(replyValues[0]);
+                            py::object a2 = wrapper::castAnyToPy(replyValues[1]);
+                            py::object a3 = wrapper::castAnyToPy(replyValues[2]);
+                            return py::make_tuple(a1, a2, a3);
+                            break;
+                        }
+                        case 4: {
+                            py::object a1 = wrapper::castAnyToPy(replyValues[0]);
+                            py::object a2 = wrapper::castAnyToPy(replyValues[1]);
+                            py::object a3 = wrapper::castAnyToPy(replyValues[2]);
+                            py::object a4 = wrapper::castAnyToPy(replyValues[3]);
+                            return py::make_tuple(a1, a2, a3, a4);
+                            break;
+                        }
+                        default:
+                            throw KARABO_PARAMETER_EXCEPTION("Execute supports slot replies with up to 4 arguments");
+                    }
+                },
+                py::arg("instanceId"), py::arg("functionName"), py::kw_only(), py::arg("timeoutInSeconds") = 3,
+                "Synchronously executes a slot with up to four arguments and up to four return values.\n"
+                "@param instanceId the ID of the device whose slot will be executed.\n"
+                "@param functionName the name of the slot to execute.\n"
+                "@param args between 0 and 4 slot specific arguments.\n"
+                "@param timeoutInSeconds (keyword-only) maximum time, in seconds, allowed for the slot execution.\n"
+                "@return a tuple containing between 0 and 4 values that are the result of the slot execution.\n")
 
           .def("executeNoWait", &DeviceClientWrap::executeNoWait, py::arg("instanceId"), py::arg("functionName"))
 
