@@ -672,6 +672,8 @@ namespace karabo {
                 template <typename... Args>
                 void receive(Args&... args);
 
+                std::vector<boost::any> receiveAsVecOfAny();
+
                 Requestor& timeout(const int& milliseconds);
 
                protected:
@@ -691,8 +693,25 @@ namespace karabo {
                 void sendRequest() const;
 
                private:
+                /**
+                 * @brief Receives the reply for the current request, returning shared pointers to the reply's header
+                 * and body hashes.
+                 *
+                 * @returns A pair with a shared pointer to the header hash of the reply in the first position and a
+                 * shared pointer to the body in the second.
+                 */
+                std::pair<karabo::util::Hash::Pointer, karabo::util::Hash::Pointer> receiveResponseHashes();
+
                 /// Register handler for errors in async requests, e.g. timeout or remote exception
                 void registerErrorHandler(const AsyncErrorHandler& errorHandler);
+
+                /**
+                 * @brief Extracts the value of the SignalInstanceId path in a response header hash.
+                 *
+                 * @param header response header hash from where the value will be extracted
+                 * @param result the string that will be assigned the value of the SignalInstanceId path
+                 */
+                void getSignalInstanceId(const karabo::util::Hash::Pointer& header, std::string& result);
 
                protected:
                 SignalSlotable* m_signalSlotable;
@@ -1202,27 +1221,10 @@ namespace karabo {
 
         template <typename... Args>
         void SignalSlotable::Requestor::receive(Args&... args) {
-            auto getSignalInstanceId = [](const karabo::util::Hash::Pointer& header, std::string& result) {
-                if (header && header->has("signalInstanceId") && header->is<std::string>("signalInstanceId")) {
-                    header->get("signalInstanceId", result);
-                }
-            };
-            karabo::util::Hash::Pointer header, body;
+            auto headerBodyPair = receiveResponseHashes();
+            const karabo::util::Hash::Pointer& header = headerBodyPair.first;
+            const karabo::util::Hash::Pointer& body = headerBodyPair.second;
             try {
-                receiveResponse(header, body); // sends request and blocks until reply arrives or times out
-                const boost::optional<karabo::util::Hash::Node&> errorNode = header->find("error");
-                if (errorNode && errorNode->is<bool>() && errorNode->getValue<bool>()) {
-                    // Handling an error, so double check that input is as expected, i.e. body has key "a1":
-                    const boost::optional<karabo::util::Hash::Node&> textNode = body->find("a1");
-                    const std::string text(textNode && textNode->is<std::string>()
-                                                 ? textNode->getValue<std::string>()
-                                                 : "Error signaled, but body without string at key \"a1\"");
-                    const boost::optional<karabo::util::Hash::Node&> detailsNode = body->find("a2"); // since 2.14.0
-                    const std::string details(detailsNode && detailsNode->is<std::string>()
-                                                    ? detailsNode->getValue<std::string>()
-                                                    : std::string());
-                    throw karabo::util::RemoteException(text, header->get<std::string>("signalInstanceId"), details);
-                }
                 karabo::util::unpack(*body, args...); // ParameterException if args is too long
 
                 if (sizeof...(Args) != body->size()) {
@@ -1230,12 +1232,6 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Ignoring the last " << nArgs << " arguments of response:\n" << *body;
                 }
 
-            } catch (const karabo::util::TimeoutException&) {
-                // rethrow as same type without message: detailedMsg() will show the full trace, userFriendlyMsg() just
-                // one line
-                KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION(std::string()));
-            } catch (const karabo::util::RemoteException&) {
-                throw; // Do not change the type, just throw again.
             } catch (const karabo::util::CastException&) {
                 std::string signalInstanceId("unknown");
                 getSignalInstanceId(header, signalInstanceId);
