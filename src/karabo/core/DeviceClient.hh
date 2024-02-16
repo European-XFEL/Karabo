@@ -1312,6 +1312,9 @@ namespace karabo {
             template <typename R1, typename... Args>
             R1 execute1(const std::string& deviceId, const std::string& slotName, int timeoutInSeconds = 3,
                         const Args&... slotArgs) {
+                // For backwards compatibility with BoundApi.
+                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
+
                 KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
                 // Note: karabo::util::unpack is the workhorse that performs the transformation of the hash body
                 //       of the request's response into the variadic list of arguments passed to receive.
@@ -1339,6 +1342,9 @@ namespace karabo {
             template <typename R1, typename R2, typename... Args>
             std::tuple<R1, R2> execute2(const std::string& deviceId, const std::string& slotName,
                                         int timeoutInSeconds = 3, const Args&... slotArgs) {
+                // For backwards compatibility with BoundApi.
+                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
+
                 KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
                 R1 st;
                 R2 nd;
@@ -1365,6 +1371,9 @@ namespace karabo {
             template <typename R1, typename R2, typename R3, typename... Args>
             std::tuple<R1, R2, R3> execute3(const std::string& deviceId, const std::string& slotName,
                                             int timeoutInSeconds = 3, const Args&... slotArgs) {
+                // For backwards compatibility with BoundApi.
+                if (timeoutInSeconds == -1) timeoutInSeconds = 3;
+
                 KARABO_GET_SHARED_FROM_WEAK(sp, m_signalSlotable);
                 R1 st;
                 R2 nd;
