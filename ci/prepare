@@ -52,6 +52,22 @@ echo "Start to prepare environment for job: {$1}"
 REL_OS_NAME=$LSB_RELEASE_DIST
 __lang_setting $REL_OS_NAME
 
+if [ "${KARABO_UPLOAD_HOST}" == "" ]; then
+    export KARABO_UPLOAD_HOST=xkarabo@exflctrl01
+fi
+if [ "${KARABO_UPLOAD_DIR}" == "" ]; then
+    export KARABO_UPLOAD_DIR=/var/www/html/karabo
+fi
+if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
+    export KARABO_UPLOAD_CURL_PREFIX=http://exflctrl01.desy.de/karabo
+fi
+
+
+export SSH_PREFIX=$KARABO_UPLOAD_HOST:$KARABO_UPLOAD_DIR
+export LATEST_RELEASE_TAG=latest_build
+export LATEST_PRERELEASE_TAG=latest_prerelease_build
+export NIGHTLY_TAG=Nightly
+
 export KARABO_BROKER_TOPIC="gitlab_ci_$CI_JOB_ID"
 export KARABO_PROJECT_DB=existdb_host
 export KARABO_PROJECT_DB_PORT=8080

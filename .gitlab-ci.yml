@@ -119,6 +119,13 @@ variables:
 
 .release_build: &release-build
   <<: *build
+  variables:
+    REL_TAG: $CI_COMMIT_REF_NAME
+    FRAMEWORK_DEST_DIR: karaboFramework/tags/$CI_COMMIT_REF_NAME
+    LATEST_RELEASE_TAG: latest_build
+    FRAMEWORK_LATEST_DIR: karaboFramework/tags/$LATEST_RELEASE_TAG
+    LATEST_TAG: $LATEST_RELEASE_TAG
+    GUI_DEST_DIR: karaboGui
   only:
     - /^(\d+\.)(\d+\.)(\d+)$/
   except:
@@ -127,6 +134,13 @@ variables:
 
 .prerelease_build: &prerelease-build
   <<: *build
+  variables:
+    REL_TAG: $CI_COMMIT_REF_NAME
+    FRAMEWORK_DEST_DIR: karaboFramework/tags/$CI_COMMIT_REF_NAME
+    LATEST_PRERELEASE_TAG: latest_prerelease_build
+    FRAMEWORK_LATEST_DIR: karaboFramework/tags/$LATEST_PRERELEASE_TAG
+    LATEST_TAG: $LATEST_PRERELEASE_TAG
+    GUI_DEST_DIR: karaboGui
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)$/
   except:
@@ -135,6 +149,13 @@ variables:
 
 .release_build_conda: &release-build-conda
   stage: build
+  variables:
+    REL_TAG: $CI_COMMIT_REF_NAME
+    FRAMEWORK_DEST_DIR: karaboFramework/tags/$CI_COMMIT_REF_NAME
+    LATEST_RELEASE_TAG: latest_build
+    FRAMEWORK_LATEST_DIR: karaboFramework/tags/$LATEST_RELEASE_TAG
+    LATEST_TAG: $LATEST_RELEASE_TAG
+    GUI_DEST_DIR: karaboGui
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
@@ -154,6 +175,13 @@ variables:
 
 .prerelease_build_conda: &prerelease-build-conda
   stage: build
+  variables:
+    REL_TAG: $CI_COMMIT_REF_NAME
+    FRAMEWORK_DEST_DIR: karaboFramework/tags/$CI_COMMIT_REF_NAME
+    LATEST_PRERELEASE_TAG: latest_prerelease_build
+    FRAMEWORK_LATEST_DIR: karaboFramework/tags/$LATEST_PRERELEASE_TAG
+    LATEST_TAG: $LATEST_PRERELEASE_TAG
+    GUI_DEST_DIR: karaboGui
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
@@ -173,6 +201,11 @@ variables:
 
 .nightly_build_conda: &nightly-build-conda
   stage: build
+  variables:
+    NIGHTLY_TAG: Nightly
+    REL_TAG: $NIGHTLY_TAG
+    FRAMEWORK_DEST_DIR: karaboFramework/nightly
+    GUI_DEST_DIR: $FRAMEWORK_DEST_DIR
   script:
     - conda config --add channels $KARABO_CONDA_CHANNEL_URL
     - >
@@ -208,8 +241,11 @@ variables:
 
 .nightly_build: &nightly-build
   <<: *build
-  only:
-    - schedules
+  variables:
+    NIGHTLY_TAG: Nightly
+    REL_TAG: $NIGHTLY_TAG
+    FRAMEWORK_DEST_DIR: karaboFramework/nightly
+    GUI_DEST_DIR: $FRAMEWORK_DEST_DIR
 
 .deps_build: &deps-build
   <<: *build
@@ -412,6 +448,8 @@ prerelease build miniconda-win64:
 nightly build:
   parallel: !reference [.target_os_matrix, all_targets]
   <<: *nightly-build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULED_JOB == "nightly-build"
 
 nightly build miniconda-osx64:
   before_script:
