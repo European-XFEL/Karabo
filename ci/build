@@ -3,23 +3,6 @@
 set -e
 set -o pipefail
 
-if [ "${KARABO_UPLOAD_HOST}" == "" ]; then
-    KARABO_UPLOAD_HOST=xkarabo@exflctrl01
-fi
-if [ "${KARABO_UPLOAD_DIR}" == "" ]; then
-    KARABO_UPLOAD_DIR=/var/www/html/karabo
-fi
-if [ "${KARABO_UPLOAD_CURL_PREFIX}" == "" ]; then
-    KARABO_UPLOAD_CURL_PREFIX=http://exflctrl01.desy.de/karabo
-fi
-
-
-SSH_PREFIX=$KARABO_UPLOAD_HOST:$KARABO_UPLOAD_DIR
-LATEST_RELEASE_TAG=latest_build
-LATEST_PRERELEASE_TAG=latest_prerelease_build
-NIGHTLY_TAG=Nightly
-
-
 __check_existence() {
     local status=$(curl --silent --head -r 0-0 "$1" | head -n 1)
     local fileNotFound=$(echo $status | grep 404)
@@ -29,47 +12,7 @@ __check_existence() {
     fi
 }
 
-__tests_build() {
-    bash ./auto_build_all.sh Debug --buildAllTests
-}
-
 __release_build() {
-    case "$2" in
-        nightly)
-            # nightly jobs are triggered on *ALL* schedules, due to
-            # gitlab CI limitations.
-            # In order to avoid running nightly on unrelated schedules,
-            # we add a variable to each scheduled pipeline `SCHEDULED_JOB`
-            # if this does not matches, we skip the whole nightly
-            # task.
-            # The only drawback, is that all jobs will appear as successful
-            # even though they are skipped.
-            if [[ "$CI_PIPELINE_SOURCE" == "schedule" && "$SCHEDULED_JOB" != "nightly-build" ]]; then
-                # another scheduled job was triggered
-                echo "Not a 'nightly-build' job. Skipping."
-                exit 0
-            fi
-            export REL_TAG=$NIGHTLY_TAG
-            export FRAMEWORK_DEST_DIR=karaboFramework/nightly
-            export GUI_DEST_DIR=$FRAMEWORK_DEST_DIR
-            ;;
-        release)
-            export REL_TAG=$CI_COMMIT_REF_NAME
-            export FRAMEWORK_DEST_DIR=karaboFramework/tags/$REL_TAG
-            export FRAMEWORK_LATEST_DIR=karaboFramework/tags/$LATEST_RELEASE_TAG
-            export LATEST_TAG=$LATEST_RELEASE_TAG
-            export GUI_DEST_DIR=karaboGui
-            ;;
-        prerelease)
-            export REL_TAG=$CI_COMMIT_REF_NAME
-            export FRAMEWORK_DEST_DIR=karaboFramework/tags/$REL_TAG
-            export FRAMEWORK_LATEST_DIR=karaboFramework/tags/$LATEST_PRERELEASE_TAG
-            export LATEST_TAG=$LATEST_PRERELEASE_TAG
-            export GUI_DEST_DIR=karaboGui
-            ;;
-        *) echo "unknown job type: $2" ;;
-    esac
-
     case "$1" in
         debian*|ubuntu*|centos*|almalinux*|redhat*)
             export REL_OS_NAME=$LSB_RELEASE_DIST
@@ -130,9 +73,9 @@ TARGET_OS=${TARGET_OS//[}
 TARGET_OS=${TARGET_OS//]}
 
 case "$JOB_SCOPE" in
-    release) __release_build $TARGET_OS $JOB_SCOPE ;;
-    prerelease) __release_build $TARGET_OS $JOB_SCOPE ;;
-    nightly) __release_build $TARGET_OS $JOB_SCOPE ;;
+    release) __release_build $TARGET_OS ;;
+    prerelease) __release_build $TARGET_OS ;;
+    nightly) __release_build $TARGET_OS ;;
     deps) __deps_build $JOB_TYPE ;;
     tests) __tests_build $JOB_TYPE ;;
     *) echo "unknown job scope: $JOB_SCOPE" ;;
