@@ -53,15 +53,6 @@ __release_build() {
     fi
 }
 
-__deps_build() {
-    pushd extern
-    export DEPS_BASE_NAME=$LSB_RELEASE_DIST-$(echo $LSB_RELEASE_VERSION | sed -r "s/^([0-9]+).*/\1/")
-    export DEPS_DIR_ABS_PATH=$(pwd -P)/$DEPS_BASE_NAME
-    bash build.sh -q $DEPS_BASE_NAME CI
-    $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py --fix-links $DEPS_BASE_NAME/bin $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-    $DEPS_BASE_NAME/bin/python3 ./builder_path_replace.py $DEPS_BASE_NAME/lib $DEPS_DIR_ABS_PATH __KARABO_CI_PATH__
-}
-
 
 echo "Start building job: {$1}"
 
@@ -76,7 +67,5 @@ case "$JOB_SCOPE" in
     release) __release_build $TARGET_OS ;;
     prerelease) __release_build $TARGET_OS ;;
     nightly) __release_build $TARGET_OS ;;
-    deps) __deps_build $JOB_TYPE ;;
-    tests) __tests_build $JOB_TYPE ;;
     *) echo "unknown job scope: $JOB_SCOPE" ;;
 esac
