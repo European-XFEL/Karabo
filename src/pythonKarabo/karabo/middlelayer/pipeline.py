@@ -48,21 +48,19 @@ SERVER_WAIT_ONLINE = 5
 def get_hostname_from_interface(address_range):
     """returns the ip address of the local interfaces
 
-    in case of bad input, it will return the result of
-    `socket.gethostname()`
+    in case of bad input, it will throw
     """
-    try:
-        network = ip_network(address_range)
-        for interface in net_if_addrs().values():
-            for nic in interface:
-                if nic.family != socket.AF_INET:
-                    continue
-                addr = ip_address(nic.address)
-                if addr in network:
-                    return nic.address
-    except ValueError:
-        pass
-    return socket.gethostname()
+    # ip_network will throw if address cannot be found
+    network = ip_network(address_range)
+    for interface in net_if_addrs().values():
+        for nic in interface:
+            if nic.family != socket.AF_INET:
+                continue
+            addr = ip_address(nic.address)
+            if addr in network:
+                return nic.address
+    raise ValueError(
+        f"{address_range} does not appear to be an IPv4 or IPv6 network")
 
 
 class CancelQueue(Queue):
@@ -1202,6 +1200,7 @@ class SchemaNode(Node):
 
 
 class OutputChannel(Node):
+
     def __init__(self, cls=None, **kwargs):
         if cls is None:
             # Child check for output schema
