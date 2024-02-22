@@ -142,7 +142,7 @@ class Device(InjectMixin, SignalSlotable):
         self.alarmCondition = value
 
     lockedBy = String(
-        displayedName="Locked By",
+        displayedName="Locked by",
         description="The name of the device holding a lock on this one "
                     "(empty if not locked)",
         displayType="lockedBy",
