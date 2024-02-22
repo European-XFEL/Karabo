@@ -20,9 +20,9 @@ import pytest_asyncio
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
-    InputChannel, Int32, Node, OutputChannel, Overwrite, PipelineContext,
-    PipelineMetaData, Slot, State, Timestamp, UInt32, background, call,
-    getDevice, getSchema, isAlive, setWait, slot, waitUntil)
+    InputChannel, Int32, NetworkOutput, Node, OutputChannel, Overwrite,
+    PipelineContext, PipelineMetaData, Slot, State, Timestamp, UInt32,
+    background, call, getDevice, getSchema, isAlive, setWait, slot, waitUntil)
 from karabo.middlelayer.testing import AsyncDeviceContext, run_test, sleepUntil
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -876,3 +876,23 @@ async def test_injected_output_channel_connection(event_loop):
             await wait_for(waitUntil(lambda: input_proxy.received > 0),
                            timeout=timeout)
             assert receiver.received > 0
+
+
+@pytest.mark.timeout(30)
+@run_test
+async def test_output_fail_address(event_loop):
+    """Test the output with a wrong address"""
+
+    class Output(NetworkOutput):
+        hostname = Overwrite(defaultValue="192.168.1/22")
+
+    class SimpleSender(Device):
+
+        output = Node(Output)
+
+    config = {"_deviceId_": "outputraisedevice"}
+
+    output_device = SimpleSender(config)
+    with pytest.raises(ValueError) as exc:
+        await output_device.startInstance()
+    assert "does not appear to be an IPv4 or IPv6 network" in str(exc)
