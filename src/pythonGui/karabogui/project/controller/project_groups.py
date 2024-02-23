@@ -21,7 +21,7 @@
 import os.path as op
 from functools import partial
 
-from qtpy.QtWidgets import QAction, QDialog, QMenu
+from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, String
 
 from karabo.common.api import Capabilities
@@ -30,6 +30,7 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
+from karabogui.binding.api import ProxyStatus
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.itemtypes import ProjectItemTypes
 from karabogui.project.dialog.move_handle import MoveHandleDialog
@@ -38,7 +39,8 @@ from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
     check_device_server_exists, check_macro_exists)
 from karabogui.request import get_macro_from_server, get_scene_from_server
-from karabogui.singletons.api import get_config, get_panel_wrangler
+from karabogui.singletons.api import (
+    get_config, get_network, get_panel_wrangler)
 from karabogui.util import (
     VALID_PROJECT_OBJECT_NAME, getOpenFileName, move_to_cursor,
     show_filename_error)
@@ -185,7 +187,15 @@ def _fill_servers_menu(menu, project_controller):
                                          parent=menu.parent()))
     add_action.setEnabled(project_allowed)
 
+    server_action = QAction(icons.kill, "Shutdown all servers", menu)
+    server_action.triggered.connect(partial(_shutdown_servers,
+                                            project_controller,
+                                            parent=menu.parent()))
+    instance_allowed = access_role_allowed(AccessRole.INSTANCE_CONTROL)
+    server_action.setEnabled(instance_allowed)
+
     menu.addAction(add_action)
+    menu.addAction(server_action)
 
 
 # ----------------------------------------------------------------------
@@ -405,3 +415,22 @@ def _add_server(project_controller, parent=None):
         # Set initialized and modified last
         server.initialized = server.modified = True
         project.servers.append(server)
+
+
+def _shutdown_servers(project_controller, parent=None):
+    """Shutdown all servers in a project group"""
+    ask = "Are you sure you want to shutdown all servers?"
+    msg_box = QMessageBox(QMessageBox.Question, "Shutdown servers",
+                          ask, QMessageBox.Yes | QMessageBox.No,
+                          parent=parent)
+    msg_box.setModal(False)
+    msg_box.setDefaultButton(QMessageBox.No)
+    move_to_cursor(msg_box)
+    if msg_box.exec() != QMessageBox.Yes:
+        return
+
+    project = project_controller.model
+    for server in project.servers:
+        if server.status is not ProxyStatus.ONLINE:
+            continue
+        get_network().onKillServer(server.server_id)
