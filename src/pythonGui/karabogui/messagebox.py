@@ -23,7 +23,6 @@ from textwrap import dedent
 from qtpy.QtCore import QPoint, Qt
 from qtpy.QtWidgets import QMessageBox
 
-from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.messagebox import KaraboMessageBox
 from karabogui.singletons.api import get_panel_wrangler
 
@@ -58,11 +57,11 @@ def _show_message_box(icon, text, title, details=None, parent=None):
     if details is not None:
         message_box.setDetailedText(details)
 
-    if parent is not None and not IS_MAC_SYSTEM:
+    if parent is None:
+        move_main_window(message_box)
+        return message_box.exec()
+    else:
         return message_box.open()
-
-    move_main_window(message_box)
-    return message_box.exec()
 
 
 def move_main_window(msg_box):
