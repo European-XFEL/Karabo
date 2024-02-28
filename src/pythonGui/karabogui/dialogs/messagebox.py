@@ -15,7 +15,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.
 from qtpy import uic
-from qtpy.QtCore import QPoint, QSize, Qt, QTimer, Slot
+from qtpy.QtCore import QEventLoop, QPoint, QSize, Qt, QTimer, Slot
 from qtpy.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QStyle
 
 from .utils import get_dialog_ui
@@ -38,6 +38,7 @@ class KaraboMessageBox(QDialog):
         super().__init__(parent)
         uic.loadUi(get_dialog_ui("messagebox.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setModal(False)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         # Set focus on the OK button
         self.ok_button.clicked.connect(self.accept)
@@ -72,6 +73,8 @@ class KaraboMessageBox(QDialog):
         # Graceful unregister with discard!
         self.existing.discard(self)
         super().closeEvent(event)
+        flags = QEventLoop.AllEvents
+        QApplication.processEvents(flags, 100)
 
     def sizeHint(self):
         return self._size_hint
