@@ -33,3 +33,9 @@ class KaraboOpenMQConan(ConanFile):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.libs = collect_libs(self)
+
+        # packages that link against openmqc should also link
+        # against same nss/nspr libraries as openmqc
+        self.cpp_info.requires = [
+            "nss::nss",
+        ]
