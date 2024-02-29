@@ -133,9 +133,6 @@ install_python() {
     # install everything else
     safeRunCommandQuiet "$pip_install_cmd -r requirements-1.txt"
 
-    # fix rpaths
-    safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
-
     popd
 }
 
@@ -167,6 +164,9 @@ install_from_deps() {
         safeRunCommandQuiet "$INSTALL_PREFIX/bin/conan install . $folder_opts $build_opts $profile_opts"
         # fix read-only files installed by nss (to enable conan reinstalls)
         safeRunCommandQuiet "chmod +w $INSTALL_PREFIX/include/*"
+
+        # fix rpaths
+        safeRunCommand "./relocate_deps.sh $INSTALL_PREFIX"
 
     # for whatever reason conan does not reliably copy *.pc files from its root directory
     # we do this here instead, and also capture any .pc files our from source builds created
