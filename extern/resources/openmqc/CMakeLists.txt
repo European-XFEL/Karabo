@@ -32,6 +32,11 @@ target_link_libraries(
     nss::nss
 )
 
+set_target_properties(
+        ${CMAKE_PROJECT_NAME} PROPERTIES
+        INSTALL_RPATH "$ORIGIN/../lib"
+)
+
 install(TARGETS ${CMAKE_PROJECT_NAME}
     LIBRARY DESTINATION "lib"
     PUBLIC_HEADER DESTINATION "include/openmqc")
