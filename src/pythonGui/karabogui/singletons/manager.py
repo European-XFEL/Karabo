@@ -309,7 +309,7 @@ class Manager(QObject):
             log_text = (f"Device reconfiguration of <b>{deviceId}</b> with "
                         f"properties <b>{', '.join(paths)}</b> failed")
             get_logger().error(log_text)
-            messagebox.show_error(text, details=details)
+            messagebox.show_error_at_cursor(text, details=details)
         else:
             device_proxy = self._waiting_devices.pop(deviceId, None)
             if device_proxy is None:
