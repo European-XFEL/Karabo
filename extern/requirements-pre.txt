@@ -1,7 +1,9 @@
 # requirements here are needed to get conan running, and ensure that
 # pip has necessary packages. Don't put anything in here that
 # requires libraries to be installed by conan first.
-wheel
-pip==22.3.1
+wheel==0.42.0
+setuptools==69.1.1
+setuptools-scm==8.0.4
+pip==24.0
 conan==1.62.0
-pyyaml==6.0
+pyyaml==6.0.1
