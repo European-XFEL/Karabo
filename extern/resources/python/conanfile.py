@@ -259,10 +259,15 @@ class CPythonConan(ConanFile):
         if tools.cross_building(self) and not tools.cross_building(self, skip_x64_x86=True):
             # Building from x86_64 to x86 is not a "real" cross build, so set build == host
             build = tools.get_gnu_triplet(str(self.settings.os), str(self.settings.arch), str(self.settings.compiler))
+
         env_build_vars = self._autotools.vars
-        env_build_vars['LIBSQLITE3_CFLAGS'] = ' '
-        env_build_vars['LIBSQLITE3_LIBS'] = '-lsqlite3 -lm'
-        env_build_vars['LIBS'] = '-lm -lssl -lcrypto -ldl -pthread'
+        env_build_vars['LIBSQLITE3_LIBS'] = ' '.join(f'-l{lib}' for lib in [*self.deps_cpp_info["sqlite3"].libs,
+                                                                            *self.deps_cpp_info["sqlite3"].system_libs])
+        env_build_vars['OPENSSL_LIBS'] = ' '.join(f'-l{lib}' for lib in [*self.deps_cpp_info["openssl"].libs,
+                                                                         *self.deps_cpp_info["openssl"].system_libs])
+        env_build_vars['LIBS'] = ' '.join(f'-l{lib}' for lib in [*self.deps_cpp_info["openssl"].libs,
+                                                                 *self.deps_cpp_info["sqlite3"].system_libs])
+
         self._autotools.configure(args=conf_args, configure_dir=self._source_subfolder, build=build, vars=env_build_vars)
         return self._autotools
 
